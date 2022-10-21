@@ -1,5 +1,6 @@
 from ..packages import *
-from ..core import ANVIL, Entity
+from ..core import ANVIL
+from .actors import Entity
 
 GAMEMODES = ['a', 'c', 'd', 's']
 GAMEMODES_FULL = ['adventure', 'creative', 'default', 'survival']
@@ -183,6 +184,10 @@ class _Spawnpoint():
     def __call__(self, target: str, spawnPos : _coordinates = ('~','~','~')) -> str:
         return f'spawnpoint {target} {spawnPos[0]} {spawnPos[1]} {spawnPos[2]}'
 
+class _Say():
+    def __call__(self, text: str):
+        return f'say {text}'
+
 AlwaysDay = _AlwaysDay()
 CameraShake = _CameraShake()
 TitleRaw = _TitleRaw()
@@ -190,6 +195,7 @@ Tellraw = _Tellraw()
 Summon = _Summon()
 Clone = _Clone()
 msg = _Msg()
+Say = _Say()
 AnvilMessage = _AnvilMsg()
 
 Weather = _Weather()
