@@ -9,17 +9,9 @@ from ..packages import *
 
 Component = NewType('Component',str)
 Identifier = NewType('Identifier',str)
-Seconds = NewType('Seconds',str)
 Event = NewType('Event',str)
 
-class Target():
-    Block = 'block'
-    Damager = 'damager'
-    Other = 'other'
-    Parent = 'parent'
-    Player = 'player'
-    Self = 'self'
-    Target = 'target'
+
     
 class EventObject():
     def __init__(self, event: Event, target : Target) -> None:
@@ -28,7 +20,7 @@ class EventObject():
             'target': target
         }
 
-# Components
+# Components ==========================================================================
 class _component(dict):
     def __init__(self, component_name) -> None:
         self._component_name = component_name
@@ -73,8 +65,6 @@ class AdmireItem(_component):
             self.AddField('duration', duration)
 
 class Ageable(_component):
-
-    @overload
     def __init__(self, duration: Seconds, event: Event) -> None:
         '''Adds a timer for the entity to grow up. It can be accelerated by giving the entity the items it likes.
         
@@ -88,41 +78,10 @@ class Ageable(_component):
         '''
         super().__init__('ageable')
         self.AddField('duration', duration)
-        self.AddField('event', event)
-
-    @overload
-    def __init__(self, duration: Seconds, event: EventObject) -> None:
-        '''Adds a timer for the entity to grow up. It can be accelerated by giving the entity the items it likes.
-        
-        Parameters
-        ----------
-        `duration` : `Seconds` `int`.
-            Amount of time before the entity grows up, -1 for always a baby. `Default: 1200`
-        `event` : `Event` `str`.
-            Minecraft behavior event object.
-
-        '''
-        super().__init__('ageable')
-        self.AddField('duration', duration)
-        self.AddField('event', event)
-
-class Variant(_component):
-    def __init__(self, value: int) -> None:
-        """Used to differentiate the component group of a variant of an entity from others. (e.g. ocelot, villager)."""
-        super().__init__('variant')
-        self.AddField('value', value)
-
-class MarkVariant(_component):
-    def __init__(self, value: int) -> None:
-        """Additional variant value. Can be used to further differentiate variants."""
-        super().__init__('skin_id')
-        self.AddField('value', value)
-
-class SkinID(_component):
-    def __init__(self, value: int) -> None:
-        """Skin ID value. Can be used to differentiate skins, such as base skins for villagers."""
-        super().__init__('skin_id')
-        self.AddField('value', value)
+        self[self._component_namespace]['grow_up']={
+            "event": event,
+            "target": "self"
+        }
 
 class CollisionBox(_component):
     def __init__(self, height: float, width: float) -> None:
@@ -130,11 +89,6 @@ class CollisionBox(_component):
         super().__init__('collision_box')
         self.AddField('height', height)
         self.AddField('width', width)
-
-class IsStackable(_component):
-    def __init__(self) -> None:
-        """Sets that this entity can be stacked."""
-        super().__init__('is_stackable')
 
 class TypeFamily(_component):
     def __init__(self, *family: str) -> None:
@@ -178,16 +132,6 @@ class Pushable(_component):
         super().__init__('pushable')
         self.AddField('is_pushable', is_pushable)
         self.AddField('is_pushable_by_piston', is_pushable_by_piston)
-
-class IsIllagerCaptain(_component):
-    def __init__(self) -> None:
-        """Sets that this entity is an illager captain."""
-        super().__init__('is_illager_captain')
-
-class IsBaby(_component):
-    def __init__(self) -> None:
-        """Sets that this entity is a baby."""
-        super().__init__('is_baby')
 
 class PushThrough(_component):
     def __init__(self, value: int) -> None:
@@ -245,11 +189,6 @@ class Attack(_component):
         if not effect_name is None:
             self.AddField('effect_name', effect_name)
 
-class IsIgnited(_component):
-    def __init__(self) -> None:
-        """Sets that this entity is currently on fire."""
-        super().__init__('is_ignited')
-
 class JumpStatic(_component):
     def __init__(self, jump_power: float) -> None:
         """Gives the entity the ability to jump."""
@@ -264,4 +203,235 @@ class HorseJumpStrength(_component):
             "range_min": range_min,
             "range_max": range_max
         }])
+
+class SpellEffects(_component):
+    def __init__(self) -> None:
+        """Defines what mob effects to add and remove to the entity when adding this component."""
+        super().__init__('spell_effects')
+        self.AddField('add_effects', [])
+        self.AddField('remove_effects', [])
+    
+    def add_effects(self, effect: str, duration: int, amplifier:int, ambient: bool = True, visible: bool = True, display_on_screen_animation: bool = True):
+        effect = {
+            'effect': effect,
+            'duration': duration,
+            'amplifier': amplifier,
+        }
+        if ambient is not True:
+            effect.update({'ambient': ambient})
+        if visible is not True:
+            effect.update({'visible': visible})
+        if display_on_screen_animation is not True:
+            effect.update({'display_on_screen_animation': display_on_screen_animation})
+
+        self[self._component_namespace]['add_effects'].append(effect)
+        return self
+
+    def remove_effects(self, *effects: str):
+        self[self._component_namespace]['remove_effects'] = effects
+        return self
+
+class FrictionModifier(_component):
+    def __init__(self, value: int) -> None:
+        """Defines how much friction affects this entity."""
+        super().__init__('friction_modifier')
+        self.AddField('value', value)
+
+class Breathable(_component):
+    def __init__(self, breathes_air: bool = True, total_supply: int = 15, suffocate_time: int = -20, inhale_time: int = 0) -> None:
+        """Defines what blocks this entity can breathe in and gives them the ability to suffocate."""
+        super().__init__('breathable')
+        self.AddField('breathes_air', breathes_air)
+        if total_supply != 15:
+            self.AddField('total_supply', total_supply)
+        if suffocate_time != -20:
+            self.AddField('suffocate_time', suffocate_time)
+        if inhale_time != 0:
+            self.AddField('inhale_time', inhale_time)
+    
+    @property
+    def breathes_lava(self):
+        self.AddField('breathes_lava', True)
+        return self
+
+    @property
+    def breathes_solids(self):
+        self.AddField('breathes_solids', True)
+        return self
+
+    def breathes_water(self, generates_bubbles: bool = False):
+        self.AddField('breathes_water', True)
+        if generates_bubbles:
+            self.AddField('generates_bubbles', generates_bubbles)
+        return self
+
+    @property
+    def breathes_solids(self):
+        self.AddField('breathes_solids', True)
+        return self
+
+    def breathe_blocks(self, *blocks: str):
+        self.AddField('blocks', blocks)
+        return self
+
+    def non_breathe_blocks(self, *blocks: str):
+        self.AddField('non_breathe_blocks', blocks)
+        return self
+
+class Variant(_component):
+    def __init__(self, value: int) -> None:
+        """Used to differentiate the component group of a variant of an entity from others. (e.g. ocelot, villager)."""
+        super().__init__('variant')
+        self.AddField('value', value)
+
+class MarkVariant(_component):
+    def __init__(self, value: int) -> None:
+        """Additional variant value. Can be used to further differentiate variants."""
+        super().__init__('mark_variant')
+        self.AddField('value', value)
+
+class SkinID(_component):
+    def __init__(self, value: int) -> None:
+        """Skin ID value. Can be used to differentiate skins, such as base skins for villagers."""
+        super().__init__('skin_id')
+        self.AddField('value', value)
+
+class Scale(_component):
+    def __init__(self, value: int) -> None:
+        """Sets the entity's visual size."""
+        super().__init__('scale')
+        self.AddField('value', value)
+
+class ScaleByAge(_component):
+    def __init__(self, start_scale: int, end_scale: int) -> None:
+        """Defines the entity's size interpolation based on the entity's age."""
+        super().__init__('scale_by_age')
+        self.AddField('end_scale', end_scale)
+        self.AddField('start_scale', start_scale)
+
+class AreaAttack(_component):
+    def __init__(self, damage_per_tick: int = 2, damage_range: float = 0.2, cause: DamageCause = DamageCause.Attack ) -> None:
+        """The types of damage an entity can receive."""
+        if cause not in DamageCause.list:
+            RaiseError(DAMAGE_CAUSE_ERROR)
+
+        super().__init__('area_attack')
+        self.AddField('damage_per_tick', damage_per_tick)
+        self.AddField('damage_range', damage_range)
+        self.AddField('cause', cause)
+    
+    def filter(self, filter: dict):
+        self.AddField('entity_filter', filter)
+        return self
+
+# FLAGS ===============================================================================
+class IsStackable(_component):
+    def __init__(self) -> None:
+        """Sets that this entity can be stacked."""
+        super().__init__('is_stackable')
+
+class IsIllagerCaptain(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is an illager captain."""
+        super().__init__('is_illager_captain')
+
+class IsBaby(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is a baby."""
+        super().__init__('is_baby')
+
+class IsIgnited(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is currently on fire."""
+        super().__init__('is_ignited')
+
+class IsTamed(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is currently tamed."""
+        super().__init__('is_tamed')
+
+class IsCharged(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is charged."""
+        super().__init__('is_charged')
+
+class IsStunned(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is currently stunned."""
+        super().__init__('is_stunned')
+
+class IsSaddled(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is currently saddled."""
+        super().__init__('is_saddled')
+
+class CanClimb(_component):
+    def __init__(self) -> None:
+        """Allows this entity to climb up ladders."""
+        super().__init__('can_climb')
+
+class IsSheared(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is currently sheared."""
+        super().__init__('is_sheared')
+
+class CanFly(_component):
+    def __init__(self) -> None:
+        """Marks the entity as being able to fly, the pathfinder won't be restricted to paths where a solid block is required underneath it."""
+        super().__init__('can_fly')
+
+class CanPowerJump(_component):
+    def __init__(self) -> None:
+        """Allows the entity to power jump like the horse does in vanilla."""
+        super().__init__('can_power_jump')
+
+class IsChested(_component):
+    def __init__(self) -> None:
+        """Sets that this entity is currently carrying a chest."""
+        super().__init__('is_chested')
+
+class OutOfControl(_component):
+    def __init__(self) -> None:
+        """Defines the entity's 'out of control' state."""
+        super().__init__('out_of_control')
+
+class DamageSensor(_component):
+    def __init__(self) -> None:
+        """Defines what events to call when this entity is damaged by specific entities or items."""
+        super().__init__('damage_sensor')
+        self.AddField('triggers', [])
+
+    def add_trigger(self, 
+        cause: DamageCause, deals_damage: bool = True, 
+        on_damage_event: str = None, on_damage_filter: dict = None,  damage_multiplier: int = 1, damage_modifier: float = 0
+    ):
+        damage = {
+            'cause': cause,
+            'deals_damage': deals_damage,
+        }
+        if not on_damage_event is None:
+            damage['on_damage']={
+                'event': on_damage_event
+            }
+        if not on_damage_filter is None:
+            damage['on_damage']['filters'] = on_damage_filter
+        if not damage_multiplier == 1:
+            damage['damage_multiplier'] = damage_multiplier
+        if not damage_modifier == 0:
+            damage['damage_modifier'] = damage_modifier
+
+        self[self._component_namespace]['triggers'].append(damage)
+        return self
+# =====================================================================================
+
+# Unfinished
+class TargetNearbySensor(_component):
+    def __init__(self) -> None:
+        super().__init__('target_nearby_sensor')
+
+class ConditionalBandwidthOptimization(_component):
+    def __init__(self) -> None:
+        """Defines the Conditional Spatial Update Bandwidth Optimizations of this entity."""
+        super().__init__('conditional_bandwidth_optimization')
+
 

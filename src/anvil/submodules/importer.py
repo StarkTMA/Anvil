@@ -1,5 +1,7 @@
 import commentjson as js
 
+# This script is intended to host all functions that imports excising json files and converts them into an Anvil code
+
 def sound_definition():
     with open('sound_definitions.json', 'r') as file:
         with open('b.py', 'w+') as file2:

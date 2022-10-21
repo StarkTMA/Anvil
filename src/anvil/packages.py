@@ -1,3 +1,4 @@
+from ast import Global
 import commentjson as json
 from urllib import request
 import os
@@ -18,52 +19,56 @@ from PIL import Image, ImageColor, ImageEnhance, ImageQt
 import time
 from pprint import pprint
 from . __version__ import __version__
+from .submodules.localization import *
 
 FileExists = lambda path : os.path.exists(path)
-MakePath = lambda *paths : os.path.normpath(os.path.join(*paths)).replace('\\','/')
+MakePath = lambda *paths : os.path.normpath(os.path.join(*[ x for x in paths if type(x) is str ])).replace('\\','/')
 
 APPDATA = os.getenv('APPDATA').rstrip('Roaming')
 DESKTOP = MakePath(os.getenv('USERPROFILE'),'Desktop')
-RP = 'https://aka.ms/resourcepacktemplate'
-BP = 'https://aka.ms/behaviorpacktemplate'
 MOLANG_PREFIXES = ['q.','v.','c.','t.','query.','variable.','context.','temp.']
 
-class Interpolation():
-    #Linear = 'linear'
-    Catmull = 'catmull'
+Seconds = NewType('Seconds',str)
+
 class LootPoolType():
     Empty  = 'empty'
     Item = 'item'
     LootTable = 'loot_table'
+
 class Population():
     Animal = 'animal'
     UnderwaterAnimal = 'underwater_animal'
     Monster = 'monster'
     Ambient = 'ambient'
+
 class Difficulty():
     Peaceful = 'peaceful'
     Easy = 'easy'
     Normal = 'normal'
     Hard = 'hard' 
+
 class Vanilla():
+    #Updated on 21-10-2022
+    # Latest Updated release: 1.19.31
+    # Latest Updated preview: 1.19.50.21
     class Entities():
         _list = [
-            "minecraft:armor_stand", "minecraft:arrow", "minecraft:axolotl", "minecraft:bat", "minecraft:bee",
-            "minecraft:blaze", "minecraft:cat", "minecraft:cave_spider", "minecraft:chicken", "minecraft:cow",
-            "minecraft:creeper", "minecraft:dolphin", "minecraft:donkey", "minecraft:drowned", "minecraft:elder_guardian",
-            "minecraft:ender_dragon", "minecraft:enderman", "minecraft:endermite", "minecraft:evocation_illager",
-            "minecraft:fish", "minecraft:fox", "minecraft:ghast", "minecraft:glow_squid", "minecraft:goat", "minecraft:guardian",
-            "minecraft:hoglin", "minecraft:horse", "minecraft:husk", "minecraft:iron_golem", "minecraft:llama",
-            "minecraft:magma_cube", "minecraft:mooshroom", "minecraft:mule", "minecraft:npc", "minecraft:ocelot",
-            "minecraft:panda", "minecraft:parrot", "minecraft:phantom", "minecraft:pig", "minecraft:piglin_brute",
-            "minecraft:piglin", "minecraft:pillager", "minecraft:player", "minecraft:polar_bear", "minecraft:pufferfish",
-            "minecraft:rabbit", "minecraft:ravager", "minecraft:salmon", "minecraft:sheep", "minecraft:shulker", "minecraft:silverfish",
-            "minecraft:skeleton_horse", "minecraft:skeleton", "minecraft:slime", "minecraft:snow_golem",
-            "minecraft:spider", "minecraft:squid", "minecraft:stray", "minecraft:strider", "minecraft:tropicalfish",
-            "minecraft:turtle", "minecraft:vex", "minecraft:villager_v2", "minecraft:vindicator", "minecraft:wandering_trader",
-            "minecraft:witch", 'minecraft:wither_skull', 'minecraft:wither_skull_dangerous', "minecraft:wither_skeleton", "minecraft:wither", "minecraft:wolf", "minecraft:zoglin",
-            "minecraft:zombie_horse", "minecraft:zombie_pigman", "minecraft:zombie_villager_v2", "minecraft:zombie", 
-            'minecraft:boat',
+            "armor_stand", "arrow", "axolotl", "bat", "bee",
+            "blaze", "cat", "cave_spider", "chicken", "cow",
+            "creeper", "dolphin", "donkey", "drowned", "elder_guardian",
+            "ender_dragon", "enderman", "endermite", "evocation_illager",
+            "fish", "fox", "ghast", "glow_squid", "goat", "guardian",
+            "hoglin", "horse", "husk", "iron_golem", "llama",
+            "magma_cube", "mooshroom", "mule", "npc", "ocelot",
+            "panda", "parrot", "phantom", "pig", "piglin_brute",
+            "piglin", "pillager", "player", "polar_bear", "pufferfish",
+            "rabbit", "ravager", "salmon", "sheep", "shulker", "silverfish",
+            "skeleton_horse", "skeleton", "slime", "snow_golem",
+            "spider", "squid", "stray", "strider", "tropicalfish",
+            "turtle", "vex", "villager_v2", "vindicator", "wandering_trader",
+            "witch", 'wither_skull', 'wither_skull_dangerous', "wither_skeleton", "wither", "wolf", "zoglin",
+            "zombie_horse", "zombie_pigman", "zombie_villager_v2", "zombie", 
+            'boat', 'snowball', 'fishing_hook', 'fireball', 'llama_spit', 'thrown_trident'
         ]
         ArmorStand="armor_stand"
         Arrow="arrow"
@@ -85,6 +90,8 @@ class Vanilla():
         Endermite="endermite"
         EvocationIllager="evocation_illager"
         Fish="fish"
+        FishingHook = 'fishing_hook'
+        Fireball = 'fireball'
         Fox="fox"
         Ghast="ghast"
         GlowSquid="glow_squid"
@@ -95,6 +102,7 @@ class Vanilla():
         Husk="husk"
         IronGolem="iron_golem"
         Llama="llama"
+        LlamaSpit = 'llama_spit'
         MagmaCube="magma_cube"
         Mooshroom="mooshroom"
         Mule="mule"
@@ -125,6 +133,7 @@ class Vanilla():
         Stray="stray"
         Strider="strider"
         Tropicalfish="tropicalfish"
+        ThrownTrident = 'thrown_trident'
         Turtle="turtle"
         Vex="vex"
         Villager="villager_v2"
@@ -142,18 +151,22 @@ class Vanilla():
         ZombieVillager="zombie_villager_v2"
         Zombie="zombie"
         Boat ="boat"
+        Snowball ="snowball"
+        # 1.19.0
         #Updated on 11-07-2022
-        _list.append('minecraft:warden')
+        _list.append('warden')
         Warden="warden"
+        # 1.19.50.21
+        #Updated on 21-10-2022
+        _list.append('camel')
+        Camel="camel"
+
     class BlocksItems:
-        # Updated on 27-5-22
-        # Latest Updated release: 1.18.32
-        # Latest Updated preview: 1.19.10.20
-        list = {
+        _list = {
         # Planks
         "minecraft:oak_planks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Planks",
@@ -162,7 +175,7 @@ class Vanilla():
         },
         "minecraft:spruce_planks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Spruce Planks",
@@ -171,7 +184,7 @@ class Vanilla():
         },
         "minecraft:birch_planks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Birch Planks",
@@ -180,7 +193,7 @@ class Vanilla():
         },
         "minecraft:jungle_planks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Jungle Planks",
@@ -189,7 +202,7 @@ class Vanilla():
         },
         "minecraft:acacia_planks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Acacia Planks",
@@ -198,7 +211,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_planks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Dark Oak Planks",
@@ -207,7 +220,7 @@ class Vanilla():
         },
         "minecraft:mangrove_planks": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Mangrove Planks",
@@ -216,7 +229,7 @@ class Vanilla():
         },
         "minecraft:crimson_planks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Planks",
@@ -225,7 +238,7 @@ class Vanilla():
         },
         "minecraft:warped_planks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Planks",
@@ -235,7 +248,7 @@ class Vanilla():
         # Walls
         "minecraft:cobblestone_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cobblestone Wall",
@@ -244,7 +257,7 @@ class Vanilla():
         },
         "minecraft:mossy_cobblestone_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Mossy Cobblestone Wall",
@@ -253,7 +266,7 @@ class Vanilla():
         },
         "minecraft:granite_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Granite Wall",
@@ -262,7 +275,7 @@ class Vanilla():
         },
         "minecraft:diorite_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Diorite Wall",
@@ -271,7 +284,7 @@ class Vanilla():
         },
         "minecraft:andesite_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Andesite Wall",
@@ -280,7 +293,7 @@ class Vanilla():
         },
         "minecraft:sandstone_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Sandstone Wall",
@@ -289,7 +302,7 @@ class Vanilla():
         },
         "minecraft:red_sandstone_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Red Sandstone Wall",
@@ -298,7 +311,7 @@ class Vanilla():
         },
         "minecraft:stone_brick_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Stone Brick Wall",
@@ -307,7 +320,7 @@ class Vanilla():
         },
         "minecraft:mossy_stone_brick_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Mossy Stone Brick Wall",
@@ -316,7 +329,7 @@ class Vanilla():
         },
         "minecraft:brick_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Brick Wall",
@@ -325,7 +338,7 @@ class Vanilla():
         },
         "minecraft:nether_brick_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 9,
             "display_name": "Nether Brick Wall",
@@ -334,7 +347,7 @@ class Vanilla():
         },
         "minecraft:red_nether_brick_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 13,
             "display_name": "Red Nether Brick Wall",
@@ -343,7 +356,7 @@ class Vanilla():
         },
         "minecraft:end_stone_brick_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 10,
             "display_name": "End Stone Brick Wall",
@@ -352,7 +365,7 @@ class Vanilla():
         },
         "minecraft:prismarine_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Prismarine Wall",
@@ -361,7 +374,7 @@ class Vanilla():
         },
         "minecraft:blackstone_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Blackstone Wall",
@@ -370,7 +383,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Wall",
@@ -379,7 +392,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_brick_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Brick Wall",
@@ -388,7 +401,7 @@ class Vanilla():
         },
         "minecraft:cobbled_deepslate_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cobbled Deepslate Wall",
@@ -397,7 +410,7 @@ class Vanilla():
         },
         "minecraft:deepslate_tile_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Tile Wall",
@@ -406,7 +419,7 @@ class Vanilla():
         },
         "minecraft:polished_deepslate_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Polished Deepslate Wall",
@@ -415,7 +428,7 @@ class Vanilla():
         },
         "minecraft:deepslate_brick_wall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Brick Wall",
@@ -424,7 +437,7 @@ class Vanilla():
         },
         "minecraft:mud_brick_wall": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mud Brick Wall",
@@ -434,7 +447,7 @@ class Vanilla():
         # Fences
         "minecraft:oak_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Fence",
@@ -443,7 +456,7 @@ class Vanilla():
         },
         "minecraft:spruce_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Spruce Fence",
@@ -452,7 +465,7 @@ class Vanilla():
         },
         "minecraft:birch_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Birch Fence",
@@ -461,7 +474,7 @@ class Vanilla():
         },
         "minecraft:jungle_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Jungle Fence",
@@ -470,7 +483,7 @@ class Vanilla():
         },
         "minecraft:acacia_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Acacia Fence",
@@ -479,7 +492,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Dark Oak Fence",
@@ -488,7 +501,7 @@ class Vanilla():
         },
         "minecraft:mangrove_fence": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Mangrove Fence",
@@ -497,7 +510,7 @@ class Vanilla():
         },
         "minecraft:nether_brick_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Brick Fence",
@@ -506,7 +519,7 @@ class Vanilla():
         },
         "minecraft:crimson_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Fence",
@@ -515,7 +528,7 @@ class Vanilla():
         },
         "minecraft:warped_fence": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Fence",
@@ -525,7 +538,7 @@ class Vanilla():
         # Fence Gates
         "minecraft:oak_fence_gate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Fence Gate",
@@ -534,7 +547,7 @@ class Vanilla():
         },
         "minecraft:spruce_fence_gate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Fence Gate",
@@ -543,7 +556,7 @@ class Vanilla():
         },
         "minecraft:birch_fence_gate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Fence Gate",
@@ -552,7 +565,7 @@ class Vanilla():
         },
         "minecraft:jungle_fence_gate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Fence Gate",
@@ -561,7 +574,7 @@ class Vanilla():
         },
         "minecraft:acacia_fence_gate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Fence Gate",
@@ -570,7 +583,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_fence_gate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Fence Gate",
@@ -579,7 +592,7 @@ class Vanilla():
         },
         "minecraft:mangrove_fence_gate": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Fence Gate",
@@ -588,7 +601,7 @@ class Vanilla():
         },
         "minecraft:crimson_fence_gate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Fence Gate",
@@ -597,7 +610,7 @@ class Vanilla():
         },
         "minecraft:warped_fence_gate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Fence Gate",
@@ -607,7 +620,7 @@ class Vanilla():
         # Stairs
         "minecraft:stone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Stairs",
@@ -616,7 +629,7 @@ class Vanilla():
         },
         "minecraft:cobblestone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cobblestone Stairs",
@@ -625,7 +638,7 @@ class Vanilla():
         },
         "minecraft:mossy_cobblestone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mossy Cobblestone Stairs",
@@ -634,7 +647,7 @@ class Vanilla():
         },
         "minecraft:oak_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Wood Stairs",
@@ -643,7 +656,7 @@ class Vanilla():
         },
         "minecraft:spruce_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Wood Stairs",
@@ -652,7 +665,7 @@ class Vanilla():
         },
         "minecraft:birch_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Wood Stairs",
@@ -661,7 +674,7 @@ class Vanilla():
         },
         "minecraft:jungle_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Wood Stairs",
@@ -670,7 +683,7 @@ class Vanilla():
         },
         "minecraft:acacia_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Wood Stairs",
@@ -679,7 +692,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Wood Stairs",
@@ -688,7 +701,7 @@ class Vanilla():
         },
         "minecraft:mangrove_stairs": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Stairs",
@@ -697,7 +710,7 @@ class Vanilla():
         },
         "minecraft:stone_brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Brick Stairs",
@@ -706,7 +719,7 @@ class Vanilla():
         },
         "minecraft:mossy_stone_brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mossy Stone Brick Stairs",
@@ -715,7 +728,7 @@ class Vanilla():
         },
         "minecraft:sandstone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sandstone Stairs",
@@ -724,7 +737,7 @@ class Vanilla():
         },
         "minecraft:smooth_sandstone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Smooth Sandstone Stairs",
@@ -733,7 +746,7 @@ class Vanilla():
         },
         "minecraft:red_sandstone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Red Sandstone Stairs",
@@ -742,7 +755,7 @@ class Vanilla():
         },
         "minecraft:smooth_red_sandstone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Smooth Red Sandstone Stairs",
@@ -751,7 +764,7 @@ class Vanilla():
         },
         "minecraft:granite_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Granite Stairs",
@@ -760,7 +773,7 @@ class Vanilla():
         },
         "minecraft:polished_granite_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Polished Granite Stairs",
@@ -769,7 +782,7 @@ class Vanilla():
         },
         "minecraft:diorite_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diorite Stairs",
@@ -778,7 +791,7 @@ class Vanilla():
         },
         "minecraft:polished_diorite_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Polished Diorite Stairs",
@@ -787,7 +800,7 @@ class Vanilla():
         },
         "minecraft:andesite_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Andesite Stairs",
@@ -796,7 +809,7 @@ class Vanilla():
         },
         "minecraft:polished_andesite_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Polished Andesite Stairs",
@@ -805,7 +818,7 @@ class Vanilla():
         },
         "minecraft:brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Brick Stairs",
@@ -814,7 +827,7 @@ class Vanilla():
         },
         "minecraft:nether_brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Brick Stairs",
@@ -823,7 +836,7 @@ class Vanilla():
         },
         "minecraft:red_nether_brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Red Nether Brick Stairs",
@@ -832,7 +845,7 @@ class Vanilla():
         },
         "minecraft:end_stone_brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Stone Brick Stairs",
@@ -841,7 +854,7 @@ class Vanilla():
         },
         "minecraft:quartz_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Quartz Stairs",
@@ -850,7 +863,7 @@ class Vanilla():
         },
         "minecraft:smooth_quartz_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Smooth Quartz Stairs",
@@ -859,7 +872,7 @@ class Vanilla():
         },
         "minecraft:purpur_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Purpur Stairs",
@@ -868,7 +881,7 @@ class Vanilla():
         },
         "minecraft:prismarine_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Prismarine Stairs",
@@ -877,7 +890,7 @@ class Vanilla():
         },
         "minecraft:dark_prismarine_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Prismarine Stairs",
@@ -886,7 +899,7 @@ class Vanilla():
         },
         "minecraft:prismarine_brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Prismarine Brick Stairs",
@@ -895,7 +908,7 @@ class Vanilla():
         },
         "minecraft:crimson_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Stairs",
@@ -904,7 +917,7 @@ class Vanilla():
         },
         "minecraft:warped_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Stairs",
@@ -913,7 +926,7 @@ class Vanilla():
         },
         "minecraft:blackstone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Blackstone Stairs",
@@ -922,7 +935,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Stairs",
@@ -931,7 +944,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Brick Stairs",
@@ -940,7 +953,7 @@ class Vanilla():
         },
         "minecraft:cut_copper_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cut Copper Stairs",
@@ -949,7 +962,7 @@ class Vanilla():
         },
         "minecraft:exposed_cut_copper_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Exposed Cut Copper Stairs",
@@ -958,7 +971,7 @@ class Vanilla():
         },
         "minecraft:weathered_cut_copper_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Weathered Cut Copper Stairs",
@@ -967,7 +980,7 @@ class Vanilla():
         },
         "minecraft:oxidized_cut_copper_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oxidized Cut Copper Stairs",
@@ -976,7 +989,7 @@ class Vanilla():
         },
         "minecraft:waxed_cut_copper_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Cut Copper Stairs",
@@ -985,7 +998,7 @@ class Vanilla():
         },
         "minecraft:waxed_exposed_cut_copper_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Exposed Cut Copper Stairs",
@@ -994,7 +1007,7 @@ class Vanilla():
         },
         "minecraft:waxed_weathered_cut_copper_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Weathered Cut Copper Stairs",
@@ -1003,7 +1016,7 @@ class Vanilla():
         },
         "minecraft:waxed_oxidized_cut_copper_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Oxidized Cut Copper Stairs",
@@ -1012,7 +1025,7 @@ class Vanilla():
         },
         "minecraft:cobbled_deepslate_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cobbled Deepslate Stairs",
@@ -1021,7 +1034,7 @@ class Vanilla():
         },
         "minecraft:deepslate_tile_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Tile Stairs",
@@ -1030,7 +1043,7 @@ class Vanilla():
         },
         "minecraft:polished_deepslate_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Polished Deepslate Stairs",
@@ -1039,7 +1052,7 @@ class Vanilla():
         },
         "minecraft:deepslate_brick_stairs": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Brick Stairs",
@@ -1048,7 +1061,7 @@ class Vanilla():
         },
         "minecraft:mud_brick_stairs": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mud Brick Stairs",
@@ -1058,7 +1071,7 @@ class Vanilla():
         # Doors
         "minecraft:oak_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Door",
@@ -1067,7 +1080,7 @@ class Vanilla():
         },
         "minecraft:spruce_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Door",
@@ -1076,7 +1089,7 @@ class Vanilla():
         },
         "minecraft:birch_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Door",
@@ -1085,7 +1098,7 @@ class Vanilla():
         },
         "minecraft:jungle_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Door",
@@ -1094,7 +1107,7 @@ class Vanilla():
         },
         "minecraft:acacia_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Door",
@@ -1103,7 +1116,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Door",
@@ -1112,7 +1125,7 @@ class Vanilla():
         },
         "minecraft:mangrove_door": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Door",
@@ -1121,7 +1134,7 @@ class Vanilla():
         },
         "minecraft:iron_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Door",
@@ -1130,7 +1143,7 @@ class Vanilla():
         },
         "minecraft:crimson_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Door",
@@ -1139,7 +1152,7 @@ class Vanilla():
         },
         "minecraft:warped_door": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Door",
@@ -1149,7 +1162,7 @@ class Vanilla():
         # Trapsdoors
         "minecraft:oak_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wooden Trapdoor",
@@ -1158,7 +1171,7 @@ class Vanilla():
         },
         "minecraft:spruce_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Trapdoor",
@@ -1167,7 +1180,7 @@ class Vanilla():
         },
         "minecraft:birch_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Trapdoor",
@@ -1176,7 +1189,7 @@ class Vanilla():
         },
         "minecraft:jungle_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Trapdoor",
@@ -1185,7 +1198,7 @@ class Vanilla():
         },
         "minecraft:acacia_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Trapdoor",
@@ -1194,7 +1207,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Trapdoor",
@@ -1203,7 +1216,7 @@ class Vanilla():
         },
         "minecraft:mangrove_trapdoor": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Trapdoor",
@@ -1212,7 +1225,7 @@ class Vanilla():
         },
         "minecraft:iron_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Trapdoor",
@@ -1221,7 +1234,7 @@ class Vanilla():
         },
         "minecraft:crimson_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Trapdoor",
@@ -1230,7 +1243,7 @@ class Vanilla():
         },
         "minecraft:warped_trapdoor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Trapdoor",
@@ -1240,7 +1253,7 @@ class Vanilla():
         #
         "minecraft:iron_bars": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Bars",
@@ -1250,7 +1263,7 @@ class Vanilla():
         # Glass
         "minecraft:glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glass",
@@ -1259,7 +1272,7 @@ class Vanilla():
         },
         "minecraft:white_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Stained Glass",
@@ -1268,7 +1281,7 @@ class Vanilla():
         },
         "minecraft:gray_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Stained Glass",
@@ -1277,7 +1290,7 @@ class Vanilla():
         },
         "minecraft:light_gray_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Stained Glass",
@@ -1286,7 +1299,7 @@ class Vanilla():
         },
         "minecraft:black_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Stained Glass",
@@ -1295,7 +1308,7 @@ class Vanilla():
         },
         "minecraft:brown_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Stained Glass",
@@ -1304,7 +1317,7 @@ class Vanilla():
         },
         "minecraft:red_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Stained Glass",
@@ -1313,7 +1326,7 @@ class Vanilla():
         },
         "minecraft:orange_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Stained Glass",
@@ -1322,7 +1335,7 @@ class Vanilla():
         },
         "minecraft:yellow_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Stained Glass",
@@ -1331,7 +1344,7 @@ class Vanilla():
         },
         "minecraft:lime_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Stained Glass",
@@ -1340,7 +1353,7 @@ class Vanilla():
         },
         "minecraft:green_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Stained Glass",
@@ -1349,7 +1362,7 @@ class Vanilla():
         },
         "minecraft:cyan_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Stained Glass",
@@ -1358,7 +1371,7 @@ class Vanilla():
         },
         "minecraft:light_blue_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Stained Glass",
@@ -1367,7 +1380,7 @@ class Vanilla():
         },
         "minecraft:blue_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Stained Glass",
@@ -1376,7 +1389,7 @@ class Vanilla():
         },
         "minecraft:purple_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Stained Glass",
@@ -1385,7 +1398,7 @@ class Vanilla():
         },
         "minecraft:magenta_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Stained Glass",
@@ -1394,7 +1407,7 @@ class Vanilla():
         },
         "minecraft:pink_stained_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Stained Glass",
@@ -1403,7 +1416,7 @@ class Vanilla():
         },
         "minecraft:tinted_glass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tinted Glass",
@@ -1412,7 +1425,7 @@ class Vanilla():
         },
         "minecraft:glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glass Pane",
@@ -1421,7 +1434,7 @@ class Vanilla():
         },
         "minecraft:white_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Stained Glass Pane",
@@ -1430,7 +1443,7 @@ class Vanilla():
         },
         "minecraft:gray_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Stained Glass Pane",
@@ -1439,7 +1452,7 @@ class Vanilla():
         },
         "minecraft:light_gray_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Stained Glass Pane",
@@ -1448,7 +1461,7 @@ class Vanilla():
         },
         "minecraft:black_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Stained Glass Pane",
@@ -1457,7 +1470,7 @@ class Vanilla():
         },
         "minecraft:brown_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Stained Glass Pane",
@@ -1466,7 +1479,7 @@ class Vanilla():
         },
         "minecraft:red_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Stained Glass Pane",
@@ -1475,7 +1488,7 @@ class Vanilla():
         },
         "minecraft:orange_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Stained Glass Pane",
@@ -1484,7 +1497,7 @@ class Vanilla():
         },
         "minecraft:yellow_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Stained Glass Pane",
@@ -1493,7 +1506,7 @@ class Vanilla():
         },
         "minecraft:lime_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Stained Glass Pane",
@@ -1502,7 +1515,7 @@ class Vanilla():
         },
         "minecraft:green_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Stained Glass Pane",
@@ -1511,7 +1524,7 @@ class Vanilla():
         },
         "minecraft:cyan_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Stained Glass Pane",
@@ -1520,7 +1533,7 @@ class Vanilla():
         },
         "minecraft:light_blue_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Stained Glass Pane",
@@ -1529,7 +1542,7 @@ class Vanilla():
         },
         "minecraft:blue_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Stained Glass Pane",
@@ -1538,7 +1551,7 @@ class Vanilla():
         },
         "minecraft:purple_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Stained Glass Pane",
@@ -1547,7 +1560,7 @@ class Vanilla():
         },
         "minecraft:magenta_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Stained Glass Pane",
@@ -1556,7 +1569,7 @@ class Vanilla():
         },
         "minecraft:pink_stained_glass_pane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Stained Glass Pane",
@@ -1566,7 +1579,7 @@ class Vanilla():
         # Climbing
         "minecraft:ladder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ladder",
@@ -1575,7 +1588,7 @@ class Vanilla():
         },
         "minecraft:scaffolding": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Scaffolding",
@@ -1585,7 +1598,7 @@ class Vanilla():
         # Slabs
         "minecraft:stone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Stone Slab",
@@ -1594,7 +1607,7 @@ class Vanilla():
         },
         "minecraft:smooth_stone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Smooth Stone Slab",
@@ -1603,7 +1616,7 @@ class Vanilla():
         },
         "minecraft:cobblestone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Cobblestone Slab",
@@ -1612,7 +1625,7 @@ class Vanilla():
         },
         "minecraft:mossy_cobblestone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Mossy Cobblestone Slab",
@@ -1621,7 +1634,7 @@ class Vanilla():
         },
         "minecraft:oak_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Wood Slab",
@@ -1630,7 +1643,7 @@ class Vanilla():
         },
         "minecraft:spruce_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Spruce Wood Slab",
@@ -1639,7 +1652,7 @@ class Vanilla():
         },
         "minecraft:birch_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Birch Wood Slab",
@@ -1648,7 +1661,7 @@ class Vanilla():
         },
         "minecraft:jungle_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Jungle Wood Slab",
@@ -1657,7 +1670,7 @@ class Vanilla():
         },
         "minecraft:acacia_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Acacia Wood Slab",
@@ -1666,7 +1679,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Dark Oak Wood Slab",
@@ -1675,7 +1688,7 @@ class Vanilla():
         },
         "minecraft:mangrove_slab": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Mangrove Slab",
@@ -1684,7 +1697,7 @@ class Vanilla():
         },
         "minecraft:stone_brick_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Stone Brick Slab",
@@ -1693,7 +1706,7 @@ class Vanilla():
         },
         "minecraft:mossy_stone_brick_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mossy Stone Brick Slab",
@@ -1702,7 +1715,7 @@ class Vanilla():
         },
         "minecraft:sandstone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Sandstone Slab",
@@ -1711,7 +1724,7 @@ class Vanilla():
         },
         "minecraft:cut_sandstone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Cut Sandstone Slab",
@@ -1720,7 +1733,7 @@ class Vanilla():
         },
         "minecraft:smooth_sandstone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Smooth Sandstone Slab",
@@ -1729,7 +1742,7 @@ class Vanilla():
         },
         "minecraft:red_sandstone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Red Sandstone Slab",
@@ -1738,7 +1751,7 @@ class Vanilla():
         },
         "minecraft:cut_red_sandstone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Cut Red Sandstone Slab",
@@ -1747,7 +1760,7 @@ class Vanilla():
         },
         "minecraft:smooth_red_sandstone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Smooth Red Sandstone Slab",
@@ -1756,7 +1769,7 @@ class Vanilla():
         },
         "minecraft:granite_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Granite Slab",
@@ -1765,7 +1778,7 @@ class Vanilla():
         },
         "minecraft:polished_granite_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Polished Granite Slab",
@@ -1774,7 +1787,7 @@ class Vanilla():
         },
         "minecraft:diorite_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Diorite Slab",
@@ -1783,7 +1796,7 @@ class Vanilla():
         },
         "minecraft:polished_diorite_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Polished Diorite Slab",
@@ -1792,7 +1805,7 @@ class Vanilla():
         },
         "minecraft:andesite_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Andesite Slab",
@@ -1801,7 +1814,7 @@ class Vanilla():
         },
         "minecraft:polished_andesite_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Polished Andesite Slab",
@@ -1810,7 +1823,7 @@ class Vanilla():
         },
         "minecraft:brick_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Brick Slab",
@@ -1819,7 +1832,7 @@ class Vanilla():
         },
         "minecraft:nether_brick_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 7,
             "display_name": "Nether Brick Slab",
@@ -1828,7 +1841,7 @@ class Vanilla():
         },
         "minecraft:red_nether_brick_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 7,
             "display_name": "Red Nether Brick Slab",
@@ -1837,7 +1850,7 @@ class Vanilla():
         },
         "minecraft:end_stone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Stone Brick Slab",
@@ -1846,7 +1859,7 @@ class Vanilla():
         },
         "minecraft:quartz_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 6,
             "display_name": "Quartz Slab",
@@ -1855,7 +1868,7 @@ class Vanilla():
         },
         "minecraft:smooth_quartz_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 1,
             "display_name": "Smooth Quartz Slab",
@@ -1864,7 +1877,7 @@ class Vanilla():
         },
         "minecraft:purpur_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 1,
             "display_name": "Purpur Slab",
@@ -1873,7 +1886,7 @@ class Vanilla():
         },
         "minecraft:prismarine_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Prismarine Slab",
@@ -1882,7 +1895,7 @@ class Vanilla():
         },
         "minecraft:dark_prismarine_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Dark Prismarine Slab",
@@ -1891,7 +1904,7 @@ class Vanilla():
         },
         "minecraft:prismarine_brick_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Prismarine Brick Slab",
@@ -1900,7 +1913,7 @@ class Vanilla():
         },
         "minecraft:crimson_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Slab",
@@ -1909,7 +1922,7 @@ class Vanilla():
         },
         "minecraft:warped_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Slab",
@@ -1918,7 +1931,7 @@ class Vanilla():
         },
         "minecraft:blackstone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Blackstone Slab",
@@ -1927,7 +1940,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Slab",
@@ -1936,7 +1949,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_brick_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Brick Slab",
@@ -1945,7 +1958,7 @@ class Vanilla():
         },
         "minecraft:cut_copper_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cut Copper Slab",
@@ -1954,7 +1967,7 @@ class Vanilla():
         },
         "minecraft:exposed_cut_copper_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Exposed Cut Copper Slab",
@@ -1963,7 +1976,7 @@ class Vanilla():
         },
         "minecraft:weathered_cut_copper_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Weathered Cut Copper Slab",
@@ -1972,7 +1985,7 @@ class Vanilla():
         },
         "minecraft:oxidized_cut_copper_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oxidized Cut Copper Slab",
@@ -1981,7 +1994,7 @@ class Vanilla():
         },
         "minecraft:waxed_cut_copper_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Cut Copper Slab",
@@ -1990,7 +2003,7 @@ class Vanilla():
         },
         "minecraft:waxed_exposed_cut_copper_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Exposed Cut Copper Slab",
@@ -1999,7 +2012,7 @@ class Vanilla():
         },
         "minecraft:waxed_weathered_cut_copper_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Weathered Cut Copper Slab",
@@ -2008,7 +2021,7 @@ class Vanilla():
         },
         "minecraft:waxed_oxidized_cut_copper_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Oxidized Cut Copper Slab",
@@ -2017,7 +2030,7 @@ class Vanilla():
         },
         "minecraft:cobbled_deepslate_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cobbled Deepslate Slab",
@@ -2026,7 +2039,7 @@ class Vanilla():
         },
         "minecraft:polished_deepslate_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Polished Deepslate Slab",
@@ -2035,7 +2048,7 @@ class Vanilla():
         },
         "minecraft:deepslate_tile_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Tile Slab",
@@ -2044,7 +2057,7 @@ class Vanilla():
         },
         "minecraft:deepslate_brick_slab": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Brick Slab",
@@ -2053,7 +2066,7 @@ class Vanilla():
         },
         "minecraft:mud_brick_slab": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Mud Brick Slab",
@@ -2063,7 +2076,7 @@ class Vanilla():
         # Bricks
         "minecraft:bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bricks",
@@ -2072,7 +2085,7 @@ class Vanilla():
         },
         "minecraft:chiseled_nether_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Chiseled Nether Bricks",
@@ -2081,7 +2094,7 @@ class Vanilla():
         },
         "minecraft:cracked_nether_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Cracked Nether Bricks",
@@ -2090,7 +2103,7 @@ class Vanilla():
         },
         "minecraft:quartz_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Quartz Bricks",
@@ -2099,7 +2112,7 @@ class Vanilla():
         },
         "minecraft:stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Bricks",
@@ -2108,7 +2121,7 @@ class Vanilla():
         },
         "minecraft:mossy_stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Mossy Stone Bricks",
@@ -2117,7 +2130,7 @@ class Vanilla():
         },
         "minecraft:cracked_stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Cracked Stone Bricks",
@@ -2126,7 +2139,7 @@ class Vanilla():
         },
         "minecraft:chiseled_stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Chiseled Stone Bricks",
@@ -2135,7 +2148,7 @@ class Vanilla():
         },
         "minecraft:end_stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Stone Bricks",
@@ -2144,7 +2157,7 @@ class Vanilla():
         },
         "minecraft:prismarine_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Prismarine Bricks",
@@ -2153,7 +2166,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Bricks",
@@ -2162,7 +2175,7 @@ class Vanilla():
         },
         "minecraft:cracked_polished_blackstone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Cracked Polished Blackstone Bricks",
@@ -2171,7 +2184,7 @@ class Vanilla():
         },
         "minecraft:gilded_blackstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Gilded Blackstone",
@@ -2180,7 +2193,7 @@ class Vanilla():
         },
         "minecraft:chiseled_polished_blackstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Chiseled Polished Blackstone",
@@ -2189,7 +2202,7 @@ class Vanilla():
         },
         "minecraft:deepslate_tiles": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Tiles",
@@ -2198,7 +2211,7 @@ class Vanilla():
         },
         "minecraft:cracked_deepslate_tiles": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cracked Deepslate Tiles",
@@ -2207,7 +2220,7 @@ class Vanilla():
         },
         "minecraft:deepslate_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Bricks",
@@ -2216,7 +2229,7 @@ class Vanilla():
         },
         "minecraft:cracked_deepslate_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cracked Deepslate Bricks",
@@ -2225,7 +2238,7 @@ class Vanilla():
         },
         "minecraft:chiseled_deepslate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chiseled Deepslate",
@@ -2235,7 +2248,7 @@ class Vanilla():
         # Cobblestone
         "minecraft:cobblestone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cobblestone",
@@ -2244,7 +2257,7 @@ class Vanilla():
         },
         "minecraft:mossy_cobblestone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Moss Stone",
@@ -2253,7 +2266,7 @@ class Vanilla():
         },
         "minecraft:cobbled_deepslate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cobbled Deepslate",
@@ -2263,7 +2276,7 @@ class Vanilla():
         # Stone
         "minecraft:smooth_stone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Smooth Stone",
@@ -2272,7 +2285,7 @@ class Vanilla():
         },
         "minecraft:sandstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sandstone",
@@ -2281,7 +2294,7 @@ class Vanilla():
         },
         "minecraft:chiseled_sandstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Chiseled Sandstone",
@@ -2290,7 +2303,7 @@ class Vanilla():
         },
         "minecraft:cut_sandstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Cut Sandstone",
@@ -2299,7 +2312,7 @@ class Vanilla():
         },
         "minecraft:smooth_sandstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Smooth Sandstone",
@@ -2308,7 +2321,7 @@ class Vanilla():
         },
         "minecraft:red_sandstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Red Sandstone",
@@ -2317,7 +2330,7 @@ class Vanilla():
         },
         "minecraft:chiseled_red_sandstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Chiseled Red Sandstone",
@@ -2326,7 +2339,7 @@ class Vanilla():
         },
         "minecraft:cut_red_sandstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Cut Red Sandstone",
@@ -2335,7 +2348,7 @@ class Vanilla():
         },
         "minecraft:smooth_red_sandstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Smooth Red Sandstone",
@@ -2344,7 +2357,7 @@ class Vanilla():
         },
         "minecraft:coal_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Block of Coal",
@@ -2353,7 +2366,7 @@ class Vanilla():
         },
         "minecraft:dried_kelp_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dried Kelp Block",
@@ -2362,7 +2375,7 @@ class Vanilla():
         },
         "minecraft:gold_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gold Block",
@@ -2371,7 +2384,7 @@ class Vanilla():
         },
         "minecraft:iron_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Block",
@@ -2380,7 +2393,7 @@ class Vanilla():
         },
         "minecraft:copper_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Block of Copper",
@@ -2389,7 +2402,7 @@ class Vanilla():
         },
         "minecraft:exposed_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Exposed Copper",
@@ -2398,7 +2411,7 @@ class Vanilla():
         },
         "minecraft:weathered_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Weathered Copper",
@@ -2407,7 +2420,7 @@ class Vanilla():
         },
         "minecraft:oxidized_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oxidized Copper",
@@ -2416,7 +2429,7 @@ class Vanilla():
         },
         "minecraft:waxed_copper_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Block of Copper",
@@ -2425,7 +2438,7 @@ class Vanilla():
         },
         "minecraft:waxed_exposed_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Exposed Copper",
@@ -2434,7 +2447,7 @@ class Vanilla():
         },
         "minecraft:waxed_weathered_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Weathered Copper",
@@ -2443,7 +2456,7 @@ class Vanilla():
         },
         "minecraft:waxed_oxidized_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Oxidized Copper",
@@ -2452,7 +2465,7 @@ class Vanilla():
         },
         "minecraft:cut_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cut Copper",
@@ -2461,7 +2474,7 @@ class Vanilla():
         },
         "minecraft:exposed_cut_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Exposed Cut Copper",
@@ -2470,7 +2483,7 @@ class Vanilla():
         },
         "minecraft:weathered_cut_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Weathered Cut Copper",
@@ -2479,7 +2492,7 @@ class Vanilla():
         },
         "minecraft:oxidized_cut_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oxidized Cut Copper",
@@ -2488,7 +2501,7 @@ class Vanilla():
         },
         "minecraft:waxed_cut_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Cut Copper",
@@ -2497,7 +2510,7 @@ class Vanilla():
         },
         "minecraft:waxed_exposed_cut_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Exposed Cut Copper",
@@ -2506,7 +2519,7 @@ class Vanilla():
         },
         "minecraft:waxed_weathered_cut_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Weathered Cut Copper",
@@ -2515,7 +2528,7 @@ class Vanilla():
         },
         "minecraft:waxed_oxidized_cut_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Waxed Oxidized Cut Copper",
@@ -2524,7 +2537,7 @@ class Vanilla():
         },
         "minecraft:emerald_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Emerald Block",
@@ -2533,7 +2546,7 @@ class Vanilla():
         },
         "minecraft:diamond_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Block",
@@ -2542,16 +2555,16 @@ class Vanilla():
         },
         "minecraft:lapis_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
-            "display_name": "Lapis Lazuli Block",
+            "display_name": "Block of Lapis Lazuli",
             "icon_path": "icons/lapis_block.png",
             "identifier": "minecraft:lapis_block"
         },
         "minecraft:raw_iron_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Block of Raw Iron",
@@ -2560,7 +2573,7 @@ class Vanilla():
         },
         "minecraft:raw_copper_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Block of Raw Copper",
@@ -2569,7 +2582,7 @@ class Vanilla():
         },
         "minecraft:raw_gold_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Block of Raw Gold",
@@ -2578,7 +2591,7 @@ class Vanilla():
         },
         "minecraft:quartz_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Quartz Block",
@@ -2587,7 +2600,7 @@ class Vanilla():
         },
         "minecraft:quartz_pillar": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 2,
             "display_name": "Pillar Quartz Block",
@@ -2596,7 +2609,7 @@ class Vanilla():
         },
         "minecraft:chiseled_quartz_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 1,
             "display_name": "Chiseled Quartz Block",
@@ -2605,7 +2618,7 @@ class Vanilla():
         },
         "minecraft:smooth_quartz": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 3,
             "display_name": "Smooth Quartz",
@@ -2614,7 +2627,7 @@ class Vanilla():
         },
         "minecraft:prismarine": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Prismarine",
@@ -2623,7 +2636,7 @@ class Vanilla():
         },
         "minecraft:dark_prismarine": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Dark Prismarine",
@@ -2632,7 +2645,7 @@ class Vanilla():
         },
         "minecraft:slime_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Slime Block",
@@ -2641,7 +2654,7 @@ class Vanilla():
         },
         "minecraft:honey_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Honey Block",
@@ -2650,7 +2663,7 @@ class Vanilla():
         },
         "minecraft:honeycomb_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Honeycomb Block",
@@ -2659,7 +2672,7 @@ class Vanilla():
         },
         "minecraft:hay_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Hay Bale",
@@ -2668,7 +2681,7 @@ class Vanilla():
         },
         "minecraft:bone_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bone Block",
@@ -2677,7 +2690,7 @@ class Vanilla():
         },
         "minecraft:nether_brick_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Brick Block",
@@ -2686,7 +2699,7 @@ class Vanilla():
         },
         "minecraft:red_nether_brick": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Red Nether Brick",
@@ -2695,7 +2708,7 @@ class Vanilla():
         },
         "minecraft:netherite_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Block",
@@ -2704,7 +2717,7 @@ class Vanilla():
         },
         "minecraft:lodestone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lodestone",
@@ -2714,7 +2727,7 @@ class Vanilla():
         # Wool
         "minecraft:white_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Wool",
@@ -2723,7 +2736,7 @@ class Vanilla():
         },
         "minecraft:light_gray_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Wool",
@@ -2732,7 +2745,7 @@ class Vanilla():
         },
         "minecraft:gray_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Wool",
@@ -2741,7 +2754,7 @@ class Vanilla():
         },
         "minecraft:black_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Wool",
@@ -2750,7 +2763,7 @@ class Vanilla():
         },
         "minecraft:brown_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Wool",
@@ -2759,7 +2772,7 @@ class Vanilla():
         },
         "minecraft:red_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Wool",
@@ -2768,7 +2781,7 @@ class Vanilla():
         },
         "minecraft:orange_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Wool",
@@ -2777,7 +2790,7 @@ class Vanilla():
         },
         "minecraft:yellow_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Wool",
@@ -2786,7 +2799,7 @@ class Vanilla():
         },
         "minecraft:lime_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Wool",
@@ -2795,7 +2808,7 @@ class Vanilla():
         },
         "minecraft:green_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Wool",
@@ -2804,7 +2817,7 @@ class Vanilla():
         },
         "minecraft:cyan_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Wool",
@@ -2813,7 +2826,7 @@ class Vanilla():
         },
         "minecraft:light_blue_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Wool",
@@ -2822,7 +2835,7 @@ class Vanilla():
         },
         "minecraft:blue_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Wool",
@@ -2831,7 +2844,7 @@ class Vanilla():
         },
         "minecraft:purple_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Wool",
@@ -2840,7 +2853,7 @@ class Vanilla():
         },
         "minecraft:magenta_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Wool",
@@ -2849,7 +2862,7 @@ class Vanilla():
         },
         "minecraft:pink_wool": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Wool",
@@ -2858,7 +2871,7 @@ class Vanilla():
         },
         "minecraft:white_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Carpet",
@@ -2867,7 +2880,7 @@ class Vanilla():
         },
         "minecraft:light_gray_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Carpet",
@@ -2876,7 +2889,7 @@ class Vanilla():
         },
         "minecraft:gray_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Carpet",
@@ -2885,7 +2898,7 @@ class Vanilla():
         },
         "minecraft:black_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Carpet",
@@ -2894,7 +2907,7 @@ class Vanilla():
         },
         "minecraft:brown_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Carpet",
@@ -2903,7 +2916,7 @@ class Vanilla():
         },
         "minecraft:red_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Carpet",
@@ -2912,7 +2925,7 @@ class Vanilla():
         },
         "minecraft:orange_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Carpet",
@@ -2921,7 +2934,7 @@ class Vanilla():
         },
         "minecraft:yellow_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Carpet",
@@ -2930,7 +2943,7 @@ class Vanilla():
         },
         "minecraft:lime_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Carpet",
@@ -2939,7 +2952,7 @@ class Vanilla():
         },
         "minecraft:green_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Carpet",
@@ -2948,7 +2961,7 @@ class Vanilla():
         },
         "minecraft:cyan_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Carpet",
@@ -2957,7 +2970,7 @@ class Vanilla():
         },
         "minecraft:light_blue_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Carpet",
@@ -2966,7 +2979,7 @@ class Vanilla():
         },
         "minecraft:blue_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Carpet",
@@ -2975,7 +2988,7 @@ class Vanilla():
         },
         "minecraft:purple_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Carpet",
@@ -2984,7 +2997,7 @@ class Vanilla():
         },
         "minecraft:magenta_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Carpet",
@@ -2993,7 +3006,7 @@ class Vanilla():
         },
         "minecraft:pink_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Carpet",
@@ -3003,7 +3016,7 @@ class Vanilla():
         # Concrete
         "minecraft:white_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Concrete Powder",
@@ -3012,7 +3025,7 @@ class Vanilla():
         },
         "minecraft:light_gray_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Concrete Powder",
@@ -3021,7 +3034,7 @@ class Vanilla():
         },
         "minecraft:gray_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Concrete Powder",
@@ -3030,7 +3043,7 @@ class Vanilla():
         },
         "minecraft:black_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Concrete Powder",
@@ -3039,7 +3052,7 @@ class Vanilla():
         },
         "minecraft:brown_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Concrete Powder",
@@ -3048,7 +3061,7 @@ class Vanilla():
         },
         "minecraft:red_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Concrete Powder",
@@ -3057,7 +3070,7 @@ class Vanilla():
         },
         "minecraft:orange_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Concrete Powder",
@@ -3066,7 +3079,7 @@ class Vanilla():
         },
         "minecraft:yellow_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Concrete Powder",
@@ -3075,7 +3088,7 @@ class Vanilla():
         },
         "minecraft:lime_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Concrete Powder",
@@ -3084,7 +3097,7 @@ class Vanilla():
         },
         "minecraft:green_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Concrete Powder",
@@ -3093,7 +3106,7 @@ class Vanilla():
         },
         "minecraft:cyan_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Concrete Powder",
@@ -3102,7 +3115,7 @@ class Vanilla():
         },
         "minecraft:light_blue_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Concrete Powder",
@@ -3111,7 +3124,7 @@ class Vanilla():
         },
         "minecraft:blue_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Concrete Powder",
@@ -3120,7 +3133,7 @@ class Vanilla():
         },
         "minecraft:purple_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Concrete Powder",
@@ -3129,7 +3142,7 @@ class Vanilla():
         },
         "minecraft:magenta_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Concrete Powder",
@@ -3138,7 +3151,7 @@ class Vanilla():
         },
         "minecraft:pink_concrete_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Concrete Powder",
@@ -3148,7 +3161,7 @@ class Vanilla():
 
         "minecraft:white_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Concrete",
@@ -3157,7 +3170,7 @@ class Vanilla():
         },
         "minecraft:light_gray_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Concrete",
@@ -3166,7 +3179,7 @@ class Vanilla():
         },
         "minecraft:gray_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Concrete",
@@ -3175,7 +3188,7 @@ class Vanilla():
         },
         "minecraft:black_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Concrete",
@@ -3184,7 +3197,7 @@ class Vanilla():
         },
         "minecraft:brown_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Concrete",
@@ -3193,7 +3206,7 @@ class Vanilla():
         },
         "minecraft:red_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Concrete",
@@ -3202,7 +3215,7 @@ class Vanilla():
         },
         "minecraft:orange_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Concrete",
@@ -3211,7 +3224,7 @@ class Vanilla():
         },
         "minecraft:yellow_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Concrete",
@@ -3220,7 +3233,7 @@ class Vanilla():
         },
         "minecraft:lime_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Concrete",
@@ -3229,7 +3242,7 @@ class Vanilla():
         },
         "minecraft:green_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Concrete",
@@ -3238,7 +3251,7 @@ class Vanilla():
         },
         "minecraft:cyan_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Concrete",
@@ -3247,7 +3260,7 @@ class Vanilla():
         },
         "minecraft:light_blue_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Concrete",
@@ -3256,7 +3269,7 @@ class Vanilla():
         },
         "minecraft:blue_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Concrete",
@@ -3265,7 +3278,7 @@ class Vanilla():
         },
         "minecraft:purple_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Concrete",
@@ -3274,7 +3287,7 @@ class Vanilla():
         },
         "minecraft:magenta_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Concrete",
@@ -3283,7 +3296,7 @@ class Vanilla():
         },
         "minecraft:pink_concrete": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Concrete",
@@ -3293,7 +3306,7 @@ class Vanilla():
         # Terracotta
         "minecraft:clay": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Clay",
@@ -3302,7 +3315,7 @@ class Vanilla():
         },
         "minecraft:terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Terracotta",
@@ -3311,7 +3324,7 @@ class Vanilla():
         },
         "minecraft:white_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Terracotta",
@@ -3320,7 +3333,7 @@ class Vanilla():
         },
         "minecraft:light_gray_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Terracotta",
@@ -3329,7 +3342,7 @@ class Vanilla():
         },
         "minecraft:gray_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Terracotta",
@@ -3338,7 +3351,7 @@ class Vanilla():
         },
         "minecraft:black_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Terracotta",
@@ -3347,7 +3360,7 @@ class Vanilla():
         },
         "minecraft:brown_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Terracotta",
@@ -3356,7 +3369,7 @@ class Vanilla():
         },
         "minecraft:red_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Terracotta",
@@ -3365,7 +3378,7 @@ class Vanilla():
         },
         "minecraft:orange_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Terracotta",
@@ -3374,7 +3387,7 @@ class Vanilla():
         },
         "minecraft:yellow_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Terracotta",
@@ -3383,7 +3396,7 @@ class Vanilla():
         },
         "minecraft:lime_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Terracotta",
@@ -3392,7 +3405,7 @@ class Vanilla():
         },
         "minecraft:green_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Terracotta",
@@ -3401,7 +3414,7 @@ class Vanilla():
         },
         "minecraft:cyan_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Terracotta",
@@ -3410,7 +3423,7 @@ class Vanilla():
         },
         "minecraft:light_blue_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Terracotta",
@@ -3419,7 +3432,7 @@ class Vanilla():
         },
         "minecraft:blue_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Terracotta",
@@ -3428,7 +3441,7 @@ class Vanilla():
         },
         "minecraft:purple_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Terracotta",
@@ -3437,7 +3450,7 @@ class Vanilla():
         },
         "minecraft:magenta_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Terracotta",
@@ -3446,7 +3459,7 @@ class Vanilla():
         },
         "minecraft:pink_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Terracotta",
@@ -3455,7 +3468,7 @@ class Vanilla():
         },
         "minecraft:white_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Glazed Terracotta",
@@ -3464,7 +3477,7 @@ class Vanilla():
         },
         "minecraft:light_gray_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Light Gray Glazed Terracotta",
@@ -3473,7 +3486,7 @@ class Vanilla():
         },
         "minecraft:gray_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gray Glazed Terracotta",
@@ -3482,7 +3495,7 @@ class Vanilla():
         },
         "minecraft:black_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Black Glazed Terracotta",
@@ -3491,7 +3504,7 @@ class Vanilla():
         },
         "minecraft:brown_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Brown Glazed Terracotta",
@@ -3500,7 +3513,7 @@ class Vanilla():
         },
         "minecraft:red_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Red Glazed Terracotta",
@@ -3509,7 +3522,7 @@ class Vanilla():
         },
         "minecraft:orange_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Orange Glazed Terracotta",
@@ -3518,7 +3531,7 @@ class Vanilla():
         },
         "minecraft:yellow_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Yellow Glazed Terracotta",
@@ -3527,7 +3540,7 @@ class Vanilla():
         },
         "minecraft:lime_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lime Glazed Terracotta",
@@ -3536,7 +3549,7 @@ class Vanilla():
         },
         "minecraft:green_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Green Glazed Terracotta",
@@ -3545,7 +3558,7 @@ class Vanilla():
         },
         "minecraft:cyan_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cyan Glazed Terracotta",
@@ -3554,7 +3567,7 @@ class Vanilla():
         },
         "minecraft:light_blue_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Light Blue Glazed Terracotta",
@@ -3563,7 +3576,7 @@ class Vanilla():
         },
         "minecraft:blue_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blue Glazed Terracotta",
@@ -3572,7 +3585,7 @@ class Vanilla():
         },
         "minecraft:purple_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Purple Glazed Terracotta",
@@ -3581,7 +3594,7 @@ class Vanilla():
         },
         "minecraft:magenta_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Magenta Glazed Terracotta",
@@ -3590,7 +3603,7 @@ class Vanilla():
         },
         "minecraft:pink_glazed_terracotta": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pink Glazed Terracotta",
@@ -3600,7 +3613,7 @@ class Vanilla():
         #
         "minecraft:purpur_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Purpur Block",
@@ -3609,7 +3622,7 @@ class Vanilla():
         },
         "minecraft:purpur_pillar": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 2,
             "display_name": "Purpur Pillar",
@@ -3618,7 +3631,7 @@ class Vanilla():
         },
         "minecraft:packed_mud": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Packed Mud",
@@ -3627,7 +3640,7 @@ class Vanilla():
         },
         "minecraft:mud_bricks": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Mud Bricks",
@@ -3636,7 +3649,7 @@ class Vanilla():
         },
         "minecraft:nether_wart_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Wart Block",
@@ -3645,7 +3658,7 @@ class Vanilla():
         },
         "minecraft:warped_wart_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Wart Block",
@@ -3654,7 +3667,7 @@ class Vanilla():
         },
         "minecraft:shroomlight": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Shroomlight",
@@ -3663,7 +3676,7 @@ class Vanilla():
         },
         "minecraft:crimson_nylium": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Nylium",
@@ -3672,7 +3685,7 @@ class Vanilla():
         },
         "minecraft:warped_nylium": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Nylium",
@@ -3681,7 +3694,7 @@ class Vanilla():
         },
         "minecraft:basalt": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Basalt",
@@ -3690,7 +3703,7 @@ class Vanilla():
         },
         "minecraft:polished_basalt": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Basalt",
@@ -3699,7 +3712,7 @@ class Vanilla():
         },
         "minecraft:smooth_basalt": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Smooth Basalt",
@@ -3708,7 +3721,7 @@ class Vanilla():
         },
         "minecraft:soul_soil": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Soul Soil",
@@ -3717,7 +3730,7 @@ class Vanilla():
         },
         "minecraft:dirt": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dirt",
@@ -3726,7 +3739,7 @@ class Vanilla():
         },
         "minecraft:coarse_dirt": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Coarse Dirt",
@@ -3735,7 +3748,7 @@ class Vanilla():
         },
         "minecraft:farmland": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Farmland",
@@ -3744,7 +3757,7 @@ class Vanilla():
         },
         "minecraft:grass_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Grass",
@@ -3753,7 +3766,7 @@ class Vanilla():
         },
         "minecraft:grass_path": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dirt Path",
@@ -3762,7 +3775,7 @@ class Vanilla():
         },
         "minecraft:podzol": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Podzol",
@@ -3771,7 +3784,7 @@ class Vanilla():
         },
         "minecraft:mycelium": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mycelium",
@@ -3780,7 +3793,7 @@ class Vanilla():
         },
         "minecraft:mud": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mud",
@@ -3789,7 +3802,7 @@ class Vanilla():
         },
         "minecraft:stone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone",
@@ -3799,7 +3812,7 @@ class Vanilla():
         # Ores
         "minecraft:iron_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Ore",
@@ -3808,7 +3821,7 @@ class Vanilla():
         },
         "minecraft:gold_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gold Ore",
@@ -3817,7 +3830,7 @@ class Vanilla():
         },
         "minecraft:diamond_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Ore",
@@ -3826,7 +3839,7 @@ class Vanilla():
         },
         "minecraft:lapis_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lapis Lazuli Ore",
@@ -3835,7 +3848,7 @@ class Vanilla():
         },
         "minecraft:redstone_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Redstone Ore",
@@ -3844,7 +3857,7 @@ class Vanilla():
         },
         "minecraft:coal_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Coal Ore",
@@ -3853,7 +3866,7 @@ class Vanilla():
         },
         "minecraft:copper_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Copper Ore",
@@ -3862,7 +3875,7 @@ class Vanilla():
         },
         "minecraft:emerald_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Emerald Ore",
@@ -3871,7 +3884,7 @@ class Vanilla():
         },
         "minecraft:nether_quartz_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Quartz Ore",
@@ -3880,7 +3893,7 @@ class Vanilla():
         },
         "minecraft:nether_gold_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Gold Ore",
@@ -3889,7 +3902,7 @@ class Vanilla():
         },
         "minecraft:ancient_debris": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Ancient Debris",
@@ -3898,7 +3911,7 @@ class Vanilla():
         },
         "minecraft:deepslate_iron_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Iron Ore",
@@ -3907,7 +3920,7 @@ class Vanilla():
         },
         "minecraft:deepslate_gold_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Gold Ore",
@@ -3916,7 +3929,7 @@ class Vanilla():
         },
         "minecraft:deepslate_diamond_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Diamond Ore",
@@ -3925,7 +3938,7 @@ class Vanilla():
         },
         "minecraft:deepslate_lapis_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Lapis Ore",
@@ -3934,7 +3947,7 @@ class Vanilla():
         },
         "minecraft:deepslate_redstone_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Redstone Ore",
@@ -3943,7 +3956,7 @@ class Vanilla():
         },
         "minecraft:deepslate_emerald_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Emerald Ore",
@@ -3952,7 +3965,7 @@ class Vanilla():
         },
         "minecraft:deepslate_coal_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Coal Ore",
@@ -3961,7 +3974,7 @@ class Vanilla():
         },
         "minecraft:deepslate_copper_ore": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate Copper Ore",
@@ -3971,7 +3984,7 @@ class Vanilla():
         # Stone
         "minecraft:gravel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gravel",
@@ -3980,7 +3993,7 @@ class Vanilla():
         },
         "minecraft:granite": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Granite",
@@ -3989,7 +4002,7 @@ class Vanilla():
         },
         "minecraft:diorite": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Diorite",
@@ -3998,7 +4011,7 @@ class Vanilla():
         },
         "minecraft:andesite": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Andesite",
@@ -4007,7 +4020,7 @@ class Vanilla():
         },
         "minecraft:blackstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Blackstone",
@@ -4016,7 +4029,7 @@ class Vanilla():
         },
         "minecraft:deepslate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Deepslate",
@@ -4025,7 +4038,7 @@ class Vanilla():
         },
         "minecraft:polished_granite": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Polished Granite",
@@ -4034,7 +4047,7 @@ class Vanilla():
         },
         "minecraft:polished_diorite": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Polished Diorite",
@@ -4043,7 +4056,7 @@ class Vanilla():
         },
         "minecraft:polished_andesite": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Polished Andesite",
@@ -4052,7 +4065,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone",
@@ -4061,7 +4074,7 @@ class Vanilla():
         },
         "minecraft:polished_deepslate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Polished Deepslate",
@@ -4070,7 +4083,7 @@ class Vanilla():
         },
         "minecraft:sand": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sand",
@@ -4079,7 +4092,7 @@ class Vanilla():
         },
         "minecraft:red_sand": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Red Sand",
@@ -4088,7 +4101,7 @@ class Vanilla():
         },
         "minecraft:cactus": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cactus",
@@ -4098,7 +4111,7 @@ class Vanilla():
         # Log
         "minecraft:oak_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Log",
@@ -4107,7 +4120,7 @@ class Vanilla():
         },
         "minecraft:stripped_oak_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stripped Oak Log",
@@ -4116,7 +4129,7 @@ class Vanilla():
         },
         "minecraft:spruce_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Spruce Log",
@@ -4125,7 +4138,7 @@ class Vanilla():
         },
         "minecraft:stripped_spruce_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stripped Spruce Log",
@@ -4134,7 +4147,7 @@ class Vanilla():
         },
         "minecraft:birch_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Birch Log",
@@ -4143,7 +4156,7 @@ class Vanilla():
         },
         "minecraft:stripped_birch_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stripped Birch Log",
@@ -4152,7 +4165,7 @@ class Vanilla():
         },
         "minecraft:jungle_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Jungle Log",
@@ -4161,7 +4174,7 @@ class Vanilla():
         },
         "minecraft:stripped_jungle_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stripped Jungle Log",
@@ -4170,7 +4183,7 @@ class Vanilla():
         },
         "minecraft:acacia_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Log",
@@ -4179,7 +4192,7 @@ class Vanilla():
         },
         "minecraft:stripped_acacia_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stripped Acacia Log",
@@ -4188,7 +4201,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Dark Oak Log",
@@ -4197,7 +4210,7 @@ class Vanilla():
         },
         "minecraft:stripped_dark_oak_log": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stripped Dark Oak Log",
@@ -4206,7 +4219,7 @@ class Vanilla():
         },
         "minecraft:mangrove_log": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Log",
@@ -4215,7 +4228,7 @@ class Vanilla():
         },
         "minecraft:stripped_mangrove_log": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stripped Mangrove Log",
@@ -4224,7 +4237,7 @@ class Vanilla():
         },
         "minecraft:crimson_stem": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Stem",
@@ -4233,7 +4246,7 @@ class Vanilla():
         },
         "minecraft:stripped_crimson_stem": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Stripped Crimson Stem",
@@ -4242,7 +4255,7 @@ class Vanilla():
         },
         "minecraft:warped_stem": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Stem",
@@ -4251,7 +4264,7 @@ class Vanilla():
         },
         "minecraft:stripped_warped_stem": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Stripped Warped Stem",
@@ -4260,7 +4273,7 @@ class Vanilla():
         },
         "minecraft:oak_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Wood",
@@ -4269,7 +4282,7 @@ class Vanilla():
         },
         "minecraft:stripped_oak_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Stripped Oak Wood",
@@ -4278,7 +4291,7 @@ class Vanilla():
         },
         "minecraft:spruce_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Spruce Wood",
@@ -4287,7 +4300,7 @@ class Vanilla():
         },
         "minecraft:stripped_spruce_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Stripped Spruce Wood",
@@ -4296,7 +4309,7 @@ class Vanilla():
         },
         "minecraft:birch_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Birch Wood",
@@ -4305,7 +4318,7 @@ class Vanilla():
         },
         "minecraft:stripped_birch_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Stripped Birch Wood",
@@ -4314,7 +4327,7 @@ class Vanilla():
         },
         "minecraft:jungle_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Jungle Wood",
@@ -4323,7 +4336,7 @@ class Vanilla():
         },
         "minecraft:stripped_jungle_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Stripped Jungle Wood",
@@ -4332,7 +4345,7 @@ class Vanilla():
         },
         "minecraft:acacia_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Acacia Wood",
@@ -4341,7 +4354,7 @@ class Vanilla():
         },
         "minecraft:stripped_acacia_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Stripped Acacia Wood",
@@ -4350,7 +4363,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Dark Oak Wood",
@@ -4359,7 +4372,7 @@ class Vanilla():
         },
         "minecraft:mangrove_wood": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Wood",
@@ -4368,16 +4381,16 @@ class Vanilla():
         },
         "minecraft:stripped_mangrove_wood": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
-            "display_name": "Stripped Mangrove Wood",
+            "display_name": "Stripped Mangrove",
             "icon_path": "icons/stripped_mangrove_wood.png",
             "identifier": "minecraft:stripped_mangrove_wood"
         },
         "minecraft:stripped_dark_oak_wood": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Stripped Dark Oak Wood",
@@ -4386,7 +4399,7 @@ class Vanilla():
         },
         "minecraft:crimson_hyphae": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Hyphae",
@@ -4395,7 +4408,7 @@ class Vanilla():
         },
         "minecraft:stripped_crimson_hyphae": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Stripped Crimson Hyphae",
@@ -4404,7 +4417,7 @@ class Vanilla():
         },
         "minecraft:warped_hyphae": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Hyphae",
@@ -4413,7 +4426,7 @@ class Vanilla():
         },
         "minecraft:stripped_warped_hyphae": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Stripped Warped Hyphae",
@@ -4423,7 +4436,7 @@ class Vanilla():
         # leaves
         "minecraft:oak_leaves": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Leaves",
@@ -4432,7 +4445,7 @@ class Vanilla():
         },
         "minecraft:spruce_leaves": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Spruce Leaves",
@@ -4441,7 +4454,7 @@ class Vanilla():
         },
         "minecraft:birch_leaves": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Birch Leaves",
@@ -4450,7 +4463,7 @@ class Vanilla():
         },
         "minecraft:jungle_leaves": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Jungle Leaves",
@@ -4459,7 +4472,7 @@ class Vanilla():
         },
         "minecraft:acacia_leaves": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Leaves",
@@ -4468,7 +4481,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_leaves": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Dark Oak Leaves",
@@ -4477,7 +4490,7 @@ class Vanilla():
         },
         "minecraft:mangrove_leaves": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Leaves",
@@ -4486,7 +4499,7 @@ class Vanilla():
         },
         "minecraft:azalea_leaves": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Azalea Leaves",
@@ -4495,17 +4508,17 @@ class Vanilla():
         },
         "minecraft:flowering_azalea_leaves": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
-            "display_name": "Flowered Azalea Leaves",
+            "display_name": "Flowering Azalea Leaves",
             "icon_path": "icons/azalea_leaves_flowered.png",
             "identifier": "minecraft:azalea_leaves_flowered"
         },
         # Saplings
         "minecraft:oak_sapling": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Sapling",
@@ -4514,7 +4527,7 @@ class Vanilla():
         },
         "minecraft:spruce_sapling": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Spruce Sapling",
@@ -4523,7 +4536,7 @@ class Vanilla():
         },
         "minecraft:birch_sapling": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Birch Sapling",
@@ -4532,7 +4545,7 @@ class Vanilla():
         },
         "minecraft:jungle_sapling": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Jungle Sapling",
@@ -4541,7 +4554,7 @@ class Vanilla():
         },
         "minecraft:acacia_sapling": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Acacia Sapling",
@@ -4550,7 +4563,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_sapling": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Dark Oak Sapling",
@@ -4559,7 +4572,7 @@ class Vanilla():
         },
         "minecraft:mangrove_propagule": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Mangrove Propagule",
@@ -4569,7 +4582,7 @@ class Vanilla():
         #
         "minecraft:bee_nest": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bee Nest",
@@ -4579,7 +4592,7 @@ class Vanilla():
         # Plants
         "minecraft:wheat_seeds": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wheat Seeds",
@@ -4588,7 +4601,7 @@ class Vanilla():
         },
         "minecraft:pumpkin_seeds": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pumpkin Seeds",
@@ -4597,7 +4610,7 @@ class Vanilla():
         },
         "minecraft:melon_seeds": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Melon Seeds",
@@ -4606,7 +4619,7 @@ class Vanilla():
         },
         "minecraft:beetroot_seeds": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Beetroot Seeds",
@@ -4615,7 +4628,7 @@ class Vanilla():
         },
         "minecraft:wheat": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wheat",
@@ -4624,7 +4637,7 @@ class Vanilla():
         },
         "minecraft:beetroot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Beetroot",
@@ -4633,7 +4646,7 @@ class Vanilla():
         },
         "minecraft:potato": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Potato",
@@ -4642,7 +4655,7 @@ class Vanilla():
         },
         "minecraft:poisonous_potato": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Poisonous Potato",
@@ -4651,7 +4664,7 @@ class Vanilla():
         },
         "minecraft:carrot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Carrot",
@@ -4660,7 +4673,7 @@ class Vanilla():
         },
         "minecraft:golden_carrot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Carrot",
@@ -4669,7 +4682,7 @@ class Vanilla():
         },
         "minecraft:apple": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Apple",
@@ -4678,7 +4691,7 @@ class Vanilla():
         },
         "minecraft:golden_apple": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Apple",
@@ -4687,7 +4700,7 @@ class Vanilla():
         },
         "minecraft:enchanted_golden_apple": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Enchanted Golden Apple",
@@ -4696,7 +4709,7 @@ class Vanilla():
         },
         "minecraft:melon": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Melon",
@@ -4705,7 +4718,7 @@ class Vanilla():
         },
         "minecraft:melon_slice": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Melon",
@@ -4714,7 +4727,7 @@ class Vanilla():
         },
         "minecraft:glistering_melon_slice": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glistering Melon Slice",
@@ -4723,7 +4736,7 @@ class Vanilla():
         },
         "minecraft:sweet_berries": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sweet Berries",
@@ -4732,7 +4745,7 @@ class Vanilla():
         },
         "minecraft:glow_berries": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glow Berries",
@@ -4741,7 +4754,7 @@ class Vanilla():
         },
         "minecraft:pumpkin": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pumpkin",
@@ -4750,7 +4763,7 @@ class Vanilla():
         },
         "minecraft:carved_pumpkin": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Carved Pumpkin",
@@ -4759,7 +4772,7 @@ class Vanilla():
         },
         "minecraft:jack_o_lantern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jack o'Lantern",
@@ -4768,7 +4781,7 @@ class Vanilla():
         },
         "minecraft:honeycomb": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Honeycomb",
@@ -4777,7 +4790,7 @@ class Vanilla():
         },
         "minecraft:fern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Fern",
@@ -4786,7 +4799,7 @@ class Vanilla():
         },
         "minecraft:large_fern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Large Fern",
@@ -4795,7 +4808,7 @@ class Vanilla():
         },
         "minecraft:grass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Grass",
@@ -4804,7 +4817,7 @@ class Vanilla():
         },
         "minecraft:tall_grass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Double Tallgrass",
@@ -4813,7 +4826,7 @@ class Vanilla():
         },
         "minecraft:nether_sprouts": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Sprouts",
@@ -4822,7 +4835,7 @@ class Vanilla():
         },
         "minecraft:fire_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Fire Coral",
@@ -4831,7 +4844,7 @@ class Vanilla():
         },
         "minecraft:brain_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Brain Coral",
@@ -4840,7 +4853,7 @@ class Vanilla():
         },
         "minecraft:bubble_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Bubble Coral",
@@ -4849,7 +4862,7 @@ class Vanilla():
         },
         "minecraft:tube_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tube Coral",
@@ -4858,7 +4871,7 @@ class Vanilla():
         },
         "minecraft:horn_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Horn Coral",
@@ -4867,7 +4880,7 @@ class Vanilla():
         },
         "minecraft:dead_fire_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Dead Fire Coral",
@@ -4876,7 +4889,7 @@ class Vanilla():
         },
         "minecraft:dead_brain_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Dead Brain Coral",
@@ -4885,7 +4898,7 @@ class Vanilla():
         },
         "minecraft:dead_bubble_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Dead Bubble Coral",
@@ -4894,7 +4907,7 @@ class Vanilla():
         },
         "minecraft:dead_tube_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Dead Tube Coral",
@@ -4903,7 +4916,7 @@ class Vanilla():
         },
         "minecraft:dead_horn_coral": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Dead Horn Coral",
@@ -4912,7 +4925,7 @@ class Vanilla():
         },
         "minecraft:fire_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Fire Coral Fan",
@@ -4921,7 +4934,7 @@ class Vanilla():
         },
         "minecraft:brain_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Brain Coral Fan",
@@ -4930,7 +4943,7 @@ class Vanilla():
         },
         "minecraft:bubble_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Bubble Coral Fan",
@@ -4939,7 +4952,7 @@ class Vanilla():
         },
         "minecraft:tube_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tube Coral Fan",
@@ -4948,7 +4961,7 @@ class Vanilla():
         },
         "minecraft:horn_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Horn Coral Fan",
@@ -4957,7 +4970,7 @@ class Vanilla():
         },
         "minecraft:dead_fire_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Dead Fire Coral Fan",
@@ -4966,7 +4979,7 @@ class Vanilla():
         },
         "minecraft:dead_brain_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Dead Brain Coral Fan",
@@ -4975,7 +4988,7 @@ class Vanilla():
         },
         "minecraft:dead_bubble_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Dead Bubble Coral Fan",
@@ -4984,7 +4997,7 @@ class Vanilla():
         },
         "minecraft:dead_tube_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dead Tube Coral Fan",
@@ -4993,7 +5006,7 @@ class Vanilla():
         },
         "minecraft:dead_horn_coral_fan": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Dead Horn Coral Fan",
@@ -5002,7 +5015,7 @@ class Vanilla():
         },
         "minecraft:kelp": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Kelp",
@@ -5011,7 +5024,7 @@ class Vanilla():
         },
         "minecraft:seagrass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sea Grass",
@@ -5020,7 +5033,7 @@ class Vanilla():
         },
         "minecraft:crimson_roots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Roots",
@@ -5029,7 +5042,7 @@ class Vanilla():
         },
         "minecraft:warped_roots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Roots",
@@ -5038,7 +5051,7 @@ class Vanilla():
         },
         "minecraft:dandelion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dandelion",
@@ -5047,7 +5060,7 @@ class Vanilla():
         },
         "minecraft:poppy": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Poppy",
@@ -5056,7 +5069,7 @@ class Vanilla():
         },
         "minecraft:blue_orchid": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Blue Orchid",
@@ -5065,7 +5078,7 @@ class Vanilla():
         },
         "minecraft:allium": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Allium",
@@ -5074,7 +5087,7 @@ class Vanilla():
         },
         "minecraft:azure_bluet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Azure Bluet",
@@ -5083,7 +5096,7 @@ class Vanilla():
         },
         "minecraft:red_tulip": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Red Tulip",
@@ -5092,7 +5105,7 @@ class Vanilla():
         },
         "minecraft:orange_tulip": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Orange Tulip",
@@ -5101,7 +5114,7 @@ class Vanilla():
         },
         "minecraft:white_tulip": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "White Tulip",
@@ -5110,7 +5123,7 @@ class Vanilla():
         },
         "minecraft:pink_tulip": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Pink Tulip",
@@ -5119,7 +5132,7 @@ class Vanilla():
         },
         "minecraft:oxeye_daisy": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Oxeye Daisy",
@@ -5128,7 +5141,7 @@ class Vanilla():
         },
         "minecraft:cornflower": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cornflower",
@@ -5137,7 +5150,7 @@ class Vanilla():
         },
         "minecraft:lily_of_the_valley": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Lily of the Valley",
@@ -5146,7 +5159,7 @@ class Vanilla():
         },
         "minecraft:sunflower": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sunflower",
@@ -5155,7 +5168,7 @@ class Vanilla():
         },
         "minecraft:lilac": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Lilac",
@@ -5164,7 +5177,7 @@ class Vanilla():
         },
         "minecraft:rose_bush": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Rose Bush",
@@ -5173,7 +5186,7 @@ class Vanilla():
         },
         "minecraft:peony": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Peony",
@@ -5182,7 +5195,7 @@ class Vanilla():
         },
         "minecraft:wither_rose": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wither Rose",
@@ -5192,7 +5205,7 @@ class Vanilla():
         # Dyes
         "minecraft:white_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Dye",
@@ -5201,7 +5214,7 @@ class Vanilla():
         },
         "minecraft:light_gray_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Light Gray Dye",
@@ -5210,7 +5223,7 @@ class Vanilla():
         },
         "minecraft:gray_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gray Dye",
@@ -5219,7 +5232,7 @@ class Vanilla():
         },
         "minecraft:brown_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Brown Dye",
@@ -5228,7 +5241,7 @@ class Vanilla():
         },
         "minecraft:black_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Black Dye",
@@ -5237,7 +5250,7 @@ class Vanilla():
         },
         "minecraft:red_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Red Dye",
@@ -5246,7 +5259,7 @@ class Vanilla():
         },
         "minecraft:orange_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Orange Dye",
@@ -5255,7 +5268,7 @@ class Vanilla():
         },
         "minecraft:yellow_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Yellow Dye",
@@ -5264,7 +5277,7 @@ class Vanilla():
         },
         "minecraft:lime_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lime Dye",
@@ -5273,7 +5286,7 @@ class Vanilla():
         },
         "minecraft:green_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Green Dye",
@@ -5282,7 +5295,7 @@ class Vanilla():
         },
         "minecraft:cyan_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cyan Dye",
@@ -5291,7 +5304,7 @@ class Vanilla():
         },
         "minecraft:light_blue_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Light Blue Dye",
@@ -5300,7 +5313,7 @@ class Vanilla():
         },
         "minecraft:blue_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blue Dye",
@@ -5309,7 +5322,7 @@ class Vanilla():
         },
         "minecraft:purple_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Purple Dye",
@@ -5318,7 +5331,7 @@ class Vanilla():
         },
         "minecraft:magenta_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Magenta Dye",
@@ -5327,7 +5340,7 @@ class Vanilla():
         },
         "minecraft:pink_dye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pink Dye",
@@ -5336,7 +5349,7 @@ class Vanilla():
         },
         "minecraft:ink_sac": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ink Sack",
@@ -5345,7 +5358,7 @@ class Vanilla():
         },
         "minecraft:glow_ink_sac": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glow Ink Sac",
@@ -5354,7 +5367,7 @@ class Vanilla():
         },
         "minecraft:cocoa_beans": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cocoa Beans",
@@ -5363,7 +5376,7 @@ class Vanilla():
         },
         "minecraft:lapis_lazuli": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lapis Lazuli",
@@ -5372,7 +5385,7 @@ class Vanilla():
         },
         "minecraft:bone_meal": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bone Meal",
@@ -5382,7 +5395,7 @@ class Vanilla():
         #
         "minecraft:vine": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Vines",
@@ -5391,7 +5404,7 @@ class Vanilla():
         },
         "minecraft:weeping_vines": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Weeping Vines",
@@ -5400,7 +5413,7 @@ class Vanilla():
         },
         "minecraft:twisting_vines": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Twisting Vines",
@@ -5409,7 +5422,7 @@ class Vanilla():
         },
         "minecraft:lily_pad": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lily Pad",
@@ -5418,7 +5431,7 @@ class Vanilla():
         },
         "minecraft:dead_bush": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dead Bush",
@@ -5427,7 +5440,7 @@ class Vanilla():
         },
         "minecraft:bamboo": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bamboo",
@@ -5437,7 +5450,7 @@ class Vanilla():
         #
         "minecraft:snow_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Snow Block",
@@ -5446,7 +5459,7 @@ class Vanilla():
         },
         "minecraft:ice": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ice",
@@ -5455,7 +5468,7 @@ class Vanilla():
         },
         "minecraft:packed_ice": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Packed Ice",
@@ -5464,7 +5477,7 @@ class Vanilla():
         },
         "minecraft:blue_ice": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blue Ice",
@@ -5473,7 +5486,7 @@ class Vanilla():
         },
         "minecraft:snow_layer": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Top Snow",
@@ -5482,7 +5495,7 @@ class Vanilla():
         },
         "minecraft:pointed_dripstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pointed Dripstone",
@@ -5491,7 +5504,7 @@ class Vanilla():
         },
         "minecraft:dripstone_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dripstone Block",
@@ -5500,7 +5513,7 @@ class Vanilla():
         },
         "minecraft:moss_carpet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Moss Carpet",
@@ -5509,7 +5522,7 @@ class Vanilla():
         },
         "minecraft:moss_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Moss Block",
@@ -5518,7 +5531,7 @@ class Vanilla():
         },
         "minecraft:rooted_dirt": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Rooted Dirt",
@@ -5527,7 +5540,7 @@ class Vanilla():
         },
         "minecraft:hanging_roots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Hanging Roots",
@@ -5536,7 +5549,7 @@ class Vanilla():
         },
         "minecraft:mangrove_roots": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Roots",
@@ -5545,7 +5558,7 @@ class Vanilla():
         },
         "minecraft:muddy_mangrove_roots": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Muddy Mangrove Roots",
@@ -5554,7 +5567,7 @@ class Vanilla():
         },
         "minecraft:big_dripleaf": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Big Dripleaf",
@@ -5563,7 +5576,7 @@ class Vanilla():
         },
         "minecraft:small_dripleaf": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Small Dripleaf",
@@ -5572,7 +5585,7 @@ class Vanilla():
         },
         "minecraft:spore_blossom": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spore Blossom",
@@ -5581,7 +5594,7 @@ class Vanilla():
         },
         "minecraft:azalea": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Azalea",
@@ -5590,7 +5603,7 @@ class Vanilla():
         },
         "minecraft:flowering_azalea": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Flowering Azalea",
@@ -5599,7 +5612,7 @@ class Vanilla():
         },
         "minecraft:glow_lichen": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glow Lichen",
@@ -5608,7 +5621,7 @@ class Vanilla():
         },
         "minecraft:amethyst_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Block of Amethyst",
@@ -5617,7 +5630,7 @@ class Vanilla():
         },
         "minecraft:budding_amethyst": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Budding Amethyst",
@@ -5626,7 +5639,7 @@ class Vanilla():
         },
         "minecraft:amethyst_cluster": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Amethyst Cluster",
@@ -5635,7 +5648,7 @@ class Vanilla():
         },
         "minecraft:large_amethyst_bud": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Large Amethyst Bud",
@@ -5644,7 +5657,7 @@ class Vanilla():
         },
         "minecraft:medium_amethyst_bud": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Medium Amethyst Bud",
@@ -5653,7 +5666,7 @@ class Vanilla():
         },
         "minecraft:small_amethyst_bud": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Small Amethyst Bud",
@@ -5662,7 +5675,7 @@ class Vanilla():
         },
         "minecraft:tuff": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tuff",
@@ -5671,7 +5684,7 @@ class Vanilla():
         },
         "minecraft:calcite": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Calcite",
@@ -5681,7 +5694,7 @@ class Vanilla():
         # Food
         "minecraft:chicken": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Raw Chicken",
@@ -5690,7 +5703,7 @@ class Vanilla():
         },
         "minecraft:porkchop": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Raw Porkchop",
@@ -5699,7 +5712,7 @@ class Vanilla():
         },
         "minecraft:beef": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Raw Beef",
@@ -5708,7 +5721,7 @@ class Vanilla():
         },
         "minecraft:mutton": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Raw Mutton",
@@ -5717,7 +5730,7 @@ class Vanilla():
         },
         "minecraft:rabbit": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Raw Rabbit",
@@ -5726,7 +5739,7 @@ class Vanilla():
         },
         "minecraft:cod": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cod",
@@ -5735,7 +5748,7 @@ class Vanilla():
         },
         "minecraft:salmon": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Salmon",
@@ -5744,7 +5757,7 @@ class Vanilla():
         },
         "minecraft:tropical_fish": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tropical Fish",
@@ -5753,7 +5766,7 @@ class Vanilla():
         },
         "minecraft:pufferfish": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pufferfish",
@@ -5762,7 +5775,7 @@ class Vanilla():
         },
         "minecraft:brown_mushroom": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Brown Mushroom",
@@ -5771,7 +5784,7 @@ class Vanilla():
         },
         "minecraft:red_mushroom": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Red Mushroom",
@@ -5780,7 +5793,7 @@ class Vanilla():
         },
         "minecraft:crimson_fungus": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Fungus",
@@ -5789,7 +5802,7 @@ class Vanilla():
         },
         "minecraft:warped_fungus": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Fungus",
@@ -5798,7 +5811,7 @@ class Vanilla():
         },
         "minecraft:brown_mushroom_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Brown Mushroom Block",
@@ -5807,7 +5820,7 @@ class Vanilla():
         },
         "minecraft:red_mushroom_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Mushroom Block",
@@ -5816,7 +5829,7 @@ class Vanilla():
         },
         "minecraft:mushroom_stem": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Mushroom Stem",
@@ -5825,7 +5838,7 @@ class Vanilla():
         },
         "minecraft:mushroom": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mushroom",
@@ -5834,7 +5847,7 @@ class Vanilla():
         },
         "minecraft:egg": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Egg",
@@ -5843,7 +5856,7 @@ class Vanilla():
         },
         "minecraft:sugar_cane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sugar Canes",
@@ -5852,7 +5865,7 @@ class Vanilla():
         },
         "minecraft:sugar": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sugar",
@@ -5861,7 +5874,7 @@ class Vanilla():
         },
         "minecraft:rotten_flesh": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Rotten Flesh",
@@ -5870,7 +5883,7 @@ class Vanilla():
         },
         "minecraft:bone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bone",
@@ -5879,7 +5892,7 @@ class Vanilla():
         },
         "minecraft:cobweb": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cobweb",
@@ -5888,7 +5901,7 @@ class Vanilla():
         },
         "minecraft:spider_eye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spider Eye",
@@ -5897,7 +5910,7 @@ class Vanilla():
         },
         "minecraft:spawner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Monster Spawner",
@@ -5906,7 +5919,7 @@ class Vanilla():
         },
         "minecraft:infested_stone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Infested Stone",
@@ -5915,7 +5928,7 @@ class Vanilla():
         },
         "minecraft:infested_cobblestone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Infested Cobblestone",
@@ -5924,7 +5937,7 @@ class Vanilla():
         },
         "minecraft:infested_stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Infested Stone Brick",
@@ -5933,7 +5946,7 @@ class Vanilla():
         },
         "minecraft:infested_mossy_stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Infested Mossy Stone Brick",
@@ -5942,7 +5955,7 @@ class Vanilla():
         },
         "minecraft:infested_cracked_stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Infested Cracked Stone Brick",
@@ -5951,7 +5964,7 @@ class Vanilla():
         },
         "minecraft:infested_chiseled_stone_bricks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Infested Chiseled Stone Brick",
@@ -5960,7 +5973,7 @@ class Vanilla():
         },
         "minecraft:infested_deepslate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Infested Deepslate",
@@ -5969,7 +5982,7 @@ class Vanilla():
         },
         "minecraft:dragon_egg": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Dragon Egg",
@@ -5978,7 +5991,7 @@ class Vanilla():
         },
         "minecraft:turtle_egg": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sea Turtle Egg",
@@ -5987,7 +6000,7 @@ class Vanilla():
         },
         "minecraft:frog_spawn": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Frogspawn",
@@ -5996,7 +6009,7 @@ class Vanilla():
         },
         "minecraft:pearlescent_froglight": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pearlescent Froglight",
@@ -6005,7 +6018,7 @@ class Vanilla():
         },
         "minecraft:verdant_froglight": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Verdant Froglight",
@@ -6014,7 +6027,7 @@ class Vanilla():
         },
         "minecraft:ochre_froglight": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ochre Froglight",
@@ -6024,7 +6037,7 @@ class Vanilla():
         # Spawn Eggs
         "minecraft:chicken_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chicken Spawn Egg",
@@ -6033,7 +6046,7 @@ class Vanilla():
         },
         "minecraft:bee_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bee Spawn Egg",
@@ -6042,7 +6055,7 @@ class Vanilla():
         },
         "minecraft:cow_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cow Spawn Egg",
@@ -6051,7 +6064,7 @@ class Vanilla():
         },
         "minecraft:pig_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pig Spawn Egg",
@@ -6060,7 +6073,7 @@ class Vanilla():
         },
         "minecraft:sheep_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sheep Spawn Egg",
@@ -6069,7 +6082,7 @@ class Vanilla():
         },
         "minecraft:wolf_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wolf Spawn Egg",
@@ -6078,7 +6091,7 @@ class Vanilla():
         },
         "minecraft:polar_bear_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Polar Bear Spawn Egg",
@@ -6087,7 +6100,7 @@ class Vanilla():
         },
         "minecraft:ocelot_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ocelot Spawn Egg",
@@ -6096,7 +6109,7 @@ class Vanilla():
         },
         "minecraft:cat_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cat Spawn Egg",
@@ -6105,7 +6118,7 @@ class Vanilla():
         },
         "minecraft:mooshroom_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mooshroom Spawn Egg",
@@ -6114,7 +6127,7 @@ class Vanilla():
         },
         "minecraft:bat_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bat Spawn Egg",
@@ -6123,7 +6136,7 @@ class Vanilla():
         },
         "minecraft:parrot_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Parrot Spawn Egg",
@@ -6132,7 +6145,7 @@ class Vanilla():
         },
         "minecraft:rabbit_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Rabbit Spawn Egg",
@@ -6141,7 +6154,7 @@ class Vanilla():
         },
         "minecraft:llama_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Llama Spawn Egg",
@@ -6150,7 +6163,7 @@ class Vanilla():
         },
         "minecraft:horse_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Horse Spawn Egg",
@@ -6159,7 +6172,7 @@ class Vanilla():
         },
         "minecraft:donkey_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Donkey Spawn Egg",
@@ -6168,7 +6181,7 @@ class Vanilla():
         },
         "minecraft:mule_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mule Spawn Egg",
@@ -6177,7 +6190,7 @@ class Vanilla():
         },
         "minecraft:skeleton_horse_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Skeleton Horse Spawn Egg",
@@ -6186,7 +6199,7 @@ class Vanilla():
         },
         "minecraft:zombie_horse_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Zombie Horse Spawn Egg",
@@ -6195,7 +6208,7 @@ class Vanilla():
         },
         "minecraft:tropical_fish_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tropical Fish Spawn Egg",
@@ -6204,7 +6217,7 @@ class Vanilla():
         },
         "minecraft:cod_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cod Spawn Egg",
@@ -6213,7 +6226,7 @@ class Vanilla():
         },
         "minecraft:pufferfish_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pufferfish Spawn Egg",
@@ -6222,7 +6235,7 @@ class Vanilla():
         },
         "minecraft:salmon_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Salmon Spawn Egg",
@@ -6231,7 +6244,7 @@ class Vanilla():
         },
         "minecraft:dolphin_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dolphin Spawn Egg",
@@ -6240,7 +6253,7 @@ class Vanilla():
         },
         "minecraft:turtle_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Turtle Spawn Egg",
@@ -6249,7 +6262,7 @@ class Vanilla():
         },
         "minecraft:panda_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Panda Spawn Egg",
@@ -6258,7 +6271,7 @@ class Vanilla():
         },
         "minecraft:fox_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Fox Spawn Egg",
@@ -6267,7 +6280,7 @@ class Vanilla():
         },
         "minecraft:creeper_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Creeper Spawn Egg",
@@ -6276,7 +6289,7 @@ class Vanilla():
         },
         "minecraft:enderman_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Enderman Spawn Egg",
@@ -6285,7 +6298,7 @@ class Vanilla():
         },
         "minecraft:silverfish_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Silverfish Spawn Egg",
@@ -6294,7 +6307,7 @@ class Vanilla():
         },
         "minecraft:skeleton_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Skeleton Spawn Egg",
@@ -6303,7 +6316,7 @@ class Vanilla():
         },
         "minecraft:wither_skeleton_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wither Skeleton Spawn Egg",
@@ -6312,7 +6325,7 @@ class Vanilla():
         },
         "minecraft:stray_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stray Spawn Egg",
@@ -6321,7 +6334,7 @@ class Vanilla():
         },
         "minecraft:slime_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Slime Spawn Egg",
@@ -6330,7 +6343,7 @@ class Vanilla():
         },
         "minecraft:spider_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spider Spawn Egg",
@@ -6339,7 +6352,7 @@ class Vanilla():
         },
         "minecraft:zombie_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Zombie Spawn Egg",
@@ -6348,7 +6361,7 @@ class Vanilla():
         },
         "minecraft:zombified_piglin_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Zombified Piglin Spawn Egg",
@@ -6357,7 +6370,7 @@ class Vanilla():
         },
         "minecraft:husk_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Husk Spawn Egg",
@@ -6366,7 +6379,7 @@ class Vanilla():
         },
         "minecraft:drowned_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Drowned Spawn Egg",
@@ -6375,7 +6388,7 @@ class Vanilla():
         },
         "minecraft:squid_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Squid Spawn Egg",
@@ -6384,7 +6397,7 @@ class Vanilla():
         },
         "minecraft:glow_squid_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glow Squid Spawn Egg",
@@ -6393,7 +6406,7 @@ class Vanilla():
         },
         "minecraft:cave_spider_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cave Spider Spawn Egg",
@@ -6402,7 +6415,7 @@ class Vanilla():
         },
         "minecraft:witch_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Witch Spawn Egg",
@@ -6411,7 +6424,7 @@ class Vanilla():
         },
         "minecraft:guardian_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Guardian Spawn Egg",
@@ -6420,7 +6433,7 @@ class Vanilla():
         },
         "minecraft:elder_guardian_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Elder Guardian Spawn Egg",
@@ -6429,7 +6442,7 @@ class Vanilla():
         },
         "minecraft:endermite_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Endermite Spawn Egg",
@@ -6438,7 +6451,7 @@ class Vanilla():
         },
         "minecraft:magma_cube_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Magma Cube Spawn Egg",
@@ -6447,7 +6460,7 @@ class Vanilla():
         },
         "minecraft:strider_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Strider Spawn Egg",
@@ -6456,7 +6469,7 @@ class Vanilla():
         },
         "minecraft:hoglin_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Hoglin Spawn Egg",
@@ -6465,7 +6478,7 @@ class Vanilla():
         },
         "minecraft:piglin_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Piglin Spawn Egg",
@@ -6474,7 +6487,7 @@ class Vanilla():
         },
         "minecraft:zoglin_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Zoglin Spawn Egg",
@@ -6483,7 +6496,7 @@ class Vanilla():
         },
         "minecraft:piglin_brute_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Piglin Brute Spawn Egg",
@@ -6492,7 +6505,7 @@ class Vanilla():
         },
         "minecraft:goat_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Goat Spawn Egg",
@@ -6501,7 +6514,7 @@ class Vanilla():
         },
         "minecraft:axolotl_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Axolotl Spawn Egg",
@@ -6510,7 +6523,7 @@ class Vanilla():
         },
         "minecraft:warden_spawn_egg": {
             "creative": True,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Warden Spawn Egg",
@@ -6519,7 +6532,7 @@ class Vanilla():
         },
         "minecraft:allay_spawn_egg": {
             "creative": True,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Allay Spawn Egg",
@@ -6528,7 +6541,7 @@ class Vanilla():
         },
         "minecraft:frog_spawn_egg": {
             "creative": True,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Frog Spawn Egg",
@@ -6537,7 +6550,7 @@ class Vanilla():
         },
         "minecraft:tadpole_spawn_egg": {
             "creative": True,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tadpole Spawn Egg",
@@ -6546,7 +6559,7 @@ class Vanilla():
         },
         "minecraft:ghast_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ghast Spawn Egg",
@@ -6555,7 +6568,7 @@ class Vanilla():
         },
         "minecraft:blaze_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blaze Spawn Egg",
@@ -6564,7 +6577,7 @@ class Vanilla():
         },
         "minecraft:shulker_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Shulker Spawn Egg",
@@ -6573,7 +6586,7 @@ class Vanilla():
         },
         "minecraft:vindicator_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Vindicator Spawn Egg",
@@ -6582,7 +6595,7 @@ class Vanilla():
         },
         "minecraft:evoker_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Evoker Spawn Egg",
@@ -6591,7 +6604,7 @@ class Vanilla():
         },
         "minecraft:vex_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Vex Spawn Egg",
@@ -6600,7 +6613,7 @@ class Vanilla():
         },
         "minecraft:villager_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Villager Spawn Egg",
@@ -6609,7 +6622,7 @@ class Vanilla():
         },
         "minecraft:wandering_trader_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wandering Trader Spawn Egg",
@@ -6618,7 +6631,7 @@ class Vanilla():
         },
         "minecraft:zombie_villager_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Zombie Villager Spawn Egg",
@@ -6627,7 +6640,7 @@ class Vanilla():
         },
         "minecraft:phantom_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Phantom Spawn Egg",
@@ -6636,7 +6649,7 @@ class Vanilla():
         },
         "minecraft:pillager_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pillager Spawn Egg",
@@ -6645,7 +6658,7 @@ class Vanilla():
         },
         "minecraft:ravager_spawn_egg": {
             "creative": True,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ravager Spawn Egg",
@@ -6655,7 +6668,7 @@ class Vanilla():
         # Blocks
         "minecraft:obsidian": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Obsidian",
@@ -6664,7 +6677,7 @@ class Vanilla():
         },
         "minecraft:crying_obsidian": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crying Obsidian",
@@ -6673,7 +6686,7 @@ class Vanilla():
         },
         "minecraft:bedrock": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bedrock",
@@ -6682,7 +6695,7 @@ class Vanilla():
         },
         "minecraft:soul_sand": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Soul Sand",
@@ -6691,7 +6704,7 @@ class Vanilla():
         },
         "minecraft:netherrack": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherrack",
@@ -6700,7 +6713,7 @@ class Vanilla():
         },
         "minecraft:magma_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Magma Block",
@@ -6709,7 +6722,7 @@ class Vanilla():
         },
         "minecraft:nether_wart": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Wart",
@@ -6718,7 +6731,7 @@ class Vanilla():
         },
         "minecraft:end_stone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Stone",
@@ -6727,7 +6740,7 @@ class Vanilla():
         },
         "minecraft:chorus_flower": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Chorus Flower",
@@ -6736,7 +6749,7 @@ class Vanilla():
         },
         "minecraft:chorus_plant": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Chorus Plant",
@@ -6745,7 +6758,7 @@ class Vanilla():
         },
         "minecraft:chorus_fruit": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Chorus Fruit",
@@ -6754,7 +6767,7 @@ class Vanilla():
         },
         "minecraft:popped_chorus_fruit": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Popped Chorus Fruit",
@@ -6763,7 +6776,7 @@ class Vanilla():
         },
         "minecraft:sponge": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sponge",
@@ -6772,7 +6785,7 @@ class Vanilla():
         },
         "minecraft:wet_sponge": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Wet Sponge",
@@ -6782,7 +6795,7 @@ class Vanilla():
         # Coral
         "minecraft:tube_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tube Coral Block",
@@ -6791,7 +6804,7 @@ class Vanilla():
         },
         "minecraft:brain_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Brain Coral Block",
@@ -6800,7 +6813,7 @@ class Vanilla():
         },
         "minecraft:bubble_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Bubble Coral Block",
@@ -6809,7 +6822,7 @@ class Vanilla():
         },
         "minecraft:fire_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Fire Coral Block",
@@ -6818,7 +6831,7 @@ class Vanilla():
         },
         "minecraft:horn_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Horn Coral block",
@@ -6827,7 +6840,7 @@ class Vanilla():
         },
         "minecraft:dead_tube_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Dead Tube Coral Block",
@@ -6836,7 +6849,7 @@ class Vanilla():
         },
         "minecraft:dead_brain_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Dead Brain Coral Block",
@@ -6845,7 +6858,7 @@ class Vanilla():
         },
         "minecraft:dead_bubble_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Dead Bubble Coral Block",
@@ -6854,7 +6867,7 @@ class Vanilla():
         },
         "minecraft:dead_fire_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Dead Fire Coral Block",
@@ -6863,7 +6876,7 @@ class Vanilla():
         },
         "minecraft:dead_horn_coral_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Dead Horn Coral Block",
@@ -6872,7 +6885,7 @@ class Vanilla():
         },
         "minecraft:sculk": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sculk",
@@ -6881,7 +6894,7 @@ class Vanilla():
         },
         "minecraft:sculk_vein": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sculk Vein",
@@ -6890,7 +6903,7 @@ class Vanilla():
         },
         "minecraft:sculk_catalyst": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sculk Catalyst",
@@ -6899,7 +6912,7 @@ class Vanilla():
         },
         "minecraft:sculk_shrieker": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sculk Shrieker",
@@ -6908,7 +6921,7 @@ class Vanilla():
         },
         "minecraft:sculk_sensor": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sculk Sensor",
@@ -6917,7 +6930,7 @@ class Vanilla():
         },
         "minecraft:reinforced_deepslate": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Reinforced Deepslate",
@@ -6927,7 +6940,7 @@ class Vanilla():
         # Armor
         "minecraft:leather_helmet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Leather Cap",
@@ -6936,7 +6949,7 @@ class Vanilla():
         },
         "minecraft:chainmail_helmet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chainmail Helmet",
@@ -6945,7 +6958,7 @@ class Vanilla():
         },
         "minecraft:iron_helmet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Helmet",
@@ -6954,7 +6967,7 @@ class Vanilla():
         },
         "minecraft:golden_helmet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Helmet",
@@ -6963,7 +6976,7 @@ class Vanilla():
         },
         "minecraft:diamond_helmet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Helmet",
@@ -6972,7 +6985,7 @@ class Vanilla():
         },
         "minecraft:netherite_helmet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Helmet",
@@ -6981,7 +6994,7 @@ class Vanilla():
         },
         "minecraft:leather_chestplate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Leather Tunic",
@@ -6990,7 +7003,7 @@ class Vanilla():
         },
         "minecraft:chainmail_chestplate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chainmail Chestplate",
@@ -6999,7 +7012,7 @@ class Vanilla():
         },
         "minecraft:iron_chestplate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Chestplate",
@@ -7008,7 +7021,7 @@ class Vanilla():
         },
         "minecraft:golden_chestplate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Chestplate",
@@ -7017,7 +7030,7 @@ class Vanilla():
         },
         "minecraft:diamond_chestplate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Chestplate",
@@ -7026,7 +7039,7 @@ class Vanilla():
         },
         "minecraft:netherite_chestplate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Chestplate",
@@ -7035,7 +7048,7 @@ class Vanilla():
         },
         "minecraft:leather_leggings": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Leather Pants",
@@ -7044,7 +7057,7 @@ class Vanilla():
         },
         "minecraft:chainmail_leggings": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chainmail Leggings",
@@ -7053,7 +7066,7 @@ class Vanilla():
         },
         "minecraft:iron_leggings": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Leggings",
@@ -7062,7 +7075,7 @@ class Vanilla():
         },
         "minecraft:golden_leggings": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Leggings",
@@ -7071,7 +7084,7 @@ class Vanilla():
         },
         "minecraft:diamond_leggings": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Leggings",
@@ -7080,7 +7093,7 @@ class Vanilla():
         },
         "minecraft:netherite_leggings": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Leggings",
@@ -7089,7 +7102,7 @@ class Vanilla():
         },
         "minecraft:leather_boots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Leather Boots",
@@ -7098,7 +7111,7 @@ class Vanilla():
         },
         "minecraft:chainmail_boots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chainmail Boots",
@@ -7107,7 +7120,7 @@ class Vanilla():
         },
         "minecraft:iron_boots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Boots",
@@ -7116,7 +7129,7 @@ class Vanilla():
         },
         "minecraft:golden_boots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Boots",
@@ -7125,7 +7138,7 @@ class Vanilla():
         },
         "minecraft:diamond_boots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Boots",
@@ -7134,7 +7147,7 @@ class Vanilla():
         },
         "minecraft:netherite_boots": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Boots",
@@ -7144,7 +7157,7 @@ class Vanilla():
         # Tools
         "minecraft:wooden_sword": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wooden Sword",
@@ -7153,7 +7166,7 @@ class Vanilla():
         },
         "minecraft:stone_sword": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Sword",
@@ -7162,7 +7175,7 @@ class Vanilla():
         },
         "minecraft:iron_sword": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Sword",
@@ -7171,7 +7184,7 @@ class Vanilla():
         },
         "minecraft:golden_sword": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Sword",
@@ -7180,7 +7193,7 @@ class Vanilla():
         },
         "minecraft:diamond_sword": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Sword",
@@ -7189,7 +7202,7 @@ class Vanilla():
         },
         "minecraft:netherite_sword": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Sword",
@@ -7198,7 +7211,7 @@ class Vanilla():
         },
         "minecraft:wooden_axe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wooden Axe",
@@ -7207,7 +7220,7 @@ class Vanilla():
         },
         "minecraft:stone_axe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Axe",
@@ -7216,7 +7229,7 @@ class Vanilla():
         },
         "minecraft:iron_axe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Axe",
@@ -7225,7 +7238,7 @@ class Vanilla():
         },
         "minecraft:golden_axe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Axe",
@@ -7234,7 +7247,7 @@ class Vanilla():
         },
         "minecraft:diamond_axe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Axe",
@@ -7243,7 +7256,7 @@ class Vanilla():
         },
         "minecraft:netherite_axe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Axe",
@@ -7252,7 +7265,7 @@ class Vanilla():
         },
         "minecraft:wooden_pickaxe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wooden Pickaxe",
@@ -7261,7 +7274,7 @@ class Vanilla():
         },
         "minecraft:stone_pickaxe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Pickaxe",
@@ -7270,7 +7283,7 @@ class Vanilla():
         },
         "minecraft:iron_pickaxe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Pickaxe",
@@ -7279,7 +7292,7 @@ class Vanilla():
         },
         "minecraft:golden_pickaxe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Pickaxe",
@@ -7288,7 +7301,7 @@ class Vanilla():
         },
         "minecraft:diamond_pickaxe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Pickaxe",
@@ -7297,7 +7310,7 @@ class Vanilla():
         },
         "minecraft:netherite_pickaxe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Pickaxe",
@@ -7306,7 +7319,7 @@ class Vanilla():
         },
         "minecraft:wooden_shovel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wooden Shovel",
@@ -7315,7 +7328,7 @@ class Vanilla():
         },
         "minecraft:stone_shovel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Shovel",
@@ -7324,7 +7337,7 @@ class Vanilla():
         },
         "minecraft:iron_shovel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Shovel",
@@ -7333,7 +7346,7 @@ class Vanilla():
         },
         "minecraft:golden_shovel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Shovel",
@@ -7342,7 +7355,7 @@ class Vanilla():
         },
         "minecraft:diamond_shovel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Shovel",
@@ -7351,7 +7364,7 @@ class Vanilla():
         },
         "minecraft:netherite_shovel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Shovel",
@@ -7360,7 +7373,7 @@ class Vanilla():
         },
         "minecraft:wooden_hoe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wooden Hoe",
@@ -7369,7 +7382,7 @@ class Vanilla():
         },
         "minecraft:stone_hoe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Hoe",
@@ -7378,7 +7391,7 @@ class Vanilla():
         },
         "minecraft:iron_hoe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Hoe",
@@ -7387,7 +7400,7 @@ class Vanilla():
         },
         "minecraft:golden_hoe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Hoe",
@@ -7396,7 +7409,7 @@ class Vanilla():
         },
         "minecraft:diamond_hoe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Hoe",
@@ -7405,7 +7418,7 @@ class Vanilla():
         },
         "minecraft:netherite_hoe": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Hoe",
@@ -7414,7 +7427,7 @@ class Vanilla():
         },
         "minecraft:bow": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bow",
@@ -7423,7 +7436,7 @@ class Vanilla():
         },
         "minecraft:crossbow": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Crossbow",
@@ -7433,7 +7446,7 @@ class Vanilla():
         # arrows
         "minecraft:arrow": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Arrow",
@@ -7442,7 +7455,7 @@ class Vanilla():
         },
         "minecraft:night_vision_arrow_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Arrow of Night Vision (0:22)",
@@ -7451,7 +7464,7 @@ class Vanilla():
         },
         "minecraft:night_vision_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Arrow of Night Vision (1:00)",
@@ -7460,7 +7473,7 @@ class Vanilla():
         },
         "minecraft:invisibility_arrow_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Arrow of invisibility (0:22)",
@@ -7469,7 +7482,7 @@ class Vanilla():
         },
         "minecraft:invisibility_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Arrow of invisibility (1:00)",
@@ -7478,7 +7491,7 @@ class Vanilla():
         },
         "minecraft:leaping_arrow_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Arrow of Leaping I (0:22)",
@@ -7487,7 +7500,7 @@ class Vanilla():
         },
         "minecraft:leaping_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Arrow of Leaping I (1:00)",
@@ -7496,7 +7509,7 @@ class Vanilla():
         },
         "minecraft:leaping_2_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Arrow of Leaping II (0:11)",
@@ -7505,7 +7518,7 @@ class Vanilla():
         },
         "minecraft:fire_resistance_arrow_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Arrow of ire Resistance (0:22)",
@@ -7514,7 +7527,7 @@ class Vanilla():
         },
         "minecraft:fire_resistance_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Arrow of Fire Resistance (1:00)",
@@ -7523,7 +7536,7 @@ class Vanilla():
         },
         "minecraft:speed_arrow_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Arrow of Speed I (0:22)",
@@ -7532,7 +7545,7 @@ class Vanilla():
         },
         "minecraft:speed_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 16,
             "display_name": "Arrow of Speed I (1:00)",
@@ -7541,7 +7554,7 @@ class Vanilla():
         },
         "minecraft:speed_2_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 17,
             "display_name": "Arrow of Speed I (0:11)",
@@ -7550,7 +7563,7 @@ class Vanilla():
         },
         "minecraft:slowness_arrow_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 18,
             "display_name": "Arrow of Slowness (0:11)",
@@ -7559,7 +7572,7 @@ class Vanilla():
         },
         "minecraft:slowness_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 19,
             "display_name": "Arrow of Slowness (0:30)",
@@ -7568,7 +7581,7 @@ class Vanilla():
         },
         "minecraft:water_breathing_arrow_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 20,
             "display_name": "Arrow of Water Breathing (0:22)",
@@ -7577,7 +7590,7 @@ class Vanilla():
         },
         "minecraft:water_breathing_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 21,
             "display_name": "Arrow of Water Breathing (1:00)",
@@ -7586,7 +7599,7 @@ class Vanilla():
         },
         "minecraft:healing_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 22,
             "display_name": "Arrow of Healing I",
@@ -7595,7 +7608,7 @@ class Vanilla():
         },
         "minecraft:healing_arrow_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 23,
             "display_name": "Arrow of Healing II",
@@ -7604,7 +7617,7 @@ class Vanilla():
         },
         "minecraft:harming_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 24,
             "display_name": "Arrow of Harming I",
@@ -7613,7 +7626,7 @@ class Vanilla():
         },
         "minecraft:harming_arrow_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 25,
             "display_name": "Arrow of Harming II",
@@ -7622,7 +7635,7 @@ class Vanilla():
         },
         "minecraft:poison_arrow_0.05": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 26,
             "display_name": "Arrow of Poison (0:05)",
@@ -7631,7 +7644,7 @@ class Vanilla():
         },
         "minecraft:poison_arrow_0.15": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 27,
             "display_name": "Arrow of Poison (0:15)",
@@ -7640,7 +7653,7 @@ class Vanilla():
         },
         "minecraft:poison_2_arrow_0.02": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 28,
             "display_name": "Arrow of Poison II (0:02)",
@@ -7649,7 +7662,7 @@ class Vanilla():
         },
         "minecraft:regeneration_arrow_0.05": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 29,
             "display_name": "Arrow of Regeneration (0:05)",
@@ -7658,7 +7671,7 @@ class Vanilla():
         },
         "minecraft:regeneration_arrow_0.15": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 30,
             "display_name": "Arrow of Regeneration (0:15)",
@@ -7667,7 +7680,7 @@ class Vanilla():
         },
         "minecraft:regeneration_2_arrow_0.02": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 31,
             "display_name": "Arrow of Regeneration II (0:02)",
@@ -7676,7 +7689,7 @@ class Vanilla():
         },
         "minecraft:strength_arrow_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 32,
             "display_name": "Arrow of Strength (0:22)",
@@ -7685,7 +7698,7 @@ class Vanilla():
         },
         "minecraft:strength_arrow_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 33,
             "display_name": "Arrow of Strength (1:00)",
@@ -7694,7 +7707,7 @@ class Vanilla():
         },
         "minecraft:strength_2_arrow_0.11": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 33,
             "display_name": "Arrow of Strength II (0:11)",
@@ -7704,7 +7717,7 @@ class Vanilla():
 
         "minecraft:weakness_arrow_0.11": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 34,
             "display_name": "Arrow of Weakness (0:11)",
@@ -7713,7 +7726,7 @@ class Vanilla():
         },
         "minecraft:weakness_arrow_0.30": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 35,
             "display_name": "Arrow of Weakness (0:30)",
@@ -7722,7 +7735,7 @@ class Vanilla():
         },
         "minecraft:decay_arrow_0.05": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 36,
             "display_name": "Arrow of Decay (0:05)",
@@ -7731,7 +7744,7 @@ class Vanilla():
         },
         "minecraft:turtle_master_arrow_0.02": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 37,
             "display_name": "Arrow of Turtle Master (0:02)",
@@ -7740,7 +7753,7 @@ class Vanilla():
         },
         "minecraft:turtle_master_arrow_0.05": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 38,
             "display_name": "Arrow of Turtle Master (0:05)",
@@ -7749,7 +7762,7 @@ class Vanilla():
         },
         "minecraft:turtle_master_2_arrow_0.02": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 39,
             "display_name": "Arrow of Turtle Master II (0:02)",
@@ -7758,7 +7771,7 @@ class Vanilla():
         },
         "minecraft:slow_falling_arrow_0.11": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 40,
             "display_name": "Arrow of Slow Falling II (0:11)",
@@ -7767,7 +7780,7 @@ class Vanilla():
         },
         "minecraft:slow_falling_arrow_0.30": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 41,
             "display_name": "Arrow of Slow Falling II (0:30)",
@@ -7776,7 +7789,7 @@ class Vanilla():
         },
         "minecraft:slowness_arrow_0.02": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 42,
             "display_name": "Arrow of Slowness (0:02)",
@@ -7785,7 +7798,7 @@ class Vanilla():
         },
         "minecraft:shield": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Shield",
@@ -7795,7 +7808,7 @@ class Vanilla():
         # Food
         "minecraft:cooked_chicken": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cooked Chicken",
@@ -7804,7 +7817,7 @@ class Vanilla():
         },
         "minecraft:cooked_porkchop": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cooked Porkchop",
@@ -7813,7 +7826,7 @@ class Vanilla():
         },
         "minecraft:cooked_beef": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Steak",
@@ -7822,7 +7835,7 @@ class Vanilla():
         },
         "minecraft:cooked_mutton": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cooked Mutton",
@@ -7831,7 +7844,7 @@ class Vanilla():
         },
         "minecraft:cooked_rabbit": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cooked Rabbit",
@@ -7840,7 +7853,7 @@ class Vanilla():
         },
         "minecraft:cooked_cod": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cooked Cod",
@@ -7849,7 +7862,7 @@ class Vanilla():
         },
         "minecraft:cooked_salmon": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cooked Salmon",
@@ -7858,7 +7871,7 @@ class Vanilla():
         },
         "minecraft:bread": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bread",
@@ -7867,7 +7880,7 @@ class Vanilla():
         },
         "minecraft:mushroom_stew": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mushroom Stew",
@@ -7876,7 +7889,7 @@ class Vanilla():
         },
         "minecraft:beetroot_soup": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Beetroot Soup",
@@ -7885,7 +7898,7 @@ class Vanilla():
         },
         "minecraft:rabbit_stew": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Rabbit Stew",
@@ -7894,7 +7907,7 @@ class Vanilla():
         },
         "minecraft:baked_potato": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Baked Potato",
@@ -7903,7 +7916,7 @@ class Vanilla():
         },
         "minecraft:cookie": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cookie",
@@ -7912,7 +7925,7 @@ class Vanilla():
         },
         "minecraft:pumpkin_pie": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pumpkin Pie",
@@ -7921,7 +7934,7 @@ class Vanilla():
         },
         "minecraft:cake": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cake",
@@ -7930,7 +7943,7 @@ class Vanilla():
         },
         "minecraft:dried_kelp": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dried Kelp",
@@ -7940,7 +7953,7 @@ class Vanilla():
         # Tools
         "minecraft:fishing_rod": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Fishing Rod",
@@ -7949,7 +7962,7 @@ class Vanilla():
         },
         "minecraft:carrot_on_a_stick": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Carrot on a Stick",
@@ -7958,7 +7971,7 @@ class Vanilla():
         },
         "minecraft:warped_fungus_on_a_stick": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Fungus on a Stick",
@@ -7967,7 +7980,7 @@ class Vanilla():
         },
         "minecraft:snowball": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Snowball",
@@ -7976,7 +7989,7 @@ class Vanilla():
         },
         "minecraft:shears": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Shears",
@@ -7985,7 +7998,7 @@ class Vanilla():
         },
         "minecraft:flint_and_steel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Flint and Steel",
@@ -7994,7 +8007,7 @@ class Vanilla():
         },
         "minecraft:lead": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lead",
@@ -8003,7 +8016,7 @@ class Vanilla():
         },
         "minecraft:clock": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Clock",
@@ -8012,7 +8025,7 @@ class Vanilla():
         },
         "minecraft:compass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Compass",
@@ -8021,7 +8034,7 @@ class Vanilla():
         },
         "minecraft:recovery_compass": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "recovery_compass",
@@ -8030,7 +8043,7 @@ class Vanilla():
         },
         "minecraft:map": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Empty Map",
@@ -8039,7 +8052,7 @@ class Vanilla():
         },
         "minecraft:locator_map": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Empty Locator Map",
@@ -8048,7 +8061,7 @@ class Vanilla():
         },
         "minecraft:saddle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Saddle",
@@ -8057,7 +8070,7 @@ class Vanilla():
         },
         "minecraft:goat_horn_ponder": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Goat Horn (Ponder)",
@@ -8066,7 +8079,7 @@ class Vanilla():
         },
         "minecraft:goat_horn_sing": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Goat Horn (Sing)",
@@ -8075,7 +8088,7 @@ class Vanilla():
         },
         "minecraft:goat_horn_seek": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Goat Horn (Seek)",
@@ -8084,7 +8097,7 @@ class Vanilla():
         },
         "minecraft:goat_horn_feel": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Goat Horn (Feel)",
@@ -8093,7 +8106,7 @@ class Vanilla():
         },
         "minecraft:goat_horn_admire": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Goat Horn (Admire)",
@@ -8102,7 +8115,7 @@ class Vanilla():
         },
         "minecraft:goat_horn_call": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Goat Horn (Call)",
@@ -8111,7 +8124,7 @@ class Vanilla():
         },
         "minecraft:goat_horn_yearn": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Goat Horn (Yearn)",
@@ -8120,7 +8133,7 @@ class Vanilla():
         },
         "minecraft:goat_horn_resist": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Goat Horn (Resist)",
@@ -8129,7 +8142,7 @@ class Vanilla():
         },
         "minecraft:leather_horse_armor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Leather Horse Armor",
@@ -8138,7 +8151,7 @@ class Vanilla():
         },
         "minecraft:iron_horse_armor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Horse Armor",
@@ -8147,7 +8160,7 @@ class Vanilla():
         },
         "minecraft:golden_horse_armor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Golden Horse Armor",
@@ -8156,7 +8169,7 @@ class Vanilla():
         },
         "minecraft:diamond_horse_armor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond Horse Armor",
@@ -8165,7 +8178,7 @@ class Vanilla():
         },
         "minecraft:trident": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Trident",
@@ -8174,7 +8187,7 @@ class Vanilla():
         },
         "minecraft:turtle_helmet": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Turtle Shell",
@@ -8183,7 +8196,7 @@ class Vanilla():
         },
         "minecraft:elytra": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Elytra",
@@ -8192,7 +8205,7 @@ class Vanilla():
         },
         "minecraft:totem_of_undying": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Totem of Undying",
@@ -8201,7 +8214,7 @@ class Vanilla():
         },
         "minecraft:glass_bottle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glass Bottle",
@@ -8210,7 +8223,7 @@ class Vanilla():
         },
         "minecraft:experience_bottle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bottle o' Enchanting",
@@ -8220,7 +8233,7 @@ class Vanilla():
         # Potions
         "minecraft:water_bottle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Water Bottle",
@@ -8229,7 +8242,7 @@ class Vanilla():
         },
         "minecraft:mundane_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Mundane Potion",
@@ -8238,7 +8251,7 @@ class Vanilla():
         },
         "minecraft:long_mundane_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Long Mundane Potion",
@@ -8247,7 +8260,7 @@ class Vanilla():
         },
         "minecraft:thick_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Thick Potion",
@@ -8256,7 +8269,7 @@ class Vanilla():
         },
         "minecraft:awkward_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Awkward Potion",
@@ -8265,7 +8278,7 @@ class Vanilla():
         },
         "minecraft:night_vision_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Potion of Night Vision (3:00)",
@@ -8274,7 +8287,7 @@ class Vanilla():
         },
         "minecraft:night_vision_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Potion of Night Vision (8:00)",
@@ -8283,7 +8296,7 @@ class Vanilla():
         },
         "minecraft:invisibility_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Potion of Invisibility (3:00)",
@@ -8292,7 +8305,7 @@ class Vanilla():
         },
         "minecraft:invisibility_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Potion of Invisibility (8:00)",
@@ -8301,7 +8314,7 @@ class Vanilla():
         },
         "minecraft:leaping_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Potion of Leaping (3:00)",
@@ -8310,7 +8323,7 @@ class Vanilla():
         },
         "minecraft:leaping_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Potion of Leaping (8:00)",
@@ -8319,7 +8332,7 @@ class Vanilla():
         },
         "minecraft:leaping_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Potion of Leaping II (1:30)",
@@ -8328,7 +8341,7 @@ class Vanilla():
         },
         "minecraft:fire_resistance_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Potion of Fire Resistance (3:00)",
@@ -8337,7 +8350,7 @@ class Vanilla():
         },
         "minecraft:fire_resistance_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Potion of Fire Resistance (8:00)",
@@ -8346,7 +8359,7 @@ class Vanilla():
         },
         "minecraft:swiftness_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Potion of Swiftness (3:00)",
@@ -8355,7 +8368,7 @@ class Vanilla():
         },
         "minecraft:swiftness_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Potion of Swiftness (8:00)",
@@ -8364,7 +8377,7 @@ class Vanilla():
         },
         "minecraft:swiftness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 16,
             "display_name": "Potion of Swiftness II (1:30)",
@@ -8373,7 +8386,7 @@ class Vanilla():
         },
         "minecraft:slowness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 17,
             "display_name": "Potion of Slowness (1:30)",
@@ -8382,7 +8395,7 @@ class Vanilla():
         },
         "minecraft:slowness_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 18,
             "display_name": "Potion of Slowness (4:00)",
@@ -8391,7 +8404,7 @@ class Vanilla():
         },
         "minecraft:water_breathing_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 19,
             "display_name": "Potion of Water Breathing (3:00)",
@@ -8400,7 +8413,7 @@ class Vanilla():
         },
         "minecraft:water_breathing_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 20,
             "display_name": "Potion of Water Breathing (8:00)",
@@ -8409,7 +8422,7 @@ class Vanilla():
         },
         "minecraft:healing_potion_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 21,
             "display_name": "Potion of Healing I",
@@ -8418,7 +8431,7 @@ class Vanilla():
         },
         "minecraft:healing_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 22,
             "display_name": "Potion of Healing II",
@@ -8427,7 +8440,7 @@ class Vanilla():
         },
         "minecraft:harming_potion_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 23,
             "display_name": "Potion of Harming I",
@@ -8436,7 +8449,7 @@ class Vanilla():
         },
         "minecraft:harming_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 24,
             "display_name": "Potion of Harming II",
@@ -8445,7 +8458,7 @@ class Vanilla():
         },
         "minecraft:poison_potion_0.45": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 25,
             "display_name": "Potion of Poison (0:45)",
@@ -8454,7 +8467,7 @@ class Vanilla():
         },
         "minecraft:poison_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 26,
             "display_name": "Potion of Poison (2:00)",
@@ -8463,7 +8476,7 @@ class Vanilla():
         },
         "minecraft:poison_potion_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 27,
             "display_name": "Potion of Poison II (0:22)",
@@ -8472,7 +8485,7 @@ class Vanilla():
         },
         "minecraft:regeneration_potion_0.45": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 28,
             "display_name": "Potion of Regeneration (0:45)",
@@ -8481,7 +8494,7 @@ class Vanilla():
         },
         "minecraft:regeneration_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 29,
             "display_name": "Potion of Regeneration (2:00)",
@@ -8490,7 +8503,7 @@ class Vanilla():
         },
         "minecraft:regeneration_potion_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 30,
             "display_name": "Potion of Regeneration II (0:22)",
@@ -8499,7 +8512,7 @@ class Vanilla():
         },
         "minecraft:strength_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 31,
             "display_name": "Potion of Strength (3:00)",
@@ -8508,7 +8521,7 @@ class Vanilla():
         },
         "minecraft:strength_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 32,
             "display_name": "Potion of Strength (8:00)",
@@ -8517,7 +8530,7 @@ class Vanilla():
         },
         "minecraft:strength_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 33,
             "display_name": "Potion of Strength (1:30)",
@@ -8526,7 +8539,7 @@ class Vanilla():
         },
         "minecraft:weakness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 34,
             "display_name": "Potion of Weakness (1:30)",
@@ -8535,7 +8548,7 @@ class Vanilla():
         },
         "minecraft:weakness_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 35,
             "display_name": "Potion of Weakness (4:00)",
@@ -8544,7 +8557,7 @@ class Vanilla():
         },
         "minecraft:decay_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 36,
             "display_name": "Potion of Decay (0:40)",
@@ -8553,7 +8566,7 @@ class Vanilla():
         },
         "minecraft:turtle_master_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 37,
             "display_name": "Potion of Turtle Master (0:20)",
@@ -8562,7 +8575,7 @@ class Vanilla():
         },
         "minecraft:turtle_master_potion_0.4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 38,
             "display_name": "Potion of Turtle Master (0:40)",
@@ -8571,7 +8584,7 @@ class Vanilla():
         },
         "minecraft:turtle_master_2_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 39,
             "display_name": "Potion of Turtle Master II (0:20)",
@@ -8580,7 +8593,7 @@ class Vanilla():
         },
         "minecraft:slow_falling_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 40,
             "display_name": "Potion of Slow Falling (1:30)",
@@ -8589,7 +8602,7 @@ class Vanilla():
         },
         "minecraft:slow_falling_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 41,
             "display_name": "Potion of Slow Falling (4:00)",
@@ -8598,7 +8611,7 @@ class Vanilla():
         },
         "minecraft:slowness_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 42,
             "display_name": "Potion of Slowness II (0:20)",
@@ -8607,7 +8620,7 @@ class Vanilla():
         },
         "minecraft:splash_water_bottle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Splash Water Bottle",
@@ -8616,7 +8629,7 @@ class Vanilla():
         },
         "minecraft:splash_mundane_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Splash Mundane Potion",
@@ -8625,7 +8638,7 @@ class Vanilla():
         },
         "minecraft:splash_long_mundane_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Splash Long Mundane Potion",
@@ -8634,7 +8647,7 @@ class Vanilla():
         },
         "minecraft:splash_thick_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Splash Thick Potion",
@@ -8643,7 +8656,7 @@ class Vanilla():
         },
         "minecraft:splash_awkward_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Splash Awkward Potion",
@@ -8652,7 +8665,7 @@ class Vanilla():
         },
         "minecraft:splash_night_vision_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Splash Potion of Night Vision (3:00)",
@@ -8661,7 +8674,7 @@ class Vanilla():
         },
         "minecraft:splash_night_vision_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Splash Potion of Night Vision (8:00)",
@@ -8670,7 +8683,7 @@ class Vanilla():
         },
         "minecraft:splash_invisibility_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Splash Potion of Invisibility (3:00)",
@@ -8679,7 +8692,7 @@ class Vanilla():
         },
         "minecraft:splash_invisibility_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Splash Potion of Invisibility (8:00)",
@@ -8688,7 +8701,7 @@ class Vanilla():
         },
         "minecraft:splash_leaping_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Splash Potion of Leaping (3:00)",
@@ -8697,7 +8710,7 @@ class Vanilla():
         },
         "minecraft:splash_leaping_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Splash Potion of Leaping (8:00)",
@@ -8706,7 +8719,7 @@ class Vanilla():
         },
         "minecraft:splash_leaping_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Splash Potion of Leaping II (1:30)",
@@ -8715,7 +8728,7 @@ class Vanilla():
         },
         "minecraft:splash_fire_resistance_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Splash Potion of Fire Resistance (3:00)",
@@ -8724,7 +8737,7 @@ class Vanilla():
         },
         "minecraft:splash_fire_resistance_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Splash Potion of Fire Resistance (8:00)",
@@ -8733,7 +8746,7 @@ class Vanilla():
         },
         "minecraft:splash_swiftness_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Splash Potion of Swiftness (3:00)",
@@ -8742,7 +8755,7 @@ class Vanilla():
         },
         "minecraft:splash_swiftness_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Splash Potion of Swiftness (8:00)",
@@ -8751,7 +8764,7 @@ class Vanilla():
         },
         "minecraft:splash_swiftness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 16,
             "display_name": "Splash Potion of Swiftness II (1:30)",
@@ -8760,7 +8773,7 @@ class Vanilla():
         },
         "minecraft:splash_slowness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 17,
             "display_name": "Splash Potion of Slowness (1:30)",
@@ -8769,7 +8782,7 @@ class Vanilla():
         },
         "minecraft:splash_slowness_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 18,
             "display_name": "Splash Potion of Slowness (4:00)",
@@ -8778,7 +8791,7 @@ class Vanilla():
         },
         "minecraft:splash_water_breathing_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 19,
             "display_name": "Splash Potion of Water Breathing (3:00)",
@@ -8787,7 +8800,7 @@ class Vanilla():
         },
         "minecraft:splash_water_breathing_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 20,
             "display_name": "Splash Potion of Water Breathing (8:00)",
@@ -8796,7 +8809,7 @@ class Vanilla():
         },
         "minecraft:splash_healing_potion_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 21,
             "display_name": "Splash Potion of Healing I",
@@ -8805,7 +8818,7 @@ class Vanilla():
         },
         "minecraft:splash_healing_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 22,
             "display_name": "Splash Potion of Healing II",
@@ -8814,7 +8827,7 @@ class Vanilla():
         },
         "minecraft:splash_harming_potion_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 23,
             "display_name": "Splash Potion of Harming I",
@@ -8823,7 +8836,7 @@ class Vanilla():
         },
         "minecraft:splash_harming_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 24,
             "display_name": "Splash Potion of Harming II",
@@ -8832,7 +8845,7 @@ class Vanilla():
         },
         "minecraft:splash_poison_potion_0.45": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 25,
             "display_name": "Splash Potion of Poison (0:45)",
@@ -8841,7 +8854,7 @@ class Vanilla():
         },
         "minecraft:splash_poison_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 26,
             "display_name": "Splash Potion of Poison (2:00)",
@@ -8850,7 +8863,7 @@ class Vanilla():
         },
         "minecraft:splash_poison_potion_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 27,
             "display_name": "Splash Potion of Poison II (0:22)",
@@ -8859,7 +8872,7 @@ class Vanilla():
         },
         "minecraft:splash_regeneration_potion_0.45": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 28,
             "display_name": "Splash Potion of Regeneration (0:45)",
@@ -8868,7 +8881,7 @@ class Vanilla():
         },
         "minecraft:splash_regeneration_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 29,
             "display_name": "Splash Potion of Regeneration (2:00)",
@@ -8877,7 +8890,7 @@ class Vanilla():
         },
         "minecraft:splash_regeneration_potion_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 30,
             "display_name": "Splash Potion of Regeneration II (0:22)",
@@ -8886,7 +8899,7 @@ class Vanilla():
         },
         "minecraft:splash_strength_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 31,
             "display_name": "Splash Potion of Strength (3:00)",
@@ -8895,7 +8908,7 @@ class Vanilla():
         },
         "minecraft:splash_strength_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 32,
             "display_name": "Splash Potion of Strength (8:00)",
@@ -8904,7 +8917,7 @@ class Vanilla():
         },
         "minecraft:splash_strength_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 33,
             "display_name": "Splash Potion of Strength (1:30)",
@@ -8913,7 +8926,7 @@ class Vanilla():
         },
         "minecraft:splash_weakness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 34,
             "display_name": "Splash Potion of Weakness (1:30)",
@@ -8922,7 +8935,7 @@ class Vanilla():
         },
         "minecraft:splash_weakness_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 35,
             "display_name": "Splash Potion of Weakness (4:00)",
@@ -8931,7 +8944,7 @@ class Vanilla():
         },
         "minecraft:splash_decay_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 36,
             "display_name": "Splash Potion of Decay (0:40)",
@@ -8940,7 +8953,7 @@ class Vanilla():
         },
         "minecraft:splash_turtle_master_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 37,
             "display_name": "Splash Potion of Turtle Master (0:20)",
@@ -8949,7 +8962,7 @@ class Vanilla():
         },
         "minecraft:splash_turtle_master_potion_0.4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 38,
             "display_name": "Splash Potion of Turtle Master (0:40)",
@@ -8958,7 +8971,7 @@ class Vanilla():
         },
         "minecraft:splash_turtle_master_2_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 39,
             "display_name": "Splash Potion of Turtle Master II (0:20)",
@@ -8967,7 +8980,7 @@ class Vanilla():
         },
         "minecraft:splash_slow_falling_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 40,
             "display_name": "Splash Potion of Slow Falling (1:30)",
@@ -8976,7 +8989,7 @@ class Vanilla():
         },
         "minecraft:splash_slow_falling_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 41,
             "display_name": "Splash Potion of Slow Falling (4:00)",
@@ -8985,7 +8998,7 @@ class Vanilla():
         },
         "minecraft:splash_slowness_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 42,
             "display_name": "Splash Potion of Slowness II (0:20)",
@@ -8994,7 +9007,7 @@ class Vanilla():
         },
         "minecraft:lingering_water_bottle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lingering Water Bottle",
@@ -9003,7 +9016,7 @@ class Vanilla():
         },
         "minecraft:lingering_mundane_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Lingering Mundane Potion",
@@ -9012,7 +9025,7 @@ class Vanilla():
         },
         "minecraft:lingering_long_mundane_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Lingering Long Mundane Potion",
@@ -9021,7 +9034,7 @@ class Vanilla():
         },
         "minecraft:lingering_thick_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Lingering Thick Potion",
@@ -9030,7 +9043,7 @@ class Vanilla():
         },
         "minecraft:lingering_awkward_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Lingering Awkward Potion",
@@ -9039,7 +9052,7 @@ class Vanilla():
         },
         "minecraft:lingering_night_vision_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lingering Potion of Night Vision (3:00)",
@@ -9048,7 +9061,7 @@ class Vanilla():
         },
         "minecraft:lingering_night_vision_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Lingering Potion of Night Vision (8:00)",
@@ -9057,7 +9070,7 @@ class Vanilla():
         },
         "minecraft:lingering_invisibility_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Lingering Potion of Invisibility (3:00)",
@@ -9066,7 +9079,7 @@ class Vanilla():
         },
         "minecraft:lingering_invisibility_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Lingering Potion of Invisibility (8:00)",
@@ -9075,7 +9088,7 @@ class Vanilla():
         },
         "minecraft:lingering_leaping_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Lingering Potion of Leaping (3:00)",
@@ -9084,7 +9097,7 @@ class Vanilla():
         },
         "minecraft:lingering_leaping_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Lingering Potion of Leaping (8:00)",
@@ -9093,7 +9106,7 @@ class Vanilla():
         },
         "minecraft:lingering_leaping_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Lingering Potion of Leaping II (1:30)",
@@ -9102,7 +9115,7 @@ class Vanilla():
         },
         "minecraft:lingering_fire_resistance_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Lingering Potion of Fire Resistance (3:00)",
@@ -9111,7 +9124,7 @@ class Vanilla():
         },
         "minecraft:lingering_fire_resistance_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Lingering Potion of Fire Resistance (8:00)",
@@ -9120,7 +9133,7 @@ class Vanilla():
         },
         "minecraft:lingering_swiftness_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Lingering Potion of Swiftness (3:00)",
@@ -9129,7 +9142,7 @@ class Vanilla():
         },
         "minecraft:lingering_swiftness_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Lingering Potion of Swiftness (8:00)",
@@ -9138,7 +9151,7 @@ class Vanilla():
         },
         "minecraft:lingering_swiftness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 16,
             "display_name": "Lingering Potion of Swiftness II (1:30)",
@@ -9147,7 +9160,7 @@ class Vanilla():
         },
         "minecraft:lingering_slowness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 17,
             "display_name": "Lingering Potion of Slowness (1:30)",
@@ -9156,7 +9169,7 @@ class Vanilla():
         },
         "minecraft:lingering_slowness_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 18,
             "display_name": "Lingering Potion of Slowness (4:00)",
@@ -9165,7 +9178,7 @@ class Vanilla():
         },
         "minecraft:lingering_water_breathing_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 19,
             "display_name": "Lingering Potion of Water Breathing (3:00)",
@@ -9174,7 +9187,7 @@ class Vanilla():
         },
         "minecraft:lingering_water_breathing_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 20,
             "display_name": "Lingering Potion of Water Breathing (8:00)",
@@ -9183,7 +9196,7 @@ class Vanilla():
         },
         "minecraft:lingering_healing_potion_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 21,
             "display_name": "Lingering Potion of Healing I",
@@ -9192,7 +9205,7 @@ class Vanilla():
         },
         "minecraft:lingering_healing_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 22,
             "display_name": "Lingering Potion of Healing II",
@@ -9201,7 +9214,7 @@ class Vanilla():
         },
         "minecraft:lingering_harming_potion_1": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 23,
             "display_name": "Lingering Potion of Harming I",
@@ -9210,7 +9223,7 @@ class Vanilla():
         },
         "minecraft:lingering_harming_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 24,
             "display_name": "Lingering Potion of Harming II",
@@ -9219,7 +9232,7 @@ class Vanilla():
         },
         "minecraft:lingering_poison_potion_0.45": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 25,
             "display_name": "Lingering Potion of Poison (0:45)",
@@ -9228,7 +9241,7 @@ class Vanilla():
         },
         "minecraft:lingering_poison_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 26,
             "display_name": "Lingering Potion of Poison (2:00)",
@@ -9237,7 +9250,7 @@ class Vanilla():
         },
         "minecraft:lingering_poison_potion_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 27,
             "display_name": "Lingering Potion of Poison II (0:22)",
@@ -9246,7 +9259,7 @@ class Vanilla():
         },
         "minecraft:lingering_regeneration_potion_0.45": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 28,
             "display_name": "Lingering Potion of Regeneration (0:45)",
@@ -9255,7 +9268,7 @@ class Vanilla():
         },
         "minecraft:lingering_regeneration_potion_2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 29,
             "display_name": "Lingering Potion of Regeneration (2:00)",
@@ -9264,7 +9277,7 @@ class Vanilla():
         },
         "minecraft:lingering_regeneration_potion_0.22": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 30,
             "display_name": "Lingering Potion of Regeneration II (0:22)",
@@ -9273,7 +9286,7 @@ class Vanilla():
         },
         "minecraft:lingering_strength_potion_3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 31,
             "display_name": "Lingering Potion of Strength (3:00)",
@@ -9282,7 +9295,7 @@ class Vanilla():
         },
         "minecraft:lingering_strength_potion_8": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 32,
             "display_name": "Lingering Potion of Strength (8:00)",
@@ -9291,7 +9304,7 @@ class Vanilla():
         },
         "minecraft:lingering_strength_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 33,
             "display_name": "Lingering Potion of Strength (1:30)",
@@ -9300,7 +9313,7 @@ class Vanilla():
         },
         "minecraft:lingering_weakness_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 34,
             "display_name": "Lingering Potion of Weakness (1:30)",
@@ -9309,7 +9322,7 @@ class Vanilla():
         },
         "minecraft:lingering_weakness_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 35,
             "display_name": "Lingering Potion of Weakness (4:00)",
@@ -9318,7 +9331,7 @@ class Vanilla():
         },
         "minecraft:lingering_decay_potion": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 36,
             "display_name": "Lingering Potion of Decay (0:40)",
@@ -9327,7 +9340,7 @@ class Vanilla():
         },
         "minecraft:lingering_turtle_master_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 37,
             "display_name": "Lingering Potion of Turtle Master (0:20)",
@@ -9336,7 +9349,7 @@ class Vanilla():
         },
         "minecraft:lingering_turtle_master_potion_0.4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 38,
             "display_name": "Lingering Potion of Turtle Master (0:40)",
@@ -9345,7 +9358,7 @@ class Vanilla():
         },
         "minecraft:lingering_turtle_master_2_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 39,
             "display_name": "Lingering Potion of Turtle Master II (0:20)",
@@ -9354,7 +9367,7 @@ class Vanilla():
         },
         "minecraft:lingering_slow_falling_potion_1.3": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 40,
             "display_name": "Lingering Potion of Slow Falling (1:30)",
@@ -9363,7 +9376,7 @@ class Vanilla():
         },
         "minecraft:lingering_slow_falling_potion_4": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 41,
             "display_name": "Lingering Potion of Slow Falling (4:00)",
@@ -9372,7 +9385,7 @@ class Vanilla():
         },
         "minecraft:lingering_slowness_potion_0.2": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 42,
             "display_name": "Lingering Potion of Slowness II (0:20)",
@@ -9382,7 +9395,7 @@ class Vanilla():
         #
         "minecraft:spyglass": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spyglass",
@@ -9391,7 +9404,7 @@ class Vanilla():
         },
         "minecraft:stick": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stick",
@@ -9400,7 +9413,7 @@ class Vanilla():
         },
         "minecraft:white_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Bed",
@@ -9409,7 +9422,7 @@ class Vanilla():
         },
         "minecraft:light_gray_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Bed",
@@ -9418,7 +9431,7 @@ class Vanilla():
         },
         "minecraft:gray_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Bed",
@@ -9427,7 +9440,7 @@ class Vanilla():
         },
         "minecraft:black_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Bed",
@@ -9436,7 +9449,7 @@ class Vanilla():
         },
         "minecraft:brown_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Bed",
@@ -9445,7 +9458,7 @@ class Vanilla():
         },
         "minecraft:red_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Bed",
@@ -9454,7 +9467,7 @@ class Vanilla():
         },
         "minecraft:orange_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Bed",
@@ -9463,7 +9476,7 @@ class Vanilla():
         },
         "minecraft:yellow_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Bed",
@@ -9472,7 +9485,7 @@ class Vanilla():
         },
         "minecraft:lime_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Bed",
@@ -9481,7 +9494,7 @@ class Vanilla():
         },
         "minecraft:green_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Bed",
@@ -9490,7 +9503,7 @@ class Vanilla():
         },
         "minecraft:cyan_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Bed",
@@ -9499,7 +9512,7 @@ class Vanilla():
         },
         "minecraft:light_blue_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Bed",
@@ -9508,7 +9521,7 @@ class Vanilla():
         },
         "minecraft:blue_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Bed",
@@ -9517,7 +9530,7 @@ class Vanilla():
         },
         "minecraft:purple_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Bed",
@@ -9526,7 +9539,7 @@ class Vanilla():
         },
         "minecraft:magenta_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Bed",
@@ -9535,7 +9548,7 @@ class Vanilla():
         },
         "minecraft:pink_bed": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Bed",
@@ -9544,7 +9557,7 @@ class Vanilla():
         },
         "minecraft:torch": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Torch",
@@ -9553,7 +9566,7 @@ class Vanilla():
         },
         "minecraft:soul_torch": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Soul Torch",
@@ -9562,7 +9575,7 @@ class Vanilla():
         },
         "minecraft:sea_pickle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sea Pickle",
@@ -9571,7 +9584,7 @@ class Vanilla():
         },
         "minecraft:lantern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lantern",
@@ -9580,7 +9593,7 @@ class Vanilla():
         },
         "minecraft:soul_lantern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Soul Lantern",
@@ -9589,7 +9602,7 @@ class Vanilla():
         },
         "minecraft:candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Candle",
@@ -9598,7 +9611,7 @@ class Vanilla():
         },
         "minecraft:white_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Candle",
@@ -9607,7 +9620,7 @@ class Vanilla():
         },
         "minecraft:orange_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Orange Candle",
@@ -9616,7 +9629,7 @@ class Vanilla():
         },
         "minecraft:magenta_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Magenta Candle",
@@ -9625,7 +9638,7 @@ class Vanilla():
         },
         "minecraft:light_blue_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Light Blue Candle",
@@ -9634,7 +9647,7 @@ class Vanilla():
         },
         "minecraft:yellow_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Yellow Candle",
@@ -9643,7 +9656,7 @@ class Vanilla():
         },
         "minecraft:lime_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lime Candle",
@@ -9652,7 +9665,7 @@ class Vanilla():
         },
         "minecraft:pink_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pink Candle",
@@ -9661,7 +9674,7 @@ class Vanilla():
         },
         "minecraft:gray_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gray Candle",
@@ -9670,7 +9683,7 @@ class Vanilla():
         },
         "minecraft:light_gray_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Light Gray Candle",
@@ -9679,7 +9692,7 @@ class Vanilla():
         },
         "minecraft:cyan_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cyan Candle",
@@ -9688,7 +9701,7 @@ class Vanilla():
         },
         "minecraft:purple_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Purple Candle",
@@ -9697,7 +9710,7 @@ class Vanilla():
         },
         "minecraft:blue_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blue Candle",
@@ -9706,7 +9719,7 @@ class Vanilla():
         },
         "minecraft:brown_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Brown Candle",
@@ -9715,7 +9728,7 @@ class Vanilla():
         },
         "minecraft:green_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Green Candle",
@@ -9724,7 +9737,7 @@ class Vanilla():
         },
         "minecraft:red_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Red Candle",
@@ -9733,7 +9746,7 @@ class Vanilla():
         },
         "minecraft:black_candle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Black Candle",
@@ -9742,7 +9755,7 @@ class Vanilla():
         },
         "minecraft:crafting_table": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Crafting Table",
@@ -9751,7 +9764,7 @@ class Vanilla():
         },
         "minecraft:cartography_table": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cartography Table",
@@ -9760,7 +9773,7 @@ class Vanilla():
         },
         "minecraft:fletching_table": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Fletching Table",
@@ -9769,7 +9782,7 @@ class Vanilla():
         },
         "minecraft:smithing_table": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Smithing Table",
@@ -9778,7 +9791,7 @@ class Vanilla():
         },
         "minecraft:beehive": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Beehive",
@@ -9787,7 +9800,7 @@ class Vanilla():
         },
         "minecraft:campfire": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Campfire",
@@ -9796,7 +9809,7 @@ class Vanilla():
         },
         "minecraft:soul_campfire": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Soul Campfire",
@@ -9805,7 +9818,7 @@ class Vanilla():
         },
         "minecraft:furnace": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Furnace",
@@ -9814,7 +9827,7 @@ class Vanilla():
         },
         "minecraft:blast_furnace": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blast Furnace",
@@ -9823,7 +9836,7 @@ class Vanilla():
         },
         "minecraft:smoker": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Smoker",
@@ -9832,7 +9845,7 @@ class Vanilla():
         },
         "minecraft:respawn_anchor": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Respawn Anchor",
@@ -9841,7 +9854,7 @@ class Vanilla():
         },
         "minecraft:brewing_stand": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Brewing Stand",
@@ -9850,7 +9863,7 @@ class Vanilla():
         },
         "minecraft:anvil": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Anvil",
@@ -9859,7 +9872,7 @@ class Vanilla():
         },
         "minecraft:slighlty_damaged_anvil": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Slightly Damaged Anvil",
@@ -9868,7 +9881,7 @@ class Vanilla():
         },
         "minecraft:very_damaged_anvil": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Very Damaged Anvil",
@@ -9877,7 +9890,7 @@ class Vanilla():
         },
         "minecraft:grindstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Grindstone",
@@ -9886,7 +9899,7 @@ class Vanilla():
         },
         "minecraft:enchanting_table": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Enchantment Table",
@@ -9895,7 +9908,7 @@ class Vanilla():
         },
         "minecraft:bookshelf": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bookshelf",
@@ -9904,7 +9917,7 @@ class Vanilla():
         },
         "minecraft:lectern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lectern",
@@ -9913,7 +9926,7 @@ class Vanilla():
         },
         "minecraft:cauldron": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cauldron",
@@ -9922,7 +9935,7 @@ class Vanilla():
         },
         "minecraft:composter": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Composter",
@@ -9931,7 +9944,7 @@ class Vanilla():
         },
         "minecraft:chest": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chest",
@@ -9940,7 +9953,7 @@ class Vanilla():
         },
         "minecraft:trapped_chest": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Trapped Chest",
@@ -9949,7 +9962,7 @@ class Vanilla():
         },
         "minecraft:ender_chest": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Ender Chest",
@@ -9958,7 +9971,7 @@ class Vanilla():
         },
         "minecraft:barrel": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Barrel",
@@ -9967,7 +9980,7 @@ class Vanilla():
         },
         "minecraft:shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Shulker Box",
@@ -9976,7 +9989,7 @@ class Vanilla():
         },
         "minecraft:white_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "White Shulker Box",
@@ -9985,7 +9998,7 @@ class Vanilla():
         },
         "minecraft:gray_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Gray Shulker Box",
@@ -9994,7 +10007,7 @@ class Vanilla():
         },
         "minecraft:light_gray_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Light Gray Shulker Box",
@@ -10003,7 +10016,7 @@ class Vanilla():
         },
         "minecraft:black_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Black Shulker Box",
@@ -10012,7 +10025,7 @@ class Vanilla():
         },
         "minecraft:brown_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Brown Shulker Box",
@@ -10021,7 +10034,7 @@ class Vanilla():
         },
         "minecraft:red_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Red Shulker Box",
@@ -10030,7 +10043,7 @@ class Vanilla():
         },
         "minecraft:orange_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Orange Shulker Box",
@@ -10039,7 +10052,7 @@ class Vanilla():
         },
         "minecraft:yellow_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Yellow Shulker Box",
@@ -10048,7 +10061,7 @@ class Vanilla():
         },
         "minecraft:lime_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Lime Shulker Box",
@@ -10057,7 +10070,7 @@ class Vanilla():
         },
         "minecraft:green_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Green Shulker Box",
@@ -10066,7 +10079,7 @@ class Vanilla():
         },
         "minecraft:cyan_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Cyan Shulker Box",
@@ -10075,7 +10088,7 @@ class Vanilla():
         },
         "minecraft:light_blue_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Light Blue Shulker Box",
@@ -10084,7 +10097,7 @@ class Vanilla():
         },
         "minecraft:blue_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Blue Shulker Box",
@@ -10093,7 +10106,7 @@ class Vanilla():
         },
         "minecraft:purple_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Purple Shulker Box",
@@ -10102,7 +10115,7 @@ class Vanilla():
         },
         "minecraft:magenta_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Magenta Shulker Box",
@@ -10111,7 +10124,7 @@ class Vanilla():
         },
         "minecraft:pink_shulker_box": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Pink Shulker Box",
@@ -10120,7 +10133,7 @@ class Vanilla():
         },
         "minecraft:armor_stand": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Armor Stand",
@@ -10129,7 +10142,7 @@ class Vanilla():
         },
         "minecraft:note_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Note Block",
@@ -10138,7 +10151,7 @@ class Vanilla():
         },
         "minecraft:jukebox": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jukebox",
@@ -10147,7 +10160,7 @@ class Vanilla():
         },
         "minecraft:music_disc_13": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "13 Disc",
@@ -10156,7 +10169,7 @@ class Vanilla():
         },
         "minecraft:music_disc_cat": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cat Disc",
@@ -10165,7 +10178,7 @@ class Vanilla():
         },
         "minecraft:music_disc_blocks": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blocks Disc",
@@ -10174,7 +10187,7 @@ class Vanilla():
         },
         "minecraft:music_disc_chirp": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chirp Disc",
@@ -10183,7 +10196,7 @@ class Vanilla():
         },
         "minecraft:music_disc_far": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Far Disc",
@@ -10192,7 +10205,7 @@ class Vanilla():
         },
         "minecraft:music_disc_mall": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mall Disc",
@@ -10201,7 +10214,7 @@ class Vanilla():
         },
         "minecraft:music_disc_mellohi": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mellohi Disc",
@@ -10210,7 +10223,7 @@ class Vanilla():
         },
         "minecraft:music_disc_stal": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stal Disc",
@@ -10219,7 +10232,7 @@ class Vanilla():
         },
         "minecraft:music_disc_strad": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Strad Disc",
@@ -10228,7 +10241,7 @@ class Vanilla():
         },
         "minecraft:music_disc_ward": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ward Disc",
@@ -10237,7 +10250,7 @@ class Vanilla():
         },
         "minecraft:music_disc_11": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "11 Disc",
@@ -10246,7 +10259,7 @@ class Vanilla():
         },
         "minecraft:music_disc_wait": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wait Disc",
@@ -10255,7 +10268,7 @@ class Vanilla():
         },
         "minecraft:music_disc_otherside": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Otherside Disc",
@@ -10264,7 +10277,7 @@ class Vanilla():
         },
         "minecraft:music_disc_5": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "5 Disc",
@@ -10273,7 +10286,7 @@ class Vanilla():
         },
         "minecraft:music_disc_pigstep": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pigstep Disc",
@@ -10282,7 +10295,7 @@ class Vanilla():
         },
         "minecraft:disc_fragment_5": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Disc Fragment 5",
@@ -10291,7 +10304,7 @@ class Vanilla():
         },
         "minecraft:glowstone_dust": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Glowstone Dust",
@@ -10300,7 +10313,7 @@ class Vanilla():
         },
         "minecraft:glowstone": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Glowstone",
@@ -10309,7 +10322,7 @@ class Vanilla():
         },
         "minecraft:redstone_lamp": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Redstone Lamp",
@@ -10318,7 +10331,7 @@ class Vanilla():
         },
         "minecraft:sea_lantern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Sea Lantern",
@@ -10327,7 +10340,7 @@ class Vanilla():
         },
         "minecraft:oak_sign": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Sign",
@@ -10336,7 +10349,7 @@ class Vanilla():
         },
         "minecraft:spruce_sign": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Sign",
@@ -10345,7 +10358,7 @@ class Vanilla():
         },
         "minecraft:birch_sign": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Sign",
@@ -10354,7 +10367,7 @@ class Vanilla():
         },
         "minecraft:jungle_sign": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Sign",
@@ -10363,7 +10376,7 @@ class Vanilla():
         },
         "minecraft:acacia_sign": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Sign",
@@ -10372,7 +10385,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_sign": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Sign",
@@ -10381,7 +10394,7 @@ class Vanilla():
         },
         "minecraft:mangrove_sign": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Sign",
@@ -10390,7 +10403,7 @@ class Vanilla():
         },
         "minecraft:crimson_sign": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Sign",
@@ -10399,7 +10412,7 @@ class Vanilla():
         },
         "minecraft:warped_sign": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Sign",
@@ -10408,7 +10421,7 @@ class Vanilla():
         },
         "minecraft:painting": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Painting",
@@ -10417,7 +10430,7 @@ class Vanilla():
         },
         "minecraft:item_frame": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Item Frame",
@@ -10426,7 +10439,7 @@ class Vanilla():
         },
         "minecraft:glow_item_frame": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Glow Item Frame",
@@ -10435,7 +10448,7 @@ class Vanilla():
         },
         "minecraft:honey_bottle": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Honey Bottle",
@@ -10444,7 +10457,7 @@ class Vanilla():
         },
         "minecraft:flower_pot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Flower Pot",
@@ -10453,7 +10466,7 @@ class Vanilla():
         },
         "minecraft:bowl": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bowl",
@@ -10462,7 +10475,7 @@ class Vanilla():
         },
         "minecraft:bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bucket",
@@ -10471,7 +10484,7 @@ class Vanilla():
         },
         "minecraft:milk_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Milk Bucket",
@@ -10480,7 +10493,7 @@ class Vanilla():
         },
         "minecraft:water_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Water Bucket",
@@ -10489,7 +10502,7 @@ class Vanilla():
         },
         "minecraft:lava_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lava Bucket",
@@ -10498,7 +10511,7 @@ class Vanilla():
         },
         "minecraft:cod_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Cod Bucket",
@@ -10507,7 +10520,7 @@ class Vanilla():
         },
         "minecraft:salmon_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Salmon Bucket",
@@ -10516,7 +10529,7 @@ class Vanilla():
         },
         "minecraft:tropical_fish_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tropical Fish Bucket",
@@ -10525,7 +10538,7 @@ class Vanilla():
         },
         "minecraft:pufferfish_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Pufferfish Bucket",
@@ -10534,7 +10547,7 @@ class Vanilla():
         },
         "minecraft:powder_snow_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Powder Snow Bucket",
@@ -10543,7 +10556,7 @@ class Vanilla():
         },
         "minecraft:axolotl_bucket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bucket of Axolotl",
@@ -10552,7 +10565,7 @@ class Vanilla():
         },
         "minecraft:tadpole_bucket": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bucket of Tadpole",
@@ -10561,7 +10574,7 @@ class Vanilla():
         },
         "minecraft:player_head": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Player Head",
@@ -10570,7 +10583,7 @@ class Vanilla():
         },
         "minecraft:zombie_head": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Zombie Head",
@@ -10579,7 +10592,7 @@ class Vanilla():
         },
         "minecraft:creeper_head": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Creeper Head",
@@ -10588,7 +10601,7 @@ class Vanilla():
         },
         "minecraft:dragon_head": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 5,
             "display_name": "Ender Dragon Head",
@@ -10597,7 +10610,7 @@ class Vanilla():
         },
         "minecraft:skeleton_skull": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Skeleton Skull",
@@ -10606,7 +10619,7 @@ class Vanilla():
         },
         "minecraft:wither_skeleton_skull": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Wither Skeleton Skull",
@@ -10615,7 +10628,7 @@ class Vanilla():
         },
         "minecraft:beacon": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Beacon",
@@ -10624,7 +10637,7 @@ class Vanilla():
         },
         "minecraft:bell": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bell",
@@ -10633,7 +10646,7 @@ class Vanilla():
         },
         "minecraft:conduit": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Conduit",
@@ -10642,7 +10655,7 @@ class Vanilla():
         },
         "minecraft:stonecutter": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stonecutter",
@@ -10651,7 +10664,7 @@ class Vanilla():
         },
         "minecraft:end_portal_frame": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Portal Frame",
@@ -10660,7 +10673,7 @@ class Vanilla():
         },
         "minecraft:coal": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Coal",
@@ -10669,7 +10682,7 @@ class Vanilla():
         },
         "minecraft:charcoal": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Charcoal",
@@ -10678,7 +10691,7 @@ class Vanilla():
         },
         "minecraft:diamond": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Diamond",
@@ -10687,7 +10700,7 @@ class Vanilla():
         },
         "minecraft:iron_nugget": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Nugget",
@@ -10696,7 +10709,7 @@ class Vanilla():
         },
         "minecraft:raw_iron": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Raw Iron",
@@ -10705,7 +10718,7 @@ class Vanilla():
         },
         "minecraft:raw_gold": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Raw Gold",
@@ -10714,7 +10727,7 @@ class Vanilla():
         },
         "minecraft:raw_copper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Raw Copper",
@@ -10723,7 +10736,7 @@ class Vanilla():
         },
         "minecraft:copper_ingot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Copper Ingot",
@@ -10732,7 +10745,7 @@ class Vanilla():
         },
         "minecraft:iron_ingot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Iron Ingot",
@@ -10741,7 +10754,7 @@ class Vanilla():
         },
         "minecraft:netherite_scrap": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Scrap",
@@ -10750,7 +10763,7 @@ class Vanilla():
         },
         "minecraft:netherite_ingot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Netherite Ingot",
@@ -10759,7 +10772,7 @@ class Vanilla():
         },
         "minecraft:gold_nugget": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gold Nugget",
@@ -10768,7 +10781,7 @@ class Vanilla():
         },
         "minecraft:gold_ingot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gold Ingot",
@@ -10777,7 +10790,7 @@ class Vanilla():
         },
         "minecraft:emerald": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Emerald",
@@ -10786,7 +10799,7 @@ class Vanilla():
         },
         "minecraft:quartz": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Quartz",
@@ -10795,7 +10808,7 @@ class Vanilla():
         },
         "minecraft:clay_ball": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Clay",
@@ -10804,7 +10817,7 @@ class Vanilla():
         },
         "minecraft:brick": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Brick",
@@ -10813,7 +10826,7 @@ class Vanilla():
         },
         "minecraft:netherbrick": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Brick",
@@ -10822,7 +10835,7 @@ class Vanilla():
         },
         "minecraft:prismarine_shard": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Prismarine Shard",
@@ -10831,7 +10844,7 @@ class Vanilla():
         },
         "minecraft:amethyst_shard": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Amethyst Shard",
@@ -10840,7 +10853,7 @@ class Vanilla():
         },
         "minecraft:prismarine_crystals": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Prismarine Crystals",
@@ -10849,7 +10862,7 @@ class Vanilla():
         },
         "minecraft:nautilus_shell": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Nautilus Shell",
@@ -10858,7 +10871,7 @@ class Vanilla():
         },
         "minecraft:heart_of_the_sea": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Heart of the Sea",
@@ -10867,7 +10880,7 @@ class Vanilla():
         },
         "minecraft:scute": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Scute",
@@ -10876,7 +10889,7 @@ class Vanilla():
         },
         "minecraft:phantom_membrane": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Phantom Membrane",
@@ -10885,7 +10898,7 @@ class Vanilla():
         },
         "minecraft:string": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "String",
@@ -10894,7 +10907,7 @@ class Vanilla():
         },
         "minecraft:feather": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Feather",
@@ -10903,7 +10916,7 @@ class Vanilla():
         },
         "minecraft:flint": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Flint",
@@ -10912,7 +10925,7 @@ class Vanilla():
         },
         "minecraft:gunpowder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Gunpowder",
@@ -10921,7 +10934,7 @@ class Vanilla():
         },
         "minecraft:leather": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Leather",
@@ -10930,7 +10943,7 @@ class Vanilla():
         },
         "minecraft:rabbit_hide": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Rabbit Hide",
@@ -10939,7 +10952,7 @@ class Vanilla():
         },
         "minecraft:rabbit_foot": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Rabbit's Foot",
@@ -10948,7 +10961,7 @@ class Vanilla():
         },
         "minecraft:fire_charge": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Fire Charge",
@@ -10957,7 +10970,7 @@ class Vanilla():
         },
         "minecraft:blaze_rod": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blaze Rod",
@@ -10966,7 +10979,7 @@ class Vanilla():
         },
         "minecraft:blaze_powder": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Blaze Powder",
@@ -10975,7 +10988,7 @@ class Vanilla():
         },
         "minecraft:magma_cream": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Magma Cream",
@@ -10984,7 +10997,7 @@ class Vanilla():
         },
         "minecraft:fermented_spider_eye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Fermented Spider Eye",
@@ -10993,7 +11006,7 @@ class Vanilla():
         },
         "minecraft:echo_shard": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Echo Shard",
@@ -11002,7 +11015,7 @@ class Vanilla():
         },
         "minecraft:dragon_breath": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Dragon's Breath",
@@ -11011,7 +11024,7 @@ class Vanilla():
         },
         "minecraft:shulker_shell": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Shulker Shell",
@@ -11020,7 +11033,7 @@ class Vanilla():
         },
         "minecraft:ghast_tear": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Ghast Tear",
@@ -11029,7 +11042,7 @@ class Vanilla():
         },
         "minecraft:slime_ball": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Slimeball",
@@ -11038,7 +11051,7 @@ class Vanilla():
         },
         "minecraft:ender_pearl": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Ender Pearl",
@@ -11047,7 +11060,7 @@ class Vanilla():
         },
         "minecraft:ender_eye": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "Eye of Ender",
@@ -11056,7 +11069,7 @@ class Vanilla():
         },
         "minecraft:nether_star": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Star",
@@ -11065,7 +11078,7 @@ class Vanilla():
         },
         "minecraft:end_rod": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Rod",
@@ -11074,7 +11087,7 @@ class Vanilla():
         },
         "minecraft:lightning_rod": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lightning Rod",
@@ -11083,7 +11096,7 @@ class Vanilla():
         },
         "minecraft:end_crystal": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Crystal",
@@ -11092,7 +11105,7 @@ class Vanilla():
         },
         "minecraft:paper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Paper",
@@ -11101,7 +11114,7 @@ class Vanilla():
         },
         "minecraft:book": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Book",
@@ -11110,7 +11123,7 @@ class Vanilla():
         },
         "minecraft:writable_book": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Book and Quill",
@@ -11119,7 +11132,7 @@ class Vanilla():
         },
         "minecraft:enchanted_book": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Enchanted Book",
@@ -11129,7 +11142,7 @@ class Vanilla():
         # Boats
         "minecraft:oak_boat": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Boat",
@@ -11138,7 +11151,7 @@ class Vanilla():
         },
         "minecraft:spruce_boat": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Boat",
@@ -11147,7 +11160,7 @@ class Vanilla():
         },
         "minecraft:birch_boat": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Boat",
@@ -11156,7 +11169,7 @@ class Vanilla():
         },
         "minecraft:jungle_boat": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Boat",
@@ -11165,7 +11178,7 @@ class Vanilla():
         },
         "minecraft:acacia_boat": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Boat",
@@ -11174,7 +11187,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_boat": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Boat",
@@ -11183,7 +11196,7 @@ class Vanilla():
         },
         "minecraft:mangrove_boat": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Boat",
@@ -11192,7 +11205,7 @@ class Vanilla():
         },
         "minecraft:oak_chest_boat": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Boat with Chest",
@@ -11201,7 +11214,7 @@ class Vanilla():
         },
         "minecraft:spruce_chest_boat": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Boat with Chest",
@@ -11210,7 +11223,7 @@ class Vanilla():
         },
         "minecraft:birch_chest_boat": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Boat with Chest",
@@ -11219,7 +11232,7 @@ class Vanilla():
         },
         "minecraft:jungle_chest_boat": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Boat with Chest",
@@ -11228,7 +11241,7 @@ class Vanilla():
         },
         "minecraft:acacia_chest_boat": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Boat with Chest",
@@ -11237,7 +11250,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_chest_boat": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Boat with Chest",
@@ -11246,7 +11259,7 @@ class Vanilla():
         },
         "minecraft:mangrove_chest_boat": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Boat with Chest",
@@ -11255,7 +11268,7 @@ class Vanilla():
         },
         "minecraft:rail": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Rail",
@@ -11264,7 +11277,7 @@ class Vanilla():
         },
         "minecraft:powered_rail": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Powered Rail",
@@ -11273,7 +11286,7 @@ class Vanilla():
         },
         "minecraft:detector_rail": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Detector Rail",
@@ -11282,7 +11295,7 @@ class Vanilla():
         },
         "minecraft:activator_rail": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Activator Rail",
@@ -11291,7 +11304,7 @@ class Vanilla():
         },
         "minecraft:minecart": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Minecart",
@@ -11300,7 +11313,7 @@ class Vanilla():
         },
         "minecraft:chest_minecart": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Minecart with Chest",
@@ -11309,7 +11322,7 @@ class Vanilla():
         },
         "minecraft:hopper_minecart": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Minecart with Hopper",
@@ -11318,7 +11331,7 @@ class Vanilla():
         },
         "minecraft:tnt_minecart": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Minecart with TNT",
@@ -11327,7 +11340,7 @@ class Vanilla():
         },
         "minecraft:redstone_block": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Redstone Block",
@@ -11336,7 +11349,7 @@ class Vanilla():
         },
         "minecraft:redstone_torch": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Redstone Torch",
@@ -11345,7 +11358,7 @@ class Vanilla():
         },
         "minecraft:lever": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Lever",
@@ -11354,7 +11367,7 @@ class Vanilla():
         },
         "minecraft:oak_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Wooden Button",
@@ -11363,7 +11376,7 @@ class Vanilla():
         },
         "minecraft:spruce_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Button",
@@ -11372,7 +11385,7 @@ class Vanilla():
         },
         "minecraft:birch_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Button",
@@ -11381,7 +11394,7 @@ class Vanilla():
         },
         "minecraft:jungle_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Button",
@@ -11390,7 +11403,7 @@ class Vanilla():
         },
         "minecraft:acacia_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Button",
@@ -11399,7 +11412,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Button",
@@ -11408,7 +11421,7 @@ class Vanilla():
         },
         "minecraft:mangrove_button": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Button",
@@ -11417,7 +11430,7 @@ class Vanilla():
         },
         "minecraft:stone_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Button",
@@ -11426,7 +11439,7 @@ class Vanilla():
         },
         "minecraft:crimson_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Button",
@@ -11435,7 +11448,7 @@ class Vanilla():
         },
         "minecraft:warped_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Button",
@@ -11444,7 +11457,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_button": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Button",
@@ -11453,7 +11466,7 @@ class Vanilla():
         },
         "minecraft:tripwire_hook": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Tripwire Hook",
@@ -11462,7 +11475,7 @@ class Vanilla():
         },
         "minecraft:oak_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Oak Pressure Plate",
@@ -11471,7 +11484,7 @@ class Vanilla():
         },
         "minecraft:spruce_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Spruce Pressure Plate",
@@ -11480,7 +11493,7 @@ class Vanilla():
         },
         "minecraft:birch_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Birch Pressure Plate",
@@ -11489,7 +11502,7 @@ class Vanilla():
         },
         "minecraft:jungle_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jungle Pressure Plate",
@@ -11498,7 +11511,7 @@ class Vanilla():
         },
         "minecraft:acacia_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Acacia Pressure Plate",
@@ -11507,7 +11520,7 @@ class Vanilla():
         },
         "minecraft:dark_oak_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Dark Oak Pressure Plate",
@@ -11516,7 +11529,7 @@ class Vanilla():
         },
         "minecraft:mangrove_pressure_plate": {
             "creative": False,
-            "experimetal": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Mangrove Pressure Plate",
@@ -11525,7 +11538,7 @@ class Vanilla():
         },
         "minecraft:crimson_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Crimson Pressure Plate",
@@ -11534,7 +11547,7 @@ class Vanilla():
         },
         "minecraft:warped_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Warped Pressure Plate",
@@ -11543,7 +11556,7 @@ class Vanilla():
         },
         "minecraft:stone_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Stone Pressure Plate",
@@ -11552,7 +11565,7 @@ class Vanilla():
         },
         "minecraft:light_weighted_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Light Weighted Pressure Plate",
@@ -11561,7 +11574,7 @@ class Vanilla():
         },
         "minecraft:heavy_weighted_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Heavy Weighted Pressure Plate",
@@ -11570,7 +11583,7 @@ class Vanilla():
         },
         "minecraft:polished_blackstone_pressure_plate": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Polished Blackstone Pressure Plate",
@@ -11579,7 +11592,7 @@ class Vanilla():
         },
         "minecraft:observer": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Observer",
@@ -11588,7 +11601,7 @@ class Vanilla():
         },
         "minecraft:daylight_detector": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Daylight Sensor",
@@ -11597,7 +11610,7 @@ class Vanilla():
         },
         "minecraft:repeater": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Redstone Repeater",
@@ -11606,7 +11619,7 @@ class Vanilla():
         },
         "minecraft:comparator": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Redstone Comparator",
@@ -11615,7 +11628,7 @@ class Vanilla():
         },
         "minecraft:hopper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Hopper",
@@ -11624,7 +11637,7 @@ class Vanilla():
         },
         "minecraft:dropper": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Dropper",
@@ -11633,7 +11646,7 @@ class Vanilla():
         },
         "minecraft:dispenser": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Dispenser",
@@ -11642,7 +11655,7 @@ class Vanilla():
         },
         "minecraft:piston": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Piston",
@@ -11651,7 +11664,7 @@ class Vanilla():
         },
         "minecraft:sticky_piston": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Sticky Piston",
@@ -11660,7 +11673,7 @@ class Vanilla():
         },
         "minecraft:tnt": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "TNT",
@@ -11669,7 +11682,7 @@ class Vanilla():
         },
         "minecraft:name_tag": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Name Tag",
@@ -11678,7 +11691,7 @@ class Vanilla():
         },
         "minecraft:loom": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Loom",
@@ -11687,7 +11700,7 @@ class Vanilla():
         },
         "minecraft:black_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Black Banner",
@@ -11696,7 +11709,7 @@ class Vanilla():
         },
         "minecraft:gray_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 8,
             "display_name": "Gray Banner",
@@ -11705,7 +11718,7 @@ class Vanilla():
         },
         "minecraft:light_gray_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 7,
             "display_name": "Light Gray Banner",
@@ -11714,7 +11727,7 @@ class Vanilla():
         },
         "minecraft:white_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "White Banner",
@@ -11723,7 +11736,7 @@ class Vanilla():
         },
         "minecraft:light_blue_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 12,
             "display_name": "Light Blue Banner",
@@ -11732,7 +11745,7 @@ class Vanilla():
         },
         "minecraft:orange_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 14,
             "display_name": "Orange Banner",
@@ -11741,7 +11754,7 @@ class Vanilla():
         },
         "minecraft:red_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 1,
             "display_name": "Red Banner",
@@ -11750,7 +11763,7 @@ class Vanilla():
         },
         "minecraft:blue_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 4,
             "display_name": "Blue Banner",
@@ -11759,7 +11772,7 @@ class Vanilla():
         },
         "minecraft:purple_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 5,
             "display_name": "Purple Banner",
@@ -11768,7 +11781,7 @@ class Vanilla():
         },
         "minecraft:magenta_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 13,
             "display_name": "Magenta Banner",
@@ -11777,7 +11790,7 @@ class Vanilla():
         },
         "minecraft:pink_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 9,
             "display_name": "Pink Banner",
@@ -11786,7 +11799,7 @@ class Vanilla():
         },
         "minecraft:brown_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 3,
             "display_name": "Brown Banner",
@@ -11795,7 +11808,7 @@ class Vanilla():
         },
         "minecraft:yellow_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 11,
             "display_name": "Yellow Banner",
@@ -11804,7 +11817,7 @@ class Vanilla():
         },
         "minecraft:lime_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 10,
             "display_name": "Lime Banner",
@@ -11813,7 +11826,7 @@ class Vanilla():
         },
         "minecraft:green_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 2,
             "display_name": "Green Banner",
@@ -11822,7 +11835,7 @@ class Vanilla():
         },
         "minecraft:cyan_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 6,
             "display_name": "Cyan Banner",
@@ -11831,7 +11844,7 @@ class Vanilla():
         },
         "minecraft:illager_banner": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 15,
             "display_name": "Illager Banner (Unobtainable w/o NBT Edit)",
@@ -11840,7 +11853,7 @@ class Vanilla():
         },
         "minecraft:bordure_indented_banner_pattern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Bordure Indented Banner Pattern",
@@ -11849,7 +11862,7 @@ class Vanilla():
         },
         "minecraft:creeper_banner_pattern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Creeper Banner Pattern",
@@ -11858,7 +11871,7 @@ class Vanilla():
         },
         "minecraft:field_masoned_banner_pattern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Field Masoned Banner Pattern",
@@ -11867,7 +11880,7 @@ class Vanilla():
         },
         "minecraft:flower_banner_pattern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Flower Banner Pattern",
@@ -11876,7 +11889,7 @@ class Vanilla():
         },
         "minecraft:globe_banner_pattern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Globe Banner Pattern",
@@ -11885,7 +11898,7 @@ class Vanilla():
         },
         "minecraft:mojang_banner_pattern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Thing Banner Pattern",
@@ -11894,7 +11907,7 @@ class Vanilla():
         },
         "minecraft:piglin_banner_pattern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Piglin Banner Pattern",
@@ -11903,7 +11916,7 @@ class Vanilla():
         },
         "minecraft:skull_banner_pattern": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Skull Banner Pattern",
@@ -11912,7 +11925,7 @@ class Vanilla():
         },
         "minecraft:firework_rocket": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Firework Rocket",
@@ -11921,7 +11934,7 @@ class Vanilla():
         },
         "minecraft:firework_star": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Firework Star",
@@ -11930,7 +11943,7 @@ class Vanilla():
         },
         "minecraft:chain": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Chain",
@@ -11939,7 +11952,7 @@ class Vanilla():
         },
         "minecraft:target": {
             "creative": False,
-            "experimetal": False,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Target",
@@ -11948,8 +11961,8 @@ class Vanilla():
         },
         # creative
         "minecraft:air": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Air",
@@ -11957,8 +11970,8 @@ class Vanilla():
             "identifier": "minecraft:air"
         },
         "minecraft:allow": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Allow",
@@ -11966,8 +11979,8 @@ class Vanilla():
             "identifier": "minecraft:allow"
         },
         "minecraft:barrier": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Barrier",
@@ -11975,8 +11988,8 @@ class Vanilla():
             "identifier": "minecraft:barrier"
         },
         "minecraft:command_block": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Command Block",
@@ -11984,8 +11997,8 @@ class Vanilla():
             "identifier": "minecraft:command_block"
         },
         "minecraft:chain_command_block": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Chain Command Block",
@@ -11993,8 +12006,8 @@ class Vanilla():
             "identifier": "minecraft:chain_command_block"
         },
         "minecraft:repeating_command_block": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Repeating Command Block",
@@ -12002,8 +12015,8 @@ class Vanilla():
             "identifier": "minecraft:repeating_command_block"
         },
         "minecraft:command_block_minecart": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Minecart with Command Block",
@@ -12011,8 +12024,8 @@ class Vanilla():
             "identifier": "minecraft:command_block_minecart"
         },
         "minecraft:structure_block": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Structure Block",
@@ -12020,8 +12033,8 @@ class Vanilla():
             "identifier": "minecraft:structure_block"
         },
         "minecraft:structure_void": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Structure Void",
@@ -12029,8 +12042,8 @@ class Vanilla():
             "identifier": "minecraft:structure_void"
         },
         "minecraft:jigsaw": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Jigsaw Block",
@@ -12038,8 +12051,8 @@ class Vanilla():
             "identifier": "minecraft:jigsaw"
         },
         "minecraft:light": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Light",
@@ -12047,8 +12060,8 @@ class Vanilla():
             "identifier": "minecraft:light_block"
         },
         "minecraft:suspicious_stew": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Suspicious Stew",
@@ -12056,8 +12069,8 @@ class Vanilla():
             "identifier": "minecraft:suspicious_stew"
         },
         "minecraft:filled_map": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Map",
@@ -12065,8 +12078,8 @@ class Vanilla():
             "identifier": "minecraft:filled_map"
         },
         "minecraft:frosted_ice": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "overworld",
             "data": 0,
             "display_name": "Frosted Ice",
@@ -12074,8 +12087,8 @@ class Vanilla():
             "identifier": "minecraft:frosted_ice"
         },
         "minecraft:portal": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "nether",
             "data": 0,
             "display_name": "Nether Portal (Unobtainable w/o NBT Edit)",
@@ -12083,8 +12096,8 @@ class Vanilla():
             "identifier": "minecraft:portal"
         },
         "minecraft:end_portal": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Portal (Unobtainable w/o NBT Edit)",
@@ -12092,8 +12105,8 @@ class Vanilla():
             "identifier": "minecraft:end_portal"
         },
         "minecraft:end_gateway": {
-            "creative": False,
-            "experimetal": True,
+            "creative": True,
+            "experimental": False,
             "dimension": "end",
             "data": 0,
             "display_name": "End Gateway (Unobtainable w/o NBT Edit)",
@@ -12101,6 +12114,329 @@ class Vanilla():
             "identifier": "minecraft:end_gateway"
         }
     }
+        # 1.19.50.21
+        #Updated on 21-10-2022
+        _list.update({
+            # Wood
+            "minecraft:bamboo_planks": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Planks",
+                "icon_path": "icons/bamboo_planks.png",
+                "identifier": "minecraft:bamboo_planks"
+            },
+            "minecraft:bamboo_mosaic": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Mosaic",
+                "icon_path": "icons/bamboo_mosaic.png",
+                "identifier": "minecraft:bamboo_mosaic"
+            },
+            "minecraft:bamboo_fence": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Fence",
+                "icon_path": "icons/bamboo_fence.png",
+                "identifier": "minecraft:bamboo_fence"
+            },
+            "minecraft:bamboo_fence_gate": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Fence Gate",
+                "icon_path": "icons/bamboo_fence_gate.png",
+                "identifier": "minecraft:bamboo_fence_gate"
+            },
+            "minecraft:bamboo_stairs": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Stairs",
+                "icon_path": "icons/bamboo_stairs.png",
+                "identifier": "minecraft:bamboo_stairs"
+            },
+            "minecraft:bamboo_door": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Door",
+                "icon_path": "icons/bamboo_door.png",
+                "identifier": "minecraft:bamboo_door"
+            },
+            "minecraft:bamboo_trapdoor": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Trapdoor",
+                "icon_path": "icons/bamboo_trapdoor.png",
+                "identifier": "minecraft:bamboo_trapdoor"
+            },
+            "minecraft:bamboo_slab": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Slab",
+                "icon_path": "icons/bamboo_slab.png",
+                "identifier": "minecraft:bamboo_slab"
+            },
+            "minecraft:bamboo_mosaic_slab": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Mosaic Slab",
+                "icon_path": "icons/bamboo_mosaic_slab.png",
+                "identifier": "minecraft:bamboo_mosaic_slab"
+            },
+            "minecraft:bamboo_mosaic_stairs": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Mosaic Stairs",
+                "icon_path": "icons/bamboo_mosaic_stairs.png",
+                "identifier": "minecraft:bamboo_mosaic_stairs"
+            },
+            "minecraft:bamboo_boat": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Boat",
+                "icon_path": "icons/bamboo_boat.png",
+                "identifier": "minecraft:bamboo_boat"
+            },
+            "minecraft:bamboo_chest_boat": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Chest Boat",
+                "icon_path": "icons/bamboo_chest_boat.png",
+                "identifier": "minecraft:bamboo_chest_boat"
+            },
+            "minecraft:bamboo_button": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Button",
+                "icon_path": "icons/bamboo_button.png",
+                "identifier": "minecraft:bamboo_button"
+            },
+            "minecraft:bamboo_pressure_plate": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Pressure Plate",
+                "icon_path": "icons/bamboo_pressure_plate.png",
+                "identifier": "minecraft:bamboo_pressure_plate"
+            },
+            "minecraft:bamboo_sign": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Sign",
+                "icon_path": "icons/bamboo_sign.png",
+                "identifier": "minecraft:bamboo_sign"
+            },
+            # Spawn Egg
+            "minecraft:camel_spawn_egg": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Camel Spawn Egg",
+                "icon_path": "icons/camel_spawn_egg.png",
+                "identifier": "minecraft:camel_spawn_egg"
+            },
+            # Bookshelf
+            "minecraft:chiseled_bookshelf": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Chiseled Bookshelf",
+                "icon_path": "icons/chiseled_bookshelf.png",
+                "identifier": "minecraft:chiseled_bookshelf"
+            },
+            # Hanging Signs
+            "minecraft:bamboo_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Hanging Sign",
+                "icon_path": "icons/bamboo_hanging_sign.png",
+                "identifier": "minecraft:bamboo_hanging_sign"
+            },
+            "minecraft:mangrove_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Mangrove Hanging Sign",
+                "icon_path": "icons/mangrove_hanging_sign.png",
+                "identifier": "minecraft:mangrove_hanging_sign"
+            },
+            "minecraft:warped_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Hanging Sign",
+                "icon_path": "icons/warped_hanging_sign.png",
+                "identifier": "minecraft:warped_hanging_sign"
+            },
+            "minecraft:crimson_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Crimson Hanging Sign",
+                "icon_path": "icons/crimson_hanging_sign.png",
+                "identifier": "minecraft:crimson_hanging_sign"
+            },
+            "minecraft:dark_oak_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Dark Oak Hanging Sign",
+                "icon_path": "icons/dark_oak_hanging_sign.png",
+                "identifier": "minecraft:dark_oak_hanging_sign"
+            },
+            "minecraft:acacia_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Acasia Hanging Sign",
+                "icon_path": "icons/acacia_hanging_sign.png",
+                "identifier": "minecraft:acacia_hanging_sign"
+            },
+            "minecraft:jungle_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Jungle Hanging Sign",
+                "icon_path": "icons/jungle_hanging_sign.png",
+                "identifier": "minecraft:jungle_hanging_sign"
+            },
+            "minecraft:birch_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Birch Hanging Sign",
+                "icon_path": "icons/birch_hanging_sign.png",
+                "identifier": "minecraft:birch_hanging_sign"
+            },
+            "minecraft:spruce_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Spruce Hanging Sign",
+                "icon_path": "icons/spruce_hanging_sign.png",
+                "identifier": "minecraft:spruce_hanging_sign"
+            },
+            "minecraft:oak_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Oak Hanging Sign",
+                "icon_path": "icons/oak_hanging_sign.png",
+                "identifier": "minecraft:oak_hanging_sign"
+            }
+        })
+
+class SoundCategory():
+    list = ['ambient', 'block', 'player', 'neutral', 'hostile', 'music', 'record', 'ui']
+    
+    Ambient = 'ambient'
+    Block = 'block'
+    Player = 'player'
+    Neutral = 'neutral'
+    Hostile = 'hostile'
+    Music = 'music'
+    Record = 'record'
+    UI = 'ui'
+class MusicCategory():
+    list = ['creative', 'credits', 'crimson_forest', 'dripstone_caves', 'end', 'endboss', 'frozen_peaks', 'game', 'grove', 'hell', 'jagged_peaks', 'lush_caves', 'meadow', 'menu', 'nether', 'snowy_slopes', 'soulsand_valley', 'stony_peaks', 'water' ]
+    Creative = 'creative'
+    Credits = 'credits'
+    Crimson_forest = 'crimson_forest'
+    Dripstone_caves = 'dripstone_caves'
+    End = 'end'
+    Endboss = 'endboss'
+    Frozen_peaks = 'frozen_peaks'
+    Game = 'game'
+    Grove = 'grove'
+    Hell = 'hell'
+    Jagged_peaks = 'jagged_peaks'
+    Lush_caves = 'lush_caves'
+    Meadow = 'meadow'
+    Menu = 'menu'
+    Nether = 'nether'
+    Snowy_slopes = 'snowy_slopes'
+    Soulsand_valley = 'soulsand_valley'
+    Stony_peaks = 'stony_peaks'
+    Water = 'water'
+class DamageCause():
+    list = ['all', 'anvil', 'attack', 'block_explosion', 'contact', 'drowning', 'entity_explosion', 'fall', 'falling_block', 'fatal', 'fire', 'fire_tick', 'fly_into_wall', 'lava', 'magic', 'none', 'override', 'piston', 'projectile', 'sonic_boom', 'stalactite', 'stalagmite', 'starve', 'suffocation', 'suicide', 'thorns', 'void', 'wither',]
+    All = 'all'
+    Anvil = 'anvil'
+    Attack = 'attack'
+    Block_explosion = 'block_explosion'
+    Contact = 'contact'
+    Drowning = 'drowning'
+    Entity_explosion = 'entity_explosion'
+    Fall = 'fall'
+    Falling_block = 'falling_block'
+    Fatal = 'fatal'
+    Fire = 'fire'
+    Fire_tick = 'fire_tick'
+    Fly_into_wall = 'fly_into_wall'
+    Lava = 'lava'
+    Magic = 'magic'
+    Nothing = 'none'
+    Override = 'override'
+    Piston = 'piston'
+    Projectile = 'projectile'
+    Sonic_boom = 'sonic_boom'
+    Stalactite = 'stalactite'
+    Stalagmite = 'stalagmite'
+    Starve = 'starve'
+    Suffocation = 'suffocation'
+    Suicide = 'suicide'
+    Thorns = 'thorns'
+    Void = 'void'
+    Wither = 'wither'
+class Target():
+    list = ['block', 'damager', 'other', 'parent', 'player', 'self', 'target']
+    Block = 'block'
+    Damager = 'damager'
+    Other = 'other'
+    Parent = 'parent'
+    Player = 'player'
+    Self = 'self'
+    Target = 'target'  
 
 def Schemes(type, *args):
     MANIFEST_BUILD = [1, 18, 0]
@@ -12109,8 +12445,9 @@ def Schemes(type, *args):
     BP_ANIMATION_VERSION = '1.10.0'
     ANIMATION_CONTROLLERS_VERSION = '1.10.0'
     SPAWN_RULES_VERSION = '1.8.0'
-    GEOMETRY_VERSION = '1.8.0'
+    GEOMETRY_VERSION = '1.12.0'
     RENDER_CONTROLLER_VERSION = '1.10.0'
+    SOUND_DEFINITIONS_VERSION = '1.14.0'
     match type:
         case 'structure':
             return {
@@ -12121,7 +12458,8 @@ def Schemes(type, *args):
                         "skins":{},
                         "animations": {},
                         "models": {
-                            "entity":{}
+                            "entity":{},
+                            'attachables':{}
                         },
                         "particles": {},
                         "sounds": {},
@@ -12148,33 +12486,36 @@ def Schemes(type, *args):
                 f'    #ANVIL.package()\n'
         case 'config':
             return {
-                "COMPANY": args[1].title(),
-                "NAMESPACE": args[0],
-                "PROJECT_NAME": args[2],
-                "DISPLAY_NAME": args[3].replace('_', ' ').replace('-', ' ').title(),
-                "PROJECT_DESCRIPTION": f'{args[4].replace("_", " ").replace("-", " ").title()}',
-                "VANILLA_VERSION": args[5],
-                "LAST_CHECK": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "NAMESPACE_FORMAT": args[6]
+                'COMPANY': args[1].title(),
+                'NAMESPACE': args[0],
+                'PROJECT_NAME': args[2],
+                'DISPLAY_NAME': args[3].replace('_', ' ').replace('-', ' ').title(),
+                'PROJECT_DESCRIPTION': f'{args[4].replace("_", " ").replace("-", " ").title()}',
+                'VANILLA_VERSION': args[5],
+                'LAST_CHECK': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                'NAMESPACE_FORMAT': int(args[6]),
+                'BUILD': args[7]
             }
         case 'code-workspace':
             return {
             	"folders": [
             		{
+                        "name": "Assets",
+            			"path": MakePath(args[0],args[1],'assets')
+            		},
+            		{
+                        "name": "Resource Packs",
+            			"path": MakePath(args[0],args[1],'resource_packs')
+            		},
+            		{
+                        "name": "Behavior Packs",
+            			"path": MakePath(args[0],args[1],'behavior_packs')
+            		},
+            		{
+                        "name":"General",
             			"path": MakePath(args[0],args[1])
-            		},
-            		{
-            			"name": "BP.zip",
-            			"uri": f"zip:{MakePath(args[0],args[1],'assets','vanilla','BP.zip')}"
-            		},
-            		{
-            			"name": "RP.zip",
-            			"uri": f"zip:{MakePath(args[0],args[1],'assets','vanilla','RP.zip')}"
             		}
-            	],
-            	"settings": {
-            		"docwriter.style": "JSDoc"
-            	}
+            	]
             }
         
         case 'description': 
@@ -12183,6 +12524,22 @@ def Schemes(type, *args):
                     'identifier': f'{args[0]}:{args[1]}'
             }
         }
+        case 'client_description':
+            return {
+                'materials': {
+                    'default': 'entity_alphatest'
+                },
+                'scripts':{
+                    'pre_animation':[],
+                    'initialize': [],
+                    'animate':[]
+                },
+                'textures': {},
+                'geometry': {},
+                'particle_effects': {},
+                'sound_effects': {},
+                'render_controllers': []
+            }
         case 'server_entity':
             return {
                 'format_version': ENTITY_SERVER_VERSION,
@@ -12204,8 +12561,8 @@ def Schemes(type, *args):
             }     
         case 'bp_animation':
             return {
-                f'animation.{args[0]}.{args[1]}': {
-                    'loop': args[2],
+                f'animation.{args[0]}.{args[1]}.{args[2]}': {
+                    'loop': args[3],
                     'timeline': {}
                 }
             }
@@ -12261,11 +12618,27 @@ def Schemes(type, *args):
                     ]
                 }
             }
-        case 'item_textures':
+        case 'item_texture':
             return {
                 'resource_pack_name': args[0],
                 'texture_name': 'atlas.items',
                 'texture_data': {}
+            }
+        case 'terrain_textures':
+            return {
+               "num_mip_levels" : 4,
+               "padding" : 8,
+               "resource_pack_name" : args[0],
+               "texture_data" : {},
+               "texture_name" : "atlas.terrain"
+            }
+        case 'flipbook_textures':
+            return []
+            
+        case 'attachable':
+            return {
+                "format_version": ENTITY_CLIENT_VERSION,
+                "minecraft:attachable": {}
             }
         
         case 'spawn_rules':
@@ -12358,23 +12731,25 @@ def Schemes(type, *args):
                     "authors" : args[0]
                 }
             }
+        case 'sound_definitions':
+            return {
+                "format_version": SOUND_DEFINITIONS_VERSION,
+                "sound_definitions": {}
+            }
+        case 'music_definitions':
+            return {
+            }
+        case 'sound':
+            return {
+                args[0]: {
+                    'category': args[1],
+                    'sounds': []
+                }
+            }
 
-
-def FileExtension(type) -> str:
-    extensions = {
-        'server_entity': '.behavior.json',
-        'client_entity': '.entity.json',
-        'bp_animations': '.animation.json',
-        'spawn_rules': '.spawn_rules.json',
-        'bp_animation_controllers': '.animation_controller.json',
-        'rp_animation_controllers': '.animation_controller.json',
-        'ui': '.ui.json',
-        'render_controllers': '.render.json'
-    }
-
-    return extensions[type]
-
-
+        case 'blocks':
+            return {}
+        
 def Defaults(type, *args):
     match type:
         case 'animation_controllers_rp':
@@ -12386,21 +12761,6 @@ def Defaults(type, *args):
             return {
                 "format_version": "1.10.0",
                 "animations": {}
-            }
-        case 'attachable':
-            return {
-                "format_version": "1.10.0",
-                "minecraft:attachable": {
-                    "description": {
-                        "identifier": f'{args[0]}:{args[1]}',
-                        "materials": {
-                            "default": "entity_alphatest"
-                        },
-                        "textures": {},
-                        "geometry": {},
-                        "render_controllers": []
-                    }
-                }
             }
         case 'rp_item_v1':
             return {
@@ -12432,7 +12792,7 @@ def Defaults(type, *args):
                 'minecraft:block': {
                     'description': {
                         'identifier': f"{args[0]}:{args[1]}",
-                        'is_experimetal': False,
+                        'is_experimental': False,
                         'register_to_creative_menu': True
                     },
                     'components': {}
@@ -12544,12 +12904,6 @@ def Defaults(type, *args):
             }
         case 'music_definitions':
             return {}
-        case 'sound_definitions':
-            return {
-                "format_version": "1.14.0",
-                "sound_definitions": {
-                }
-            }
         case 'language':
             return \
                 f'pack.name={args[0]}\n'\
@@ -12767,8 +13121,7 @@ def RaiseError(text):
 
 def CheckAvailability(file, type, folder):
     if FileExists(f'{folder}/{file}') is False:
-        RaiseError(
-            f'A {type} with the name {file} cannot be found in {folder}')
+        RaiseError(MISSING_FILE(type, file, folder))
 
 
 def CreateDirectoriesFromTree(tree):
@@ -12782,6 +13135,19 @@ def CreateDirectoriesFromTree(tree):
     directories = find_key(tree, '', a=[])
     for dir in directories:
         CreateDirectory(dir)
+
+
+def ShortenDict(d):
+    if isinstance(d, dict):
+        return {
+            k: v for k, v in ((k, ShortenDict(v)) for k, v in d.items())
+            if v != {} and v != [] or str(k).startswith('minecraft:')
+        }
+
+    elif isinstance(d, list):
+        return [v for v in map(ShortenDict, d) if v != []]
+
+    return d
 
 
 def CreateTreeFromPath(path):
@@ -12828,7 +13194,8 @@ def MoveFiles(old_dir: str, new_dir: str, file_name: str):
 
 def CopyFiles(old_dir: str, new_dir: str, file_name: str):
     CreateDirectory(new_dir)
-    shutil.copyfile(f'{old_dir}/{file_name}', f'{new_dir}/{file_name}')
+    
+    shutil.copyfile(MakePath(old_dir,file_name), MakePath(new_dir,file_name))
 
 
 def CopyFolder(old_dir: str, new_dir: str):
@@ -12848,18 +13215,10 @@ def File(name: str, content, directory: str, mode: str,*args):
     path = os.path.normpath(os.path.join(directory,name))
     if mode == 'w':
         match type:
-            case 'json':
+            case 'json' | 'material' | 'code-workspace':
                 out_content = f'//{stamp}\n//{time}\n//{copyright}\n\n'
-                file_content = json.dumps(content, sort_keys=True, indent=4)
-            case 'material':
-                out_content = f'//{stamp}\n//{time}\n//{copyright}\n\n'
-                file_content = json.dumps(content, sort_keys=True, indent=4)
-            case 'code-workspace':
-                out_content = f'//{stamp}\n//{time}\n//{copyright}\n\n'
-                file_content = json.dumps(content, sort_keys=True, indent=4)
-            case 'py':
-                out_content = f'#{stamp}\n#{time}\n#{copyright}\n\n'
-            case 'mcfunction':
+                file_content = json.dumps(content, sort_keys=False, indent=4)
+            case 'py' | 'mcfunction':
                 out_content = f'#{stamp}\n#{time}\n#{copyright}\n\n'
             case 'lang':
                 out_content = f'##{stamp}\n##{time}\n##{copyright}\n\n'
@@ -12875,7 +13234,6 @@ def File(name: str, content, directory: str, mode: str,*args):
 
 
 def DownloadFile(url: str, save_path: str, content_type: str):
-    LATEST_BUILD = request.urlopen(BP).url.split('/')[-1].lstrip('Vanilla_Behavior_Pack_').rstrip('.zip')
     def report_hook(count, block_size, total_size):
         progress = 100.0 * count * block_size / total_size
         # Converting  from B to MB
@@ -12883,13 +13241,13 @@ def DownloadFile(url: str, save_path: str, content_type: str):
         total = round(total_size*pow(10,-6),1)
         bar = int((downloaded/total)*20)
         if progress <= 100:
-            click.echo(f'\rDownloading {LATEST_BUILD} Vanilla {content_type} Pack:  ', nl=False)
+            click.echo(f'\rDownloading: ', nl=False)
             click.echo(click.style("━" * bar,fg='bright_magenta'),nl=False)
             click.echo(click.style(f'╸',fg='bright_magenta'),nl=False)
             click.echo(click.style("━" * (20-bar),fg='bright_black'),nl=False)
             click.echo(click.style(f'  {downloaded}/{total} MB',fg='green'),nl=False)
         else:
-            click.echo(f'\rDownloading {LATEST_BUILD} Vanilla {content_type} Pack:  ', nl=False)
+            click.echo(f'\rDownloading: ', nl=False)
             click.echo(click.style("━" * 20,fg='bright_green'),nl=False)
             click.echo(click.style(f'╸',fg='bright_green'))
     request.urlretrieve(url, save_path, reporthook=report_hook)
@@ -12897,5 +13255,6 @@ def DownloadFile(url: str, save_path: str, content_type: str):
 
 def header():
     os.system('cls')
-    click.echo(f'Anvil [{__version__}]')
-    click.echo(f'Copyright © {datetime.now().year} StarkTMA. All rights reserved.\n')
+    click.echo(MODULE)
+    click.echo(VERSION(__version__))
+    click.echo(COPYRIGHT(datetime.now().year))
