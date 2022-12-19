@@ -20,6 +20,26 @@ class EventObject():
             'target': target
         }
 
+# Filters ==========================================================================
+class _filter(dict):
+    def __init__(self, component_name) -> None:
+        self.__setitem__('self._component_namespace', {})
+        self._all_of = []
+        self._any_of = []
+        self._none_of = []
+    
+    def all_of(self):
+        self._all_of.append(_filter(''))
+        return self._all_of[-1]
+    def any_of(self):
+        self._any_of.append(_filter(''))
+        return self._any_of[-1]
+    def none_of(self):
+        self._none_of.append(_filter(''))
+        return self._none_of[-1]
+
+
+
 # Components ==========================================================================
 class _component(dict):
     def __init__(self, component_name) -> None:
@@ -180,7 +200,7 @@ class CanClimb(_component):
         super().__init__('can_climb')
 
 class Attack(_component):
-    def __init__(self, damage: int, effect_duration: str = None, effect_name: str = None) -> None:
+    def __init__(self, damage: int, effect_duration: int = None, effect_name: str = None) -> None:
         """Defines an entity's melee attack and any additional effects on it."""
         super().__init__('attack')
         self.AddField('damage', damage)
@@ -324,7 +344,6 @@ class AreaAttack(_component):
         self.AddField('entity_filter', filter)
         return self
 
-# FLAGS ===============================================================================
 class IsStackable(_component):
     def __init__(self) -> None:
         """Sets that this entity can be stacked."""
@@ -406,9 +425,10 @@ class DamageSensor(_component):
         on_damage_event: str = None, on_damage_filter: dict = None,  damage_multiplier: int = 1, damage_modifier: float = 0
     ):
         damage = {
-            'cause': cause,
             'deals_damage': deals_damage,
         }
+        if not cause is DamageCause.All:
+            damage['cause'] = cause
         if not on_damage_event is None:
             damage['on_damage']={
                 'event': on_damage_event
@@ -422,7 +442,6 @@ class DamageSensor(_component):
 
         self[self._component_namespace]['triggers'].append(damage)
         return self
-# =====================================================================================
 
 # Unfinished
 class TargetNearbySensor(_component):

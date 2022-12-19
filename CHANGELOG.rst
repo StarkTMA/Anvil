@@ -2,6 +2,17 @@
 Changelog
 =========
 
+Version 0.2.2
+===========
+ - Updated to Python 3.11.
+ - Moved away from `setup.py` to `pyproject.toml`.
+ - Updated the Dialogue class.
+ - Added Fog class.
+ - Added Fog command.
+ - Updated commands classes.
+===========
+Version 0.2.1
+===========
 Version 0.2.0
 ===========
  - Updated the Exporter to include file extension formats.

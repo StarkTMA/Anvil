@@ -1,5 +1,6 @@
 from ..packages import *
 from ..core import ANVIL, Function, NAMESPACE, PROJECT_NAME
+from . import commands
 
 
 class Interpolation:
@@ -80,9 +81,10 @@ class Cinematics():
                 commands.append(point['cmd'])
                 
             # Create a time list the size of input data with evenly spaced values
-            # Create ta new time list with 20*duration samples
-            time = np.linspace(0, len(x_data)-1, len(x_data))
-            new_time = np.linspace(0, len(x_data)-1, 20*data['duration'])
+            # Create a new time list with 20*duration samples
+            
+            time = frange(0, len(x_data)-1, len(x_data))
+            new_time = frange(0, len(x_data)-1, 20*data['duration'])
 
             # Calculate the prediction function for each list
             x_f = interp1d(time, x_data, kind = data['interpolation'])
@@ -109,7 +111,7 @@ class Cinematics():
                 ax.legend()
                 plt.show()
 
-            a = np.floor(20*data['duration']/(len(commands)-1))
+            a = 20*data['duration']//(len(commands)-1)
             for i,(x, y, z, rx, ry) in enumerate(zip(new_x_data, new_y_data, new_z_data, new_rx_data, new_ry_data)):
                 if i % a == 1:
                     if commands[0] != None:
@@ -139,7 +141,6 @@ class StateManager():
             self._game = Function('game').queue(f'StateManager/{type}_{self._index}')
             self._init_player = Function('init_player').queue(f'StateManager/{type}_{self._index}')
             self._init_world = Function('init_world').queue(f'StateManager/{type}_{self._index}')
-        
         @property
         def init_world(self):
             return self._init_world
@@ -155,6 +156,9 @@ class StateManager():
         @property
         def exit_world(self):
             return self._exit_world
+        @property
+        def index(self):
+            return self._index
 
     class MainState(_state):
         def __init__(self, index: int) -> None:
@@ -246,9 +250,7 @@ class StateManager():
         ix = len(self.main_levels)
         state = self.MainState(ix)
         self.main_levels.append(state)
-        self.root.add(
-            f'execute @p[scores={{game_level={ix},player_id=0}}] ~ ~ ~ {state._root.execute}'
-        )
+        self.root.add(f'execute @p[scores={{game_level={ix},player_id=0}}] ~ ~ ~ {state._root.execute}')
         state.init_player.add(
             'effect @s clear',
             'effect @s saturation 100000 255 true',
@@ -256,12 +258,11 @@ class StateManager():
             'xp -1000L',
             'clear @s',
             'gamemode a @a',
-            'gamerule commandblockoutput false',
-            'gamerule sendcommandfeedback false'
+            commands.Gamerule.CommandBlockOutput(False),
+            commands.Gamerule.SendCommandFeedback(False),
+            commands.Gamerule.ShowTags(False),
         )
-        state.exit_player.add(
-            'effect @s clear'
-        )
+        state.exit_player.add('effect @s clear')
         return state
 
     @property
@@ -288,37 +289,193 @@ class StateManager():
         )
         for level in self.main_levels:
             level._exit_emergency._content = level.exit_player._content
-            level.init_world.add(
-                f'scoreboard players set {PROJECT_NAME} game_state 1')
-            level.init_player.add(
-                f'scoreboard players set {PROJECT_NAME} game_state 2')
-            level._exit_emergency.add(
-                f'scoreboard players set @s game_level {level._index+1}',
-                'scoreboard players set @s game_state 0'
-            )
-            level.exit_player.add(
-                f'scoreboard players set {PROJECT_NAME} game_state 4')
-            level.exit_world.add(
-                f'scoreboard players set {PROJECT_NAME} game_state 0',
-                f'scoreboard players set @a[scores={{game_level={level._index}}}] game_state 0',
-                f'scoreboard players set {PROJECT_NAME} game_level {level._index+1}'
-            )
+            level.init_world.add(f'scoreboard players set {PROJECT_NAME} game_state 1')
+            level.init_player.add(f'scoreboard players set {PROJECT_NAME} game_state 2')
+            level._exit_emergency.add(f'scoreboard players set @s game_level {level._index+1}','scoreboard players set @s game_state 0')
+            level.exit_player.add(f'scoreboard players set {PROJECT_NAME} game_state 4')
+            level.exit_world.add(f'scoreboard players set {PROJECT_NAME} game_state 0',f'scoreboard players set @a[scores={{game_level={level._index}}}] game_state 0',f'scoreboard players set {PROJECT_NAME} game_level {level._index+1}')
+        
         for level in self.side_levels:
             level._exit_emergency._content = level.exit_player._content
-            level.init_world.add(
-                f'scoreboard players set @s game_state 1')
-            level.init_player.add(
-                f'scoreboard players set @s game_state 2')
-            level._exit_emergency.add(
-                f'scoreboard players set @s game_level 0',
-                'scoreboard players set @s game_state 0'
+            level.init_world.add(f'scoreboard players set @s game_state 1')
+            level.init_player.add(f'scoreboard players set @s game_state 2')
+            level._exit_emergency.add(f'scoreboard players set @s game_level 0','scoreboard players set @s game_state 0')
+            level.exit_player.add(f'scoreboard players set @s game_state 4')
+            level.exit_world.add(f'scoreboard players set @a[scores={{game_level={level._index}}}] game_state 1',f'scoreboard players set @a[scores={{game_level={level._index}}}] sync 1')
+
+
+class StateManager2():
+    class _state():
+        def __init__(self, index: int, type: str) -> None:
+            self._index = index
+            self._root = Function('root').queue(f'StateManager/{type}_{self._index}')
+            self._exit_emergency = Function('exit_emergency').queue(f'StateManager/{type}_{self._index}')
+            self._exit_player = Function('exit_player').queue(f'StateManager/{type}_{self._index}')
+            self._exit_world = Function('exit_world').queue(f'StateManager/{type}_{self._index}')
+            self._game = Function('game').queue(f'StateManager/{type}_{self._index}')
+            self._init_player = Function('init_player').queue(f'StateManager/{type}_{self._index}')
+            self._init_world = Function('init_world').queue(f'StateManager/{type}_{self._index}')
+        @property
+        def init_world(self):
+            return self._init_world
+        @property
+        def init_player(self):
+            return self._init_player
+        @property
+        def game(self):
+            return self._game
+        @property
+        def exit_player(self):
+            return self._exit_player
+        @property
+        def exit_world(self):
+            return self._exit_world
+        @property
+        def index(self):
+            return self._index
+
+    class MainState(_state):
+        def __init__(self, index: int) -> None:
+            super().__init__(index, 'level')
+            self._root.add(
+                '#Skip init world if already initiated',
+                f'execute @a[scores={{game_level={self._index}..,game_state=1..}}] ~ ~ ~ scoreboard players set @a[scores={{game_level={self._index},game_state=0}}] game_state 1',
+                '#Emergency exit if player is on the next level',
+                f'execute @a[scores={{game_level={self._index+1}..}}] ~ ~ ~ scoreboard players set @a[scores={{game_level={self._index}}}] game_state 5',
+                '# Init world',
+                f'execute @s[scores={{game_state=0}}] ~ ~ ~ {self._init_world.execute}',
+                f'execute @a[scores={{game_level={self._index},game_state=1}}] ~ ~ ~ {self._init_player.execute}',
+                f'execute @s[scores={{game_state=2}}] ~ ~ ~ {self._game.execute}',
+                f'execute @a[scores={{game_level={self._index},game_state=3}}] ~ ~ ~ {self._exit_player.execute}',
+                f'execute @s[scores={{game_state=4}}] ~ ~ ~ {self._exit_world.execute}',
+                f'execute @a[scores={{game_level={self._index},game_state=5}}] ~ ~ ~ {self._exit_emergency.execute}',
+                f'scoreboard players operation @a[scores={{game_level={self._index},sync=1}}] game_state > {PROJECT_NAME} game_state'
             )
-            level.exit_player.add(
-                f'scoreboard players set @s game_state 4')
-            level.exit_world.add(
-                f'scoreboard players set @a[scores={{game_level={level._index}}}] game_state 0',
-                f'scoreboard players set @a[scores={{game_level={level._index}}}] sync 1'
+
+    class SideState(_state):
+        def __init__(self, index: int) -> None:
+            super().__init__(index, 'side_level')
+            self._root.add(
+                f'execute @s[scores={{game_level={self._index}..,game_state=1..}}] ~ ~ ~ scoreboard players set @a[scores={{game_level={self._index},game_state=0}}] game_state 1',
+                '# Init world',
+                f'execute @s[scores={{game_state=0}}] ~ ~ ~ {self._init_world.execute}',
+                f'execute @a[scores={{game_level={self._index},game_state=1}}] ~ ~ ~ {self._init_player.execute}',
+                f'execute @s[scores={{game_state=2}}] ~ ~ ~ {self._game.execute}',
+                f'execute @a[scores={{game_level={self._index},game_state=3}}] ~ ~ ~ {self._exit_player.execute}',
+                f'execute @s[scores={{game_state=4}}] ~ ~ ~ {self._exit_world.execute}',
+                f'execute @a[scores={{game_level={self._index},game_state=5}}] ~ ~ ~ {self._exit_emergency.execute}',
+                f'scoreboard players operation @a[scores={{game_level={self._index},sync=0,game_state=1..}}] game_state > @a[scores={{game_level={self._index},sync=0}}] game_state'
             )
+
+    def __init__(self):
+        ANVIL.tag('self_init')
+        ANVIL.score(
+            even = 2,
+            game_level = 0,
+            game_state = 0,
+            sync = 1,
+            player_id = 0,
+            active_players = 0,
+            player_count = 0,
+            players_odd = 0,
+        )
+        # init Function, initialise player scores
+        self.init_player = Function('init_player').add(
+            commands.Comment('Init players'),
+            commands.Comment('Make the game engine Sync by default'),
+            commands.Clear('@s'),
+            f'scoreboard players operation @s player_id = {PROJECT_NAME} player_id',
+            f'scoreboard players add {PROJECT_NAME} player_id 1',
+            'scoreboard players set @s sync 1',
+            'scoreboard players set @s game_state 0',
+            'scoreboard players set @s game_level 0',
+            commands.Tag().add('@s', 'self_init')
+        ).queue('StateManager/misc')
+        # Controls active players count
+        self.active_players = Function('active_players').add(
+            # Resets active players count
+            f'scoreboard players set {PROJECT_NAME} active_players 0',
+            # Counts every player who self initialized through self_init function
+            commands.Execute().As('@a[tag=self_init]').run(f'scoreboard players add {PROJECT_NAME} active_players 1'),
+            # Calculate even or odd player count
+            f'scoreboard players operation {PROJECT_NAME} players_odd = {PROJECT_NAME} active_players',
+            f'scoreboard players operation {PROJECT_NAME} players_odd %= {PROJECT_NAME} even',
+            # Return the active player count and odd state to every player
+            # This is to be removed once the nex execute commands are out of experimental.
+            f'scoreboard players operation @a active_players = {PROJECT_NAME} active_players',
+            f'scoreboard players operation @a players_odd = {PROJECT_NAME} players_odd',
+        ).queue('StateManager/misc')
+        # Root Function, controls which game state logic works
+        self.root = Function('root').add(
+            '# Init new players',
+            f'execute @a[tag=!self_init] ~ ~ ~ {self.init_player.execute}',
+            self.active_players.execute,
+            '# Engine always syncs to players',
+            f'scoreboard players set {PROJECT_NAME} sync 1',
+            '# Sync Engine to all players if players are syncing',
+            f'scoreboard players operation @a[scores={{sync=1}}] game_level > {PROJECT_NAME} game_level'
+        ).queue('StateManager').tick
+        # Levels
+        self.main_levels : list['StateManager.MainState'] = []
+        self.side_levels : list['StateManager.SideState'] = []
+
+    @property
+    def lobby(self):
+        ix = len(self.main_levels)
+        state = self.MainState(ix)
+        self.main_levels.append(state)
+        self.root.add(f'execute @p[scores={{game_level={ix},player_id=0}}] ~ ~ ~ {state._root.execute}')
+        state.init_player.add(
+            'effect @s clear',
+            'effect @s saturation 100000 255 true',
+            'effect @s regeneration 100000 255 true',
+            'xp -1000L',
+            'clear @s',
+            'gamemode a @a',
+            commands.Gamerule.CommandBlockOutput(False),
+            commands.Gamerule.SendCommandFeedback(False),
+            commands.Gamerule.ShowTags(False),
+        )
+        state.exit_player.add('effect @s clear')
+        return state
+
+    @property
+    def add_main_level(self):
+        ix = len(self.main_levels)
+        state = self.MainState(ix)
+        self.main_levels.append(state)
+        self.root.add(f'execute @p[scores={{game_level={ix},player_id=0}}] ~ ~ ~ {state._root.execute}')
+        return state
+
+    @property
+    def add_side_level(self):
+        ix = len(self.side_levels)+1
+        state = self.SideState(-ix)
+        self.side_levels.append(state)
+        self.root.add(f'execute @p[scores={{game_level={-ix},player_id=0}}] ~ ~ ~ {state._root.execute}')
+        return state
+
+    @property 
+    def queue(self):
+        self.root.add(
+            '# Sync players progress back to the Engine',
+            f'scoreboard players operation {PROJECT_NAME} game_level > @a[scores={{sync=1}}] game_level'
+        )
+        for level in self.main_levels:
+            level._exit_emergency._content = level.exit_player._content
+            level.init_world.add(f'scoreboard players set {PROJECT_NAME} game_state 1')
+            level.init_player.add(f'scoreboard players set {PROJECT_NAME} game_state 2')
+            level._exit_emergency.add(f'scoreboard players set @s game_level {level._index+1}','scoreboard players set @s game_state 0')
+            level.exit_player.add(f'scoreboard players set {PROJECT_NAME} game_state 4')
+            level.exit_world.add(f'scoreboard players set {PROJECT_NAME} game_state 0',f'scoreboard players set @a[scores={{game_level={level._index}}}] game_state 0',f'scoreboard players set {PROJECT_NAME} game_level {level._index+1}')
+        
+        for level in self.side_levels:
+            level._exit_emergency._content = level.exit_player._content
+            level.init_world.add(f'scoreboard players set @s game_state 1')
+            level.init_player.add(f'scoreboard players set @s game_state 2')
+            level._exit_emergency.add(f'scoreboard players set @s game_level 0','scoreboard players set @s game_state 0')
+            level.exit_player.add(f'scoreboard players set @s game_state 4')
+            level.exit_world.add(f'scoreboard players set @a[scores={{game_level={level._index}}}] game_state 1',f'scoreboard players set @a[scores={{game_level={level._index}}}] sync 1')
 
 
 class TimedFunction():

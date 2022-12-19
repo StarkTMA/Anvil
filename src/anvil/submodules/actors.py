@@ -114,6 +114,15 @@ class _ActorClientDescription(_ActorDescription):
         self._added_anims = []
         self._sounds : list[_SoundDefinition] = []
 
+    @property
+    def dummy(self):
+        self._is_dummy = True
+        File('dummy.geo.json', Schemes('geometry', NAMESPACE_FORMAT, 'dummy',{"name": "root", "pivot": [0, 0, 0], "locators": {"root": [0, 0, 0]}}), MakePath('assets', 'models', self._type), 'w')
+        CreateImage('dummy', 8, 8, (0, 0, 0, 0), MakePath('assets', 'textures', self._type))
+        self.geometry('dummy', 'dummy')
+        self.texture('dummy', 'dummy')
+        self.render_controller('dummy').geometry('dummy').textures('dummy')
+
     def animation_controller(self, controller_shortname: str, animate: bool = False, condition: str = None):
         self._animation_controller(controller_shortname, animate, condition)
         return self._animation_controllers.add_controller(controller_shortname)
@@ -136,8 +145,8 @@ class _ActorClientDescription(_ActorDescription):
         return self
 
     def texture(self, texture_id: str, texture_name: str):
-        self._spawn_egg_colors = texture_id
         CheckAvailability(f'{texture_name}.png','texture', MakePath('assets','textures',self._type))
+        self._spawn_egg_colors = texture_id
         self._description['description']['textures'].update({texture_id: MakePath('textures', self._type, self._identifier, texture_name)})
         self._added_textures.append(texture_name)
         return self
@@ -266,7 +275,7 @@ class _EntityServerDescription(_ActorDescription):
         '''
         if not type(identifier) is str:
             raise TypeError('Runtime Identifier type must be a Vanilla.Entities')
-        elif identifier in Vanilla.Entities.list:
+        elif identifier in Vanilla.Entities._list:
             self._description['description']['runtime_identifier'] = f'minecraft:{identifier}'
             return self
         else:
@@ -275,15 +284,6 @@ class _EntityServerDescription(_ActorDescription):
 class _EntityClientDescription(_ActorClientDescription):
     def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
         super().__init__(identifier, is_vanilla, 'entity')
-
-    @property
-    def dummy(self):
-        self._is_dummy = True
-        File('dummy.geo.json', Schemes('geometry', NAMESPACE_FORMAT, 'dummy',{"name": "root", "pivot": [0, 0, 0], "locators": {"root": [0, 0, 0]}}), 'assets/models/entity', 'w')
-        CreateImage('dummy', 8, 8, (0, 0, 0, 0), 'assets/textures/entity')
-        self.geometry('dummy', 'dummy')
-        self.texture('dummy', 'dummy')
-        self.render_controller('dummy').geometry('dummy').textures('dummy')
 
     @property
     def EnableAttachables(self):
@@ -491,7 +491,7 @@ class _RenderController():
         return self
     
     def material(self, bone: str, material_shortname: str):
-        self._controller[self.controller_identifier]['materials'].append({bone: f'Material.{material_shortname}'})
+        self._controller[self.controller_identifier]['materials'].append({bone: material_shortname if material_shortname.startswith(('v', 'q')) else f'Material.{material_shortname}'})
         return self
     
     def geometry_array(self, array_name: str, *geometries_short_names: str):
@@ -999,7 +999,6 @@ class _BPAnimation():
             This animation.
         
         '''
-        from .commands import validate
         if self._animation_length < timestamp:
             self._animation_length = timestamp+0.1
         self._animation[f'animation.{NAMESPACE_FORMAT}.{self._identifier}.{self._animation_short_name}']['animation_length'] = self._animation_length
@@ -1393,14 +1392,14 @@ class _Condition():
             {'minecraft:distance_filter': {'min': min, 'max': max}})
         return self
     
-    def DelayFilter(self, min: int, max: int, identifier: str, spawn_chance: int):
+    def DelayFilter(self, minimum: int, maximum: int, identifier: str, spawn_chance: int):
         '''Unknown behavior.
         
         Parameters
         ----------
-        min : int
+        minimum : int
             The minimum time required to use.
-        max : int
+        maximum : int
             The maximum time required to use
         identifier : str
             	The * identifier.
@@ -1414,10 +1413,10 @@ class _Condition():
         '''
         self._condition.update({
             'minecraft:delay_filter': {
-                'min': min,
-                'max': max,
+                'min': minimum,
+                'max': maximum,
                 'identifier': identifier,
-                'spawn_chance': int(np.clip(spawn_chance,0,100))
+                'spawn_chance': max(min(spawn_chance, 100), 0)
             }
         })
         
@@ -1730,7 +1729,7 @@ class Entity():
     def __init__(self, identifier: str) -> None:
         self._identifier = identifier
         self._is_vanilla = False
-        if identifier in Vanilla.Entities.list:
+        if identifier in Vanilla.Entities._list:
             self._is_vanilla = True
 
         self._namespace_format = NAMESPACE_FORMAT
@@ -1784,7 +1783,8 @@ class Attachable(Exporter):
     def description(self):
         return self._description
 
-    def queue(self, directory: str = None):
-        self._attachable['minecraft:attachable'].update(self._description.queue(directory))
+    @property
+    def queue(self):
+        self._attachable['minecraft:attachable'].update(self._description.queue('attachables'))
         self.content(self._attachable)
-        super().queue(directory=directory)
+        super().queue('attachables')

@@ -1,67 +1,22 @@
 from ..packages import *
-from ..core import ANVIL
+from ..core import ANVIL, RawTextConstructor
 from .actors import Entity
 
 GAMEMODES = ['a', 'c', 'd', 's']
-GAMEMODES_FULL = ['adventure', 'creative', 'default', 'survival']
-GAMEMODES_NUM = ['adventure', 'creative', 'default', 'survival']
+GAMEMODES_FULL = ['adventure', 'creative', 'default', 'survival', 'spectator']
+GAMEMODES_NUM = ['adventure', 'creative', 'default', 'survival', 'spectator']
 
 _coordinates = NewType('tuple(x, y, z)', tuple[float, float, float])
 _rotation = NewType('tuple(ry,rx)', tuple[float, float])
 _level = NewType('tuple(lm,l)', tuple[float, float])
 
-Command = NewType('Command', str)
 _tick = NewType('Tick', int)
-_xp = NewType('XP', int)
-_level = NewType('Level', int)
+_range = NewType('[range]', str)
 
 inf = 99999999999
-
-def validate(command: Command) -> Command:
-    cmd = command.lower()
-    cmd = cmd.lstrip('/')
-    return cmd
-
-class _RawText():
-    def __init__(self, texttype: str, target):
-        self._type = texttype
-        self._target = target
-        self._raw_text = []
-        if self._type in ['actionbar', 'subtitle', 'title']:
-            self._command = f'titleraw {self._target} {self._type}'
-        elif self._type == 'tellraw':
-            self._command = f'tellraw {self._target}'
-
-    def text(self, text):
-        self._raw_text.append({'text':text})
-        return self
-    
-    def translate(self, text):
-        is_present = False
-        new_t = ''
-        for t in ANVIL._langs:
-            if t.split('=')[1].replace('\n', '') == text:
-                is_present = True
-                new_t = t.replace('\n', '')
-        if not is_present:
-            self.id = f'raw_text_{ANVIL._tellraw_index}'
-            ANVIL.localize(f'{self.id}={text}')
-            ANVIL._tellraw_index += 1
-        else:
-            self.id = new_t.split('=')[0]
-        self._raw_text.append({'translate':self.id, 'with': ['\n']})
-        return self
-    
-    def score(self, objective, target):
-        self._raw_text.append({'score':{'name': target,'objective': objective}})
-        return self
-    
-    def selector(self, target):
-        self._raw_text.append({'selector':target})
-        return self
-    
-    def __str__(self) -> str:
-        return self._command + f' {{"rawtext":{json.dumps(self._raw_text)}}}'
+class Anchor:
+    Feet = 'feet'
+    Eyes = 'eyes'
 
 class CameraShakeType():
     positional = 'positional'
@@ -76,18 +31,76 @@ class CloneMode():
     move = 'move'
     normal = 'normal'
 
-class _AlwaysDay():
-    def __call__(self, lock: bool) -> str:
-        return f'alwaysday {lock}'
+class WeatherSet():
+    Clear = 'clear'
+    Rain = 'rain'
+    Thunder = 'thunder'
 
-class _CameraShake():
-    def add(self, target: str, intensity: float, seconds: float, shakeType: CameraShakeType):
-        return f'camerashake add {target} {intensity} {seconds} {shakeType}'
+class Command:
+    def __init__(self, prefix: str, *commands) -> None:
+        self._prefix = prefix
+        self._command: str = f'{prefix}'
+        for cmd in commands:
+            self._command += f' {cmd}'
+            
+    def _new_cmd(self, *commands):
+        self._command = f'{self._prefix}'
+        for cmd in commands:
+            self._command += f' {cmd}'
+        return self
+   
+    def _append_cmd(self, *commands):
+        for cmd in commands:
+            self._command += f' {cmd}'
+        return self
 
-    def stope(self, target: str, intensity: float, seconds: float, shakeType: CameraShakeType):
-        return f'camerashake stop {target}'
+    def __str__(self):
+        self._command = self._command.lower().lstrip('/')
+        return self._command
 
-class _TitleRaw():
+class _ExecuteIfUnless():
+    def __init__(self, parent: 'Execute', condition:str) -> None:
+        self._parent = parent
+        self._condition = condition
+    
+    def Entity(self, target: str):
+        self._parent._append_cmd(self._condition, 'entity', target)
+        return self._parent
+    
+    def Block(self, block_position: _coordinates, data: int = -1):
+        self._parent._append_cmd(self._condition, 'block', block_position, data if not data == 1 else '')
+        return self._parent
+
+    def Blocks(self, begin: _coordinates, end: _coordinates, destination: _coordinates, masked: bool = False):
+        self._parent._append_cmd(self._condition, 'blocks', ' '.join(begin), ' '.join(end), ' '.join(destination), masked if masked == True else '')
+        return self._parent
+
+    def ScoreMatches(self, target: str, objective: str, matches: _range):
+        self._parent._append_cmd(self._condition, 'score', target, objective, 'matches', matches)
+        return self._parent
+    
+    def Score(self, target: str, target_objective: str, operator: Operator, source: str, source_objective: str):
+        self._parent._append_cmd(self._condition, 'score', target, target_objective, operator, source, source_objective)
+        return self._parent
+
+#special
+class _RawText(RawTextConstructor):
+    def __init__(self, texttype: str, target):
+        self._type = texttype
+        self._target = target
+        if self._type in ['actionbar', 'subtitle', 'title']:
+            self._command = f'titleraw {self._target} {self._type} '
+        elif self._type == 'tellraw':
+            self._command = f'tellraw {self._target} '
+        super().__init__()
+    
+    def __str__(self) -> str:
+        return self._command + super().__str__()
+
+class TitleRaw(Command):
+    def __init__(self) -> None:
+        super().__init__('titleraw')
+
     def title(self, target: str = '@a' or '@p' or '@s' or '@e'):
         return _RawText('title', target)
 
@@ -97,29 +110,97 @@ class _TitleRaw():
     def actionbar(self, target: str = '@a' or '@p' or '@s' or '@e'):
         return _RawText('actionbar', target)
 
-class _Tellraw():
-    def __call__(self, target: str = '@s' or '@a' or '@p' or '@e'):
+class Tellraw(Command):
+    def __init__(self, target: str):
         return _RawText('tellraw', target)
 
-class _Summon():
-    def __call__(self, entity, coordinates: _coordinates = ('~', '~', '~'), event: str = '', name: str = '', rotation:_rotation=('~', '~')):
-        cmd = 'summon'
-        if type(entity) is str:
-            id = entity
-            cmd += f' {id}'
-        elif type(entity) is Entity:
-            id = entity.identifier
-            cmd += f' {id}'
-        cmd += (f' {coordinates[0]} {coordinates[1]} {coordinates[2]}')
-        if len(event) > 0:
-            cmd += f' {event}'
-        if len(name) > 0:
-            cmd += f' "{name}"'
-        if rotation != ('~', '~'):
-            cmd += f'\ntp @e[type={id},x={coordinates[0]},y={coordinates[1]},z={coordinates[2]},r=1,c=1] {coordinates[0]} {coordinates[1]} {coordinates[2]} {rotation[0]} {rotation[1]}'
-        return cmd
+class Execute(Command):
+    def __init__(self) -> None:
+        super().__init__('execute')
+    
+    def As(self, target: str):
+        super()._append_cmd('as', target)
+        return self
 
-class _XP():
+    def At(self, target: str):
+        super()._append_cmd('at', target)
+        return self
+
+    def In(self, dimension: Dimension = Dimension.Overworld):
+        super()._append_cmd('in', dimension)
+        return self
+
+    def Positioned(self, poistion: _coordinates):
+        super()._append_cmd('positioned', poistion)
+        return self
+
+    def PositionedAs(self, target: str):
+        super()._append_cmd('positioned', 'as', target)
+        return self
+        
+    def Align(self, axes: str = 'xyz'):
+        super()._append_cmd('align', "".join(set(axes)))
+        return self
+
+    def Anchored(self, anchored: Anchor = Anchor.Feet):
+        super()._append_cmd('anchored', anchored)
+        return self
+        
+    def Rotated(self, yaw: float | str = '~', pitch: float | str = '~'):
+        super()._append_cmd('rotated', yaw, pitch)
+        return self
+
+    def RotatedAs(self, target: str):
+        super()._append_cmd('rotated', 'as', target)
+        return self
+        
+    def Facing(self, poistion: _coordinates):
+        super()._append_cmd('facing', poistion)
+        return self
+    
+    def FacingEntity(self, target: str, anchor: Anchor = Anchor.Feet):
+        super()._append_cmd('facing', 'entity', target, anchor)
+        return self
+
+    @property
+    def If(self):
+        return _ExecuteIfUnless(self, 'if')
+
+    @property
+    def Unless(self):
+        return _ExecuteIfUnless(self, 'unless')
+
+    def run(self, command: Command | str):
+        super()._append_cmd('run', command)
+        return self
+
+class AlwaysDay(Command):
+    def __init__(self, lock: bool = True):
+        super().__init__('alwaysday', lock)
+
+class CameraShake(Command):
+    def __init__(self) -> None:
+        super().__init__('camerashake')
+
+    def add(self, target: str, intensity: float, seconds: float, shakeType: CameraShakeType):
+        super()._new_cmd('add', target, intensity, seconds, shakeType)
+
+    def stop(self, target: str):
+        super()._new_cmd('stop', 'target')
+
+class Summon(Command):
+    def __init__(self, entity, coordinates: _coordinates = ('~', '~', '~'), event: str = 'minecraft:entity_spawned', name: str = '', rotation:_rotation=('~', '~')):
+        super().__init__('summon', entity)
+        if not coordinates == ('~', '~', '~'):
+            self._command += f' {" ".join(coordinates)}'
+        if not event == 'minecraft:entity_spawned':
+            self._command += f' {event}'
+        if not name == '':
+            self._command += f' {name}'
+        if not rotation == ('~', '~'):
+            self._command += f' {" ".join(rotation)}'
+
+class XP(Command):
     """Adds or removes player experience.
 
     Args:
@@ -130,74 +211,98 @@ class _XP():
         Command: xp command
 
     Example:
-        >>> xp(-2000, '@a')
-        >>> xp.level(5, '@s')
+        >>> xp('-2000', '@a')
+        >>> xp('-5L', '@a')
     """
 
-    def __call__(self, amount: _xp, player: str) -> Command:
-        return f'xp {amount} {player}'
+    def __init__(self):
+        super().__init__('xp')
+    
+    def add(self, amount, target):
+        super()._new_cmd(amount, target)
+    
+    def remove(self, amount, target):
+        super()._new_cmd(f'-{amount}', target)
 
-    def level(self, amount: _level, player: str) -> Command:
-        return f'xp {amount}L {player}'
-
-class _Weather():
-    def __call__(self, set: str, duration: int) -> Command:
-        """Sets the weather.
-
-        Args:
-            set (str): clear|rain|thunder
-            duration (int): Must be between 0 and 1999999999 (inclusive) in ticks.
-
-        Returns:
-            Command: weather command
-
-        Example:
-            >>> Weather.clear
-            >>> Weather.rain(200)
-        """
-        return f'weather {set} {duration}'
-
+class Weather(Command):
+    def __init__(self) -> None:
+        super().__init__('weather')
     @property
-    def clear():
-        return f'weather clear'
+    def clear(self):
+        super()._new_cmd('clear')
 
     def rain(self, duration: _tick):
-        return f'weather rain {duration}'
+        super()._new_cmd('rain', duration)
 
     def thunder(self, duration: _tick):
-        return f'weather thunder {duration}'
+        super()._new_cmd('thunder', duration)
 
-class _Clone():
-    def __call__(self, begin: _coordinates = ('~', '~', '~'), end: _coordinates = ('~', '~', '~'), destination: _coordinates = ('~', '~', '~'), cloneMode: CloneMode = CloneMode.normal, maskMode: MaskMode = MaskMode.replace) -> Command:
+class Clone(Command):
+    def __init__(self, begin: _coordinates, end: _coordinates, destination: _coordinates, cloneMode: CloneMode = CloneMode.normal, maskMode: MaskMode = MaskMode.replace):
         """Clones a region of blocks."""
-        return f'clone {begin[0]} {begin[1]} {begin[2]} {end[0]} {end[1]} {end[2]} {destination[0]} {destination[1]} {destination[2]} {cloneMode} {maskMode}'
+        super().__init__('clone', ' '.join(begin), ' '.join(end), ' '.join(destination), cloneMode, maskMode)
 
-class _Msg():
-    def __call__(self, text: str, target: str = '@a' or '@p' or '@s' or '@e'):
-        return f'msg {target} {text}'
+class Msg(Command):
+    def __init__(self, text: str, target: str):
+        super().__init__('msg', target, text)
 
-class _AnvilMsg():
-    def __call__(self, text: str):
-        return f'msg @a[tag=dev] "[§2Anvil§r]: {text}"'
+class DebugMsg(Command):
+    def __init__(self, text: str) -> None:
+        super().__init__('msg', '@a[tag=dev]', f"[§2Anvil§r]: {text}")
 
-class _Spawnpoint():
-    def __call__(self, target: str, spawnPos : _coordinates = ('~','~','~')) -> str:
-        return f'spawnpoint {target} {spawnPos[0]} {spawnPos[1]} {spawnPos[2]}'
+class Spawnpoint(Command):
+    def __init__(self, target: str, spawnPos : _coordinates):
+        super().__init__('spawnpoint', target, ' '.join(spawnPos))
 
-class _Say():
-    def __call__(self, text: str):
-        return f'say {text}'
+class Say(Command):
+    def __init__(self, text: str):
+        super().__init__('say', text)
 
-AlwaysDay = _AlwaysDay()
-CameraShake = _CameraShake()
-TitleRaw = _TitleRaw()
-Tellraw = _Tellraw()
-Summon = _Summon()
-Clone = _Clone()
-msg = _Msg()
-Say = _Say()
-AnvilMessage = _AnvilMsg()
+class Gamerule(Command):
+    def __init__(self) -> None:
+        super().__init__('gamerule')
 
-Weather = _Weather()
-xp = _XP()
-Spawnpoint = _Spawnpoint()
+    def SendCommandFeedback(self, value: bool = True):
+        super()._new_cmd('sendcommandfeedback', value)
+
+    def CommandBlockOutput(self, value: bool = True):
+        super()._new_cmd('commandblockoutput', value)
+
+    def ShowTags(self, value: bool = True):
+        super()._new_cmd('showtags', value)
+
+class Fog(Command):
+    def __init__(self) -> None:
+        super().__init__('fog')
+
+    def Push(self, target: str, fog_identifie: str, name: str):
+        super()._new_cmd(target, 'push', fog_identifie, name)
+        return self
+
+    def Pop(self, target: str, name: str):
+        super()._new_cmd(target, 'pop', name)
+        return self
+
+    def Remove(self, target: str, name: str):
+        super()._new_cmd(target, 'remove', name)
+        return self
+
+class Tag(Command):
+    def __init__(self) -> None:
+        super().__init__('tag')
+
+    def add(self, target: str, tag: str):
+        super()._new_cmd(target, 'add', tag)
+        return self
+
+    def remove(self, target: str, tag: str):
+        super()._new_cmd(target, 'remove', tag)
+        return self
+
+class Comment(Command):
+    def __init__(self, comment) -> None:
+        super().__init__('#', comment)
+
+class Clear(Command):
+    def __init__(self ,target: str, itemname: str = '', date : int = -1, max_count: int = -1) -> None:
+        super().__init__('clear', target, itemname, date if not date == -1 else '', max_count if not max_count == -1 else '')

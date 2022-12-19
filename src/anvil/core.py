@@ -7,7 +7,7 @@ class Exporter():
     def __init__(self, name: str, type: str) -> None:
         self._valids = {
             'function': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'functions', 'NAMESPACE'),
+                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'functions'),
                 'extension':{
                     0: '.mcfunction',
                     1: '.mcfunction',
@@ -190,7 +190,28 @@ class Exporter():
                     0: '.json',
                     1: '.json'
                 }
-            }
+            },
+            'dialogue': {
+                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'dialogue'),
+                'extension':{
+                    0: '.dialogue.json',
+                    1: '.dialogue.json'
+                }
+            },
+            'font': {
+                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'),
+                'extension':{
+                    0: '.json',
+                    1: '.json'
+                }
+            },
+            'fog': {
+                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'fogs'),
+                'extension':{
+                    0: '.fog.json',
+                    1: '.fog.json',
+                }
+            },
         }
         self._name = name
         self._type = type
@@ -219,6 +240,45 @@ class Exporter():
         if self._shorten and type(self._content) is dict:
             self._content = ShortenDict(self._content)
         File(f'{self._name}{self._valids[self._type]["extension"][NAMESPACE_FORMAT_BIT]}', self._content, self._path, 'w')
+
+class RawTextConstructor():
+    def __init__(self):
+        self._raw_text = []
+
+    def style(self, *styles : Style):
+        self._raw_text.append({'text': ''.join(styles)})
+        return self
+    
+    def text(self, text):
+        self._raw_text.append({'text':text})
+        return self
+    
+    def translate(self, text):
+        is_present = False
+        new_t = ''
+        for t in ANVIL._langs:
+            if t.split('=')[1].replace('\n', '') == text:
+                is_present = True
+                new_t = t.replace('\n', '')
+        if not is_present:
+            self.id = f'raw_text_{ANVIL._tellraw_index}'
+            ANVIL.localize(f'{self.id}={text}')
+            ANVIL._tellraw_index += 1
+        else:
+            self.id = new_t.split('=')[0]
+        self._raw_text.append({'translate':self.id, 'with': ['\n']})
+        return self
+    
+    def score(self, objective, target):
+        self._raw_text.append({'score':{'name': target,'objective': objective}})
+        return self
+    
+    def selector(self, target):
+        self._raw_text.append({'selector':target})
+        return self
+    
+    def __str__(self) -> str:
+        return f'{{"rawtext":{json.dumps(self._raw_text, ensure_ascii=False)}}}'
 
 # General
 class _MinecraftDescription():
@@ -317,7 +377,16 @@ class _SoundDefinition():
             self._sound[self._sound_definition].update({'min_distance': min_distance})
         self._sounds = []
 
-    def add_sound(self, sound_name, volume: int = 1, weight: int = 1, pitch: int = [1, 1], is_3d: bool = False, stream: bool = False, load_on_low_memory: bool = False):
+    def add_sound(
+            self, 
+            sound_name, 
+            volume: int = 1, 
+            weight: int = 1, 
+            pitch: int = [1, 1], 
+            is_3d: bool = None, 
+            stream: bool = None, 
+            load_on_low_memory: bool = None
+        ):
         CheckAvailability(f'{sound_name}.ogg', 'audio', 'assets/sounds')
         self._sound_name = sound_name
         splits = self._sound_definition.split(".")
@@ -325,19 +394,20 @@ class _SoundDefinition():
         for i in range(len(splits)-1):
             self._path += f'{splits[i]}/'
         sound = {
-            "name": MakePath('sounds', self._path, self._sound_name),
-            "weight": weight
+            "name": MakePath('sounds', self._path, self._sound_name)
         }
         if pitch != [1, 1]:
             sound.update({"pitch": pitch})
-        if is_3d != False:
+        if not is_3d is None:
             sound.update({"is3D": is_3d})
-        if stream != False:
+        if not stream is None:
             sound.update({"stream": stream})
-        if load_on_low_memory != False:
+        if not load_on_low_memory is None:
             sound.update({"load_on_low_memory": load_on_low_memory})
         if volume != 1:
             sound.update({"volume": volume})
+        if weight != 1:
+            sound.update({"weight": weight})
         self._sounds.append(sound)
         ANVIL._sounds.update({ self._sound_name: self._sound_definition})
         return self
@@ -397,6 +467,60 @@ class _Music(Exporter):
     def _export(self):
         return super()._export()
 
+class _DialogueButton():
+    def __init__(self, button_name: str, *commands: str):
+        self._button_name = button_name
+        self._commands = commands
+
+    def _export(self):
+        return Schemes(
+            'dialogue_button', 
+            self._button_name,
+            self._commands
+        )
+
+class _DialogueScene():
+    def __init__(self, scene_tag: str):
+        self._tag = scene_tag
+        self._buttons: list[_DialogueButton] = []
+        self._on_open_commands = []
+        self._on_close_commands = []
+        self._npc_name = None
+        self._text = None
+
+    def properties(self, npc_name: str, text: str = ''):
+        self._npc_name : str = RawTextConstructor().text(npc_name)
+        if not text is None:
+            self._text : str = RawTextConstructor().translate(text)
+        return self
+
+    def button(self, button_name: str, *commands: str):
+        if len(self._buttons) > 6:
+            RaiseError(DIALOGUE_MAX_BUTTONS(self._tag, len(self._buttons)))
+        # Buttons cannot be translated
+        button = _DialogueButton(button_name, *commands)
+        self._buttons.append(button)
+        return self
+
+    def on_open_commands(self, *commands):
+        self._on_open_commands = commands
+        return self 
+
+    def on_close_commands(self, *commands):
+        self._on_close_commands = commands
+        return self 
+
+    def _export(self):
+        return Schemes(
+            'dialogue_scene', 
+            self._tag, 
+            self._npc_name.__str__(), 
+            self._text.__str__(), 
+            self._on_open_commands, 
+            self._on_close_commands, 
+            [ button._export() for button in self._buttons ]
+        )
+
 class NewBlock(_MinecraftDescription):
     def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
         super().__init__(identifier, is_vanilla)
@@ -414,11 +538,10 @@ class NewBlock(_MinecraftDescription):
 
         return self
     
-    @property
-    def queue(self):
+    def queue(self, directory: str = None):
         CopyFiles(
             MakePath('assets', 'textures', 'blocks'),
-            MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'blocks'),
+            MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'blocks', directory),
             f'{self._identifier}.{self._ext}'
         )
 
@@ -446,6 +569,122 @@ class SkinPack():
         File('en_US.lang', Schemes('skin_language', PROJECT_NAME, DISPLAY_NAME+ ' Skin Pack') + ''.join(ANVIL._skins_langs),'assets/skin_pack/texts', 'w')
         File('skins.json', Schemes('skins', PROJECT_NAME, self._skins), 'assets/skin_pack', 'w')
 
+class Dialogue(Exporter):
+    def __init__(self, name: str) -> None:
+        self._dialogues = Schemes('dialogues')
+        self._scenes = []
+        super().__init__(name, 'dialogue')
+
+    def add_scene(self, scene_tag: str):
+        scene = _DialogueScene(scene_tag)
+        self._scenes.append(scene)
+        return scene
+
+    def queue(self, directory : str = None):
+        for scene in self._scenes:
+            self._dialogues['minecraft:npc_dialogue']['scenes'].append(scene._export())
+        self.content(self._dialogues)
+        return super().queue(directory)
+
+class Function(Exporter):
+    def __init__(self, name: str) -> None:
+        self._name = name
+        self._function : list[str] = []
+        self._sub_functions : list[Function] = [self]
+        super().__init__(name, 'function')
+    
+    def add(self, *functions: str):
+        if len(self._sub_functions[-1]._function) >= 10000-len(functions)-1:
+            self._sub_functions.append(Function(f'{self._name}_{len(self._sub_functions)}'))
+
+        self._sub_functions[-1]._function.extend([str(func) for func in functions])
+        return self
+
+    @property
+    def path(self):
+        return MakePath(self._directory, self._name)
+
+    @property
+    def execute(self):
+        return f'function {self.path}'
+
+    @property
+    def tick(self):
+        ANVIL._tick(self)
+        return self
+
+    def queue(self, directory: str = None):
+        self._directory = directory
+        return super().queue(self._directory)
+
+    def _export(self):
+        for function in self._sub_functions[1:]:
+            function.content('\n'.join(function._function)).queue(self._directory)
+        self.content('\n'.join(self._function))
+
+        return super()._export()
+
+class Fonts():
+    @property
+    def queue(self):
+        for file in ['glyph_E1.png', 'default8.png']:
+            if FileExists(MakePath('assets', 'textures', 'ui', file)):
+                CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'), file)
+
+class _FogDistance():
+    def __init__(self, camera_location: FogCameraLocation = FogCameraLocation.Air) -> None:
+        self._camera_location = camera_location
+        self._distance = {
+            self._camera_location : {}
+        }
+    
+    def color(self, color: str):
+        self._distance[self._camera_location]['fog_color'] = color
+        return self
+
+    def distance(self, fog_start: int, fog_end: int, render_distance_type : RenderDistanceType = RenderDistanceType.Render):
+        if fog_start >= fog_end:
+            RaiseError(f'{ERROR}: fog_end must be greater than fog_start.')
+        self._distance[self._camera_location]['fog_start'] = fog_start
+        self._distance[self._camera_location]['fog_end'] = fog_end
+        self._distance[self._camera_location]['render_distance_type'] = render_distance_type
+        return self
+
+    def transition_fog(self, color: str, fog_start: int, fog_end: int, render_distance_type : RenderDistanceType = RenderDistanceType.Render):
+        if fog_start >= fog_end:
+            RaiseError(f'{ERROR}: fog_end must be greater than fog_start.')
+        self._distance[self._camera_location]['color'] = color
+        self._distance[self._camera_location]['fog_start'] = fog_start
+        self._distance[self._camera_location]['fog_end'] = fog_end
+        self._distance[self._camera_location]['render_distance_type'] = render_distance_type
+        return self
+
+    def _export(self):
+        return self._distance
+        
+class Fog(Exporter):
+    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
+        super().__init__(identifier, 'fog')
+        self._identifier = identifier
+        self._description = _MinecraftDescription(self._identifier, is_vanilla)
+        self._fog = Schemes('fog')
+        self._locations : list[_FogDistance] = []
+        self._volumes = []
+
+    def add_distance_location(self, camera_location : FogCameraLocation = FogCameraLocation.Air):
+        self._locations.append(_FogDistance(camera_location))
+        return self._locations[-1]
+
+    def add_volume(self):
+        pass
+
+    @property
+    def queue(self):
+        for location in self._locations:
+            self._fog['minecraft:fog_settings']['distance'].update(location._export())
+        self._fog['minecraft:fog_settings'].update(self._description._export)
+        self.content(self._fog)
+        return super().queue()
 
 
 
@@ -870,10 +1109,11 @@ class Structure():
         CopyFiles(f"assets/structures",
                   f"behavior_packs/BP_{PASCAL_PROJECT_NAME}/structures/{NAMESPACE_FORMAT}", f"{self._structure_name}.mcstructure")
 class Particle(EngineComponent):
-    def __init__(self, particle_name):
+    def __init__(self, particle_name, use_vanilla_texture: bool = False):
         super().__init__(particle_name, 'asset', '.particle.json')
         self._name = particle_name
         self._content = ''
+        self._use_vanilla_texture = use_vanilla_texture
 
     def queue(self):
         return super().queue('particles')
@@ -881,35 +1121,38 @@ class Particle(EngineComponent):
     def _export(self):
         if self._content != '':
             super()._export()
-        CheckAvailability(f'{self._name}.png', 'texture', 'assets/particles')
-        CopyFiles('assets/particles',
-                  f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/particle', f'{self._name}.png')
+        if not self._use_vanilla_texture:
+            CheckAvailability(f'{self._name}.png', 'texture', 'assets/particles')
+            CopyFiles('assets/particles',f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/particle', f'{self._name}.png')
         CheckAvailability(f'{self._name}.particle.json', 'particle', 'assets/particles')
         CopyFiles('assets/particles',
                   f'resource_packs/RP_{PASCAL_PROJECT_NAME}/particles', f'{self._name}.particle.json')
 class Item():
-    def __new__(self, identifier: str, is_vanilla: bool = False):
+    def __new__(self, identifier: str, display_name: str = None, is_vanilla: bool = False):
         self._identifier, self._display_name = RawText(identifier)
         ANVIL._items.update({self._display_name: f'{NAMESPACE_FORMAT}:{self._identifier}'})
         CheckAvailability(f'{self._identifier}.png', 'texture', 'assets/textures/items')
         if is_vanilla:
             ANVIL._items.update({self._display_name: f'minecraft:{self._identifier}'})
-        self._item_rp = Item.__RP_Item(self._identifier, is_vanilla)
+        self._item_rp = Item.__RP_Item(self._identifier, display_name, is_vanilla)
         self._item_bp = Item.__BP_Item(self._item_rp, self._identifier, is_vanilla)
         return self._item_bp
 
     class __RP_Item(EngineComponent):
-        def __init__(self, identifier, is_vanilla):
-            self._identifier, self._display_name = RawText(identifier)
+        def __init__(self, identifier, display_name, is_vanilla):
+            if display_name is None:
+                self._identifier, self._display_name = RawText(identifier)
+            else:
+                self._identifier = identifier
+                self._display_name = display_name
+
             super().__init__(self._identifier, 'rp_item_v1', '.item.json')
             self.content(Defaults('rp_item_v1', NAMESPACE_FORMAT if not is_vanilla else 'minecraft', self._identifier))
 
         def queue(self, directory):
-            ANVIL.localize(
-                (f'item.{NAMESPACE_FORMAT}:{self._identifier}.name={self._display_name}'))
+            ANVIL.localize((f'item.{NAMESPACE_FORMAT}:{self._identifier}.name={self._display_name}'))
             super().queue(directory=directory)
-            CopyFiles(
-                'assets/textures/items', f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/items/{directory}', f'{self._identifier}.png')
+            CopyFiles('assets/textures/items', f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/items/{directory}', f'{self._identifier}.png')
             if not FileExists(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/item_texture.json'):
                 File('item_texture.json', Schemes('item_texture', PROJECT_NAME),f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures', 'w')
             with open(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/item_texture.json', 'r') as file:
@@ -1065,9 +1308,7 @@ class Block():
             self._content['minecraft:block']['components']['minecraft:map_color'] = self._most_dominant_color
 
         def destroy_time(self, destroy_time: int = 0):
-            destroy_time = int(destroy_time)
-            self._content['minecraft:block']['components']['minecraft:destroy_time'] = max(
-                min(1000, destroy_time), 0)
+            self._content['minecraft:block']['components']['minecraft:destructible_by_mining'] = False
             return self
 
         def explosion_resistance(self, explosion_resistance: int = 0):
@@ -1094,15 +1335,14 @@ class Block():
             light_emission = int(light_emission)
             if light_emission not in range(0, 16, 1):
                 RaiseError('Light Emission level must be in range 0 - 15')
-            self._content['minecraft:block']['components']['minecraft:block_light_emission'] = max(
-                min(15, light_emission), 0)/15
+            self._content['minecraft:block']['components']['minecraft:light_emission'] = light_emission
             return self
 
         def light_absorption(self, light_absorption: int = 0):
             light_absorption = int(light_absorption)
             if light_absorption not in range(0, 16, 1):
                 RaiseError('Light Emission level must be in range 0 - 15')
-            self._content['minecraft:block']['components']['minecraft:block_light_absorption'] = max(
+            self._content['minecraft:block']['components']['minecraft:light_dampening'] = max(
                 min(15, light_absorption), 0)
             return self
 
@@ -1263,133 +1503,14 @@ class LootTable(EngineComponent):
             self._content["pools"].append(pool._export())
         self.content(self._content)
         return super().queue(directory=directory)
-class Function(EngineComponent):
-    def __init__(self, name: str):
-        self._name = name
-        self._content = ''
-        self._length = 0
-        self._id = 0
-        self._sub_functions : list[Function]= []
-        super().__init__(name, 'function', '.mcfunction')
-
-    def add(self, *functions: str):
-        for function in functions:
-            if self._length < 9998-len(functions)-self._id:
-                self._content += f'{function}\n'
-                self._length += 1
-            else:
-                if len(self._sub_functions) == 0:
-                    self._id += 1
-                    self._sub_functions.append(Function(f'{self._name}_{self._id}'))
-                else:
-                    if self._sub_functions[-1]._length < 9998-len(functions)-self._id:
-                        self._sub_functions[-1]._content += f'{function}\n'
-                        self._sub_functions[-1]._length += 1
-                    else:
-                        self._id += 1
-                        self._sub_functions.append(Function(f'{self._name}_{self._id}'))
-                        self._sub_functions[-1]._content += f'{function}\n'
-                        self._sub_functions[-1]._length += 1
-        return self
-
-    @property
-    def execute(self):
-        return f'function {MakePath(PROJECT_NAME,self._directory,self._name)}'
-
-    @property
-    def identifier(self):
-        return self._name
-
-    @property
-    def tick(self):
-        ANVIL._tick(self)
-        return self
-
-    def queue(self, directory: str = ''):
-        if len(self._sub_functions) > 0:
-            content = str(self._content)
-            self._content = ''
-            self._sub_functions.insert(0, Function(f'{self._name}_{0}').content(content))
-            for function in self._sub_functions:
-                function.queue(directory)
-                self._content += f'{function.execute}\n'
-        return super().queue(directory)
-class Dialogue(EngineComponent):
-    def __init__(self, name: str):
-        self._scenes = []
-        super().__init__(name, 'dialogue', '.dialogue.json')
-
-    def scene(self, tag: str):
-        scene = Dialogue._Scene(tag)
-        self._scenes.append(scene)
-        return scene
-
-    def queue(self, directory=''):
-        self._directory = directory
-        dialogues = Defaults('dialogue')
-        for scene in self._scenes:
-            dialogues['minecraft:npc_dialogue']['scenes'].append(
-                scene._export())
-        self.content(dialogues)
-        return super().queue(self._directory)
-
-    class _Scene():
-        def __init__(self, tag: str):
-            self._buttons = []
-            self._tag = tag
-
-        def properties(self, npc_name: str, text: str):
-            self._npc_name, self._npc_display_name = RawText(npc_name)
-            self._display_text = text
-            return self
-
-        def button(self, button_name: str, *commands: str or object):
-            button = self._Button(button_name, *commands)
-            self._buttons.append(button)
-            return self
-
-        def _export(self):
-            buttons = []
-            if len(self._buttons) > 6:
-                RaiseError(
-                    f'Error: The dialogue scene with the name {self._tag} has {len(self._buttons)} buttons. Maximum is 6')
-            for button in self._buttons:
-                buttons.append(button._export())
-            ANVIL.localize(f'npc_name.{self._npc_name}={self._npc_display_name}')
-            ANVIL.localize(f'npc_text.{self._tag}={self._display_text}')
-            return {
-                'scene_tag': self._tag,
-                'npc_name': {'rawtext': [{'translate': f'npc_name.{self._npc_name}'}]},
-                'text': {'rawtext': [{'translate': f'npc_text.{self._tag}', 'with': ['\n']}]},
-                'buttons': buttons
-            }
-
-        class _Button():
-            def __init__(self, button_name: str, *commands: str or Function):
-                self._button_name = button_name
-                if isinstance(commands, Function):
-                    self._commands = f'/{commands.execute}'
-                else:
-                    self._commands = commands
-
-            def _export(self):
-                ANVIL.localize(
-                    f'button.{self._button_name.replace(" ", "_").lower()}={self._button_name}')
-                return {
-                    'name': self._button_name,
-                    'commands': [
-                        command for command in self._commands
-                    ]
-                }
-
-
 
 class Anvil():
     def get_github_file(self, path: str):
         from github import Github
-        if not self._github_init:
+        if self._github is None:
             self._github = Github().get_repo('Mojang/bedrock-samples')
-        return json.loads(self._github.get_contents(path, BUILD.lower()).decoded_content.decode())
+        r = json.loads(self._github.get_contents(path, BUILD.lower()).decoded_content.decode())
+        return r
 
     def __init__(self):
         """
@@ -1446,9 +1567,9 @@ class Anvil():
         self._sound_definition = _Sound()
         self._music_definition = _Music()
 
-        self._functions = []
+        self._functions : list[Function] = []
         self._scores = {}
-        self._objects_list = []
+        self._objects_list : list[Exporter] = []
         self._tick_functions = []
         self._langs = []
         self._skins_langs = []
@@ -1460,11 +1581,12 @@ class Anvil():
         self._tellraw_index = 0
         self._score_index = 0
         self._materials = Defaults('materials')
-        self._setup_scores.content(f'scoreboard objectives add {PROJECT_NAME} dummy "{PROJECT_NAME.replace("_"," ").title()}"\n')
-        self._remove_scores.content(f'scoreboard objectives remove {PROJECT_NAME}\n')
+        self._setup_scores.add(f'scoreboard objectives add {PROJECT_NAME} dummy "{PROJECT_NAME.replace("_"," ").title()}"')
+        self._remove_scores.add(f'scoreboard objectives remove {PROJECT_NAME}\n')
         self._deltatime = int((datetime.now() - datetime.strptime(LAST_CHECK, "%Y-%m-%d %H:%M:%S")).total_seconds())
-        self._github_init = False
-
+        self._github = None
+        self._compiled = False
+        click.echo(EXECUTION_TIME(datetime.now().strptime(LAST_CHECK, "%Y-%m-%d %H:%M:%S")))
         # 12 Hours
         if (self._deltatime > 12*3600):
             click.echo(CHECK_UPDATE)
@@ -1472,6 +1594,7 @@ class Anvil():
 
             if VANILLA_VERSION < LATEST_BUILD:
                 click.echo(NEW_BUILD(VANILLA_VERSION, LATEST_BUILD))
+                #DownloadFile(self._github.clone_url, MakePath('assets', 'vanilla'))
             else:
                 click.echo(UP_TO_DATE)
             File("config.json", Schemes('config', NAMESPACE, COMPANY, PROJECT_NAME, DISPLAY_NAME, PROJECT_DESCRIPTION, LATEST_BUILD, NAMESPACE_FORMAT_BIT, BUILD), ".", "w")
@@ -1588,8 +1711,7 @@ class Anvil():
                 RaiseError(FUNCTION_ERROR('setup', function))
             self._setup.add(function.execute)
 
-    @property
-    def translate(self) -> None:
+    def _translate(self, include_skin_pack: bool = False) -> None:
         """
         Translates en_US to all supported Minecraft languages.
         This is a time consuming function, it will be executed with anvil.package(), so it's better to avoid it unless you really want to use it.
@@ -1599,12 +1721,12 @@ class Anvil():
         ---------
         >>> ANVIL.translate
         """
-
         from deep_translator import GoogleTranslator
-        click.echo(f'Translating...')
+        self._translation_timer = time.time()
         languages = Defaults('languages')
         self._langs.sort()
         for language in languages:
+            click.echo(TRANSLATING(language))
             destination_language = language.split('_')[0]
             if language == 'zh_CN':
                 destination_language = 'zh-CN'
@@ -1613,47 +1735,34 @@ class Anvil():
             if language == 'nb_NO':
                 destination_language = 'no'
             new_data = ''
-            # Translating Skin Packs
-            if not FileExists(f'assets/skin_pack/texts/{language}.lang'):
-                TRANSLATOR = GoogleTranslator(target=destination_language)
-                for line in self._skins_langs:
-                    if len(line) > 0:
-                        if '=' in line:
-                            id, text = line.split("=")
-                            text=text.replace('\n','')
-
-                            click.echo(f'{language}: {text} = ', nl=False)
-                            translated = TRANSLATOR.translate(text)
-                            click.echo(f'{translated}\r', nl=False)
-                            
-                            new_data += f'{id}={translated}\n'
-                    else:
-                        new_data += f'{line}\n'
-                    time.sleep(0.3)
-                click.echo(f'{language}: Done.\n')
-                File(f'{language}.lang', Schemes('skin_language', PROJECT_NAME, DISPLAY_NAME+ ' Skin Pack') + new_data, f'assets/skin_pack/texts', 'w')
-
-            if not FileExists(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/texts/{language}.lang'):
-                TRANSLATOR = GoogleTranslator(target=destination_language)
+            Translator = GoogleTranslator(target=destination_language)
+            if not FileExists(MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'texts', f'{language}.lang')):
                 for line in self._langs:
-                    if len(line) > 0:
-                        if '=' in line:
-                            id, text = line.split("=")
-                            text=text.replace('\n','')
-
-                            click.echo(f'{language}: {text} = ', nl=False)
-                            translated = TRANSLATOR.translate(text)
-                            click.echo(f'{translated}\r', nl=False)
-                            
-                            new_data += f'{id}={translated}\n'
+                    if len(line) > 0 and '=' in line:
+                        id, text = line.split("=")
+                        text=text.replace('\n','')
+                        translated = Translator.translate(text)
+                        new_data += f'{id}={translated}\n'
                     else:
                         new_data += f'{line}\n'
                     time.sleep(0.3)
-                click.echo(f'{language}: Done.\n')
-                File(f'{language}.lang', Defaults('language', DISPLAY_NAME, TRANSLATOR.translate(PROJECT_DESCRIPTION)) + new_data, f'resource_packs/RP_{PASCAL_PROJECT_NAME}/texts', 'w')
-                File(f'{language}.lang', Defaults('language', DISPLAY_NAME, TRANSLATOR.translate(PROJECT_DESCRIPTION)), f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/texts', 'w')
-                File(f'{language}.lang', Defaults('language', DISPLAY_NAME, TRANSLATOR.translate(PROJECT_DESCRIPTION)), 'texts', 'w')
-            
+                File(f'{language}.lang', Defaults('language', DISPLAY_NAME, Translator.translate(PROJECT_DESCRIPTION)) + new_data, MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'texts'), 'w')
+                File(f'{language}.lang', Defaults('language', DISPLAY_NAME, Translator.translate(PROJECT_DESCRIPTION)), MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'texts'), 'w')
+                File(f'{language}.lang', Defaults('language', DISPLAY_NAME, Translator.translate(PROJECT_DESCRIPTION)), MakePath('texts'), 'w')
+            if include_skin_pack:
+                if not FileExists(MakePath('assets', 'skin_pack', 'texts', f'{language}.lang')):
+                    for line in self._skins_langs:
+                        if len(line) > 0 and '=' in line:
+                            id, text = line.split("=")
+                            text=text.replace('\n','')
+                            translated = Translator.translate(text)
+                            new_data += f'{id}={translated}\n'
+                        else:
+                            new_data += f'{line}\n'
+                        time.sleep(0.3)
+                    File(f'{language}.lang', Schemes('skin_language', PROJECT_NAME, DISPLAY_NAME+ ' Skin Pack') + new_data, MakePath('assets', 'skin_pack', 'texts', f'{language}.lang'), 'w')
+        click.echo(TRANSLATION_TIME(round(time.time() - self._translation_timer, 2)))
+
     @property
     def compile(self) -> None:
         """
@@ -1665,44 +1774,42 @@ class Anvil():
         ---------
         >>> ANVIL.compile
         """
-        click.echo(f'Executed at: {datetime.now()}')
-        click.echo(f'Compiling...')
         self._langs.sort()
         CreateDirectory(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/texts')
         CreateDirectory(f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/texts')
         CreateDirectory('texts')
-
         File('languages.json', Defaults('languages'),f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/texts', 'w')
         File('languages.json', Defaults('languages'),f'resource_packs/RP_{PASCAL_PROJECT_NAME}/texts', 'w')
         File('languages.json', Defaults('languages'),'texts', 'w')
-
         File('en_US.lang', Defaults('language', DISPLAY_NAME, PROJECT_DESCRIPTION) + ''.join(self._langs), f'resource_packs/RP_{PASCAL_PROJECT_NAME}/texts', 'w')
         File('en_US.lang', Defaults('language', DISPLAY_NAME, PROJECT_DESCRIPTION),f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/texts', 'w')
         File('en_US.lang', Defaults('language', DISPLAY_NAME, PROJECT_DESCRIPTION),'texts', 'w')
         
-        if FileExists(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json') is False:
+        if not FileExists(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json'):
             File("manifest.json", Schemes('manifest_rp'),f"resource_packs/RP_{PASCAL_PROJECT_NAME}", "w")
             with open(f"resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json",'r') as file:
                 data = json.load(file)
                 uuid = data["header"]["uuid"]
                 version = data["header"]["version"]
                 File("world_resource_packs.json", Schemes('world_packs', uuid, version), ".", "w")
-        if FileExists(f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json') is False:
+        if not FileExists(f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json'):
             File("manifest.json", Schemes('manifest_bp'),f"behavior_packs/BP_{PASCAL_PROJECT_NAME}", "w")
             with open(f"./behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json",'r') as file:
                 data = json.load(file)
                 uuid = data["header"]["uuid"]
                 version = data["header"]["version"]
                 File("world_behavior_packs.json", Schemes('world_packs', uuid, version), ".", "w") 
+        if not FileExists(f'manifest.json'):
+            File("manifest.json", Schemes('manifest_world', [COMPANY]),"", "w")
         
         if len(self._materials['materials']) > 1:
             CreateDirectory(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/materials')
-            File('entity.material', self._materials,
-                 f'resource_packs/RP_{PASCAL_PROJECT_NAME}/materials', 'w')
-        if FileExists('assets/gui'):
-            CopyFolder('assets/gui',f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/gui')
-        if FileExists('assets/textures/glyph_E1.png'):
-            CopyFiles('assets/textures',f'resource_packs/RP_{PASCAL_PROJECT_NAME}/font', 'glyph_E1.png')
+            File('entity.material', self._materials,f'resource_packs/RP_{PASCAL_PROJECT_NAME}/materials', 'w')
+        
+        if FileExists('assets/textures/gui'):
+            CopyFolder('assets/textures/gui',f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/gui')
+        if FileExists('assets/textures/environment'):
+            CopyFolder('assets/textures/environment', f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/environment')
         
             
         self._setup_scores.queue('StateManager/misc')
@@ -1710,6 +1817,7 @@ class Anvil():
         self._remove_tags.queue('StateManager/misc')
         for function in self._functions:
             self._setup.add(function.execute)
+
         File('tick.json', {'values': self._tick_functions},
              f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/functions', 'w')
         self._setup.add(self._remove_tags.execute).add(
@@ -1726,14 +1834,15 @@ class Anvil():
 
         for object in self._objects_list:
             object._export()
-        click.echo(f'Compiling time: {round(time.time() - self._start_timer,2)} s')
+            click.echo(EXPORTING(object._name))
 
-    def package(self, clear_assets: bool = False, skip_translation : bool = False) -> None:
+        click.echo(COMPILATION_TIME(round(time.time() - self._start_timer,2)))
+        self._compiled = True
+
+    def package(self, skip_translation : bool = False, include_skin_pack: bool = False) -> None:
         """
         Compiles queued anvil objects, translates and packages the project.
         This function should be called at the end of development and playtesting, it packages the project and exports a submission ready .zip file.
-
-        clear_assets is set to False by default, if you pass True as the argument, everything in the project folder will be deleted.
 
         Notes:
         ---------
@@ -1741,62 +1850,65 @@ class Anvil():
         `0-4.png`: Marketing art, must all be `1920x1080`
         `keyart.png`: Marketing Keyart, must be `1920x1080`
 
-        Parameters:
-        ---------
-        `clear_assets` : `bool`
-            Removes all files.
-
         Usage:
         ---------
         >>> ANVIL.package()
         >>> ANVIL.package(True)
         """
-        
-        def validate(path:str):
-            return FileExists(path)
-
+        content_structure = {}
         def art():
-            CreateDirectory('assets/marketing/Store Art')
-            CreateDirectory('assets/marketing/Marketing Art')
+            pack_icon_size = (256, 256)
+            marketing_screenshot_size = (1920, 1080)
+            store_screenshot_size = (800, 450)
+            
+            source = MakePath('assets', 'marketing')
+            output_store = MakePath('assets', 'output', 'Store Art')
+            output_marketing = MakePath('assets', 'output', 'Marketing Art')
 
-            if validate('assets/marketing/pack_icon.png'):
-                CopyFiles('assets/marketing',f'behavior_packs/BP_{PASCAL_PROJECT_NAME}', 'pack_icon.png')
-                CopyFiles('assets/marketing',f'resource_packs/RP_{PASCAL_PROJECT_NAME}', 'pack_icon.png')
-                original = Image.open('assets/marketing/pack_icon.png')
+            CreateDirectory(output_store)
+            CreateDirectory(output_marketing)
+
+            if FileExists(MakePath(source, 'pack_icon.png')):
+                CopyFiles(source, MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
+                CopyFiles(source, MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
+                original = Image.open(MakePath(source, 'pack_icon.png'))
                 resized = original.resize(pack_icon_size)
-                resized.convert("RGB").save(f'assets/marketing/Store Art/{PROJECT_NAME}_packicon_0.jpg',dpi=(72,72),quality=95)
-
-            #Keyart
-            if validate('assets/marketing/keyart.png'):
-                original = Image.open('assets/marketing/keyart.png')
+                resized.convert("RGB").save(MakePath(output_store, f'{PROJECT_NAME}_packicon_0.jpg'),dpi=(72,72),quality=95)
+            else:
+                click.echo(FILE_EXIST_WARNING('pack_icon.png'))
+            if FileExists(MakePath(source, 'keyart.png')):
+                original = Image.open(MakePath(source, 'keyart.png'))
                 resized = original.resize(store_screenshot_size)
-                resized.save('world_icon.jpeg')
-                resized.convert("RGB").save(f'assets/marketing/Store Art/{PROJECT_NAME}_Thumbnail_0.jpg',dpi=(72,72),quality=95)
-
+                resized.convert('RGB').save('world_icon.jpeg')
+                resized.convert('RGB').save(MakePath(output_store, f'{PROJECT_NAME}_Thumbnail_0.jpg'),dpi=(72,72),quality=95)
                 resized = original.resize(marketing_screenshot_size)
-                resized.convert("RGB").save(f'assets/marketing/Marketing Art/{PASCAL_PROJECT_NAME}_MarketingKeyArt.jpg',dpi=(300,300),quality=95)
-            #Panorama
-            if validate('assets/marketing/panorama.png'):
-                original = Image.open('assets/marketing/panorama.png')
-                new_width = original.size[1]//450
-                resized = original.resize((original.size[0]*new_width, 450))
-                resized.convert("RGB").save(f'assets/marketing/Store Art/{PROJECT_NAME}_panorama_0.jpg',dpi=(72,72),quality=95)
-            #Marketing
+                resized.convert("RGB").save(MakePath(output_marketing, f'{PROJECT_NAME}_MarketingKeyArt.jpg'),dpi=(300,300),quality=95)
+            else:
+                click.echo(FILE_EXIST_WARNING('keyart.png'))
+            if FileExists(MakePath(source, 'panorama.png')):
+                original = Image.open(MakePath(source, 'panorama.png'))
+                scale_factor = 450/original.size[1]
+                resized = original.resize((round(original.size[0]*scale_factor), 450))
+                resized.convert("RGB").save(MakePath(output_store, f'{PROJECT_NAME}_panorama_0.jpg'),dpi=(72,72),quality=95)
+            else:
+                click.echo(FILE_EXIST_WARNING('panorama.png'))
             for i in range(5):
-                if validate(f'assets/marketing/{i}.png'):
-                    original = Image.open(f'assets/marketing/{i}.png')
+                if FileExists(MakePath(source, f'{i}.png')):
+                    original = Image.open(MakePath(source, f'{i}.png'))
                     resized = original.resize(store_screenshot_size)
-                    resized.convert("RGB").save(f'assets/marketing/Store Art/{PROJECT_NAME}_screenshot_{i}.jpg',dpi=(72,72),quality=95)
+                    resized.convert("RGB").save(MakePath(output_store, f'{PROJECT_NAME}_screenshot_{i}.jpg'),dpi=(72,72),quality=95)
                     resized = original.resize(marketing_screenshot_size)
-                    resized.convert("RGB").save(f'assets/marketing/Marketing Art/{PASCAL_PROJECT_NAME}_MarketingScreenshot_{i}.jpg',dpi=(300,300),quality=100)
-            #Partner Art
-            if validate(f'assets/marketing/partner_art.png'):
-                original = Image.open(f'assets/marketing/partner_art.png')
+                    resized.convert("RGB").save(MakePath(output_marketing, f'{PROJECT_NAME}_MarketingScreenshot_{i}.jpg'),dpi=(300,300),quality=100)
+                else:
+                    click.echo(FILE_EXIST_WARNING(f'{i}.png'))
+            if FileExists(MakePath(source, 'partner_art.png')):
+                original = Image.open(MakePath(source, 'partner_art.png'))
                 resized = original.resize(marketing_screenshot_size)
-                resized.convert("RGB").save(f'assets/marketing/Marketing Art/{PASCAL_PROJECT_NAME}_PartnerArt.jpg',dpi=(300,300),quality=100)
-
+                resized.convert("RGB").save(MakePath(output_marketing, f'{PROJECT_NAME}_PartnerArt.jpg'),dpi=(300,300),quality=100)
+            else:
+                click.echo(FILE_EXIST_WARNING('partner_art.png'))
         def generate_submission_notes():
-            with open('assets/submission_notes.txt', "w", encoding='utf-8') as file:
+            with open('assets/output/submission_notes.txt', "w", encoding='utf-8') as file:
                 file.write('Entities:\n')
                 for name, data in self._entities.items():
                     file.write(f'   {data["Display Name"]}: {name}\n')
@@ -1812,106 +1924,91 @@ class Anvil():
                 file.write('\nBlocks:\n')
                 for item, id in self._blocks.items():
                     file.write(f'   {item}: {id}\n')
-        
-        def zipit(zip_name, dir_list:dict):
-            def zipdir(ziph:zipfile.ZipFile, source, target):
-                if os.path.isdir(source):
-                    for root, dirs, files in os.walk(source):
-                        for file in files:
-                            ziph.write(
-                                os.path.join(root, file),
-                                os.path.join(target,os.path.relpath(os.path.join(root, file), os.path.join(source, '.')))
-                            )
-                else:
-                    ziph.write(source,os.path.relpath(os.path.join(target,source), os.path.join(source, '..')))
-
-            zipf = zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED)
-            for source, target in dir_list.items():
-                zipdir(zipf, source, target)
-            zipf.close()
-
-            RemoveDirectory('assets/marketing/Store Art')
-            RemoveDirectory('assets/marketing/Marketing Art')
-            RemoveFile('assets/submission_notes.txt')
-
-        self.compile
+        if not self._compiled:
+            RaiseError(NOT_COMPILED)
         if not skip_translation:
-            self.translate
+            self._translate(include_skin_pack)
+        if include_skin_pack:
+            content_structure.update({
+                MakePath('assets', 'skin_pack'): MakePath('Content', 'world_tskin_packemplate'),
+            })
         
-        click.echo(f'Packaging...')
-        pack_icon_size = (256, 256)
-        marketing_screenshot_size = (1920, 1080)
-        store_screenshot_size = (800, 450)
-
-        content_structure = {
-            'assets/marketing/Store Art': 'Store Art',
-            'assets/marketing/Marketing Art': 'Marketing Art',
-            'assets/skin_pack': 'Content/skin_pack',
-
-            'resource_packs': 'Content/world_template/resource_packs',
-            'behavior_packs': 'Content/world_template/behavior_packs',
-            'db': 'Content/world_template/db',
-            'texts': 'Content/world_template/texts',
-
-            'level.dat': 'Content/world_template',
-            'levelname.txt': 'Content/world_template',
-            'manifest.json': 'Content/world_template',
-            'world_behavior_packs.json': 'Content/world_template',
-            'world_icon.jpeg': 'Content/world_template',
-            'world_resource_packs.json': 'Content/world_template',
-
-            'assets/submission_notes.txt': '',
-        }
-        File("manifest.json", Schemes('manifest_world', [COMPANY]),"", "w")
+        click.echo(PACKAGING_ZIP)
         generate_submission_notes()
         art()
-        zipit(f"assets/{PROJECT_NAME.title().replace('_', '').replace('-', '')}.zip", content_structure)
+        content_structure.update({
+            MakePath('assets', 'output', 'Store Art'):              MakePath('Store Art'),
+            MakePath('assets', 'output', 'Marketing Art'):          MakePath('Marketing Art'),
+            'resource_packs':                                       MakePath('Content', 'world_template', 'resource_packs'),
+            'behavior_packs':                                       MakePath('Content', 'world_template', 'behavior_packs'),
+            'texts':                                                MakePath('Content', 'world_template', 'texts'),
+            'db':                                                   MakePath('Content', 'world_template', 'db'),
+            'level.dat':                                            MakePath('Content', 'world_template'),
+            'levelname.txt':                                        MakePath('Content', 'world_template'),
+            'manifest.json':                                        MakePath('Content', 'world_template'),
+            'world_icon.jpeg':                                      MakePath('Content', 'world_template'),
+            'world_behavior_packs.json':                            MakePath('Content', 'world_template'),
+            'world_resource_packs.json':                            MakePath('Content', 'world_template'),
+        })
+        
+        zipit(MakePath('assets', 'output', f'{DISPLAY_NAME}.zip'), content_structure)
+        
+        RemoveDirectory(MakePath('assets', 'output', 'Store Art'))
+        RemoveDirectory(MakePath('assets', 'output', 'Marketing Art'))
     
     @property
     def mcaddon(self):
-        def zipit(zip_name, dir_list:dict):
-            def zipdir(ziph:zipfile.ZipFile, source, target):
-                if os.path.isdir(source):
-                    for root, dirs, files in os.walk(source):
-                        for file in files:
-                            ziph.write(
-                                os.path.join(root, file),
-                                os.path.join(target,os.path.relpath(os.path.join(root, file), os.path.join(source, '.')))
-                            )
-                else:
-                    ziph.write(source,os.path.relpath(os.path.join(target,source), os.path.join(source, '..')))
+        if not self._compiled:
+            RaiseError(NOT_COMPILED)
+        click.echo(PACKAGING_MCADDON)
 
-            zipf = zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED)
-            for source, target in dir_list.items():
-                zipdir(zipf, source, target)
-            zipf.close()
-
-        self.compile
-        click.echo(f'Packaging...')
-        project = PROJECT_NAME.title().replace('_', '').replace('-', '')
-
-        if FileExists('assets/marketing/pack_icon.png'):
-            CopyFiles('assets/marketing',f'behavior_packs/BP_{PASCAL_PROJECT_NAME}', 'pack_icon.png')
-            CopyFiles('assets/marketing',f'resource_packs/RP_{PASCAL_PROJECT_NAME}', 'pack_icon.png')
-
-        resource_packs_structure = {
-            f'resource_packs/RP_{PASCAL_PROJECT_NAME}': '',
-        }
-        behavior_packs_structure = {
-            f'behavior_packs/BP_{PASCAL_PROJECT_NAME}': '',
-        }
+        source = MakePath('assets', 'marketing')
+        output = MakePath('assets', 'output')
+        if FileExists(MakePath(source, 'pack_icon.png')):
+            CopyFiles(source, MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
+            CopyFiles(source, MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
+            
+        resource_packs_structure = {MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}'): '',}
+        behavior_packs_structure = {MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}'): '',}
         content_structure = {
-            f'assets/{project}_RP.mcpack': '',
-            f'assets/{project}_BP.mcpack': '',
+            MakePath(output, f'{DISPLAY_NAME}_RP.mcpack'): '',
+            MakePath(output, f'{DISPLAY_NAME}_BP.mcpack'): '',
         }
-        zipit(f"assets/{project}_RP.mcpack", resource_packs_structure)
-        zipit(f"assets/{project}_BP.mcpack", behavior_packs_structure)
-        zipit(f"assets/{project}.mcaddon", content_structure)
 
-        RemoveFile(f"assets/{project}_RP.mcpack")
-        RemoveFile(f"assets/{project}_BP.mcpack")
+        zipit(MakePath(output, f'{DISPLAY_NAME}_RP.mcpack'), resource_packs_structure)
+        zipit(MakePath(output, f'{DISPLAY_NAME}_BP.mcpack'), behavior_packs_structure)
+        zipit(MakePath(output, f'{DISPLAY_NAME}.mcaddon'), content_structure)
+        RemoveFile(MakePath(output, f'{DISPLAY_NAME}_RP.mcpack'))
+        RemoveFile(MakePath(output, f'{DISPLAY_NAME}_BP.mcpack'))
+
+    @property
+    def mcworld(self):
+        if not self._compiled:
+            RaiseError(NOT_COMPILED)
+        click.echo(PACKAGING_MCWORLD)
+        
+        source = MakePath('assets', 'marketing')
+        output = MakePath('assets', 'output')
+        if FileExists(MakePath(source, 'pack_icon.png')):
+            CopyFiles(source, MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
+            CopyFiles(source, MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
+
+        content_structure = {
+            'resource_packs':                                       MakePath('Content', 'world_template', 'resource_packs'),
+            'behavior_packs':                                       MakePath('Content', 'world_template', 'behavior_packs'),
+            'texts':                                                MakePath('Content', 'world_template', 'texts'),
+            'db':                                                   MakePath('Content', 'world_template', 'db'),
+            'level.dat':                                            MakePath('Content', 'world_template'),
+            'levelname.txt':                                        MakePath('Content', 'world_template'),
+            'manifest.json':                                        MakePath('Content', 'world_template'),
+            'world_icon.jpeg':                                      MakePath('Content', 'world_template'),
+            'world_behavior_packs.json':                            MakePath('Content', 'world_template'),
+            'world_resource_packs.json':                            MakePath('Content', 'world_template'),
+        }
+        zipit(MakePath(output, f'{DISPLAY_NAME}.mcworld'), content_structure)
 
     def _queue(self, object: object):
         self._objects_list.append(object)
+        click.echo(COMPILING(object._name))
 
 ANVIL = Anvil()
