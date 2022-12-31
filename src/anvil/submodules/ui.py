@@ -2,16 +2,20 @@
 from ..packages import *
 from ..core import ANVIL, Exporter, NAMESPACE, PASCAL_PROJECT_NAME
 
-__all__ = [ 'UIBindingType', 'UIElementType', 'UIAnchor', 'UIAnimType', 'UIEasing', 'UI']
+__all__ = [ 'UIBindingType', 'UIElementType', 'UIElementTrigger', 'UIAnchor', 'UIAnimType', 'UIEasing', 'UIFontSize', 'UI']
 
 
 class UIBindingType():
     View = 'view'
     Global = 'global'
+    Collection = 'collection'
 class UIElementType():
     Image = 'image'
     Panel = 'panel'
     Label = 'label'
+    Screen = 'screen'
+    Factory = 'factory'
+    StackPanel = 'stack_panel'
 class UIAnchor():
     Center = 'center'
     TopLeft = 'top_left'
@@ -98,6 +102,9 @@ class _UIBinding():
     def binding_type(self, binding_type: UIBindingType =  UIBindingType.View):
         self._content['binding_type'] = binding_type
         return self
+    def binding_collection_name(self, binding_collection_name: str):
+        self._content['binding_collection_name'] = binding_collection_name
+        return self
     def source_control_name(self, source_control_name: str):
         self._content['source_control_name'] = source_control_name
         return self
@@ -107,18 +114,53 @@ class _UIBinding():
     def target_property_name(self, target_property_name: str):
         self._content['target_property_name'] = target_property_name
         return self
+    def binding_condition(self, binding_condition: str):
+        self._content['binding_condition'] = binding_condition
+        return self
+
+
+class _UIButtonMapping():
+    def __init__(self) -> None:
+        self._content = {}
+    def from_button_id(self, from_button_id: str):
+        self._content['from_button_id'] = from_button_id
+        return self
+    def to_button_id(self, to_button_id: str):
+        self._content['to_button_id'] = to_button_id
+        return self
+    def mapping_type(self, mapping_type: str):
+        self._content['mapping_type'] = mapping_type
+        return self
+    def ignored(self, ignored: bool):
+        self._content['ignored'] = ignored
+        return self
+
+
+class _UIModifications():
+    def __init__(self) -> None:
+        self._content = {}
+
+    def remove(self, control_name: str):
+        self._content['control_name'] = control_name
+        self._content['operation'] = 'remove'
+        return self
+
+    def insert_front(self, control_name: str):
+        element = _UIElement(control_name)
+        self._content['array_name'] = 'controls'
+        self._content['operation'] = 'insert_front'
+        self._content['value'] = element
+        return element
 
 
 class _UIElement():
     def __init__(self, element_name: str) -> None:
         self._element_name = element_name
-        self.element =  {
-            'bindings' : [],
-            'controls' : [],
-            'variables': []
-        }
+        self.element =  {}
+        self._buttons : list[_UIButtonMapping] = []
         self._bindings : list[_UIBinding] = []
         self._controls : list[_UIElement] = []
+        self._modifications : list[_UIModifications] = []
     
     @property
     def should_steal_mouse(self):
@@ -132,6 +174,10 @@ class _UIElement():
     
     def visible(self, visible: bool | str):
         self.element['visible'] = visible
+        return self
+    
+    def enabled(self, enabled: bool | str):
+        self.element['enabled'] = enabled
         return self
     
     def text(self, text: str):
@@ -158,11 +204,25 @@ class _UIElement():
     def layer(self, layer: int):
         self.element['layer'] = layer
         return self
+
+    def font_scale_factor(self, font_scale_factor: int):
+        self.element['font_scale_factor'] = font_scale_factor
+        return self
     
-    def texture(self, texture: str):
+    def texture(self, texture: str, nineslice_size: int = None):
+        if not '$' in texture:
+            CheckAvailability(f'{texture}.png', 'sprite', MakePath('assets', 'textures', 'ui'))
+            self.element['texture'] = MakePath('textures', 'ui', texture)
+            if not nineslice_size is None:
+                File(f'{texture}.json', {'nineslice_size': nineslice_size, 'base_size': Image.open(MakePath('assets', 'textures', 'ui', f'{texture}.png')).size}, MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'ui'), 'w')
+        else:
+            self.element['texture'] = texture
+        return self
+    
+    def aseprite_texture(self, texture: str):
         CheckAvailability(f'{texture}.png', 'sprite', MakePath('assets', 'textures', 'ui'))
         self.element['texture'] = MakePath('textures', 'ui', texture)
-
+        CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'ui'), f"{texture}.json")
         return self
     
     def keys(self, key, value):
@@ -171,11 +231,39 @@ class _UIElement():
     
     @property
     def binding(self):
+        if 'bindings' not in self.element:
+            self.element['bindings'] = []
         bind = _UIBinding()
         self._bindings.append(bind)
         return bind
     
+    @property
+    def button_mapping(self):
+        if 'button_mappings' not in self.element:
+            self.element['button_mappings'] = []
+        bind = _UIButtonMapping()
+        self._buttons.append(bind)
+        return bind
+    
+    @property
+    def modification(self):
+        if 'modifications' not in self.element:
+            self.element['modifications'] = []
+        mod = _UIModifications()
+        self._modifications.append(mod)
+        return mod
+    
+    def control_ids(self, id: str, element: str):
+        if 'control_ids' not in self.element:
+            self.element['control_ids'] = {}
+        self.element['control_ids'][id] = element
+
+        return self
+    
     def controls(self, element_name: str):
+        if 'controls' not in self.element:
+            self.element['controls'] = []
+
         ctrl = _UIElement(element_name)
         self._controls.append(ctrl)
         return ctrl
@@ -191,6 +279,10 @@ class _UIElement():
 
     def size(self, size: str | tuple):
         self.element['size'] = size
+        return self
+
+    def line_padding(self, line_padding: int):
+        self.element['line_padding'] = line_padding
         return self
     
     def uv(self, uv: tuple):
@@ -232,6 +324,9 @@ class _UIElement():
         return self
 
     def variables(self, requires: str, key, value):
+        if 'variables' not in self.element:
+            self.element['variables'] = []
+
         self.element['variables'].append({
             "requires": requires,
             f'${key}': value
@@ -242,6 +337,13 @@ class _UIElement():
     def queue(self):
         for bind in self._bindings:
             self.element['bindings'].append(bind._content)
+        for button in self._buttons:
+            self.element['button_mappings'].append(button._content)
+        for mod in self._modifications:
+            if 'value' in mod._content:
+                mod._content['value'] = mod._content['value'].queue
+
+            self.element['modifications'].append(mod._content)
         for ctrl in self._controls:
             self.element['controls'].append(ctrl.queue)
         return { self._element_name: self.element }
@@ -372,34 +474,45 @@ class _UIScreen(Exporter):
         self._variables = variables
         self._ignored_title_texts = []
         self._ignored_actionbar_texts = []
-              
+        self.do_not_shorten
+        
     def add_element(self, element_name: str, trigger: UIElementTrigger = UIElementTrigger.NONE, keyword: str = None):
+        new_element = _UIElement(element_name)
+        if not keyword is None:
+            new_element.binding.binding_type(UIBindingType.View).source_property_name(f'$anvil.{element_name}.bool').target_property_name('#visible')
+        
         match trigger:
             case 'title':
                 if not keyword is None:
                     self._variables.add_variable(f'$anvil.{element_name}.text', f'{NAMESPACE}:{keyword}')
                     self._variables.add_variable(f'$anvil.{element_name}.bool', f'(#text = $anvil.{element_name}.text)')
                     self._ignored_title_texts.append(f'(#text = $anvil.{element_name}.text)')
-
+                
+                new_element.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
+                new_element.binding.binding_name('#hud_subtitle_text_string').binding_name_override('#subtext')
                 factory = self.add_element(f'{element_name}_factory')
                 factory.type(UIElementType.Panel)
                 factory.factory('hud_title_text_factory', 'hud_title_text', f'{element_name}@anvil_hud.{element_name}')
+
             case 'actionbar':
                 if not keyword is None:
                     self._variables.add_variable(f'$anvil.{element_name}.text', f'{NAMESPACE}:{keyword}')
                     self._variables.add_variable(f'$anvil.{element_name}.bool', f'($text = $anvil.{element_name}.text)')
-                    self._ignored_title_texts.append(f'($text = $anvil.{element_name}.text)')
-                factory = self.add_element(f'{element_name}_factory')
+                    self._ignored_actionbar_texts.append(f'($text = $anvil.{element_name}.text)')
+                factory: _UIElement = self.add_element(f'{element_name}_factory')
                 factory.type(UIElementType.Panel)
                 factory.factory('hud_actionbar_text_factory', 'hud_actionbar_text', f'{element_name}@anvil_hud.{element_name}')
+                
+                new_element.keys('text', '$actionbar_text')
 
-        self._elements.append(_UIElement(element_name))
-        return self._elements[-1]
+        self._elements.append(new_element)
+        return new_element
     
     def queue(self, directory: str = ''):
         def copy_textures(element: _UIElement):
             if 'texture' in element.element:
-                CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'ui'), f"{element.element['texture'].split('/')[-1]}.png")
+                if '$' not in element.element['texture']:
+                    CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'ui'), f"{element.element['texture'].split('/')[-1]}.png")
             for elem in element._controls:
                 copy_textures(elem)
 
@@ -414,36 +527,24 @@ class UI():
         def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables) -> None:
             super().__init__('hud_screen', 'hud', anvil_animation, variables)
             #Disable HUD
-            root_panel = self.add_element('root_panel')
-            root_panel.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
-            root_panel.binding.binding_type(UIBindingType.View).source_property_name('$anvil.hud_visible').target_property_name('#visible')
+            self.root_panel = self.add_element('root_panel')
+            self.root_panel.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
+            self.root_panel.binding.binding_type(UIBindingType.View).source_property_name('$anvil.hud_visible').target_property_name('#visible')
 
-            hud_title_text = self.add_element('hud_title_text')
-            hud_title_text.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
-            hud_title_text.binding.binding_name('#hud_subtitle_text_string').binding_name_override('#subtext')
-            hud_title_text.binding.binding_type(UIBindingType.View).source_property_name('$anvil.title.bool').target_property_name('#visible')
+            self.hud_title_text = self.add_element('hud_title_text')
+            self.hud_title_text.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
+            self.hud_title_text.binding.binding_name('#hud_subtitle_text_string').binding_name_override('#subtext')
+            self.hud_title_text.binding.binding_type(UIBindingType.View).source_property_name('$anvil.title.bool').target_property_name('#visible')
             
-            hud_actionbar_text = self.add_element('hud_actionbar_text')
-            hud_actionbar_text.visible('$anvil.actionbar.bool')
-            hud_actionbar_text.keys('text', '$actionbar_text')
+            self.hud_actionbar_text = self.add_element('hud_actionbar_text')
+            self.hud_actionbar_text.visible('$anvil.actionbar.bool')
+            self.hud_actionbar_text.keys('text', '$actionbar_text')
 
             anvil_element = self.add_element('hud_content')
             # TO DO:
             # Add a modifications controlling class
             anvil_element.binding.binding_name('#hud_visible').binding_name_override('#visible').binding_type(UIBindingType.Global)
-            anvil_element.element.update({
-                "modifications": [
-                    {
-                        "array_name": "controls",
-                        "operation": "insert_front",
-                        "value": {
-                            "@anvil_hud.test_hud": {
-                                "visible": True
-                            }
-                        }
-                    }
-                ]
-            })
+            anvil_element.modification.insert_front('anvil@anvil_hud.test_hud')
             variables.add_variable('$anvil.show.text', f'{NAMESPACE}:show')
             variables.add_variable('$anvil.hide.text', f'{NAMESPACE}:hide')
             self._ignored_title_texts = ['(#text = $anvil.show.text)', '(#text = $anvil.hide.text)']
@@ -451,8 +552,22 @@ class UI():
 
         def disable_mouse(self):
             self.add_element('hud_screen@common.base_screen').should_steal_mouse.absorbs_input
-            self.add_element('cursor_renderer').visible(False)
+            self.root_panel.modification.remove('curor_rend')
             return self
+
+        def disable_mob_effect(self):
+            self.root_panel.modification.remove('mob_effects_renderer')
+            return self
+    
+        def disable_helpers(self):
+            self.root_panel.modification.remove('left_helpers')
+            self.root_panel.modification.remove('right_helpers')
+            self.root_panel.modification.remove('emote_helpers')
+            return self
+    
+    class _NPCScreen(_UIScreen):
+        def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables) -> None:
+            super().__init__('npc_interact_screen', 'npc_interact', anvil_animation, variables)
     
     class _AnvilScreen(_UIScreen):
         def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables) -> None:
@@ -462,51 +577,92 @@ class UI():
 
         def add_element(self, element_name: str, trigger: UIElementTrigger = UIElementTrigger.NONE, keyword: str = None):
             if trigger is not None:
-                self.test_hud.controls(f'{element_name}@anvil_hud.{element_name}_factory').visible(True)
-
+                self.test_hud.controls(f'{element_name}@anvil_hud.{element_name}_factory')
             return super().add_element(element_name, trigger, keyword)
         
-        # Layer 100
-        def add_logo(self):
+        def add_image_panel(self, name: str, background: bool = False, zoom: bool =  True, duration: float = 8):
             #animations
-            logo_zoom = self._anvil_animation.add_animation('logo_zoom')
-            logo_zoom.anim_type(UIAnimType.Size)
-            logo_zoom.easing(UIEasing.Linear)
-            logo_zoom.from_(("38%", "38%")).to(("71%", "71%"))
-            logo_zoom.duration('$anvil.logo.logo_zoom')
-            self._variables.add_variable('$anvil.logo.logo_zoom', 13.7)
-            logo_zoom.destroy_at_end('@anvil_hud.logo_element')
+            self._variables.add_variable(f'$anvil.image.{name}_zoom', duration-1)
 
-            logo_alpha_in = self._anvil_animation.add_animation('logo_alpha_in')
-            logo_alpha_in.anim_type(UIAnimType.Alpha)
-            logo_alpha_in.easing(UIEasing.OutQuad)
-            logo_alpha_in.from_(0)
-            logo_alpha_in.to(1)
-            logo_alpha_in.duration('$title_fade_in_time')
-            logo_alpha_in.next('@anvil_animations.logo_alpha_wait')
+            image_zoom = self._anvil_animation.add_animation(f'{name}_zoom')
+            image_zoom.anim_type(UIAnimType.Size)
+            image_zoom.easing(UIEasing.Linear)
+            image_zoom.from_(("30%", "30%")).to(("40%", "40%"))
+            image_zoom.duration(f'$anvil.image.{name}_zoom')
+            image_zoom.destroy_at_end(f'@anvil_hud.{name}_element')
 
-            logo_alpha_wait = self._anvil_animation.add_animation('logo_alpha_wait')
-            logo_alpha_wait.anim_type(UIAnimType.Wait)
-            logo_alpha_wait.duration('$title_stay_time')
-            logo_alpha_wait.next('@anvil_animations.logo_alpha_out')
-
-            logo_alpha_out = self._anvil_animation.add_animation('logo_alpha_out')
-            logo_alpha_out.anim_type(UIAnimType.Alpha)
-            logo_alpha_out.easing(UIEasing.InOutSine)
-            logo_alpha_out.from_(1)
-            logo_alpha_out.to(0)
-            logo_alpha_out.duration('$title_fade_out_time')
+            image_alpha_in = self._anvil_animation.add_animation(f'{name}_alpha_in')
+            image_alpha_in.anim_type(UIAnimType.Alpha)
+            image_alpha_in.easing(UIEasing.OutQuad)
+            image_alpha_in.from_(0)
+            image_alpha_in.to(1)
+            image_alpha_in.duration('$title_fade_in_time')
+            image_alpha_in.next(f'@anvil_animations.{name}_alpha_wait')
+            image_alpha_wait = self._anvil_animation.add_animation(f'{name}_alpha_wait')
+            image_alpha_wait.anim_type(UIAnimType.Wait)
+            image_alpha_wait.duration(f'$anvil.image.{name}_zoom')
+            image_alpha_wait.next(f'@anvil_animations.{name}_alpha_out')
+            image_alpha_out = self._anvil_animation.add_animation(f'{name}_alpha_out')
+            image_alpha_out.anim_type(UIAnimType.Alpha)
+            image_alpha_out.easing(UIEasing.InOutSine)
+            image_alpha_out.from_(1)
+            image_alpha_out.to(0)
+            image_alpha_out.duration('$title_fade_out_time')
 
             #element
-            logo_element = self.add_element('logo_element', UIElementTrigger.Title, 'logo')
-            logo_element.type(UIElementType.Image)
-            logo_element.layer(100)
-            logo_element.texture('logo')
-            logo_element.anchor(UIAnchor.Center, UIAnchor.Center)
-            logo_element.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
-            logo_element.binding.binding_type(UIBindingType.View).source_property_name('$anvil.logo_element.bool').target_property_name('#visible')
-            logo_element.size('@anvil_animations.logo_zoom')
-            logo_element.alpha('@anvil_animations.logo_alpha_in')
+            image_element = self.add_element(f'{name}_element', UIElementTrigger.Title, name)
+            image_element.type(UIElementType.Panel)
+            image_element.size(('100%', '100%'))
+            image_element.layer(100)
+            image_element.anchor(UIAnchor.Center, UIAnchor.Center)
+            
+            if background:
+                background_image = image_element.controls(f'{name}_background')
+                background_image.type(UIElementType.Image)
+                background_image.texture('black_element')
+                background_image.size(('100%', '100%'))
+                background_image.keep_ratio(False)
+                
+            image = image_element.controls(f'{name}_image')
+            image.type(UIElementType.Image)
+            image.texture(name)
+            image.anchor(UIAnchor.Center, UIAnchor.Center)
+            image.offset((0, '-50px'))
+            if zoom:
+                image.size(f'@anvil_animations.{name}_zoom')
+                image.alpha(f'@anvil_animations.{name}_alpha_in')
+            else: 
+                image.size(('40%', '40%'))
+                image.alpha(1)
+
+            tip = image_element.controls(f'{name}_tip')
+            tip.type(UIElementType.Label)
+            tip.anchor(UIAnchor.Center, UIAnchor.Center)
+            tip.offset((0, '50px'))
+            tip.text('#text').shadow.font_size(UIFontSize.Large)
+            tip.binding.binding_name('#hud_subtitle_text_string').binding_name_override('#text')
+
+        # Layer 100
+        def add_logo(self):
+            self.add_image_zoom('logo', True)
+        # Layer 100
+        def add_celebration_screen(self):
+            confetti_flipbook = self._anvil_animation.add_animation('confetti_flipbook')
+            confetti_flipbook.anim_type(UIAnimType.Aseprite_flip_book)
+            confetti_flipbook.initial_uv((0, 0))
+
+            #element
+            celeb_element = self.add_element('celeb_element', UIElementTrigger.Title, 'celebrate')
+            celeb_element.type(UIElementType.Panel)
+            celeb_element.layer(102)
+            celeb_element.anchor(UIAnchor.Center, UIAnchor.Center)
+            celeb_element.size(('100%', '100%'))
+            
+            confetti = celeb_element.controls('confetti')
+            confetti.type(UIElementType.Image)
+            confetti.aseprite_texture('confetti')
+            confetti.uv_size((1280, 720))
+            confetti.uv('@anvil_animations.confetti_flipbook')
         # Layer 101
         def add_blinking_screen(self):
             # animation
@@ -539,8 +695,6 @@ class UI():
             blink_element.anchor(UIAnchor.Center, UIAnchor.Center)
             blink_element.size(('300%', '300%'))
             blink_element.alpha('@anvil_animations.blink_fade_in')
-            blink_element.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
-            blink_element.binding.binding_type(UIBindingType.View).source_property_name('$anvil.blink_element.bool').target_property_name('#visible')
         # Layer 101
         def add_black_bars(self):
             black_bars_in = self._anvil_animation.add_animation('black_bars_in')
@@ -589,14 +743,14 @@ class UI():
             self._variables.add_variable('$anvil.scope_view_out.duration', 1.6)
 
             self._variables.add_variable('$anvil.scope_view_in.text', f'{NAMESPACE}:scope_view_in')
-            self._variables.add_variable('$anvil.scope_view_in.bool', '($text = $anvil.scope_view_in.text)')
+            self._variables.add_variable('$anvil.scope_view_in.bool', '(#text = $anvil.scope_view_in.text)')
             self._variables.add_variable('$anvil.scope_view_out.text', f'{NAMESPACE}:scope_view_out')
-            self._variables.add_variable('$anvil.scope_view_out.bool', '($text = $anvil.scope_view_out.text)')
+            self._variables.add_variable('$anvil.scope_view_out.bool', '(#text = $anvil.scope_view_out.text)')
 
             self._variables.add_variable('$anvil.scope_view_full_in.text', f'{NAMESPACE}:scope_view_full_in')
-            self._variables.add_variable('$anvil.scope_view_full_in.bool', '($text = $anvil.scope_view_full_in.text)')
+            self._variables.add_variable('$anvil.scope_view_full_in.bool', '(#text = $anvil.scope_view_full_in.text)')
             self._variables.add_variable('$anvil.scope_view_full_out.text', f'{NAMESPACE}:scope_view_full_out')
-            self._variables.add_variable('$anvil.scope_view_full_out.bool', '($text = $anvil.scope_view_full_out.text)')
+            self._variables.add_variable('$anvil.scope_view_full_out.bool', '(#text = $anvil.scope_view_full_out.text)')
 
             scope_view_in = self._anvil_animation.add_animation('scope_view_in')
             scope_view_in.anim_type(UIAnimType.Size)\
@@ -629,57 +783,71 @@ class UI():
                 .destroy_at_end('@anvil_hud.scope_view')
 
             # element
-            scope_view = self.add_element('scope_view', UIElementTrigger.Actionbar)
-            scope_view.type(UIElementType.Image)\
+            scope_view = self.add_element('scope_view', UIElementTrigger.Title)
+            scope_view.type(UIElementType.Panel)
+            scope_view.binding.binding_name('#hud_title_text_string').binding_name_override('#text').binding_type(UIBindingType.Global)
+
+            scope_in = scope_view.controls('in@anvil_hud.scope_view_image').keys('anim_size', '@anvil_animations.scope_view_in')
+            scope_in.binding.binding_type(UIBindingType.View).source_property_name('$anvil.scope_view_in.bool').target_property_name('#visible')
+            scope_in.binding.binding_name('#hud_title_text_string').binding_name_override('#text').binding_type(UIBindingType.Global)
+
+            scope_out = scope_view.controls('out@anvil_hud.scope_view_image').keys('anim_size', '@anvil_animations.scope_view_out')
+            scope_out.binding.binding_type(UIBindingType.View).source_property_name('$anvil.scope_view_out.bool').target_property_name('#visible')
+            scope_out.binding.binding_name('#hud_title_text_string').binding_name_override('#text').binding_type(UIBindingType.Global)
+
+            scope_full_in = scope_view.controls('full_in@anvil_hud.scope_view_image').keys('anim_size', '@anvil_animations.scope_view_full_in')
+            scope_full_in.binding.binding_type(UIBindingType.View).source_property_name('$anvil.scope_view_full_in.bool').target_property_name('#visible')
+            scope_full_in.binding.binding_name('#hud_title_text_string').binding_name_override('#text').binding_type(UIBindingType.Global)
+
+            scope_full_out = scope_view.controls('full_out@anvil_hud.scope_view_image').keys('anim_size', '@anvil_animations.scope_view_full_out')
+            scope_full_out.binding.binding_type(UIBindingType.View).source_property_name('$anvil.scope_view_full_out.bool').target_property_name('#visible')
+            scope_full_out.binding.binding_name('#hud_title_text_string').binding_name_override('#text').binding_type(UIBindingType.Global)
+
+
+            scope_view_image = self.add_element('scope_view_image')
+            scope_view_image.type(UIElementType.Image)\
                 .offset((0,"10px"))\
                 .texture('scope_view')\
                 .keep_ratio(False)\
                 .anchor(UIAnchor.Center, UIAnchor.Center)\
                 .layer(101)\
-                .keys('anim_size', ("300%","300%"))\
-                .keys('text', '$actionbar_text')\
-                .variables('$anvil.scope_view_in.bool', 'anim_size', '@anvil_animations.scope_view_in')\
-                .variables('$anvil.scope_view_out.bool', 'anim_size', '@anvil_animations.scope_view_out')\
-                .variables('$anvil.scope_view_full_in.bool', 'anim_size', '@anvil_animations.scope_view_full_in')\
-                .variables('$anvil.scope_view_full_out.bool', 'anim_size', '@anvil_animations.scope_view_full_out')\
-                .size('$anim_size')\
-
-            scope_view_right_bar = scope_view.controls('scope_view_right_bar')
+                .size('$anim_size')
+            scope_view_right_bar = scope_view_image.controls('scope_view_right_bar')
             scope_view_right_bar.type(UIElementType.Image)\
                 .texture('black_element')\
                 .keep_ratio(False)\
                 .anchor(UIAnchor.RightMiddle, UIAnchor.RightMiddle)\
                 .size(('40000%', '40000%'))\
                 .offset(('100%x', 0))
-            scope_view_left_bar = scope_view.controls('scope_view_left_bar')
+            scope_view_left_bar = scope_view_image.controls('scope_view_left_bar')
             scope_view_left_bar.type(UIElementType.Image)\
                 .texture('black_element')\
                 .keep_ratio(False)\
                 .anchor(UIAnchor.LeftMiddle, UIAnchor.LeftMiddle)\
                 .size(('40000%', '40000%'))\
                 .offset(('-100%x', 0))
-            scope_view_top_bar = scope_view.controls('scope_view_top_bar')
+            scope_view_top_bar = scope_view_image.controls('scope_view_top_bar')
             scope_view_top_bar.type(UIElementType.Image)\
                 .texture('black_element')\
                 .keep_ratio(False)\
                 .anchor(UIAnchor.TopMiddle, UIAnchor.TopMiddle)\
                 .size(('40000%', '40000%'))\
                 .offset((0, '-100%x'))
-            scope_view_bottom_bar = scope_view.controls('scope_view_bottom_bar')
+            scope_view_bottom_bar = scope_view_image.controls('scope_view_bottom_bar')
             scope_view_bottom_bar.type(UIElementType.Image)\
                 .texture('black_element')\
                 .keep_ratio(False)\
                 .anchor(UIAnchor.BottomMiddle, UIAnchor.BottomMiddle)\
                 .size(('40000%', '40000%'))\
                 .offset((0, '100%x'))
-        
-            self._ignored_actionbar_texts.extend(['($text = $anvil.scope_view_in.text)', '($text = $anvil.scope_view_out.text)', '($text = $anvil.scope_view_full_in.text)', '($text = $anvil.scope_view_full_out.text)'])
+
+            self._ignored_title_texts.extend(['(#text = $anvil.scope_view_in.text)', '(#text = $anvil.scope_view_out.text)', '(#text = $anvil.scope_view_full_in.text)', '(#text = $anvil.scope_view_full_out.text)'])
         # Layer 102
         def add_info_card(self):
             info_in = self._anvil_animation.add_animation('info_in')
             info_in.anim_type(UIAnimType.Offset)
             info_in.easing(UIEasing.InOutSine)
-            info_in.from_(("100%x","15%")).to((0,"15%"))
+            info_in.from_(("100%x",0)).to(('-10px',0))
             self._variables.add_variable('$anvil.info.in', 0.5)
             info_in.duration('$anvil.info.in')
             info_in.next('@anvil_animations.info_wait')
@@ -693,7 +861,7 @@ class UI():
             info_out = self._anvil_animation.add_animation('info_out')
             info_out.anim_type(UIAnimType.Offset)
             info_out.easing(UIEasing.InOutSine)
-            info_out.from_((0,"15%")).to(("100%x","15%"))
+            info_out.from_(('-10px',0)).to(("100%x",0))
             self._variables.add_variable('$anvil.info.out', 0.5)
             info_out.duration('$anvil.info.out')
             info_in.destroy_at_end('@anvil_hud.info_card')
@@ -702,26 +870,23 @@ class UI():
             info_card = self.add_element('info_card', UIElementTrigger.Title, 'info')
             info_card.type(UIElementType.Image)
             info_card.layer(102)
-            info_card.texture('info_card')
-            info_card.size(("138px","32px"))
-            info_card.anchor(UIAnchor.TopRight, UIAnchor.TopRight)
+            info_card.texture('info_card', 10)
+            info_card.size(("100%c + 12px", "100%c + 12px"))
+            info_card.anchor(UIAnchor.RightMiddle, UIAnchor.RightMiddle)
             info_card.offset('@anvil_animations.info_in')
-            info_card.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
-            info_card.binding.binding_type(UIBindingType.View).source_property_name('$anvil.info_card.bool').target_property_name('#visible')
+            
             info_text = info_card.controls('info_text')
-            info_text.type(UIElementType.Label)
-            info_text.size(("80%","90%"))
-            info_text.offset(("4%","9%"))
             info_text.text_alignment(UIAnchor.Center)
-            info_text.font_size(UIFontSize.Normal)
+            info_text.type(UIElementType.Label)
             info_text.shadow
-            info_text.binding.binding_name('#hud_subtitle_text_string').binding_name_override('#text')
-            info_text.text('#text')
+            info_text.binding.binding_name('#hud_subtitle_text_string').binding_name_override('#subtext')
+            info_text.text('#subtext')
         # Layer 103
-        def add_loading_screen(self, load_time : int = 10):
-            progress_bar_y_offset = 40
+        def add_loading_screen(self, load_time : int = 10, **textures: str):
+            progress_bar_y_offset = 20
             progress_bar_height = 16
             text_y_offset = progress_bar_height + 5
+            level_name_y_offset = text_y_offset + 25
 
             self._variables.add_variable('$anvil.loading_screen.in', 1)
             self._variables.add_variable('$anvil.loading_screen.stay', load_time)
@@ -730,7 +895,6 @@ class UI():
             self._variables.add_variable('$anvil.loading_progress_bar.wait', 3)
             self._variables.add_variable('$anvil.loading_progress_bar.size', load_time-3)
             self._variables.add_variable('$anvil.loading_progress_bar.offset', load_time-3)
-
             
             loading_screen_alpha_in = self._anvil_animation.add_animation('loading_screen_alpha_in')
             loading_screen_alpha_wait = self._anvil_animation.add_animation('loading_screen_alpha_wait')
@@ -773,79 +937,90 @@ class UI():
 
             # Loading Panel
             loading = self.add_element('loading_screen', UIElementTrigger.Title, 'loading')
-            loading.binding.binding_name('#hud_title_text_string').binding_name_override('#text')
-            loading.binding.binding_type(UIBindingType.View).source_property_name('$anvil.loading_screen.bool').target_property_name('#visible')
             loading.type(UIElementType.Image)\
                 .layer(106)\
+                .texture('black_element')\
                 .size(('100%', '100%'))\
-                .alpha('@anvil_animations.loading_screen_alpha_in')\
-                .anchor(UIAnchor.Center, UIAnchor.Center)\
-                .propagate_alpha\
+                .keep_ratio(False)\
+                .anchor(UIAnchor.Center, UIAnchor.Center)
             
-            # Loading Background
-            loading_background = loading.controls('loading_bar')
-            loading_background.type(UIElementType.Image)\
-                .size(('100%', '100%x'))\
-                .keep_ratio(True)\
-                .texture('loading_background')\
             
-            #Loading Bar
+            
+            ## Black Backdrop => loading
+            #black_backdrop = loading.controls('black_backdrop')
+            #black_backdrop.type(UIElementType.Image).size(('100%x', '100%y')).texture('black_element').keep_ratio(False).anchor(UIAnchor.Center, UIAnchor.Center)
+
+            # Loading Background => loading
+            loading_background = loading.controls('loading_background')
+            loading_background.type(UIElementType.Panel)\
+                .anchor(UIAnchor.TopMiddle, UIAnchor.TopMiddle)
+            for k,v in textures.items():
+                CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'ui'), f"{k}.png")
+                background = loading_background.controls(k)\
+                    .type(UIElementType.Image)\
+                    .texture(k)\
+                    .size(('100%', '100%x'))\
+                    .alpha('@anvil_animations.loading_screen_alpha_in')\
+                    .propagate_alpha
+                background.binding.binding_type(UIBindingType.Global)\
+                    .binding_name('#hud_subtitle_text_string')\
+                    .binding_name_override('#subtext')
+                background.binding.binding_type(UIBindingType.View)\
+                        .source_property_name(f"(#subtext = '{v}')")\
+                        .target_property_name('#visible')
+
+            #Loading Frame => loading
+            loading_frame = loading_background.controls('loading_frame')\
+                .size(('100%', '100%'))\
+                .type(UIElementType.Image)\
+                .texture('loading_screen_frame', 16)
+
+            #Loading Bar Panel => loading
             loading_bar = loading.controls('loading_bar')
             loading_bar.type(UIElementType.Panel)\
                 .size(('90%', f'{progress_bar_height}px'))\
                 .offset((0, f'-{progress_bar_y_offset}px'))\
                 .anchor(UIAnchor.BottomMiddle, UIAnchor.BottomMiddle)\
+            # Loadding Bar Bakcground => Loading
+            loading_bar.controls('loading_bar_background')\
+                .type(UIElementType.Image)\
+                .texture('black_element')\
+                .keep_ratio(False)\
+                .size(('100% + 20px', '500%'))\
+                .alpha(0.8)\
+                .offset((0, f'-{progress_bar_y_offset+10}px'))
 
-            # Loading text
-            loading_text = loading_bar.controls('loading_text')
-            loading_text.type(UIElementType.Label)\
+            # Loading Level name => Loading Bar Panel
+            loading_bar.controls('level_name')\
+                .type(UIElementType.Label)\
+                .anchor(UIAnchor.LeftMiddle, UIAnchor.LeftMiddle)\
+                .offset((0, f'-{level_name_y_offset}px'))\
+                .font_size(UIFontSize.ExtraLarge)\
+                .text('#subtext')\
+                .shadow\
+                .binding.binding_name('#hud_subtitle_text_string').binding_name_override('#subtext')
+            # Loading bar text => Loading Bar Panel
+            loading_bar.controls('loading_text')\
+                .type(UIElementType.Label)\
                 .anchor(UIAnchor.LeftMiddle, UIAnchor.LeftMiddle)\
                 .offset((0, f'-{text_y_offset}px'))\
                 .shadow\
                 .font_size(UIFontSize.Large)\
                 .text('Loading...')
-
-            #Bar
-            loading_progress_bar_background = loading_bar.controls('loading_progress_bar_background')
-            loading_progress_bar_background.texture('loading_progress_bar_background')\
+            #Bar => Loading Bar Panel
+            loading_bar.controls('loading_progress_bar_background')\
+                .texture('loading_progress_bar_background')\
                 .type(UIElementType.Image)\
                 .keep_ratio(False)\
-                .size(('100%', f'{progress_bar_height/2}px'))
-
-            loading_progress_bar = loading_bar.controls('loading_progress_bar')
-            loading_progress_bar.texture('loading_progress_bar')\
+                .size(('100% + 4px', f'{progress_bar_height/2}px + 4 px'))
+            loading_bar.controls('loading_progress_bar')\
+                .texture('loading_progress_bar')\
                 .type(UIElementType.Image)\
                 .keep_ratio(False)\
                 .size('@anvil_animations.loading_progress_bar_size_in')\
                 .offset('@anvil_animations.loading_progress_bar_offset_in')
 
-            #loading_bar_middle = loading_bar.controls('loading_bar_middle')
-            #loading_bar_middle.texture('loading_bar_outer')\
-            #    .type(UIElementType.Image)\
-            #    .uv((2, 0))\
-            #    .uv_size((1, 8))\
-            #    .keep_ratio(False)\
-            #    .size(('100%', '100%'))
-#
-            #loading_bar_left = loading_bar.controls('loading_bar_left')
-            #loading_bar_left.texture('loading_bar_outer')\
-            #    .type(UIElementType.Image)\
-            #    .anchor(UIAnchor.LeftMiddle, UIAnchor.LeftMiddle)\
-            #    .uv((0, 0))\
-            #    .uv_size((2, 8))\
-            #    .keep_ratio(True)\
-            #    .size(('4px', '100%'))
-#
-            #loading_bar_right = loading_bar.controls('loading_bar_right')
-            #loading_bar_right.texture('loading_bar_outer')\
-            #    .type(UIElementType.Image)\
-            #    .anchor(UIAnchor.RightMiddle, UIAnchor.RightMiddle)\
-            #    .uv((3, 0))\
-            #    .uv_size((2, 8))\
-            #    .keep_ratio(True)\
-            #    .size(('4px', '100%'))
-
-
+        
         def queue(self):
             return super().queue('anvil')
 
@@ -860,6 +1035,10 @@ class UI():
         self.animations_screen = self._AnvilAnimations()
         self.hud_screen = self._HUDScreen(self.animations_screen, self.variables)
         self.anvil_screen = self._AnvilScreen(self.animations_screen, self.variables)
+
+    def add_ui_screen(self, filename, namespace):
+        screen = _UIScreen(filename, namespace, self.animations_screen, self.variables)
+        return screen
 
     def queue(self):
         # Manage Titles, Subtitles and actionbars
@@ -880,3 +1059,4 @@ class UI():
         self.animations_screen.queue('anvil')
         self.variables.queue()
         self._defs.queue()
+

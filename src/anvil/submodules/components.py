@@ -20,6 +20,26 @@ class EventObject():
             'target': target
         }
 
+# Filters ==========================================================================
+class _filter(dict):
+    def __init__(self, component_name) -> None:
+        self.__setitem__('self._component_namespace', {})
+        self._all_of = []
+        self._any_of = []
+        self._none_of = []
+    
+    def all_of(self):
+        self._all_of.append(_filter(''))
+        return self._all_of[-1]
+    def any_of(self):
+        self._any_of.append(_filter(''))
+        return self._any_of[-1]
+    def none_of(self):
+        self._none_of.append(_filter(''))
+        return self._none_of[-1]
+
+
+
 # Components ==========================================================================
 class _component(dict):
     def __init__(self, component_name) -> None:
@@ -29,6 +49,9 @@ class _component(dict):
     
     def AddField(self, key,value):
         self[self._component_namespace][key] = value
+
+    def SetValue(self, value):
+        self[self._component_namespace] = value
 
 class AddRider(_component):
     def __init__(self, entity_type: Identifier, spawn_event: Event = None) -> None:
@@ -180,7 +203,7 @@ class CanClimb(_component):
         super().__init__('can_climb')
 
 class Attack(_component):
-    def __init__(self, damage: int, effect_duration: str = None, effect_name: str = None) -> None:
+    def __init__(self, damage: int, effect_duration: int = None, effect_name: str = None) -> None:
         """Defines an entity's melee attack and any additional effects on it."""
         super().__init__('attack')
         self.AddField('damage', damage)
@@ -211,7 +234,7 @@ class SpellEffects(_component):
         self.AddField('add_effects', [])
         self.AddField('remove_effects', [])
     
-    def add_effects(self, effect: str, duration: int, amplifier:int, ambient: bool = True, visible: bool = True, display_on_screen_animation: bool = True):
+    def add_effects(self, effect: Effects, duration: int, amplifier:int, ambient: bool = True, visible: bool = True, display_on_screen_animation: bool = True):
         effect = {
             'effect': effect,
             'duration': duration,
@@ -324,7 +347,6 @@ class AreaAttack(_component):
         self.AddField('entity_filter', filter)
         return self
 
-# FLAGS ===============================================================================
 class IsStackable(_component):
     def __init__(self) -> None:
         """Sets that this entity can be stacked."""
@@ -406,9 +428,10 @@ class DamageSensor(_component):
         on_damage_event: str = None, on_damage_filter: dict = None,  damage_multiplier: int = 1, damage_modifier: float = 0
     ):
         damage = {
-            'cause': cause,
             'deals_damage': deals_damage,
         }
+        if not cause is DamageCause.All:
+            damage['cause'] = cause
         if not on_damage_event is None:
             damage['on_damage']={
                 'event': on_damage_event
@@ -422,7 +445,14 @@ class DamageSensor(_component):
 
         self[self._component_namespace]['triggers'].append(damage)
         return self
-# =====================================================================================
+
+class FollowRange(_component):
+    def __init__(self, value: int, max: int = None) -> None:
+        """Defines the range of blocks that a mob will pursue a target."""
+        super().__init__('follow_range')
+        self.AddField('value', value)
+        if not max is None:
+            self.AddField('max', max)
 
 # Unfinished
 class TargetNearbySensor(_component):

@@ -5,7 +5,6 @@ from github import Github
 @click.group()
 def cli(): pass
 
-
 @cli.command(help='Initiate an Anvil project')
 @click.argument('namespace')
 @click.argument('project_name')
@@ -33,7 +32,7 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
     else:
         target = 'Microsoft.MinecraftUWP_8wekyb3d8bbwe'
         LATEST_BUILD = json.loads(github.get_contents('version.json', 'main').decoded_content.decode())['latest']['version']
-    
+
     BASE_DIR = MakePath(APPDATA,'Local','Packages',target,'LocalState','games','com.mojang','minecraftWorlds')
     os.chdir(BASE_DIR)
 
@@ -51,13 +50,12 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
         fullns is True, 
         'preview' if preview else 'main'
     ), project_name, "w")
-    
     File("en_US.lang", Schemes('language', project_name, project_name),MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}','texts'), "w")
     File("en_US.lang", Schemes('language', project_name, project_name),MakePath(project_name,'resource_packs',f'RP_{PASCAL_PROJECT_NAME}','texts'), "w")
     File("manifest.json", Schemes('manifest_bp'),MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}'), "w")
     File("manifest.json", Schemes('manifest_rp'),MakePath(project_name,'resource_packs',f'RP_{PASCAL_PROJECT_NAME}'), "w")
-    File(f'{project_name}.code-workspace', Schemes('code-workspace',BASE_DIR,project_name),DESKTOP, "w")
-    
+    File(f'{project_name}.code-workspace', Schemes('code-workspace',BASE_DIR,project_name,COMPANY),DESKTOP, "w")
+
     with open(MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}','manifest.json')) as file:
         data = json.load(file)
         uuid = data["header"]["uuid"]
