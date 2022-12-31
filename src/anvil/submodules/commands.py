@@ -2,22 +2,6 @@ from ..packages import *
 from ..core import ANVIL, RawTextConstructor
 from .actors import Entity
 
-GAMEMODES = ['a', 'c', 'd', 's']
-GAMEMODES_FULL = ['adventure', 'creative', 'default', 'survival', 'spectator']
-GAMEMODES_NUM = ['adventure', 'creative', 'default', 'survival', 'spectator']
-
-_coordinates = NewType('tuple(x, y, z)', tuple[float, float, float])
-_rotation = NewType('tuple(ry,rx)', tuple[float, float])
-_level = NewType('tuple(lm,l)', tuple[float, float])
-
-_tick = NewType('Tick', int)
-_range = NewType('[range]', str)
-
-inf = 99999999999
-class Anchor:
-    Feet = 'feet'
-    Eyes = 'eyes'
-
 class CameraShakeType():
     positional = 'positional'
     rotational = 'rotational'
@@ -55,33 +39,8 @@ class Command:
         return self
 
     def __str__(self):
-        self._command = self._command.lower().lstrip('/')
+        self._command = self._command.lstrip('/')
         return self._command
-
-class _ExecuteIfUnless():
-    def __init__(self, parent: 'Execute', condition:str) -> None:
-        self._parent = parent
-        self._condition = condition
-    
-    def Entity(self, target: str):
-        self._parent._append_cmd(self._condition, 'entity', target)
-        return self._parent
-    
-    def Block(self, block_position: _coordinates, data: int = -1):
-        self._parent._append_cmd(self._condition, 'block', block_position, data if not data == 1 else '')
-        return self._parent
-
-    def Blocks(self, begin: _coordinates, end: _coordinates, destination: _coordinates, masked: bool = False):
-        self._parent._append_cmd(self._condition, 'blocks', ' '.join(begin), ' '.join(end), ' '.join(destination), masked if masked == True else '')
-        return self._parent
-
-    def ScoreMatches(self, target: str, objective: str, matches: _range):
-        self._parent._append_cmd(self._condition, 'score', target, objective, 'matches', matches)
-        return self._parent
-    
-    def Score(self, target: str, target_objective: str, operator: Operator, source: str, source_objective: str):
-        self._parent._append_cmd(self._condition, 'score', target, target_objective, operator, source, source_objective)
-        return self._parent
 
 #special
 class _RawText(RawTextConstructor):
@@ -112,9 +71,45 @@ class TitleRaw(Command):
 
 class Tellraw(Command):
     def __init__(self, target: str):
-        return _RawText('tellraw', target)
+        self._target = target
+
+    @property
+    def text(self):
+        return _RawText('tellraw', self._target)
 
 class Execute(Command):
+    class _ExecuteIfUnless():
+        def __init__(self, parent: 'Execute', condition:str) -> None:
+            self._parent = parent
+            self._condition = condition
+
+        def Entity(self, target: Selector):
+            self._parent._append_cmd(self._condition, 'entity', target)
+            return self._parent
+
+        def Block(self, block_position: coordinates, block: str, data: int = -1):
+            self._parent._append_cmd(self._condition, 'block', ' '.join(map(str, block_position)), block, data if not data == 1 else '')
+            return self._parent
+
+        def Blocks(self, begin: coordinates, end: coordinates, destination: coordinates, masked: bool = False):
+            self._parent._append_cmd(
+                self._condition, 
+                'blocks', 
+                ' '.join(map(str, begin)),
+                ' '.join(map(str, end)), 
+                ' '.join(map(str, destination)), 
+                masked if masked == True else ''
+            )
+            return self._parent
+
+        def ScoreMatches(self, target: str, objective: str, matches: range):
+            self._parent._append_cmd(self._condition, 'score', target, objective, 'matches', matches)
+            return self._parent
+
+        def Score(self, target: str, target_objective: str, operator: Operator, source: str, source_objective: str):
+            self._parent._append_cmd(self._condition, 'score', target, target_objective, operator, source, source_objective)
+            return self._parent
+
     def __init__(self) -> None:
         super().__init__('execute')
     
@@ -130,8 +125,8 @@ class Execute(Command):
         super()._append_cmd('in', dimension)
         return self
 
-    def Positioned(self, poistion: _coordinates):
-        super()._append_cmd('positioned', poistion)
+    def Positioned(self, poistion: coordinates):
+        super()._append_cmd('positioned', ' '.join(map(str, poistion)))
         return self
 
     def PositionedAs(self, target: str):
@@ -154,8 +149,8 @@ class Execute(Command):
         super()._append_cmd('rotated', 'as', target)
         return self
         
-    def Facing(self, poistion: _coordinates):
-        super()._append_cmd('facing', poistion)
+    def Facing(self, poistion: coordinates):
+        super()._append_cmd('facing', ' '.join(map(str, poistion)))
         return self
     
     def FacingEntity(self, target: str, anchor: Anchor = Anchor.Feet):
@@ -164,11 +159,11 @@ class Execute(Command):
 
     @property
     def If(self):
-        return _ExecuteIfUnless(self, 'if')
+        return self._ExecuteIfUnless(self, 'if')
 
     @property
     def Unless(self):
-        return _ExecuteIfUnless(self, 'unless')
+        return self._ExecuteIfUnless(self, 'unless')
 
     def run(self, command: Command | str):
         super()._append_cmd('run', command)
@@ -189,16 +184,16 @@ class CameraShake(Command):
         super()._new_cmd('stop', 'target')
 
 class Summon(Command):
-    def __init__(self, entity, coordinates: _coordinates = ('~', '~', '~'), event: str = 'minecraft:entity_spawned', name: str = '', rotation:_rotation=('~', '~')):
+    def __init__(self, entity, coordinates: coordinates = ('~', '~', '~'), event: str = 'minecraft:entity_spawned', name: str = '', rotation:rotation=('~', '~')):
         super().__init__('summon', entity)
         if not coordinates == ('~', '~', '~'):
-            self._command += f' {" ".join(coordinates)}'
+            self._command += f' {" ".join(map(str, coordinates))}'
         if not event == 'minecraft:entity_spawned':
             self._command += f' {event}'
         if not name == '':
             self._command += f' {name}'
         if not rotation == ('~', '~'):
-            self._command += f' {" ".join(rotation)}'
+            self._command += f' {" ".join(map(str, rotation))}'
 
 class XP(Command):
     """Adds or removes player experience.
@@ -218,10 +213,10 @@ class XP(Command):
     def __init__(self):
         super().__init__('xp')
     
-    def add(self, amount, target):
+    def add(self, target, amount):
         super()._new_cmd(amount, target)
     
-    def remove(self, amount, target):
+    def remove(self, target, amount):
         super()._new_cmd(f'-{amount}', target)
 
 class Weather(Command):
@@ -231,16 +226,23 @@ class Weather(Command):
     def clear(self):
         super()._new_cmd('clear')
 
-    def rain(self, duration: _tick):
+    def rain(self, duration: tick):
         super()._new_cmd('rain', duration)
 
-    def thunder(self, duration: _tick):
+    def thunder(self, duration: tick):
         super()._new_cmd('thunder', duration)
 
 class Clone(Command):
-    def __init__(self, begin: _coordinates, end: _coordinates, destination: _coordinates, cloneMode: CloneMode = CloneMode.normal, maskMode: MaskMode = MaskMode.replace):
+    def __init__(self, begin: coordinates, end: coordinates, destination: coordinates, cloneMode: CloneMode = CloneMode.normal, maskMode: MaskMode = MaskMode.replace):
         """Clones a region of blocks."""
-        super().__init__('clone', ' '.join(begin), ' '.join(end), ' '.join(destination), cloneMode, maskMode)
+        super().__init__(
+            'clone', 
+            ' '.join(map(str,begin)), 
+            ' '.join(map(str,end)), 
+            ' '.join(map(str,destination)), 
+            cloneMode, 
+            maskMode
+        )
 
 class Msg(Command):
     def __init__(self, text: str, target: str):
@@ -251,8 +253,12 @@ class DebugMsg(Command):
         super().__init__('msg', '@a[tag=dev]', f"[§2Anvil§r]: {text}")
 
 class Spawnpoint(Command):
-    def __init__(self, target: str, spawnPos : _coordinates):
-        super().__init__('spawnpoint', target, ' '.join(spawnPos))
+    def __init__(self, target: str, spawnPos : coordinates):
+        super().__init__(
+            'spawnpoint', 
+            target, 
+            ' '.join(map(str, spawnPos))
+        )
 
 class Say(Command):
     def __init__(self, text: str):
@@ -299,10 +305,43 @@ class Tag(Command):
         super()._new_cmd(target, 'remove', tag)
         return self
 
-class Comment(Command):
-    def __init__(self, comment) -> None:
-        super().__init__('#', comment)
-
 class Clear(Command):
     def __init__(self ,target: str, itemname: str = '', date : int = -1, max_count: int = -1) -> None:
         super().__init__('clear', target, itemname, date if not date == -1 else '', max_count if not max_count == -1 else '')
+
+class Effect(Command):
+    def __init__(self) -> None:
+        super().__init__('effect')
+    
+    def clear(self, target: str):
+        super()._new_cmd(target, 'clear')
+
+    def give(self, target: str, effect: Effects, seconds: int, amplifier: int, hide_particles: bool):
+        super()._new_cmd(
+            target, 
+            effect, 
+            seconds, 
+            amplifier, 
+            hide_particles
+        )
+
+class Gamemode(Command):
+    def __init__(self, target: str, gamemode: Gamemodes):
+        super().__init__('gamemode', target, gamemode)
+
+class Teleport(Command):
+    def __init__(self, target, destination: coordinates, rotation: rotation = ('~', '~')) -> None:
+        super().__init__(
+            'teleport',
+            target,
+            ' '.join(map(str, destination)),
+            ' '.join(map(str, rotation)) if not rotation == ('~', '~') else ''
+        )
+
+class Event(Command):
+    def __init__(self, target, event: str) -> None:
+        super().__init__('event', 'entity',target, event)
+        
+class Function(Command):
+    def __init__(self, path) -> None:
+        super().__init__('function', path)

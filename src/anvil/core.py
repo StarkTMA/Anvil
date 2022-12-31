@@ -156,7 +156,7 @@ class Exporter():
                     1: '.json'
                 }
             },
-            'terrain_textures': {
+            'terrain_texture': {
                 'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures'),
                 'extension':{
                     0: '.json',
@@ -212,6 +212,14 @@ class Exporter():
                     1: '.fog.json',
                 }
             },
+            'server_block': {
+                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'blocks'),
+                'extension':{
+                    0: '.block.json',
+                    1: '.block.json'
+                }
+            },
+            
         }
         self._name = name
         self._type = type
@@ -321,44 +329,34 @@ class _ItemTextures(Exporter):
 
 class _TerrainTextures(Exporter):
     def __init__(self) -> None:
-        super().__init__('terrain_textures', 'terrain_textures')
-        self.content(Schemes('terrain_textures', PROJECT_NAME))
+        super().__init__('terrain_texture', 'terrain_texture')
+        self.content(Schemes('terrain_texture', PROJECT_NAME))
 
-    def add_block(self, block_name: str, directory, *block_textures: str):
-        for block in block_textures:
-            CheckAvailability(f'{block}.png', 'sprite', MakePath('assets', 'textures', 'blocks'))
-        self._content['texture_data'][block_name]=[
-            *[
-                MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'blocks', directory, f'{face}.png') 
-                for face in block_textures
-            ]
-        ]
+    def add_block(self, block_name: str, directory: str, *block_textures: str):
+        self._content['texture_data'][block_name]={
+                "textures":[
+                *[
+                    MakePath('textures', 'blocks', directory, face) 
+                    for face in block_textures
+                ]
+            ]}
 
     @property
     def queue(self):
-        return super().queue('')
-    
-    def _export(self):
-        if len(self._content['texture_data']) > 0:
-            for blocks in self._content['texture_data'].values():
-                for block in blocks:
-                    CopyFiles(MakePath('assets', 'textures', 'blocks'), block.rstrip(block.split('/')[-1]), block.split('/')[-1])
-        return super()._export()
+        return super().queue()
 
-class _Blocks(Exporter):
+class _BlocksJSON(Exporter):
     def __init__(self) -> None:
         super().__init__('blocks', 'blocks')
         self.content(Schemes('blocks', PROJECT_NAME))
 
-    def add_block(self, block_name: str, *block_textures: str):
-        for block in block_textures:
-            CheckAvailability(f'{block}.png', 'sprite', MakePath('assets', 'textures', 'blocks'))
+    def add_block(self, block_name: str):
         self._content['texture_data'][block_name]={
             "sound": "",
-            "textures":{},
-            "carried_textures":{},
-            "brightness_gamma": 0,
-            "isotropic":True
+            #"textures":{},
+            #"carried_textures":{},
+            #"brightness_gamma": 0,
+            #"isotropic":True
         }
 
 class _SoundDefinition():
@@ -1539,6 +1537,7 @@ class Anvil():
             global DISPLAY_NAME
             global PROJECT_DESCRIPTION
             global VANILLA_VERSION
+            global LATEST_BUILD
             global NAMESPACE_FORMAT
             global NAMESPACE_FORMAT_BIT
             global BUILD
@@ -1550,6 +1549,7 @@ class Anvil():
             DISPLAY_NAME = data['DISPLAY_NAME']
             PROJECT_DESCRIPTION = data['PROJECT_DESCRIPTION']
             VANILLA_VERSION = data['VANILLA_VERSION']
+            LATEST_BUILD = VANILLA_VERSION
             LAST_CHECK = data['LAST_CHECK']
             NAMESPACE_FORMAT_BIT = data['NAMESPACE_FORMAT']
             BUILD = data['BUILD']
@@ -1564,6 +1564,7 @@ class Anvil():
         self._remove_scores = Function('remove_scores')
         self._remove_tags = Function('remove_tags')
         self._item_texture = _ItemTextures()
+        self._terrain_texture = _TerrainTextures()
         self._sound_definition = _Sound()
         self._music_definition = _Music()
 
@@ -1784,22 +1785,24 @@ class Anvil():
         File('en_US.lang', Defaults('language', DISPLAY_NAME, PROJECT_DESCRIPTION) + ''.join(self._langs), f'resource_packs/RP_{PASCAL_PROJECT_NAME}/texts', 'w')
         File('en_US.lang', Defaults('language', DISPLAY_NAME, PROJECT_DESCRIPTION),f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/texts', 'w')
         File('en_US.lang', Defaults('language', DISPLAY_NAME, PROJECT_DESCRIPTION),'texts', 'w')
-        
-        if not FileExists(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json'):
+
+        if VANILLA_VERSION < LATEST_BUILD or not all([
+            FileExists(MakePath('resource_packs',f'RP_{PASCAL_PROJECT_NAME}','manifest.json')),
+            FileExists(MakePath('behavior_packs',f'BP_{PASCAL_PROJECT_NAME}','manifest.json')),
+            FileExists(MakePath('manifest.json')),
+        ]):
             File("manifest.json", Schemes('manifest_rp'),f"resource_packs/RP_{PASCAL_PROJECT_NAME}", "w")
             with open(f"resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json",'r') as file:
                 data = json.load(file)
                 uuid = data["header"]["uuid"]
                 version = data["header"]["version"]
                 File("world_resource_packs.json", Schemes('world_packs', uuid, version), ".", "w")
-        if not FileExists(f'behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json'):
             File("manifest.json", Schemes('manifest_bp'),f"behavior_packs/BP_{PASCAL_PROJECT_NAME}", "w")
             with open(f"./behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json",'r') as file:
                 data = json.load(file)
                 uuid = data["header"]["uuid"]
                 version = data["header"]["version"]
-                File("world_behavior_packs.json", Schemes('world_packs', uuid, version), ".", "w") 
-        if not FileExists(f'manifest.json'):
+                File("world_behavior_packs.json", Schemes('world_packs', uuid, version), ".", "w")
             File("manifest.json", Schemes('manifest_world', [COMPANY]),"", "w")
         
         if len(self._materials['materials']) > 1:
@@ -1812,9 +1815,9 @@ class Anvil():
             CopyFolder('assets/textures/environment', f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/environment')
         
             
-        self._setup_scores.queue('StateManager/misc')
-        self._remove_scores.queue('StateManager/misc')
-        self._remove_tags.queue('StateManager/misc')
+        self._setup_scores.queue('StateMachine/misc')
+        self._remove_scores.queue('StateMachine/misc')
+        self._remove_tags.queue('StateMachine/misc')
         for function in self._functions:
             self._setup.add(function.execute)
 
@@ -1827,6 +1830,8 @@ class Anvil():
         # Export only if contains data
         if len(self._item_texture._content['texture_data']) > 0:
             self._item_texture.queue
+        if len(self._terrain_texture._content['texture_data']) > 0:
+            self._terrain_texture.queue
         if len(self._sound_definition._sounds) > 0:
             self._sound_definition.queue
         if len(self._music_definition._sounds) > 0:

@@ -50,6 +50,9 @@ class _component(dict):
     def AddField(self, key,value):
         self[self._component_namespace][key] = value
 
+    def SetValue(self, value):
+        self[self._component_namespace] = value
+
 class AddRider(_component):
     def __init__(self, entity_type: Identifier, spawn_event: Event = None) -> None:
         '''Adds a rider to the entity. Requires `minecraft:rideable.`.
@@ -231,7 +234,7 @@ class SpellEffects(_component):
         self.AddField('add_effects', [])
         self.AddField('remove_effects', [])
     
-    def add_effects(self, effect: str, duration: int, amplifier:int, ambient: bool = True, visible: bool = True, display_on_screen_animation: bool = True):
+    def add_effects(self, effect: Effects, duration: int, amplifier:int, ambient: bool = True, visible: bool = True, display_on_screen_animation: bool = True):
         effect = {
             'effect': effect,
             'duration': duration,
@@ -442,6 +445,14 @@ class DamageSensor(_component):
 
         self[self._component_namespace]['triggers'].append(damage)
         return self
+
+class FollowRange(_component):
+    def __init__(self, value: int, max: int = None) -> None:
+        """Defines the range of blocks that a mob will pursue a target."""
+        super().__init__('follow_range')
+        self.AddField('value', value)
+        if not max is None:
+            self.AddField('max', max)
 
 # Unfinished
 class TargetNearbySensor(_component):

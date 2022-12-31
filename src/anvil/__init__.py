@@ -7,3 +7,5 @@ if sys.argv[0].endswith('.py'):
     from .submodules.actors import *
     from .submodules.ui import *
     from .submodules.tools import *
+    from .submodules.molang import Query, q, Math
+    from .submodules import blocks

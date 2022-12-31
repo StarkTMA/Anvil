@@ -33,7 +33,19 @@ DESKTOP = MakePath(os.getenv("USERPROFILE"), "Desktop")
 MOLANG_PREFIXES = ["q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp."]
 
 Seconds = NewType("Seconds", str)
+Molang = NewType("Molang", str)
+coordinate = NewType('coordinate', [float | str])
+coordinates = NewType('tuple(x, y, z)', tuple[coordinate, coordinate, coordinate])
+rotation = NewType('tuple(ry,rx)', tuple[coordinate, coordinate])
+level = NewType('tuple(lm,l)', tuple[float, float])
 
+tick = NewType('Tick', int)
+_range = NewType('[range]', str)
+
+inf = 99999999999
+
+def clamp(value, _min, _max):
+    return max(min(_max, value), _min)
 
 class LootPoolType:
     Empty = "empty"
@@ -12504,7 +12516,7 @@ class DamageCause:
         "falling_block",
         "fatal",
         "fire",
-        "fire_tick",
+        "firetick",
         "fly_into_wall",
         "lava",
         "magic",
@@ -12533,7 +12545,7 @@ class DamageCause:
     Falling_block = "falling_block"
     Fatal = "fatal"
     Fire = "fire"
-    Fire_tick = "fire_tick"
+    Firetick = "firetick"
     Fly_into_wall = "fly_into_wall"
     Lava = "lava"
     Magic = "magic"
@@ -12561,9 +12573,19 @@ class Target:
     Self = "self"
     Target = "target"
 
-class Effect:
-    Hunger = "hunger"
-    JumpBoost = "jump"
+class Effects:
+    Hunger = 'hunger'
+    JumpBoost = 'jump'
+    Saturation = 'saturation'
+    Regeneration = 'regeneration'
+    Speed = 'speed'
+
+class Gamemodes:
+    Adventure = 'adventure'
+    Creative = 'creative'
+    Default = 'default'
+    Survival = 'survival'
+    Spectator = 'spectator'
 
 class Style:
     Black : str = '§0'
@@ -12612,11 +12634,108 @@ class Operator:
     Greater = '>'
     GreaterEqual = '>='
 
-def Schemes(type, *args):
-    MANIFEST_BUILD = [1, 18, 0]
+class Slots:
+    Mainhand = 'slot.weapon.mainhand'
+    Offhand = 'slot.weapon.offhand'
+    Head = 'slot.armor.head'
+    Chest = 'slot.armor.chest'
+    Legs = 'slot.armor.legs'
+    Feet = 'slot.armor.feet'
+    Hotbar = 'slot.hotbar'
+    Inventory = 'slot.inventory'
+    Enderchest = 'slot.enderchest'
+    Saddle = 'slot.saddle'
+    Armor = 'slot.armor'
+    Chest = 'slot.chest'
+    Equippable = 'slot.equippable'
+
+class Target():
+    P = '@p'
+    R = '@r'
+    A = '@a'
+    E = '@e'
+    S = '@s'
+    C = '@c'
+    V = '@v'
+    Initiator = '@initiator'
+
+class Selector():
+    def __init__(self, target: Target = Target.S) -> None:
+        self.target = target
+        self.arguments = {}
+        
+    def _args(self, **args):
+        self.arguments.update({
+            key : value for key, value in args.items() if value != None
+        })
+        return self
+        
+    def type(self, type : str):
+        self._args(type = type)
+        return self
+
+    def name(self, name : str):
+        self._args(name = name)
+        return self
+
+    def count(self, count : int):
+        self._args(c = count)
+        return self
+
+    def coordinates(self, *, x : coordinate = None, y : coordinate = None, z : coordinate = None):
+        self._args(x=x, y=y, z=z)
+        return self
+
+    def distance(self, *, r : coordinate = None, rm : coordinate = None):
+        self._args(r=r, rm=rm)
+        return self
+
+    def volume(self, *, dx : coordinate = None, dy : coordinate = None, dz : coordinate = None):
+        self._args(dx=dx, dy=dy, dz=dz)
+        return self
+
+    def scores(self, *score : str):
+        self._args(score = score)
+        return self
+
+    def tag(self, tag : str):
+        self._args(tag = tag)
+        return self
+
+    def rotation(self, *, ry : rotation = None, rym : rotation = None, rx : rotation = None, rxm : rotation = None):
+        self._args(ry=ry, rym=rym, rx=clamp(rx, -90, 90), rxm=clamp(rxm, -90, 90))
+        return self
+
+    def __str__(self):
+        if len(self.arguments) > 0:
+            self.target += f"[{', '.join(f'{key} = {value}' for key, value in self.arguments.items())}]"
+        return self.target
+
+class BlockCategory:
+    Construction = "construction"
+    Nature = "nature"
+    Equipment = "equipment"
+    Items = "items"
+    none = "none"
+
+class BlockMaterial:
+    Opaque = 'opaque'
+    DoubleSided = 'double_sided'
+    Blend = 'blend'
+    AlphaTest = 'alpha_test'
+
+class Anchor:
+    Feet = 'feet'
+    Eyes = 'eyes'
+
+
+def Schemes(type, *args) -> dict:
+    MANIFEST_BUILD = [1, 19, 50]
+    BLOCK_SERVER_VERSION = "1.19.40"
     ENTITY_SERVER_VERSION = "1.16.0"
     ENTITY_CLIENT_VERSION = "1.10.0"
     BP_ANIMATION_VERSION = "1.10.0"
+    RP_ANIMATION_VERSION = "1.8.0"
     ANIMATION_CONTROLLERS_VERSION = "1.10.0"
     SPAWN_RULES_VERSION = "1.8.0"
     GEOMETRY_VERSION = "1.12.0"
@@ -12625,6 +12744,7 @@ def Schemes(type, *args):
     DIALOGUE_VERSION = "1.18.0"
     FOG_VERSION = "1.16.100"
     match type:
+        # Anvil files
         case "structure":
             return {
                 args[0]: {
@@ -12633,7 +12753,11 @@ def Schemes(type, *args):
                     "assets": {
                         "skins": {},
                         "animations": {},
-                        "models": {"entity": {}, "attachables": {}},
+                        "models": {
+                            "entity": {}, 
+                            "attachables": {},
+                            "blocks": {},
+                        },
                         "particles": {},
                         "sounds": {},
                         "structures": {},
@@ -12684,115 +12808,7 @@ def Schemes(type, *args):
                 ]
             }
 
-        case "description":
-            return {"description": {"identifier": f"{args[0]}:{args[1]}"}}
-        case "client_description":
-            return {
-                "materials": {"default": "entity_alphatest"},
-                "scripts": {"pre_animation": [], "initialize": [], "animate": []},
-                "textures": {},
-                "geometry": {},
-                "particle_effects": {},
-                "sound_effects": {},
-                "render_controllers": [],
-            }
-        case "server_entity":
-            return {
-                "format_version": ENTITY_SERVER_VERSION,
-                "minecraft:entity": {
-                    "component_groups": {},
-                    "components": {},
-                    "events": {},
-                },
-            }
-        case "client_entity":
-            return {
-                "format_version": ENTITY_CLIENT_VERSION,
-                "minecraft:client_entity": {},
-            }
-        case "bp_animations":
-            return {"format_version": BP_ANIMATION_VERSION, "animations": {}}
-        case "bp_animation":
-            return {
-                f"animation.{args[0]}.{args[1]}.{args[2]}": {
-                    "loop": args[3],
-                    "timeline": {},
-                }
-            }
-        case "animation_controllers":
-            return {
-                "format_version": ANIMATION_CONTROLLERS_VERSION,
-                "animation_controllers": {},
-            }
-        case "animation_controller":
-            return {
-                f"controller.animation.{args[0]}.{args[1]}.{args[2]}": {
-                    "initial_state": "default",
-                    "states": {},
-                }
-            }
-        case "animation_controller_state":
-            return {
-                args[0]: {
-                    "on_entry": [],
-                    "on_exit": [],
-                    "animations": [],
-                    "transitions": [],
-                }
-            }
-        case "geometry":
-            return {
-                "format_version": GEOMETRY_VERSION,
-                "minecraft:geometry": [
-                    {
-                        "description": {"identifier": f"geometry.{args[0]}.{args[1]}"},
-                        "bones": [args[2]],
-                    }
-                ],
-            }
-        case "render_controllers":
-            return {
-                "format_version": RENDER_CONTROLLER_VERSION,
-                "render_controllers": {},
-            }
-        case "render_controller":
-            return {
-                f"controller.render.{args[0]}.{args[1]}.{args[2]}": {
-                    "arrays": {"textures": {}, "geometries": {}},
-                    "materials": [{"*": "Material.default"}],
-                    "geometry": {},
-                    "textures": [],
-                    "part_visibility": [{"*": True}],
-                }
-            }
-        case "item_texture":
-            return {
-                "resource_pack_name": args[0],
-                "texture_name": "atlas.items",
-                "texture_data": {},
-            }
-        case "terrain_textures":
-            return {
-                "num_mip_levels": 4,
-                "padding": 8,
-                "resource_pack_name": args[0],
-                "texture_data": {},
-                "texture_name": "atlas.terrain",
-            }
-        case "flipbook_textures":
-            return []
-
-        case "attachable":
-            return {"format_version": ENTITY_CLIENT_VERSION, "minecraft:attachable": {}}
-
-        case "spawn_rules":
-            return {
-                "format_version": SPAWN_RULES_VERSION,
-                "minecraft:spawn_rules": {"conditions": []},
-            }
-        case "language":
-            return f"pack.name={args[0]}\n" f"pack.description={args[1]}\n\n"
-
+        #Core
         case "manifest_bp":
             return {
                 "format_version": 2,
@@ -12806,6 +12822,11 @@ def Schemes(type, *args):
                 "modules": [
                     {"type": "data", "uuid": str(uuid.uuid4()), "version": [1, 0, 0]}
                 ],
+	            "metadata": {
+	            	"generated_with": {
+	            		"anvil": [__version__]
+	            	}
+	            },
             }
         case "manifest_rp":
             return {
@@ -12824,6 +12845,11 @@ def Schemes(type, *args):
                         "version": [1, 0, 0],
                     }
                 ],
+	            "metadata": {
+	            	"generated_with": {
+	            		"anvil": [__version__]
+	            	}
+	            },
             }
         case "manifest_skins":
             return {
@@ -12840,17 +12866,12 @@ def Schemes(type, *args):
                         "version": [1, 0, 0],
                     }
                 ],
+	            "metadata": {
+	            	"generated_with": {
+	            		"anvil": [__version__]
+	            	}
+	            },
             }
-        case "skins":
-            return {
-                "serialize_name": args[0],
-                "localization_name": args[0],
-                "skins": args[1],
-            }
-        case "skin_language":
-            return f"skinpack.{args[0]}={args[1]}\n"
-        case "world_packs":
-            return [{"pack_id": args[0], "version": args[1]}]
         case "manifest_world":
             return {
                 "format_version": 2,
@@ -12869,8 +12890,33 @@ def Schemes(type, *args):
                         "version": [1, 0, 0],
                     }
                 ],
-                "metadata": {"authors": args[0]},
+                "metadata": {
+	            	"generated_with": {
+	            		"anvil": [__version__]
+	            	},
+                    "authors": args[0]
+                },
             }
+        case "description":
+            return {"description": {"identifier": f"{args[0]}:{args[1]}"}}
+        case "item_texture":
+            return {
+                "resource_pack_name": args[0],
+                "texture_name": "atlas.items",
+                "texture_data": {},
+            }
+        case "language":
+            return f"pack.name={args[0]}\n" f"pack.description={args[1]}\n\n"
+        case "skins":
+            return {
+                "serialize_name": args[0],
+                "localization_name": args[0],
+                "skins": args[1],
+            }
+        case "skin_language":
+            return f"skinpack.{args[0]}={args[1]}\n"
+        case "world_packs":
+            return [{"pack_id": args[0], "version": args[1]}]        
         case "sound_definitions":
             return {
                 "format_version": SOUND_DEFINITIONS_VERSION,
@@ -12881,26 +12927,117 @@ def Schemes(type, *args):
         case "sound":
             return {args[0]: {"category": args[1], "sounds": []}}
 
-        case "blocks":
-            return {}
-
-        case "dialogues":
+        #Actors
+        case "client_description":
             return {
-                "format_version": DIALOGUE_VERSION,
-                "minecraft:npc_dialogue": {"scenes": []},
+                "materials": {"default": "entity_alphatest"},
+                "scripts": {"pre_animation": [], "initialize": [], "animate": []},
+                "textures": {},
+                "geometry": {},
+                "particle_effects": {},
+                "sound_effects": {},
+                "render_controllers": [],
             }
-        case "dialogue_scene":
+        case "client_entity":
             return {
-                "scene_tag": args[0],
-                "npc_name": args[1],
-                "text": args[2],
-                "on_open_commands": args[3],
-                "on_close_commands": args[4],
-                "buttons": args[5],
+                "format_version": ENTITY_CLIENT_VERSION,
+                "minecraft:client_entity": {},
             }
-        case "dialogue_button":
-            return {"name": args[0], "commands": args[1]}
-
+        case "server_entity":
+            return {
+                "format_version": ENTITY_SERVER_VERSION,
+                "minecraft:entity": {
+                    "component_groups": {},
+                    "components": {},
+                    "events": {},
+                },
+            }
+        case "bp_animations":
+            return {"format_version": BP_ANIMATION_VERSION, "animations": {}}
+        case "bp_animation":
+            return {
+                f"animation.{args[0]}.{args[1]}.{args[2]}": {
+                    "loop": args[3],
+                    "timeline": {},
+                }
+            }
+        case "rp_animations":
+            return {"format_version": RP_ANIMATION_VERSION, "animations": {}}
+        case "animation_controller_state":
+            return {
+                args[0]: {
+                    "on_entry": [],
+                    "on_exit": [],
+                    "animations": [],
+                    "transitions": [],
+                }
+            }
+        case "animation_controller":
+            return {
+                f"controller.animation.{args[0]}.{args[1]}.{args[2]}": {
+                    "initial_state": "default",
+                    "states": {},
+                }
+            }
+        case "animation_controllers":
+            return {
+                "format_version": ANIMATION_CONTROLLERS_VERSION,
+                "animation_controllers": {},
+            }
+        case "geometry":
+            return {
+                "format_version": GEOMETRY_VERSION,
+                "minecraft:geometry": [
+                    {
+                        "description": {"identifier": f"geometry.{args[0]}.{args[1]}"},
+                        "bones": [args[2]],
+                    }
+                ],
+            }
+        case "render_controller":
+            return {
+                f"controller.render.{args[0]}.{args[1]}.{args[2]}": {
+                    "arrays": {"textures": {}, "geometries": {}},
+                    "materials": [{"*": "Material.default"}],
+                    "geometry": {},
+                    "textures": [],
+                    "part_visibility": [{"*": True}],
+                }
+            }
+        case "render_controllers":
+            return {
+                "format_version": RENDER_CONTROLLER_VERSION,
+                "render_controllers": {},
+            }
+        case "attachable":
+            return {"format_version": ENTITY_CLIENT_VERSION, "minecraft:attachable": {}}
+        case "spawn_rules":
+            return {
+                "format_version": SPAWN_RULES_VERSION,
+                "minecraft:spawn_rules": {"conditions": []},
+            }
+        
+        #Blocks
+        case "server_block":
+            return {
+                "format_version": BLOCK_SERVER_VERSION, 
+                "minecraft:block": {
+                    "description": {}, 
+                    "components": {}
+                }
+            }
+        case "terrain_texture":
+            return {
+                "num_mip_levels": 4,
+                "padding": 8,
+                "resource_pack_name": args[0],
+                "texture_data": {},
+                "texture_name": "atlas.terrain",
+            }
+        case "flipbook_textures":
+            return []
+        
+        #Extra
         case "font":
             return {
               "version": 1,
@@ -12922,6 +13059,22 @@ def Schemes(type, *args):
                     "volumetric": {},
                 },
             }
+        case "dialogues":
+            return {
+                "format_version": DIALOGUE_VERSION,
+                "minecraft:npc_dialogue": {"scenes": []},
+            }
+        case "dialogue_scene":
+            return {
+                "scene_tag": args[0],
+                "npc_name": args[1],
+                "text": args[2],
+                "on_open_commands": args[3],
+                "on_close_commands": args[4],
+                "buttons": args[5],
+            }
+        case "dialogue_button":
+            return {"name": args[0], "commands": args[1]}
 
 
 def Defaults(type, *args):
@@ -13109,7 +13262,7 @@ def Defaults(type, *args):
                 "resource_pack_name": args[0],
                 "texture_name": "atlas.terrain",
                 "padding": 8,
-                "num_mip_levels": 4,
+                "num_miplevels": 4,
                 "texture_data": {},
             }
         case "loot_table":
@@ -13309,11 +13462,12 @@ def MoveFiles(old_dir: str, new_dir: str, file_name: str):
     os.replace(f"{old_dir}/{file_name}", f"{new_dir}/{file_name}")
 
 
-def CopyFiles(old_dir: str, new_dir: str, file_name: str):
+def CopyFiles(old_dir: str, new_dir: str, target_file: str, rename: str = None):
     CreateDirectory(new_dir)
-
-    shutil.copyfile(MakePath(old_dir, file_name), MakePath(new_dir, file_name))
-
+    if rename is None:
+        shutil.copyfile(MakePath(old_dir, target_file), MakePath(new_dir, target_file))
+    else:
+        shutil.copyfile(MakePath(old_dir, target_file), MakePath(new_dir, rename))
 
 def CopyFolder(old_dir: str, new_dir: str):
     CreateDirectory(new_dir)
@@ -13380,6 +13534,7 @@ def header():
     click.echo(MODULE)
     click.echo(VERSION(__version__))
     click.echo(COPYRIGHT(datetime.now().year))
+
 
 def frange(start: int, stop: int, num: float = 1):
     ''' Similar to numpy linspace function'''

@@ -1,5 +1,5 @@
 from ..packages import *
-from ..core import NAMESPACE_FORMAT, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle, components
+from ..core import NAMESPACE_FORMAT, NAMESPACE, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle, components
 
 __all__ = [ 'Entity', 'Attachable' ]
 
@@ -64,10 +64,10 @@ class _ActorDescription(_MinecraftDescription):
         self._description['description']['animations'].update(
             {animation_shortname: f'animation.{NAMESPACE_FORMAT}.{self._identifier}.{animation_shortname}'}
         )
-
+    
 class _ActorClientDescription(_ActorDescription):
     def _check_model(self, entity_name, model_name):
-        CheckAvailability(f'{self._identifier}.geo.json', 'geometry', MakePath('assets','models',self._type))
+        CheckAvailability(f'{entity_name}.geo.json', 'geometry', MakePath('assets','models',self._type))
         geo_namespace = f'geometry.{NAMESPACE_FORMAT}.{model_name}'
         with open(MakePath('assets','models',self._type, f'{entity_name}.geo.json')) as file:
             data = file.read()
@@ -137,7 +137,10 @@ class _ActorClientDescription(_ActorDescription):
         self._description['description']['materials'].update({material_id: material_name})
         return self
 
-    def geometry(self, geometry_id: str, geometry_name: str):
+    def geometry(self, geometry_id: str, geometry_name: str, reuse: str = None):
+        if not reuse is None:
+            self._check_model(reuse, geometry_name)
+            CopyFiles(MakePath('assets', 'models', self._type), MakePath('assets', 'models', self._type), f'{reuse}.geo.json', f'{self._identifier}.geo.json')
         if not self._is_dummy:
             self._check_model(self._identifier, geometry_name)
         self._description['description']['geometry'].update({geometry_id: f'geometry.{NAMESPACE_FORMAT}.{geometry_name}'})
@@ -223,6 +226,10 @@ class _ActorClientDescription(_ActorDescription):
 class _EntityServerDescription(_ActorDescription):
     def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
         super().__init__(identifier, is_vanilla)
+        self._properties = _Properties()
+        self._description['description'].update({
+            'properties': {},
+        })
 
     @property
     def Summonable(self):
@@ -280,6 +287,15 @@ class _EntityServerDescription(_ActorDescription):
             return self
         else:
             raise ValueError('The runtime identifier is not a valid minecraft entity.')
+
+    @property
+    def add_property(self):
+        return self._properties
+
+    @property
+    def _export(self):
+        self._description['description']['properties']=self._properties._export
+        return super()._export
 
 class _EntityClientDescription(_ActorClientDescription):
     def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
@@ -421,7 +437,7 @@ class _EntityServer(_Entity):
     def init_vars(self, **vars):
         self._vars.extend([f'v.{var}={value}' for var, value in vars.items()])
         return self
-
+    
     def event(self, event_name: str):
         self._event = _Event(event_name)
         self._events.append(self._event)
@@ -1544,19 +1560,18 @@ class _SpawnRule(Exporter):
 class _BaseEvent():
     def __init__(self, event_name: str):
         self._event_name = event_name
-        self._event = {self._event_name: {}}
+        self._event = {self._event_name: {
+            'add': {'component_groups':[]},
+            'remove': {'component_groups':[]},
+            'run_command': {'command':[]},
+            'set_property': {}
+        }}
 
     def add(self, *component_groups: str):
-        if 'add' not in self._event[self._event_name]:
-            self._event[self._event_name].update({'add': {'component_groups':[]}})
-
         self._event[self._event_name]['add']['component_groups'].extend(component_groups)
         return self
 
     def remove(self, *component_groups: str):
-        if 'remove' not in self._event[self._event_name]:
-            self._event[self._event_name].update({'remove': {'component_groups':[]}})
-
         self._event[self._event_name]['remove']['component_groups'].extend(component_groups)
         return self
 
@@ -1564,13 +1579,17 @@ class _BaseEvent():
         self._event[self._event_name]['trigger'] = event
         return self
 
+    def set_property(self, property, value):
+        self._event[self._event_name]['set_property'].update({
+            f'{NAMESPACE}:{property}':value
+        })
+        return self
+
     def update(self, components: dict):
         self._event[self._event_name] = components
 
     #experimental
     def _run_command(self, *commands: str):
-        if 'run_command' not in self._event[self._event_name]:
-            self._event[self._event_name].update({'run_command': {'command':[]}})
         self._event[self._event_name]['run_command']['command'].extend(cmd for cmd in commands)
         return self
 
@@ -1580,7 +1599,7 @@ class _BaseEvent():
 
 class _Randomize(_BaseEvent):
     def __init__(self, parent):
-        self._event = {"weight": 1}
+        self._event = {"weight": 1, 'set_property':{}}
         self._sequences : list[_Sequence] = []
         self._parent_class : _Event = parent
 
@@ -1598,6 +1617,12 @@ class _Randomize(_BaseEvent):
 
     def weight(self, weight: int):
         self._event.update({'weight': weight})
+        return self
+    
+    def set_property(self, property, value):
+        self._event['set_property'].update({
+            f'{NAMESPACE}:{property}':value
+        })
         return self
 
     @property
@@ -1622,7 +1647,7 @@ class _Sequence(_BaseEvent):
     def __init__(self, parent_event) -> None:
         self._randomizes : list[_Randomize] = []
         self._parent_class : _Event = parent_event
-        self._event = {}
+        self._event = {'set_property':{}}
 
     def add(self, *component_groups):
         self._event.update({'add': {"component_groups": [*component_groups]}})
@@ -1640,6 +1665,10 @@ class _Sequence(_BaseEvent):
         self._event.update({'filters': filter})
         return self
 
+    def set_property(self, property, value):
+        self._event['set_property'].update({
+            f'{NAMESPACE}:{property}':value
+        })
     @property
     def sequence(self):
         return self._parent_class.sequence
@@ -1719,6 +1748,49 @@ class _ComponentGroup(_Components):
         super().__init__()
         self._component_group_name = component_group_name
         self._components = {self._component_group_name: {}}
+
+class _Properties():
+    def __init__(self):
+        self._properties = {}
+
+    def enum(self, name : str, range : tuple[str], *, default: str, client_sync : bool = False):
+        self._properties[f'{NAMESPACE}:{name}'] = {
+                "type": "enum", 
+                'default': default,
+                'range': range,
+                'client_sync': client_sync
+            }
+        return self
+    
+    def int(self, name : str, range : tuple[int, int], *, default: int = 0, client_sync : bool = False):
+        self._properties[f'{NAMESPACE}:{name}'] = {
+            "type": "int", 
+            'default': int(default),
+            'range': range,
+            'client_sync': client_sync
+        }
+        return self
+        
+    def float(self, name : str, range : tuple[float, float], *, default: float = 0, client_sync : bool = False):
+        self._properties[f'{NAMESPACE}:{name}'] = {
+            "type": "float", 
+            'default': float(default),
+            'range': range,
+            'client_sync': client_sync
+        }
+        return self
+
+    def bool(self, name : str, *, default: bool = False, client_sync : bool = False):
+        self._properties[f'{NAMESPACE}:{name}'] = {
+            "type": "bool", 
+            'default': default,
+            'client_sync': client_sync
+        }
+        return self
+
+    @property
+    def _export(self):
+        return self._properties
 
 # ==========================
 class Entity():
