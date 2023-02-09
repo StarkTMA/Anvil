@@ -14,14 +14,13 @@ from fnmatch import fnmatch
 from pprint import pprint
 from typing import NewType, Tuple, overload, Type
 from urllib import request
-
 import click
 import commentjson as json
 import math
 from PIL import Image, ImageColor, ImageEnhance, ImageQt
 
 from .__version__ import __version__
-from .submodules.localization import *
+from .api.localization import *
 
 FileExists = lambda path: os.path.exists(path)
 MakePath = lambda *paths: os.path.normpath(
@@ -30,7 +29,21 @@ MakePath = lambda *paths: os.path.normpath(
 
 APPDATA = os.getenv("APPDATA").rstrip("Roaming")
 DESKTOP = MakePath(os.getenv("USERPROFILE"), "Desktop")
-MOLANG_PREFIXES = ["q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp."]
+MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
+
+MANIFEST_BUILD = [1, 19, 50]
+BLOCK_SERVER_VERSION = "1.19.40"
+ENTITY_SERVER_VERSION = "1.19.0"
+ENTITY_CLIENT_VERSION = "1.10.0"
+BP_ANIMATION_VERSION = "1.10.0"
+RP_ANIMATION_VERSION = "1.8.0"
+ANIMATION_CONTROLLERS_VERSION = "1.10.0"
+SPAWN_RULES_VERSION = "1.8.0"
+GEOMETRY_VERSION = "1.12.0"
+RENDER_CONTROLLER_VERSION = "1.10.0"
+SOUND_DEFINITIONS_VERSION = "1.14.0"
+DIALOGUE_VERSION = "1.18.0"
+FOG_VERSION = "1.16.100"
 
 Seconds = NewType("Seconds", str)
 Molang = NewType("Molang", str)
@@ -12698,12 +12711,13 @@ class Selector():
         self._args(score = score)
         return self
 
-    def tag(self, tag : str):
-        self._args(tag = tag)
+    def tag(self, *tags : str):
+        for tag in tags:
+            self._args(tag = tag)
         return self
 
     def rotation(self, *, ry : rotation = None, rym : rotation = None, rx : rotation = None, rxm : rotation = None):
-        self._args(ry=ry, rym=rym, rx=clamp(rx, -90, 90), rxm=clamp(rxm, -90, 90))
+        self._args(ry=clamp(ry, -180, 180), rym=clamp(rym, -180, 180), rx=clamp(rx, -90, 90), rxm=clamp(rxm, -90, 90))
         return self
 
     def __str__(self):
@@ -12711,38 +12725,12 @@ class Selector():
             self.target += f"[{', '.join(f'{key} = {value}' for key, value in self.arguments.items())}]"
         return self.target
 
-class BlockCategory:
-    Construction = "construction"
-    Nature = "nature"
-    Equipment = "equipment"
-    Items = "items"
-    none = "none"
-
-class BlockMaterial:
-    Opaque = 'opaque'
-    DoubleSided = 'double_sided'
-    Blend = 'blend'
-    AlphaTest = 'alpha_test'
-
 class Anchor:
     Feet = 'feet'
     Eyes = 'eyes'
 
 
 def Schemes(type, *args) -> dict:
-    MANIFEST_BUILD = [1, 19, 50]
-    BLOCK_SERVER_VERSION = "1.19.40"
-    ENTITY_SERVER_VERSION = "1.16.0"
-    ENTITY_CLIENT_VERSION = "1.10.0"
-    BP_ANIMATION_VERSION = "1.10.0"
-    RP_ANIMATION_VERSION = "1.8.0"
-    ANIMATION_CONTROLLERS_VERSION = "1.10.0"
-    SPAWN_RULES_VERSION = "1.8.0"
-    GEOMETRY_VERSION = "1.12.0"
-    RENDER_CONTROLLER_VERSION = "1.10.0"
-    SOUND_DEFINITIONS_VERSION = "1.14.0"
-    DIALOGUE_VERSION = "1.18.0"
-    FOG_VERSION = "1.16.100"
     match type:
         # Anvil files
         case "structure":
@@ -12795,6 +12783,7 @@ def Schemes(type, *args) -> dict:
                 "LAST_CHECK": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "NAMESPACE_FORMAT": int(args[6]),
                 "BUILD": args[7],
+                "DEBUG": args[8],
             }
         case "code-workspace":
             return {
@@ -12989,8 +12978,12 @@ def Schemes(type, *args) -> dict:
                 "format_version": GEOMETRY_VERSION,
                 "minecraft:geometry": [
                     {
-                        "description": {"identifier": f"geometry.{args[0]}.{args[1]}"},
-                        "bones": [args[2]],
+                        "description": {
+                            "identifier": f"geometry.{args[0]}.{args[1]}",
+				            "texture_width": args[2][0],
+				            "texture_height": args[2][1],
+                        },
+                        "bones": [args[3]],
                     }
                 ],
             }
@@ -12998,10 +12991,10 @@ def Schemes(type, *args) -> dict:
             return {
                 f"controller.render.{args[0]}.{args[1]}.{args[2]}": {
                     "arrays": {"textures": {}, "geometries": {}},
-                    "materials": [{"*": "Material.default"}],
+                    "materials": [],
                     "geometry": {},
                     "textures": [],
-                    "part_visibility": [{"*": True}],
+                    "part_visibility": [],
                 }
             }
         case "render_controllers":

@@ -191,7 +191,9 @@ class Summon(Command):
         if not event == 'minecraft:entity_spawned':
             self._command += f' {event}'
         if not name == '':
-            self._command += f' {name}'
+            if event == 'minecraft:entity_spawned':
+                self._command += f' {event}'
+            self._command += f' "{name}"'
         if not rotation == ('~', '~'):
             self._command += f' {" ".join(map(str, rotation))}'
 
@@ -294,15 +296,16 @@ class Fog(Command):
         return self
 
 class Tag(Command):
-    def __init__(self) -> None:
+    def __init__(self, target: str) -> None:
         super().__init__('tag')
+        self._target = target
 
-    def add(self, target: str, tag: str):
-        super()._new_cmd(target, 'add', tag)
+    def add(self, tag: str):
+        super()._new_cmd(self._target, 'add', tag)
         return self
 
-    def remove(self, target: str, tag: str):
-        super()._new_cmd(target, 'remove', tag)
+    def remove(self, tag: str):
+        super()._new_cmd(self._target, 'remove', tag)
         return self
 
 class Clear(Command):

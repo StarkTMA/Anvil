@@ -547,7 +547,7 @@ class StateMachine():
             'scoreboard players set @s player_state 0',
             'scoreboard players set @s game_level 0',
             'scoreboard players set @s sync 1',
-            commands.Tag().add('@s', 'self_init')
+            commands.Tag(Target.S).add('self_init')
         ).queue('StateMachine/misc')
         self.active_players = Function('active_players').add(
             f'scoreboard players set {PROJECT_NAME} active_players 0',

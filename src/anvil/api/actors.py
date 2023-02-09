@@ -1,5 +1,6 @@
 from ..packages import *
-from ..core import NAMESPACE_FORMAT, NAMESPACE, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle, components
+from anvil.api import components
+from anvil.core import NAMESPACE_FORMAT, NAMESPACE, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle
 
 __all__ = [ 'Entity', 'Attachable' ]
 
@@ -117,7 +118,7 @@ class _ActorClientDescription(_ActorDescription):
     @property
     def dummy(self):
         self._is_dummy = True
-        File('dummy.geo.json', Schemes('geometry', NAMESPACE_FORMAT, 'dummy',{"name": "root", "pivot": [0, 0, 0], "locators": {"root": [0, 0, 0]}}), MakePath('assets', 'models', self._type), 'w')
+        File('dummy.geo.json', Schemes('geometry', NAMESPACE_FORMAT, 'dummy', (8, 8), {"name": "root", "pivot": [0, 0, 0], "locators": {"root": [0, 0, 0]}}), MakePath('assets', 'models', self._type), 'w')
         CreateImage('dummy', 8, 8, (0, 0, 0, 0), MakePath('assets', 'textures', self._type))
         self.geometry('dummy', 'dummy')
         self.texture('dummy', 'dummy')
@@ -588,6 +589,8 @@ class _RenderController():
     
     @property
     def _export(self):
+        if len(self._controller[self.controller_identifier]['materials']) == 0:
+            self.material('*', 'default')
         return self._controller
 
 class _RenderControllers(Exporter):
@@ -1669,6 +1672,7 @@ class _Sequence(_BaseEvent):
         self._event['set_property'].update({
             f'{NAMESPACE}:{property}':value
         })
+        return self
     @property
     def sequence(self):
         return self._parent_class.sequence
@@ -1800,13 +1804,8 @@ class Entity():
 
     def __init__(self, identifier: str) -> None:
         self._identifier = identifier
-        self._is_vanilla = False
-        if identifier in Vanilla.Entities._list:
-            self._is_vanilla = True
-
-        self._namespace_format = NAMESPACE_FORMAT
-        if self._is_vanilla:
-            self._namespace_format = 'minecraft'
+        self._is_vanilla = identifier in Vanilla.Entities._list
+        self._namespace_format = 'minecraft' if self._is_vanilla else NAMESPACE_FORMAT
 
         self._validate_name(self._identifier)
         self._server = _EntityServer(self._identifier, self._is_vanilla)
@@ -1835,6 +1834,10 @@ class Entity():
     @property
     def identifier(self):
         return f'{self._namespace_format}:{self._identifier}'
+    
+    @property
+    def name(self):
+        return self._identifier
 
     def queue(self, directory: str = None):
         display_name = RawText(self._identifier)[1]

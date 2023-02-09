@@ -2,11 +2,16 @@
 Changelog
 =========
 
+Version 0.2.4
+===========
+ - Expanded Molang queries.
+ - Some improvements to the structure.
+
 Version 0.2.3
 ===========
  - Updated the StateManager to use the new Execute commands.
  - Added Entity properties.
- - Added the Holiday Blocks, Blocks components including Experimentals, Events and Event Triggers.
+ - Added the Holiday Blocks, Blocks components including Experimental, Events and Event Triggers.
  - Added a Score to clock function.
  - Added some queries.
 

@@ -1,17 +1,28 @@
 from ..packages import *
 from ..core import NAMESPACE
 
+
+class _molang(str):
+    def __and__(self, other):
+        return _molang(f'{self} && {other}')
+    
+    def __or__(self, other):
+        return _molang(f'{self} || {other}')
+
+    def __invert__(self):
+        return _molang(f'!{self}')
+
+
 class _Query():
     def __init__(self) -> None:
-        self._prefix = ''
-
+        self._suffix = ''
+    
     def _query(self, query, *arguments):
-        query_str = f'{self._prefix}q.{query}'
+        a = f'q.{query}'
         if len(arguments):
-            args = ', '.join(f"'{arg}'" if type(arg) is str else f"{arg}" for arg in arguments)
-            query_str += f"({args})"
-        self._prefix = ''
-        return query_str
+            args = ', '.join(f"'{arg}'" if type(arg) is str and not arg.startswith(MOLANG_PREFIXES) else f"{arg}" for arg in arguments)
+            a += f"({args})"
+        return _molang(a)
 
     @property
     def IsIllagerCaptain(self):
@@ -40,6 +51,9 @@ class _Query():
     def IsItemNameAny(self, slot: Slots, index: int, *item_identifiers):
         return self._query('is_item_name_any', slot, index, *item_identifiers)
 
+    def InRange(self, value: float, min: float, max: float):
+        return self._query('in_range', value, min, max)
+
     def MovementDirection(self, axis: int):
         return self._query('movement_direction', axis)
 
@@ -47,10 +61,41 @@ class _Query():
         return self._query('property', f'{NAMESPACE}:{property}')
 
     @property
-    def Not(self):
-        self._prefix = '!'
-        return self
-    
+    def BodyYRotation(self):
+        return self._query('body_y_rotation')
+
+    @property
+    def BodyXRotation(self):
+        return self._query('body_x_rotation')
+
+    @property
+    def TargetYRotation(self):
+        return self._query('target_y_rotation')
+
+    @property
+    def TargetXRotation(self):
+        return self._query('target_x_rotation')
+
+    @property
+    def IsFirstPerson(self):
+        return self._query('is_first_person')
+
+class _Variable():
+    def _query(self, query, *arguments):
+        a = f'v.{query}'
+        if len(arguments):
+            args = ', '.join(f"'{arg}'" if type(arg) is str and not arg.startswith(MOLANG_PREFIXES) else f"{arg}" for arg in arguments)
+            a += f"({args})"
+        return _molang(a)
+
+    @property
+    def IsFirstPerson(self):
+        return self._query('is_first_person')
+
+    @property
+    def IsPaperdoll(self):
+        return self._query('is_paperdoll')
+
 class _Math():
     def __init__(self) -> None:
         self._prefix = ''
@@ -118,6 +163,9 @@ class _Math():
     def trunc(self, value):
         return self._math ('trunc', value)
 
+Query = _Query()
+Variable = _Variable()
+q = Query
+v = Variable
 
-Query = q = _Query()
 Math = _Math()

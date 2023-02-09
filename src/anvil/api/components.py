@@ -38,20 +38,23 @@ class _filter(dict):
         self._none_of.append(_filter(''))
         return self._none_of[-1]
 
-
-
-# Components ==========================================================================
 class _component(dict):
     def __init__(self, component_name) -> None:
+        self.ResetNamespace(component_name)
+    
+    def ResetNamespace(self, component_name):
+        self.clear()
         self._component_name = component_name
         self._component_namespace = f'minecraft:{self._component_name}'
         self.__setitem__(self._component_namespace, {})
-    
+
     def AddField(self, key,value):
         self[self._component_namespace][key] = value
 
     def SetValue(self, value):
         self[self._component_namespace] = value
+
+# Components ==========================================================================
 
 class AddRider(_component):
     def __init__(self, entity_type: Identifier, spawn_event: Event = None) -> None:
@@ -453,6 +456,179 @@ class FollowRange(_component):
         self.AddField('value', value)
         if not max is None:
             self.AddField('max', max)
+
+class MovementType(_component):
+    def _basic(self, type: str, max_turn: float = 30) -> None:
+        super().ResetNamespace(f'movement.{type}')
+        if not max_turn == 30:
+            self.AddField('max_turn', max_turn)
+    
+    def __init__(self) -> None:
+        """Defines the movement of an entity."""
+        super().__init__(f'movement.basic')
+    
+    def Basic(self, max_turn: float = 30):
+        """Defines the movement of an entity."""
+        self._basic('basic', max_turn)
+        return self
+
+    def Amphibious(self, max_turn: float = 30):
+        """Allows the mob to swim in water and walk on land."""
+        self._basic('amphibious', max_turn)
+        return self
+
+    def Dolphin(self) -> None:
+        """Allows the mob to swim in water like a dolphin."""
+        self._basic('dolphin')
+        return self
+    
+    def Fly(self, max_turn: float = 30, start_speed: float = 0.1, speed_when_turning: float = 0.2) -> None:
+        """Causes the mob to fly."""
+        self._basic('fly', max_turn)
+        if not start_speed == 0.1:
+            self.AddField('start_speed', start_speed)
+        if not speed_when_turning == 0.2:
+            self.AddField('speed_when_turning', speed_when_turning)
+        return self
+
+    def Generic(self, max_turn: float = 30):
+        """Allows a mob to fly, swim, climb, etc."""
+        self._basic('generic', max_turn)
+        return self
+
+    def Glide(self, max_turn: float = 30, start_speed: float = 0.1, speed_when_turning: float = 0.2):
+        """Is the move control for a flying mob that has a gliding movement."""
+        self._basic('generic', max_turn)
+        if not start_speed == 0.1:
+            self.AddField('start_speed', start_speed)
+        if not speed_when_turning == 0.2:
+            self.AddField('speed_when_turning', speed_when_turning)
+        return self
+
+    def Jump(self, max_turn: float = 30, jump_delay : tuple[float, float] = (0, 0)):
+        """Causes the mob to jump as it moves with a specified delay between jumps."""
+        self._basic('hover', max_turn)
+        if not jump_delay == (0, 0):
+            self.AddField('jump_delay', jump_delay)
+        return self
+
+    def Skip(self, max_turn: float = 30):
+        """Causes the mob to hop as it moves."""
+        self._basic('skip', max_turn)
+        return self
+
+    def Sway(self, max_turn: float = 30, sway_amplitude: float = 0.05, sway_frequency: float = 0.5):
+        """Causes the mob to sway side to side giving the impression it is swimming."""
+        self._basic('skip', max_turn)
+        if not sway_amplitude == 0.05:
+            self.AddField('sway_amplitude', sway_amplitude)
+        if not sway_frequency == 0.5:
+            self.AddField('sway_frequency', sway_frequency)
+        return self
+
+class NavigationType(_component):
+    def _basic(
+        self, 
+        type: str,
+        avoid_damage_blocks: bool = False,
+        avoid_portals: bool = False,
+        avoid_sun: bool = False,
+        avoid_water: bool = False,
+        can_breach: bool = False,
+        can_break_doors: bool = False,
+        can_jump: bool = True,
+        can_open_doors: bool = False,
+        can_open_iron_doors: bool = False,
+        can_pass_doors: bool = True,
+        can_path_from_air: bool = False,
+        can_path_over_lava: bool = False,
+        can_path_over_water: bool = False,
+        can_sink: bool = True,
+        can_swim: bool = False,
+        can_walk: bool = True,
+        can_walk_in_lava: bool = False,
+        is_amphibious: bool = False,
+        blocks_to_avoid: list[str] = [],
+    ) -> None:
+        super().ResetNamespace(f'navigation.{type}')
+        if avoid_damage_blocks:
+            self.AddField('avoid_damage_blocks', avoid_damage_blocks)
+        if avoid_portals:
+            self.AddField('avoid_portals', avoid_portals)
+        if avoid_sun:
+            self.AddField('avoid_sun', avoid_sun)
+        if avoid_water:
+            self.AddField('avoid_water', avoid_water)
+        if can_breach:
+            self.AddField('can_breach', can_breach)
+        if can_break_doors:
+            self.AddField('can_break_doors', can_break_doors)
+        if not can_jump:
+            self.AddField('can_jum', can_jump)
+        if can_open_doors:
+            self.AddField('can_open_doors', can_open_doors)
+        if can_open_iron_doors:
+            self.AddField('can_open_iron_doors', can_open_iron_doors)
+        if not can_pass_doors:
+            self.AddField('can_pass_doors', can_pass_doors)
+        if can_path_from_air:
+            self.AddField('can_path_from_air', can_path_from_air)
+        if can_path_over_lava:
+            self.AddField('can_path_over_lava', can_path_over_lava)
+        if can_path_over_water:
+            self.AddField('can_path_over_water', can_path_over_water)
+        if not can_sink:
+            self.AddField('can_sink', can_sink)
+        if can_swim:
+            self.AddField('can_swim', can_swim)
+        if not can_walk:
+            self.AddField('can_walk', can_walk)
+        if can_walk_in_lava:
+            self.AddField('can_walk_in_lava', can_walk_in_lava)
+        if is_amphibious:
+            self.AddField('is_amphibious', is_amphibious)
+        if blocks_to_avoid == []:
+            self.AddField('blocks_to_avoid', blocks_to_avoid)
+    
+    def __init__(self) -> None:
+        """Allows this entity to generate paths by walking, swimming, flying and/or climbing around and jumping up and down a block."""
+        super().__init__(f'navigation.generic')
+    
+    def Climb(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
+        """Allows this entity to generate paths that include vertical walls like the vanilla Spiders do."""
+        self._basic('climb', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        return self
+
+    def Float(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
+        """Allows this entity to generate paths by flying around the air like the regular Ghast."""
+        self._basic('float', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        return self
+
+    def Fly(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
+        """Allows this entity to generate paths in the air like the vanilla Parrots do."""
+        self._basic('fly', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        return self
+        
+    def Generic(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
+        """Allows this entity to generate paths by walking, swimming, flying and/or climbing around and jumping up and down a block."""
+        self._basic('generic', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        return self
+        
+    def Hover(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
+        """Allows this entity to generate paths in the air like the vanilla Bees do. Keeps them from falling out of the skies and doing predictive movement."""
+        self._basic('hover', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        return self
+        
+    def Swim(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
+        """Allows this entity to generate paths that include water."""
+        self._basic('swim', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        return self
+        
+    def Walk(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
+        """llows this entity to generate paths by walking around and jumping up and down a block like regular mobs."""
+        self._basic('walk', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        return self
+        
 
 # Unfinished
 class TargetNearbySensor(_component):
