@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.2.5
+===========
+ - Sounds `load_on_low_memory` is set to `False` by default.
+ - UI `text_alignment` use `UITextAlignment` now instead of `UIAnchor`.
+
 Version 0.2.4
 ===========
  - Expanded Molang queries.

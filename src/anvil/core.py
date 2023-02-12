@@ -397,7 +397,7 @@ class _SoundDefinition():
         pitch: int = [1, 1],
         is_3d: bool = None,
         stream: bool = None,
-        load_on_low_memory: bool = None
+        load_on_low_memory: bool = False
     ):
         CheckAvailability(f'{sound_name}.ogg', 'audio', 'assets/sounds')
         self._sound_name = sound_name
@@ -414,7 +414,7 @@ class _SoundDefinition():
             sound.update({"is3D": is_3d})
         if not stream is None:
             sound.update({"stream": stream})
-        if not load_on_low_memory is None:
+        if load_on_low_memory:
             sound.update({"load_on_low_memory": load_on_low_memory})
         if volume != 1:
             sound.update({"volume": volume})
@@ -2069,8 +2069,7 @@ class Anvil():
             'world_resource_packs.json':                            MakePath('Content', 'world_template'),
         })
 
-        zipit(MakePath('assets', 'output',
-              f'{PROJECT_NAME}.zip'), content_structure)
+        zipit(MakePath('assets', 'output',f'{PROJECT_NAME}.zip'), content_structure)
 
         RemoveDirectory(MakePath('assets', 'output', 'Store Art'))
         RemoveDirectory(MakePath('assets', 'output', 'Marketing Art'))

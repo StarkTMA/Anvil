@@ -6,6 +6,7 @@ __all__ = [
     "UIElementType",
     "UIElementTrigger",
     "UIAnchor",
+    "UITextAlignment",
     "UIAnimType",
     "UIEasing",
     "UIFontSize",
@@ -39,6 +40,10 @@ class UIAnchor:
     BottomMiddle = "bottom_middle"
     BottomRight = "bottom_right"
 
+class UITextAlignment:
+    Center = "center"
+    Left = "left"
+    Right = "right"
 
 class UIAnimType:
     Alpha = "alpha"
@@ -223,7 +228,7 @@ class _UIElement:
         self.element["anchor_to"] = anchor_to
         return self
 
-    def text_alignment(self, text_alignment: UIAnchor):
+    def text_alignment(self, text_alignment: UITextAlignment):
         self.element["text_alignment"] = text_alignment
         return self
 
@@ -672,7 +677,7 @@ class UI:
         def disable_helpers(self):
             self.root_panel.modification.remove("left_helpers")
             self.root_panel.modification.remove("right_helpers")
-            self.root_panel.modification.remove("emote_helpers")
+            self.root_panel.modification.remove("emote_expediate_helpers")
             return self
 
     class _NPCScreen(_UIScreen):
@@ -1165,7 +1170,7 @@ class UI:
             info_card.offset("@anvil_animations.info_in")
 
             info_text = info_card.controls("info_text")
-            info_text.text_alignment(UIAnchor.Center)
+            info_text.text_alignment(UITextAlignment.Center)
             info_text.type(UIElementType.Label)
             info_text.shadow
             info_text.binding.binding_name(
