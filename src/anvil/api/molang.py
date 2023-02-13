@@ -1,171 +1,240 @@
 from ..packages import *
 from ..core import NAMESPACE
 
-
 class _molang(str):
+    def __eq__(self, other):
+        return _molang(f'{self} == {other}')
+    def __ne__(self, other):
+        return _molang(f'{self} != {other}')
+    def __lt__(self, other):
+        return _molang(f'{self} < {other}')
+    def __gt__(self, other):
+        return _molang(f'{self} > {other}')
+    def __le__(self, other):
+        return _molang(f'{self} <= {other}')
+    def __ge__(self, other):
+        return _molang(f'{self} >= {other}')
     def __and__(self, other):
         return _molang(f'{self} && {other}')
-    
     def __or__(self, other):
         return _molang(f'{self} || {other}')
-
     def __invert__(self):
         return _molang(f'!{self}')
-
-
-class _Query():
-    def __init__(self) -> None:
-        self._suffix = ''
     
-    def _query(self, query, *arguments):
-        a = f'q.{query}'
+    def _query(self, qtype, query, *arguments):
+        a = f'{qtype}.{query}'
         if len(arguments):
             args = ', '.join(f"'{arg}'" if type(arg) is str and not arg.startswith(MOLANG_PREFIXES) else f"{arg}" for arg in arguments)
             a += f"({args})"
         return _molang(a)
 
+class Query(_molang):
+    @classmethod
     @property
     def IsIllagerCaptain(self):
-        return self._query('is_illager_captain')
+        return self._query(self, 'q', 'is_illager_captain')
 
+    @classmethod
     @property
     def SkinId(self):
-        return self._query('skin_id')
+        return self._query(self, 'q', 'skin_id')
         
+    @classmethod
     @property
     def Variant(self):
-        return self._query('variant')
+        return self._query(self, 'q', 'variant')
         
+    @classmethod
     @property
     def IsInUI(self):
-        return self._query('is_in_ui')
+        return self._query(self, 'q', 'is_in_ui')
 
+    @classmethod
     @property
     def HasTarget(self):
-        return self._query('has_target')
+        return self._query(self, 'q', 'has_target')
 
+    @classmethod
     @property
     def IsUsingItem(self):
-        return self._query('is_using_item')
+        return self._query(self, 'q', 'is_using_item')
 
+    @classmethod
     def IsItemNameAny(self, slot: Slots, index: int, *item_identifiers):
-        return self._query('is_item_name_any', slot, index, *item_identifiers)
+        return self._query(self, 'q', 'is_item_name_any', slot, index, *item_identifiers)
 
+    @classmethod
     def InRange(self, value: float, min: float, max: float):
-        return self._query('in_range', value, min, max)
+        return self._query(self, 'q', 'in_range', value, min, max)
 
+    @classmethod
     def MovementDirection(self, axis: int):
-        return self._query('movement_direction', axis)
+        return self._query(self, 'q', 'movement_direction', axis)
 
+    @classmethod
     def Property(self, property: str):
-        return self._query('property', f'{NAMESPACE}:{property}')
+        return self._query(self, 'q', 'property', f'{NAMESPACE}:{property}')
 
+    @classmethod
     @property
     def BodyYRotation(self):
-        return self._query('body_y_rotation')
+        return self._query(self, 'q', 'body_y_rotation')
 
+    @classmethod
     @property
     def BodyXRotation(self):
-        return self._query('body_x_rotation')
+        return self._query(self, 'q', 'body_x_rotation')
 
+    @classmethod
     @property
     def TargetYRotation(self):
-        return self._query('target_y_rotation')
+        return self._query(self, 'q', 'target_y_rotation')
 
+    @classmethod
     @property
     def TargetXRotation(self):
-        return self._query('target_x_rotation')
+        return self._query(self, 'q', 'target_x_rotation')
 
+    @classmethod
     @property
     def IsFirstPerson(self):
-        return self._query('is_first_person')
+        return self._query(self, 'q', 'is_first_person')
 
-class _Variable():
-    def _query(self, query, *arguments):
-        a = f'v.{query}'
-        if len(arguments):
-            args = ', '.join(f"'{arg}'" if type(arg) is str and not arg.startswith(MOLANG_PREFIXES) else f"{arg}" for arg in arguments)
-            a += f"({args})"
-        return _molang(a)
+    @classmethod
+    @property
+    def DistanceFromCamera(self):
+        return self._query(self, 'q', 'distance_from_camera')
 
+class Variable(_molang):
+    def __init__(self) -> None:
+        super().__init__('v')
+
+    @classmethod
     @property
     def IsFirstPerson(self):
-        return self._query('is_first_person')
+        return self._query(self, 'v', 'is_first_person')
 
+    @classmethod
     @property
     def IsPaperdoll(self):
-        return self._query('is_paperdoll')
+        return self._query(self, 'v', 'is_paperdoll')
 
-class _Math():
+class Math(_molang):
     def __init__(self) -> None:
-        self._prefix = ''
-    def _math(self, operation, *arguments):
-        math_str = f'{self._prefix}math.{operation}'
-        if len(arguments):
-            math_str += f"({','.join(map(str, arguments))})"
-        return math_str
-        
+        super().__init__('math')
+    
+    @classmethod
     def abs(self, value):
-        return self._math ('abs', value)
+        return self._query(self, 'math', 'abs', value)
+    
+    @classmethod
     def acos(self, value):
-        return self._math ('acos', value)
+        return self._query(self, 'math', 'acos', value)
+    
+    @classmethod
     def asin(self, value):
-        return self._math ('asin', value)
+        return self._query(self, 'math', 'asin', value)
+    
+    @classmethod
     def atan(self, value):
-        return self._math ('atan', value)
+        return self._query(self, 'math', 'atan', value)
+    
+    @classmethod
     def atan2(self, y: str, x):
-        return self._math ('atan2', y, x)
+        return self._query(self, 'math', 'atan2', y, x)
+    
+    @classmethod
     def ceil(self, value):
-        return self._math ('ceil', value)
+        return self._query(self, 'math', 'ceil', value)
+    
+    @classmethod
     def clamp(self, value, min, max):
-        return self._math ('clamp', value, min, max)
+        return self._query(self, 'math', 'clamp', value, min, max)
+    
+    @classmethod
     def cos(self, value):
-        return self._math ('cos', value)
+        return self._query(self, 'math', 'cos', value)
+    
+    @classmethod
     def die_roll(self, num, low, high):
-        return self._math ('die_roll', num, low, high)
+        return self._query(self, 'math', 'die_roll', num, low, high)
+    
+    @classmethod
     def die_roll_integer(self, num, low, high):
-        return self._math ('die_roll_integer', num, low, high)
+        return self._query(self, 'math', 'die_roll_integer', num, low, high)
+    
+    @classmethod
     def exp(self, value):
-        return self._math ('exp', value)
+        return self._query(self, 'math', 'exp', value)
+    
+    @classmethod
     def floor(self, value):
-        return self._math ('floor', value)
+        return self._query(self, 'math', 'floor', value)
+    
+    @classmethod
     def hermite_blend(self, value):
-        return self._math ('hermite_blend', value)
+        return self._query(self, 'math', 'hermite_blend', value)
+    
+    @classmethod
     def lerp(self, start, end):
-        return self._math ('lerp', start, end, '0_to_1')
+        return self._query(self, 'math', 'lerp', start, end, '0_to_1')
+    
+    @classmethod
     def lerprotate(self, start, end):
-        return self._math ('lerprotate', start, end, '0_to_1')
+        return self._query(self, 'math', 'lerprotate', start, end, '0_to_1')
+    
+    @classmethod
     def ln(self, value):
-        return self._math ('ln', value)
+        return self._query(self, 'math', 'ln', value)
+    
+    @classmethod
     def max(self, A, B):
-        return self._math ('max', A, B)
+        return self._query(self, 'math', 'max', A, B)
+    
+    @classmethod
     def min(self, A, B):
-        return self._math ('min', A, B)
+        return self._query(self, 'math', 'min', A, B)
+    
+    @classmethod
     def min_angle(self, value):
-        return self._math ('min_angle', value)
+        return self._query(self, 'math', 'min_angle', value)
+    
+    @classmethod
     def mod(self, value, denominator):
-        return self._math ('mod', value, denominator)
+        return self._query(self, 'math', 'mod', value, denominator)
+    
+    @classmethod
     @property
     def pi(self):
-        return self._math ('pi')
+        return self._query(self, 'math', 'pi')
+    
+    @classmethod
     def pow(self, base, exponent):
-        return self._math ('pow', base, exponent)
+        return self._query(self, 'math', 'pow', base, exponent)
+    
+    @classmethod
     def random(self, low, high):
-        return self._math ('random', low, high)
+        return self._query(self, 'math', 'random', low, high)
+    
+    @classmethod
     def random_integer(self, low, high):
-        return self._math ('random_integer', low, high)
+        return self._query(self, 'math', 'random_integer', low, high)
+    
+    @classmethod
     def round(self, value):
-        return self._math ('round', value)
+        return self._query(self, 'math', 'round', value)
+    
+    @classmethod
     def sin(self, value):
-        return self._math ('sin', value)
+        return self._query(self, 'math', 'sin', value)
+    
+    @classmethod
     def sqrt(self, value):
-        return self._math ('sqrt', value)
+        return self._query(self, 'math', 'sqrt', value)
+    
+    @classmethod
     def trunc(self, value):
-        return self._math ('trunc', value)
+        return self._query(self, 'math', 'trunc', value)
 
-Query = _Query()
-Variable = _Variable()
 q = Query
 v = Variable
-
-Math = _Math()

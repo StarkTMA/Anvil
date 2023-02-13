@@ -6,31 +6,9 @@ from .components import _component
 __all__ = ['Block', 'VanillaBlockTexture', 'BlockGeometry',
            'BlockMaterialInstance', 'BlockMapColor', 'BlockLootTable', 'BlockLightEmission', 'BlockLightDampening',
            'BlockFriction', 'BlockFlammable', 'BlockDestructibleByMining', 'BlockDestructibleByExplosion']
+
 # Experimental
-
-
-class BlockCategory:
-    Construction = "construction"
-    Nature = "nature"
-    Equipment = "equipment"
-    Items = "items"
-    none = "none"
-
-class BlockMaterial:
-    Opaque = 'opaque'
-    DoubleSided = 'double_sided'
-    Blend = 'blend'
-    AlphaTest = 'alpha_test'
-
-class _BlockCollisionBox(_component):
-    def __init__(self, size: coordinates, origin: coordinates) -> None:
-        """Sets the size of the Block's collision box."""
-        super().__init__('collision_box')
-        self.AddField('size', size)
-        self.AddField('origin', origin)
-
-
-class _BlockSelectionBox(_component):
+class _BlockSelectionBox(_component): 
     def __init__(self, size: coordinates, origin: coordinates) -> None:
         """Defines the area of the block that is selected by the player's cursor."""
         super().__init__('selection_box')
@@ -61,7 +39,6 @@ class _BlockCraftingTable(_component):
 
 # Probably removed
 
-
 class _BlockPartVisibility(_component):
     def __init__(self) -> None:
         """Sets conditions for when the block's different parts are visible."""
@@ -73,23 +50,7 @@ class _BlockPartVisibility(_component):
         })
         return self
 
-
-class BlockUnitCube(_component):
-    def __init__(self) -> None:
-        """Specifies that a unit cube is to be used with tessellation."""
-        super().__init__('geometry')
-        File('unit_cube.geo.json', Schemes('geometry', NAMESPACE_FORMAT, 'unit_cube', (64, 32),
-            {
-					"name": "unit_cube",
-					"pivot": [0, 0, 0],
-					"cubes": [
-						{"origin": [-8, 0, -8], "size": [16, 16, 16], "uv": [0, 0]}
-					]
-				}
-        ), MakePath('assets', 'models', 'blocks'), 'w')
-        self.SetValue(f'geometry.{NAMESPACE_FORMAT}.unit_cube')
 # Released
-
 
 class BlockDestructibleByExplosion(_component):
     def __init__(self, explosion_resistance: int) -> None:
@@ -174,7 +135,7 @@ class BlockGeometry(_component):
         super().__init__('geometry')
         self.SetValue(f'geometry.{NAMESPACE_FORMAT}.{geometry_name}')
 
-
+#Blocks
 class _BlockServerDescription(_MinecraftDescription):
     def __init__(self, identifier, is_vanilla) -> None:
         super().__init__(identifier, is_vanilla)
@@ -227,25 +188,18 @@ class _BlockServer(Exporter):
     @property
     def queue(self):
         self._server_block['minecraft:block'].update(self.description._export)
-        self._server_block['minecraft:block']['components'].update(
-            self._components._export()['components'])
+        self._server_block['minecraft:block']['components'].update(self._components._export()['components'])
         comps = self._server_block['minecraft:block']['components']
 
         if 'minecraft:geometry' in comps:
-            target_model = self._server_block['minecraft:block']['components']['minecraft:geometry'].split(
-                '.')[-1]
-        else:
-            target_model = self._identifier
-            self._server_block['minecraft:block']['components'].update(
-                {'minecraft:geometry': f'geometry.{NAMESPACE}.{target_model}'})
-
-        self._check_model(target_model)
-        CopyFiles(
-            MakePath('assets', 'models', 'blocks'),
-            MakePath('resource_packs',
-                     f'RP_{PASCAL_PROJECT_NAME}', 'models', 'blocks'),
-            f'{target_model}.geo.json'
-        )
+            target_model = self._server_block['minecraft:block']['components']['minecraft:geometry'].split('.')[-1]
+            self._check_model(target_model)
+            CopyFiles(
+                MakePath('assets', 'models', 'blocks'),
+                MakePath('resource_packs',
+                         f'RP_{PASCAL_PROJECT_NAME}', 'models', 'blocks'),
+                f'{target_model}.geo.json'
+            )
 
         if not 'minecraft:material_instances' in comps:
             RaiseError(MISSING_TEXTURE(f"{NAMESPACE}:{self._identifier}"))
@@ -309,7 +263,6 @@ class Block():
         self.Server.queue
 
 #  TODO: Integrate with the Block class
-
 
 class VanillaBlockTexture(_MinecraftDescription):
     def __init__(self, identifier: str) -> None:

@@ -1,5 +1,6 @@
 from ..packages import *
 from anvil.api import components
+from anvil.api.components import Filter
 from anvil.core import NAMESPACE_FORMAT, NAMESPACE, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle
 
 __all__ = [ 'Entity', 'Attachable' ]
@@ -1561,7 +1562,7 @@ class _SpawnRule(Exporter):
 
 # Events
 class _BaseEvent():
-    def __init__(self, event_name: str):
+    def __init__(self, event_name: event):
         self._event_name = event_name
         self._event = {self._event_name: {
             'add': {'component_groups':[]},
@@ -1578,7 +1579,7 @@ class _BaseEvent():
         self._event[self._event_name]['remove']['component_groups'].extend(component_groups)
         return self
 
-    def trigger(self, event: str):
+    def trigger(self, event: event):
         self._event[self._event_name]['trigger'] = event
         return self
 
@@ -1614,7 +1615,7 @@ class _Randomize(_BaseEvent):
         self._event.update({'remove': {"component_groups": [*component_groups]}})
         return self
 
-    def trigger(self, event):
+    def trigger(self, event: event):
         self._event.update({'trigger': event})
         return self
 
@@ -1660,11 +1661,11 @@ class _Sequence(_BaseEvent):
         self._event.update({'remove': {"component_groups": [*component_groups]}})
         return self
 
-    def trigger(self, event):
+    def trigger(self, event: event):
         self._event.update({'trigger': event})
         return self
 
-    def filters(self, filter: dict):
+    def filters(self, filter: Filter):
         self._event.update({'filters': filter})
         return self
 
@@ -1692,7 +1693,7 @@ class _Sequence(_BaseEvent):
         return self._event
 
 class _Event(_BaseEvent):
-    def __init__(self, event_name: str):
+    def __init__(self, event_name: event):
         super().__init__(event_name)
         self._sequences : list[_Sequence] = []
         self._randomizes : list[_Randomize] = []

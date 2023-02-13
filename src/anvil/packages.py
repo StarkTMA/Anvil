@@ -17,8 +17,8 @@ from urllib import request
 import click
 import commentjson as json
 import math
+from .api import CONFIG
 from PIL import Image, ImageColor, ImageEnhance, ImageQt
-
 from .__version__ import __version__
 from .api.localization import *
 
@@ -33,7 +33,7 @@ MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "t
 
 MANIFEST_BUILD = [1, 19, 50]
 BLOCK_SERVER_VERSION = "1.19.40"
-ENTITY_SERVER_VERSION = "1.19.0"
+ENTITY_SERVER_VERSION = "1.16.0"
 ENTITY_CLIENT_VERSION = "1.10.0"
 BP_ANIMATION_VERSION = "1.10.0"
 RP_ANIMATION_VERSION = "1.8.0"
@@ -45,17 +45,6 @@ SOUND_DEFINITIONS_VERSION = "1.14.0"
 DIALOGUE_VERSION = "1.18.0"
 FOG_VERSION = "1.16.100"
 
-Seconds = NewType("Seconds", str)
-Molang = NewType("Molang", str)
-coordinate = NewType('coordinate', [float | str])
-coordinates = NewType('tuple(x, y, z)', tuple[coordinate, coordinate, coordinate])
-rotation = NewType('tuple(ry,rx)', tuple[coordinate, coordinate])
-level = NewType('tuple(lm,l)', tuple[float, float])
-
-tick = NewType('Tick', int)
-_range = NewType('[range]', str)
-
-inf = 99999999999
 
 def clamp(value, _min, _max):
     return max(min(_max, value), _min)
@@ -12729,7 +12718,54 @@ class Anchor:
     Feet = 'feet'
     Eyes = 'eyes'
 
+class BlockCategory:
+    Construction = "construction"
+    Nature = "nature"
+    Equipment = "equipment"
+    Items = "items"
+    none = "none"
 
+class BlockMaterial:
+    Opaque = 'opaque'
+    DoubleSided = 'double_sided'
+    Blend = 'blend'
+    AlphaTest = 'alpha_test'
+
+class CameraShakeType():
+    positional = 'positional'
+    rotational = 'rotational'
+
+class MaskMode():
+    replace = 'replace'
+    masked = 'masked'
+
+class CloneMode():
+    force = 'force'
+    move = 'move'
+    normal = 'normal'
+
+class WeatherSet():
+    Clear = 'clear'
+    Rain = 'rain'
+    Thunder = 'thunder'
+
+class FilterSubject:
+    Block = 'block'
+    Damager = 'damager'
+    Other = 'other'
+    Parent = 'parent'
+    Player = 'player'
+    Self = 'self'
+    Target = 'target'
+
+class FilterOperation:
+    Less = '<'
+    LessEqual = '<='
+    Greater = '>'
+    GreaterEqual = '>='
+    Equals = 'equals'
+    Not = 'not'
+    
 def Schemes(type, *args) -> dict:
     match type:
         # Anvil files
@@ -12772,19 +12808,6 @@ def Schemes(type, *args) -> dict:
                 f"    #Uncomment package when you're ready to submit it. Pass True as the argument to clear all assets when packaging\n"
                 f"    #ANVIL.package()\n"
             )
-        case "config":
-            return {
-                "COMPANY": args[1].title(),
-                "NAMESPACE": args[0],
-                "PROJECT_NAME": args[2],
-                "DISPLAY_NAME": args[3].replace("_", " ").replace("-", " ").title(),
-                "PROJECT_DESCRIPTION": f'{args[4].replace("_", " ").replace("-", " ").title()}',
-                "VANILLA_VERSION": args[5],
-                "LAST_CHECK": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "NAMESPACE_FORMAT": int(args[6]),
-                "BUILD": args[7],
-                "DEBUG": args[8],
-            }
         case "code-workspace":
             return {
                 "folders": [
@@ -12796,6 +12819,139 @@ def Schemes(type, *args) -> dict:
                     },
                 ]
             }
+        case "gitignore":
+            return """
+            # Byte-compiled / optimized / DLL files
+            __pycache__/
+            *.py[cod]
+            *$py.class
+            
+            # C extensions
+            *.so
+            
+            # Distribution / packaging
+            .Python
+            build/
+            develop-eggs/
+            dist/
+            downloads/
+            eggs/
+            .eggs/
+            lib/
+            lib64/
+            parts/
+            sdist/
+            var/
+            wheels/
+            pip-wheel-metadata/
+            share/python-wheels/
+            *.egg-info/
+            .installed.cfg
+            *.egg
+            MANIFEST
+            
+            # PyInstaller
+            #  Usually these files are written by a python script from a template
+            #  before PyInstaller builds the exe, so as to inject date/other infos into it.
+            *.manifest
+            *.spec
+            
+            # Installer logs
+            pip-log.txt
+            pip-delete-this-directory.txt
+            
+            # Unit test / coverage reports
+            htmlcov/
+            .tox/
+            .nox/
+            .coverage
+            .coverage.*
+            .cache
+            nosetests.xml
+            coverage.xml
+            *.cover
+            *.py,cover
+            .hypothesis/
+            .pytest_cache/
+            
+            # Translations
+            *.mo
+            *.pot
+            
+            # Django stuff:
+            *.log
+            local_settings.py
+            db.sqlite3
+            db.sqlite3-journal
+            
+            # Flask stuff:
+            instance/
+            .webassets-cache
+            
+            # Scrapy stuff:
+            .scrapy
+            
+            # Sphinx documentation
+            docs/_build/
+            
+            # PyBuilder
+            target/
+            
+            # Jupyter Notebook
+            .ipynb_checkpoints
+            
+            # IPython
+            profile_default/
+            ipython_config.py
+            
+            # pyenv
+            .python-version
+            
+            # pipenv
+            #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+            #   However, in case of collaboration, if having platform-specific dependencies or dependencies
+            #   having no cross-platform support, pipenv may install dependencies that don't work, or not
+            #   install all needed dependencies.
+            #Pipfile.lock
+            
+            # PEP 582; used by e.g. github.com/David-OConnor/pyflow
+            __pypackages__/
+            
+            # Celery stuff
+            celerybeat-schedule
+            celerybeat.pid
+            
+            # SageMath parsed files
+            *.sage.py
+            
+            # Environments
+            .env
+            .venv
+            env/
+            venv/
+            ENV/
+            env.bak/
+            venv.bak/
+            
+            # Spyder project settings
+            .spyderproject
+            .spyproject
+            
+            # Rope project settings
+            .ropeproject
+            
+            # mkdocs documentation
+            /site
+            
+            # mypy
+            .mypy_cache/
+            .dmypy.json
+            dmypy.json
+            
+            # Pyre type checker
+            .pyre/
+            
+            """
 
         #Core
         case "manifest_bp":
@@ -13102,12 +13258,12 @@ def Defaults(type, *args):
             }
         case "bp_block_v1":
             return {
-                "format_version": "1.10.0",
+                "format_version": "1.12.0",
                 "minecraft:block": {
                     "description": {
                         "identifier": f"{args[0]}:{args[1]}",
                         "is_experimental": False,
-                        "register_to_creative_menu": True,
+                        "register_to_creative_menu": True
                     },
                     "components": {},
                 },

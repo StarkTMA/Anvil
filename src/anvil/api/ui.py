@@ -4,11 +4,11 @@ from ..core import ANVIL, Exporter, NAMESPACE, PASCAL_PROJECT_NAME
 __all__ = [
     "UIBindingType",
     "UIElementType",
-    "UIElementTrigger",
     "UIAnchor",
     "UITextAlignment",
     "UIAnimType",
     "UIEasing",
+    "UIElementTrigger",
     "UIFontSize",
     "UI",
 ]

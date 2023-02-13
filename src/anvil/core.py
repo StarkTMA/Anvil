@@ -1,5 +1,13 @@
 from .packages import *
 
+#__all__ = [
+#    'ANVIL', 'LootTable', 'Item', 'Particle', 
+#    'Recipe', 'oldBlock', 'Structure', 'Fog',
+#    'Fonts', 'Function', 'Dialogue', 'SkinPack',
+#    'NAMESPACE', 'PROJECT_NAME', 'PASCAL_PROJECT_NAME', 'DEBUG',
+#    'EngineComponent'
+#]
+
 class Exporter():
     def __init__(self, name: str, type: str) -> None:
         self._valids = {
@@ -815,174 +823,6 @@ class EngineComponent():
              self._content, self._path, self._export_mode)
 
 
-class oldBlock():
-    class __RP_Block():
-        class _BlockTextures():
-            def __init__(self, identifier: str, sound: str, **kwargs):
-                if not FileExists(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/blocks.json'):
-                    File('blocks.json', Defaults('blocks'),
-                         f'resource_packs/RP_{PASCAL_PROJECT_NAME}', 'w')
-                with open(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/blocks.json', 'r') as file:
-                    data = json.load(file)
-                    if len(kwargs.keys()) == 0:
-                        data[f'{NAMESPACE_FORMAT}:{identifier}'] = {
-                            'textures': identifier, 'sound': sound}
-                    else:
-                        data[f'{NAMESPACE_FORMAT}:{identifier}'] = {
-                            'textures': {}, 'sound': sound}
-                        keys = ['side', 'up', 'down',
-                                'east', 'north', 'south', 'west']
-                        for key in kwargs:
-                            if key in keys:
-                                data[f'{NAMESPACE_FORMAT}:{identifier}']['textures'][key] = kwargs[key]
-                            else:
-                                RaiseError(
-                                    'Texture keys type must be one of %r.' % keys)
-                File('blocks.json', data,
-                     f'resource_packs/RP_{PASCAL_PROJECT_NAME}', 'w')
-
-        class _TerrainTexture():
-            def __init__(self, identifier: str, directory: str, **kwargs):
-                if not FileExists(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/terrain_texture.json'):
-                    File('terrain_texture.json', Defaults('terrain_texture', PROJECT_NAME),
-                         f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures', 'w')
-                with open(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/terrain_texture.json', 'r') as file:
-                    data = json.load(file)
-                    if len(kwargs.keys()) == 0:
-                        data['texture_data'][f'{identifier}'] = {
-                            'textures': []}
-                        data['texture_data'][f'{identifier}']['textures'].append(
-                            os.path.join('textures/blocks', directory, identifier).replace('\\', '/'))
-                    else:
-                        keys = ['side', 'up', 'down',
-                                'east', 'north', 'south', 'west']
-                        for key in kwargs:
-                            if key in keys:
-                                data['texture_data'][kwargs[key]] = {
-                                    'textures': []}
-                                data['texture_data'][kwargs[key]]['textures'].append(
-                                    MakePath('textures', 'blocks', directory, kwargs[key]))
-
-                            else:
-                                RaiseError(
-                                    'Texture keys type must be one of %r.' % keys)
-                File('terrain_texture.json', data,
-                     f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures', 'w')
-
-        def __init__(self, identifier, sound, **textures):
-            self._identifier, self._display_name = RawText(identifier)
-            self._sound = sound
-            self._textures = textures
-
-        def queue(self, directory):
-            ANVIL.localize(
-                f'tile.{NAMESPACE_FORMAT}:{self._identifier}.name={self._display_name}')
-            self._BlockTextures(
-                self._identifier, self._sound, **self._textures)
-            self._TerrainTexture(self._identifier, directory, **self._textures)
-            if len(self._textures) == 0:
-                if FileExists(f'assets/textures/blocks/{self._identifier}.png'):
-                    CopyFiles('assets/textures/blocks',
-                              f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/blocks/{directory}', f'{self._identifier}.png')
-            else:
-                for texture in self._textures:
-                    CopyFiles('assets/textures/blocks',
-                              f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/blocks/{directory}', f'{self._textures[texture]}.png')
-
-    class __BP_Block(EngineComponent):
-        def __init__(self, parent, identifier):
-            self._identifier = identifier
-            self._parent = parent
-            super().__init__(self._identifier, 'bp_block_v1', '.block.json')
-            self._content = Defaults(
-                'bp_block_v1', NAMESPACE_FORMAT, self._identifier)
-            if FileExists(f'assets/textures/blocks/{self._identifier}.png'):
-                self._most_dominant_color, self._least_dominant_color = GetColors(
-                    f'assets/textures/blocks/{self._identifier}.png')
-            else:
-                self._most_dominant_color = '#000000'
-            self._content['minecraft:block']['components']['minecraft:map_color'] = self._most_dominant_color
-
-        def destroy_time(self, destroy_time: int = 0):
-            self._content['minecraft:block']['components']['minecraft:destructible_by_mining'] = False
-            return self
-
-        def explosion_resistance(self, explosion_resistance: int = 0):
-            explosion_resistance = int(explosion_resistance)
-            self._content['minecraft:block']['components']['minecraft:explosion_resistance'] = max(
-                min(1000, explosion_resistance), 0)
-            return self
-
-        def friction(self, friction: float = 0.6):
-            friction = float(friction)
-            self._content['minecraft:block']['components']['minecraft:friction'] = max(
-                min(1000, friction), 0)
-            return self
-
-        @property
-        def flammable(self):
-            self._content['minecraft:block']['components']['minecraft:flammable'] = {
-                'flame_odds': 1,
-                'burn_odds': 1
-            }
-            return self
-
-        def light_emission(self, light_emission: int = 0):
-            light_emission = int(light_emission)
-            if light_emission not in range(0, 16, 1):
-                RaiseError('Light Emission level must be in range 0 - 15')
-            self._content['minecraft:block']['components']['minecraft:light_emission'] = light_emission
-            return self
-
-        def light_absorption(self, light_absorption: int = 0):
-            light_absorption = int(light_absorption)
-            if light_absorption not in range(0, 16, 1):
-                RaiseError('Light Emission level must be in range 0 - 15')
-            self._content['minecraft:block']['components']['minecraft:light_dampening'] = max(
-                min(15, light_absorption), 0)
-            return self
-
-        def loot(self, drops: str = 'self'):
-            self._content['minecraft:block']['components'][
-                'minecraft:loot'] = f'loot_tables/blocks/{self._identifier}.loot_table.json'
-            if drops == 'self':
-                LootTable(self._identifier).entry(
-                    f'{NAMESPACE_FORMAT}:{self._identifier}', 1, 1, 1).queue('blocks')
-            else:
-                LootTable(self._identifier).entry(
-                    drops, 1, 1, 1).queue('blocks')
-            return self
-
-        def queue(self, directory=''):
-            self._directory = directory
-            self.content(self._content)
-            super().queue(self._directory)
-            self._parent.queue(self._directory)
-
-    def get_name(self):
-        return f'{NAMESPACE_FORMAT}:{self._identifier}'
-
-    def __new__(self, identifier: str = '', sound: str = 'stone', **textures):
-        self._identifier, self._display_name = RawText(identifier)
-        ANVIL._blocks.update(
-            {self._display_name: f'{NAMESPACE_FORMAT}:{self._identifier}'})
-        self._sound = sound
-        self._textures = textures
-
-        if not FileExists(f'assets/textures/blocks/{self._identifier}.png'):
-            if 'up' in textures:
-                CheckAvailability(
-                    f'{textures["up"]}.png', 'texture', 'assets/textures/blocks')
-            else:
-                RaiseError(
-                    f'A texture with the name {self._identifier} cannot be found in assets/textures/blocks')
-
-        self._block_rp = self.__RP_Block(
-            self._identifier, self._sound, **self._textures)
-        self._block_bp = self.__BP_Block(self._block_rp, self._identifier)
-        return self._block_bp
-
-
 class Recipe(EngineComponent):
     class _Crafting():
         class _Shapeless():
@@ -1596,39 +1436,22 @@ class Anvil():
         """
         header()
         self._start_timer = time.time()
-        with open('./config.json', 'r') as config:
-            data = json.load(config)
-            global COMPANY
-            global NAMESPACE
-            global PROJECT_NAME
-            global PASCAL_PROJECT_NAME
-            global DISPLAY_NAME
-            global PROJECT_DESCRIPTION
-            global VANILLA_VERSION
-            global LATEST_BUILD
-            global NAMESPACE_FORMAT
-            global NAMESPACE_FORMAT_BIT
-            global BUILD
-            global DEBUG
 
-            COMPANY = data['COMPANY']
-            NAMESPACE = data['NAMESPACE']
-            PROJECT_NAME = data['PROJECT_NAME']
-            PASCAL_PROJECT_NAME = ''.join(x for x in PROJECT_NAME.title().replace(
-                '_', '').replace('-', '') if x.isupper())
-            DISPLAY_NAME = data['DISPLAY_NAME']
-            PROJECT_DESCRIPTION = data['PROJECT_DESCRIPTION']
-            VANILLA_VERSION = data['VANILLA_VERSION']
-            LATEST_BUILD = VANILLA_VERSION
-            LAST_CHECK = data['LAST_CHECK']
-            NAMESPACE_FORMAT_BIT = data['NAMESPACE_FORMAT']
-            BUILD = data['BUILD']
-            DEBUG = data['DEBUG']
+        global COMPANY, NAMESPACE, PROJECT_NAME, PASCAL_PROJECT_NAME, DISPLAY_NAME, PROJECT_DESCRIPTION, VANILLA_VERSION, LATEST_BUILD, NAMESPACE_FORMAT, NAMESPACE_FORMAT_BIT, BUILD, DEBUG
+        COMPANY = CONFIG.get('ANVIL', 'COMPANY')
+        NAMESPACE = CONFIG.get('ANVIL', 'NAMESPACE')
+        PROJECT_NAME = CONFIG.get('ANVIL', 'PROJECT_NAME')
+        PASCAL_PROJECT_NAME = CONFIG.get('ANVIL', 'PASCAL_PROJECT_NAME')
+        DISPLAY_NAME = CONFIG.get('ANVIL', 'DISPLAY_NAME')
+        PROJECT_DESCRIPTION = CONFIG.get('ANVIL', 'PROJECT_DESCRIPTION')
+        VANILLA_VERSION = CONFIG.get('ANVIL', 'VANILLA_VERSION')
+        LATEST_BUILD = VANILLA_VERSION
+        LAST_CHECK = CONFIG.get('ANVIL', 'LAST_CHECK')
+        NAMESPACE_FORMAT_BIT = int(CONFIG.get('ANVIL', 'NAMESPACE_FORMAT'))
+        BUILD = CONFIG.get('ANVIL', 'BUILD')
+        DEBUG = CONFIG.get('ANVIL', 'DEBUG')
+        NAMESPACE_FORMAT = NAMESPACE + f'.{PROJECT_NAME}' * NAMESPACE_FORMAT_BIT
 
-            if NAMESPACE_FORMAT_BIT == 0:
-                NAMESPACE_FORMAT = f'{NAMESPACE}'
-            elif NAMESPACE_FORMAT_BIT == 1:
-                NAMESPACE_FORMAT = f'{NAMESPACE}.{PROJECT_NAME}'
 
         self._setup = Function('setup')
         self._setup_scores = Function('setup_scores')
@@ -1666,16 +1489,16 @@ class Anvil():
         # 12 Hours
         if (self._deltatime > 12*3600):
             click.echo(CHECK_UPDATE)
-            LATEST_BUILD = self.get_github_file(
-                'version.json')['latest']['version']
+            LATEST_BUILD = self.get_github_file('version.json')['latest']['version']
 
             if VANILLA_VERSION < LATEST_BUILD:
                 click.echo(NEW_BUILD(VANILLA_VERSION, LATEST_BUILD))
                 #DownloadFile(self._github.clone_url, MakePath('assets', 'vanilla'))
             else:
                 click.echo(UP_TO_DATE)
-            File("config.json", Schemes('config', NAMESPACE, COMPANY, PROJECT_NAME, DISPLAY_NAME,
-                 PROJECT_DESCRIPTION, LATEST_BUILD, NAMESPACE_FORMAT_BIT, BUILD, DEBUG), ".", "w")
+                
+            CONFIG.set('ANVIL', 'VANILLA_VERSION', LATEST_BUILD)
+            CONFIG.set('ANVIL', 'LAST_CHECK', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     def sound(self, sound_definition: str, category: SoundCategory(), use_legacy_max_distance: bool = False, max_distance: int = 0, min_distance: int = 9999):
         return self._sound_definition.sound_definition(sound_definition, category, use_legacy_max_distance, max_distance, min_distance)
@@ -2120,16 +1943,16 @@ class Anvil():
                       f'RP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
 
         content_structure = {
-            'resource_packs':                                       MakePath('Content', 'world_template', 'resource_packs'),
-            'behavior_packs':                                       MakePath('Content', 'world_template', 'behavior_packs'),
-            'texts':                                                MakePath('Content', 'world_template', 'texts'),
-            'db':                                                   MakePath('Content', 'world_template', 'db'),
-            'level.dat':                                            MakePath('Content', 'world_template'),
-            'levelname.txt':                                        MakePath('Content', 'world_template'),
-            'manifest.json':                                        MakePath('Content', 'world_template'),
-            'world_icon.jpeg':                                      MakePath('Content', 'world_template'),
-            'world_behavior_packs.json':                            MakePath('Content', 'world_template'),
-            'world_resource_packs.json':                            MakePath('Content', 'world_template'),
+            'resource_packs':              'resource_packs',
+            'behavior_packs':              'behavior_packs',
+            'texts':                       'texts',
+            'db':                          'db',
+            'level.dat':                   'level.dat',
+            'levelname.txt':               'levelname.txt',
+            'manifest.json':               'manifest.json',
+            'world_icon.jpeg':             'world_icon.jpeg',
+            'world_behavior_packs.json':   'world_behavior_packs.json',
+            'world_resource_packs.json':   'world_resource_packs.json',
         }
         zipit(MakePath(output, f'{DISPLAY_NAME}.mcworld'), content_structure)
 

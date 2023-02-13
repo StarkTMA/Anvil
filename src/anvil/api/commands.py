@@ -1,24 +1,5 @@
 from ..packages import *
 from ..core import ANVIL, RawTextConstructor
-from .actors import Entity
-
-class CameraShakeType():
-    positional = 'positional'
-    rotational = 'rotational'
-
-class MaskMode():
-    replace = 'replace'
-    masked = 'masked'
-
-class CloneMode():
-    force = 'force'
-    move = 'move'
-    normal = 'normal'
-
-class WeatherSet():
-    Clear = 'clear'
-    Rain = 'rain'
-    Thunder = 'thunder'
 
 class Command:
     def __init__(self, prefix: str, *commands) -> None:
@@ -342,7 +323,7 @@ class Teleport(Command):
         )
 
 class Event(Command):
-    def __init__(self, target, event: str) -> None:
+    def __init__(self, target: Target, event: event) -> None:
         super().__init__('event', 'entity',target, event)
         
 class Function(Command):

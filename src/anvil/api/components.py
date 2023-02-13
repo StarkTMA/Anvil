@@ -1,5 +1,5 @@
 from ..packages import *
-
+from .. import NAMESPACE
 #__all__ = [
 #    'AddRider', 'AdmireItem', 'Ageable',
 #    'Variant', 'MarkVariant', 'SkinID', 'CollisionBox', 'IsStackable', 'TypeFamily',
@@ -7,36 +7,74 @@ from ..packages import *
 #    'IsBaby', 'PushThrough', 'Movement', 'TickWorld'
 #]
 
-Component = NewType('Component',str)
-Identifier = NewType('Identifier',str)
-Event = NewType('Event',str)
-
-
-    
 class EventObject():
-    def __init__(self, event: Event, target : Target) -> None:
+    def __init__(self, event: event, target : Target) -> None:
         return {
             'event': event,
             'target': target
         }
 
 # Filters ==========================================================================
-class _filter(dict):
-    def __init__(self, component_name) -> None:
-        self.__setitem__('self._component_namespace', {})
-        self._all_of = []
-        self._any_of = []
-        self._none_of = []
+class Filter:
+    #Basic configuration
+    def _construct_filter(filter_name, subject, operator, domain, value):
+        filter = {"test": filter_name, "value": value}
+        if subject != FilterSubject.Self:
+            filter.update({'subject': subject})
+        if operator != FilterOperation.Equals:
+            filter.update({'operator': operator})
+        if domain != None:
+            filter.update({'domain': domain})
+            
+        return filter
     
-    def all_of(self):
-        self._all_of.append(_filter(''))
-        return self._all_of[-1]
-    def any_of(self):
-        self._any_of.append(_filter(''))
-        return self._any_of[-1]
-    def none_of(self):
-        self._none_of.append(_filter(''))
-        return self._none_of[-1]
+    # Filter Groups
+    @staticmethod
+    def all_of(*filters : 'Filter'):
+        return {'all_of':[filters]}
+    
+    @staticmethod
+    def any_of(*filters : 'Filter'):
+        return {'any_of':[filters]}
+    
+    @staticmethod
+    def none_of(*filters : 'Filter'):
+        return {'none_of':[filters]}
+    
+    # Actual Filters
+    @classmethod
+    def distance_to_nearest_player(self, value: float, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('distance_to_nearest_player', subject, operator, None, max(0, value))
+
+    @classmethod
+    def has_component(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        self._construct_filter('has_component', subject, operator, None, value)
+    
+    @classmethod
+    def is_family(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        self._construct_filter('is_family', subject, operator, None, value)
+    
+    #Properties
+    
+    @classmethod
+    def int_property(self, value: int, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('int_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+    
+    @classmethod
+    def bool_property(self, value: bool, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('bool_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+    
+    @classmethod
+    def float_property(self, value: float, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('float_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+    
+    @classmethod
+    def enum_property(self, value: str, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('enum_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+    
+    @classmethod
+    def has_property(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('has_property', subject, operator, None, f'{NAMESPACE}:{value}')
 
 class _component(dict):
     def __init__(self, component_name) -> None:
@@ -57,14 +95,14 @@ class _component(dict):
 # Components ==========================================================================
 
 class AddRider(_component):
-    def __init__(self, entity_type: Identifier, spawn_event: Event = None) -> None:
+    def __init__(self, entity_type: Identifier, spawn_event: event = None) -> None:
         '''Adds a rider to the entity. Requires `minecraft:rideable.`.
         
         Parameters
         ----------
         `entity_type` : `Identifier` `str`.
             The entity type that will be riding this entity
-        `spawn_event` : `Event` `str`, `optional`.
+        `spawn_event` : `event` `str`, `optional`.
             The spawn event that will be used when the riding entity is created.
 
         '''
@@ -91,14 +129,14 @@ class AdmireItem(_component):
             self.AddField('duration', duration)
 
 class Ageable(_component):
-    def __init__(self, duration: Seconds, event: Event) -> None:
+    def __init__(self, duration: Seconds, event: event) -> None:
         '''Adds a timer for the entity to grow up. It can be accelerated by giving the entity the items it likes.
         
         Parameters
         ----------
         `duration` : `Seconds` `int`.
             Amount of time before the entity grows up, -1 for always a baby. `Default: 1200`
-        `event` : `Event` `str`.
+        `event` : `event` `str`.
             Minecraft behavior event.
 
         '''
@@ -428,7 +466,7 @@ class DamageSensor(_component):
 
     def add_trigger(self, 
         cause: DamageCause, deals_damage: bool = True, 
-        on_damage_event: str = None, on_damage_filter: dict = None,  damage_multiplier: int = 1, damage_modifier: float = 0
+        on_damage_event: event = None, on_damage_filter: Filter = None,  damage_multiplier: int = 1, damage_modifier: float = 0
     ):
         damage = {
             'deals_damage': deals_damage,
@@ -628,7 +666,20 @@ class NavigationType(_component):
         """llows this entity to generate paths by walking around and jumping up and down a block like regular mobs."""
         self._basic('walk', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
         return self
-        
+
+class EnvironmentSensor(_component):
+    def __init__(self) -> None:
+        """Creates a trigger based on environment conditions."""
+        super().__init__('environment_sensor')
+        self.AddField('triggers', [])
+    
+    def trigger(self, event: event, filters: Filter):
+        self[self._component_namespace]['triggers'].append({
+            'filters': filters,
+            'event': event
+        })
+        return self
+
 
 # Unfinished
 class TargetNearbySensor(_component):

@@ -2,6 +2,18 @@
 Changelog
 =========
 
+Version 0.2.6
+===========
+ - Switch to use ConfigParser for the configuration instead of a simple json file.
+ - Added basic Filters class with few filters.
+ - Added `EnvironmentSensor` class.
+ - Removed automatic imports from `anvil.__init__` , now requires a manual import from `anvil.api` module.
+ - Added `DistanceFromCamera` to Query class.
+ - Updated the Query, Variable and Math classes methods to @staticmethods and @classmethods.
+ - Removed the requirement of using a block geometry in Blocks as the 16x cube is used by default.
+ - Removed the oldBlock class.
+ - Molang now support native comparison operators (==, !=, <, >, <=, >=), wrapping in strings is no longer necessary. f'{Query.DistanceFromCamera} <= {sensor_range}' is that same as Query.DistanceFromCamera <= sensor_range
+
 Version 0.2.5
 ===========
  - Sounds `load_on_low_memory` is set to `False` by default.

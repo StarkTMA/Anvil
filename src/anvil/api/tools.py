@@ -491,6 +491,7 @@ class StateManager2():
                 f'scoreboard players set @a[scores={{game_level={level._index}}}] sync 1'
             )
 
+#A complete rewrite to leverage the new commands power
 class StateMachine():
     class _state():
         def __init__(self, index: int, type: str) -> None:
