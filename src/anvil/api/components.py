@@ -48,11 +48,11 @@ class Filter:
 
     @classmethod
     def has_component(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        self._construct_filter('has_component', subject, operator, None, value)
+        return self._construct_filter('has_component', subject, operator, None, value)
     
     @classmethod
     def is_family(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        self._construct_filter('is_family', subject, operator, None, value)
+        return self._construct_filter('is_family', subject, operator, None, value)
     
     #Properties
     

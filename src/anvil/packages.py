@@ -31,7 +31,7 @@ APPDATA = os.getenv("APPDATA").rstrip("Roaming")
 DESKTOP = MakePath(os.getenv("USERPROFILE"), "Desktop")
 MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
 
-MANIFEST_BUILD = [1, 19, 50]
+MANIFEST_BUILD = [1, 19, 60]
 BLOCK_SERVER_VERSION = "1.19.40"
 ENTITY_SERVER_VERSION = "1.16.0"
 ENTITY_CLIENT_VERSION = "1.10.0"
@@ -44,6 +44,7 @@ RENDER_CONTROLLER_VERSION = "1.10.0"
 SOUND_DEFINITIONS_VERSION = "1.14.0"
 DIALOGUE_VERSION = "1.18.0"
 FOG_VERSION = "1.16.100"
+MATERIALS_VERSION = "1.0.0"
 
 
 def clamp(value, _min, _max):
@@ -12697,7 +12698,7 @@ class Selector():
         return self
 
     def scores(self, *score : str):
-        self._args(score = score)
+        self._args(score)
         return self
 
     def tag(self, *tags : str):
@@ -12766,6 +12767,30 @@ class FilterOperation:
     Equals = 'equals'
     Not = 'not'
     
+class MaterialStates:
+    EnableStencilTest = 'EnableStencilTest'
+    StencilWrite = 'StencilWrite'
+    InvertCulling = 'InvertCulling'
+    DisableCulling = 'DisableCulling'
+    DisableDepthWrite = 'DisableDepthWrite'
+
+class MaterialDefinitions:
+    Fancy = 'FANCY'
+    
+class MaterialFunc:
+    Always = 'Always'
+    Equal = 'Equal'
+    NotEqual = 'NotEqual'
+    Less = 'Less'
+    Greater = 'Greater'
+    GreaterEqual = 'GreaterEqual'
+    LessEqual = 'LessEqual'
+
+class MaterialOperation:
+    Keep = 'Keep'
+    Replace = 'Replace'
+
+
 def Schemes(type, *args) -> dict:
     match type:
         # Anvil files
@@ -13071,7 +13096,8 @@ def Schemes(type, *args) -> dict:
             return {}
         case "sound":
             return {args[0]: {"category": args[1], "sounds": []}}
-
+        case "materials":
+            return {"materials": {"version": MATERIALS_VERSION}}
         #Actors
         case "client_description":
             return {
@@ -13330,8 +13356,6 @@ def Defaults(type, *args):
                     "conditions": [],
                 },
             }
-        case "materials":
-            return {"materials": {"version": "1.0.0"}}
         case "music_definitions":
             return {}
         case "language":

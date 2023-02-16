@@ -1,4 +1,5 @@
 from ..packages import *
+from .. import Query, Variable, Math
 from anvil.api import components
 from anvil.api.components import Filter
 from anvil.core import NAMESPACE_FORMAT, NAMESPACE, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle
@@ -162,8 +163,9 @@ class _ActorClientDescription(_ActorDescription):
         return self
 
     def init_vars(self, **vars):
-        for var, value in vars.items():
-            self._description['description']['scripts']['initialize'].append(f'v.{var}={value};')
+        for k, v in vars.items():
+            Variable._set_var(k)
+            self._description['description']['scripts']['initialize'].append(f'v.{k}={v};')
         return self
     
     def scale(self, scale: str = '1'):
@@ -437,7 +439,10 @@ class _EntityServer(_Entity):
         return self._animations.add_animation(animation_name, loop)
 
     def init_vars(self, **vars):
-        self._vars.extend([f'v.{var}={value}' for var, value in vars.items()])
+        for k, v in vars.items():
+            Variable._set_var(k)
+            self._vars.extend([f'v.{k}={v}'])
+
         return self
     
     def event(self, event_name: str):
@@ -1758,11 +1763,11 @@ class _Properties():
     def __init__(self):
         self._properties = {}
 
-    def enum(self, name : str, range : tuple[str], *, default: str, client_sync : bool = False):
+    def enum(self, name : str, values : tuple[str], *, default: str, client_sync : bool = False):
         self._properties[f'{NAMESPACE}:{name}'] = {
                 "type": "enum", 
                 'default': default,
-                'range': range,
+                'values': values,
                 'client_sync': client_sync
             }
         return self

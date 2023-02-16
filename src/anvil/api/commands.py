@@ -311,7 +311,7 @@ class Effect(Command):
 
 class Gamemode(Command):
     def __init__(self, target: str, gamemode: Gamemodes):
-        super().__init__('gamemode', target, gamemode)
+        super().__init__('gamemode', gamemode, target)
 
 class Teleport(Command):
     def __init__(self, target, destination: coordinates, rotation: rotation = ('~', '~')) -> None:

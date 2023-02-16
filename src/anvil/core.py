@@ -224,7 +224,13 @@ class Exporter():
                     1: '.block.json'
                 }
             },
-
+            'materials': {
+                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'materials'),
+                'extension': {
+                    0: '.material',
+                    1: '.material'
+                }
+            }
         }
         self._name = name
         self._type = type
@@ -243,18 +249,15 @@ class Exporter():
         return self
 
     def queue(self, directory: str = None):
-        # Console Output
         self._directory = directory
-        self._path = MakePath(
-            self._valids[self._type]['path'], self._directory)
+        self._path = MakePath(self._valids[self._type]['path'], self._directory)
         ANVIL._queue(self)
         return self
 
     def _export(self):
         if self._shorten and type(self._content) is dict:
             self._content = ShortenDict(self._content)
-        File(
-            f'{self._name}{self._valids[self._type]["extension"][NAMESPACE_FORMAT_BIT]}', self._content, self._path, 'w')
+        File(f'{self._name}{self._valids[self._type]["extension"][NAMESPACE_FORMAT_BIT]}', self._content, self._path, 'w')
 
 
 class RawTextConstructor():
@@ -495,7 +498,9 @@ class _Music(Exporter):
 class _DialogueButton():
     def __init__(self, button_name: str, *commands: str):
         self._button_name = button_name
-        self._commands = commands
+        self._commands = [
+            f'/{command}' if not str(command).startswith('/') else command for command in commands
+        ]
 
     def _export(self):
         return Schemes(
@@ -548,6 +553,124 @@ class _DialogueScene():
         )
 
 
+class _FogDistance():
+    def __init__(self, camera_location: FogCameraLocation = FogCameraLocation.Air) -> None:
+        self._camera_location = camera_location
+        self._distance = {
+            self._camera_location: {}
+        }
+
+    def color(self, color: str):
+        self._distance[self._camera_location]['fog_color'] = color
+        return self
+
+    def distance(self, fog_start: int, fog_end: int, render_distance_type: RenderDistanceType = RenderDistanceType.Render):
+        if fog_start >= fog_end:
+            RaiseError(f'{ERROR}: fog_end must be greater than fog_start.')
+        self._distance[self._camera_location]['fog_start'] = fog_start
+        self._distance[self._camera_location]['fog_end'] = fog_end
+        self._distance[self._camera_location]['render_distance_type'] = render_distance_type
+        return self
+
+    def transition_fog(self, color: str, fog_start: int, fog_end: int, render_distance_type: RenderDistanceType = RenderDistanceType.Render):
+        if fog_start >= fog_end:
+            RaiseError(f'{ERROR}: fog_end must be greater than fog_start.')
+        self._distance[self._camera_location]['color'] = color
+        self._distance[self._camera_location]['fog_start'] = fog_start
+        self._distance[self._camera_location]['fog_end'] = fog_end
+        self._distance[self._camera_location]['render_distance_type'] = render_distance_type
+        return self
+
+    def _export(self):
+        return self._distance
+
+
+class _Material():
+    def __init__(self, material_name, base_material) -> None:
+        self._material_name = f'{material_name}' + f':{base_material}' if not base_material is None else ''
+        self._material = {
+            self._material_name : {}
+        }
+    
+    def states(self, *states: MaterialStates):
+        self._material[self._material_name]['states'] = states
+        return self
+
+    def remove_states(self, *states: MaterialStates):
+        self._material[self._material_name]['-states'] = states
+        return self
+
+    def add_states(self, *states: MaterialStates):
+        self._material[self._material_name]['+states'] = states
+        return self
+
+    def frontFace(self, stencilFunc: MaterialFunc = None, stencilFailOp: MaterialOperation = None, stencilDepthFailOp: MaterialOperation = None, stencilPassOp: MaterialOperation = None, stencilPass: MaterialOperation = None):
+        a = {
+            'stencilFunc': stencilFunc,
+            'stencilFailOp': stencilFailOp,
+            'stencilDepthFailOp': stencilDepthFailOp,
+            'stencilPassOp': stencilPassOp,
+            'stencilPass': stencilPass
+        }
+        self._material[self._material_name]['frontFace'] = {key: value for key, value in a.items() if value != None}
+        return self
+
+    def backFace(self, stencilFunc: MaterialFunc = None, stencilFailOp: MaterialOperation = None, stencilDepthFailOp: MaterialOperation = None, stencilPassOp: MaterialOperation = None, stencilPass: MaterialOperation = None):
+        a = {
+            'stencilFunc': stencilFunc,
+            'stencilFailOp': stencilFailOp,
+            'stencilDepthFailOp': stencilDepthFailOp,
+            'stencilPassOp': stencilPassOp,
+            'stencilPass': stencilPass
+        }
+        self._material[self._material_name]['backFace'] = {key: value for key, value in a.items() if value != None}
+        return self
+    
+    def stencilRef(self, stencilRef: int):
+        self._material[self._material_name]['stencilRef'] = stencilRef
+        return self
+
+    def depthFunc(self, depthFunc: MaterialFunc):
+        self._material[self._material_name]['depthFunc'] = depthFunc
+        return self
+
+    def defines(self, *defines: MaterialDefinitions):
+        self._material[self._material_name]['defines'] = defines
+        return self
+
+    def remove_defines(self, *defines: MaterialDefinitions):
+        self._material[self._material_name]['-defines'] = defines
+        return self
+
+    def add_defines(self, *defines: MaterialDefinitions):
+        self._material[self._material_name]['+defines'] = defines
+        return self
+
+    @property
+    def _queue(self):
+        return self._material
+
+
+class _Materials(Exporter):
+    def __init__(self) -> None:
+        super().__init__('entity', 'materials')
+        self._materials : list[_Material] = []
+    
+    def add_material(self, material_name, base_material):
+        material = _Material(material_name, base_material)
+        self._materials.append(material)
+        return material
+    
+    @property
+    def queue(self):
+        if len(self._materials) > 0:
+            self._content = Schemes('materials')
+            for m in self._materials:
+                self._content['materials'].update(m._queue)
+            super().queue('')
+
+
+# =============================================
 class SkinPack():
     def __init__(self) -> None:
         self._skins = []
@@ -646,38 +769,6 @@ class Fonts():
             if FileExists(MakePath('assets', 'textures', 'ui', file)):
                 CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath(
                     'resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'), file)
-
-
-class _FogDistance():
-    def __init__(self, camera_location: FogCameraLocation = FogCameraLocation.Air) -> None:
-        self._camera_location = camera_location
-        self._distance = {
-            self._camera_location: {}
-        }
-
-    def color(self, color: str):
-        self._distance[self._camera_location]['fog_color'] = color
-        return self
-
-    def distance(self, fog_start: int, fog_end: int, render_distance_type: RenderDistanceType = RenderDistanceType.Render):
-        if fog_start >= fog_end:
-            RaiseError(f'{ERROR}: fog_end must be greater than fog_start.')
-        self._distance[self._camera_location]['fog_start'] = fog_start
-        self._distance[self._camera_location]['fog_end'] = fog_end
-        self._distance[self._camera_location]['render_distance_type'] = render_distance_type
-        return self
-
-    def transition_fog(self, color: str, fog_start: int, fog_end: int, render_distance_type: RenderDistanceType = RenderDistanceType.Render):
-        if fog_start >= fog_end:
-            RaiseError(f'{ERROR}: fog_end must be greater than fog_start.')
-        self._distance[self._camera_location]['color'] = color
-        self._distance[self._camera_location]['fog_start'] = fog_start
-        self._distance[self._camera_location]['fog_end'] = fog_end
-        self._distance[self._camera_location]['render_distance_type'] = render_distance_type
-        return self
-
-    def _export(self):
-        return self._distance
 
 
 class Fog(Exporter):
@@ -1461,6 +1552,7 @@ class Anvil():
         self._terrain_texture = _TerrainTextures()
         self._sound_definition = _Sound()
         self._music_definition = _Music()
+        self._materials = _Materials()
 
         self._functions: list[Function] = []
         self._scores = {}
@@ -1475,7 +1567,6 @@ class Anvil():
         self._sounds = {}
         self._tellraw_index = 0
         self._score_index = 0
-        self._materials = Defaults('materials')
         self._setup_scores.add(
             f'scoreboard objectives add {PROJECT_NAME} dummy "{PROJECT_NAME.replace("_"," ").title()}"')
         self._remove_scores.add(
@@ -1594,8 +1685,8 @@ class Anvil():
             self._tick_functions.append(
                 function.execute.split(' ')[-1].replace('\n', ''))
 
-    def material(self, material: dict) -> None:
-        self._materials['materials'].update(material)
+    def add_material(self, material_name, base_material: str | None = None):
+        return self._materials.add_material(material_name=material_name, base_material=base_material)
 
     def setup(self, *functions: Function) -> None:
         """
@@ -1726,19 +1817,14 @@ class Anvil():
             File("manifest.json", Schemes(
                 'manifest_world', [COMPANY]), "", "w")
 
-        if len(self._materials['materials']) > 1:
-            CreateDirectory(
-                f'resource_packs/RP_{PASCAL_PROJECT_NAME}/materials')
-            File('entity.material', self._materials,
-                 f'resource_packs/RP_{PASCAL_PROJECT_NAME}/materials', 'w')
-
         if FileExists('assets/textures/gui'):
             CopyFolder('assets/textures/gui',
                        f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/gui')
         if FileExists('assets/textures/environment'):
             CopyFolder('assets/textures/environment',
                        f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/environment')
-
+        
+        self._materials.queue
         self._setup_scores.queue('StateMachine/misc')
         self._remove_scores.queue('StateMachine/misc')
         self._remove_tags.queue('StateMachine/misc')
