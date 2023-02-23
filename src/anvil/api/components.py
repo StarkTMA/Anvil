@@ -1,5 +1,6 @@
-from ..packages import *
 from .. import NAMESPACE
+from ..packages import *
+
 #__all__ = [
 #    'AddRider', 'AdmireItem', 'Ageable',
 #    'Variant', 'MarkVariant', 'SkinID', 'CollisionBox', 'IsStackable', 'TypeFamily',
@@ -53,6 +54,10 @@ class Filter:
     @classmethod
     def is_family(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('is_family', subject, operator, None, value)
+    
+    @classmethod
+    def is_block(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('is_block', subject, operator, None, value)
     
     #Properties
     
@@ -602,7 +607,7 @@ class NavigationType(_component):
         if can_break_doors:
             self.AddField('can_break_doors', can_break_doors)
         if not can_jump:
-            self.AddField('can_jum', can_jump)
+            self.AddField('can_jump', can_jump)
         if can_open_doors:
             self.AddField('can_open_doors', can_open_doors)
         if can_open_iron_doors:
@@ -680,15 +685,166 @@ class EnvironmentSensor(_component):
         })
         return self
 
+class PreferredPath(_component):
+    def __init__(self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks : int = 3) -> None:
+        """Specifies costing information for mobs that prefer to walk on preferred paths."""
+        super().__init__('preferred_path')
+        self.AddField('default_block_cost', default_block_cost)
+        self.AddField('jump_cost', jump_cost)
+        self.AddField('max_fall_blocks', max_fall_blocks)
+        self.AddField('preferred_path_blocks', [])
+    
+    def add_blocks(self, cost: int, *blocks: list[str]):
+        self[self._component_namespace]['preferred_path_blocks'].append({
+            "cost": cost,
+            "blocks": blocks
+        })
+        return self
+
+class TargetNearbySensor(_component):
+    def __init__(self, inside_range: int = 1, outside_range: int = 5, must_see: bool = False) -> None:
+        """Defines the entity's range within which it can see or sense other entities to target them."""
+        super().__init__('target_nearby_sensor')
+        self.AddField('inside_range', inside_range)
+        self.AddField('outside_range', outside_range)
+        self.AddField('must_see', must_see)
+    
+    def on_inside_range(self, event: event, target:FilterSubject):
+        self.AddField('on_inside_range', {"event": event, "target": target})
+        return self
+    
+    def on_outside_range(self, event: event, target:FilterSubject):
+        self.AddField('on_outside_range', {"event": event, "target": target})
+        return self
+    
+    def on_vision_lost_inside_range(self, event: event, target:FilterSubject):
+        self.AddField('on_vision_lost_inside_range', {"event": event, "target": target})
+        return self
+
+class NearestAttackableTarget(_component):
+    def __init__(
+            self,
+            attack_interval: int = 0,
+            attack_interval_min: int = 0,
+            attack_owner: bool = False,
+            must_reach: bool = False,
+            must_see: bool = False,
+            must_see_forget_duration: float = 3.0,
+            persist_time: float = 0.0,
+            reevaluate_description: bool = False,
+            reselect_targets: bool = False,
+            scan_interval: int = 10,
+            set_persistent: bool = False,
+            target_invisible_multiplier: float = 0.7,
+            target_search_height: float = -0.1,
+            target_sneak_visibility_multiplier: float = 0.8,
+            within_radius: float = 0.0,
+        ) -> None:
+        """Allows an entity to attack the closest target within a given subset of specific target types."""
+        super().__init__('behavior.nearest_attackable_target')
+        self.AddField('entity_types', [])
+        
+        if not attack_interval == 0:
+            self.AddField('attack_interval', attack_interval)
+        if not attack_interval_min == 0:
+            self.AddField('attack_interval_min', attack_interval_min)
+        if attack_owner:
+            self.AddField('attack_owner', attack_owner)
+        if must_reach:
+            self.AddField('must_reach', must_reach)
+        if must_see:
+            self.AddField('must_see', must_see)
+        if not must_see_forget_duration == 3.0:
+            self.AddField('must_see_forget_duration', must_see_forget_duration)
+        if not persist_time == 0.0:
+            self.AddField('persist_time', persist_time)
+        if reevaluate_description:
+            self.AddField('reevaluate_description', reevaluate_description)
+        if reselect_targets:
+            self.AddField('reselect_targets', reselect_targets)
+        if not scan_interval == 10:
+            self.AddField('scan_interval', scan_interval)
+        if set_persistent:
+            self.AddField('set_persistent', set_persistent)
+        if not target_invisible_multiplier == 0.7:
+            self.AddField('target_invisible_multiplier', target_invisible_multiplier)
+        if not target_search_height == -0.1:
+            self.AddField('target_search_height', target_search_height)
+        if not target_sneak_visibility_multiplier == 0.8:
+            self.AddField('target_sneak_visibility_multiplier', target_sneak_visibility_multiplier)
+        if not within_radius == 0.0:
+            self.AddField('within_radius', within_radius)
+
+    def priority(self, priority):
+        self.AddField('priority', priority)
+        return self
+
+    def add_target(self, filters: Filter, must_see: bool = False, max_dist: int = 32):
+        # empty dicts will be removed at compilation
+        self[self._component_namespace]['entity_types'].append({
+            "filters": filters,
+            "must_see": must_see if must_see else {},
+            "max_dist": max_dist if max_dist != max_dist else {}
+        })
+        return self
+
+class RandomLookAround(_component):
+    def __init__(self, 
+                 probability: float = 0.2, 
+                 angle_of_view_horizontal: int = 360, 
+                 angle_of_view_vertical: int = 360, 
+                 look_distance: float = 8.0, 
+                 look_time: list[float, float] | float = (2, 4)) -> None:
+        """Allows an entity to choose a random direction to look in for a random duration within a range."""
+        super().__init__('behavior.random_look_around')
+        self.AddField('probability', clamp(probability, 0, 1))
+        if not angle_of_view_horizontal == 360:
+            self.AddField('angle_of_view_horizontal', angle_of_view_horizontal)
+        if not angle_of_view_vertical == 360:
+            self.AddField('angle_of_view_vertical', angle_of_view_vertical)
+        if not look_distance == 8:
+            self.AddField('look_distance', look_distance)
+        if not look_time == (2, 4):
+            self.AddField('look_time', look_time)
+            
+
+    def priority(self, priority):
+        self.AddField('priority', priority)
+        return self
+
+class Timer(_component):
+    def __init__(self, 
+                 event: event, 
+                 target: FilterSubject = FilterSubject.Self, 
+                 looping: bool = True, 
+                 randomInterval: bool = True, 
+                 time: list[float, float] | float = 0) -> None:
+        """Adds a timer after which an event will fire."""
+        super().__init__('timer')
+
+        self.AddField('time_down_event', {
+            "event": event,
+            "target": target
+        })
+
+        if not looping:
+            self.AddField('looping', looping)
+        if not randomInterval:
+            self.AddField('randomInterval', randomInterval)
+        if not time == (0, 0):
+            self.AddField('time', time)
+            
+
+    def priority(self, priority):
+        self.AddField('priority', priority)
+        return self
 
 # Unfinished
-class TargetNearbySensor(_component):
-    def __init__(self) -> None:
-        super().__init__('target_nearby_sensor')
-
 class ConditionalBandwidthOptimization(_component):
     def __init__(self) -> None:
         """Defines the Conditional Spatial Update Bandwidth Optimizations of this entity."""
         super().__init__('conditional_bandwidth_optimization')
+
+
 
 

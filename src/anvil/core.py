@@ -230,6 +230,13 @@ class Exporter():
                     0: '.material',
                     1: '.material'
                 }
+            },
+            'geometry': {
+                'path': MakePath('assets', 'models'),
+                'extension': {
+                    0: '.geo.json',
+                    1: '.geo.json'
+                }
             }
         }
         self._name = name
@@ -670,6 +677,69 @@ class _Materials(Exporter):
             super().queue('')
 
 
+class _Bone():
+    def __init__(self, name, pivot) -> None:
+        self._bone = {
+	    	"name": name,
+	    	"pivot": pivot,
+	    	"cubes": []
+	    }
+    
+    def add_cube(self, 
+                 origin: list[float, float, float], 
+                 size: list[float, float, float], 
+                 uv: list[int, int], 
+                 pivot: list[float, float, float] = (0,0,0), 
+                 rotation: list[float, float, float] = (0,0,0),
+                 inflate: float = 0,
+                 mirror: bool = False,
+                 reset: bool = False):
+        self._bone['cubes'].append({
+            'origin': origin,
+            'size': size,
+            'uv': uv,
+            'pivot': pivot if not pivot == (0,0,0) else {},
+            'rotation': rotation if not rotation == (0,0,0) else {},
+            'inflate': inflate if not inflate == 0 else {},
+            'mirror': mirror if mirror else {},
+            'reset': reset if reset else {},
+        })
+        return self
+
+    @property
+    def _queue(self):
+        return self._bone
+
+
+class _Geo():
+    def __init__(self, geometry_name: str, texture_size: list[int, int] = (16,16)) -> None:
+        self._geo = {
+            "description": {
+                "identifier": f"geometry.{NAMESPACE}.{geometry_name}",
+		        "texture_width": texture_size[0],
+		        "texture_height": texture_size[1],
+            },
+            "bones": [],
+        }
+        self._bones : list[_Bone] = []
+    
+    def set_visible_bounds(self, visible_bounds_wh: list[float, float], visible_bounds_offset: list[float, float, float]):
+        self._geo['description']['visible_bounds_width'] = visible_bounds_wh[0]
+        self._geo['description']['visible_bounds_height'] = visible_bounds_wh[1]
+        self._geo['description']['visible_bounds_offset'] = visible_bounds_offset
+        return self
+
+    def add_bone(self, name: str, pivot: list[int, int, int]):
+        bone = _Bone(name, pivot)
+        self._bones.append(bone)
+        return bone
+
+    @property
+    def _queue(self):
+        for bone in self._bones:
+            self._geo['bones'].append(bone._queue)
+        return self._geo
+
 # =============================================
 class SkinPack():
     def __init__(self) -> None:
@@ -763,12 +833,44 @@ class Function(Exporter):
 
 
 class Fonts():
+    def __init__(self) -> None:
+        self._image = None
+
+    def generate_font(self, font_name: str, character_size: int = 32):
+        if character_size % 16 != 0:
+            RaiseError(UNSUPPORTED_FONT_SIZE)
+
+        if not FileExists(MakePath('assets', 'textures', 'ui', f'{font_name}.ttf')):
+            RaiseError(MISSING_FILE('font', f'{font_name}.ttf', MakePath('assets', 'textures', 'ui')))
+
+        font_size = round(character_size*.8)
+        image_size = character_size*16
+        self._image = Image.new("RGBA", (image_size, image_size))
+        font = ImageFont.truetype(f'assets/textures/ui/{font_name}.ttf', font_size)
+        backup_font = ImageFont.truetype('arial.ttf', font_size)
+        default8 = u'ÀÁÂÈÉÊÍÓÔÕÚßãõǧÎ¹ŒœŞşŴŵŽê§©      !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉ§ÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴├├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■	'
+        offset = [0, 0]
+        for i in default8:
+            d1 = ImageDraw.Draw(self._image)
+            if font.getsize(i) == (27, 29):
+                d1.text((offset[0]*character_size+3, offset[1]*character_size), i, fill =(255, 255, 255), font=backup_font, align='left')
+            else:
+                d1.text((offset[0]*character_size+3, offset[1]*character_size), i, fill =(255, 255, 255), font=font, align='left')
+            offset[0] += 1
+            if offset[0] >= 16:
+                offset[0] = 0
+                offset[1] += 1
+        
+        return self
+        
     @property
     def queue(self):
+        if not self._image is None:
+            self._image.save(MakePath('assets', 'textures', 'ui', 'default8.png'))
+
         for file in ['glyph_E1.png', 'default8.png']:
             if FileExists(MakePath('assets', 'textures', 'ui', file)):
-                CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath(
-                    'resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'), file)
+                CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'), file)
 
 
 class Fog(Exporter):
@@ -817,6 +919,30 @@ class Structure():
             MakePath('behavior_packs', f"BP_{PASCAL_PROJECT_NAME}", 'structures',
                      NAMESPACE_FORMAT, f"{self._structure_name}.mcstructure")
         )
+
+
+class Geometry(Exporter):
+    def __init__(self, name: str) -> None:
+        super().__init__(name, 'geometry')
+        self._geos : list[_Geo] = []
+    
+    def add_geo(self, geometry_name: str, texture_size: tuple[int, int] = (16,16)):
+        geo = _Geo(geometry_name, texture_size)
+        self._geos.append(geo)
+        return geo
+    
+    def queue(self, type: str):
+        if not type in ['entity', 'attachables', 'blocks']:
+            RaiseError('Unsupported model type') 
+        
+        if len(self._geos) == 0:
+            RaiseError(f'The Geometry file {self._name} does not have any geometry.')
+
+        self.content(Schemes('geometry'))
+        for g in self._geos:
+            self._content['minecraft:geometry'].append(g._queue)
+        super().queue(type)
+        super()._export()
 
 # Core Functionalities
 # TODO: Replace/remove
@@ -2016,31 +2142,25 @@ class Anvil():
 
     @property
     def mcworld(self):
-        if not self._compiled:
-            RaiseError(NOT_COMPILED)
         click.echo(PACKAGING_MCWORLD)
 
-        source = MakePath('assets', 'marketing')
-        output = MakePath('assets', 'output')
-        if FileExists(MakePath(source, 'pack_icon.png')):
-            CopyFiles(source, MakePath('behavior_packs',
-                      f'BP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
-            CopyFiles(source, MakePath('resource_packs',
-                      f'RP_{PASCAL_PROJECT_NAME}'), 'pack_icon.png')
+        if not self._compiled:
+            RaiseError(NOT_COMPILED)
 
         content_structure = {
-            'resource_packs':              'resource_packs',
-            'behavior_packs':              'behavior_packs',
-            'texts':                       'texts',
-            'db':                          'db',
-            'level.dat':                   'level.dat',
-            'levelname.txt':               'levelname.txt',
-            'manifest.json':               'manifest.json',
-            'world_icon.jpeg':             'world_icon.jpeg',
-            'world_behavior_packs.json':   'world_behavior_packs.json',
-            'world_resource_packs.json':   'world_resource_packs.json',
+            'resource_packs':                                       MakePath('resource_packs'),
+            'behavior_packs':                                       MakePath('behavior_packs'),
+            'texts':                                                MakePath('texts'),
+            'db':                                                   MakePath('db'),
+            'level.dat':                                            MakePath(''),
+            'levelname.txt':                                        MakePath(''),
+            'manifest.json':                                        MakePath(''),
+            'world_icon.jpeg':                                      MakePath(''),
+            'world_behavior_packs.json':                            MakePath(''),
+            'world_resource_packs.json':                            MakePath(''),
         }
-        zipit(MakePath(output, f'{DISPLAY_NAME}.mcworld'), content_structure)
+
+        zipit(MakePath('assets', 'output',f'{PROJECT_NAME}.mcworld'), content_structure)
 
     def _queue(self, object: object):
         self._objects_list.append(object)

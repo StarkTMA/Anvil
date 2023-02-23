@@ -1,8 +1,11 @@
-from ..packages import *
-from .. import Query, Variable, Math
 from anvil.api import components
 from anvil.api.components import Filter
-from anvil.core import NAMESPACE_FORMAT, NAMESPACE, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle
+from anvil.core import (ANVIL, NAMESPACE, NAMESPACE_FORMAT,
+                        PASCAL_PROJECT_NAME, Exporter, Particle,
+                        _MinecraftDescription, _SoundDefinition)
+
+from .. import Math, Query, Variable
+from ..packages import *
 
 __all__ = [ 'Entity', 'Attachable' ]
 
@@ -639,7 +642,7 @@ class _BP_ControllerState():
         
         '''
         for command in commands:
-            if str(command).startswith('@s'):
+            if str(command).startswith(Target.S):
                 self._controller_state[self._state_name]['on_entry'].append(f'{command}')
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
                 self._controller_state[self._state_name]['on_entry'].append(f'{command};')
@@ -661,7 +664,7 @@ class _BP_ControllerState():
         
         '''
         for command in commands:
-            if str(command).startswith('@s'):
+            if str(command).startswith(Target.S):
                 self._controller_state[self._state_name]['on_exit'].append(f'{command}')
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
                 self._controller_state[self._state_name]['on_exit'].append(f'{command};')

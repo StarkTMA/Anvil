@@ -1,5 +1,6 @@
+from ..core import (ANVIL, NAMESPACE, NAMESPACE_FORMAT, PASCAL_PROJECT_NAME,
+                    Exporter, _MinecraftDescription)
 from ..packages import *
-from ..core import NAMESPACE, NAMESPACE_FORMAT, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription
 from .actors import _Components
 from .components import _component
 

@@ -1,5 +1,5 @@
+from ..core import ANVIL, NAMESPACE, PASCAL_PROJECT_NAME, Exporter
 from ..packages import *
-from ..core import ANVIL, Exporter, NAMESPACE, PASCAL_PROJECT_NAME
 
 __all__ = [
     "UIBindingType",

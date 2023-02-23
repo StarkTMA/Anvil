@@ -1,5 +1,6 @@
-from click import style
 from typing import NewType
+
+from click import style
 
 Seconds = NewType("Seconds", str)
 Molang = NewType("Molang", str)
@@ -26,6 +27,7 @@ cyan = lambda text : style(text, "cyan")
 
 ERROR = red('[Error]')
 WARNING = yellow('[Warning]')
+NOTICE = green('[Notice]')
 PACKAGING = cyan('[Packaging]')
 
 # Actor Client
@@ -67,6 +69,7 @@ PACKAGING_MCADDON = f'{PACKAGING}: .mcaddon'
 PACKAGING_MCWORLD = f'{PACKAGING}: .mcworld'
 FILE_EXIST_WARNING = lambda filename : f'{WARNING}: {cyan(filename)} does not exist. This will cause validator fails.'
 FILE_EXIST_ERROR = lambda filename : f'{ERROR}: {cyan(filename)} does not exist.'
+UNSUPPORTED_FONT_SIZE = f'{ERROR}: character_size must be a multiple of 16.'
 # Identifiers
 NAMESPACES_NOT_ALLOWED = lambda identifier : f'{ERROR}: Namespaces are not allowed. {green(identifier)}'
 

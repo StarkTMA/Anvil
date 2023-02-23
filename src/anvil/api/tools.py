@@ -1,5 +1,5 @@
+from ..core import ANVIL, NAMESPACE, PROJECT_NAME, Function
 from ..packages import *
-from ..core import ANVIL, Function, NAMESPACE, PROJECT_NAME
 from . import commands
 
 

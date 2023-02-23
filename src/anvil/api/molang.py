@@ -1,5 +1,5 @@
-from ..packages import *
 from ..core import NAMESPACE
+from ..packages import *
 
 
 class _molang(str):
@@ -7,10 +7,12 @@ class _molang(str):
         return _molang(f"!{self}")
     
     def __eq__(self, other):
-        return _molang(f"{self} == " f"'{other}'" if type(other) is str else other) 
+        o = f"'{other}'" if type(other) is str else f"{other}"
+        return _molang(f"{self} == {o}" )
 
     def __ne__(self, other):
-        return _molang(f"{self} != " f"'{other}'" if type(other) is str else other)
+        o = f"'{other}'" if type(other) is str else f"{other}"
+        return _molang(f"{self} != {o}")
 
     def __lt__(self, other):
         return _molang(f"{self} < {other}")
@@ -32,6 +34,12 @@ class _molang(str):
 
     def __add__(self, other):
         return _molang(f"{self} + {other}")
+    
+    def __sub__(self, other):
+        return _molang(f"{self} - {other}")
+    
+    def __mul__(self, other):
+        return _molang(f"{self} * {other}")
 
     def _query(self, qtype, query, *arguments):
         a = f'{qtype}.{query}'

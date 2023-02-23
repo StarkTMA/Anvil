@@ -2,6 +2,24 @@
 Changelog
 =========
 
+Version 0.3.1
+=============
+[New]
+-----
+ - Added `generate_font()` to the `Fonts()` class. Now you'll be able to generate the `default8` texture using a ttf/otf files.
+ - Added `PreferredPath`, `TargetNearbySensor`, `NearestAttackableTarget`, `RandomLookAround`, and `Timer` components.
+ - Added a basic `Geometry()` class to create models within Anvil.
+ - Added the filters `is_block`, 
+ - Molangs now support subtraction and multiplication.
+ - Added a snippets module to serve as a host for useful and quick functions.
+ - 
+
+[Bug Fixes]
+-----------
+ - Fixed the ANVIL.mcworld packagin method, now output a non corrupted world.
+ - Fixed the cli tool not creating the config and .gitignore files..
+ - The worksapce no longer lists the Minecraft logs folder, it generally has too many files which makes the IDE slow.
+
 Version 0.3.0
 =============
 
@@ -57,7 +75,7 @@ Version 0.2.2
 
 Version 0.2.1
 =============
- - 
+ - Untracked
  
 Version 0.2.0
 =============

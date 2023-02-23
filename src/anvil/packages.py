@@ -1,4 +1,5 @@
 import csv
+import math
 import os
 import random
 import shutil
@@ -10,16 +11,15 @@ import zipfile
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from fnmatch import fnmatch
-from pprint import pprint
-from typing import NewType, Tuple, overload, Type
+from typing import NewType, Tuple, Type, overload
 from urllib import request
+
 import click
 import commentjson as json
-import math
-from .api import CONFIG
-from PIL import Image, ImageColor, ImageEnhance, ImageQt
+from PIL import Image, ImageColor, ImageDraw, ImageEnhance, ImageFont, ImageQt
+
 from .__version__ import __version__
+from .api import CONFIG
 from .api.localization import *
 
 FileExists = lambda path: os.path.exists(path)
@@ -33,7 +33,7 @@ MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "t
 
 MANIFEST_BUILD = [1, 19, 60]
 BLOCK_SERVER_VERSION = "1.19.40"
-ENTITY_SERVER_VERSION = "1.16.0"
+ENTITY_SERVER_VERSION = "1.19.0"
 ENTITY_CLIENT_VERSION = "1.10.0"
 BP_ANIMATION_VERSION = "1.10.0"
 RP_ANIMATION_VERSION = "1.8.0"
@@ -46,6 +46,7 @@ DIALOGUE_VERSION = "1.18.0"
 FOG_VERSION = "1.16.100"
 MATERIALS_VERSION = "1.0.0"
 
+normalize_180 = lambda angle : (angle + 540) % 360 - 180
 
 def clamp(value, _min, _max):
     return max(min(_max, value), _min)
@@ -12707,7 +12708,12 @@ class Selector():
         return self
 
     def rotation(self, *, ry : rotation = None, rym : rotation = None, rx : rotation = None, rxm : rotation = None):
-        self._args(ry=clamp(ry, -180, 180), rym=clamp(rym, -180, 180), rx=clamp(rx, -90, 90), rxm=clamp(rxm, -90, 90))
+        self._args(
+            ry=normalize_180(ry) if not ry is None else ry,
+            rym=normalize_180(rym) if not rym is None else rym,
+            rx=clamp(rx, -90, 90) if not rx is None else rx,
+            rxm=clamp(rxm, -90, 90) if not rxm is None else rxm,
+        )
         return self
 
     def __str__(self):
@@ -12776,6 +12782,10 @@ class MaterialStates:
 
 class MaterialDefinitions:
     Fancy = 'FANCY'
+    USE_OVERLAY = 'USE_OVERLAY'
+    USE_COLOR_MASK = 'USE_COLOR_MASK'
+    MULTI_COLOR_TINT = 'MULTI_COLOR_TINT'
+    COLOR_BASED = 'COLOR_BASED'
     
 class MaterialFunc:
     Always = 'Always'
@@ -12837,11 +12847,7 @@ def Schemes(type, *args) -> dict:
             return {
                 "folders": [
                     {"name": "Assets", "path": MakePath(args[0], args[1], "assets")},
-                    {"name": args[2], "path": MakePath(args[0], args[1])},
-                    {
-                        "name": "Minecraft Logs",
-                        "path": MakePath(APPDATA, 'Local', 'Packages', 'Microsoft.MinecraftUWP_8wekyb3d8bbwe', 'LocalState', 'logs'),
-                    },
+                    {"name": args[2], "path": MakePath(args[0], args[1])}
                 ]
             }
         case "gitignore":
@@ -13159,14 +13165,7 @@ def Schemes(type, *args) -> dict:
             return {
                 "format_version": GEOMETRY_VERSION,
                 "minecraft:geometry": [
-                    {
-                        "description": {
-                            "identifier": f"geometry.{args[0]}.{args[1]}",
-				            "texture_width": args[2][0],
-				            "texture_height": args[2][1],
-                        },
-                        "bones": [args[3]],
-                    }
+                    
                 ],
             }
         case "render_controller":

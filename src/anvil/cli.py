@@ -1,6 +1,8 @@
+from github import Github
+
 from .packages import *
 from .packages import __version__
-from github import Github
+
 
 @click.group()
 def cli(): pass
@@ -42,7 +44,7 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
     CreateDirectoriesFromTree(project_structure)
     File(f'{project_name}.anvil.py', Schemes('script'), project_name, "w")
 
-    File('.gitignore', Schemes('gitignore'), "w")
+    File('.gitignore', Schemes('gitignore'), project_name, "w")
 
     CONFIG.set('ANVIL', 'COMPANY', namespace.title())
     CONFIG.set('ANVIL', 'NAMESPACE', namespace)
@@ -52,9 +54,9 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
     CONFIG.set('ANVIL', 'PROJECT_DESCRIPTION', f'{CONFIG.get("ANVIL", "DISPLAY_NAME")} Essentials')
     CONFIG.set('ANVIL', 'VANILLA_VERSION', LATEST_BUILD)
     CONFIG.set('ANVIL', 'LAST_CHECK', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    CONFIG.set('ANVIL', 'NAMESPACE_FORMAT', fullns is True)
+    CONFIG.set('ANVIL', 'NAMESPACE_FORMAT', int(fullns is True))
     CONFIG.set('ANVIL', 'BUILD', 'preview' if preview else 'main')
-    CONFIG.set('ANVIL', 'DEBUG', False)
+    CONFIG.set('ANVIL', 'DEBUG', 'false')
 
     File("en_US.lang", Schemes('language', project_name, project_name),MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}','texts'), "w")
     File("en_US.lang", Schemes('language', project_name, project_name),MakePath(project_name,'resource_packs',f'RP_{PASCAL_PROJECT_NAME}','texts'), "w")
@@ -74,6 +76,7 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
         File("world_resource_packs.json", Schemes('world_packs',uuid,version), project_name, "w")
     
     code_wkspc = f'{project_name}.code-workspace'
-
+    os.chdir(project_name)
+    CONFIG.save()
     os.system(f'start {MakePath(BASE_DIR,project_name)}')
     os.system(f'start {MakePath(DESKTOP,code_wkspc)}')

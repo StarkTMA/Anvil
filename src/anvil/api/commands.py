@@ -165,18 +165,20 @@ class CameraShake(Command):
         super()._new_cmd('stop', 'target')
 
 class Summon(Command):
-    def __init__(self, entity, coordinates: coordinates = ('~', '~', '~'), event: str = 'minecraft:entity_spawned', name: str = '', rotation:rotation=('~', '~')):
+    def __init__(self, entity, coordinates: coordinates = ('~', '~', '~'), event: str = 'minecraft:entity_spawned', name: str = '', __rotation:rotation=('~', '~')):
         super().__init__('summon', entity)
-        if not coordinates == ('~', '~', '~'):
-            self._command += f' {" ".join(map(str, coordinates))}'
+        self._command += f' {" ".join(map(str, coordinates))}'
+
         if not event == 'minecraft:entity_spawned':
             self._command += f' {event}'
+
         if not name == '':
             if event == 'minecraft:entity_spawned':
                 self._command += f' {event}'
             self._command += f' "{name}"'
-        if not rotation == ('~', '~'):
-            self._command += f' {" ".join(map(str, rotation))}'
+
+        #if not __rotation == ('~', '~'):
+        #    self._command += f' {" ".join(map(str, rotation))}'
 
 class XP(Command):
     """Adds or removes player experience.
@@ -319,7 +321,7 @@ class Teleport(Command):
             'teleport',
             target,
             ' '.join(map(str, destination)),
-            ' '.join(map(str, rotation)) if not rotation == ('~', '~') else ''
+            ' '.join(map(str, (normalize_180(rotation[0]), rotation[1]))) if not rotation == ('~', '~') else ''
         )
 
 class Event(Command):
