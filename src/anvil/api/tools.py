@@ -389,7 +389,7 @@ class StateManager2():
             'scoreboard players set @s sync 1',
             'scoreboard players set @s game_state 0',
             'scoreboard players set @s game_level 0',
-            commands.Tag().add('@s', 'self_init')
+            commands.Tag('@s').add('self_init')
         ).queue('StateManager/misc')
         # Controls active players count
         self.active_players = Function('active_players').add(
@@ -427,7 +427,7 @@ class StateManager2():
             commands.Effect().clear('@s'),
             commands.Effect().give('@s', Effects.Saturation, 100000, 255, True),
             commands.Effect().give('@s', Effects.Regeneration, 100000, 255, True),
-            commands.XP().remove('@s', '1000L'),
+            commands.XP('@s').remove('1000L'),
             commands.Clear('@s'),
             commands.Gamemode('@s', Gamemodes.Adventure),
             commands.Gamerule().CommandBlockOutput(False),
@@ -491,6 +491,7 @@ class StateManager2():
                 f'scoreboard players set @a[scores={{game_level={level._index}}}] sync 1'
             )
 
+#A complete rewrite to leverage the new commands power
 class StateMachine():
     class _state():
         def __init__(self, index: int, type: str) -> None:
@@ -547,7 +548,7 @@ class StateMachine():
             'scoreboard players set @s player_state 0',
             'scoreboard players set @s game_level 0',
             'scoreboard players set @s sync 1',
-            commands.Tag().add('@s', 'self_init')
+            commands.Tag(Target.S).add('self_init')
         ).queue('StateMachine/misc')
         self.active_players = Function('active_players').add(
             f'scoreboard players set {PROJECT_NAME} active_players 0',
@@ -594,7 +595,7 @@ class TimedFunction():
         self._function_limit = 0
         self._function.add(
             commands.Execute().If.Entity(f'@s[tag=!{self._function_id}]').run(f'scoreboard objectives add {self._function_id} dummy'),
-            commands.Execute().If.Entity(f'@s[tag=!{self._function_id}]').run(commands.Tag().add('@s', self._function_id)),
+            commands.Execute().If.Entity(f'@s[tag=!{self._function_id}]').run(commands.Tag('@s').add(self._function_id)),
             commands.Execute().If.Entity(f'@s[tag={self._function_id}]').run(f'scoreboard players add @s {self._function_id} 1'),
         )
 
@@ -623,8 +624,8 @@ class TimedFunction():
 
     def queue(self, directory: str = ""):
         self._function.add(
-            commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(commands.Tag().remove('@s', self._function_id)),
-            commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(commands.Tag().add('@s', self._function_name)),
+            commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(commands.Tag('@s').remove(self._function_id)),
+            commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(commands.Tag('@s').add(self._function_name)),
             commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(f'scoreboard objectives remove {self._function_id}'),
         )
         self._function.queue(directory)

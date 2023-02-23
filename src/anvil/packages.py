@@ -14,14 +14,13 @@ from fnmatch import fnmatch
 from pprint import pprint
 from typing import NewType, Tuple, overload, Type
 from urllib import request
-
 import click
 import commentjson as json
 import math
+from .api import CONFIG
 from PIL import Image, ImageColor, ImageEnhance, ImageQt
-
 from .__version__ import __version__
-from .submodules.localization import *
+from .api.localization import *
 
 FileExists = lambda path: os.path.exists(path)
 MakePath = lambda *paths: os.path.normpath(
@@ -30,19 +29,23 @@ MakePath = lambda *paths: os.path.normpath(
 
 APPDATA = os.getenv("APPDATA").rstrip("Roaming")
 DESKTOP = MakePath(os.getenv("USERPROFILE"), "Desktop")
-MOLANG_PREFIXES = ["q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp."]
+MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
 
-Seconds = NewType("Seconds", str)
-Molang = NewType("Molang", str)
-coordinate = NewType('coordinate', [float | str])
-coordinates = NewType('tuple(x, y, z)', tuple[coordinate, coordinate, coordinate])
-rotation = NewType('tuple(ry,rx)', tuple[coordinate, coordinate])
-level = NewType('tuple(lm,l)', tuple[float, float])
+MANIFEST_BUILD = [1, 19, 60]
+BLOCK_SERVER_VERSION = "1.19.40"
+ENTITY_SERVER_VERSION = "1.16.0"
+ENTITY_CLIENT_VERSION = "1.10.0"
+BP_ANIMATION_VERSION = "1.10.0"
+RP_ANIMATION_VERSION = "1.8.0"
+ANIMATION_CONTROLLERS_VERSION = "1.10.0"
+SPAWN_RULES_VERSION = "1.8.0"
+GEOMETRY_VERSION = "1.12.0"
+RENDER_CONTROLLER_VERSION = "1.10.0"
+SOUND_DEFINITIONS_VERSION = "1.14.0"
+DIALOGUE_VERSION = "1.18.0"
+FOG_VERSION = "1.16.100"
+MATERIALS_VERSION = "1.0.0"
 
-tick = NewType('Tick', int)
-_range = NewType('[range]', str)
-
-inf = 99999999999
 
 def clamp(value, _min, _max):
     return max(min(_max, value), _min)
@@ -12695,21 +12698,26 @@ class Selector():
         return self
 
     def scores(self, *score : str):
-        self._args(score = score)
+        self._args(score)
         return self
 
-    def tag(self, tag : str):
-        self._args(tag = tag)
+    def tag(self, *tags : str):
+        for tag in tags:
+            self._args(tag = tag)
         return self
 
     def rotation(self, *, ry : rotation = None, rym : rotation = None, rx : rotation = None, rxm : rotation = None):
-        self._args(ry=ry, rym=rym, rx=clamp(rx, -90, 90), rxm=clamp(rxm, -90, 90))
+        self._args(ry=clamp(ry, -180, 180), rym=clamp(rym, -180, 180), rx=clamp(rx, -90, 90), rxm=clamp(rxm, -90, 90))
         return self
 
     def __str__(self):
         if len(self.arguments) > 0:
             self.target += f"[{', '.join(f'{key} = {value}' for key, value in self.arguments.items())}]"
         return self.target
+
+class Anchor:
+    Feet = 'feet'
+    Eyes = 'eyes'
 
 class BlockCategory:
     Construction = "construction"
@@ -12724,25 +12732,66 @@ class BlockMaterial:
     Blend = 'blend'
     AlphaTest = 'alpha_test'
 
-class Anchor:
-    Feet = 'feet'
-    Eyes = 'eyes'
+class CameraShakeType():
+    positional = 'positional'
+    rotational = 'rotational'
+
+class MaskMode():
+    replace = 'replace'
+    masked = 'masked'
+
+class CloneMode():
+    force = 'force'
+    move = 'move'
+    normal = 'normal'
+
+class WeatherSet():
+    Clear = 'clear'
+    Rain = 'rain'
+    Thunder = 'thunder'
+
+class FilterSubject:
+    Block = 'block'
+    Damager = 'damager'
+    Other = 'other'
+    Parent = 'parent'
+    Player = 'player'
+    Self = 'self'
+    Target = 'target'
+
+class FilterOperation:
+    Less = '<'
+    LessEqual = '<='
+    Greater = '>'
+    GreaterEqual = '>='
+    Equals = 'equals'
+    Not = 'not'
+    
+class MaterialStates:
+    EnableStencilTest = 'EnableStencilTest'
+    StencilWrite = 'StencilWrite'
+    InvertCulling = 'InvertCulling'
+    DisableCulling = 'DisableCulling'
+    DisableDepthWrite = 'DisableDepthWrite'
+
+class MaterialDefinitions:
+    Fancy = 'FANCY'
+    
+class MaterialFunc:
+    Always = 'Always'
+    Equal = 'Equal'
+    NotEqual = 'NotEqual'
+    Less = 'Less'
+    Greater = 'Greater'
+    GreaterEqual = 'GreaterEqual'
+    LessEqual = 'LessEqual'
+
+class MaterialOperation:
+    Keep = 'Keep'
+    Replace = 'Replace'
 
 
 def Schemes(type, *args) -> dict:
-    MANIFEST_BUILD = [1, 19, 50]
-    BLOCK_SERVER_VERSION = "1.19.40"
-    ENTITY_SERVER_VERSION = "1.16.0"
-    ENTITY_CLIENT_VERSION = "1.10.0"
-    BP_ANIMATION_VERSION = "1.10.0"
-    RP_ANIMATION_VERSION = "1.8.0"
-    ANIMATION_CONTROLLERS_VERSION = "1.10.0"
-    SPAWN_RULES_VERSION = "1.8.0"
-    GEOMETRY_VERSION = "1.12.0"
-    RENDER_CONTROLLER_VERSION = "1.10.0"
-    SOUND_DEFINITIONS_VERSION = "1.14.0"
-    DIALOGUE_VERSION = "1.18.0"
-    FOG_VERSION = "1.16.100"
     match type:
         # Anvil files
         case "structure":
@@ -12784,18 +12833,6 @@ def Schemes(type, *args) -> dict:
                 f"    #Uncomment package when you're ready to submit it. Pass True as the argument to clear all assets when packaging\n"
                 f"    #ANVIL.package()\n"
             )
-        case "config":
-            return {
-                "COMPANY": args[1].title(),
-                "NAMESPACE": args[0],
-                "PROJECT_NAME": args[2],
-                "DISPLAY_NAME": args[3].replace("_", " ").replace("-", " ").title(),
-                "PROJECT_DESCRIPTION": f'{args[4].replace("_", " ").replace("-", " ").title()}',
-                "VANILLA_VERSION": args[5],
-                "LAST_CHECK": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "NAMESPACE_FORMAT": int(args[6]),
-                "BUILD": args[7],
-            }
         case "code-workspace":
             return {
                 "folders": [
@@ -12807,6 +12844,139 @@ def Schemes(type, *args) -> dict:
                     },
                 ]
             }
+        case "gitignore":
+            return """
+            # Byte-compiled / optimized / DLL files
+            __pycache__/
+            *.py[cod]
+            *$py.class
+            
+            # C extensions
+            *.so
+            
+            # Distribution / packaging
+            .Python
+            build/
+            develop-eggs/
+            dist/
+            downloads/
+            eggs/
+            .eggs/
+            lib/
+            lib64/
+            parts/
+            sdist/
+            var/
+            wheels/
+            pip-wheel-metadata/
+            share/python-wheels/
+            *.egg-info/
+            .installed.cfg
+            *.egg
+            MANIFEST
+            
+            # PyInstaller
+            #  Usually these files are written by a python script from a template
+            #  before PyInstaller builds the exe, so as to inject date/other infos into it.
+            *.manifest
+            *.spec
+            
+            # Installer logs
+            pip-log.txt
+            pip-delete-this-directory.txt
+            
+            # Unit test / coverage reports
+            htmlcov/
+            .tox/
+            .nox/
+            .coverage
+            .coverage.*
+            .cache
+            nosetests.xml
+            coverage.xml
+            *.cover
+            *.py,cover
+            .hypothesis/
+            .pytest_cache/
+            
+            # Translations
+            *.mo
+            *.pot
+            
+            # Django stuff:
+            *.log
+            local_settings.py
+            db.sqlite3
+            db.sqlite3-journal
+            
+            # Flask stuff:
+            instance/
+            .webassets-cache
+            
+            # Scrapy stuff:
+            .scrapy
+            
+            # Sphinx documentation
+            docs/_build/
+            
+            # PyBuilder
+            target/
+            
+            # Jupyter Notebook
+            .ipynb_checkpoints
+            
+            # IPython
+            profile_default/
+            ipython_config.py
+            
+            # pyenv
+            .python-version
+            
+            # pipenv
+            #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+            #   However, in case of collaboration, if having platform-specific dependencies or dependencies
+            #   having no cross-platform support, pipenv may install dependencies that don't work, or not
+            #   install all needed dependencies.
+            #Pipfile.lock
+            
+            # PEP 582; used by e.g. github.com/David-OConnor/pyflow
+            __pypackages__/
+            
+            # Celery stuff
+            celerybeat-schedule
+            celerybeat.pid
+            
+            # SageMath parsed files
+            *.sage.py
+            
+            # Environments
+            .env
+            .venv
+            env/
+            venv/
+            ENV/
+            env.bak/
+            venv.bak/
+            
+            # Spyder project settings
+            .spyderproject
+            .spyproject
+            
+            # Rope project settings
+            .ropeproject
+            
+            # mkdocs documentation
+            /site
+            
+            # mypy
+            .mypy_cache/
+            .dmypy.json
+            dmypy.json
+            
+            # Pyre type checker
+            .pyre/
+            
+            """
 
         #Core
         case "manifest_bp":
@@ -12926,7 +13096,8 @@ def Schemes(type, *args) -> dict:
             return {}
         case "sound":
             return {args[0]: {"category": args[1], "sounds": []}}
-
+        case "materials":
+            return {"materials": {"version": MATERIALS_VERSION}}
         #Actors
         case "client_description":
             return {
@@ -12989,8 +13160,12 @@ def Schemes(type, *args) -> dict:
                 "format_version": GEOMETRY_VERSION,
                 "minecraft:geometry": [
                     {
-                        "description": {"identifier": f"geometry.{args[0]}.{args[1]}"},
-                        "bones": [args[2]],
+                        "description": {
+                            "identifier": f"geometry.{args[0]}.{args[1]}",
+				            "texture_width": args[2][0],
+				            "texture_height": args[2][1],
+                        },
+                        "bones": [args[3]],
                     }
                 ],
             }
@@ -12998,10 +13173,10 @@ def Schemes(type, *args) -> dict:
             return {
                 f"controller.render.{args[0]}.{args[1]}.{args[2]}": {
                     "arrays": {"textures": {}, "geometries": {}},
-                    "materials": [{"*": "Material.default"}],
+                    "materials": [],
                     "geometry": {},
                     "textures": [],
-                    "part_visibility": [{"*": True}],
+                    "part_visibility": [],
                 }
             }
         case "render_controllers":
@@ -13109,12 +13284,12 @@ def Defaults(type, *args):
             }
         case "bp_block_v1":
             return {
-                "format_version": "1.10.0",
+                "format_version": "1.12.0",
                 "minecraft:block": {
                     "description": {
                         "identifier": f"{args[0]}:{args[1]}",
                         "is_experimental": False,
-                        "register_to_creative_menu": True,
+                        "register_to_creative_menu": True
                     },
                     "components": {},
                 },
@@ -13181,8 +13356,6 @@ def Defaults(type, *args):
                     "conditions": [],
                 },
             }
-        case "materials":
-            return {"materials": {"version": "1.0.0"}}
         case "music_definitions":
             return {}
         case "language":

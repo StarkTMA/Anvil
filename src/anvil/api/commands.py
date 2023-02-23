@@ -1,24 +1,5 @@
 from ..packages import *
 from ..core import ANVIL, RawTextConstructor
-from .actors import Entity
-
-class CameraShakeType():
-    positional = 'positional'
-    rotational = 'rotational'
-
-class MaskMode():
-    replace = 'replace'
-    masked = 'masked'
-
-class CloneMode():
-    force = 'force'
-    move = 'move'
-    normal = 'normal'
-
-class WeatherSet():
-    Clear = 'clear'
-    Rain = 'rain'
-    Thunder = 'thunder'
 
 class Command:
     def __init__(self, prefix: str, *commands) -> None:
@@ -191,7 +172,9 @@ class Summon(Command):
         if not event == 'minecraft:entity_spawned':
             self._command += f' {event}'
         if not name == '':
-            self._command += f' {name}'
+            if event == 'minecraft:entity_spawned':
+                self._command += f' {event}'
+            self._command += f' "{name}"'
         if not rotation == ('~', '~'):
             self._command += f' {" ".join(map(str, rotation))}'
 
@@ -294,15 +277,16 @@ class Fog(Command):
         return self
 
 class Tag(Command):
-    def __init__(self) -> None:
+    def __init__(self, target: str) -> None:
         super().__init__('tag')
+        self._target = target
 
-    def add(self, target: str, tag: str):
-        super()._new_cmd(target, 'add', tag)
+    def add(self, tag: str):
+        super()._new_cmd(self._target, 'add', tag)
         return self
 
-    def remove(self, target: str, tag: str):
-        super()._new_cmd(target, 'remove', tag)
+    def remove(self, tag: str):
+        super()._new_cmd(self._target, 'remove', tag)
         return self
 
 class Clear(Command):
@@ -327,7 +311,7 @@ class Effect(Command):
 
 class Gamemode(Command):
     def __init__(self, target: str, gamemode: Gamemodes):
-        super().__init__('gamemode', target, gamemode)
+        super().__init__('gamemode', gamemode, target)
 
 class Teleport(Command):
     def __init__(self, target, destination: coordinates, rotation: rotation = ('~', '~')) -> None:
@@ -339,7 +323,7 @@ class Teleport(Command):
         )
 
 class Event(Command):
-    def __init__(self, target, event: str) -> None:
+    def __init__(self, target: Target, event: event) -> None:
         super().__init__('event', 'entity',target, event)
         
 class Function(Command):

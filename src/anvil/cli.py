@@ -20,12 +20,14 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
 
     global COMPANY
     global LATEST_BUILD
-    PASCAL_PROJECT_NAME = ''.join(x for x in project_name.title().replace('_', '').replace('-', '') if x.isupper())
+    global DISPLAY_NAME
             
     COMPANY = namespace.title()
+    DISPLAY_NAME = project_name.title().replace("-"," ").replace("_"," ")
+    PASCAL_PROJECT_NAME = ''.join(x for x in DISPLAY_NAME if x.isupper())
     github = Github().get_repo('Mojang/bedrock-samples')
 
-    click.echo(f'Initiating {project_name.title().replace("-"," ").replace("_"," ")}')
+    click.echo(f'Initiating {DISPLAY_NAME}')
     if preview:
         target = 'Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe'
         LATEST_BUILD = json.loads(github.get_contents('version.json', 'preview').decoded_content.decode())['latest']['version']
@@ -39,17 +41,21 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
     project_structure = Schemes('structure', project_name)
     CreateDirectoriesFromTree(project_structure)
     File(f'{project_name}.anvil.py', Schemes('script'), project_name, "w")
-    File("config.json", Schemes(
-        'config', 
-        namespace,
-        namespace,
-        project_name,
-        project_name,
-        f'{project_name}_essentials',
-        LATEST_BUILD, 
-        fullns is True, 
-        'preview' if preview else 'main'
-    ), project_name, "w")
+
+    File('.gitignore', Schemes('gitignore'), "w")
+
+    CONFIG.set('ANVIL', 'COMPANY', namespace.title())
+    CONFIG.set('ANVIL', 'NAMESPACE', namespace)
+    CONFIG.set('ANVIL', 'PROJECT_NAME', project_name)
+    CONFIG.set('ANVIL', 'DISPLAY_NAME', DISPLAY_NAME)
+    CONFIG.set('ANVIL', 'PASCAL_PROJECT_NAME', PASCAL_PROJECT_NAME)
+    CONFIG.set('ANVIL', 'PROJECT_DESCRIPTION', f'{CONFIG.get("ANVIL", "DISPLAY_NAME")} Essentials')
+    CONFIG.set('ANVIL', 'VANILLA_VERSION', LATEST_BUILD)
+    CONFIG.set('ANVIL', 'LAST_CHECK', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    CONFIG.set('ANVIL', 'NAMESPACE_FORMAT', fullns is True)
+    CONFIG.set('ANVIL', 'BUILD', 'preview' if preview else 'main')
+    CONFIG.set('ANVIL', 'DEBUG', False)
+
     File("en_US.lang", Schemes('language', project_name, project_name),MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}','texts'), "w")
     File("en_US.lang", Schemes('language', project_name, project_name),MakePath(project_name,'resource_packs',f'RP_{PASCAL_PROJECT_NAME}','texts'), "w")
     File("manifest.json", Schemes('manifest_bp'),MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}'), "w")
@@ -68,5 +74,6 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
         File("world_resource_packs.json", Schemes('world_packs',uuid,version), project_name, "w")
     
     code_wkspc = f'{project_name}.code-workspace'
+
     os.system(f'start {MakePath(BASE_DIR,project_name)}')
     os.system(f'start {MakePath(DESKTOP,code_wkspc)}')

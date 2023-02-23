@@ -1,5 +1,23 @@
 from click import style
-import shutil
+from typing import NewType
+
+Seconds = NewType("Seconds", str)
+Molang = NewType("Molang", str)
+coordinate = NewType('coordinate', [float | str])
+coordinates = NewType('tuple(x, y, z)', tuple[coordinate, coordinate, coordinate])
+rotation = NewType('tuple(ry,rx)', tuple[coordinate, coordinate])
+level = NewType('tuple(lm,l)', tuple[float, float])
+Component = NewType('Component',str)
+Identifier = NewType('Identifier',str)
+event = NewType('Event',str)
+
+tick = NewType('Tick', int)
+_range = NewType('[range]', str)
+
+inf = 99999999999
+
+
+
 
 red = lambda text : style(text, "red")
 green = lambda text : style(text, "green")
@@ -29,7 +47,7 @@ FUNCTION_ERROR = lambda type,function: f'{ERROR}: ANVIL.{type}() accepts Functio
 DIALOGUE_MAX_BUTTONS = lambda scene_tag, buttons_len : f'{ERROR}: The Dialogue scene {scene_tag} has {buttons_len} buttons, The maximum allowed is 6.'
 
 # General
-MISSING_FILE = lambda type, file, folder : f'{ERROR}: A {green(type)} with the name {green(file)} cannot be found in {green(folder)}.'
+MISSING_FILE = lambda type, file, folder : f'{ERROR}: The {green(type)} with the name {green(file)} cannot be found in {green(folder)}.'
 CHECK_UPDATE = green('Checking for updates...')
 MODULE = f'{cyan(f"Anvil")} - by Yasser Benfoguhal.'
 VERSION = lambda version : f'Version {version}'

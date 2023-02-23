@@ -1,5 +1,8 @@
 from ..packages import *
-from ..core import NAMESPACE_FORMAT, NAMESPACE, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle, components
+from .. import Query, Variable, Math
+from anvil.api import components
+from anvil.api.components import Filter
+from anvil.core import NAMESPACE_FORMAT, NAMESPACE, PASCAL_PROJECT_NAME, ANVIL, Exporter, _MinecraftDescription, _SoundDefinition, Particle
 
 __all__ = [ 'Entity', 'Attachable' ]
 
@@ -117,7 +120,7 @@ class _ActorClientDescription(_ActorDescription):
     @property
     def dummy(self):
         self._is_dummy = True
-        File('dummy.geo.json', Schemes('geometry', NAMESPACE_FORMAT, 'dummy',{"name": "root", "pivot": [0, 0, 0], "locators": {"root": [0, 0, 0]}}), MakePath('assets', 'models', self._type), 'w')
+        File('dummy.geo.json', Schemes('geometry', NAMESPACE_FORMAT, 'dummy', (8, 8), {"name": "root", "pivot": [0, 0, 0], "locators": {"root": [0, 0, 0]}}), MakePath('assets', 'models', self._type), 'w')
         CreateImage('dummy', 8, 8, (0, 0, 0, 0), MakePath('assets', 'textures', self._type))
         self.geometry('dummy', 'dummy')
         self.texture('dummy', 'dummy')
@@ -160,8 +163,9 @@ class _ActorClientDescription(_ActorDescription):
         return self
 
     def init_vars(self, **vars):
-        for var, value in vars.items():
-            self._description['description']['scripts']['initialize'].append(f'v.{var}={value};')
+        for k, v in vars.items():
+            Variable._set_var(k)
+            self._description['description']['scripts']['initialize'].append(f'v.{k}={v};')
         return self
     
     def scale(self, scale: str = '1'):
@@ -435,7 +439,10 @@ class _EntityServer(_Entity):
         return self._animations.add_animation(animation_name, loop)
 
     def init_vars(self, **vars):
-        self._vars.extend([f'v.{var}={value}' for var, value in vars.items()])
+        for k, v in vars.items():
+            Variable._set_var(k)
+            self._vars.extend([f'v.{k}={v}'])
+
         return self
     
     def event(self, event_name: str):
@@ -588,6 +595,8 @@ class _RenderController():
     
     @property
     def _export(self):
+        if len(self._controller[self.controller_identifier]['materials']) == 0:
+            self.material('*', 'default')
         return self._controller
 
 class _RenderControllers(Exporter):
@@ -1558,7 +1567,7 @@ class _SpawnRule(Exporter):
 
 # Events
 class _BaseEvent():
-    def __init__(self, event_name: str):
+    def __init__(self, event_name: event):
         self._event_name = event_name
         self._event = {self._event_name: {
             'add': {'component_groups':[]},
@@ -1575,7 +1584,7 @@ class _BaseEvent():
         self._event[self._event_name]['remove']['component_groups'].extend(component_groups)
         return self
 
-    def trigger(self, event: str):
+    def trigger(self, event: event):
         self._event[self._event_name]['trigger'] = event
         return self
 
@@ -1611,7 +1620,7 @@ class _Randomize(_BaseEvent):
         self._event.update({'remove': {"component_groups": [*component_groups]}})
         return self
 
-    def trigger(self, event):
+    def trigger(self, event: event):
         self._event.update({'trigger': event})
         return self
 
@@ -1657,11 +1666,11 @@ class _Sequence(_BaseEvent):
         self._event.update({'remove': {"component_groups": [*component_groups]}})
         return self
 
-    def trigger(self, event):
+    def trigger(self, event: event):
         self._event.update({'trigger': event})
         return self
 
-    def filters(self, filter: dict):
+    def filters(self, filter: Filter):
         self._event.update({'filters': filter})
         return self
 
@@ -1669,6 +1678,7 @@ class _Sequence(_BaseEvent):
         self._event['set_property'].update({
             f'{NAMESPACE}:{property}':value
         })
+        return self
     @property
     def sequence(self):
         return self._parent_class.sequence
@@ -1688,7 +1698,7 @@ class _Sequence(_BaseEvent):
         return self._event
 
 class _Event(_BaseEvent):
-    def __init__(self, event_name: str):
+    def __init__(self, event_name: event):
         super().__init__(event_name)
         self._sequences : list[_Sequence] = []
         self._randomizes : list[_Randomize] = []
@@ -1753,11 +1763,11 @@ class _Properties():
     def __init__(self):
         self._properties = {}
 
-    def enum(self, name : str, range : tuple[str], *, default: str, client_sync : bool = False):
+    def enum(self, name : str, values : tuple[str], *, default: str, client_sync : bool = False):
         self._properties[f'{NAMESPACE}:{name}'] = {
                 "type": "enum", 
                 'default': default,
-                'range': range,
+                'values': values,
                 'client_sync': client_sync
             }
         return self
@@ -1800,13 +1810,8 @@ class Entity():
 
     def __init__(self, identifier: str) -> None:
         self._identifier = identifier
-        self._is_vanilla = False
-        if identifier in Vanilla.Entities._list:
-            self._is_vanilla = True
-
-        self._namespace_format = NAMESPACE_FORMAT
-        if self._is_vanilla:
-            self._namespace_format = 'minecraft'
+        self._is_vanilla = identifier in Vanilla.Entities._list
+        self._namespace_format = 'minecraft' if self._is_vanilla else NAMESPACE_FORMAT
 
         self._validate_name(self._identifier)
         self._server = _EntityServer(self._identifier, self._is_vanilla)
@@ -1835,6 +1840,10 @@ class Entity():
     @property
     def identifier(self):
         return f'{self._namespace_format}:{self._identifier}'
+    
+    @property
+    def name(self):
+        return self._identifier
 
     def queue(self, directory: str = None):
         display_name = RawText(self._identifier)[1]

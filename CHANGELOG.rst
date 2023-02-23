@@ -2,16 +2,52 @@
 Changelog
 =========
 
+Version 0.3.0
+=============
+
+[New]
+-----
+
+ - Added a basic Materials class.
+ - Molang variables can now access initiated variables, else throw errors.
+ - Added more queries.
+ 
+[Bug Fixes]
+-----------
+ - 'enum' properties use the 'values' key instead of 'range'.
+
+Version 0.2.6
+=============
+ - Switch to use ConfigParser for the configuration instead of a simple json file.
+ - Added basic Filters class with few filters.
+ - Added `EnvironmentSensor` class.
+ - Removed automatic imports from `anvil.__init__` , now requires a manual import from `anvil.api` module.
+ - Added `DistanceFromCamera` to Query class.
+ - Updated the Query, Variable and Math classes methods to @staticmethods and @classmethods.
+ - Removed the requirement of using a block geometry in Blocks as the 16x cube is used by default.
+ - Removed the oldBlock class.
+ - Molang now support native comparison operators (==, !=, <, >, <=, >=), wrapping in strings is no longer necessary. f'{Query.DistanceFromCamera} <= {sensor_range}' is that same as Query.DistanceFromCamera <= sensor_range
+
+Version 0.2.5
+=============
+ - Sounds ``load_on_low_memory`` is set to `False` by default.
+ - UI `text_alignment` use `UITextAlignment` now instead of `UIAnchor`.
+
+Version 0.2.4
+=============
+ - Expanded Molang queries.
+ - Some improvements to the structure.
+
 Version 0.2.3
-===========
+=============
  - Updated the StateManager to use the new Execute commands.
  - Added Entity properties.
- - Added the Holiday Blocks, Blocks components including Experimentals, Events and Event Triggers.
+ - Added the Holiday Blocks, Blocks components including Experimental, Events and Event Triggers.
  - Added a Score to clock function.
  - Added some queries.
 
 Version 0.2.2
-===========
+=============
  - Updated to Python 3.11.
  - Moved away from `setup.py` to `pyproject.toml`.
  - Updated the Dialogue class.
@@ -20,11 +56,11 @@ Version 0.2.2
  - Updated commands classes.
 
 Version 0.2.1
-===========
+=============
  - 
  
 Version 0.2.0
-===========
+=============
  - Updated the Exporter to include file extension formats.
  - Added a `TerrainTextures()` class to manage block textures.
  - Added Music class to manage music, accessible through `ANVIL.music()`.
@@ -45,7 +81,7 @@ Version 0.2.0
  -
 
 Version 0.1.0
-===========
+=============
  - Fixed incorrect names for White Dye, Black Dye,
  - Updated boats icons.
  - Finished adding the new spawn rules conditions.
@@ -61,5 +97,5 @@ Version 0.1.0
  -
  
 Version 0.0.0 -> 0.1.0
-===========
+======================
 - Untracked
