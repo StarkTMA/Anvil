@@ -1,0 +1,6 @@
+=========
+To Do
+=========
+
+- Update commands **clone**, **execute**, **fill**, **setblock** and **testforblock** to no logner use the data fiels and repalce  with block states.
+- Update volume selectors to accept floats.

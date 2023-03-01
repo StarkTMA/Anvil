@@ -2,6 +2,30 @@
 Changelog
 =========
 
+Version 0.3.2
+=============
+[Anvil]
+--------
+- Added a public to-do list.
+- Added a basic `Animation()` class to create animations within Anvil.
+
+[Molang]
+--------
+- Added `HeadXRotation`, `HeadYRotation`, `IsLocalPlayer`, `IsItemNameAny` queries.
+- Values negation is now supported, `-Query.HeadXRotation`.
+- Arithmitic operations now return a str wrapped in brackets, this is to avoid unintended behaviour that may arise because of expressions like this:
+    `q.life_time >= v.timer + 2` => `q.life_time >= (v.timer + 2)`
+
+[Commands]
+----------
+- Expanded commands to now support nbt.
+- Added the Give command class with its nbt components.
+- Added the `family` argument to the Target Selector.
+
+[Blocks]
+--------
+- Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
+
 Version 0.3.1
 =============
 [New]

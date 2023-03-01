@@ -117,7 +117,7 @@ class Exporter():
                 }
             },
             'rp_animation': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'animations'),
+                'path': MakePath('assets', 'animations'),
                 'extension': {
                     0: '.rp_anim.json',
                     1: '.animation.json'
@@ -678,26 +678,34 @@ class _Materials(Exporter):
 
 
 class _Bone():
-    def __init__(self, name, pivot) -> None:
+    def __init__(self, name, pivot, parent) -> None:
         self._bone = {
 	    	"name": name,
 	    	"pivot": pivot,
+            'parent': parent if not parent is None else {},
 	    	"cubes": []
 	    }
     
     def add_cube(self, 
                  origin: list[float, float, float], 
                  size: list[float, float, float], 
-                 uv: list[int, int], 
+                 uv: list[int, int],
                  pivot: list[float, float, float] = (0,0,0), 
                  rotation: list[float, float, float] = (0,0,0),
                  inflate: float = 0,
                  mirror: bool = False,
-                 reset: bool = False):
+                 reset: bool = False,
+                 uv_face: list[str, list[int, int], list[int, int]] = None
+                 ):
         self._bone['cubes'].append({
             'origin': origin,
             'size': size,
-            'uv': uv,
+            'uv': uv if uv_face is None else {
+                uv_face[0]: {
+                    'uv': uv_face[1],
+                    'uv_size': uv_face[2]
+                }
+            },
             'pivot': pivot if not pivot == (0,0,0) else {},
             'rotation': rotation if not rotation == (0,0,0) else {},
             'inflate': inflate if not inflate == 0 else {},
@@ -713,6 +721,7 @@ class _Bone():
 
 class _Geo():
     def __init__(self, geometry_name: str, texture_size: list[int, int] = (16,16)) -> None:
+        self._geo_name = geometry_name
         self._geo = {
             "description": {
                 "identifier": f"geometry.{NAMESPACE}.{geometry_name}",
@@ -729,8 +738,8 @@ class _Geo():
         self._geo['description']['visible_bounds_offset'] = visible_bounds_offset
         return self
 
-    def add_bone(self, name: str, pivot: list[int, int, int]):
-        bone = _Bone(name, pivot)
+    def add_bone(self, name: str, pivot: list[int, int, int], parent: str = None):
+        bone = _Bone(name, pivot, parent)
         self._bones.append(bone)
         return bone
 
@@ -739,6 +748,61 @@ class _Geo():
         for bone in self._bones:
             self._geo['bones'].append(bone._queue)
         return self._geo
+
+
+class _Anim_Bone():
+    def __init__(self, name) -> None:
+        self._name = name
+        self._bone = {
+	    	self._name: {}
+	    }
+    
+    def rotation(self, rotation: list[float, float, float] = (0,0,0),):
+        self._bone[self._name].update({
+            'rotation': rotation
+        })
+        return self
+    
+    def position(self, position: list[float, float, float] = (0,0,0),):
+        self._bone[self._name].update({
+            'position': position
+        })
+        return self
+    
+    def scale(self, scale: Union[list[float, float, float], float, Molang] = 1):
+        self._bone[self._name].update({
+            'scale': scale if scale != 1 else {}
+        })
+        return self
+
+    @property
+    def _queue(self):
+        return self._bone
+
+
+class _Anims():
+    def __init__(self, name, animation_name: str, loop: bool = False) -> None:
+        self._name = name
+        self._anim_name = animation_name
+        self._loop = loop
+        self._anim = {
+            f"animation.{NAMESPACE}.{self._name}.{self._anim_name}": {
+                "loop": self._loop,
+                "bones":{}
+            }
+        }
+        self._bones : list[_Anim_Bone] = []
+    
+    def add_bone(self, name: str):
+        bone = _Anim_Bone(name)
+        self._bones.append(bone)
+        return bone
+
+    @property
+    def _queue(self):
+        for bone in self._bones:
+            self._anim[f"animation.{NAMESPACE}.{self._name}.{self._anim_name}"]['bones'].update(bone._queue)
+        return self._anim
 
 # =============================================
 class SkinPack():
@@ -840,19 +904,23 @@ class Fonts():
         if character_size % 16 != 0:
             RaiseError(UNSUPPORTED_FONT_SIZE)
 
-        if not FileExists(MakePath('assets', 'textures', 'ui', f'{font_name}.ttf')):
-            RaiseError(MISSING_FILE('font', f'{font_name}.ttf', MakePath('assets', 'textures', 'ui')))
-
         font_size = round(character_size*.8)
+
+        try:
+            font = ImageFont.truetype(f'assets/textures/ui/{font_name}.ttf', font_size)
+        except FileNotFoundError:
+            font = ImageFont.truetype(f'assets/textures/ui/{font_name}.otf', font_size)
+        except:
+            font = ImageFont.truetype(f'{font_name}.ttf', font_size)
+
         image_size = character_size*16
         self._image = Image.new("RGBA", (image_size, image_size))
-        font = ImageFont.truetype(f'assets/textures/ui/{font_name}.ttf', font_size)
         backup_font = ImageFont.truetype('arial.ttf', font_size)
         default8 = u'ÀÁÂÈÉÊÍÓÔÕÚßãõǧÎ¹ŒœŞşŴŵŽê§©      !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉ§ÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴├├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■	'
         offset = [0, 0]
         for i in default8:
             d1 = ImageDraw.Draw(self._image)
-            if font.getsize(i) == (27, 29):
+            if font.getsize(i) == font.getsize('□'):
                 d1.text((offset[0]*character_size+3, offset[1]*character_size), i, fill =(255, 255, 255), font=backup_font, align='left')
             else:
                 d1.text((offset[0]*character_size+3, offset[1]*character_size), i, fill =(255, 255, 255), font=font, align='left')
@@ -938,10 +1006,46 @@ class Geometry(Exporter):
         if len(self._geos) == 0:
             RaiseError(f'The Geometry file {self._name} does not have any geometry.')
 
-        self.content(Schemes('geometry'))
+        if FileExists(MakePath('assets', 'models', type, f'{self._name}.geo.json')):
+            with open(MakePath('assets', 'models', type, f'{self._name}.geo.json'), 'r') as file:
+                self.content(commentjson.load(file))
+        else:
+            self.content(Schemes('geometry'))
+
         for g in self._geos:
+            for geo in self._content['minecraft:geometry']:
+                if f"geometry.{NAMESPACE}.{g._geo_name}" == geo['description']['identifier']:
+                    self._content['minecraft:geometry'].remove(geo)
+
             self._content['minecraft:geometry'].append(g._queue)
         super().queue(type)
+        super()._export()
+
+
+class Animation(Exporter):
+    def __init__(self, name: str) -> None:
+        super().__init__(name, 'rp_animation')
+        self._name = name
+        self._anims : list[_Anims] = []
+    
+    def add_animation(self, animation_name: str, loop: bool = False):
+        geo = _Anims(self._name, animation_name, loop)
+        self._anims.append(geo)
+        return geo
+    
+    def queue(self):
+        if len(self._anims) == 0:
+            RaiseError(f'The Animation file {self._name} does not have any animations.')
+        path = MakePath('assets', 'animations', f'{self._name}.{self._valids[self._type]["extension"][NAMESPACE_FORMAT_BIT]}.json')
+        if FileExists(path):
+            with open(path, 'r') as file:
+                self.content(commentjson.load(file))
+        else:
+            self.content(Schemes('rp_animations'))
+
+        for a in self._anims:
+            self._content['animations'].update(a._queue)
+        super().queue()
         super()._export()
 
 # Core Functionalities
@@ -1419,7 +1523,7 @@ class Item():
                 File('item_texture.json', Schemes('item_texture', PROJECT_NAME),
                      f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures', 'w')
             with open(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/item_texture.json', 'r') as file:
-                data = json.load(file)
+                data = commentjson.load(file)
                 data['texture_data'][f'{self._identifier}'] = {'textures': []}
                 data['texture_data'][f'{self._identifier}']['textures'].append(
                     MakePath('textures/items', directory, self._identifier))
@@ -1666,7 +1770,7 @@ class Anvil():
         LAST_CHECK = CONFIG.get('ANVIL', 'LAST_CHECK')
         NAMESPACE_FORMAT_BIT = int(CONFIG.get('ANVIL', 'NAMESPACE_FORMAT'))
         BUILD = CONFIG.get('ANVIL', 'BUILD')
-        DEBUG = CONFIG.get('ANVIL', 'DEBUG')
+        DEBUG = CONFIG.get('ANVIL', 'DEBUG') == 'True'
         NAMESPACE_FORMAT = NAMESPACE + f'.{PROJECT_NAME}' * NAMESPACE_FORMAT_BIT
 
 
@@ -1927,7 +2031,7 @@ class Anvil():
             File("manifest.json", Schemes('manifest_rp'),
                  f"resource_packs/RP_{PASCAL_PROJECT_NAME}", "w")
             with open(f"resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json", 'r') as file:
-                data = json.load(file)
+                data = commentjson.load(file)
                 uuid = data["header"]["uuid"]
                 version = data["header"]["version"]
                 File("world_resource_packs.json", Schemes(
@@ -1935,7 +2039,7 @@ class Anvil():
             File("manifest.json", Schemes('manifest_bp'),
                  f"behavior_packs/BP_{PASCAL_PROJECT_NAME}", "w")
             with open(f"./behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json", 'r') as file:
-                data = json.load(file)
+                data = commentjson.load(file)
                 uuid = data["header"]["uuid"]
                 version = data["header"]["version"]
                 File("world_behavior_packs.json", Schemes(

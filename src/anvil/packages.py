@@ -11,11 +11,12 @@ import zipfile
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import NewType, Tuple, Type, overload
+from typing import NewType, Tuple, Type, overload, Union
 from urllib import request
 
 import click
-import commentjson as json
+import commentjson as commentjson
+import json as json
 from PIL import Image, ImageColor, ImageDraw, ImageEnhance, ImageFont, ImageQt
 
 from .__version__ import __version__
@@ -23,16 +24,15 @@ from .api import CONFIG
 from .api.localization import *
 
 FileExists = lambda path: os.path.exists(path)
-MakePath = lambda *paths: os.path.normpath(
-    os.path.join(*[x for x in paths if type(x) is str])
-).replace("\\", "/")
+MakePath = lambda *paths: os.path.normpath(os.path.join(*[x for x in paths if type(x) is str])).replace("\\", "/")
+normalize_180 = lambda angle : (angle + 540) % 360 - 180
 
 APPDATA = os.getenv("APPDATA").rstrip("Roaming")
 DESKTOP = MakePath(os.getenv("USERPROFILE"), "Desktop")
 MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
 
 MANIFEST_BUILD = [1, 19, 60]
-BLOCK_SERVER_VERSION = "1.19.40"
+BLOCK_SERVER_VERSION = "1.19.60"
 ENTITY_SERVER_VERSION = "1.19.0"
 ENTITY_CLIENT_VERSION = "1.10.0"
 BP_ANIMATION_VERSION = "1.10.0"
@@ -46,32 +46,11 @@ DIALOGUE_VERSION = "1.18.0"
 FOG_VERSION = "1.16.100"
 MATERIALS_VERSION = "1.0.0"
 
-normalize_180 = lambda angle : (angle + 540) % 360 - 180
-
-def clamp(value, _min, _max):
-    return max(min(_max, value), _min)
-
-class LootPoolType:
-    Empty = "empty"
-    Item = "item"
-    LootTable = "loot_table"
-
-class Population:
-    Animal = "animal"
-    UnderwaterAnimal = "underwater_animal"
-    Monster = "monster"
-    Ambient = "ambient"
-
-class Difficulty:
-    Peaceful = "peaceful"
-    Easy = "easy"
-    Normal = "normal"
-    Hard = "hard"
+# Updated on 28-02-2023
+# Latest Updated release: 1.19.63
+# Latest Updated preview: 1.19.70.24
 
 class Vanilla:
-    # Updated on 21-10-2022
-    # Latest Updated release: 1.19.41.01
-    # Latest Updated preview: 1.19.50.22
     class Entities:
         _list = [
             "armor_stand",
@@ -157,6 +136,16 @@ class Vanilla:
             "llama_spit",
             "thrown_trident",
         ]
+        # 1.19.70.23
+        # Updated on 28-02-2023
+        Sniffer = "sniffer"
+        # 1.19.50.21
+        # Updated on 21-10-2022
+        Camel = "camel"
+        # 1.19.0
+        # Updated on 11-07-2022
+        Warden = "warden"
+        #Entites
         ArmorStand = "armor_stand"
         Arrow = "arrow"
         Axolotl = "axolotl"
@@ -239,17 +228,362 @@ class Vanilla:
         Zombie = "zombie"
         Boat = "boat"
         Snowball = "snowball"
-        # 1.19.0
-        # Updated on 11-07-2022
-        _list.append("warden")
-        Warden = "warden"
-        # 1.19.50.21
-        # Updated on 21-10-2022
-        _list.append("camel")
-        Camel = "camel"
 
     class BlocksItems:
         _list = {
+            # 1.19.70.23
+            # Updated on 28-02-2023
+            "minecraft:brush": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Brush",
+                "icon_path": "icons/brush.png",
+                "identifier": "minecraft:brush",
+            },
+            "minecraft:decorated_pot": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Decorated Pot",
+                "icon_path": "icons/decorated_pot.png",
+                "identifier": "minecraft:decorated_pot",
+            },
+            "minecraft:arms_up_pottery_shard": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Arms Up Pottery Shard",
+                "icon_path": "icons/arms_up_pottery_shard.png",
+                "identifier": "minecraft:arms_up_pottery_shard",
+            },
+            "minecraft:skull_pottery_shard": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Skull Pottery Shard",
+                "icon_path": "icons/skull_pottery_shard.png",
+                "identifier": "minecraft:skull_pottery_shard",
+            },
+            "minecraft:prize_pottery_shard": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Prize Pottery Shard",
+                "icon_path": "icons/prize_pottery_shard.png",
+                "identifier": "minecraft:prize_pottery_shard",
+            },
+            "minecraft:archer_pottery_shard": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Archer Pottery Shard",
+                "icon_path": "icons/archer_pottery_shard.png",
+                "identifier": "minecraft:archer_pottery_shard",
+            },
+            "minecraft:suspicious_sand": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Suspicious Sand",
+                "icon_path": "icons/suspicious_sand.png",
+                "identifier": "minecraft:suspicious_sand",
+            },
+            "minecraft:tourchflower": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Tourchflower",
+                "icon_path": "icons/tourchflower.png",
+                "identifier": "minecraft:tourchflower",
+            },
+            "minecraft:tourchflower_seeds": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Tourchflower Seeds",
+                "icon_path": "icons/tourchflower_seeds.png",
+                "identifier": "minecraft:tourchflower_seeds",
+            },
+            
+            # 1.19.60.20
+            # Updated on 27-02-2023
+            "minecraft:bamboo_block": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Block of Bamboo",
+                "icon_path": "icons/bamboo_block.png",
+                "identifier": "minecraft:bamboo_block",
+            },
+            "minecraft:stripped_bamboo_block": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Block of Stripped Bamboo",
+                "icon_path": "icons/stripped_bamboo_block.png",
+                "identifier": "minecraft:stripped_bamboo_block",
+            },
+            # 1.19.50.21
+            # Updated on 21-10-2022
+            # Wood
+            "minecraft:bamboo_planks": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Planks",
+                "icon_path": "icons/bamboo_planks.png",
+                "identifier": "minecraft:bamboo_planks",
+            },
+            "minecraft:bamboo_mosaic": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Mosaic",
+                "icon_path": "icons/bamboo_mosaic.png",
+                "identifier": "minecraft:bamboo_mosaic",
+            },
+            "minecraft:bamboo_fence": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Fence",
+                "icon_path": "icons/bamboo_fence.png",
+                "identifier": "minecraft:bamboo_fence",
+            },
+            "minecraft:bamboo_fence_gate": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Fence Gate",
+                "icon_path": "icons/bamboo_fence_gate.png",
+                "identifier": "minecraft:bamboo_fence_gate",
+            },
+            "minecraft:bamboo_stairs": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Stairs",
+                "icon_path": "icons/bamboo_stairs.png",
+                "identifier": "minecraft:bamboo_stairs",
+            },
+            "minecraft:bamboo_door": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Door",
+                "icon_path": "icons/bamboo_door.png",
+                "identifier": "minecraft:bamboo_door",
+            },
+            "minecraft:bamboo_trapdoor": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Trapdoor",
+                "icon_path": "icons/bamboo_trapdoor.png",
+                "identifier": "minecraft:bamboo_trapdoor",
+            },
+            "minecraft:bamboo_slab": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Slab",
+                "icon_path": "icons/bamboo_slab.png",
+                "identifier": "minecraft:bamboo_slab",
+            },
+            "minecraft:bamboo_mosaic_slab": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Mosaic Slab",
+                "icon_path": "icons/bamboo_mosaic_slab.png",
+                "identifier": "minecraft:bamboo_mosaic_slab",
+            },
+            "minecraft:bamboo_mosaic_stairs": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Mosaic Stairs",
+                "icon_path": "icons/bamboo_mosaic_stairs.png",
+                "identifier": "minecraft:bamboo_mosaic_stairs",
+            },
+            "minecraft:bamboo_boat": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Raft",
+                "icon_path": "icons/bamboo_boat.png",
+                "identifier": "minecraft:bamboo_boat",
+            },
+            "minecraft:bamboo_chest_boat": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Raft with Chest",
+                "icon_path": "icons/bamboo_chest_boat.png",
+                "identifier": "minecraft:bamboo_chest_boat",
+            },
+            "minecraft:bamboo_button": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Button",
+                "icon_path": "icons/bamboo_button.png",
+                "identifier": "minecraft:bamboo_button",
+            },
+            "minecraft:bamboo_pressure_plate": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Pressure Plate",
+                "icon_path": "icons/bamboo_pressure_plate.png",
+                "identifier": "minecraft:bamboo_pressure_plate",
+            },
+            "minecraft:bamboo_sign": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Sign",
+                "icon_path": "icons/bamboo_sign.png",
+                "identifier": "minecraft:bamboo_sign",
+            },
+            # Spawn Egg
+            "minecraft:camel_spawn_egg": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Camel Spawn Egg",
+                "icon_path": "icons/camel_spawn_egg.png",
+                "identifier": "minecraft:camel_spawn_egg",
+            },
+            # Bookshelf
+            "minecraft:chiseled_bookshelf": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Chiseled Bookshelf",
+                "icon_path": "icons/chiseled_bookshelf.png",
+                "identifier": "minecraft:chiseled_bookshelf",
+            },
+            # Hanging Signs
+            "minecraft:bamboo_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Hanging Sign",
+                "icon_path": "icons/bamboo_hanging_sign.png",
+                "identifier": "minecraft:bamboo_hanging_sign",
+            },
+            "minecraft:mangrove_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Mangrove Hanging Sign",
+                "icon_path": "icons/mangrove_hanging_sign.png",
+                "identifier": "minecraft:mangrove_hanging_sign",
+            },
+            "minecraft:warped_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Bamboo Hanging Sign",
+                "icon_path": "icons/warped_hanging_sign.png",
+                "identifier": "minecraft:warped_hanging_sign",
+            },
+            "minecraft:crimson_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Crimson Hanging Sign",
+                "icon_path": "icons/crimson_hanging_sign.png",
+                "identifier": "minecraft:crimson_hanging_sign",
+            },
+            "minecraft:dark_oak_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Dark Oak Hanging Sign",
+                "icon_path": "icons/dark_oak_hanging_sign.png",
+                "identifier": "minecraft:dark_oak_hanging_sign",
+            },
+            "minecraft:acacia_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Acasia Hanging Sign",
+                "icon_path": "icons/acacia_hanging_sign.png",
+                "identifier": "minecraft:acacia_hanging_sign",
+            },
+            "minecraft:jungle_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Jungle Hanging Sign",
+                "icon_path": "icons/jungle_hanging_sign.png",
+                "identifier": "minecraft:jungle_hanging_sign",
+            },
+            "minecraft:birch_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Birch Hanging Sign",
+                "icon_path": "icons/birch_hanging_sign.png",
+                "identifier": "minecraft:birch_hanging_sign",
+            },
+            "minecraft:spruce_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Spruce Hanging Sign",
+                "icon_path": "icons/spruce_hanging_sign.png",
+                "identifier": "minecraft:spruce_hanging_sign",
+            },
+            "minecraft:oak_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Oak Hanging Sign",
+                "icon_path": "icons/oak_hanging_sign.png",
+                "identifier": "minecraft:oak_hanging_sign",
+            },
             # Planks
             "minecraft:oak_planks": {
                 "creative": False,
@@ -12199,259 +12533,27 @@ class Vanilla:
                 "identifier": "minecraft:end_gateway",
             },
         }
-        # 1.19.50.21
-        # Updated on 21-10-2022
-        _list.update(
-            {
-                # Wood
-                "minecraft:bamboo_planks": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Planks",
-                    "icon_path": "icons/bamboo_planks.png",
-                    "identifier": "minecraft:bamboo_planks",
-                },
-                "minecraft:bamboo_mosaic": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Mosaic",
-                    "icon_path": "icons/bamboo_mosaic.png",
-                    "identifier": "minecraft:bamboo_mosaic",
-                },
-                "minecraft:bamboo_fence": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Fence",
-                    "icon_path": "icons/bamboo_fence.png",
-                    "identifier": "minecraft:bamboo_fence",
-                },
-                "minecraft:bamboo_fence_gate": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Fence Gate",
-                    "icon_path": "icons/bamboo_fence_gate.png",
-                    "identifier": "minecraft:bamboo_fence_gate",
-                },
-                "minecraft:bamboo_stairs": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Stairs",
-                    "icon_path": "icons/bamboo_stairs.png",
-                    "identifier": "minecraft:bamboo_stairs",
-                },
-                "minecraft:bamboo_door": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Door",
-                    "icon_path": "icons/bamboo_door.png",
-                    "identifier": "minecraft:bamboo_door",
-                },
-                "minecraft:bamboo_trapdoor": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Trapdoor",
-                    "icon_path": "icons/bamboo_trapdoor.png",
-                    "identifier": "minecraft:bamboo_trapdoor",
-                },
-                "minecraft:bamboo_slab": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Slab",
-                    "icon_path": "icons/bamboo_slab.png",
-                    "identifier": "minecraft:bamboo_slab",
-                },
-                "minecraft:bamboo_mosaic_slab": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Mosaic Slab",
-                    "icon_path": "icons/bamboo_mosaic_slab.png",
-                    "identifier": "minecraft:bamboo_mosaic_slab",
-                },
-                "minecraft:bamboo_mosaic_stairs": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Mosaic Stairs",
-                    "icon_path": "icons/bamboo_mosaic_stairs.png",
-                    "identifier": "minecraft:bamboo_mosaic_stairs",
-                },
-                "minecraft:bamboo_boat": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Boat",
-                    "icon_path": "icons/bamboo_boat.png",
-                    "identifier": "minecraft:bamboo_boat",
-                },
-                "minecraft:bamboo_chest_boat": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Chest Boat",
-                    "icon_path": "icons/bamboo_chest_boat.png",
-                    "identifier": "minecraft:bamboo_chest_boat",
-                },
-                "minecraft:bamboo_button": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Button",
-                    "icon_path": "icons/bamboo_button.png",
-                    "identifier": "minecraft:bamboo_button",
-                },
-                "minecraft:bamboo_pressure_plate": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Pressure Plate",
-                    "icon_path": "icons/bamboo_pressure_plate.png",
-                    "identifier": "minecraft:bamboo_pressure_plate",
-                },
-                "minecraft:bamboo_sign": {
-                    "creative": False,
-                    "experimental": True,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Sign",
-                    "icon_path": "icons/bamboo_sign.png",
-                    "identifier": "minecraft:bamboo_sign",
-                },
-                # Spawn Egg
-                "minecraft:camel_spawn_egg": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Camel Spawn Egg",
-                    "icon_path": "icons/camel_spawn_egg.png",
-                    "identifier": "minecraft:camel_spawn_egg",
-                },
-                # Bookshelf
-                "minecraft:chiseled_bookshelf": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Chiseled Bookshelf",
-                    "icon_path": "icons/chiseled_bookshelf.png",
-                    "identifier": "minecraft:chiseled_bookshelf",
-                },
-                # Hanging Signs
-                "minecraft:bamboo_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Hanging Sign",
-                    "icon_path": "icons/bamboo_hanging_sign.png",
-                    "identifier": "minecraft:bamboo_hanging_sign",
-                },
-                "minecraft:mangrove_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Mangrove Hanging Sign",
-                    "icon_path": "icons/mangrove_hanging_sign.png",
-                    "identifier": "minecraft:mangrove_hanging_sign",
-                },
-                "minecraft:warped_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Bamboo Hanging Sign",
-                    "icon_path": "icons/warped_hanging_sign.png",
-                    "identifier": "minecraft:warped_hanging_sign",
-                },
-                "minecraft:crimson_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Crimson Hanging Sign",
-                    "icon_path": "icons/crimson_hanging_sign.png",
-                    "identifier": "minecraft:crimson_hanging_sign",
-                },
-                "minecraft:dark_oak_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Dark Oak Hanging Sign",
-                    "icon_path": "icons/dark_oak_hanging_sign.png",
-                    "identifier": "minecraft:dark_oak_hanging_sign",
-                },
-                "minecraft:acacia_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Acasia Hanging Sign",
-                    "icon_path": "icons/acacia_hanging_sign.png",
-                    "identifier": "minecraft:acacia_hanging_sign",
-                },
-                "minecraft:jungle_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Jungle Hanging Sign",
-                    "icon_path": "icons/jungle_hanging_sign.png",
-                    "identifier": "minecraft:jungle_hanging_sign",
-                },
-                "minecraft:birch_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Birch Hanging Sign",
-                    "icon_path": "icons/birch_hanging_sign.png",
-                    "identifier": "minecraft:birch_hanging_sign",
-                },
-                "minecraft:spruce_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Spruce Hanging Sign",
-                    "icon_path": "icons/spruce_hanging_sign.png",
-                    "identifier": "minecraft:spruce_hanging_sign",
-                },
-                "minecraft:oak_hanging_sign": {
-                    "creative": True,
-                    "experimental": False,
-                    "dimension": "overworld",
-                    "data": 0,
-                    "display_name": "Oak Hanging Sign",
-                    "icon_path": "icons/oak_hanging_sign.png",
-                    "identifier": "minecraft:oak_hanging_sign",
-                },
-            }
-        )
+
+
+def clamp(value, _min, _max):
+    return max(min(_max, value), _min)
+
+class LootPoolType:
+    Empty = "empty"
+    Item = "item"
+    LootTable = "loot_table"
+
+class Population:
+    Animal = "animal"
+    UnderwaterAnimal = "underwater_animal"
+    Monster = "monster"
+    Ambient = "ambient"
+
+class Difficulty:
+    Peaceful = "peaceful"
+    Easy = "easy"
+    Normal = "normal"
+    Hard = "hard"
 
 class SoundCategory:
     list = ["ambient", "block", "player", "neutral", "hostile", "music", "record", "ui"]
@@ -12682,6 +12784,10 @@ class Selector():
         self._args(name = name)
         return self
 
+    def family(self, family : str):
+        self._args(family = family)
+        return self
+
     def count(self, count : int):
         self._args(c = count)
         return self
@@ -12737,6 +12843,20 @@ class BlockMaterial:
     DoubleSided = 'double_sided'
     Blend = 'blend'
     AlphaTest = 'alpha_test'
+
+class BlockFaces:
+    Up = "up"
+    Down = "down"
+    North = "north"
+    South = "south"
+    East = "east"
+    West = "west"
+    Side = "side"
+    All = "all"
+
+class BlockDescriptor(dict):
+    def __init__(self, name: str, tags: Molang, **states):
+        super().__init__(name = name, tags = tags, states = states)
 
 class CameraShakeType():
     positional = 'positional'
@@ -13647,16 +13767,13 @@ def CopyFolder(old_dir: str, new_dir: str):
         os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True
     )
 
-
 def File(name: str, content, directory: str, mode: str, *args):
     CreateDirectory(directory)
     type = name.split(".")[-1]
     out_content = ""
     file_content = content
     stamp = f"Generated with Anvil@StarkTMA {__version__}"
-    time = datetime.now(datetime.now().astimezone().tzinfo).strftime(
-        "%d-%m-%Y %H:%M:%S %z"
-    )
+    time = datetime.now(datetime.now().astimezone().tzinfo).strftime("%d-%m-%Y %H:%M:%S %z")
     # copyright=f'Property of {COMPANY}'
     copyright = ""
     path = os.path.normpath(os.path.join(directory, name))

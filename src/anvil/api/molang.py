@@ -33,14 +33,17 @@ class _molang(str):
         return _molang(f"{self} || {other}")
 
     def __add__(self, other):
-        return _molang(f"{self} + {other}")
+        return _molang(f"({self} + {other})")
     
     def __sub__(self, other):
-        return _molang(f"{self} - {other}")
+        return _molang(f"({self} - {other})")
     
     def __mul__(self, other):
-        return _molang(f"{self} * {other}")
-
+        return _molang(f"({self} * {other})")
+    
+    def __neg__(self):
+        return _molang(f"-{self}")
+    
     def _query(self, qtype, query, *arguments):
         a = f'{qtype}.{query}'
         if len(arguments):
@@ -67,7 +70,6 @@ class Query(_molang):
     def Variant(self):
         return self._query(self, 'q', 'variant')
 
-
     @classmethod
     @property
     def IsInUI(self):
@@ -91,7 +93,6 @@ class Query(_molang):
     def InRange(self, value: float, min: float, max: float):
         return self._query(self, 'q', 'in_range', value, min, max)
 
-
     @classmethod
     def MovementDirection(self, axis: int):
         return self._query(self, 'q', 'movement_direction', axis)
@@ -101,14 +102,26 @@ class Query(_molang):
         return self._query(self, 'q', 'property', f'{NAMESPACE}:{property}')
 
     @classmethod
-    @property
-    def BodyYRotation(self):
-        return self._query(self, 'q', 'body_y_rotation')
+    def HasProperty(self, property: str):
+        return self._query(self, 'q', 'has_property', f'{NAMESPACE}:{property}')
 
     @classmethod
     @property
     def BodyXRotation(self):
         return self._query(self, 'q', 'body_x_rotation')
+
+    @classmethod
+    @property
+    def BodyYRotation(self):
+        return self._query(self, 'q', 'body_y_rotation')
+
+    @classmethod
+    def HeadXRotation(self, head_number: int = 0):
+        return self._query(self, 'q', 'head_x_rotation', head_number)
+
+    @classmethod
+    def HeadYRotation(self, head_number: int = 0):
+        return self._query(self, 'q', 'head_y_rotation', head_number)
 
     @classmethod
     @property
@@ -155,7 +168,15 @@ class Query(_molang):
     def IsSneaking(self):
         return self._query(self, 'q', 'is_sneaking')
 
-
+    @classmethod
+    @property
+    def IsLocalPlayer(self):
+        return self._query(self, 'q', 'is_local_player')
+    
+    @classmethod
+    def IsItemNameAny(self, slot: Slots, index: int = 0, *items: str):
+        return self._query(self, 'q', 'is_item_name_any', slot, index, ','.join(items))
+    
 
 class Variable(_molang):
     def __init__(self) -> None:
@@ -178,7 +199,8 @@ class Variable(_molang):
     @property
     def IsPaperdoll(self):
         return self._query(self, 'v', 'is_paperdoll')
-    
+
+
 class Math(_molang):
     def __init__(self) -> None:
         super().__init__('math')
@@ -296,6 +318,10 @@ class Math(_molang):
     def trunc(self, value):
         return self._query(self, 'math', 'trunc', value)
 
+
+def molang_conditions(condition, expression, expression2):
+    return f'{condition} ? {expression} : ({expression2})'
+    
 
 q = Query
 v = Variable

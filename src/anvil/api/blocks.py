@@ -4,9 +4,12 @@ from ..packages import *
 from .actors import _Components
 from .components import _component
 
-__all__ = ['Block', 'VanillaBlockTexture', 'BlockGeometry',
-           'BlockMaterialInstance', 'BlockMapColor', 'BlockLootTable', 'BlockLightEmission', 'BlockLightDampening',
-           'BlockFriction', 'BlockFlammable', 'BlockDestructibleByMining', 'BlockDestructibleByExplosion']
+__all__ = ['Block', 'VanillaBlockTexture',
+           'BlockDestructibleByExplosion', 'BlockDestructibleByMining', 
+           'BlockFlammable', 'BlockFriction', 'BlockLightDampening', 'BlockLightEmission',
+           'BlockLootTable', 'BlockMapColor', 'BlockMaterialInstance', 'BlockGeometry', 'BlockCollisionBox',
+           'BlockCraftingTable', 'BlockPlacementFilter'
+           ]
 
 # Experimental
 class _BlockSelectionBox(_component): 
@@ -30,13 +33,6 @@ class _BlockDisplayName(_component):
         super().__init__('display_name')
         self.SetValue(display_name)
 
-
-class _BlockCraftingTable(_component):
-    def __init__(self, table_name: str, *crafting_tags: str) -> None:
-        """Makes your block into a custom crafting table."""
-        super().__init__('collision_box')
-        self.AddField('table_name', table_name)
-        self.AddField('crafting_tags', crafting_tags)
 
 # Probably removed
 
@@ -135,6 +131,47 @@ class BlockGeometry(_component):
         """The description identifier of the geometry file to use to render this block."""
         super().__init__('geometry')
         self.SetValue(f'geometry.{NAMESPACE_FORMAT}.{geometry_name}')
+
+
+class BlockCollisionBox(_component): 
+    def __init__(self, size: coordinates, origin: coordinates) -> None:
+        """Defines the area of the block that collides with entities."""
+        super().__init__('collision_box')
+        if size == (0, 0, 0):
+            self.SetValue(False)
+        else:
+            self.AddField('size', size)
+            self.AddField('origin', origin)
+
+
+class BlockCraftingTable(_component):
+    def __init__(self, table_name: str, *crafting_tags: str) -> None:
+        """Makes your block into a custom crafting table."""
+        super().__init__('crafting_table')
+        self.AddField('table_name', table_name)
+        self.AddField('crafting_tags', crafting_tags)
+
+
+class BlockPlacementFilter(_component):
+    """By default, custom blocks can be placed anywhere and do not have placement restrictions unless you specify them in this component."""
+
+    def __init__(self) -> None:
+        super().__init__('placement_filter')
+        self.AddField('conditions', [])
+
+    def add_condition(self, allowed_faces: list[BlockFaces], block_filter: list[Union[BlockDescriptor, str]]):
+        if BlockFaces.Side in allowed_faces:
+            allowed_faces.remove(BlockFaces.North)
+            allowed_faces.remove(BlockFaces.South)
+            allowed_faces.remove(BlockFaces.East)
+            allowed_faces.remove(BlockFaces.West)
+        if BlockFaces.All in allowed_faces:
+            allowed_faces = [BlockFaces.All]
+        self[self._component_namespace]['conditions'].append({
+            "allowed_faces": allowed_faces,
+            "block_filter": block_filter,
+        })
+        return self
 
 #Blocks
 class _BlockServerDescription(_MinecraftDescription):

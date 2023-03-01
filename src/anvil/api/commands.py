@@ -5,6 +5,7 @@ class Command:
     def __init__(self, prefix: str, *commands) -> None:
         self._prefix = prefix
         self._command: str = f'{prefix}'
+        self._components = {}
         for cmd in commands:
             self._command += f' {cmd}'
             
@@ -19,8 +20,14 @@ class Command:
             self._command += f' {cmd}'
         return self
 
+    def _add_nbt_component(self, component: dict):
+        self._components.update(component)
+        return self
+
     def __str__(self):
         self._command = self._command.lstrip('/')
+        if len(self._components) > 0:
+            self._command += ' ' + json.dumps(self._components)
         return self._command
 
 #special
@@ -41,13 +48,13 @@ class TitleRaw(Command):
     def __init__(self) -> None:
         super().__init__('titleraw')
 
-    def title(self, target: str = '@a' or '@p' or '@s' or '@e'):
+    def title(self, target: Target):
         return _RawText('title', target)
 
-    def subtitle(self, target: str = '@a' or '@p' or '@s' or '@e'):
+    def subtitle(self, target: Target):
         return _RawText('subtitle', target)
 
-    def actionbar(self, target: str = '@a' or '@p' or '@s' or '@e'):
+    def actionbar(self, target: Target):
         return _RawText('actionbar', target)
 
 class Tellraw(Command):
@@ -323,6 +330,13 @@ class Teleport(Command):
             ' '.join(map(str, destination)),
             ' '.join(map(str, (normalize_180(rotation[0]), rotation[1]))) if not rotation == ('~', '~') else ''
         )
+    def Facing(self, poistion: coordinates):
+        super()._append_cmd('facing', ' '.join(map(str, poistion)))
+        return self
+    
+    def FacingEntity(self, target: str):
+        super()._append_cmd('facing', target)
+        return self
 
 class Event(Command):
     def __init__(self, target: Target, event: event) -> None:
@@ -331,3 +345,25 @@ class Event(Command):
 class Function(Command):
     def __init__(self, path) -> None:
         super().__init__('function', path)
+
+class Give(Command):
+    def __init__(self, target: Target, item: str, amount: int = 1, data: int = 0) -> None:
+        super().__init__('give', target, item, amount, data)
+    
+    def can_place_on(self, *blocks):
+        self._add_nbt_component({'minecraft:can_place_on':{'blocks':blocks}})
+        return self
+    
+    def can_destroy(self, *blocks):
+        self._add_nbt_component({'minecraft:can_destroy':{'blocks':blocks}})
+        return self
+    
+    def item_lock(self, *, lock_in_slot: bool = False, lock_in_inventory: bool = False):
+        if lock_in_slot or lock_in_inventory:
+            self._add_nbt_component({'minecraft:item_lock':{'mode': 'lock_in_slot' if lock_in_slot else 'lock_in_inventory'}})
+        return self
+    
+    @property
+    def keep_on_death(self):
+        self._add_nbt_component({'minecraft:keep_on_death':{}})
+        return self

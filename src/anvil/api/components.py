@@ -59,6 +59,14 @@ class Filter:
     def is_block(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('is_block', subject, operator, None, value)
     
+    @classmethod
+    def is_visible(self, value: bool, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('is_visible', subject, operator, None, value)
+    
+    @classmethod
+    def is_target(self, value: bool, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('is_target', subject, operator, None, value)
+    
     #Properties
     
     @classmethod
@@ -80,6 +88,10 @@ class Filter:
     @classmethod
     def has_property(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('has_property', subject, operator, None, f'{NAMESPACE}:{value}')
+
+    @classmethod
+    def has_component(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('has_component', subject, operator, None, value)
 
 class _component(dict):
     def __init__(self, component_name) -> None:
@@ -731,7 +743,7 @@ class NearestAttackableTarget(_component):
             must_see: bool = False,
             must_see_forget_duration: float = 3.0,
             persist_time: float = 0.0,
-            reevaluate_description: bool = False,
+            
             reselect_targets: bool = False,
             scan_interval: int = 10,
             set_persistent: bool = False,
@@ -758,8 +770,6 @@ class NearestAttackableTarget(_component):
             self.AddField('must_see_forget_duration', must_see_forget_duration)
         if not persist_time == 0.0:
             self.AddField('persist_time', persist_time)
-        if reevaluate_description:
-            self.AddField('reevaluate_description', reevaluate_description)
         if reselect_targets:
             self.AddField('reselect_targets', reselect_targets)
         if not scan_interval == 10:
@@ -779,12 +789,79 @@ class NearestAttackableTarget(_component):
         self.AddField('priority', priority)
         return self
 
-    def add_target(self, filters: Filter, must_see: bool = False, max_dist: int = 32):
+    def add_target(self, filters: Filter, must_see: bool = False, max_dist: int = 32, reevaluate_description: bool = False,):
         # empty dicts will be removed at compilation
         self[self._component_namespace]['entity_types'].append({
             "filters": filters,
             "must_see": must_see if must_see else {},
-            "max_dist": max_dist if max_dist != max_dist else {}
+            "max_dist": max_dist if max_dist != max_dist else {},
+            "reevaluate_description": reevaluate_description if reevaluate_description else {}
+        })
+        return self
+
+class NearestPrioritizedAttackableTarget(_component):
+    def __init__(
+            self,
+            attack_interval: int = 0,
+            attack_interval_min: int = 0,
+            attack_owner: bool = False,
+            must_reach: bool = False,
+            must_see: bool = False,
+            must_see_forget_duration: float = 3.0,
+            persist_time: float = 0.0,
+            
+            reselect_targets: bool = False,
+            scan_interval: int = 10,
+            set_persistent: bool = False,
+            target_invisible_multiplier: float = 0.7,
+            target_search_height: float = -0.1,
+            target_sneak_visibility_multiplier: float = 0.8,
+            within_radius: float = 0.0,
+        ) -> None:
+        """Allows an entity to attack the closest target within a given subset of specific target types."""
+        super().__init__('behavior.nearest_prioritized_attackable_target')
+        self.AddField('entity_types', [])
+        
+        if not attack_interval == 0:
+            self.AddField('attack_interval', attack_interval)
+        if not attack_interval_min == 0:
+            self.AddField('attack_interval_min', attack_interval_min)
+        if attack_owner:
+            self.AddField('attack_owner', attack_owner)
+        if must_reach:
+            self.AddField('must_reach', must_reach)
+        if must_see:
+            self.AddField('must_see', must_see)
+        if not must_see_forget_duration == 3.0:
+            self.AddField('must_see_forget_duration', must_see_forget_duration)
+        if not persist_time == 0.0:
+            self.AddField('persist_time', persist_time)
+        if reselect_targets:
+            self.AddField('reselect_targets', reselect_targets)
+        if not scan_interval == 10:
+            self.AddField('scan_interval', scan_interval)
+        if set_persistent:
+            self.AddField('set_persistent', set_persistent)
+        if not target_invisible_multiplier == 0.7:
+            self.AddField('target_invisible_multiplier', target_invisible_multiplier)
+        if not target_search_height == -0.1:
+            self.AddField('target_search_height', target_search_height)
+        if not target_sneak_visibility_multiplier == 0.8:
+            self.AddField('target_sneak_visibility_multiplier', target_sneak_visibility_multiplier)
+        if not within_radius == 0.0:
+            self.AddField('within_radius', within_radius)
+
+    def priority(self, priority):
+        self.AddField('priority', priority)
+        return self
+
+    def add_target(self, filters: Filter, must_see: bool = False, max_dist: int = 32, reevaluate_description: bool = False,):
+        # empty dicts will be removed at compilation
+        self[self._component_namespace]['entity_types'].append({
+            "filters": filters,
+            "must_see": must_see if must_see else {},
+            "max_dist": max_dist if max_dist != max_dist else {},
+            "reevaluate_description": reevaluate_description if reevaluate_description else {}
         })
         return self
 
