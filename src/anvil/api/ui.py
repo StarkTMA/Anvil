@@ -527,6 +527,7 @@ class _UIScreen(Exporter):
         self._ignored_title_texts = []
         self._ignored_actionbar_texts = []
         self.do_not_shorten
+        
 
     def add_element(
         self,
@@ -613,7 +614,9 @@ class _UIScreen(Exporter):
         for element in self._elements:
             copy_textures(element)
             self._content.update(element.queue)
-        return super().queue(directory)
+        
+        if self._content != {"namespace": self.namespace,}:
+            return super().queue(directory)
 
 
 class UI:
@@ -624,25 +627,13 @@ class UI:
             super().__init__("hud_screen", "hud", anvil_animation, variables)
             # Disable HUD
             self.root_panel = self.add_element("root_panel")
-            self.root_panel.binding.binding_name(
-                "#hud_title_text_string"
-            ).binding_name_override("#text")
-            self.root_panel.binding.binding_type(
-                UIBindingType.View
-            ).source_property_name("$anvil.hud_visible").target_property_name(
-                "#visible"
-            )
+            self.root_panel.binding.binding_name("#hud_title_text_string").binding_name_override("#text")
+            self.root_panel.binding.binding_type(UIBindingType.View).source_property_name("$anvil.hud_visible").target_property_name("#visible")
 
             self.hud_title_text = self.add_element("hud_title_text")
-            self.hud_title_text.binding.binding_name(
-                "#hud_title_text_string"
-            ).binding_name_override("#text")
-            self.hud_title_text.binding.binding_name(
-                "#hud_subtitle_text_string"
-            ).binding_name_override("#subtext")
-            self.hud_title_text.binding.binding_type(
-                UIBindingType.View
-            ).source_property_name("$anvil.title.bool").target_property_name("#visible")
+            self.hud_title_text.binding.binding_name("#hud_title_text_string").binding_name_override("#text")
+            self.hud_title_text.binding.binding_name("#hud_subtitle_text_string").binding_name_override("#subtext")
+            self.hud_title_text.binding.binding_type(UIBindingType.View).source_property_name("$anvil.title.bool").target_property_name("#visible")
 
             self.hud_actionbar_text = self.add_element("hud_actionbar_text")
             self.hud_actionbar_text.visible("$anvil.actionbar.bool")
@@ -651,16 +642,11 @@ class UI:
             anvil_element = self.add_element("hud_content")
             # TO DO:
             # Add a modifications controlling class
-            anvil_element.binding.binding_name("#hud_visible").binding_name_override(
-                "#visible"
-            ).binding_type(UIBindingType.Global)
+            anvil_element.binding.binding_name("#hud_visible").binding_name_override("#visible").binding_type(UIBindingType.Global)
             anvil_element.modification.insert_front("anvil@anvil_hud.test_hud")
             variables.add_variable("$anvil.show.text", f"{NAMESPACE}:show")
             variables.add_variable("$anvil.hide.text", f"{NAMESPACE}:hide")
-            self._ignored_title_texts = [
-                "(#text = $anvil.show.text)",
-                "(#text = $anvil.hide.text)",
-            ]
+            self._ignored_title_texts = ["(#text = $anvil.show.text)","(#text = $anvil.hide.text)",]
             self._ignored_actionbar_texts = []
 
         def disable_mouse(self):
@@ -1384,6 +1370,10 @@ class UI:
         return screen
 
     def queue(self):
+        self.anvil_screen._variables.add_variable('$anvil.empty.text', '')
+        self.anvil_screen._ignored_actionbar_texts.append(
+            '(text = $anvil.empty.text)'
+        )
         # Manage Titles, Subtitles and actionbars
         ignored_title_texts = self.hud_screen._ignored_title_texts
         ignored_title_texts.extend(self.anvil_screen._ignored_title_texts)

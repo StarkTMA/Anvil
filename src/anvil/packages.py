@@ -32,7 +32,7 @@ DESKTOP = MakePath(os.getenv("USERPROFILE"), "Desktop")
 MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
 
 MANIFEST_BUILD = [1, 19, 60]
-BLOCK_SERVER_VERSION = "1.19.60"
+BLOCK_SERVER_VERSION = "1.19.70"
 ENTITY_SERVER_VERSION = "1.19.0"
 ENTITY_CLIENT_VERSION = "1.10.0"
 BP_ANIMATION_VERSION = "1.10.0"
@@ -46,11 +46,12 @@ DIALOGUE_VERSION = "1.18.0"
 FOG_VERSION = "1.16.100"
 MATERIALS_VERSION = "1.0.0"
 
-# Updated on 28-02-2023
-# Latest Updated release: 1.19.63
-# Latest Updated preview: 1.19.70.24
+# Updated on 14-03-2023
+# Latest Updated release: 1.19.70.02
+# Latest Updated preview: 1.19.80.20
 
 class Vanilla:
+    
     class Entities:
         _list = [
             "armor_stand",
@@ -231,6 +232,188 @@ class Vanilla:
 
     class BlocksItems:
         _list = {
+            # 1.19.80.20
+            # Updated on 08-03-2023
+            "minecraft:cherry_boat": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Raft",
+                "icon_path": "icons/cherry_boat.png",
+                "identifier": "minecraft:cherry_boat",
+            },
+            "minecraft:cherry_button": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Button",
+                "icon_path": "icons/cherry_button.png",
+                "identifier": "minecraft:cherry_button",
+            },
+            "minecraft:cherry_chest_boat": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Raft with Chest",
+                "icon_path": "icons/cherry_chest_boat.png",
+                "identifier": "minecraft:cherry_chest_boat",
+            },
+            "minecraft:cherry_door": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Door",
+                "icon_path": "icons/cherry_door.png",
+                "identifier": "minecraft:cherry_door",
+            },
+            "minecraft:cherry_fence": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Fence",
+                "icon_path": "icons/cherry_fence.png",
+                "identifier": "minecraft:cherry_fence",
+            },
+            "minecraft:cherry_fence_gate": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Fence Gate",
+                "icon_path": "icons/cherry_fence_gate.png",
+                "identifier": "minecraft:cherry_fence_gate",
+            },
+            "minecraft:cherry_hanging_sign": {
+                "creative": True,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Hanging Sign",
+                "icon_path": "icons/cherry_hanging_sign.png",
+                "identifier": "minecraft:cherry_hanging_sign",
+            },
+            "minecraft:cherry_leaves": {
+                "creative": False,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Leaves",
+                "icon_path": "icons/cherry_leaves.png",
+                "identifier": "minecraft:cherry_leaves",
+            },
+            "minecraft:cherry_log": {
+                "creative": False,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Log",
+                "icon_path": "icons/cherry_log.png",
+                "identifier": "minecraft:cherry_log",
+            },
+            "minecraft:cherry_planks": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Planks",
+                "icon_path": "icons/cherry_planks.png",
+                "identifier": "minecraft:cherry_planks",
+            },
+            "minecraft:cherry_pressure_plate": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Pressure Plate",
+                "icon_path": "icons/cherry_pressure_plate.png",
+                "identifier": "minecraft:cherry_pressure_plate",
+            },
+            "minecraft:cherry_sapling": {
+                "creative": False,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Sapling",
+                "icon_path": "icons/cherry_sapling.png",
+                "identifier": "minecraft:cherry_sapling",
+            },
+            "minecraft:cherry_sign": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Sign",
+                "icon_path": "icons/cherry_sign.png",
+                "identifier": "minecraft:cherry_sign",
+            },
+            "minecraft:cherry_slab": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Slab",
+                "icon_path": "icons/cherry_slab.png",
+                "identifier": "minecraft:cherry_slab",
+            },
+            "minecraft:cherry_stairs": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Stairs",
+                "icon_path": "icons/cherry_stairs.png",
+                "identifier": "minecraft:cherry_stairs",
+            },
+            "minecraft:cherry_trapdoor": {
+                "creative": False,
+                "experimental": True,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Cherry Trapdoor",
+                "icon_path": "icons/cherry_trapdoor.png",
+                "identifier": "minecraft:cherry_trapdoor",
+            },
+            "minecraft:cherry_wood": {
+                "creative": False,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Oak Wood",
+                "icon_path": "icons/cherry_wood.png",
+                "identifier": "minecraft:cherry_wood",
+            },
+            "minecraft:stripped_cherry_log": {
+                "creative": False,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Stripped Cherry Log",
+                "icon_path": "icons/stripped_cherry_log.png",
+                "identifier": "minecraft:stripped_cherry_log",
+            },
+            "minecraft:stripped_cherry_wood": {
+                "creative": False,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Stripped Cherry Wood",
+                "icon_path": "icons/stripped_cherry_wood.png",
+                "identifier": "minecraft:stripped_cherry_wood",
+            },
+            "minecraft:pink_petals": {
+                "creative": False,
+                "experimental": False,
+                "dimension": "overworld",
+                "data": 0,
+                "display_name": "Pink Petals",
+                "icon_path": "icons/pink_petals.png",
+                "identifier": "minecraft:pink_petals",
+            },
             # 1.19.70.23
             # Updated on 28-02-2023
             "minecraft:brush": {
@@ -12692,6 +12875,11 @@ class Gamemodes:
     Default = 'default'
     Survival = 'survival'
     Spectator = 'spectator'
+    
+    A = Adventure
+    C = Creative
+    D = Default
+    S = Survival
 
 class Style:
     Black : str = '§0'
@@ -12754,6 +12942,7 @@ class Slots:
     Armor = 'slot.armor'
     Chest = 'slot.chest'
     Equippable = 'slot.equippable'
+    Container = 'slots.container'
 
 class Target():
     P = '@p'
@@ -13317,7 +13506,8 @@ def Schemes(type, *args) -> dict:
                 "format_version": BLOCK_SERVER_VERSION, 
                 "minecraft:block": {
                     "description": {}, 
-                    "components": {}
+                    "components": {},
+                    "permutations": []
                 }
             }
         case "terrain_texture":

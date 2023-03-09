@@ -8,7 +8,7 @@ class _molang(str):
     
     def __eq__(self, other):
         o = f"'{other}'" if type(other) is str else f"{other}"
-        return _molang(f"{self} == {o}" )
+        return _molang(f"{self} == {o}")
 
     def __ne__(self, other):
         o = f"'{other}'" if type(other) is str else f"{other}"
@@ -31,7 +31,7 @@ class _molang(str):
 
     def __or__(self, other):
         return _molang(f"{self} || {other}")
-
+    
     def __add__(self, other):
         return _molang(f"({self} + {other})")
     
@@ -44,6 +44,45 @@ class _molang(str):
     def __neg__(self):
         return _molang(f"-{self}")
     
+    def __div__ (self, other):
+        return _molang(f"({self} / {other})")
+    
+    def __floordiv__ (self, other):
+        return Math.floor(f"({self} / {other})")
+    
+    def __mod__ (self, other):
+        return Math.mod(self, other)
+    
+    def __pow__(self, other):
+        return Math.pow(self, other)
+    
+    def __radd__(self, other):
+        return self.__add__(other)
+    
+    def __rsub__(self, other):
+        return self.__sub__(other)
+    
+    def __rmul__(self, other):
+        return self.__mul__(other)
+    
+    def __rdiv__(self, other):
+        return self.__div__(other)
+    
+    def __rfloordiv__(self, other):
+        return self.__floordiv__(other)
+    
+    def __rmod__(self, other):
+        return self.__mod__(other)
+    
+    def __rpow__(self, other):
+        return self.__pow__(other)
+
+    def __abs__(self):
+        return Math.abs(self)
+    
+    def __round__(self):
+        return Math.round(self)
+
     def _query(self, qtype, query, *arguments):
         a = f'{qtype}.{query}'
         if len(arguments):
@@ -177,6 +216,10 @@ class Query(_molang):
     def IsItemNameAny(self, slot: Slots, index: int = 0, *items: str):
         return self._query(self, 'q', 'is_item_name_any', slot, index, ','.join(items))
     
+    @classmethod
+    def BlockProperty(self, property: str):
+        return self._query(self, 'q', 'block_property', f'{NAMESPACE}:{property}')
+
 
 class Variable(_molang):
     def __init__(self) -> None:

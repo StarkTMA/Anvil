@@ -2,7 +2,7 @@ from anvil.api import components
 from anvil.api.components import Filter
 from anvil.core import (ANVIL, NAMESPACE, NAMESPACE_FORMAT,
                         PASCAL_PROJECT_NAME, Exporter, Particle,
-                        _MinecraftDescription, _SoundDefinition)
+                        _MinecraftDescription, _SoundDefinition, Geometry)
 
 from .. import Math, Query, Variable
 from ..packages import *
@@ -81,9 +81,9 @@ class _ActorClientDescription(_ActorDescription):
                 RaiseError(f'The geometry file {entity_name}.geo.json doesn\'t contain a geometry called {geo_namespace}')
     
     def _check_animation(self, animation_name):
-        CheckAvailability(f'{self._identifier}.animation.json', 'animation', 'assets/animations')
+        CheckAvailability(f'{self._identifier}{Exporter(animation_name, "rp_animation").extension()}', 'animation', 'assets/animations')
         anim_namespace = f'animation.{NAMESPACE_FORMAT}.{self._identifier}.{animation_name}'
-        with open(f'assets/animations/{self._identifier}.animation.json') as file:
+        with open(f'assets/animations/{self._identifier}{Exporter(animation_name, "rp_animation").extension()}') as file:
             if anim_namespace not in file.read():
                 RaiseError(MISSING_ANIMATION(anim_namespace, self._identifier, animation_name))
 
@@ -123,7 +123,10 @@ class _ActorClientDescription(_ActorDescription):
     @property
     def dummy(self):
         self._is_dummy = True
-        File('dummy.geo.json', Schemes('geometry', NAMESPACE_FORMAT, 'dummy', (8, 8), {"name": "root", "pivot": [0, 0, 0], "locators": {"root": [0, 0, 0]}}), MakePath('assets', 'models', self._type), 'w')
+        dummy = Geometry('dummy')
+        dummy.add_geo('dummy', (8, 8)).set_visible_bounds((2, 1.5), (0, 0.25, 0)).add_bone('root', (0, 0, 0)).add_cube((0, 0, 0), (0, 0, 0), (0, 0))
+        dummy.queue(self._type)
+
         CreateImage('dummy', 8, 8, (0, 0, 0, 0), MakePath('assets', 'textures', self._type))
         self.geometry('dummy', 'dummy')
         self.texture('dummy', 'dummy')
@@ -204,21 +207,17 @@ class _ActorClientDescription(_ActorDescription):
         if len(self._description['description']['render_controllers']) == 0:
             RaiseError(MISSING_RENDER_CONTROLLER(f"{self._namespace_format}:{self._identifier}"))
         
-        if self._is_dummy:
-            CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', self._type, directory), 'dummy.geo.json')
-        
-        elif self._added_geos == 1:
-            if self._type == 'entity':
-                CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', self._type, directory), f'{self._identifier}.geo.json')
-            else:
-                CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', 'entity', self._type, directory), f'{self._identifier}.geo.json')
+        if self._type == 'entity':
+            CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', self._type, directory), f'{self._identifier if not self._is_dummy else "dummy"}.geo.json')
+        else:
+            CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', 'entity', self._type, directory), f'{self._identifier if not self._is_dummy else "dummy"}.geo.json')
         
         for text in self._added_textures:
             CopyFiles(MakePath('assets','textures', self._type), MakePath('resource_packs',f'RP_{PASCAL_PROJECT_NAME}','textures',self._type,self._identifier), f'{text}.png')
             
         for animation in self._added_anims:
             if animation != 'controller':
-                CopyFiles(MakePath('assets', 'animations'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'animations', directory), f'{self._identifier}.animation.json')
+                CopyFiles(MakePath('assets', 'animations'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'animations', directory), f'{self._identifier}{Exporter("", "rp_animation").extension()}')
               
         if 'particle_effects' in self._description['description']:
             for particle in self._description['description']['particle_effects']:
@@ -226,8 +225,8 @@ class _ActorClientDescription(_ActorDescription):
 
         for sound in self._sounds:
             sound._export
-        self._render_controllers.queue(directory)
-        self._animation_controllers.queue(directory)
+        self._render_controllers.queue(MakePath(self._type, directory))
+        self._animation_controllers.queue(MakePath(self._type, directory))
         return self._description
 
 class _EntityServerDescription(_ActorDescription):
@@ -477,9 +476,11 @@ class _EntityServer(_Entity):
         for component_group in self._component_groups:
             self._server_entity['minecraft:entity']['component_groups'].update(component_group._export())
         
-
-
         self.content(self._server_entity)
+
+        if components.Rideable.component_name in json.dumps(self._server_entity):
+            ANVIL.localize(f'action.hint.exit.{NAMESPACE}:{self._name}=Hold shift to exit')
+
         super().queue(directory=directory)
 
 class _EntityClient(_Entity):
@@ -1805,7 +1806,7 @@ class _Properties():
     def _export(self):
         return self._properties
 
-# ==========================
+# ========================================================================================================
 class Entity():
     def _validate_name(self, identifier):
         if ':' in identifier:
@@ -1860,6 +1861,8 @@ class Attachable(Exporter):
     def __init__(self, identifier: str) -> None:
         super().__init__(identifier, 'attachable')
         self._identifier = identifier
+        self._is_vanilla = identifier in Vanilla.Entities._list
+        self._namespace_format = 'minecraft' if self._is_vanilla else NAMESPACE_FORMAT
         self._attachable = Schemes('attachable')
         self._description = _AttachableClientDescription(self._identifier, False)
     
@@ -1868,7 +1871,15 @@ class Attachable(Exporter):
         return self._description
 
     @property
+    def identifier(self):
+        return f'{self._namespace_format}:{self._identifier}'
+    
+    @property
+    def name(self):
+        return self._identifier
+
+    @property
     def queue(self):
-        self._attachable['minecraft:attachable'].update(self._description.queue('attachables'))
+        self._attachable['minecraft:attachable'].update(self._description.queue(''))
         self.content(self._attachable)
-        super().queue('attachables')
+        super().queue('')

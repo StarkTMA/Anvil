@@ -1,15 +1,21 @@
 from .packages import *
 
-#__all__ = [
-#    'ANVIL', 'LootTable', 'Item', 'Particle', 
+# __all__ = [
+#    'ANVIL', 'LootTable', 'Item', 'Particle',
 #    'Recipe', 'oldBlock', 'Structure', 'Fog',
 #    'Fonts', 'Function', 'Dialogue', 'SkinPack',
 #    'NAMESPACE', 'PROJECT_NAME', 'PASCAL_PROJECT_NAME', 'DEBUG',
 #    'EngineComponent'
-#]
+# ]
+
 
 class Exporter():
     def __init__(self, name: str, type: str) -> None:
+        self._name = name
+        self._type = type
+        self._shorten = True
+        self._content = {}
+        self._directory = ''
         self._valids = {
             'function': {
                 'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'functions'),
@@ -239,13 +245,15 @@ class Exporter():
                 }
             }
         }
-        self._name = name
-        self._type = type
-        self._shorten = True
-        self._content = {}
-        self._directory = ''
-        if self._type not in self._valids:
-            raise TypeError(ANVIL_TYPE_ERROR(self._type))
+
+    def is_valid(self):
+        return self._type in self._valids
+
+    def extension(self):
+        if self.is_valid():
+            return self._valids[self._type]["extension"][NAMESPACE_FORMAT_BIT]
+        else:
+            TypeError(ANVIL_TYPE_ERROR(self._type))
 
     @property
     def do_not_shorten(self):
@@ -257,14 +265,15 @@ class Exporter():
 
     def queue(self, directory: str = None):
         self._directory = directory
-        self._path = MakePath(self._valids[self._type]['path'], self._directory)
+        self._path = MakePath(
+            self._valids[self._type]['path'], self._directory)
         ANVIL._queue(self)
         return self
 
     def _export(self):
         if self._shorten and type(self._content) is dict:
             self._content = ShortenDict(self._content)
-        File(f'{self._name}{self._valids[self._type]["extension"][NAMESPACE_FORMAT_BIT]}', self._content, self._path, 'w')
+        File(f'{self._name}{self.extension()}', self._content, self._path, 'w')
 
 
 class RawTextConstructor():
@@ -594,11 +603,12 @@ class _FogDistance():
 
 class _Material():
     def __init__(self, material_name, base_material) -> None:
-        self._material_name = f'{material_name}' + f':{base_material}' if not base_material is None else ''
+        self._material_name = f'{material_name}' + \
+            f':{base_material}' if not base_material is None else ''
         self._material = {
-            self._material_name : {}
+            self._material_name: {}
         }
-    
+
     def states(self, *states: MaterialStates):
         self._material[self._material_name]['states'] = states
         return self
@@ -619,7 +629,8 @@ class _Material():
             'stencilPassOp': stencilPassOp,
             'stencilPass': stencilPass
         }
-        self._material[self._material_name]['frontFace'] = {key: value for key, value in a.items() if value != None}
+        self._material[self._material_name]['frontFace'] = {
+            key: value for key, value in a.items() if value != None}
         return self
 
     def backFace(self, stencilFunc: MaterialFunc = None, stencilFailOp: MaterialOperation = None, stencilDepthFailOp: MaterialOperation = None, stencilPassOp: MaterialOperation = None, stencilPass: MaterialOperation = None):
@@ -630,9 +641,10 @@ class _Material():
             'stencilPassOp': stencilPassOp,
             'stencilPass': stencilPass
         }
-        self._material[self._material_name]['backFace'] = {key: value for key, value in a.items() if value != None}
+        self._material[self._material_name]['backFace'] = {
+            key: value for key, value in a.items() if value != None}
         return self
-    
+
     def stencilRef(self, stencilRef: int):
         self._material[self._material_name]['stencilRef'] = stencilRef
         return self
@@ -661,13 +673,13 @@ class _Material():
 class _Materials(Exporter):
     def __init__(self) -> None:
         super().__init__('entity', 'materials')
-        self._materials : list[_Material] = []
-    
+        self._materials: list[_Material] = []
+
     def add_material(self, material_name, base_material):
         material = _Material(material_name, base_material)
         self._materials.append(material)
         return material
-    
+
     @property
     def queue(self):
         if len(self._materials) > 0:
@@ -680,18 +692,18 @@ class _Materials(Exporter):
 class _Bone():
     def __init__(self, name, pivot, parent) -> None:
         self._bone = {
-	    	"name": name,
-	    	"pivot": pivot,
+            "name": name,
+            "pivot": pivot,
             'parent': parent if not parent is None else {},
-	    	"cubes": []
-	    }
-    
-    def add_cube(self, 
-                 origin: list[float, float, float], 
-                 size: list[float, float, float], 
+            "cubes": []
+        }
+
+    def add_cube(self,
+                 origin: list[float, float, float],
+                 size: list[float, float, float],
                  uv: list[int, int],
-                 pivot: list[float, float, float] = (0,0,0), 
-                 rotation: list[float, float, float] = (0,0,0),
+                 pivot: list[float, float, float] = (0, 0, 0),
+                 rotation: list[float, float, float] = (0, 0, 0),
                  inflate: float = 0,
                  mirror: bool = False,
                  reset: bool = False,
@@ -706,8 +718,8 @@ class _Bone():
                     'uv_size': uv_face[2]
                 }
             },
-            'pivot': pivot if not pivot == (0,0,0) else {},
-            'rotation': rotation if not rotation == (0,0,0) else {},
+            'pivot': pivot if not pivot == (0, 0, 0) else {},
+            'rotation': rotation if not rotation == (0, 0, 0) else {},
             'inflate': inflate if not inflate == 0 else {},
             'mirror': mirror if mirror else {},
             'reset': reset if reset else {},
@@ -720,18 +732,18 @@ class _Bone():
 
 
 class _Geo():
-    def __init__(self, geometry_name: str, texture_size: list[int, int] = (16,16)) -> None:
+    def __init__(self, geometry_name: str, texture_size: list[int, int] = (16, 16)) -> None:
         self._geo_name = geometry_name
         self._geo = {
             "description": {
                 "identifier": f"geometry.{NAMESPACE}.{geometry_name}",
-		        "texture_width": texture_size[0],
-		        "texture_height": texture_size[1],
+                "texture_width": texture_size[0],
+                "texture_height": texture_size[1],
             },
             "bones": [],
         }
-        self._bones : list[_Bone] = []
-    
+        self._bones: list[_Bone] = []
+
     def set_visible_bounds(self, visible_bounds_wh: list[float, float], visible_bounds_offset: list[float, float, float]):
         self._geo['description']['visible_bounds_width'] = visible_bounds_wh[0]
         self._geo['description']['visible_bounds_height'] = visible_bounds_wh[1]
@@ -754,21 +766,21 @@ class _Anim_Bone():
     def __init__(self, name) -> None:
         self._name = name
         self._bone = {
-	    	self._name: {}
-	    }
-    
-    def rotation(self, rotation: list[float, float, float] = (0,0,0),):
+            self._name: {}
+        }
+
+    def rotation(self, rotation: list[float, float, float] = (0, 0, 0),):
         self._bone[self._name].update({
             'rotation': rotation
         })
         return self
-    
-    def position(self, position: list[float, float, float] = (0,0,0),):
+
+    def position(self, position: list[float, float, float] = (0, 0, 0),):
         self._bone[self._name].update({
             'position': position
         })
         return self
-    
+
     def scale(self, scale: Union[list[float, float, float], float, Molang] = 1):
         self._bone[self._name].update({
             'scale': scale if scale != 1 else {}
@@ -788,11 +800,11 @@ class _Anims():
         self._anim = {
             f"animation.{NAMESPACE}.{self._name}.{self._anim_name}": {
                 "loop": self._loop,
-                "bones":{}
+                "bones": {}
             }
         }
-        self._bones : list[_Anim_Bone] = []
-    
+        self._bones: list[_Anim_Bone] = []
+
     def add_bone(self, name: str):
         bone = _Anim_Bone(name)
         self._bones.append(bone)
@@ -801,10 +813,13 @@ class _Anims():
     @property
     def _queue(self):
         for bone in self._bones:
-            self._anim[f"animation.{NAMESPACE}.{self._name}.{self._anim_name}"]['bones'].update(bone._queue)
+            self._anim[f"animation.{NAMESPACE}.{self._name}.{self._anim_name}"]['bones'].update(
+                bone._queue)
         return self._anim
 
 # =============================================
+
+
 class SkinPack():
     def __init__(self) -> None:
         self._skins = []
@@ -903,8 +918,9 @@ class Fonts():
     def generate_font(self, font_name: str, character_size: int = 32):
         if character_size % 16 != 0:
             RaiseError(UNSUPPORTED_FONT_SIZE)
-
+        
         font_size = round(character_size*.8)
+        image_size = character_size*16
 
         try:
             font = ImageFont.truetype(f'assets/textures/ui/{font_name}.ttf', font_size)
@@ -913,32 +929,40 @@ class Fonts():
         except:
             font = ImageFont.truetype(f'{font_name}.ttf', font_size)
 
-        image_size = character_size*16
+
         self._image = Image.new("RGBA", (image_size, image_size))
         backup_font = ImageFont.truetype('arial.ttf', font_size)
-        default8 = u'ÀÁÂÈÉÊÍÓÔÕÚßãõǧÎ¹ŒœŞşŴŵŽê§©      !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂ÇüéâäàåçêëèïîìÄÅÉ§ÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴├├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■	'
+
+        ascii = u'ÀÁÂÈÉÊÍÓÔÕÚßãõǧÎ¹ŒœŞşŴŵŽê§©      !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂'
+        extended_ascii = u'ÇüéâäàåçêëèïîìÄÅÉ§ÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴├├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■	'
+        default8 = ascii + extended_ascii
+
         offset = [0, 0]
+
+        img_draw = ImageDraw.Draw(self._image)
         for i in default8:
-            d1 = ImageDraw.Draw(self._image)
-            if font.getsize(i) == font.getsize('□'):
-                d1.text((offset[0]*character_size+3, offset[1]*character_size), i, fill =(255, 255, 255), font=backup_font, align='left')
-            else:
-                d1.text((offset[0]*character_size+3, offset[1]*character_size), i, fill =(255, 255, 255), font=font, align='left')
+            bbox = font.getbbox(i)
+            img_draw.text(
+                (offset[0]*character_size - bbox[0], offset[1]*character_size), i, 
+                fill=(255, 255, 255), font=font if i in ascii else backup_font, align='cl')
+
             offset[0] += 1
             if offset[0] >= 16:
                 offset[0] = 0
                 offset[1] += 1
-        
+
         return self
-        
+
     @property
     def queue(self):
         if not self._image is None:
-            self._image.save(MakePath('assets', 'textures', 'ui', 'default8.png'))
+            self._image.save(
+                MakePath('assets', 'textures', 'ui', 'default8.png'))
 
         for file in ['glyph_E1.png', 'default8.png']:
             if FileExists(MakePath('assets', 'textures', 'ui', file)):
-                CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'), file)
+                CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath(
+                    'resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'), file)
 
 
 class Fog(Exporter):
@@ -992,19 +1016,20 @@ class Structure():
 class Geometry(Exporter):
     def __init__(self, name: str) -> None:
         super().__init__(name, 'geometry')
-        self._geos : list[_Geo] = []
-    
-    def add_geo(self, geometry_name: str, texture_size: tuple[int, int] = (16,16)):
+        self._geos: list[_Geo] = []
+
+    def add_geo(self, geometry_name: str, texture_size: tuple[int, int] = (16, 16)):
         geo = _Geo(geometry_name, texture_size)
         self._geos.append(geo)
         return geo
-    
+
     def queue(self, type: str):
         if not type in ['entity', 'attachables', 'blocks']:
-            RaiseError('Unsupported model type') 
-        
+            RaiseError('Unsupported model type')
+
         if len(self._geos) == 0:
-            RaiseError(f'The Geometry file {self._name} does not have any geometry.')
+            RaiseError(
+                f'The Geometry file {self._name} does not have any geometry.')
 
         if FileExists(MakePath('assets', 'models', type, f'{self._name}.geo.json')):
             with open(MakePath('assets', 'models', type, f'{self._name}.geo.json'), 'r') as file:
@@ -1026,17 +1051,20 @@ class Animation(Exporter):
     def __init__(self, name: str) -> None:
         super().__init__(name, 'rp_animation')
         self._name = name
-        self._anims : list[_Anims] = []
-    
+        self._anims: list[_Anims] = []
+
     def add_animation(self, animation_name: str, loop: bool = False):
         geo = _Anims(self._name, animation_name, loop)
         self._anims.append(geo)
         return geo
-    
+
+    @property
     def queue(self):
         if len(self._anims) == 0:
-            RaiseError(f'The Animation file {self._name} does not have any animations.')
-        path = MakePath('assets', 'animations', f'{self._name}.{self._valids[self._type]["extension"][NAMESPACE_FORMAT_BIT]}.json')
+            RaiseError(
+                f'The Animation file {self._name} does not have any animations.')
+        path = MakePath('assets', 'animations',
+                        f'{self._name}{self.extension()}')
         if FileExists(path):
             with open(path, 'r') as file:
                 self.content(commentjson.load(file))
@@ -1045,8 +1073,9 @@ class Animation(Exporter):
 
         for a in self._anims:
             self._content['animations'].update(a._queue)
+
         super().queue()
-        super()._export()
+        self._export()
 
 # Core Functionalities
 # TODO: Replace/remove
@@ -1771,8 +1800,8 @@ class Anvil():
         NAMESPACE_FORMAT_BIT = int(CONFIG.get('ANVIL', 'NAMESPACE_FORMAT'))
         BUILD = CONFIG.get('ANVIL', 'BUILD')
         DEBUG = CONFIG.get('ANVIL', 'DEBUG') == 'True'
-        NAMESPACE_FORMAT = NAMESPACE + f'.{PROJECT_NAME}' * NAMESPACE_FORMAT_BIT
-
+        NAMESPACE_FORMAT = NAMESPACE + \
+            f'.{PROJECT_NAME}' * NAMESPACE_FORMAT_BIT
 
         self._setup = Function('setup')
         self._setup_scores = Function('setup_scores')
@@ -1810,16 +1839,18 @@ class Anvil():
         # 12 Hours
         if (self._deltatime > 12*3600):
             click.echo(CHECK_UPDATE)
-            LATEST_BUILD = self.get_github_file('version.json')['latest']['version']
+            LATEST_BUILD = self.get_github_file(
+                'version.json')['latest']['version']
 
             if VANILLA_VERSION < LATEST_BUILD:
                 click.echo(NEW_BUILD(VANILLA_VERSION, LATEST_BUILD))
                 #DownloadFile(self._github.clone_url, MakePath('assets', 'vanilla'))
             else:
                 click.echo(UP_TO_DATE)
-                
+
             CONFIG.set('ANVIL', 'VANILLA_VERSION', LATEST_BUILD)
-            CONFIG.set('ANVIL', 'LAST_CHECK', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            CONFIG.set('ANVIL', 'LAST_CHECK',
+                       datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     def sound(self, sound_definition: str, category: SoundCategory(), use_legacy_max_distance: bool = False, max_distance: int = 0, min_distance: int = 9999):
         return self._sound_definition.sound_definition(sound_definition, category, use_legacy_max_distance, max_distance, min_distance)
@@ -1827,7 +1858,7 @@ class Anvil():
     def music(self, music_category: MusicCategory(), min_delay: int = 60, max_delay: int = 180):
         return self._music_definition.music_definition(music_category, min_delay, max_delay)
 
-    def localize(self, *texts: str) -> None:
+    def localize(self, *texts: str, **kwargs) -> None:
         """
         Adds a localized string to en_US. Translatable.
 
@@ -1846,6 +1877,7 @@ class Anvil():
                 RaiseError(LANG_ERROR(text))
             if f'{text}\n' not in self._langs:
                 self._langs.append(f'{text}\n')
+
 
     def score(self, **score_id_value) -> None:
         """
@@ -2053,7 +2085,7 @@ class Anvil():
         if FileExists('assets/textures/environment'):
             CopyFolder('assets/textures/environment',
                        f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/environment')
-        
+
         self._materials.queue
         self._setup_scores.queue('StateMachine/misc')
         self._remove_scores.queue('StateMachine/misc')
@@ -2208,7 +2240,8 @@ class Anvil():
             'world_resource_packs.json':                            MakePath('Content', 'world_template'),
         })
 
-        zipit(MakePath('assets', 'output',f'{PROJECT_NAME}.zip'), content_structure)
+        zipit(MakePath('assets', 'output',
+              f'{PROJECT_NAME}.zip'), content_structure)
 
         RemoveDirectory(MakePath('assets', 'output', 'Store Art'))
         RemoveDirectory(MakePath('assets', 'output', 'Marketing Art'))
@@ -2264,7 +2297,8 @@ class Anvil():
             'world_resource_packs.json':                            MakePath(''),
         }
 
-        zipit(MakePath('assets', 'output',f'{PROJECT_NAME}.mcworld'), content_structure)
+        zipit(MakePath('assets', 'output',
+              f'{PROJECT_NAME}.mcworld'), content_structure)
 
     def _queue(self, object: object):
         self._objects_list.append(object)

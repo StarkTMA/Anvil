@@ -4,20 +4,15 @@ from ..core import ANVIL, RawTextConstructor
 class Command:
     def __init__(self, prefix: str, *commands) -> None:
         self._prefix = prefix
-        self._command: str = f'{prefix}'
         self._components = {}
-        for cmd in commands:
-            self._command += f' {cmd}'
+        self._command = f"{self._prefix} {' '.join([str(cmd) for cmd in commands])}"
             
     def _new_cmd(self, *commands):
-        self._command = f'{self._prefix}'
-        for cmd in commands:
-            self._command += f' {cmd}'
+        self._command = f"{self._prefix} {' '.join([str(cmd) for cmd in commands])}"
         return self
    
     def _append_cmd(self, *commands):
-        for cmd in commands:
-            self._command += f' {cmd}'
+        self._command += f" {' '.join([str(cmd) for cmd in commands])}"
         return self
 
     def _add_nbt_component(self, component: dict):
@@ -27,9 +22,30 @@ class Command:
     def __str__(self):
         self._command = self._command.lstrip('/')
         if len(self._components) > 0:
-            self._command += ' ' + json.dumps(self._components)
+            self._append_cmd(json.dumps(self._components))
+            self._components = {}
         return self._command
 
+class ItemComponents(Command):
+    def can_place_on(self, *blocks):
+        self._add_nbt_component({'minecraft:can_place_on':{'blocks':blocks}})
+        return self
+    
+    def can_destroy(self, *blocks):
+        self._add_nbt_component({'minecraft:can_destroy':{'blocks':blocks}})
+        return self
+    
+    def item_lock(self, *, lock_in_slot: bool = False, lock_in_inventory: bool = False):
+        if lock_in_slot or lock_in_inventory:
+            self._add_nbt_component({'minecraft:item_lock':{'mode': 'lock_in_slot' if lock_in_slot else 'lock_in_inventory'}})
+        return self
+    
+    @property
+    def keep_on_death(self):
+        self._add_nbt_component({'minecraft:keep_on_death':{}})
+        return self
+    
+    
 #special
 class _RawText(RawTextConstructor):
     def __init__(self, texttype: str, target):
@@ -169,7 +185,7 @@ class CameraShake(Command):
         super()._new_cmd('add', target, intensity, seconds, shakeType)
 
     def stop(self, target: str):
-        super()._new_cmd('stop', 'target')
+        super()._new_cmd('stop', target)
 
 class Summon(Command):
     def __init__(self, entity, coordinates: coordinates = ('~', '~', '~'), event: str = 'minecraft:entity_spawned', name: str = '', __rotation:rotation=('~', '~')):
@@ -346,24 +362,19 @@ class Function(Command):
     def __init__(self, path) -> None:
         super().__init__('function', path)
 
-class Give(Command):
+class Give(ItemComponents):
     def __init__(self, target: Target, item: str, amount: int = 1, data: int = 0) -> None:
         super().__init__('give', target, item, amount, data)
     
-    def can_place_on(self, *blocks):
-        self._add_nbt_component({'minecraft:can_place_on':{'blocks':blocks}})
+class ReplaceItem(ItemComponents):
+    def __init__(self) -> None:
+        super().__init__('replaceitem')
+
+    def block(self, poistion: coordinates, slot_id: int, item_name: str, amount: int = 1, data: int = 0):
+        super()._new_cmd('block', *poistion, Slots.Container, slot_id, item_name, amount, data)
         return self
-    
-    def can_destroy(self, *blocks):
-        self._add_nbt_component({'minecraft:can_destroy':{'blocks':blocks}})
+
+    def entity(self, target: Selector | Target, slot: Slots, slot_id: int, item_name: str, amount: int = 1, data: int = 0):
+        super()._new_cmd('entity', target, slot, slot_id, item_name, amount, data)
         return self
-    
-    def item_lock(self, *, lock_in_slot: bool = False, lock_in_inventory: bool = False):
-        if lock_in_slot or lock_in_inventory:
-            self._add_nbt_component({'minecraft:item_lock':{'mode': 'lock_in_slot' if lock_in_slot else 'lock_in_inventory'}})
-        return self
-    
-    @property
-    def keep_on_death(self):
-        self._add_nbt_component({'minecraft:keep_on_death':{}})
-        return self
+        

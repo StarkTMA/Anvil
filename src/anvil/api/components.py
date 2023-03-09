@@ -1,23 +1,27 @@
 from .. import NAMESPACE
 from ..packages import *
+from .. import ANVIL
 
-#__all__ = [
+# __all__ = [
 #    'AddRider', 'AdmireItem', 'Ageable',
 #    'Variant', 'MarkVariant', 'SkinID', 'CollisionBox', 'IsStackable', 'TypeFamily',
 #    'InstantDespawn', 'Health', 'Physics', 'KnockbackResistance', 'Pushable', 'IsIllagerCaptain',
 #    'IsBaby', 'PushThrough', 'Movement', 'TickWorld'
-#]
+# ]
+
 
 class EventObject():
-    def __init__(self, event: event, target : Target) -> None:
+    def __init__(self, event: event, target: Target) -> None:
         return {
             'event': event,
             'target': target
         }
 
 # Filters ==========================================================================
+
+
 class Filter:
-    #Basic configuration
+    # Basic configuration
     def _construct_filter(filter_name, subject, operator, domain, value):
         filter = {"test": filter_name, "value": value}
         if subject != FilterSubject.Self:
@@ -26,22 +30,22 @@ class Filter:
             filter.update({'operator': operator})
         if domain != None:
             filter.update({'domain': domain})
-            
+
         return filter
-    
+
     # Filter Groups
     @staticmethod
-    def all_of(*filters : 'Filter'):
-        return {'all_of':[filters]}
-    
+    def all_of(*filters: 'Filter'):
+        return {'all_of': [filters]}
+
     @staticmethod
-    def any_of(*filters : 'Filter'):
-        return {'any_of':[filters]}
-    
+    def any_of(*filters: 'Filter'):
+        return {'any_of': [filters]}
+
     @staticmethod
-    def none_of(*filters : 'Filter'):
-        return {'none_of':[filters]}
-    
+    def none_of(*filters: 'Filter'):
+        return {'none_of': [filters]}
+
     # Actual Filters
     @classmethod
     def distance_to_nearest_player(self, value: float, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
@@ -50,41 +54,41 @@ class Filter:
     @classmethod
     def has_component(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('has_component', subject, operator, None, value)
-    
+
     @classmethod
     def is_family(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('is_family', subject, operator, None, value)
-    
+
     @classmethod
     def is_block(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('is_block', subject, operator, None, value)
-    
+
     @classmethod
     def is_visible(self, value: bool, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('is_visible', subject, operator, None, value)
-    
+
     @classmethod
     def is_target(self, value: bool, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('is_target', subject, operator, None, value)
-    
-    #Properties
-    
+
+    # Properties
+
     @classmethod
     def int_property(self, value: int, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('int_property', subject, operator, f'{NAMESPACE}:{domain}', value)
-    
+
     @classmethod
     def bool_property(self, value: bool, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('bool_property', subject, operator, f'{NAMESPACE}:{domain}', value)
-    
+
     @classmethod
     def float_property(self, value: float, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('float_property', subject, operator, f'{NAMESPACE}:{domain}', value)
-    
+
     @classmethod
     def enum_property(self, value: str, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('enum_property', subject, operator, f'{NAMESPACE}:{domain}', value)
-    
+
     @classmethod
     def has_property(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('has_property', subject, operator, None, f'{NAMESPACE}:{value}')
@@ -93,17 +97,22 @@ class Filter:
     def has_component(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('has_component', subject, operator, None, value)
 
+    @classmethod
+    def is_riding(self, value: bool, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('is_riding', subject, operator, None, value)
+
+
 class _component(dict):
     def __init__(self, component_name) -> None:
         self.ResetNamespace(component_name)
-    
+
     def ResetNamespace(self, component_name):
         self.clear()
         self._component_name = component_name
         self._component_namespace = f'minecraft:{self._component_name}'
         self.__setitem__(self._component_namespace, {})
 
-    def AddField(self, key,value):
+    def AddField(self, key, value):
         self[self._component_namespace][key] = value
 
     def SetValue(self, value):
@@ -111,10 +120,11 @@ class _component(dict):
 
 # Components ==========================================================================
 
+
 class AddRider(_component):
     def __init__(self, entity_type: Identifier, spawn_event: event = None) -> None:
         '''Adds a rider to the entity. Requires `minecraft:rideable.`.
-        
+
         Parameters
         ----------
         `entity_type` : `Identifier` `str`.
@@ -128,10 +138,11 @@ class AddRider(_component):
         if not spawn_event is None:
             self.AddField('spawn_event', spawn_event)
 
+
 class AdmireItem(_component):
     def __init__(self, cooldown_after_being_attacked: Seconds, duration: Seconds = 10) -> None:
         '''Causes the mob to ignore attackable targets for a given duration.
-        
+
         Parameters
         ----------
         `cooldown_after_being_attacked` : `Seconds` `int`.
@@ -141,14 +152,16 @@ class AdmireItem(_component):
 
         '''
         super().__init__('admire_item')
-        self.AddField('cooldown_after_being_attacked', cooldown_after_being_attacked)
+        self.AddField('cooldown_after_being_attacked',
+                      cooldown_after_being_attacked)
         if not duration == 10:
             self.AddField('duration', duration)
+
 
 class Ageable(_component):
     def __init__(self, duration: Seconds, event: event) -> None:
         '''Adds a timer for the entity to grow up. It can be accelerated by giving the entity the items it likes.
-        
+
         Parameters
         ----------
         `duration` : `Seconds` `int`.
@@ -159,10 +172,11 @@ class Ageable(_component):
         '''
         super().__init__('ageable')
         self.AddField('duration', duration)
-        self[self._component_namespace]['grow_up']={
+        self[self._component_namespace]['grow_up'] = {
             "event": event,
             "target": "self"
         }
+
 
 class CollisionBox(_component):
     def __init__(self, height: float, width: float) -> None:
@@ -171,11 +185,13 @@ class CollisionBox(_component):
         self.AddField('height', height)
         self.AddField('width', width)
 
+
 class TypeFamily(_component):
     def __init__(self, *family: str) -> None:
         """Defines the families this entity belongs to."""
         super().__init__('type_family')
         self.AddField('family', family)
+
 
 class InstantDespawn(_component):
     def __init__(self, remove_child_entities: bool = False) -> None:
@@ -183,6 +199,7 @@ class InstantDespawn(_component):
         super().__init__('instant_despawn')
         if remove_child_entities:
             self.AddField('remove_child_entities', True)
+
 
 class Health(_component):
     def __init__(self, value: int, min: int = None, max: int = None) -> None:
@@ -194,6 +211,7 @@ class Health(_component):
         if not min is None:
             self.AddField('min', min)
 
+
 class Physics(_component):
     def __init__(self, has_collision: bool = True, has_gravity: bool = True) -> None:
         """Defines physics properties of an actor, including if it is affected by gravity or if it collides with objects."""
@@ -201,11 +219,13 @@ class Physics(_component):
         self.AddField('has_collision', has_collision)
         self.AddField('has_gravity', has_gravity)
 
+
 class KnockbackResistance(_component):
     def __init__(self, value: float) -> None:
         """Determines the amount of knockback resistance that the item has."""
         super().__init__('knockback_resistance')
-        self.AddField('value', max(0,min(1,value)))
+        self.AddField('value', max(0, min(1, value)))
+
 
 class Pushable(_component):
     def __init__(self, is_pushable: bool = True, is_pushable_by_piston: bool = True) -> None:
@@ -214,11 +234,13 @@ class Pushable(_component):
         self.AddField('is_pushable', is_pushable)
         self.AddField('is_pushable_by_piston', is_pushable_by_piston)
 
+
 class PushThrough(_component):
     def __init__(self, value: int) -> None:
         """Sets the distance through which the entity can push through."""
         super().__init__('push_through')
         self.AddField('value', value)
+
 
 class Movement(_component):
     def __init__(self, value: int, max: int = None) -> None:
@@ -227,6 +249,7 @@ class Movement(_component):
         self.AddField('value', value)
         if not max is None:
             self.AddField('max', max)
+
 
 class TickWorld(_component):
     def __init__(self, never_despawn: bool = True, radius: int = None, distance_to_players: int = None) -> None:
@@ -238,8 +261,9 @@ class TickWorld(_component):
         if not distance_to_players is None:
             self.AddField('distance_to_players', distance_to_players)
 
+
 class CustomHitTest(_component):
-    def __init__(self, height: float, width: float, pivot : list[float,float,float] = [0,1,0]) -> None:
+    def __init__(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]) -> None:
         """List of hitboxes for melee and ranged hits against the entity."""
         super().__init__('custom_hit_test')
         self.AddField('hitboxes', [{
@@ -247,18 +271,20 @@ class CustomHitTest(_component):
             "height": height,
             "pivot": pivot
         }])
-    
-    def add_hitbox(self, height: float, width: float, pivot : list[float,float,float] = [0,1,0]):
+
+    def add_hitbox(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]):
         self[self._component_namespace]['hitboxes'].append({
             "width": width,
             "height": height,
             "pivot": pivot
         })
 
+
 class CanClimb(_component):
     def __init__(self) -> None:
         """Allows this entity to climb up ladders."""
         super().__init__('can_climb')
+
 
 class Attack(_component):
     def __init__(self, damage: int, effect_duration: int = None, effect_name: str = None) -> None:
@@ -270,11 +296,13 @@ class Attack(_component):
         if not effect_name is None:
             self.AddField('effect_name', effect_name)
 
+
 class JumpStatic(_component):
     def __init__(self, jump_power: float) -> None:
         """Gives the entity the ability to jump."""
         super().__init__('jump.static')
         self.AddField('jump_power', jump_power)
+
 
 class HorseJumpStrength(_component):
     def __init__(self, range_min: float, range_max: float) -> None:
@@ -285,14 +313,15 @@ class HorseJumpStrength(_component):
             "range_max": range_max
         }])
 
+
 class SpellEffects(_component):
     def __init__(self) -> None:
         """Defines what mob effects to add and remove to the entity when adding this component."""
         super().__init__('spell_effects')
         self.AddField('add_effects', [])
         self.AddField('remove_effects', [])
-    
-    def add_effects(self, effect: Effects, duration: int, amplifier:int, ambient: bool = True, visible: bool = True, display_on_screen_animation: bool = True):
+
+    def add_effects(self, effect: Effects, duration: int, amplifier: int, ambient: bool = True, visible: bool = True, display_on_screen_animation: bool = True):
         effect = {
             'effect': effect,
             'duration': duration,
@@ -303,7 +332,8 @@ class SpellEffects(_component):
         if visible is not True:
             effect.update({'visible': visible})
         if display_on_screen_animation is not True:
-            effect.update({'display_on_screen_animation': display_on_screen_animation})
+            effect.update(
+                {'display_on_screen_animation': display_on_screen_animation})
 
         self[self._component_namespace]['add_effects'].append(effect)
         return self
@@ -312,11 +342,13 @@ class SpellEffects(_component):
         self[self._component_namespace]['remove_effects'] = effects
         return self
 
+
 class FrictionModifier(_component):
     def __init__(self, value: int) -> None:
         """Defines how much friction affects this entity."""
         super().__init__('friction_modifier')
         self.AddField('value', value)
+
 
 class Breathable(_component):
     def __init__(self, breathes_air: bool = True, total_supply: int = 15, suffocate_time: int = -20, inhale_time: int = 0) -> None:
@@ -329,7 +361,7 @@ class Breathable(_component):
             self.AddField('suffocate_time', suffocate_time)
         if inhale_time != 0:
             self.AddField('inhale_time', inhale_time)
-    
+
     @property
     def breathes_lava(self):
         self.AddField('breathes_lava', True)
@@ -359,11 +391,13 @@ class Breathable(_component):
         self.AddField('non_breathe_blocks', blocks)
         return self
 
+
 class Variant(_component):
     def __init__(self, value: int) -> None:
         """Used to differentiate the component group of a variant of an entity from others. (e.g. ocelot, villager)."""
         super().__init__('variant')
         self.AddField('value', value)
+
 
 class MarkVariant(_component):
     def __init__(self, value: int) -> None:
@@ -371,17 +405,20 @@ class MarkVariant(_component):
         super().__init__('mark_variant')
         self.AddField('value', value)
 
+
 class SkinID(_component):
     def __init__(self, value: int) -> None:
         """Skin ID value. Can be used to differentiate skins, such as base skins for villagers."""
         super().__init__('skin_id')
         self.AddField('value', value)
 
+
 class Scale(_component):
     def __init__(self, value: int) -> None:
         """Sets the entity's visual size."""
         super().__init__('scale')
         self.AddField('value', value)
+
 
 class ScaleByAge(_component):
     def __init__(self, start_scale: int, end_scale: int) -> None:
@@ -390,8 +427,9 @@ class ScaleByAge(_component):
         self.AddField('end_scale', end_scale)
         self.AddField('start_scale', start_scale)
 
+
 class AreaAttack(_component):
-    def __init__(self, damage_per_tick: int = 2, damage_range: float = 0.2, cause: DamageCause = DamageCause.Attack ) -> None:
+    def __init__(self, damage_per_tick: int = 2, damage_range: float = 0.2, cause: DamageCause = DamageCause.Attack) -> None:
         """The types of damage an entity can receive."""
         if cause not in DamageCause.list:
             RaiseError(DAMAGE_CAUSE_ERROR)
@@ -400,80 +438,95 @@ class AreaAttack(_component):
         self.AddField('damage_per_tick', damage_per_tick)
         self.AddField('damage_range', damage_range)
         self.AddField('cause', cause)
-    
+
     def filter(self, filter: dict):
         self.AddField('entity_filter', filter)
         return self
+
 
 class IsStackable(_component):
     def __init__(self) -> None:
         """Sets that this entity can be stacked."""
         super().__init__('is_stackable')
 
+
 class IsIllagerCaptain(_component):
     def __init__(self) -> None:
         """Sets that this entity is an illager captain."""
         super().__init__('is_illager_captain')
+
 
 class IsBaby(_component):
     def __init__(self) -> None:
         """Sets that this entity is a baby."""
         super().__init__('is_baby')
 
+
 class IsIgnited(_component):
     def __init__(self) -> None:
         """Sets that this entity is currently on fire."""
         super().__init__('is_ignited')
+
 
 class IsTamed(_component):
     def __init__(self) -> None:
         """Sets that this entity is currently tamed."""
         super().__init__('is_tamed')
 
+
 class IsCharged(_component):
     def __init__(self) -> None:
         """Sets that this entity is charged."""
         super().__init__('is_charged')
+
 
 class IsStunned(_component):
     def __init__(self) -> None:
         """Sets that this entity is currently stunned."""
         super().__init__('is_stunned')
 
+
 class IsSaddled(_component):
     def __init__(self) -> None:
         """Sets that this entity is currently saddled."""
         super().__init__('is_saddled')
+
 
 class CanClimb(_component):
     def __init__(self) -> None:
         """Allows this entity to climb up ladders."""
         super().__init__('can_climb')
 
+
 class IsSheared(_component):
     def __init__(self) -> None:
         """Sets that this entity is currently sheared."""
         super().__init__('is_sheared')
+
 
 class CanFly(_component):
     def __init__(self) -> None:
         """Marks the entity as being able to fly, the pathfinder won't be restricted to paths where a solid block is required underneath it."""
         super().__init__('can_fly')
 
+
 class CanPowerJump(_component):
     def __init__(self) -> None:
         """Allows the entity to power jump like the horse does in vanilla."""
         super().__init__('can_power_jump')
+
 
 class IsChested(_component):
     def __init__(self) -> None:
         """Sets that this entity is currently carrying a chest."""
         super().__init__('is_chested')
 
+
 class OutOfControl(_component):
     def __init__(self) -> None:
         """Defines the entity's 'out of control' state."""
         super().__init__('out_of_control')
+
 
 class DamageSensor(_component):
     def __init__(self) -> None:
@@ -481,17 +534,17 @@ class DamageSensor(_component):
         super().__init__('damage_sensor')
         self.AddField('triggers', [])
 
-    def add_trigger(self, 
-        cause: DamageCause, deals_damage: bool = True, 
-        on_damage_event: event = None, on_damage_filter: Filter = None,  damage_multiplier: int = 1, damage_modifier: float = 0
-    ):
+    def add_trigger(self,
+                    cause: DamageCause, deals_damage: bool = True,
+                    on_damage_event: event = None, on_damage_filter: Filter = None,  damage_multiplier: int = 1, damage_modifier: float = 0
+                    ):
         damage = {
             'deals_damage': deals_damage,
         }
         if not cause is DamageCause.All:
             damage['cause'] = cause
         if not on_damage_event is None:
-            damage['on_damage']={
+            damage['on_damage'] = {
                 'event': on_damage_event
             }
         if not on_damage_filter is None:
@@ -504,6 +557,7 @@ class DamageSensor(_component):
         self[self._component_namespace]['triggers'].append(damage)
         return self
 
+
 class FollowRange(_component):
     def __init__(self, value: int, max: int = None) -> None:
         """Defines the range of blocks that a mob will pursue a target."""
@@ -512,16 +566,17 @@ class FollowRange(_component):
         if not max is None:
             self.AddField('max', max)
 
+
 class MovementType(_component):
     def _basic(self, type: str, max_turn: float = 30) -> None:
         super().ResetNamespace(f'movement.{type}')
         if not max_turn == 30:
             self.AddField('max_turn', max_turn)
-    
+
     def __init__(self) -> None:
         """Defines the movement of an entity."""
         super().__init__(f'movement.basic')
-    
+
     def Basic(self, max_turn: float = 30):
         """Defines the movement of an entity."""
         self._basic('basic', max_turn)
@@ -536,7 +591,7 @@ class MovementType(_component):
         """Allows the mob to swim in water like a dolphin."""
         self._basic('dolphin')
         return self
-    
+
     def Fly(self, max_turn: float = 30, start_speed: float = 0.1, speed_when_turning: float = 0.2) -> None:
         """Causes the mob to fly."""
         self._basic('fly', max_turn)
@@ -560,7 +615,7 @@ class MovementType(_component):
             self.AddField('speed_when_turning', speed_when_turning)
         return self
 
-    def Jump(self, max_turn: float = 30, jump_delay : tuple[float, float] = (0, 0)):
+    def Jump(self, max_turn: float = 30, jump_delay: tuple[float, float] = (0, 0)):
         """Causes the mob to jump as it moves with a specified delay between jumps."""
         self._basic('hover', max_turn)
         if not jump_delay == (0, 0):
@@ -581,9 +636,10 @@ class MovementType(_component):
             self.AddField('sway_frequency', sway_frequency)
         return self
 
+
 class NavigationType(_component):
     def _basic(
-        self, 
+        self,
         type: str,
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -644,52 +700,60 @@ class NavigationType(_component):
             self.AddField('is_amphibious', is_amphibious)
         if blocks_to_avoid == []:
             self.AddField('blocks_to_avoid', blocks_to_avoid)
-    
+
     def __init__(self) -> None:
         """Allows this entity to generate paths by walking, swimming, flying and/or climbing around and jumping up and down a block."""
         super().__init__(f'navigation.generic')
-    
+
     def Climb(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
         """Allows this entity to generate paths that include vertical walls like the vanilla Spiders do."""
-        self._basic('climb', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        self._basic('climb', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors,
+                    can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
         return self
 
     def Float(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
         """Allows this entity to generate paths by flying around the air like the regular Ghast."""
-        self._basic('float', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        self._basic('float', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors,
+                    can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
         return self
 
     def Fly(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
         """Allows this entity to generate paths in the air like the vanilla Parrots do."""
-        self._basic('fly', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        self._basic('fly', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors,
+                    can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
         return self
-        
+
     def Generic(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
         """Allows this entity to generate paths by walking, swimming, flying and/or climbing around and jumping up and down a block."""
-        self._basic('generic', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        self._basic('generic', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors,
+                    can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
         return self
-        
+
     def Hover(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
         """Allows this entity to generate paths in the air like the vanilla Bees do. Keeps them from falling out of the skies and doing predictive movement."""
-        self._basic('hover', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        self._basic('hover', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors,
+                    can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
         return self
-        
+
     def Swim(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
         """Allows this entity to generate paths that include water."""
-        self._basic('swim', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        self._basic('swim', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors,
+                    can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
         return self
-        
+
     def Walk(self, avoid_damage_blocks: bool = False, avoid_portals: bool = False, avoid_sun: bool = False, avoid_water: bool = False, can_breach: bool = False, can_break_doors: bool = False, can_jump: bool = True, can_open_doors: bool = False, can_open_iron_doors: bool = False, can_pass_doors: bool = True, can_path_from_air: bool = False, can_path_over_lava: bool = False, can_path_over_water: bool = False, can_sink: bool = True, can_swim: bool = False, can_walk: bool = True, can_walk_in_lava: bool = False, is_amphibious: bool = False, blocks_to_avoid: list[str] = []):
         """llows this entity to generate paths by walking around and jumping up and down a block like regular mobs."""
-        self._basic('walk', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors, can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
+        self._basic('walk', avoid_damage_blocks, avoid_portals, avoid_sun, avoid_water, can_breach, can_break_doors, can_jump, can_open_doors, can_open_iron_doors,
+                    can_pass_doors, can_path_from_air, can_path_over_lava, can_path_over_water, can_sink, can_swim, can_walk, can_walk_in_lava, is_amphibious, blocks_to_avoid)
         return self
+
 
 class EnvironmentSensor(_component):
     def __init__(self) -> None:
         """Creates a trigger based on environment conditions."""
         super().__init__('environment_sensor')
         self.AddField('triggers', [])
-    
+
     def trigger(self, event: event, filters: Filter):
         self[self._component_namespace]['triggers'].append({
             'filters': filters,
@@ -697,21 +761,23 @@ class EnvironmentSensor(_component):
         })
         return self
 
+
 class PreferredPath(_component):
-    def __init__(self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks : int = 3) -> None:
+    def __init__(self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks: int = 3) -> None:
         """Specifies costing information for mobs that prefer to walk on preferred paths."""
         super().__init__('preferred_path')
         self.AddField('default_block_cost', default_block_cost)
         self.AddField('jump_cost', jump_cost)
         self.AddField('max_fall_blocks', max_fall_blocks)
         self.AddField('preferred_path_blocks', [])
-    
+
     def add_blocks(self, cost: int, *blocks: list[str]):
         self[self._component_namespace]['preferred_path_blocks'].append({
             "cost": cost,
             "blocks": blocks
         })
         return self
+
 
 class TargetNearbySensor(_component):
     def __init__(self, inside_range: int = 1, outside_range: int = 5, must_see: bool = False) -> None:
@@ -720,18 +786,20 @@ class TargetNearbySensor(_component):
         self.AddField('inside_range', inside_range)
         self.AddField('outside_range', outside_range)
         self.AddField('must_see', must_see)
-    
-    def on_inside_range(self, event: event, target:FilterSubject):
+
+    def on_inside_range(self, event: event, target: FilterSubject):
         self.AddField('on_inside_range', {"event": event, "target": target})
         return self
-    
-    def on_outside_range(self, event: event, target:FilterSubject):
+
+    def on_outside_range(self, event: event, target: FilterSubject):
         self.AddField('on_outside_range', {"event": event, "target": target})
         return self
-    
-    def on_vision_lost_inside_range(self, event: event, target:FilterSubject):
-        self.AddField('on_vision_lost_inside_range', {"event": event, "target": target})
+
+    def on_vision_lost_inside_range(self, event: event, target: FilterSubject):
+        self.AddField('on_vision_lost_inside_range', {
+                      "event": event, "target": target})
         return self
+
 
 class NearestAttackableTarget(_component):
     def __init__(
@@ -743,19 +811,19 @@ class NearestAttackableTarget(_component):
             must_see: bool = False,
             must_see_forget_duration: float = 3.0,
             persist_time: float = 0.0,
-            
-            reselect_targets: bool = False,
-            scan_interval: int = 10,
-            set_persistent: bool = False,
-            target_invisible_multiplier: float = 0.7,
-            target_search_height: float = -0.1,
-            target_sneak_visibility_multiplier: float = 0.8,
-            within_radius: float = 0.0,
-        ) -> None:
+
+        reselect_targets: bool = False,
+        scan_interval: int = 10,
+        set_persistent: bool = False,
+        target_invisible_multiplier: float = 0.7,
+        target_search_height: float = -0.1,
+        target_sneak_visibility_multiplier: float = 0.8,
+        within_radius: float = 0.0,
+    ) -> None:
         """Allows an entity to attack the closest target within a given subset of specific target types."""
         super().__init__('behavior.nearest_attackable_target')
         self.AddField('entity_types', [])
-        
+
         if not attack_interval == 0:
             self.AddField('attack_interval', attack_interval)
         if not attack_interval_min == 0:
@@ -777,11 +845,13 @@ class NearestAttackableTarget(_component):
         if set_persistent:
             self.AddField('set_persistent', set_persistent)
         if not target_invisible_multiplier == 0.7:
-            self.AddField('target_invisible_multiplier', target_invisible_multiplier)
+            self.AddField('target_invisible_multiplier',
+                          target_invisible_multiplier)
         if not target_search_height == -0.1:
             self.AddField('target_search_height', target_search_height)
         if not target_sneak_visibility_multiplier == 0.8:
-            self.AddField('target_sneak_visibility_multiplier', target_sneak_visibility_multiplier)
+            self.AddField('target_sneak_visibility_multiplier',
+                          target_sneak_visibility_multiplier)
         if not within_radius == 0.0:
             self.AddField('within_radius', within_radius)
 
@@ -798,6 +868,7 @@ class NearestAttackableTarget(_component):
             "reevaluate_description": reevaluate_description if reevaluate_description else {}
         })
         return self
+
 
 class NearestPrioritizedAttackableTarget(_component):
     def __init__(
@@ -809,19 +880,19 @@ class NearestPrioritizedAttackableTarget(_component):
             must_see: bool = False,
             must_see_forget_duration: float = 3.0,
             persist_time: float = 0.0,
-            
-            reselect_targets: bool = False,
-            scan_interval: int = 10,
-            set_persistent: bool = False,
-            target_invisible_multiplier: float = 0.7,
-            target_search_height: float = -0.1,
-            target_sneak_visibility_multiplier: float = 0.8,
-            within_radius: float = 0.0,
-        ) -> None:
+
+        reselect_targets: bool = False,
+        scan_interval: int = 10,
+        set_persistent: bool = False,
+        target_invisible_multiplier: float = 0.7,
+        target_search_height: float = -0.1,
+        target_sneak_visibility_multiplier: float = 0.8,
+        within_radius: float = 0.0,
+    ) -> None:
         """Allows an entity to attack the closest target within a given subset of specific target types."""
         super().__init__('behavior.nearest_prioritized_attackable_target')
         self.AddField('entity_types', [])
-        
+
         if not attack_interval == 0:
             self.AddField('attack_interval', attack_interval)
         if not attack_interval_min == 0:
@@ -843,11 +914,13 @@ class NearestPrioritizedAttackableTarget(_component):
         if set_persistent:
             self.AddField('set_persistent', set_persistent)
         if not target_invisible_multiplier == 0.7:
-            self.AddField('target_invisible_multiplier', target_invisible_multiplier)
+            self.AddField('target_invisible_multiplier',
+                          target_invisible_multiplier)
         if not target_search_height == -0.1:
             self.AddField('target_search_height', target_search_height)
         if not target_sneak_visibility_multiplier == 0.8:
-            self.AddField('target_sneak_visibility_multiplier', target_sneak_visibility_multiplier)
+            self.AddField('target_sneak_visibility_multiplier',
+                          target_sneak_visibility_multiplier)
         if not within_radius == 0.0:
             self.AddField('within_radius', within_radius)
 
@@ -865,12 +938,13 @@ class NearestPrioritizedAttackableTarget(_component):
         })
         return self
 
+
 class RandomLookAround(_component):
-    def __init__(self, 
-                 probability: float = 0.2, 
-                 angle_of_view_horizontal: int = 360, 
-                 angle_of_view_vertical: int = 360, 
-                 look_distance: float = 8.0, 
+    def __init__(self,
+                 probability: float = 0.2,
+                 angle_of_view_horizontal: int = 360,
+                 angle_of_view_vertical: int = 360,
+                 look_distance: float = 8.0,
                  look_time: list[float, float] | float = (2, 4)) -> None:
         """Allows an entity to choose a random direction to look in for a random duration within a range."""
         super().__init__('behavior.random_look_around')
@@ -883,18 +957,18 @@ class RandomLookAround(_component):
             self.AddField('look_distance', look_distance)
         if not look_time == (2, 4):
             self.AddField('look_time', look_time)
-            
 
     def priority(self, priority):
         self.AddField('priority', priority)
         return self
 
+
 class Timer(_component):
-    def __init__(self, 
-                 event: event, 
-                 target: FilterSubject = FilterSubject.Self, 
-                 looping: bool = True, 
-                 randomInterval: bool = True, 
+    def __init__(self,
+                 event: event,
+                 target: FilterSubject = FilterSubject.Self,
+                 looping: bool = True,
+                 randomInterval: bool = True,
                  time: list[float, float] | float = 0) -> None:
         """Adds a timer after which an event will fire."""
         super().__init__('timer')
@@ -910,18 +984,60 @@ class Timer(_component):
             self.AddField('randomInterval', randomInterval)
         if not time == (0, 0):
             self.AddField('time', time)
-            
 
     def priority(self, priority):
         self.AddField('priority', priority)
         return self
 
+
+class Rideable(_component):
+    component_name = 'rideable'
+    def __init__(self,
+                 interact_text: str = 'Mount',
+                 controlling_seat: int = 0,
+                 crouching_skip_interact: bool = True,
+                 pull_in_entities: bool = False,
+                 rider_can_interact: bool = False,
+                 *family_types: str) -> None:
+        """Determines whether this entity can be ridden. Allows specifying the different seat positions and quantity."""
+        super().__init__(self.component_name)
+        self._seat_count = 0
+
+        if not interact_text == 'Mount':
+            t = interact_text.lower().replace(' ', '_')
+            self.AddField('interact_text', f'action.interact.{t}')
+            ANVIL.localize(f'action.interact.{t}={interact_text}')
+        if not controlling_seat == 0:
+            self.AddField('controlling_seat', controlling_seat)
+        if not crouching_skip_interact:
+            self.AddField('crouching_skip_interact', crouching_skip_interact)
+        if pull_in_entities:
+            self.AddField('pull_in_entities', pull_in_entities)
+        if rider_can_interact:
+            self.AddField('rider_can_interact', rider_can_interact)
+
+        self.AddField('family_types', family_types if len(
+            family_types) > 0 else [])
+        self.AddField('seats', [])
+
+    def add_seat(self, position: position, max_rider_count: int, min_rider_count: int = 0, lock_rider_rotation: int = 181, rotate_rider_by: int = 0):
+        self._seat_count += 1
+        self.AddField('seat_count', self._seat_count)
+
+        self[self._component_namespace]['seats'].append({
+            "max_rider_count": max_rider_count,
+            "position": position,
+            "lock_rider_rotation": lock_rider_rotation if not lock_rider_rotation == 181 else {},
+            "min_rider_count": min_rider_count if not min_rider_count == 0 else {},
+            "rotate_rider_by": rotate_rider_by if not rotate_rider_by == 0 else {},
+        })
+
+        return self
+
 # Unfinished
+
+
 class ConditionalBandwidthOptimization(_component):
     def __init__(self) -> None:
         """Defines the Conditional Spatial Update Bandwidth Optimizations of this entity."""
         super().__init__('conditional_bandwidth_optimization')
-
-
-
-

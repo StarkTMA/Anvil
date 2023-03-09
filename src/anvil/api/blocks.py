@@ -12,17 +12,8 @@ __all__ = ['Block', 'VanillaBlockTexture',
            ]
 
 # Experimental
-class _BlockSelectionBox(_component): 
-    def __init__(self, size: coordinates, origin: coordinates) -> None:
-        """Defines the area of the block that is selected by the player's cursor."""
-        super().__init__('selection_box')
-        self.AddField('size', size)
-        self.AddField('origin', origin)
-
-
 class _BlockRotation(_component):
     def __init__(self, rotation: rotation) -> None:
-        """The block's rotation around the center of the cube in degrees."""
         super().__init__('rotation')
         self.SetValue(rotation)
 
@@ -33,18 +24,21 @@ class _BlockDisplayName(_component):
         super().__init__('display_name')
         self.SetValue(display_name)
 
-
-# Probably removed
-
-class _BlockPartVisibility(_component):
-    def __init__(self) -> None:
-        """Sets conditions for when the block's different parts are visible."""
-        super().__init__('part_visibility')
-
-    def add_condition(self, bone_name: str, condition: Molang | bool):
-        self[self._component_namespace].update({
-            bone_name: condition
-        })
+class _BlockTransformation(_component):
+    def __init__(self, table_name: str, *crafting_tags: str) -> None:
+        """The block's transfomration."""
+        super().__init__('transformation')
+    
+    def translation(self, translation: position):
+        self.AddField('translation', translation)
+        return self
+    
+    def scale(self, scale: position):
+        self.AddField('scale', scale)
+        return self
+    
+    def rotation(self, rotation: rotation):
+        self.AddField('rotation', rotation)
         return self
 
 # Released
@@ -144,10 +138,21 @@ class BlockCollisionBox(_component):
             self.AddField('origin', origin)
 
 
+class BlockSelectionBox(_component): 
+    def __init__(self, size: coordinates, origin: coordinates) -> None:
+        """Defines the area of the block that is selected by the player's cursor."""
+        super().__init__('selection_box')
+        if size == (0, 0, 0):
+            self.SetValue(False)
+        else:
+            self.AddField('size', size)
+            self.AddField('origin', origin)
+
+
 class BlockCraftingTable(_component):
     def __init__(self, table_name: str, *crafting_tags: str) -> None:
         """Makes your block into a custom crafting table."""
-        super().__init__('crafting_table')
+        super().__init__('transformation')
         self.AddField('table_name', table_name)
         self.AddField('crafting_tags', crafting_tags)
 
@@ -174,6 +179,16 @@ class BlockPlacementFilter(_component):
         return self
 
 #Blocks
+class _PermutationComponents(_Components):
+    def __init__(self, condition):
+        super().__init__()
+        self._component_group_name = 'components'
+        self._components = {
+            'condition': condition,
+            self._component_group_name: {}
+        }
+
+
 class _BlockServerDescription(_MinecraftDescription):
     def __init__(self, identifier, is_vanilla) -> None:
         super().__init__(identifier, is_vanilla)
@@ -214,6 +229,7 @@ class _BlockServer(Exporter):
         self._server_block = Schemes('server_block')
         self._description = _BlockServerDescription(identifier, is_vanilla)
         self._components = _Components()
+        self._permutations : list[_PermutationComponents] = []
 
     @property
     def description(self):
@@ -223,22 +239,39 @@ class _BlockServer(Exporter):
     def components(self):
         return self._components
 
+    def permutation(self, condition: str):
+        self._permutation = _PermutationComponents(condition)
+        self._permutations.append(self._permutation)
+        return self._permutation
+
     @property
     def queue(self):
         self._server_block['minecraft:block'].update(self.description._export)
         self._server_block['minecraft:block']['components'].update(self._components._export()['components'])
         comps = self._server_block['minecraft:block']['components']
+        self._server_block['minecraft:block']['permutations'] = [permutation._export() for permutation in self._permutations]
+
+            
 
         if 'minecraft:geometry' in comps:
             target_model = self._server_block['minecraft:block']['components']['minecraft:geometry'].split('.')[-1]
             self._check_model(target_model)
             CopyFiles(
                 MakePath('assets', 'models', 'blocks'),
-                MakePath('resource_packs',
-                         f'RP_{PASCAL_PROJECT_NAME}', 'models', 'blocks'),
+                MakePath('resource_packs',f'RP_{PASCAL_PROJECT_NAME}', 'models', 'blocks'),
                 f'{target_model}.geo.json'
             )
-
+        
+        for p in self._server_block['minecraft:block']['permutations']:
+            if 'minecraft:geometry' in p['components']:
+                target_model = p['components']['minecraft:geometry'].split('.')[-1]
+                self._check_model(target_model)
+                CopyFiles(
+                    MakePath('assets', 'models', 'blocks'),
+                    MakePath('resource_packs',f'RP_{PASCAL_PROJECT_NAME}', 'models', 'blocks'),
+                    f'{target_model}.geo.json'
+                )
+        
         if not 'minecraft:material_instances' in comps:
             RaiseError(MISSING_TEXTURE(f"{NAMESPACE}:{self._identifier}"))
 
@@ -256,9 +289,6 @@ class _BlockServer(Exporter):
 
 class _BlockClient():
     def __init__(self, identifier, is_vanilla) -> None:
-        pass
-
-    def add_sound(self):
         pass
 
 

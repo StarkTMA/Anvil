@@ -580,8 +580,8 @@ class StateMachine():
             level.init_world.add(f'scoreboard players set {PROJECT_NAME} game_state 1')
             level.init_player.add(f'scoreboard players set @s player_state 1')
             level.exit_world.add(
-                f'scoreboard players add playground_main game_level 1',
-                f'scoreboard players set playground_main game_state 0'
+                f'scoreboard players add {PROJECT_NAME} game_level 1',
+                f'scoreboard players set {PROJECT_NAME} game_state 0'
             )
         
 class TimedFunction():

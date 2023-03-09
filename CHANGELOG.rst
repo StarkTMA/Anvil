@@ -2,29 +2,66 @@
 Changelog
 =========
 
+Version 0.3.3
+=============
+[Anvil]
+--------
+ - Fixed the attachables class not  copying the models to `RP/models/entity`.
+ - Updated to Release 1.19.70.02
+ - Updated to Preview 1.19.80.20
+ - Fixed a bug with Anvil UI where it caused asserts if no actionbar visibility condition was added.
+ - Fixed some bugs with the generated font characters clipping into each other.
+
+[Blocks]
+--------
+ - Updated `BlockSelectionBox()`.
+ - Removed `_BlockRotation()` and `_BlockPartVisibility()`.
+ - Added `_BlockTransformation()`.
+ - Added `permutation(condition)` to block servers.
+
+[Components]
+------------
+ - Added `Rideable()` Component.
+ - Added `is_riding` Filter.
+
+[Commands]
+----------
+ - Added the `ReplaceItem` command.
+
+[Molang]
+--------
+ - Expanded operation support to use Python operation natively.
+    - Division: **a/b** 
+    - Floor Division: **a//b** => **math.floor(a/b)**
+    - Modulo: **a%b** => **math.mod(a, b)**
+    - Power: **a**b** => **math.pow(a, b)**
+    - Absolute value: **abs(a)** => **math.abs(a)**
+    - Rounded value: **round(a)** => **math.round(a)**
+ - Added `BlockProperty`.
+
 Version 0.3.2
 =============
 [Anvil]
 --------
-- Added a public to-do list.
-- Added a basic `Animation()` class to create animations within Anvil.
+ - Added a public to-do list.
+ - Added a basic `Animation()` class to create animations within Anvil.
 
 [Molang]
 --------
-- Added `HeadXRotation`, `HeadYRotation`, `IsLocalPlayer`, `IsItemNameAny` queries.
-- Values negation is now supported, `-Query.HeadXRotation`.
-- Arithmitic operations now return a str wrapped in brackets, this is to avoid unintended behaviour that may arise because of expressions like this:
-    `q.life_time >= v.timer + 2` => `q.life_time >= (v.timer + 2)`
+ - Added `HeadXRotation`, `HeadYRotation`, `IsLocalPlayer`, `IsItemNameAny` queries.
+ - Values negation is now supported, `-Query.HeadXRotation`.
+ - Arithmitic operations now return a str wrapped in brackets, this is to avoid unintended behaviour that may arise because of expressions like this:
+     `q.life_time >= v.timer + 2` => `q.life_time >= (v.timer + 2)`
 
 [Commands]
 ----------
-- Expanded commands to now support nbt.
-- Added the Give command class with its nbt components.
-- Added the `family` argument to the Target Selector.
+ - Expanded commands to support nbt.
+ - Added the Give command class with its nbt components.
+ - Added the `family` argument to the Target Selector.
 
 [Blocks]
 --------
-- Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
+ - Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
 
 Version 0.3.1
 =============
