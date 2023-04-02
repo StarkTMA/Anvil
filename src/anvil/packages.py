@@ -51,7 +51,6 @@ MATERIALS_VERSION = "1.0.0"
 # Latest Updated preview: 1.19.80.20
 
 class Vanilla:
-    
     class Entities:
         _list = [
             "armor_stand",
@@ -137,98 +136,7 @@ class Vanilla:
             "llama_spit",
             "thrown_trident",
         ]
-        # 1.19.70.23
-        # Updated on 28-02-2023
-        Sniffer = "sniffer"
-        # 1.19.50.21
-        # Updated on 21-10-2022
-        Camel = "camel"
-        # 1.19.0
-        # Updated on 11-07-2022
-        Warden = "warden"
-        #Entites
-        ArmorStand = "armor_stand"
-        Arrow = "arrow"
-        Axolotl = "axolotl"
-        Bat = "bat"
-        Bee = "bee"
-        Blaze = "blaze"
-        Cat = "cat"
-        CaveSpider = "cave_spider"
-        Chicken = "chicken"
-        Cow = "cow"
-        Creeper = "creeper"
-        Dolphin = "dolphin"
-        Donkey = "donkey"
-        Drowned = "drowned"
-        ElderGuardian = "elder_guardian"
-        EnderDragon = "ender_dragon"
-        Enderman = "enderman"
-        Endermite = "endermite"
-        EvocationIllager = "evocation_illager"
-        Fish = "fish"
-        FishingHook = "fishing_hook"
-        Fireball = "fireball"
-        Fox = "fox"
-        Ghast = "ghast"
-        GlowSquid = "glow_squid"
-        Goat = "goat"
-        Guardian = "guardian"
-        Hoglin = "hoglin"
-        Horse = "horse"
-        Husk = "husk"
-        IronGolem = "iron_golem"
-        Llama = "llama"
-        LlamaSpit = "llama_spit"
-        MagmaCube = "magma_cube"
-        Mooshroom = "mooshroom"
-        Mule = "mule"
-        Npc = "npc"
-        Ocelot = "ocelot"
-        Panda = "panda"
-        Parrot = "parrot"
-        Phantom = "phantom"
-        Pig = "pig"
-        PiglinBrute = "piglin_brute"
-        Piglin = "piglin"
-        Pillager = "pillager"
-        Player = "player"
-        PolarBear = "polar_bear"
-        Pufferfish = "pufferfish"
-        Rabbit = "rabbit"
-        Ravager = "ravager"
-        Salmon = "salmon"
-        Sheep = "sheep"
-        Shulker = "shulker"
-        Silverfish = "silverfish"
-        SkeletonHorse = "skeleton_horse"
-        Skeleton = "skeleton"
-        Slime = "slime"
-        SnowGolem = "snow_golem"
-        Spider = "spider"
-        Squid = "squid"
-        Stray = "stray"
-        Strider = "strider"
-        Tropicalfish = "tropicalfish"
-        ThrownTrident = "thrown_trident"
-        Turtle = "turtle"
-        Vex = "vex"
-        Villager = "villager_v2"
-        Vindicator = "vindicator"
-        WanderingTrader = "wandering_trader"
-        Witch = "witch"
-        WitherSkull = "wither_skull"
-        WitherSkullDangeroud = "wither_skull_dangerous"
-        WitherSkeleton = "wither_skeleton"
-        Wither = "wither"
-        Wolf = "wolf"
-        Zoglin = "zoglin"
-        ZombieHorse = "zombie_horse"
-        ZombiePigman = "zombie_pigman"
-        ZombieVillager = "zombie_villager_v2"
-        Zombie = "zombie"
-        Boat = "boat"
-        Snowball = "snowball"
+        
 
     class BlocksItems:
         _list = {
@@ -289,7 +197,7 @@ class Vanilla:
                 "identifier": "minecraft:cherry_fence_gate",
             },
             "minecraft:cherry_hanging_sign": {
-                "creative": True,
+                "creative": False,
                 "experimental": False,
                 "dimension": "overworld",
                 "data": 0,
@@ -12868,6 +12776,14 @@ class Effects:
     Saturation = 'saturation'
     Regeneration = 'regeneration'
     Speed = 'speed'
+    Strength = 'strength'
+    Slowness = 'slowness'
+    Weakness = 'weakness'
+    Levitation = 'levitation'
+    Regeneration = 'regeneration'
+    Wither = 'wither'
+    Poison = 'poison'
+    Absorption = 'absorption'
 
 class Gamemodes:
     Adventure = 'adventure'
@@ -12900,7 +12816,7 @@ class Style:
     White : str = '§f'
     MineconGold : str = '§g'
     Obfuscated : str = '§k'
-    Bold : str = '§i'
+    Bold : str = '§l'
     Italic : str = '§o'
     Reset : str = '§r'
 
@@ -12957,16 +12873,17 @@ class Target():
 class Selector():
     def __init__(self, target: Target = Target.S) -> None:
         self.target = target
-        self.arguments = {}
+        self.arguments = []
         
     def _args(self, **args):
-        self.arguments.update({
-            key : value for key, value in args.items() if value != None
-        })
+        for key, value in args.items():
+            if value != None and {key : value} not in self.arguments:
+                self.arguments.append({key : value}) 
         return self
         
-    def type(self, type : str):
-        self._args(type = type)
+    def type(self, *types : str):
+        for type in types:
+            self._args(type = type)
         return self
 
     def name(self, name : str):
@@ -12993,7 +12910,7 @@ class Selector():
         self._args(dx=dx, dy=dy, dz=dz)
         return self
 
-    def scores(self, *score : str):
+    def scores(self, *score):
         self._args(score)
         return self
 
@@ -13013,7 +12930,7 @@ class Selector():
 
     def __str__(self):
         if len(self.arguments) > 0:
-            self.target += f"[{', '.join(f'{key} = {value}' for key, value in self.arguments.items())}]"
+            self.target += f"[{', '.join(f'{key} = {value}'for i in self.arguments for key, value in i.items())}]"
         return self.target
 
 class Anchor:
@@ -13081,7 +12998,17 @@ class FilterOperation:
     GreaterEqual = '>='
     Equals = 'equals'
     Not = 'not'
-    
+
+class FilterEquipmentDomain:
+    Any = 'any'
+    Armor = 'armor'
+    Feet = 'feet'
+    Hand = 'hand'
+    Head = 'head'
+    Inventory = 'inventory'
+    Leg = 'leg'
+    Torso = 'torso'
+
 class MaterialStates:
     EnableStencilTest = 'EnableStencilTest'
     StencilWrite = 'StencilWrite'
@@ -13161,137 +13088,46 @@ def Schemes(type, *args) -> dict:
             }
         case "gitignore":
             return """
-            # Byte-compiled / optimized / DLL files
-            __pycache__/
-            *.py[cod]
-            *$py.class
-            
-            # C extensions
-            *.so
-            
-            # Distribution / packaging
-            .Python
-            build/
-            develop-eggs/
-            dist/
-            downloads/
-            eggs/
-            .eggs/
-            lib/
-            lib64/
-            parts/
-            sdist/
-            var/
-            wheels/
-            pip-wheel-metadata/
-            share/python-wheels/
-            *.egg-info/
-            .installed.cfg
-            *.egg
-            MANIFEST
-            
-            # PyInstaller
-            #  Usually these files are written by a python script from a template
-            #  before PyInstaller builds the exe, so as to inject date/other infos into it.
-            *.manifest
-            *.spec
-            
-            # Installer logs
-            pip-log.txt
-            pip-delete-this-directory.txt
-            
-            # Unit test / coverage reports
-            htmlcov/
-            .tox/
-            .nox/
-            .coverage
-            .coverage.*
-            .cache
-            nosetests.xml
-            coverage.xml
-            *.cover
-            *.py,cover
-            .hypothesis/
-            .pytest_cache/
-            
-            # Translations
-            *.mo
-            *.pot
-            
-            # Django stuff:
-            *.log
-            local_settings.py
-            db.sqlite3
-            db.sqlite3-journal
-            
-            # Flask stuff:
-            instance/
-            .webassets-cache
-            
-            # Scrapy stuff:
-            .scrapy
-            
-            # Sphinx documentation
-            docs/_build/
-            
-            # PyBuilder
-            target/
-            
-            # Jupyter Notebook
-            .ipynb_checkpoints
-            
-            # IPython
-            profile_default/
-            ipython_config.py
-            
-            # pyenv
-            .python-version
-            
-            # pipenv
-            #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-            #   However, in case of collaboration, if having platform-specific dependencies or dependencies
-            #   having no cross-platform support, pipenv may install dependencies that don't work, or not
-            #   install all needed dependencies.
-            #Pipfile.lock
-            
-            # PEP 582; used by e.g. github.com/David-OConnor/pyflow
-            __pypackages__/
-            
-            # Celery stuff
-            celerybeat-schedule
-            celerybeat.pid
-            
-            # SageMath parsed files
-            *.sage.py
-            
-            # Environments
-            .env
-            .venv
-            env/
-            venv/
-            ENV/
-            env.bak/
-            venv.bak/
-            
-            # Spyder project settings
-            .spyderproject
-            .spyproject
-            
-            # Rope project settings
-            .ropeproject
-            
-            # mkdocs documentation
-            /site
-            
-            # mypy
-            .mypy_cache/
-            .dmypy.json
-            dmypy.json
-            
-            # Pyre type checker
-            .pyre/
-            
-            """
+#Anvil
+vanilla/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/"""
 
         #Core
         case "manifest_bp":
@@ -13588,7 +13424,9 @@ def Defaults(type, *args):
                     "description": {
                         "identifier": f"{args[0]}:{args[1]}",
                     },
-                    "components": {},
+                    "components": {
+                        "minecraft:use_animation": "none"
+                    },
                 },
             }
         case "bp_block_v1":
@@ -13611,7 +13449,7 @@ def Defaults(type, *args):
                     "pattern": [],
                     "key": {},
                     "result": {"item": args[1], "data": args[2], "count": args[3]},
-                    "description": {"identifier": f"{args[0]}"},
+                    "description": {"identifier": f"{args[4]}:{args[0]}"},
                 },
             }
         case "recipe_shapeless":
@@ -13621,7 +13459,7 @@ def Defaults(type, *args):
                     "tags": ["crafting_table"],
                     "ingredients": [],
                     "result": {"item": args[1], "data": args[2], "count": args[3]},
-                    "description": {"identifier": f"{args[0]}"},
+                    "description": {"identifier": f"{args[4]}:{args[0]}"},
                 },
             }
         case "recipe_stonecutter":
@@ -13631,7 +13469,7 @@ def Defaults(type, *args):
                     "tags": ["stonecutter"],
                     "ingredients": [],
                     "result": {"item": args[1], "data": args[2], "count": args[3]},
-                    "description": {"identifier": f"{args[0]}"},
+                    "description": {"identifier": f"{args[4]}:{args[0]}"},
                 },
             }
         case "recipe_smithing_table":
@@ -13641,7 +13479,7 @@ def Defaults(type, *args):
                     "tags": ["smithing_table"],
                     "ingredients": [{"item": "minecraft:netherite_ingot", "count": 1}],
                     "result": {"item": args[1], "data": args[2], "count": args[3]},
-                    "description": {"identifier": f"{args[0]}"},
+                    "description": {"identifier": f"{args[4]}:{args[0]}"},
                 },
             }
         case "recipe_furnace":
@@ -13651,7 +13489,7 @@ def Defaults(type, *args):
                     "tags": args[3],
                     "output": args[1],
                     "input": args[2],
-                    "description": {"identifier": f"{args[0]}"},
+                    "description": {"identifier": f"{args[4]}:{args[0]}"},
                 },
             }
         case "spawn_rules":
@@ -14016,14 +13854,13 @@ def header():
 
 
 def frange(start: int, stop: int, num: float = 1):
-    ''' Similar to numpy linspace function'''
-    l = []
-    i = start
-    step = (stop-start) / (num-1)
-    while i < (stop+step):
-        l.append(round(i, 8))
-        i += step
-    return l
+    """
+    Interpolate `num` values between `start` and `stop`.
+    """
+    step = (stop - start) / (num - 1)
+    values = [round(start + i * step, 2) for i in range(num)]
+    return values
+
 
 
 def zipit(zip_name, dir_list:dict):

@@ -1,9 +1,7 @@
-from anvil.api import components
-from anvil.api.components import Filter
-from anvil.core import (ANVIL, NAMESPACE, NAMESPACE_FORMAT,
+from .components import Filter, InstantDespawn, Rideable, CollisionBox
+from ..core import (ANVIL, NAMESPACE, NAMESPACE_FORMAT,
                         PASCAL_PROJECT_NAME, Exporter, Particle,
                         _MinecraftDescription, _SoundDefinition, Geometry)
-
 from .. import Math, Query, Variable
 from ..packages import *
 
@@ -206,11 +204,11 @@ class _ActorClientDescription(_ActorDescription):
 
         if len(self._description['description']['render_controllers']) == 0:
             RaiseError(MISSING_RENDER_CONTROLLER(f"{self._namespace_format}:{self._identifier}"))
-        
-        if self._type == 'entity':
-            CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', self._type, directory), f'{self._identifier if not self._is_dummy else "dummy"}.geo.json')
-        else:
-            CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', 'entity', self._type, directory), f'{self._identifier if not self._is_dummy else "dummy"}.geo.json')
+        if self._added_geos > 0:
+            if self._type == 'entity':
+                CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', self._type, directory), f'{self._identifier if not self._is_dummy else "dummy"}.geo.json')
+            else:
+                CopyFiles(MakePath('assets', 'models', self._type), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'models', 'entity', self._type, directory), f'{self._identifier if not self._is_dummy else "dummy"}.geo.json')
         
         for text in self._added_textures:
             CopyFiles(MakePath('assets','textures', self._type), MakePath('resource_packs',f'RP_{PASCAL_PROJECT_NAME}','textures',self._type,self._identifier), f'{text}.png')
@@ -373,7 +371,7 @@ class _Entity(Exporter):
 
 class _EntityServer(_Entity):
     def _add_despawn_function(self):
-        self.component_group("despawn").add(components.InstantDespawn())
+        self.component_group("despawn").add(InstantDespawn())
         self.event("despawn").add("despawn")
 
     def _optimize_entity(self):
@@ -412,11 +410,11 @@ class _EntityServer(_Entity):
     def dummy(self):
         self.description.Summonable
         self.components.overwrite(
-            components.CollisionBox(0.1, 0.1),
-            components.Health(1),
-            components.Physics(),
-            components.Pushable(False, False),
-            components.TypeFamily('inanimate'),
+            CollisionBox(0.1, 0.1),
+            Health(1),
+            Physics(),
+            Pushable(False, False),
+            TypeFamily('inanimate'),
             {
                 "minecraft:damage_sensor": {
                     "triggers": [{"deals_damage": False}]
@@ -478,7 +476,7 @@ class _EntityServer(_Entity):
         
         self.content(self._server_entity)
 
-        if components.Rideable.component_name in json.dumps(self._server_entity):
+        if Rideable.component_name in json.dumps(self._server_entity):
             ANVIL.localize(f'action.hint.exit.{NAMESPACE}:{self._name}=Hold shift to exit')
 
         super().queue(directory=directory)
@@ -711,7 +709,7 @@ class _BP_ControllerState():
         
         '''
         self._controller_state[self._state_name]['transitions'].append({
-                                                                       state: condition})
+                                                                       state: str(condition)})
         return self
 
     @property
@@ -801,7 +799,7 @@ class _RP_ControllerState():
             This state.
         
         '''
-        self._controller_state[self._state_name]['transitions'].append({state: condition})
+        self._controller_state[self._state_name]['transitions'].append({state: str(condition)})
         return self
 
     def particle(self, effect: str, locator: str, pre_anim_script: str = None, bind_to_actor : bool = True):
@@ -1056,6 +1054,21 @@ class _BPAnimation():
         
         '''
         self._animation[f'animation.{NAMESPACE_FORMAT}.{self._identifier}.{self._animation_short_name}']['animation_length'] = animation_length
+        return self
+
+    def anim_time_update(self, anim_time_update: Query):
+        '''
+        Parameters
+        ----------
+        anim_time_update : int
+            The length of the animation in seconds.
+        
+        Returns
+        -------
+            This animation.
+        
+        '''
+        self._animation[f'animation.{NAMESPACE_FORMAT}.{self._identifier}.{self._animation_short_name}']['anim_time_update'] = anim_time_update
         return self
 
     @property
@@ -1849,10 +1862,17 @@ class Entity():
     def name(self):
         return self._identifier
 
-    def queue(self, directory: str = None):
-        display_name = RawText(self._identifier)[1]
+    def queue(self, 
+              directory: str = None, 
+              display_name: str = None,
+              spawn_egg_name: str = None):
+        
+        display_name = RawText(self._identifier)[1] if display_name is None else display_name
+        spawn_egg_name = display_name if spawn_egg_name is None else spawn_egg_name
+
         ANVIL.localize(f'entity.{self._namespace_format}:{self._identifier}.name={display_name}')
-        ANVIL.localize(f'item.spawn_egg.entity.{self._namespace_format}:{self._identifier}.name=Spawn {display_name}')
+        ANVIL.localize(f'entity.{self._namespace_format}:{self._identifier}<>.name={display_name}')
+        ANVIL.localize(f'item.spawn_egg.entity.{self._namespace_format}:{self._identifier}.name=Spawn {spawn_egg_name}')
         ANVIL._entities.update({f'{self._namespace_format}:{self._identifier}': {"Display Name": display_name}})
         self.Client.queue(directory)
         self.Server.queue(directory)

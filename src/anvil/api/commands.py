@@ -44,8 +44,7 @@ class ItemComponents(Command):
     def keep_on_death(self):
         self._add_nbt_component({'minecraft:keep_on_death':{}})
         return self
-    
-    
+
 #special
 class _RawText(RawTextConstructor):
     def __init__(self, texttype: str, target):
@@ -73,6 +72,10 @@ class TitleRaw(Command):
     def actionbar(self, target: Target):
         return _RawText('actionbar', target)
 
+    def times(self, target: Target, fade_in: int, stay: int, fade_out: int):
+        self._append_cmd(target, 'times', fade_in, stay, fade_out)
+        return self
+    
 class Tellraw(Command):
     def __init__(self, target: str):
         self._target = target
@@ -91,8 +94,8 @@ class Execute(Command):
             self._parent._append_cmd(self._condition, 'entity', target)
             return self._parent
 
-        def Block(self, block_position: coordinates, block: str, data: int = -1):
-            self._parent._append_cmd(self._condition, 'block', ' '.join(map(str, block_position)), block, data if not data == 1 else '')
+        def Block(self, block_position: coordinates, block: str, data = None):
+            self._parent._append_cmd(self._condition, 'block', ' '.join(map(str, block_position)), block, data if not data is None else '')
             return self._parent
 
         def Blocks(self, begin: coordinates, end: coordinates, destination: coordinates, masked: bool = False):
@@ -223,9 +226,11 @@ class XP(Command):
     
     def add(self, target, amount):
         super()._new_cmd(amount, target)
+        return self
     
     def remove(self, target, amount):
         super()._new_cmd(f'-{amount}', target)
+        return self
 
 class Weather(Command):
     def __init__(self) -> None:
@@ -319,20 +324,22 @@ class Clear(Command):
         super().__init__('clear', target, itemname, date if not date == -1 else '', max_count if not max_count == -1 else '')
 
 class Effect(Command):
-    def __init__(self) -> None:
-        super().__init__('effect')
+    def __init__(self, target: Selector) -> None:
+        super().__init__('effect', target)
     
-    def clear(self, target: str):
-        super()._new_cmd(target, 'clear')
+    @property
+    def clear(self):
+        self._append_cmd('clear')
+        return self
 
-    def give(self, target: str, effect: Effects, seconds: int, amplifier: int, hide_particles: bool):
-        super()._new_cmd(
-            target, 
+    def give(self, effect: Effects, seconds: int, amplifier: int, hide_particles: bool = False):
+        self._append_cmd(
             effect, 
             seconds, 
-            amplifier, 
-            hide_particles
+            amplifier
         )
+        if hide_particles: self._append_cmd('true')
+        return self
 
 class Gamemode(Command):
     def __init__(self, target: str, gamemode: Gamemodes):
@@ -365,7 +372,7 @@ class Function(Command):
 class Give(ItemComponents):
     def __init__(self, target: Target, item: str, amount: int = 1, data: int = 0) -> None:
         super().__init__('give', target, item, amount, data)
-    
+
 class ReplaceItem(ItemComponents):
     def __init__(self) -> None:
         super().__init__('replaceitem')
@@ -377,4 +384,22 @@ class ReplaceItem(ItemComponents):
     def entity(self, target: Selector | Target, slot: Slots, slot_id: int, item_name: str, amount: int = 1, data: int = 0):
         super()._new_cmd('entity', target, slot, slot_id, item_name, amount, data)
         return self
-        
+
+class Damage(ItemComponents):
+    def __init__(self, target: Target, amount: int, cause: DamageCause) -> None:
+        super().__init__('damage', target, amount, cause)
+
+    def damager(self, damager: Target) -> None:
+        self._append_cmd('entity', damager)
+        return self
+    
+class Playsound(Command):
+    def __init__(
+            self , 
+            sound: str, 
+            target: Target = Target.S, 
+            position : position = ('~', '~', '~'),
+            volume : int = 1,
+            pitch: int = 1,
+            minimumVolume : int = 0) -> None:
+        super().__init__('playsound', sound, target, *position, volume, pitch, minimumVolume)

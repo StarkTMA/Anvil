@@ -12,7 +12,7 @@ Anvil
 
 .. |Anvil Status| image:: https://img.shields.io/badge/status-beta-yellow.svg
    :target: https://python.org/
-.. |Anvil Version| image:: https://img.shields.io/badge/release-0.3.3-blue.svg
+.. |Anvil Version| image:: https://img.shields.io/badge/release-0.3.4-blue.svg
    :target: https://python.org/
 .. |Python 10| image:: https://img.shields.io/badge/python-3.10-g.svg
    :target: https://python.org/

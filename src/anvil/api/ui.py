@@ -782,9 +782,7 @@ class UI:
             image_alpha_out.duration("$title_fade_out_time")
 
             # element
-            image_element = self.add_element(
-                f"{name}_element", UIElementTrigger.Title, name
-            )
+            image_element = self.add_element(f"{name}_element", UIElementTrigger.Title, name)
             image_element.type(UIElementType.Panel)
             image_element.size(("100%", "100%"))
             image_element.layer(100)
@@ -811,12 +809,11 @@ class UI:
 
             tip = image_element.controls(f"{name}_tip")
             tip.type(UIElementType.Label)
-            tip.anchor(UIAnchor.Center, UIAnchor.Center)
+            tip.text_alignment(UITextAlignment.Center)
+            tip.size(("80%", 'default'))
             tip.offset((0, "50px"))
             tip.text("#text").shadow.font_size(UIFontSize.Large)
-            tip.binding.binding_name("#hud_subtitle_text_string").binding_name_override(
-                "#text"
-            )
+            tip.binding.binding_name("#hud_subtitle_text_string").binding_name_override("#text")
 
         # Layer 100
         def add_logo(self):

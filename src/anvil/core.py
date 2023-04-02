@@ -340,15 +340,15 @@ class _ItemTextures(Exporter):
 
     def add_item(self, item_name: str, directory, *item_sprites: str):
         for item in item_sprites:
-            CheckAvailability(f'{item}.png', 'sprite',
-                              MakePath('assets', 'textures', 'items'))
-        self._content['texture_data'][item_name] = [
-            *[
-                MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}',
-                         'textures', 'items', directory, f'{sprite}.png')
-                for sprite in item_sprites
+            CheckAvailability(f'{item}.png', 'sprite', MakePath('assets', 'textures', 'items'))
+        self._content['texture_data'][item_name] = {
+            'textures' : [
+                *[
+                    MakePath('textures', 'items', directory, sprite)
+                    for sprite in item_sprites
+                ]
             ]
-        ]
+        }
 
     @property
     def queue(self):
@@ -357,9 +357,12 @@ class _ItemTextures(Exporter):
     def _export(self):
         if len(self._content['texture_data']) > 0:
             for items in self._content['texture_data'].values():
-                for sprite in items:
-                    CopyFiles(MakePath('assets', 'textures', 'items'), sprite.rstrip(
-                        sprite.split('/')[-1]), sprite.split('/')[-1])
+                for sprite in items['textures']:
+                    CopyFiles(
+                        MakePath('assets', 'textures', 'items'), 
+                        MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', sprite.rstrip(sprite.split('/')[-1])), 
+                        sprite.split('/')[-1] + '.png'
+                    )
         return super()._export()
 
 
@@ -793,13 +796,15 @@ class _Anim_Bone():
 
 
 class _Anims():
-    def __init__(self, name, animation_name: str, loop: bool = False) -> None:
+    def __init__(self, name, animation_name: str, loop: bool = False, override_previous_animation: bool = False) -> None:
         self._name = name
         self._anim_name = animation_name
         self._loop = loop
+        self._override_previous_animation = override_previous_animation
         self._anim = {
             f"animation.{NAMESPACE}.{self._name}.{self._anim_name}": {
                 "loop": self._loop,
+                "override_previous_animation": self._override_previous_animation,
                 "bones": {}
             }
         }
@@ -1053,8 +1058,8 @@ class Animation(Exporter):
         self._name = name
         self._anims: list[_Anims] = []
 
-    def add_animation(self, animation_name: str, loop: bool = False):
-        geo = _Anims(self._name, animation_name, loop)
+    def add_animation(self, animation_name: str, loop: bool = False, override_previous_animation: bool = False):
+        geo = _Anims(self._name, animation_name, loop, override_previous_animation)
         self._anims.append(geo)
         return geo
 
@@ -1182,12 +1187,12 @@ class Recipe(EngineComponent):
                 self._item_count = 9
                 self._ingredients = []
                 self._default = Defaults(
-                    'recipe_shapeless', self._identifier, output_item_id, data, count)
+                    'recipe_shapeless', self._identifier, output_item_id, data, count, NAMESPACE)
 
             def add_item(self, item_id: str, data: int = 0, count: int = 1):
+                item_id = str(item_id)
                 if self._item_count == 0:
-                    RaiseError(
-                        f'The recipe {self._parent._name} has more than 9 items')
+                    RaiseError(f'The recipe {self._parent._name} has more than 9 items')
                 if item_id not in [item['item'] for item in self._ingredients]:
                     self._ingredients.append(
                         {'item': item_id, 'data': data, 'count': count})
@@ -1214,62 +1219,59 @@ class Recipe(EngineComponent):
                 ]
                 self._key = {}
                 self._default = Defaults(
-                    'recipe_shaped', self._identifier, output_item_id, data, count)
+                    'recipe_shaped', self._identifier, output_item_id, data, count, NAMESPACE)
                 self._grid = [[' ' for i in range(3)] for j in range(3)]
 
-            def item_0_0(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_0_0(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[0][0] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
-            def item_0_1(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_0_1(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[0][1] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
-            def item_0_2(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_0_2(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[0][2] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
-            def item_1_0(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_1_0(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[1][0] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
-            def item_1_1(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_1_1(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[1][1] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
-            def item_1_2(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_1_2(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[1][2] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
-            def item_2_0(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_2_0(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[2][0] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
-            def item_2_1(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_2_1(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[2][1] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
-            def item_2_2(self, item_identifier: str = ' ', data: int = 0, count: int = 1):
+            def item_2_2(self, item_identifier: str = ' ', data: int = 0):
                 self._grid[2][2] = {'item': item_identifier,
-                                    'data': data, 'count': count}
+                                    'data': data}
                 return self
 
             def queue(self):
                 for i in range(0, 3):  # Row
                     for j in range(0, 3):  # Column
-                        current_item = self._grid[i][j]['item'] if type(
-                            self._grid[i][j]) is dict else ' '
+                        current_item = str(self._grid[i][j]['item']) if type(self._grid[i][j]) is dict else ' '
                         current_data = self._grid[i][j]['data'] if type(
-                            self._grid[i][j]) is dict else 0
-                        current_count = self._grid[i][j]['count'] if type(
                             self._grid[i][j]) is dict else 0
                         current_key = self._keys[0]
                         if current_item != ' ':
@@ -1277,8 +1279,7 @@ class Recipe(EngineComponent):
                                 self._items.update({
                                     current_item: {
                                         'key': current_key,
-                                        'data': current_data,
-                                        'count': current_count
+                                        'data': current_data
                                     }
                                 })
                                 self._pattern[i] = self._pattern[i][:j] + \
@@ -1287,16 +1288,14 @@ class Recipe(EngineComponent):
                                 self._key.update({
                                     current_key: {
                                         'item': current_item,
-                                        'data': current_data,
-                                        'count': current_count
+                                        'data': current_data
                                     }
                                 })
-                            elif current_data != self._items[current_item]['data'] or current_count != self._items[current_item]['count']:
+                            elif current_data != self._items[current_item]['data']:
                                 self._items.update({
                                     current_item: {
                                         'key': current_key,
-                                        'data': current_data,
-                                        'count': current_count
+                                        'data': current_data
                                     }
                                 })
                                 self._pattern[i] = self._pattern[i][:j] + \
@@ -1305,8 +1304,7 @@ class Recipe(EngineComponent):
                                 self._key.update({
                                     current_key: {
                                         'item': current_item,
-                                        'data': current_data,
-                                        'count': current_count
+                                        'data': current_data
                                     }
                                 })
                             else:
@@ -1346,7 +1344,7 @@ class Recipe(EngineComponent):
                 self._item_count = 1
                 self._ingredients = []
                 self._default = Defaults(
-                    'recipe_stonecutter', self._identifier, output_item_id, data, count)
+                    'recipe_stonecutter', self._identifier, output_item_id, data, count, NAMESPACE)
 
             def add_item(self, item_id: str, data: int = 0, count: int = 1):
                 if self._item_count == 0:
@@ -1371,7 +1369,7 @@ class Recipe(EngineComponent):
                 self._item_count = 1
                 self._ingredients = []
                 self._default = Defaults(
-                    'recipe_stonecutter', self._identifier, output_item_id, data, count)
+                    'recipe_stonecutter', self._identifier, output_item_id, data, count, NAMESPACE)
 
             def add_item(self, item_id: str, data: int = 0, count: int = 1):
                 if self._item_count == 0:
@@ -1395,7 +1393,7 @@ class Recipe(EngineComponent):
                 self._item_count = 1
                 self._ingredients = []
                 self._default = Defaults(
-                    'recipe_smithing_table', self._identifier, output_item_id, data, count)
+                    'recipe_smithing_table', self._identifier, output_item_id, data, count, NAMESPACE)
 
             def add_item(self, item_id: str, data: int = 0, count: int = 1):
                 if self._item_count == 0:
@@ -1516,7 +1514,12 @@ class Particle(EngineComponent):
 
 class Item():
     def __new__(self, identifier: str, display_name: str = None, is_vanilla: bool = False):
-        self._identifier, self._display_name = RawText(identifier)
+        if display_name is None:
+            self._identifier, self._display_name = RawText(identifier)
+        else:
+            self._identifier = identifier
+            self._display_name = RawText(display_name)[1]
+
         ANVIL._items.update(
             {self._display_name: f'{NAMESPACE_FORMAT}:{self._identifier}'})
         CheckAvailability(f'{self._identifier}.png',
@@ -1524,40 +1527,23 @@ class Item():
         if is_vanilla:
             ANVIL._items.update(
                 {self._display_name: f'minecraft:{self._identifier}'})
-        self._item_rp = Item.__RP_Item(
-            self._identifier, display_name, is_vanilla)
-        self._item_bp = Item.__BP_Item(
-            self._item_rp, self._identifier, is_vanilla)
+        self._item_rp = Item.__RP_Item(self._identifier, self._display_name, is_vanilla)
+        self._item_bp = Item.__BP_Item(self._item_rp, self._identifier, is_vanilla)
         return self._item_bp
 
     class __RP_Item(EngineComponent):
         def __init__(self, identifier, display_name, is_vanilla):
-            if display_name is None:
-                self._identifier, self._display_name = RawText(identifier)
-            else:
-                self._identifier = identifier
-                self._display_name = display_name
+            self._identifier = identifier
+            self._display_name = display_name
 
             super().__init__(self._identifier, 'rp_item_v1', '.item.json')
             self.content(Defaults(
                 'rp_item_v1', NAMESPACE_FORMAT if not is_vanilla else 'minecraft', self._identifier))
 
         def queue(self, directory):
-            ANVIL.localize(
-                (f'item.{NAMESPACE_FORMAT}:{self._identifier}.name={self._display_name}'))
+            ANVIL.localize((f'item.{NAMESPACE_FORMAT}:{self._identifier}.name={self._display_name}'))
+            ANVIL._item_texture.add_item(self._identifier, directory, self._identifier)
             super().queue(directory=directory)
-            CopyFiles('assets/textures/items',
-                      f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/items/{directory}', f'{self._identifier}.png')
-            if not FileExists(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/item_texture.json'):
-                File('item_texture.json', Schemes('item_texture', PROJECT_NAME),
-                     f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures', 'w')
-            with open(f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/item_texture.json', 'r') as file:
-                data = commentjson.load(file)
-                data['texture_data'][f'{self._identifier}'] = {'textures': []}
-                data['texture_data'][f'{self._identifier}']['textures'].append(
-                    MakePath('textures/items', directory, self._identifier))
-            File('item_texture.json', data,
-                 f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures', 'w')
 
     class __BP_Item(EngineComponent):
         def __init__(self, parent, identifier, is_vanilla):
@@ -1595,16 +1581,16 @@ class Item():
                     f'Item Stack size should be between 1 and 64, Error at item {self._identifier}')
             return self
 
-        def right_clickable(self, use_duration: int = 0):
+        def right_clickable(self, use_duration: int = 0, nutrition: int = 0):
             if 'minecraft:food' not in self._content['minecraft:item']['components']:
-                self._content['minecraft:item']['components']['minecraft:food'] = {
-                }
-            self._content['minecraft:item']['components']['minecraft:food'].update(
-                {"can_always_eat": True})
-            use_duration = int(use_duration)
+                self._content['minecraft:item']['components']['minecraft:food'] = {}
+            self._content['minecraft:item']['components']['minecraft:food'].update({"can_always_eat": True})
+            use_duration = int(use_duration*20)
             if use_duration > 0:
                 self._content['minecraft:item']['components']['minecraft:use_duration'] = max(
                     min(1000000, use_duration), 1)
+            if nutrition > 0:
+                self._content['minecraft:item']['components']['minecraft:food']['nutrition'] = nutrition
             return self
 
         def cooldown_duration(self, cooldowns_duration: int = 0):
@@ -1615,7 +1601,7 @@ class Item():
                     }
                 self._content['minecraft:item']['components']['minecraft:food']['cooldown_time'] = max(
                     min(1000000, cooldowns_duration), 1)
-                self._content['minecraft:item']['components']['minecraft:food']['cooldown_type'] = 'chorusfruit'
+                self._content['minecraft:item']['components']['minecraft:food']['cooldown_type'] = self._identifier
                 if 'minecraft:hand_equipped' in self._content['minecraft:item']['components']:
                     self._content['minecraft:item']['components']['minecraft:food']['can_always_eat'] = True
             return self
@@ -1623,7 +1609,9 @@ class Item():
         def effect(self, effect_name: str, amplifier: int = 1, duration: float or int = 120, chance: int = 1):
             if 'minecraft:food' not in self._content['minecraft:item']['components']:
                 self._content['minecraft:item']['components']['minecraft:food'] = {
-                    'nutrition': 4, 'saturation_modifier': 'normal', 'effects': []}
+                    'nutrition': 0, 'saturation_modifier': 'normal', 'effects': []}
+            if 'effects' not in self._content['minecraft:item']['components']['minecraft:food']:
+                self._content['minecraft:item']['components']['minecraft:food']['effects'] = []
             self._content['minecraft:item']['components']['minecraft:food']['effects'].append(
                 {'name': effect_name, 'chance': chance, 'duration': duration, 'amplifier': amplifier})
             self._content['minecraft:item']['components']['minecraft:food']['can_always_eat'] = True
@@ -1642,6 +1630,15 @@ class LootTable(EngineComponent):
             class _Functions():
                 def __init__(self) -> None:
                     pass
+
+                def SetBookContent(self, author: str, title: str, *pages: str):
+                    self._func = {
+                        "author": author,
+                        "title": title,
+                        "pages": [str(p) for p in pages],
+                        "function": "set_book_contents",
+                    }
+                    return self
 
                 def SetName(self, name: str):
                     self._func = {"function": "set_name", "name": name}
@@ -1731,7 +1728,7 @@ class LootTable(EngineComponent):
                 self._pool['tiers'].update({'initial_range': initial_range})
 
         def entry(self, name: str, count: int = 1, weight: int = 1, entry_type: LootPoolType = LootPoolType.Item):
-            entry = self._entry(name, count, weight, entry_type)
+            entry = self._entry(str(name), count, weight, entry_type)
             self._entries.append(entry)
             return entry
 
@@ -1760,12 +1757,29 @@ class LootTable(EngineComponent):
 
 
 class Anvil():
+    def _check_vanilla(self):
+        import requests
+        response = requests.get(f'https://raw.githubusercontent.com/Mojang/bedrock-samples/{BUILD.lower()}/version.json')
+        return response.json()['latest']['version']
+    
+    def _clone_vanilla(self):
+        import git
+        repo = git.Repo.clone_from(
+            'https://github.com/Mojang/bedrock-samples.git',
+            MakePath('assets', 'vanilla'),
+            branch=BUILD.lower()
+        )
+    
+    def _pull_vanilla(self):
+        import git
+        git.Remote(git.Repo(MakePath('assets', 'vanilla')), 'origin').pull()
+
     def get_github_file(self, path: str):
-        from github import Github
-        if self._github is None:
-            self._github = Github().get_repo('Mojang/bedrock-samples')
-        r = json.loads(self._github.get_contents(
-            path, BUILD.lower()).decoded_content.decode())
+        if not FileExists(MakePath('assets', 'vanilla', path)):
+            self._clone_vanilla()
+
+        with open(MakePath('assets', 'vanilla', path), 'r') as file:
+            r = json.load(file)
         return r
 
     def __init__(self):
@@ -1839,12 +1853,10 @@ class Anvil():
         # 12 Hours
         if (self._deltatime > 12*3600):
             click.echo(CHECK_UPDATE)
-            LATEST_BUILD = self.get_github_file(
-                'version.json')['latest']['version']
-
+            LATEST_BUILD = self._check_vanilla()
             if VANILLA_VERSION < LATEST_BUILD:
                 click.echo(NEW_BUILD(VANILLA_VERSION, LATEST_BUILD))
-                #DownloadFile(self._github.clone_url, MakePath('assets', 'vanilla'))
+                self._pull_vanilla()
             else:
                 click.echo(UP_TO_DATE)
 
@@ -1877,7 +1889,6 @@ class Anvil():
                 RaiseError(LANG_ERROR(text))
             if f'{text}\n' not in self._langs:
                 self._langs.append(f'{text}\n')
-
 
     def score(self, **score_id_value) -> None:
         """
@@ -2003,7 +2014,7 @@ class Anvil():
                         new_data += f'{id}={translated}\n'
                     else:
                         new_data += f'{line}\n'
-                    time.sleep(0.3)
+                    #time.sleep(0.3)
                 File(f'{language}.lang', Defaults('language', DISPLAY_NAME, Translator.translate(
                     PROJECT_DESCRIPTION)) + new_data, MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'texts'), 'w')
                 File(f'{language}.lang', Defaults('language', DISPLAY_NAME, Translator.translate(
@@ -2016,11 +2027,12 @@ class Anvil():
                         if len(line) > 0 and '=' in line:
                             id, text = line.split("=")
                             text = text.replace('\n', '')
+                            print(text)
                             translated = Translator.translate(text)
                             new_data += f'{id}={translated}\n'
                         else:
                             new_data += f'{line}\n'
-                        time.sleep(0.3)
+                        #time.sleep(0.3)
                     File(f'{language}.lang', Schemes('skin_language', PROJECT_NAME, DISPLAY_NAME + ' Skin Pack') +
                          new_data, MakePath('assets', 'skin_pack', 'texts', f'{language}.lang'), 'w')
         click.echo(TRANSLATION_TIME(
@@ -2085,6 +2097,24 @@ class Anvil():
         if FileExists('assets/textures/environment'):
             CopyFolder('assets/textures/environment',
                        f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/environment')
+        
+        for ui in [
+            'hotbar_start_cap.png',
+            'hotbar_0.png',
+            'hotbar_1.png',
+            'hotbar_2.png',
+            'hotbar_3.png',
+            'hotbar_4.png',
+            'hotbar_5.png',
+            'hotbar_6.png',
+            'hotbar_7.png',
+            'hotbar_8.png',
+            'hotbar_end_cap.png',
+            'selected_hotbar_slot.png',
+        ]:
+            if FileExists(f'assets/textures/ui/{ui}'):
+                CopyFiles('assets/textures/ui',
+                           f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/ui', ui)
 
         self._materials.queue
         self._setup_scores.queue('StateMachine/misc')

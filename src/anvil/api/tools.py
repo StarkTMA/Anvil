@@ -1,7 +1,7 @@
+
 from ..core import ANVIL, NAMESPACE, PROJECT_NAME, Function
 from ..packages import *
-from . import commands
-
+from .commands import Execute, Tag, Teleport, Clear
 
 class Interpolation:
     interpolations = ['linear', 'nearest', 'nearest-up', 'zero', 'slinear', 'quadratic', 'cubic', 'previous', 'next']
@@ -26,15 +26,16 @@ class Cinematics():
         self._interpolation = interpolation
         self._show_graphs = show_graphs
         ANVIL.score(**{f'{self._name}_tick': 0})
+        ANVIL.tag(f'{self._name}', f'{self._name}_completed')
         self.locations: list[list] = []
         self.additional_data: list[list] = []
 
-    def anchor(self, position:tuple[float,float,float],rotation:tuple[float,float], cmd: str = None):  
+    def anchor(self, position_xyz:tuple[float,float,float], rotation_xy:tuple[float,float], *commands):  
         self.locations[-1].append(
             {
-                'x': position[0], 'y': position[1], 'z': position[2],
-                'rx': rotation[0], 'ry': rotation[1],
-                'cmd': cmd
+                'x': position_xyz[0], 'y': position_xyz[1], 'z': position_xyz[2],
+                'rx': rotation_xy[0], 'ry': rotation_xy[1],
+                'cmd': commands
             }
         )
         return self
@@ -53,8 +54,7 @@ class Cinematics():
         ANVIL.tag(self._name, f'{self._name}_completed')
         function = Function(self._name)
         function.add(
-            f'execute @s[tag=!{self._name},tag=!{self._name}_completed] ~ ~ ~ scoreboard objectives add {self._name}_tick dummy',
-            f'execute @s[tag=!{self._name},tag=!{self._name}_completed] ~ ~ ~ tag @s add {self._name}',
+            Execute().As(Selector(Target.S).tag(f'!{self._name}', f'!{self._name}_completed')).run(Tag(Target.S).add(self._name)),
             f'scoreboard players add @s[tag={self._name}] {self._name}_tick 1'
         )
         function_tick = 1
@@ -63,7 +63,7 @@ class Cinematics():
             #phase.insert(0, phase[0])
             #phase.append(phase[len(phase)-1])
             # Returns a list of point dicts
-            # Create empty lists tto host coordinates
+            # Create empty lists to host coordinates
             x_data = []
             y_data = []
             z_data = []
@@ -79,7 +79,7 @@ class Cinematics():
                 rx_data.append(point['rx'])
                 ry_data.append(point['ry'])
                 commands.append(point['cmd'])
-                
+
             # Create a time list the size of input data with evenly spaced values
             # Create a new time list with 20*duration samples
             
@@ -112,19 +112,22 @@ class Cinematics():
                 plt.show()
 
             a = 20*data['duration']//(len(commands)-1)
-            for i,(x, y, z, rx, ry) in enumerate(zip(new_x_data, new_y_data, new_z_data, new_rx_data, new_ry_data)):
+            for i, (x, y, z, rx, ry) in enumerate(zip(new_x_data, new_y_data, new_z_data, new_rx_data, new_ry_data)):
                 if i % a == 1:
                     if commands[0] != None:
-                        function.add(f'execute @s[scores={{{self._name}_tick={function_tick}}}] ~~~ {commands.pop(0)}')
+                        function.add(
+                            *[Execute().As(Selector(Target.S).tag(self._name)).If.ScoreMatches(Target.S, f'{self._name}_tick', function_tick).run(cmd) for cmd in commands.pop(0)]
+                        )
                     else: commands.pop(0)
 
-                function.add(f'tp @s[scores={{{self._name}_tick={function_tick}}}] {round(x,3)} {round(y,3)} {round(z,3)} {round(ry,3)} {round(rx,3)}')
+                function.add(
+                    Execute().As(Selector(Target.S).tag(self._name)).If.ScoreMatches(Target.S, f'{self._name}_tick', function_tick).run(Teleport(Target.S, (round(x,2), round(y,2), round(z,2)), (round(ry), round(rx))))
+                )
                 function_tick += 1
 
         function.add(
-            f'tag @s[scores={{{self._name}_tick={function_tick}}}] add {self._name}_completed',
-            f'tag @s[scores={{{self._name}_tick={function_tick}}}] remove {self._name}',
-            f'execute @s[scores={{{self._name}_tick={function_tick}}}] ~ ~ ~ scoreboard objectives remove {self._name}_tick'
+            Execute().As(Selector(Target.S).tag(self._name)).If.ScoreMatches(Target.S, f'{self._name}_tick', function_tick).run(Tag(Target.S).add(f'{self._name}_completed')),
+            Execute().As(Selector(Target.S).tag(self._name)).If.ScoreMatches(Target.S, f'{self._name}_tick', function_tick).run(Tag(Target.S).remove(self._name))
         )
         
         return(function)
@@ -258,9 +261,9 @@ class StateManager():
             'xp -1000L',
             'clear @s',
             'gamemode a @a',
-            commands.Gamerule.CommandBlockOutput(False),
-            commands.Gamerule.SendCommandFeedback(False),
-            commands.Gamerule.ShowTags(False),
+            Gamerule.CommandBlockOutput(False),
+            Gamerule.SendCommandFeedback(False),
+            Gamerule.ShowTags(False),
         )
         state.exit_player.add('effect @s clear')
         return state
@@ -303,7 +306,7 @@ class StateManager():
             level.exit_player.add(f'scoreboard players set @s game_state 4')
             level.exit_world.add(f'scoreboard players set @a[scores={{game_level={level._index}}}] game_state 1',f'scoreboard players set @a[scores={{game_level={level._index}}}] sync 1')
 
-# This is just an update to the new execute
+# This is just an update of StateManager with the new execute. Will be removed
 class StateManager2():
     class _state():
         def __init__(self, index: int, type: str) -> None:
@@ -339,16 +342,16 @@ class StateManager2():
             super().__init__(index, 'level')
             self._root.add(
                 '#Skip init world if already initiated',
-                commands.Execute().As(f'@a[scores={{game_level={self._index}..,game_state=1..}}]').run(f'scoreboard players set @a[scores={{game_level={self._index},game_state=0}}] game_state 1'),
+                Execute().As(f'@a[scores={{game_level={self._index}..,game_state=1..}}]').run(f'scoreboard players set @a[scores={{game_level={self._index},game_state=0}}] game_state 1'),
                 '#Emergency exit if player is on the next level',
-                commands.Execute().As(f'@a[scores={{game_level={self._index+1}..}}]').run(f'scoreboard players set @a[scores={{game_level={self._index}}}] game_state 5'),
+                Execute().As(f'@a[scores={{game_level={self._index+1}..}}]').run(f'scoreboard players set @a[scores={{game_level={self._index}}}] game_state 5'),
                 '# Init world',
-                commands.Execute().If.ScoreMatches('@s', 'game_state', 0).run(self._init_world.execute),
-                commands.Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 1).run(self._init_player.execute),
-                commands.Execute().If.ScoreMatches('@s', 'game_state', 2).run(self._game.execute),
-                commands.Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 3).run(self._exit_player.execute),
-                commands.Execute().If.ScoreMatches('@s', 'game_state', 4).run(self._exit_world.execute),
-                commands.Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 5).run(self._exit_emergency.execute),
+                Execute().If.ScoreMatches('@s', 'game_state', 0).run(self._init_world.execute),
+                Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 1).run(self._init_player.execute),
+                Execute().If.ScoreMatches('@s', 'game_state', 2).run(self._game.execute),
+                Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 3).run(self._exit_player.execute),
+                Execute().If.ScoreMatches('@s', 'game_state', 4).run(self._exit_world.execute),
+                Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 5).run(self._exit_emergency.execute),
                 f'scoreboard players operation @a[scores={{game_level={self._index},sync=1}}] game_state > {PROJECT_NAME} game_state'
             )
 
@@ -356,14 +359,14 @@ class StateManager2():
         def __init__(self, index: int) -> None:
             super().__init__(index, 'side_level')
             self._root.add(
-                commands.Execute().If.ScoreMatches('@s', 'game_level', f'{self._index}..').If.ScoreMatches('@s', 'game_state', '1..').run(f'scoreboard players set @a[scores={{game_level={self._index},game_state=0}}] game_state 1'),
+                Execute().If.ScoreMatches('@s', 'game_level', f'{self._index}..').If.ScoreMatches('@s', 'game_state', '1..').run(f'scoreboard players set @a[scores={{game_level={self._index},game_state=0}}] game_state 1'),
                 '# Init world',
-                commands.Execute().If.ScoreMatches('@s', 'game_state', 0).run(self._init_world.execute),
-                commands.Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 1).run(self._init_player.execute),
-                commands.Execute().If.ScoreMatches('@s', 'game_state', 2).run(self._game.execute),
-                commands.Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 3).run(self._exit_player.execute),
-                commands.Execute().If.ScoreMatches('@s', 'game_state', 4).run(self._exit_world.execute),
-                commands.Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 5).run(self._exit_emergency.execute),
+                Execute().If.ScoreMatches('@s', 'game_state', 0).run(self._init_world.execute),
+                Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 1).run(self._init_player.execute),
+                Execute().If.ScoreMatches('@s', 'game_state', 2).run(self._game.execute),
+                Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 3).run(self._exit_player.execute),
+                Execute().If.ScoreMatches('@s', 'game_state', 4).run(self._exit_world.execute),
+                Execute().As('@a').If.ScoreMatches('@s', 'game_level', self._index).If.ScoreMatches('@s', 'game_state', 5).run(self._exit_emergency.execute),
                 f'scoreboard players operation @a[scores={{game_level={self._index},sync=0,game_state=1..}}] game_state > @a[scores={{game_level={self._index},sync=0}}] game_state'
             )
 
@@ -383,20 +386,20 @@ class StateManager2():
         self.init_player = Function('init_player').add(
             # Init players
             # Make the game engine Sync by default
-            commands.Clear('@s'),
+            Clear('@s'),
             f'scoreboard players operation @s player_id = {PROJECT_NAME} player_id',
             f'scoreboard players add {PROJECT_NAME} player_id 1',
             'scoreboard players set @s sync 1',
             'scoreboard players set @s game_state 0',
             'scoreboard players set @s game_level 0',
-            commands.Tag('@s').add('self_init')
+            Tag('@s').add('self_init')
         ).queue('StateManager/misc')
         # Controls active players count
         self.active_players = Function('active_players').add(
             # Resets active players count
             f'scoreboard players set {PROJECT_NAME} active_players 0',
             # Counts every player who self initialized through self_init function
-            commands.Execute().As('@a[tag=self_init]').run(f'scoreboard players add {PROJECT_NAME} active_players 1'),
+            Execute().As('@a[tag=self_init]').run(f'scoreboard players add {PROJECT_NAME} active_players 1'),
             # Calculate even or odd player count
             f'scoreboard players operation {PROJECT_NAME} players_odd = {PROJECT_NAME} active_players',
             f'scoreboard players operation {PROJECT_NAME} players_odd %= {PROJECT_NAME} even',
@@ -408,7 +411,7 @@ class StateManager2():
         # Root Function, controls which game state logic works
         self.root = Function('root').add(
             '# Init new players',
-            commands.Execute().As('@a[tag=!self_init]').run(self.init_player.execute),
+            Execute().As('@a[tag=!self_init]').run(self.init_player.execute),
             self.active_players.execute,
             '# Engine always syncs to players',
             f'scoreboard players set {PROJECT_NAME} sync 1',
@@ -424,17 +427,17 @@ class StateManager2():
         self.main_levels.append(state)
         self.root.add(f'execute @p[scores={{game_level={ix}}}] ~ ~ ~ {state._root.execute}')
         state.init_player.add(
-            commands.Effect().clear('@s'),
-            commands.Effect().give('@s', Effects.Saturation, 100000, 255, True),
-            commands.Effect().give('@s', Effects.Regeneration, 100000, 255, True),
-            commands.XP('@s').remove('1000L'),
-            commands.Clear('@s'),
-            commands.Gamemode('@s', Gamemodes.Adventure),
-            commands.Gamerule().CommandBlockOutput(False),
-            commands.Gamerule().SendCommandFeedback(False),
-            commands.Gamerule().ShowTags(False),
+            Effect().clear('@s'),
+            Effect().give('@s', Effects.Saturation, 100000, 255, True),
+            Effect().give('@s', Effects.Regeneration, 100000, 255, True),
+            XP('@s').remove('1000L'),
+            Clear('@s'),
+            Gamemode('@s', Gamemodes.Adventure),
+            Gamerule().CommandBlockOutput(False),
+            Gamerule().SendCommandFeedback(False),
+            Gamerule().ShowTags(False),
         )
-        state.exit_player.add(commands.Effect().clear('@s'))
+        state.exit_player.add(Effect().clear('@s'))
         return state
 
     @property
@@ -443,7 +446,7 @@ class StateManager2():
         state = self.MainState(ix)
         self.main_levels.append(state)
         self.root.add(
-            commands.Execute().As(f'@p[scores={{game_level={ix}}}]').run(state._root.execute)
+            Execute().As(f'@p[scores={{game_level={ix}}}]').run(state._root.execute)
         )
         return state
 
@@ -453,7 +456,7 @@ class StateManager2():
         state = self.SideState(-ix)
         self.side_levels.append(state)
         self.root.add(
-            commands.Execute().As(f'@p[scores={{game_level={-ix}}}]').run(state._root.execute)
+            Execute().As(f'@p[scores={{game_level={-ix}}}]').run(state._root.execute)
         )
         return state
 
@@ -521,12 +524,12 @@ class StateMachine():
         def __init__(self, index: int) -> None:
             super().__init__(index, 'level')
             self._root.add(
-                commands.Execute().As('@a[scores={sync = 1}]').If.Score('@s', 'game_level', Operator.Less, PROJECT_NAME, 'game_level').run(f'scoreboard players set @s player_state 0'),
-                commands.Execute().As('@a[scores={sync = 1}]').If.Score('@s', 'game_level', Operator.Less, PROJECT_NAME, 'game_level').run(f'scoreboard players set @s game_level {self.index}'),
-                commands.Execute().As(f'@a[scores={{game_level = {self._index}, player_state = 0, sync = 1}}]').run(self._init_player.execute),
-                commands.Execute().If.ScoreMatches(PROJECT_NAME, 'game_state', 0).run(self._init_world.execute),
-                commands.Execute().If.ScoreMatches(PROJECT_NAME, 'game_state', 1).run(self._game_loop.execute),
-                commands.Execute().If.ScoreMatches(PROJECT_NAME, 'game_state', 2).run(self._exit_world.execute),
+                Execute().As('@a[scores={sync = 1}]').If.Score('@s', 'game_level', Operator.Less, PROJECT_NAME, 'game_level').run(f'scoreboard players set @s player_state 0'),
+                Execute().As('@a[scores={sync = 1}]').If.Score('@s', 'game_level', Operator.Less, PROJECT_NAME, 'game_level').run(f'scoreboard players set @s game_level {self.index}'),
+                Execute().As(f'@a[scores={{game_level = {self._index}, player_state = 0, sync = 1}}]').run(self._init_player.execute),
+                Execute().If.ScoreMatches(PROJECT_NAME, 'game_state', 0).run(self._init_world.execute),
+                Execute().If.ScoreMatches(PROJECT_NAME, 'game_state', 1).run(self._game_loop.execute),
+                Execute().If.ScoreMatches(PROJECT_NAME, 'game_state', 2).run(self._exit_world.execute),
             )
 
     def __init__(self):
@@ -542,23 +545,23 @@ class StateMachine():
             sync = 1,
         )
         self.init_player = Function('init_player').add(
-            commands.Clear('@s'),
+            Clear('@s'),
             f'scoreboard players operation @s player_id = {PROJECT_NAME} player_id',
             f'scoreboard players add {PROJECT_NAME} player_id 1',
             'scoreboard players set @s player_state 0',
             'scoreboard players set @s game_level 0',
             'scoreboard players set @s sync 1',
-            commands.Tag(Target.S).add('self_init')
+            Tag(Target.S).add('self_init')
         ).queue('StateMachine/misc')
         self.active_players = Function('active_players').add(
             f'scoreboard players set {PROJECT_NAME} active_players 0',
-            commands.Execute().As('@a[tag=self_init]').run(f'scoreboard players add {PROJECT_NAME} active_players 1'),
+            Execute().As('@a[tag=self_init]').run(f'scoreboard players add {PROJECT_NAME} active_players 1'),
             f'scoreboard players operation {PROJECT_NAME} players_odd = {PROJECT_NAME} active_players',
             f'scoreboard players operation {PROJECT_NAME} players_odd %= {PROJECT_NAME} even',
         ).queue('StateMachine/misc')
         self.root = Function('root').add(
             '# Init new players',
-            commands.Execute().As('@a[tag=!self_init]').run(self.init_player.execute),
+            Execute().As('@a[tag=!self_init]').run(self.init_player.execute),
             self.active_players.execute,
         ).queue('StateMachine').tick
         # Levels
@@ -570,7 +573,7 @@ class StateMachine():
         state = self.MainState(ix)
         self.main_levels.append(state)
         self.root.add(
-            commands.Execute().If.ScoreMatches(PROJECT_NAME, 'game_level', state.index).run(state._root.execute)
+            Execute().If.ScoreMatches(PROJECT_NAME, 'game_level', state.index).run(state._root.execute)
         )
         return state
 
@@ -583,7 +586,8 @@ class StateMachine():
                 f'scoreboard players add {PROJECT_NAME} game_level 1',
                 f'scoreboard players set {PROJECT_NAME} game_state 0'
             )
-        
+
+
 class TimedFunction():
     def __init__(self, function_name: str) -> None:
         self._function_name = function_name
@@ -591,12 +595,12 @@ class TimedFunction():
         self._function_id = f'{NAMESPACE}{ANVIL._score_index}'
         ANVIL._score_index += 1
         ANVIL.score(**{f'{self._function_id}': 0})
-        ANVIL.tag(self._function_id)
+        ANVIL.tag(self._function_id, self._function_name)
         self._function_limit = 0
         self._function.add(
-            commands.Execute().If.Entity(f'@s[tag=!{self._function_id}]').run(f'scoreboard objectives add {self._function_id} dummy'),
-            commands.Execute().If.Entity(f'@s[tag=!{self._function_id}]').run(commands.Tag('@s').add(self._function_id)),
-            commands.Execute().If.Entity(f'@s[tag={self._function_id}]').run(f'scoreboard players add @s {self._function_id} 1'),
+            Execute().If.Entity(f'@s[tag=!{self._function_id}]').run(f'scoreboard objectives add {self._function_id} dummy'),
+            Execute().If.Entity(f'@s[tag=!{self._function_id}]').run(Tag('@s').add(self._function_id)),
+            Execute().If.Entity(f'@s[tag={self._function_id}]').run(f'scoreboard players add @s {self._function_id} 1'),
         )
 
     def time(self, timestamp: int, *functions: str):
@@ -605,7 +609,7 @@ class TimedFunction():
             self._function_limit = self._tick
         for function in functions:
             self._function.add(
-                commands.Execute().If.ScoreMatches('@s', self._function_id, self._tick).run(function)
+                Execute().If.ScoreMatches('@s', self._function_id, self._tick).run(function)
             )
         return self
 
@@ -618,15 +622,15 @@ class TimedFunction():
             self._function_limit = self._endtick
         for function in functions:
             self._function.add(
-                commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._starttick}..{self._endtick}').run(function)
+                Execute().If.ScoreMatches('@s', self._function_id, f'{self._starttick}..{self._endtick}').run(function)
             )
         return self
 
     def queue(self, directory: str = ""):
         self._function.add(
-            commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(commands.Tag('@s').remove(self._function_id)),
-            commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(commands.Tag('@s').add(self._function_name)),
-            commands.Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(f'scoreboard objectives remove {self._function_id}'),
+            Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(Tag('@s').remove(self._function_id)),
+            Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(Tag('@s').add(self._function_name)),
+            Execute().If.ScoreMatches('@s', self._function_id, f'{self._function_limit}..').run(f'scoreboard objectives remove {self._function_id}'),
         )
         self._function.queue(directory)
         return self
@@ -636,7 +640,7 @@ class TimedFunction():
         if self._function_limit < self._tick:
             self._function_limit = self._tick
         self._function.add(
-            commands.Execute().If.ScoreMatches('@s', self._function_id, self._tick).run(f'scoreboard players set @s {self._function_id} {round(forced_timestamp*20)}'),
+            Execute().If.ScoreMatches('@s', self._function_id, self._tick).run(f'scoreboard players set @s {self._function_id} {round(forced_timestamp*20)}'),
             
         )
         return self
@@ -645,6 +649,7 @@ class TimedFunction():
     @property
     def execute(self):
         return self._function.execute
+
 
 class ScoreClock(Function):
     """
