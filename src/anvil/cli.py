@@ -40,17 +40,18 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
     BASE_DIR = MakePath(APPDATA, 'Local', 'Packages', target, 'LocalState', 'games', 'com.mojang', 'minecraftWorlds')
     os.chdir(BASE_DIR)
 
-    CONFIG.set('ANVIL', 'COMPANY', namespace.title())
     CONFIG.set('ANVIL', 'NAMESPACE', namespace)
     CONFIG.set('ANVIL', 'PROJECT_NAME', project_name)
+    CONFIG.set('ANVIL', 'COMPANY', namespace.title())
     CONFIG.set('ANVIL', 'DISPLAY_NAME', DISPLAY_NAME)
     CONFIG.set('ANVIL', 'PASCAL_PROJECT_NAME', PASCAL_PROJECT_NAME)
     CONFIG.set('ANVIL', 'PROJECT_DESCRIPTION', f'{CONFIG.get("ANVIL", "DISPLAY_NAME")} Essentials')
     CONFIG.set('ANVIL', 'VANILLA_VERSION', LATEST_BUILD)
+    CONFIG.set('ANVIL', 'RELEASE', [1, 0, 0])
     CONFIG.set('ANVIL', 'LAST_CHECK', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     CONFIG.set('ANVIL', 'NAMESPACE_FORMAT', int(fullns is True))
     CONFIG.set('ANVIL', 'BUILD', 'preview' if preview else 'main')
-    CONFIG.set('ANVIL', 'DEBUG', 'false')
+    CONFIG.set('ANVIL', 'DEBUG', 'False')
 
     CreateDirectoriesFromTree(Schemes('structure', project_name))
     File(f'{project_name}.anvil.py', Schemes('script'), project_name, "w")
@@ -58,8 +59,8 @@ def create(namespace:str, project_name:str, preview:bool=False, fullns: bool = F
     File('CHANGELOG.rst', '', project_name, "w")
     File("en_US.lang", Schemes('language', project_name, project_name),MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}','texts'), "w")
     File("en_US.lang", Schemes('language', project_name, project_name),MakePath(project_name,'resource_packs',f'RP_{PASCAL_PROJECT_NAME}','texts'), "w")
-    File("manifest.json", Schemes('manifest_bp'), MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}'), "w")
-    File("manifest.json", Schemes('manifest_rp'), MakePath(project_name,'resource_packs',f'RP_{PASCAL_PROJECT_NAME}'), "w")
+    File("manifest.json", Schemes('manifest_bp', [1, 0, 0]), MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}'), "w")
+    File("manifest.json", Schemes('manifest_rp', [1, 0, 0]), MakePath(project_name,'resource_packs',f'RP_{PASCAL_PROJECT_NAME}'), "w")
     File(f'{project_name}.code-workspace', Schemes('code-workspace',BASE_DIR,project_name,COMPANY),DESKTOP, "w")
 
     with open(MakePath(project_name,'behavior_packs',f'BP_{PASCAL_PROJECT_NAME}','manifest.json')) as file:

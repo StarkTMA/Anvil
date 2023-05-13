@@ -1,259 +1,25 @@
 from .packages import *
 
-# __all__ = [
-#    'ANVIL', 'LootTable', 'Item', 'Particle',
-#    'Recipe', 'oldBlock', 'Structure', 'Fog',
-#    'Fonts', 'Function', 'Dialogue', 'SkinPack',
-#    'NAMESPACE', 'PROJECT_NAME', 'PASCAL_PROJECT_NAME', 'DEBUG',
-#    'EngineComponent'
-# ]
 
+class AddonObject():
+    _extensions = {
+        0: ".json", 
+        1: ".json"
+    }
 
-class Exporter():
-    def __init__(self, name: str, type: str) -> None:
-        self._name = name
-        self._type = type
+    def __init__(self, name: str, path: str) -> None:
         self._shorten = True
+
+        self._name = name
+        self._path = path
+
         self._content = {}
         self._directory = ''
-        self._valids = {
-            'function': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'functions'),
-                'extension': {
-                    0: '.mcfunction',
-                    1: '.mcfunction',
-                }
-            },
-            'server_entity': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'entities'),
-                'extension': {
-                    0: '.behavior.json',
-                    1: '.behavior.json'
-                }
-            },
-            'client_entity': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'entity'),
-                'extension': {
-                    0: '.entity.json',
-                    1: '.entity.json'
-                }
-            },
-            'dialogue': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'dialogue'),
-                'extension': {
-                    0: '.dialogue.json',
-                    1: '.dialogue.json'
-                }
-            },
-            'bp_item_v1': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'items'),
-                'extension': {
-                    0: '.bp_item.json',
-                    1: '.bp_item.json'
-                }
-            },
-            'bp_block_v1': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'blocks'),
-                'extension': {
-                    0: '.block.json',
-                    1: '.block.json'
-                }
-            },
-            'loot_table': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'loot_tables'),
-                'extension': {
-                    0: '.loot_table.json',
-                    1: '.loot_table.json'
-                }
-            },
-            'bp_animation_controllers': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'animation_controllers'),
-                'extension': {
-                    0: '.bp_ac.json',
-                    1: '.animation_controller.json'
-                }
-            },
-            'bp_animations': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'animations'),
-                'extension': {
-                    0: '.bp_anim.json',
-                    1: '.animation.json'
-                }
-            },
-            'spawn_rules': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'spawn_rules'),
-                'extension': {
-                    0: '.spawn_rule.json',
-                    1: '.spawn_rules.json'
-                }
-            },
-            'recipe': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'recipe'),
-                'extension': {
-                    0: '.recipe.json',
-                    1: '.recipe.json'
-                }
-            },
-            'language': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'texts'),
-                'extension': {
-                    0: '.lang',
-                    1: '.lang'
-                }
-            },
-            'rp_item_v1': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'items'),
-                'extension': {
-                    0: '.rp_item.json',
-                    1: '.rp_item.json'
-                }
-            },
-            'rp_animation_controllers': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'animation_controllers'),
-                'extension': {
-                    0: '.rp_ac.json',
-                    1: '.animation_controller.json'
-                }
-            },
-            'render_controllers': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'render_controllers'),
-                'extension': {
-                    0: '.render.json',
-                    1: '.render_controller.json'
-                }
-            },
-            'rp_animation': {
-                'path': MakePath('assets', 'animations'),
-                'extension': {
-                    0: '.rp_anim.json',
-                    1: '.animation.json'
-                }
-            },
-            'attachable': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'attachables'),
-                'extension': {
-                    0: '.attachable.json',
-                    1: '.attachable.json'
-                }
-            },
-            'particle': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'particles'),
-                'extension': {
-                    0: '.particle.json',
-                    1: '.particle.json'
-                }
-            },
-            'assets': {
-                'path': MakePath('assets'),
-            },
-            'ui': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'ui'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'uivars': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'ui'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'item_texture': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'terrain_texture': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'flipbook_textures': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'sound_definitions': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'sounds'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'music_definitions': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'sounds'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'blocks': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'dialogue': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'dialogue'),
-                'extension': {
-                    0: '.dialogue.json',
-                    1: '.dialogue.json'
-                }
-            },
-            'font': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'),
-                'extension': {
-                    0: '.json',
-                    1: '.json'
-                }
-            },
-            'fog': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'fogs'),
-                'extension': {
-                    0: '.fog.json',
-                    1: '.fog.json',
-                }
-            },
-            'server_block': {
-                'path': MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'blocks'),
-                'extension': {
-                    0: '.block.json',
-                    1: '.block.json'
-                }
-            },
-            'materials': {
-                'path': MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'materials'),
-                'extension': {
-                    0: '.material',
-                    1: '.material'
-                }
-            },
-            'geometry': {
-                'path': MakePath('assets', 'models'),
-                'extension': {
-                    0: '.geo.json',
-                    1: '.geo.json'
-                }
-            }
-        }
 
-    def is_valid(self):
-        return self._type in self._valids
-
-    def extension(self):
-        if self.is_valid():
-            return self._valids[self._type]["extension"][NAMESPACE_FORMAT_BIT]
-        else:
-            TypeError(ANVIL_TYPE_ERROR(self._type))
+    @classmethod
+    @property
+    def _extension(self):
+        return self._extensions[NAMESPACE_FORMAT_BIT]
 
     @property
     def do_not_shorten(self):
@@ -265,15 +31,19 @@ class Exporter():
 
     def queue(self, directory: str = None):
         self._directory = directory
-        self._path = MakePath(
-            self._valids[self._type]['path'], self._directory)
+        self._path = MakePath(self._path, self._directory)
         ANVIL._queue(self)
         return self
 
     def _export(self):
+        path = self._path.removeprefix('resource_packs/').removeprefix('behavior_packs/').removeprefix(f'RP_{PASCAL_PROJECT_NAME}/').removeprefix(f'BP_{PASCAL_PROJECT_NAME}/')
+        path = MakePath(path, self._name + self._extension)
+        if len(path) > 80:
+            RaiseError(f'Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters.')
+
         if self._shorten and type(self._content) is dict:
             self._content = ShortenDict(self._content)
-        File(f'{self._name}{self.extension()}', self._content, self._path, 'w')
+        File(f'{self._name}{self._extension}', self._content, self._path, 'w')
 
 
 class RawTextConstructor():
@@ -285,7 +55,7 @@ class RawTextConstructor():
         return self
 
     def text(self, text):
-        self._raw_text.append({'text': text})
+        self._raw_text.append({'text': str(text)})
         return self
 
     def translate(self, text):
@@ -333,9 +103,16 @@ class _MinecraftDescription():
         return self._description
 
 
-class _ItemTextures(Exporter):
+class _ItemTextures(AddonObject):
+    _extensions = {
+        0: '.json',
+        1: '.json'
+    }
+
     def __init__(self) -> None:
-        super().__init__('item_texture', 'item_texture')
+        super().__init__('item_texture', MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures'))
+
+
         self.content(Schemes('item_texture', PROJECT_NAME))
 
     def add_item(self, item_name: str, directory, *item_sprites: str):
@@ -366,9 +143,14 @@ class _ItemTextures(Exporter):
         return super()._export()
 
 
-class _TerrainTextures(Exporter):
+class _TerrainTextures(AddonObject):
+    _extensions = {
+        0: '.json',
+        1: '.json'
+    }
+
     def __init__(self) -> None:
-        super().__init__('terrain_texture', 'terrain_texture')
+        super().__init__('terrain_texture', MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures'))
         self.content(Schemes('terrain_texture', PROJECT_NAME))
 
     def add_block(self, block_name: str, directory: str, *block_textures: str):
@@ -385,9 +167,14 @@ class _TerrainTextures(Exporter):
         return super().queue()
 
 
-class _BlocksJSON(Exporter):
+class _BlocksJSON(AddonObject):
+    _extensions = {
+        0: '.json',
+        1: '.json'
+    }
+
     def __init__(self) -> None:
-        super().__init__('blocks', 'blocks')
+        super().__init__('blocks', MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}'))
         self.content(Schemes('blocks', PROJECT_NAME))
 
     def add_block(self, block_name: str):
@@ -463,9 +250,14 @@ class _SoundDefinition():
         return self._sound
 
 
-class _Sound(Exporter):
+class _Sound(AddonObject):
+    _extensions = {
+        0: '.json',
+        1: '.json'
+    }
+
     def __init__(self) -> None:
-        super().__init__('sound_definitions', 'sound_definitions')
+        super().__init__('sound_definitions', MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'sounds'))
         self.content(Schemes('sound_definitions'))
         self._sounds: list[_SoundDefinition] = []
 
@@ -485,9 +277,14 @@ class _Sound(Exporter):
         return super()._export()
 
 
-class _Music(Exporter):
+class _Music(AddonObject):
+    _extensions = {
+        0: '.json',
+        1: '.json'
+    }
+
     def __init__(self) -> None:
-        super().__init__('music_definitions', 'music_definitions')
+        super().__init__('music_definitions', MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'sounds'))
         self.content(Schemes('music_definitions'))
         self._sounds: list[_SoundDefinition] = []
 
@@ -545,18 +342,18 @@ class _DialogueScene():
         return self
 
     def button(self, button_name: str, *commands: str):
-        if len(self._buttons) > 6:
+        if len(self._buttons) >= 6:
             RaiseError(DIALOGUE_MAX_BUTTONS(self._tag, len(self._buttons)))
         # Buttons cannot be translated
         button = _DialogueButton(button_name, *commands)
         self._buttons.append(button)
         return self
 
-    def on_open_commands(self, *commands):
+    def on_open_commands(self, *commands: str):
         self._on_open_commands = commands
         return self
 
-    def on_close_commands(self, *commands):
+    def on_close_commands(self, *commands: str):
         self._on_close_commands = commands
         return self
 
@@ -566,8 +363,8 @@ class _DialogueScene():
             self._tag,
             self._npc_name.__str__(),
             self._text.__str__(),
-            self._on_open_commands,
-            self._on_close_commands,
+            ['/' + cmd.__str__() for cmd in self._on_open_commands],
+            ['/' + cmd.__str__() for cmd in self._on_close_commands],
             [button._export() for button in self._buttons]
         )
 
@@ -673,9 +470,14 @@ class _Material():
         return self._material
 
 
-class _Materials(Exporter):
+class _Materials(AddonObject):
+    _extensions = {
+        0: '.material',
+        1: '.material'
+    }
+
     def __init__(self) -> None:
-        super().__init__('entity', 'materials')
+        super().__init__('entity', MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'materials'))
         self._materials: list[_Material] = []
 
     def add_material(self, material_name, base_material):
@@ -828,6 +630,7 @@ class _Anims():
 class SkinPack():
     def __init__(self) -> None:
         self._skins = []
+        self._name = 'Skins'
 
     def add_skin(self, filename: str, display_name: str, is_slim: bool = False, free: bool = False):
         self._skins.append({
@@ -855,11 +658,16 @@ class SkinPack():
              self._skins), 'assets/skin_pack', 'w')
 
 
-class Dialogue(Exporter):
+class Dialogue(AddonObject):
+    _extensions = {
+        0: '.dialogue.json',
+        1: '.dialogue.json'
+    }
+
     def __init__(self, name: str) -> None:
+        super().__init__(name, MakePath("behavior_packs", f"BP_{PASCAL_PROJECT_NAME}", "dialogue"))
         self._dialogues = Schemes('dialogues')
         self._scenes = []
-        super().__init__(name, 'dialogue')
 
     def add_scene(self, scene_tag: str):
         scene = _DialogueScene(scene_tag)
@@ -874,12 +682,16 @@ class Dialogue(Exporter):
         return super().queue(directory)
 
 
-class Function(Exporter):
+class Function(AddonObject):
+    _extensions = {
+        0: '.mcfunction',
+        1: '.mcfunction',
+    }
+
     def __init__(self, name: str) -> None:
-        self._name = name
+        super().__init__(name, MakePath('behavior_packs', f'BP_{PASCAL_PROJECT_NAME}', 'functions'))
         self._function: list[str] = []
         self._sub_functions: list[Function] = [self]
-        super().__init__(name, 'function')
 
     def add(self, *functions: str):
         if len(self._sub_functions[-1]._function) >= 10000-len(functions)-1:
@@ -919,6 +731,7 @@ class Function(Exporter):
 class Fonts():
     def __init__(self) -> None:
         self._image = None
+        self._path = MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font')
 
     def generate_font(self, font_name: str, character_size: int = 32):
         if character_size % 16 != 0:
@@ -966,13 +779,17 @@ class Fonts():
 
         for file in ['glyph_E1.png', 'default8.png']:
             if FileExists(MakePath('assets', 'textures', 'ui', file)):
-                CopyFiles(MakePath('assets', 'textures', 'ui'), MakePath(
-                    'resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'font'), file)
+                CopyFiles(MakePath('assets', 'textures', 'ui'), self._path, file)
 
 
-class Fog(Exporter):
+class Fog(AddonObject):
+    _extensions = {
+        0: '.fog.json',
+        1: '.fog.json',
+    }
+
     def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
-        super().__init__(identifier, 'fog')
+        super().__init__(identifier, MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'fogs'))
         self._identifier = identifier
         self._description = _MinecraftDescription(self._identifier, is_vanilla)
         self._fog = Schemes('fog')
@@ -1018,9 +835,14 @@ class Structure():
         )
 
 
-class Geometry(Exporter):
+class Geometry(AddonObject):
+    _extensions = {
+        0: '.geo.json',
+        1: '.geo.json'
+    }
+
     def __init__(self, name: str) -> None:
-        super().__init__(name, 'geometry')
+        super().__init__(name, MakePath('assets', 'models'))
         self._geos: list[_Geo] = []
 
     def add_geo(self, geometry_name: str, texture_size: tuple[int, int] = (16, 16)):
@@ -1052,9 +874,15 @@ class Geometry(Exporter):
         super()._export()
 
 
-class Animation(Exporter):
+class Animation(AddonObject):
+    _extensions = {
+        0: '.animation.json',
+        1: '.animation.json'
+    }
+
     def __init__(self, name: str) -> None:
-        super().__init__(name, 'rp_animation')
+        super().__init__(name, MakePath('assets', 'animations'))
+
         self._name = name
         self._anims: list[_Anims] = []
 
@@ -1066,10 +894,8 @@ class Animation(Exporter):
     @property
     def queue(self):
         if len(self._anims) == 0:
-            RaiseError(
-                f'The Animation file {self._name} does not have any animations.')
-        path = MakePath('assets', 'animations',
-                        f'{self._name}{self.extension()}')
+            RaiseError(f'The Animation file {self._name} does not have any animations.')
+        path = MakePath('assets', 'animations', f'{self._name}{self._extension}')
         if FileExists(path):
             with open(path, 'r') as file:
                 self.content(commentjson.load(file))
@@ -1082,103 +908,148 @@ class Animation(Exporter):
         super().queue()
         self._export()
 
-# Core Functionalities
-# TODO: Replace/remove
 
+class LootTable(AddonObject):
+    _extensions = {
+        0: ".loot_table.json", 
+        1: ".loot_table.json"
+    }
+    class _LootPool():
+        class _entry():
+            class _Functions():
+                def __init__(self) -> None:
+                    pass
 
-class EngineComponent():
-    def __init__(self, name: str, engine_component: str, file_type: str):
-        self._valid_bp = [
-            'function',
-            'behavior',
-            'dialogue',
-            'bp_item_v1',
-            'bp_block_v1',
-            'loot_table',
-            'bp_animation_controller',
-            'bp_animation',
-            'spawn_rule',
-            'recipe'
-        ]
-        self._valid_rp = [
-            'language',
-            'client_entity',
-            'rp_item_v1',
-            'rp_animation_controller',
-            'render_controller',
-            'rp_animation',
-            'attachable',
-            'particle'
-        ]
-        if engine_component in self._valid_bp:
-            self._path = f'behavior_packs/BP_{PASCAL_PROJECT_NAME}'
-        elif engine_component in self._valid_rp:
-            self._path = f'resource_packs/RP_{PASCAL_PROJECT_NAME}'
-        elif engine_component == 'asset':
-            self._path = f'assets'
-        else:
-            RaiseError('Component type must be one of %r.' %
-                       [self._valid_bp+self._valid_rp])
-        self._name = name
-        self._engine_component = engine_component
-        self._file_type = file_type
-        self._directory = ''
-        self._export_mode = 'w'
+                def SetBookContent(self, author: str, title: str, *pages: str):
+                    self._func = {
+                        "author": author,
+                        "title": title,
+                        "pages": [str(p) for p in pages],
+                        "function": "set_book_contents",
+                    }
+                    return self
 
-    def content(self, content):
-        self._content = content
-        return self
+                def SetName(self, name: str):
+                    self._func = {"function": "set_name", "name": name}
+                    return self
+
+                def SetLore(self, *lore: str):
+                    self._func = {"function": "set_lore", "lore": [lore]}
+                    return self
+
+                def SpecificEnchants(self, *enchants: tuple[str, int]):
+                    self._func = {"function": "specific_enchants", "enchants": [
+                        {'id': enchant[0], 'level': enchant[1]}for enchant in enchants]}
+                    return self
+
+                def SetDamage(self, damage: float | tuple[float, float]):
+                    if damage > 1:
+                        RaiseError(
+                            'SetDamage value cannot be above the maximum of 1.')
+                    self._func = {"function": "set_damage", "damage": {
+                        'min': damage[0], 'max': damage[1]}}
+                    return self
+
+                def SetCount(self, count: int | tuple[int, int]):
+                    if type(count) is tuple:
+                        self._func = {"function": "set_count",
+                                      "count": {'min': count[0], 'max': count[1]}}
+                    elif type(count) is int:
+                        self._func = {"function": "set_count", "count": count}
+                    return self
+
+                def SetData(self, data: int | tuple[int, int]):
+                    if type(data) is tuple:
+                        self._func = {"function": "set_data",
+                                      "data": {'min': data[0], 'max': data[1]}}
+                    elif type(data) is int:
+                        self._func = {"function": "set_data", "data": data}
+                    return self
+
+                def EnchantRandomly(self):
+                    self._func = {"function": "enchant_randomly"}
+                    return self
+
+                def _export(self):
+                    return self._func
+
+            def __init__(self, name: str, count: int = 1, weight: int = 1, entry_type: LootPoolType = LootPoolType.Item) -> None:
+                self._entry = {
+                    "type": entry_type,
+                    "name": name,
+                    "count": count,
+                    "weight": weight
+                }
+                self._functions = []
+
+            def quality(self, quality: int):
+                self._entry.update({"quality": quality})
+
+            @property
+            def functions(self):
+                function = self._Functions()
+                self._functions.append(function)
+                return function
+
+            def _export(self):
+                for function in self._functions:
+                    if 'functions' not in self._entry:
+                        self._entry.update({'functions': []})
+                    self._entry["functions"].append(function._export())
+                return self._entry
+
+        def __init__(self, rolls: int | Tuple[int, int] = 1, loot_type: LootPoolType = LootPoolType.Item):
+            self._pool = {}
+            self._entries = []
+            if type(rolls) is int:
+                self._pool.update({"rolls": rolls})
+            elif type(rolls) is tuple:
+                self._pool.update({"rolls": {rolls[0], rolls[1]}})
+            self._pool.update({"type": loot_type})
+
+        def tiers(self, bonus_chance: int = 0, bonus_rolls: int = 0, initial_range: int = 0):
+            self._pool.update({"tiers": {}})
+            if bonus_chance != 0:
+                self._pool['tiers'].update({'bonus_chance': bonus_chance})
+            if bonus_rolls != 0:
+                self._pool['tiers'].update({'bonus_rolls': bonus_rolls})
+            if initial_range != 0:
+                self._pool['tiers'].update({'initial_range': initial_range})
+
+        def entry(self, name: str, count: int = 1, weight: int = 1, entry_type: LootPoolType = LootPoolType.Item):
+            entry = self._entry(str(name), count, weight, entry_type)
+            self._entries.append(entry)
+            return entry
+
+        def _export(self):
+            for entry in self._entries:
+                if 'entries' not in self._pool:
+                    self._pool.update({'entries': []})
+                self._pool["entries"].append(entry._export())
+            return self._pool
+
+    def __init__(self, name: str):
+        super().__init__(name, MakePath("behavior_packs", f"BP_{PASCAL_PROJECT_NAME}", "loot_tables"))
+        self._content = Defaults('loot_table')
+        self._pools = []
+
+    def pool(self, rolls: int | Tuple[int, int] = 1, loot_type: LootPoolType = LootPoolType.Item):
+        pool = self._LootPool(rolls, loot_type)
+        self._pools.append(pool)
+        return pool
 
     def queue(self, directory: str = ''):
-        # Console Output
-        self._directory = directory
-        match self._engine_component:
-            case 'recipe':
-                self._path += f'/recipes'
-            case 'function':
-                self._path += MakePath('/functions',
-                                       PROJECT_NAME, self._directory)
-            case 'behavior':
-                self._path += f'/entities/{self._directory}'
-            case 'dialogue':
-                self._path += f'/dialogue/{self._directory}'
-            case 'bp_item_v1':
-                self._path += f'/items/{self._directory}'
-            case 'rp_item_v1':
-                self._path += f'/items/{self._directory}'
-            case 'bp_block_v1':
-                self._path += f'/blocks/{self._directory}'
-            case 'loot_table':
-                self._path += f'/loot_tables/{self._directory}'
-            case 'bp_animation_controller':
-                self._path += f'/animation_controllers/{self._directory}'
-            case 'bp_animation':
-                self._path += f'/animations/{self._directory}'
-            case 'rp_animation_controller':
-                self._path += f'/animation_controllers/{self._directory}'
-            case 'client_entity':
-                self._path += f'/entity/{self._directory}'
-            case 'render_controller':
-                self._path += f'/render_controllers/{self._directory}'
-            case 'spawn_rule':
-                self._path += f'/spawn_rules/{self._directory}'
-            case 'attachable':
-                self._path += f'/attachables/{self._directory}'
-            case 'asset':
-                self._path += f'/{self._directory}'
-            case 'particle':
-                self._path += f'/particles'
-
-        CreateDirectory(self._path)
-        ANVIL._queue(self)
-        return self
-
-    def _export(self):
-        File(f'{self._name}{self._file_type}',
-             self._content, self._path, self._export_mode)
+        for pool in self._pools:
+            self._content["pools"].append(pool._export())
+        self.content(self._content)
+        return super().queue(directory=directory)
 
 
-class Recipe(EngineComponent):
+class Recipe(AddonObject):
+    _extensions = {
+        0: ".recipe.json", 
+        1: ".recipe.json"
+    }
     class _Crafting():
         class _Shapeless():
             def __init__(self, parent, identifier, output_item_id: str, data: int = 0, count: int = 1):
@@ -1479,7 +1350,7 @@ class Recipe(EngineComponent):
     def __init__(self, name: str):
         self._name = name
         self._content = ''
-        super().__init__(name, 'recipe', '.json')
+        super().__init__(name, MakePath("behavior_packs", f"BP_{PASCAL_PROJECT_NAME}", "recipe"))
 
     def crafting(self, identifier: str):
         return self._Crafting(self, identifier)
@@ -1488,9 +1359,14 @@ class Recipe(EngineComponent):
         return self._Smelting(self, identifier)
 
 
-class Particle(EngineComponent):
+class Particle(AddonObject):
+    _extensions = {
+        0: ".particle.json", 
+        1: ".particle.json"
+    }
+    
     def __init__(self, particle_name, use_vanilla_texture: bool = False):
-        super().__init__(particle_name, 'asset', '.particle.json')
+        super().__init__(particle_name, MakePath("resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "particles"))
         self._name = particle_name
         self._content = ''
         self._use_vanilla_texture = use_vanilla_texture
@@ -1502,14 +1378,106 @@ class Particle(EngineComponent):
         if self._content != '':
             super()._export()
         if not self._use_vanilla_texture:
-            CheckAvailability(f'{self._name}.png',
-                              'texture', 'assets/particles')
-            CopyFiles('assets/particles',
-                      f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/particle', f'{self._name}.png')
-        CheckAvailability(f'{self._name}.particle.json',
-                          'particle', 'assets/particles')
-        CopyFiles('assets/particles',
-                  f'resource_packs/RP_{PASCAL_PROJECT_NAME}/particles', f'{self._name}.particle.json')
+            CheckAvailability(f'{self._name}.png','texture', 'assets/particles')
+            CopyFiles('assets/particles',f'resource_packs/RP_{PASCAL_PROJECT_NAME}/textures/particle', f'{self._name}.png')
+        CheckAvailability(f'{self._name}.particle.json','particle', 'assets/particles')
+        CopyFiles('assets/particles',f'resource_packs/RP_{PASCAL_PROJECT_NAME}/particles', f'{self._name}.particle.json')
+
+
+# Core Functionalities
+# TODO: Replace/remove
+
+
+class EngineComponent():
+    def __init__(self, name: str, engine_component: str, file_type: str):
+        self._valid_bp = [
+            'function',
+            'behavior',
+            'dialogue',
+            'bp_item_v1',
+            'bp_block_v1',
+            'loot_table',
+            'bp_animation_controller',
+            'bp_animation',
+            'spawn_rule',
+            'recipe'
+        ]
+        self._valid_rp = [
+            'language',
+            'client_entity',
+            'rp_item_v1',
+            'rp_animation_controller',
+            'render_controller',
+            'rp_animation',
+            'attachable',
+            'particle'
+        ]
+        if engine_component in self._valid_bp:
+            self._path = f'behavior_packs/BP_{PASCAL_PROJECT_NAME}'
+        elif engine_component in self._valid_rp:
+            self._path = f'resource_packs/RP_{PASCAL_PROJECT_NAME}'
+        elif engine_component == 'asset':
+            self._path = f'assets'
+        else:
+            RaiseError('Component type must be one of %r.' %
+                       [self._valid_bp+self._valid_rp])
+        self._name = name
+        self._engine_component = engine_component
+        self._file_type = file_type
+        self._directory = ''
+        self._export_mode = 'w'
+
+    def content(self, content):
+        self._content = content
+        return self
+
+    def queue(self, directory: str = ''):
+        # Console Output
+        self._directory = directory
+        match self._engine_component:
+            case 'recipe':
+                self._path += f'/recipes'
+            case 'function':
+                self._path += MakePath('/functions',
+                                       PROJECT_NAME, self._directory)
+            case 'behavior':
+                self._path += f'/entities/{self._directory}'
+            case 'dialogue':
+                self._path += f'/dialogue/{self._directory}'
+            case 'bp_item_v1':
+                self._path += f'/items/{self._directory}'
+            case 'rp_item_v1':
+                self._path += f'/items/{self._directory}'
+            case 'bp_block_v1':
+                self._path += f'/blocks/{self._directory}'
+            case 'loot_table':
+                self._path += f'/loot_tables/{self._directory}'
+            case 'bp_animation_controller':
+                self._path += f'/animation_controllers/{self._directory}'
+            case 'bp_animation':
+                self._path += f'/animations/{self._directory}'
+            case 'rp_animation_controller':
+                self._path += f'/animation_controllers/{self._directory}'
+            case 'client_entity':
+                self._path += f'/entity/{self._directory}'
+            case 'render_controller':
+                self._path += f'/render_controllers/{self._directory}'
+            case 'spawn_rule':
+                self._path += f'/spawn_rules/{self._directory}'
+            case 'attachable':
+                self._path += f'/attachables/{self._directory}'
+            case 'asset':
+                self._path += f'/{self._directory}'
+            case 'particle':
+                self._path += f'/particles'
+
+        CreateDirectory(self._path)
+        ANVIL._queue(self)
+        return self
+
+    def _export(self):
+        File(f'{self._name}{self._file_type}',
+             self._content, self._path, self._export_mode)
 
 
 class Item():
@@ -1593,7 +1561,7 @@ class Item():
                 self._content['minecraft:item']['components']['minecraft:food']['nutrition'] = nutrition
             return self
 
-        def cooldown_duration(self, cooldowns_duration: int = 0):
+        def cooldown_duration(self, cooldowns_duration: int = 0, cooldown_type: str = None):
             cooldowns_duration = int(cooldowns_duration*20)
             if cooldowns_duration > 0:
                 if 'minecraft:food' not in self._content['minecraft:item']['components']:
@@ -1601,7 +1569,7 @@ class Item():
                     }
                 self._content['minecraft:item']['components']['minecraft:food']['cooldown_time'] = max(
                     min(1000000, cooldowns_duration), 1)
-                self._content['minecraft:item']['components']['minecraft:food']['cooldown_type'] = self._identifier
+                self._content['minecraft:item']['components']['minecraft:food']['cooldown_type'] = self._identifier if cooldown_type is None else cooldown_type
                 if 'minecraft:hand_equipped' in self._content['minecraft:item']['components']:
                     self._content['minecraft:item']['components']['minecraft:food']['can_always_eat'] = True
             return self
@@ -1624,144 +1592,16 @@ class Item():
             self._parent.queue(self._directory)
 
 
-class LootTable(EngineComponent):
-    class _LootPool():
-        class _entry():
-            class _Functions():
-                def __init__(self) -> None:
-                    pass
-
-                def SetBookContent(self, author: str, title: str, *pages: str):
-                    self._func = {
-                        "author": author,
-                        "title": title,
-                        "pages": [str(p) for p in pages],
-                        "function": "set_book_contents",
-                    }
-                    return self
-
-                def SetName(self, name: str):
-                    self._func = {"function": "set_name", "name": name}
-                    return self
-
-                def SetLore(self, *lore: str):
-                    self._func = {"function": "set_lore", "lore": [lore]}
-                    return self
-
-                def SpecificEnchants(self, *enchants: tuple[str, int]):
-                    self._func = {"function": "specific_enchants", "enchants": [
-                        {'id': enchant[0], 'level': enchant[1]}for enchant in enchants]}
-                    return self
-
-                def SetDamage(self, damage: float | tuple[float, float]):
-                    if damage > 1:
-                        RaiseError(
-                            'SetDamage value cannot be above the maximum of 1.')
-                    self._func = {"function": "set_damage", "damage": {
-                        'min': damage[0], 'max': damage[1]}}
-                    return self
-
-                def SetCount(self, count: int | tuple[int, int]):
-                    if type(count) is tuple:
-                        self._func = {"function": "set_count",
-                                      "count": {'min': count[0], 'max': count[1]}}
-                    elif type(count) is int:
-                        self._func = {"function": "set_count", "count": count}
-                    return self
-
-                def SetData(self, data: int | tuple[int, int]):
-                    if type(data) is tuple:
-                        self._func = {"function": "set_data",
-                                      "data": {'min': data[0], 'max': data[1]}}
-                    elif type(data) is int:
-                        self._func = {"function": "set_data", "data": data}
-                    return self
-
-                def EnchantRandomly(self):
-                    self._func = {"function": "enchant_randomly"}
-                    return self
-
-                def _export(self):
-                    return self._func
-
-            def __init__(self, name: str, count: int = 1, weight: int = 1, entry_type: LootPoolType = LootPoolType.Item) -> None:
-                self._entry = {
-                    "type": entry_type,
-                    "name": name,
-                    "count": count,
-                    "weight": weight
-                }
-                self._functions = []
-
-            def quality(self, quality: int):
-                self._entry.update({"quality": quality})
-
-            @property
-            def functions(self):
-                function = self._Functions()
-                self._functions.append(function)
-                return function
-
-            def _export(self):
-                for function in self._functions:
-                    if 'functions' not in self._entry:
-                        self._entry.update({'functions': []})
-                    self._entry["functions"].append(function._export())
-                return self._entry
-
-        def __init__(self, rolls: int | Tuple[int, int] = 1, loot_type: LootPoolType = LootPoolType.Item):
-            self._pool = {}
-            self._entries = []
-            if type(rolls) is int:
-                self._pool.update({"rolls": rolls})
-            elif type(rolls) is tuple:
-                self._pool.update({"rolls": {rolls[0], rolls[1]}})
-            self._pool.update({"type": loot_type})
-
-        def tiers(self, bonus_chance: int = 0, bonus_rolls: int = 0, initial_range: int = 0):
-            self._pool.update({"tiers": {}})
-            if bonus_chance != 0:
-                self._pool['tiers'].update({'bonus_chance': bonus_chance})
-            if bonus_rolls != 0:
-                self._pool['tiers'].update({'bonus_rolls': bonus_rolls})
-            if initial_range != 0:
-                self._pool['tiers'].update({'initial_range': initial_range})
-
-        def entry(self, name: str, count: int = 1, weight: int = 1, entry_type: LootPoolType = LootPoolType.Item):
-            entry = self._entry(str(name), count, weight, entry_type)
-            self._entries.append(entry)
-            return entry
-
-        def _export(self):
-            for entry in self._entries:
-                if 'entries' not in self._pool:
-                    self._pool.update({'entries': []})
-                self._pool["entries"].append(entry._export())
-            return self._pool
-
-    def __init__(self, name: str):
-        super().__init__(name, 'loot_table', '.loot_table.json')
-        self._content = Defaults('loot_table')
-        self._pools = []
-
-    def pool(self, rolls: int | Tuple[int, int] = 1, loot_type: LootPoolType = LootPoolType.Item):
-        pool = self._LootPool(rolls, loot_type)
-        self._pools.append(pool)
-        return pool
-
-    def queue(self, directory: str = ''):
-        for pool in self._pools:
-            self._content["pools"].append(pool._export())
-        self.content(self._content)
-        return super().queue(directory=directory)
-
-
 class Anvil():
     def _check_vanilla(self):
         import requests
-        response = requests.get(f'https://raw.githubusercontent.com/Mojang/bedrock-samples/{BUILD.lower()}/version.json')
-        return response.json()['latest']['version']
-    
+        try:
+            response = requests.get(f'https://raw.githubusercontent.com/Mojang/bedrock-samples/{BUILD.lower()}/version.json')
+            return response.json()['latest']['version']
+        except:
+            print('Could not receive latest build number.')
+            return VANILLA_VERSION
+
     def _clone_vanilla(self):
         import git
         repo = git.Repo.clone_from(
@@ -1783,25 +1623,10 @@ class Anvil():
         return r
 
     def __init__(self):
-        """
-        Provides a way to control different aspects of the project, setting up project scores, tags, ticking functions, languages and so on...
-
-        Methods:
-        ---------
-        >>> Anvil.score()
-        >>> Anvil.tag()
-        >>> Anvil.tick()
-        >>> Anvil.localize()
-        >>> Anvil.material()
-        >>> Anvil.setup()
-        >>> Anvil.translate()
-        >>> Anvil.compile
-        >>> Anvil.package()
-        """
         header()
         self._start_timer = time.time()
 
-        global COMPANY, NAMESPACE, PROJECT_NAME, PASCAL_PROJECT_NAME, DISPLAY_NAME, PROJECT_DESCRIPTION, VANILLA_VERSION, LATEST_BUILD, NAMESPACE_FORMAT, NAMESPACE_FORMAT_BIT, BUILD, DEBUG
+        global COMPANY, NAMESPACE, PROJECT_NAME, PASCAL_PROJECT_NAME, DISPLAY_NAME, PROJECT_DESCRIPTION, VANILLA_VERSION, LATEST_BUILD, NAMESPACE_FORMAT, NAMESPACE_FORMAT_BIT, RELEASE, BUILD, DEBUG
         COMPANY = CONFIG.get('ANVIL', 'COMPANY')
         NAMESPACE = CONFIG.get('ANVIL', 'NAMESPACE')
         PROJECT_NAME = CONFIG.get('ANVIL', 'PROJECT_NAME')
@@ -1812,6 +1637,7 @@ class Anvil():
         LATEST_BUILD = VANILLA_VERSION
         LAST_CHECK = CONFIG.get('ANVIL', 'LAST_CHECK')
         NAMESPACE_FORMAT_BIT = int(CONFIG.get('ANVIL', 'NAMESPACE_FORMAT'))
+        RELEASE = [int(i) for i in CONFIG.get('ANVIL', 'RELEASE').split('.')]
         BUILD = CONFIG.get('ANVIL', 'BUILD')
         DEBUG = CONFIG.get('ANVIL', 'DEBUG') == 'True'
         NAMESPACE_FORMAT = NAMESPACE + \
@@ -1829,7 +1655,7 @@ class Anvil():
 
         self._functions: list[Function] = []
         self._scores = {}
-        self._objects_list: list[Exporter] = []
+        self._objects_list: list[AddonObject] = []
         self._tick_functions = []
         self._langs = []
         self._skins_langs = []
@@ -1848,10 +1674,9 @@ class Anvil():
             (datetime.now() - datetime.strptime(LAST_CHECK, "%Y-%m-%d %H:%M:%S")).total_seconds())
         self._github = None
         self._compiled = False
-        click.echo(EXECUTION_TIME(datetime.now().strptime(
-            LAST_CHECK, "%Y-%m-%d %H:%M:%S")))
+        #click.echo(EXECUTION_TIME(datetime.now().strptime(LAST_CHECK, "%Y-%m-%d %H:%M:%S")))
         # 12 Hours
-        if (self._deltatime > 12*3600):
+        if (self._deltatime < 12*3600):
             click.echo(CHECK_UPDATE)
             LATEST_BUILD = self._check_vanilla()
             if VANILLA_VERSION < LATEST_BUILD:
@@ -2027,14 +1852,13 @@ class Anvil():
                         if len(line) > 0 and '=' in line:
                             id, text = line.split("=")
                             text = text.replace('\n', '')
-                            print(text)
                             translated = Translator.translate(text)
                             new_data += f'{id}={translated}\n'
                         else:
                             new_data += f'{line}\n'
                         #time.sleep(0.3)
                     File(f'{language}.lang', Schemes('skin_language', PROJECT_NAME, DISPLAY_NAME + ' Skin Pack') +
-                         new_data, MakePath('assets', 'skin_pack', 'texts', f'{language}.lang'), 'w')
+                         new_data, MakePath('assets', 'skin_pack', 'texts'), 'w')
         click.echo(TRANSLATION_TIME(
             round(time.time() - self._translation_timer, 2)))
 
@@ -2066,30 +1890,39 @@ class Anvil():
              PROJECT_DESCRIPTION), 'texts', 'w')
 
         if VANILLA_VERSION < LATEST_BUILD or not all([
-            FileExists(MakePath('resource_packs',
-                       f'RP_{PASCAL_PROJECT_NAME}', 'manifest.json')),
-            FileExists(MakePath('behavior_packs',
-                       f'BP_{PASCAL_PROJECT_NAME}', 'manifest.json')),
+            FileExists(MakePath('resource_packs',f'RP_{PASCAL_PROJECT_NAME}', 'manifest.json')),
+            FileExists(MakePath('behavior_packs',f'BP_{PASCAL_PROJECT_NAME}', 'manifest.json')),
             FileExists(MakePath('manifest.json')),
         ]):
-            File("manifest.json", Schemes('manifest_rp'),
-                 f"resource_packs/RP_{PASCAL_PROJECT_NAME}", "w")
-            with open(f"resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json", 'r') as file:
-                data = commentjson.load(file)
-                uuid = data["header"]["uuid"]
-                version = data["header"]["version"]
-                File("world_resource_packs.json", Schemes(
-                    'world_packs', uuid, version), ".", "w")
-            File("manifest.json", Schemes('manifest_bp'),
-                 f"behavior_packs/BP_{PASCAL_PROJECT_NAME}", "w")
-            with open(f"./behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json", 'r') as file:
-                data = commentjson.load(file)
-                uuid = data["header"]["uuid"]
-                version = data["header"]["version"]
-                File("world_behavior_packs.json", Schemes(
-                    'world_packs', uuid, version), ".", "w")
-            File("manifest.json", Schemes(
-                'manifest_world', [COMPANY]), "", "w")
+            File("manifest.json", Schemes('manifest_rp', RELEASE),f"resource_packs/RP_{PASCAL_PROJECT_NAME}", "w")
+            File("manifest.json", Schemes('manifest_bp', RELEASE),f"behavior_packs/BP_{PASCAL_PROJECT_NAME}", "w")
+            File("manifest.json", Schemes('manifest_world', RELEASE, [COMPANY]), "", "w")
+
+        with open(f"resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json", 'r') as file:
+            data = commentjson.load(file)
+            data["header"]["version"] = RELEASE
+            uuid = data["header"]["uuid"]
+            for i in data["modules"]:
+                i["version"] = RELEASE
+            File("world_resource_packs.json", Schemes('world_packs', uuid, RELEASE), ".", "w")
+            File(f"resource_packs/RP_{PASCAL_PROJECT_NAME}/manifest.json", data, ".", "w")
+            
+        with open(f"./behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json", 'r') as file:
+            data = commentjson.load(file)
+            data["header"]["version"] = RELEASE
+            uuid = data["header"]["uuid"]
+            for i in data["modules"]:
+                i["version"] = RELEASE
+            File("world_behavior_packs.json", Schemes('world_packs', uuid, RELEASE), ".", "w")
+            File(f"./behavior_packs/BP_{PASCAL_PROJECT_NAME}/manifest.json", data, ".", "w")
+
+        with open("manifest.json", 'r') as file:
+            data = commentjson.load(file)
+            data["header"]["version"] = RELEASE
+            for i in data["modules"]:
+                i["version"] = RELEASE
+            File("manifest.json", data, ".", "w")
+
 
         if FileExists('assets/textures/gui'):
             CopyFolder('assets/textures/gui',
@@ -2146,7 +1979,7 @@ class Anvil():
         click.echo(COMPILATION_TIME(round(time.time() - self._start_timer, 2)))
         self._compiled = True
 
-    def package(self, skip_translation: bool = False, include_skin_pack: bool = False) -> None:
+    def package(self, skip_translation: bool = False, include_skin_pack: bool = False, apply_overlay: bool = False) -> None:
         """
         Compiles queued anvil objects, translates and packages the project.
         This function should be called at the end of development and playtesting, it packages the project and exports a submission ready .zip file.
@@ -2188,14 +2021,21 @@ class Anvil():
             else:
                 click.echo(FILE_EXIST_WARNING('pack_icon.png'))
             if FileExists(MakePath(source, 'keyart.png')):
-                original = Image.open(MakePath(source, 'keyart.png'))
+                original = Image.open(MakePath(source, 'keyart.png')).convert('RGB')
+
                 resized = original.resize(store_screenshot_size)
-                resized.convert('RGB').save('world_icon.jpeg')
-                resized.convert('RGB').save(MakePath(
-                    output_store, f'{PROJECT_NAME}_Thumbnail_0.jpg'), dpi=(72, 72), quality=95)
+                if apply_overlay:
+                    overlay = Image.open(MakePath(source, 'keyart_overlay_450.png'))
+                    resized.paste(overlay, mask=overlay.split()[3])
+                resized.save('world_icon.jpeg', dpi=(72, 72), quality=300)
+                resized.save(MakePath(output_store, f'{PROJECT_NAME}_Thumbnail_0.jpg'), dpi=(72, 72), quality=300)
+
                 resized = original.resize(marketing_screenshot_size)
-                resized.convert("RGB").save(MakePath(
-                    output_marketing, f'{PROJECT_NAME}_MarketingKeyArt.jpg'), dpi=(300, 300), quality=95)
+                if apply_overlay:
+                    overlay = Image.open(MakePath(source, 'keyart_overlay_1080.png'))
+                    resized.paste(overlay, mask=overlay.split()[3])
+                resized.save(MakePath(output_marketing, f'{PROJECT_NAME}_MarketingKeyArt.jpg'), dpi=(300, 300), quality=300)
+
             else:
                 click.echo(FILE_EXIST_WARNING('keyart.png'))
             if FileExists(MakePath(source, 'panorama.png')):

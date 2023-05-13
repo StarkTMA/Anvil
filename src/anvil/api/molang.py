@@ -27,10 +27,10 @@ class _molang(str):
         return _molang(f"{self} >= {other}")
 
     def __and__(self, other):
-        return _molang(f"{self} && {other}")
+        return _molang(f"({self} && {other})")
 
     def __or__(self, other):
-        return _molang(f"{self} || {other}")
+        return _molang(f"({self} || {other})")
     
     def __add__(self, other):
         return _molang(f"({self} + {other})")
@@ -296,6 +296,20 @@ class Query(_molang):
     @property
     def IsRoaring(self):
         return self._query(self, 'q', 'is_roaring')
+
+    @classmethod
+    def RotationToCamera(self, axis: int):
+        return self._query(self, 'q', 'rotation_to_camera', clamp(axis, 0, 1))
+
+    @classmethod
+    @property
+    def Health(self):
+        return self._query(self, 'q', 'health')
+    
+    @classmethod
+    @property
+    def MaxHealth(self):
+        return self._query(self, 'q', 'max_health')
 
   
 class Variable(_molang):

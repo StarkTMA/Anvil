@@ -10,7 +10,7 @@ from ..packages import *
 
 
 class EventObject():
-    def __init__(self, event: event, target: Target) -> None:
+    def __init__(self, event: event, target: Selector | Target) -> None:
         return {
             'event': event,
             'target': target
@@ -78,28 +78,6 @@ class Filter:
     def has_target(self, value: bool, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('has_target', subject, operator, None, value)
 
-    # Properties
-
-    @classmethod
-    def int_property(self, value: int, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('int_property', subject, operator, f'{NAMESPACE}:{domain}', value)
-
-    @classmethod
-    def bool_property(self, value: bool, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('bool_property', subject, operator, f'{NAMESPACE}:{domain}', value)
-
-    @classmethod
-    def float_property(self, value: float, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('float_property', subject, operator, f'{NAMESPACE}:{domain}', value)
-
-    @classmethod
-    def enum_property(self, value: str, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('enum_property', subject, operator, f'{NAMESPACE}:{domain}', value)
-
-    @classmethod
-    def has_property(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('has_property', subject, operator, None, f'{NAMESPACE}:{value}')
-
     @classmethod
     def has_component(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('has_component', subject, operator, None, value)
@@ -124,23 +102,66 @@ class Filter:
     def target_distance(self, value: int, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('target_distance', subject, operator, None, value)
 
+    @classmethod
+    def is_raider(self, value: bool, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('is_raider', subject, operator, None, value)
 
-class _component(dict):
+    @classmethod
+    def is_variant(self, value: int, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('is_variant', subject, operator, None, value)
+
+    @classmethod
+    def is_mark_variant(self, value: int, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('is_mark_variant', subject, operator, None, value)
+
+    @classmethod
+    def is_skin_id(self, value: int, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('is_skin_id', subject, operator, None, value)
+
+    # Properties
+
+    @classmethod
+    def int_property(self, value: int, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('int_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+
+    @classmethod
+    def bool_property(self, value: bool, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('bool_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+
+    @classmethod
+    def float_property(self, value: float, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('float_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+
+    @classmethod
+    def enum_property(self, value: str, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('enum_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+
+    @classmethod
+    def has_property(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        return self._construct_filter('has_property', subject, operator, None, f'{NAMESPACE}:{value}')
+
+
+class _component():
     def __init__(self, component_name) -> None:
-        self.ResetNamespace(component_name)
+        self._component_reset_namespace(component_name)
 
-    def ResetNamespace(self, component_name):
-        self.clear()
+    def _component_reset_namespace(self, component_name):
         self._component_name = component_name
         self._component_namespace = f'minecraft:{self._component_name}'
-        self.__setitem__(self._component_namespace, {})
+        self._cmp = {self._component_namespace:{}}
 
-    def AddField(self, key, value):
-        self[self._component_namespace][key] = value
+    def _component_add_field(self, key, value):
+        self._cmp[self._component_namespace][key] = value
 
-    def SetValue(self, value):
-        self[self._component_namespace] = value
+    def _component_set_value(self, value):
+        self._cmp[self._component_namespace] = value
 
+    def keys(self):
+        return list(self._cmp.keys())
+    
+    def __getitem__(self, key):
+        return self._cmp[key]
+    
 # Components ==========================================================================
 
 
@@ -157,9 +178,9 @@ class AddRider(_component):
 
         '''
         super().__init__('addrider')
-        self.AddField('entity_type', entity_type)
+        self._component_add_field('entity_type', entity_type)
         if not spawn_event is None:
-            self.AddField('spawn_event', spawn_event)
+            self._component_add_field('spawn_event', spawn_event)
 
 
 class AdmireItem(_component):
@@ -175,10 +196,10 @@ class AdmireItem(_component):
 
         '''
         super().__init__('admire_item')
-        self.AddField('cooldown_after_being_attacked',
+        self._component_add_field('cooldown_after_being_attacked',
                       cooldown_after_being_attacked)
         if not duration == 10:
-            self.AddField('duration', duration)
+            self._component_add_field('duration', duration)
 
 
 class Ageable(_component):
@@ -194,7 +215,7 @@ class Ageable(_component):
 
         '''
         super().__init__('ageable')
-        self.AddField('duration', duration)
+        self._component_add_field('duration', duration)
         self[self._component_namespace]['grow_up'] = {
             "event": event,
             "target": "self"
@@ -205,15 +226,15 @@ class CollisionBox(_component):
     def __init__(self, height: float, width: float) -> None:
         """Sets the width and height of the Entity's collision box."""
         super().__init__('collision_box')
-        self.AddField('height', height)
-        self.AddField('width', width)
+        self._component_add_field('height', height)
+        self._component_add_field('width', width)
 
 
 class TypeFamily(_component):
     def __init__(self, *family: str) -> None:
         """Defines the families this entity belongs to."""
         super().__init__('type_family')
-        self.AddField('family', family)
+        self._component_add_field('family', family)
 
 
 class InstantDespawn(_component):
@@ -221,75 +242,75 @@ class InstantDespawn(_component):
         """"""
         super().__init__('instant_despawn')
         if remove_child_entities:
-            self.AddField('remove_child_entities', True)
+            self._component_add_field('remove_child_entities', True)
 
 
 class Health(_component):
     def __init__(self, value: int, min: int = None, max: int = None) -> None:
         """Sets the amount of health this mob has."""
         super().__init__('health')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
         if not max is None:
-            self.AddField('max', max)
+            self._component_add_field('max', max)
         if not min is None:
-            self.AddField('min', min)
+            self._component_add_field('min', min)
 
 
 class Physics(_component):
     def __init__(self, has_collision: bool = True, has_gravity: bool = True) -> None:
         """Defines physics properties of an actor, including if it is affected by gravity or if it collides with objects."""
         super().__init__('physics')
-        self.AddField('has_collision', has_collision)
-        self.AddField('has_gravity', has_gravity)
+        self._component_add_field('has_collision', has_collision)
+        self._component_add_field('has_gravity', has_gravity)
 
 
 class KnockbackResistance(_component):
     def __init__(self, value: float) -> None:
         """Determines the amount of knockback resistance that the item has."""
         super().__init__('knockback_resistance')
-        self.AddField('value', max(0, min(1, value)))
+        self._component_add_field('value', max(0, min(1, value)))
 
 
 class Pushable(_component):
     def __init__(self, is_pushable: bool = True, is_pushable_by_piston: bool = True) -> None:
         """Defines what can push an entity between other entities and pistons."""
         super().__init__('pushable')
-        self.AddField('is_pushable', is_pushable)
-        self.AddField('is_pushable_by_piston', is_pushable_by_piston)
+        self._component_add_field('is_pushable', is_pushable)
+        self._component_add_field('is_pushable_by_piston', is_pushable_by_piston)
 
 
 class PushThrough(_component):
     def __init__(self, value: int) -> None:
         """Sets the distance through which the entity can push through."""
         super().__init__('push_through')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
 
 
 class Movement(_component):
     def __init__(self, value: int, max: int = None) -> None:
         """Sets the amount of movement this mob has."""
         super().__init__('movement')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
         if not max is None:
-            self.AddField('max', max)
+            self._component_add_field('max', max)
 
 
 class TickWorld(_component):
     def __init__(self, never_despawn: bool = True, radius: int = None, distance_to_players: int = None) -> None:
         """Defines if the entity ticks the world and the radius around it to tick."""
         super().__init__('tick_world')
-        self.AddField('never_despawn', never_despawn)
+        self._component_add_field('never_despawn', never_despawn)
         if not radius is None:
-            self.AddField('radius', radius)
+            self._component_add_field('radius', radius)
         if not distance_to_players is None:
-            self.AddField('distance_to_players', distance_to_players)
+            self._component_add_field('distance_to_players', distance_to_players)
 
 
 class CustomHitTest(_component):
     def __init__(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]) -> None:
         """List of hitboxes for melee and ranged hits against the entity."""
         super().__init__('custom_hit_test')
-        self.AddField('hitboxes', [{
+        self._component_add_field('hitboxes', [{
             "width": width,
             "height": height,
             "pivot": pivot
@@ -313,25 +334,25 @@ class Attack(_component):
     def __init__(self, damage: int, effect_duration: int = None, effect_name: str = None) -> None:
         """Defines an entity's melee attack and any additional effects on it."""
         super().__init__('attack')
-        self.AddField('damage', damage)
+        self._component_add_field('damage', damage)
         if not effect_duration is None:
-            self.AddField('effect_duration', effect_duration)
+            self._component_add_field('effect_duration', effect_duration)
         if not effect_name is None:
-            self.AddField('effect_name', effect_name)
+            self._component_add_field('effect_name', effect_name)
 
 
 class JumpStatic(_component):
     def __init__(self, jump_power: float) -> None:
         """Gives the entity the ability to jump."""
         super().__init__('jump.static')
-        self.AddField('jump_power', jump_power)
+        self._component_add_field('jump_power', jump_power)
 
 
 class HorseJumpStrength(_component):
     def __init__(self, range_min: float, range_max: float) -> None:
         """Allows this mob to jump higher when being ridden by a player."""
         super().__init__('horse.jump_strength')
-        self.AddField('hitboxes', [{
+        self._component_add_field('hitboxes', [{
             "range_min": range_min,
             "range_max": range_max
         }])
@@ -341,8 +362,8 @@ class SpellEffects(_component):
     def __init__(self) -> None:
         """Defines what mob effects to add and remove to the entity when adding this component."""
         super().__init__('spell_effects')
-        self.AddField('add_effects', [])
-        self.AddField('remove_effects', [])
+        self._component_add_field('add_effects', [])
+        self._component_add_field('remove_effects', [])
 
     def add_effects(self, effect: Effects, duration: int, amplifier: int, ambient: bool = True, visible: bool = True, display_on_screen_animation: bool = True):
         effect = {
@@ -370,48 +391,48 @@ class FrictionModifier(_component):
     def __init__(self, value: int) -> None:
         """Defines how much friction affects this entity."""
         super().__init__('friction_modifier')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
 
 
 class Breathable(_component):
     def __init__(self, breathes_air: bool = True, total_supply: int = 15, suffocate_time: int = -20, inhale_time: int = 0) -> None:
         """Defines what blocks this entity can breathe in and gives them the ability to suffocate."""
         super().__init__('breathable')
-        self.AddField('breathes_air', breathes_air)
+        self._component_add_field('breathes_air', breathes_air)
         if total_supply != 15:
-            self.AddField('total_supply', total_supply)
+            self._component_add_field('total_supply', total_supply)
         if suffocate_time != -20:
-            self.AddField('suffocate_time', suffocate_time)
+            self._component_add_field('suffocate_time', suffocate_time)
         if inhale_time != 0:
-            self.AddField('inhale_time', inhale_time)
+            self._component_add_field('inhale_time', inhale_time)
 
     @property
     def breathes_lava(self):
-        self.AddField('breathes_lava', True)
+        self._component_add_field('breathes_lava', True)
         return self
 
     @property
     def breathes_solids(self):
-        self.AddField('breathes_solids', True)
+        self._component_add_field('breathes_solids', True)
         return self
 
     def breathes_water(self, generates_bubbles: bool = False):
-        self.AddField('breathes_water', True)
+        self._component_add_field('breathes_water', True)
         if generates_bubbles:
-            self.AddField('generates_bubbles', generates_bubbles)
+            self._component_add_field('generates_bubbles', generates_bubbles)
         return self
 
     @property
     def breathes_solids(self):
-        self.AddField('breathes_solids', True)
+        self._component_add_field('breathes_solids', True)
         return self
 
     def breathe_blocks(self, *blocks: str):
-        self.AddField('blocks', blocks)
+        self._component_add_field('blocks', blocks)
         return self
 
     def non_breathe_blocks(self, *blocks: str):
-        self.AddField('non_breathe_blocks', blocks)
+        self._component_add_field('non_breathe_blocks', blocks)
         return self
 
 
@@ -419,36 +440,36 @@ class Variant(_component):
     def __init__(self, value: int) -> None:
         """Used to differentiate the component group of a variant of an entity from others. (e.g. ocelot, villager)."""
         super().__init__('variant')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
 
 
 class MarkVariant(_component):
     def __init__(self, value: int) -> None:
         """Additional variant value. Can be used to further differentiate variants."""
         super().__init__('mark_variant')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
 
 
 class SkinID(_component):
     def __init__(self, value: int) -> None:
         """Skin ID value. Can be used to differentiate skins, such as base skins for villagers."""
         super().__init__('skin_id')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
 
 
 class Scale(_component):
     def __init__(self, value: int) -> None:
         """Sets the entity's visual size."""
         super().__init__('scale')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
 
 
 class ScaleByAge(_component):
     def __init__(self, start_scale: int, end_scale: int) -> None:
         """Defines the entity's size interpolation based on the entity's age."""
         super().__init__('scale_by_age')
-        self.AddField('end_scale', end_scale)
-        self.AddField('start_scale', start_scale)
+        self._component_add_field('end_scale', end_scale)
+        self._component_add_field('start_scale', start_scale)
 
 
 class AreaAttack(_component):
@@ -459,15 +480,15 @@ class AreaAttack(_component):
         """Is a component that does damage to entities that get within range."""
         super().__init__('area_attack')
 
-        self.AddField('cause', cause)
+        self._component_add_field('cause', cause)
         
         if not damage_per_tick == 2:
-            self.AddField('damage_per_tick', damage_per_tick)
+            self._component_add_field('damage_per_tick', damage_per_tick)
         if not damage_range == 0.2:
-            self.AddField('damage_range', damage_range)
+            self._component_add_field('damage_range', damage_range)
 
     def filter(self, entity_filter: dict):
-        self.AddField('entity_filter', entity_filter)
+        self._component_add_field('entity_filter', entity_filter)
         return self
 
 
@@ -559,7 +580,7 @@ class DamageSensor(_component):
     def __init__(self) -> None:
         """Defines what events to call when this entity is damaged by specific entities or items."""
         super().__init__('damage_sensor')
-        self.AddField('triggers', [])
+        self._component_add_field('triggers', [])
 
     def add_trigger(self,
                     cause: DamageCause, deals_damage: bool = True,
@@ -590,16 +611,16 @@ class FollowRange(_component):
     def __init__(self, value: int, max: int = None) -> None:
         """Defines the range of blocks that a mob will pursue a target."""
         super().__init__('follow_range')
-        self.AddField('value', value)
+        self._component_add_field('value', value)
         if not max is None:
-            self.AddField('max', max)
+            self._component_add_field('max', max)
 
 
 class MovementType(_component):
     def _basic(self, type: str, max_turn: float = 30) -> None:
-        super().ResetNamespace(f'movement.{type}')
+        super()._component_reset_namespace(f'movement.{type}')
         if not max_turn == 30:
-            self.AddField('max_turn', max_turn)
+            self._component_add_field('max_turn', max_turn)
 
     def __init__(self) -> None:
         """Defines the movement of an entity."""
@@ -624,9 +645,9 @@ class MovementType(_component):
         """Causes the mob to fly."""
         self._basic('fly', max_turn)
         if not start_speed == 0.1:
-            self.AddField('start_speed', start_speed)
+            self._component_add_field('start_speed', start_speed)
         if not speed_when_turning == 0.2:
-            self.AddField('speed_when_turning', speed_when_turning)
+            self._component_add_field('speed_when_turning', speed_when_turning)
         return self
 
     def Generic(self, max_turn: float = 30):
@@ -638,16 +659,16 @@ class MovementType(_component):
         """Is the move control for a flying mob that has a gliding movement."""
         self._basic('generic', max_turn)
         if not start_speed == 0.1:
-            self.AddField('start_speed', start_speed)
+            self._component_add_field('start_speed', start_speed)
         if not speed_when_turning == 0.2:
-            self.AddField('speed_when_turning', speed_when_turning)
+            self._component_add_field('speed_when_turning', speed_when_turning)
         return self
 
     def Jump(self, max_turn: float = 30, jump_delay: tuple[float, float] = (0, 0)):
         """Causes the mob to jump as it moves with a specified delay between jumps."""
         self._basic('hover', max_turn)
         if not jump_delay == (0, 0):
-            self.AddField('jump_delay', jump_delay)
+            self._component_add_field('jump_delay', jump_delay)
         return self
 
     def Skip(self, max_turn: float = 30):
@@ -659,9 +680,9 @@ class MovementType(_component):
         """Causes the mob to sway side to side giving the impression it is swimming."""
         self._basic('skip', max_turn)
         if not sway_amplitude == 0.05:
-            self.AddField('sway_amplitude', sway_amplitude)
+            self._component_add_field('sway_amplitude', sway_amplitude)
         if not sway_frequency == 0.5:
-            self.AddField('sway_frequency', sway_frequency)
+            self._component_add_field('sway_frequency', sway_frequency)
         return self
 
 
@@ -689,45 +710,45 @@ class NavigationType(_component):
         is_amphibious: bool = False,
         blocks_to_avoid: list[str] = [],
     ) -> None:
-        super().ResetNamespace(f'navigation.{type}')
+        super()._component_reset_namespace(f'navigation.{type}')
         if avoid_damage_blocks:
-            self.AddField('avoid_damage_blocks', avoid_damage_blocks)
+            self._component_add_field('avoid_damage_blocks', avoid_damage_blocks)
         if avoid_portals:
-            self.AddField('avoid_portals', avoid_portals)
+            self._component_add_field('avoid_portals', avoid_portals)
         if avoid_sun:
-            self.AddField('avoid_sun', avoid_sun)
+            self._component_add_field('avoid_sun', avoid_sun)
         if avoid_water:
-            self.AddField('avoid_water', avoid_water)
+            self._component_add_field('avoid_water', avoid_water)
         if can_breach:
-            self.AddField('can_breach', can_breach)
+            self._component_add_field('can_breach', can_breach)
         if can_break_doors:
-            self.AddField('can_break_doors', can_break_doors)
+            self._component_add_field('can_break_doors', can_break_doors)
         if not can_jump:
-            self.AddField('can_jump', can_jump)
+            self._component_add_field('can_jump', can_jump)
         if can_open_doors:
-            self.AddField('can_open_doors', can_open_doors)
+            self._component_add_field('can_open_doors', can_open_doors)
         if can_open_iron_doors:
-            self.AddField('can_open_iron_doors', can_open_iron_doors)
+            self._component_add_field('can_open_iron_doors', can_open_iron_doors)
         if not can_pass_doors:
-            self.AddField('can_pass_doors', can_pass_doors)
+            self._component_add_field('can_pass_doors', can_pass_doors)
         if can_path_from_air:
-            self.AddField('can_path_from_air', can_path_from_air)
+            self._component_add_field('can_path_from_air', can_path_from_air)
         if can_path_over_lava:
-            self.AddField('can_path_over_lava', can_path_over_lava)
+            self._component_add_field('can_path_over_lava', can_path_over_lava)
         if can_path_over_water:
-            self.AddField('can_path_over_water', can_path_over_water)
+            self._component_add_field('can_path_over_water', can_path_over_water)
         if not can_sink:
-            self.AddField('can_sink', can_sink)
+            self._component_add_field('can_sink', can_sink)
         if can_swim:
-            self.AddField('can_swim', can_swim)
+            self._component_add_field('can_swim', can_swim)
         if not can_walk:
-            self.AddField('can_walk', can_walk)
+            self._component_add_field('can_walk', can_walk)
         if can_walk_in_lava:
-            self.AddField('can_walk_in_lava', can_walk_in_lava)
+            self._component_add_field('can_walk_in_lava', can_walk_in_lava)
         if is_amphibious:
-            self.AddField('is_amphibious', is_amphibious)
+            self._component_add_field('is_amphibious', is_amphibious)
         if blocks_to_avoid == []:
-            self.AddField('blocks_to_avoid', blocks_to_avoid)
+            self._component_add_field('blocks_to_avoid', blocks_to_avoid)
 
     def __init__(self) -> None:
         """Allows this entity to generate paths by walking, swimming, flying and/or climbing around and jumping up and down a block."""
@@ -780,7 +801,7 @@ class EnvironmentSensor(_component):
     def __init__(self) -> None:
         """Creates a trigger based on environment conditions."""
         super().__init__('environment_sensor')
-        self.AddField('triggers', [])
+        self._component_add_field('triggers', [])
 
     def trigger(self, event: event, filters: Filter):
         self[self._component_namespace]['triggers'].append({
@@ -794,10 +815,10 @@ class PreferredPath(_component):
     def __init__(self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks: int = 3) -> None:
         """Specifies costing information for mobs that prefer to walk on preferred paths."""
         super().__init__('preferred_path')
-        self.AddField('default_block_cost', default_block_cost)
-        self.AddField('jump_cost', jump_cost)
-        self.AddField('max_fall_blocks', max_fall_blocks)
-        self.AddField('preferred_path_blocks', [])
+        self._component_add_field('default_block_cost', default_block_cost)
+        self._component_add_field('jump_cost', jump_cost)
+        self._component_add_field('max_fall_blocks', max_fall_blocks)
+        self._component_add_field('preferred_path_blocks', [])
 
     def add_blocks(self, cost: int, *blocks: list[str]):
         self[self._component_namespace]['preferred_path_blocks'].append({
@@ -811,20 +832,20 @@ class TargetNearbySensor(_component):
     def __init__(self, inside_range: int = 1, outside_range: int = 5, must_see: bool = False) -> None:
         """Defines the entity's range within which it can see or sense other entities to target them."""
         super().__init__('target_nearby_sensor')
-        self.AddField('inside_range', inside_range)
-        self.AddField('outside_range', outside_range)
-        self.AddField('must_see', must_see)
+        self._component_add_field('inside_range', inside_range)
+        self._component_add_field('outside_range', outside_range)
+        self._component_add_field('must_see', must_see)
 
     def on_inside_range(self, event: event, target: FilterSubject):
-        self.AddField('on_inside_range', {"event": event, "target": target})
+        self._component_add_field('on_inside_range', {"event": event, "target": target})
         return self
 
     def on_outside_range(self, event: event, target: FilterSubject):
-        self.AddField('on_outside_range', {"event": event, "target": target})
+        self._component_add_field('on_outside_range', {"event": event, "target": target})
         return self
 
     def on_vision_lost_inside_range(self, event: event, target: FilterSubject):
-        self.AddField('on_vision_lost_inside_range', {
+        self._component_add_field('on_vision_lost_inside_range', {
                       "event": event, "target": target})
         return self
 
@@ -850,47 +871,48 @@ class NearestAttackableTarget(_component):
         ) -> None:
         """Allows an entity to attack the closest target within a given subset of specific target types."""
         super().__init__('behavior.nearest_attackable_target')
-        self.AddField('entity_types', [])
+        self._component_add_field('entity_types', [])
 
         if not attack_interval == 0:
-            self.AddField('attack_interval', attack_interval)
+            self._component_add_field('attack_interval', attack_interval)
         if not attack_interval_min == 0:
-            self.AddField('attack_interval_min', attack_interval_min)
+            self._component_add_field('attack_interval_min', attack_interval_min)
         if attack_owner:
-            self.AddField('attack_owner', attack_owner)
+            self._component_add_field('attack_owner', attack_owner)
         if must_reach:
-            self.AddField('must_reach', must_reach)
+            self._component_add_field('must_reach', must_reach)
         if must_see:
-            self.AddField('must_see', must_see)
+            self._component_add_field('must_see', must_see)
         if not must_see_forget_duration == 3.0:
-            self.AddField('must_see_forget_duration', must_see_forget_duration)
+            self._component_add_field('must_see_forget_duration', must_see_forget_duration)
         if not persist_time == 0.0:
-            self.AddField('persist_time', persist_time)
+            self._component_add_field('persist_time', persist_time)
         if reevaluate_description:
-            self.AddField('reevaluate_description', reevaluate_description)
+            self._component_add_field('reevaluate_description', reevaluate_description)
         if reselect_targets:
-            self.AddField('reselect_targets', reselect_targets)
+            self._component_add_field('reselect_targets', reselect_targets)
         if not scan_interval == 10:
-            self.AddField('scan_interval', scan_interval)
+            self._component_add_field('scan_interval', scan_interval)
         if set_persistent:
-            self.AddField('set_persistent', set_persistent)
+            self._component_add_field('set_persistent', set_persistent)
         if not target_invisible_multiplier == 0.7:
-            self.AddField('target_invisible_multiplier',
+            self._component_add_field('target_invisible_multiplier',
                           target_invisible_multiplier)
         if not target_search_height == -0.1:
-            self.AddField('target_search_height', target_search_height)
+            self._component_add_field('target_search_height', target_search_height)
         if not target_sneak_visibility_multiplier == 0.8:
-            self.AddField('target_sneak_visibility_multiplier',
+            self._component_add_field('target_sneak_visibility_multiplier',
                           target_sneak_visibility_multiplier)
         if not within_radius == 0.0:
-            self.AddField('within_radius', within_radius)
+            self._component_add_field('within_radius', within_radius)
 
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
     def add_target(self, 
                    filters: Filter, 
+                   cooldown : int = 0,
                    max_dist: int = 32, 
                    must_see: bool = False,
                    must_see_forget_duration : float = 3.0,
@@ -900,6 +922,7 @@ class NearestAttackableTarget(_component):
         # empty dicts will be removed at compilation
         self[self._component_namespace]['entity_types'].append({
             "filters": filters,
+            "cooldown": cooldown if cooldown > 0 else {},
             "max_dist": max_dist if max_dist != 32 else {},
             "must_see": must_see if must_see else {},
             "must_see_forget_duration": must_see_forget_duration if must_see_forget_duration != 3.0 else {},
@@ -919,61 +942,74 @@ class NearestPrioritizedAttackableTarget(_component):
             must_see: bool = False,
             must_see_forget_duration: float = 3.0,
             persist_time: float = 0.0,
-
-        reselect_targets: bool = False,
-        scan_interval: int = 10,
-        set_persistent: bool = False,
-        target_invisible_multiplier: float = 0.7,
-        target_search_height: float = -0.1,
-        target_sneak_visibility_multiplier: float = 0.8,
-        within_radius: float = 0.0,
-    ) -> None:
+            reevaluate_description: bool = False,
+            reselect_targets: bool = False,
+            scan_interval: int = 10,
+            set_persistent: bool = False,
+            target_invisible_multiplier: float = 0.7,
+            target_search_height: float = -0.1,
+            target_sneak_visibility_multiplier: float = 0.8,
+            within_radius: float = 0.0,
+        ) -> None:
         """Allows an entity to attack the closest target within a given subset of specific target types."""
         super().__init__('behavior.nearest_prioritized_attackable_target')
-        self.AddField('entity_types', [])
+        self._component_add_field('entity_types', [])
 
         if not attack_interval == 0:
-            self.AddField('attack_interval', attack_interval)
+            self._component_add_field('attack_interval', attack_interval)
         if not attack_interval_min == 0:
-            self.AddField('attack_interval_min', attack_interval_min)
+            self._component_add_field('attack_interval_min', attack_interval_min)
         if attack_owner:
-            self.AddField('attack_owner', attack_owner)
+            self._component_add_field('attack_owner', attack_owner)
         if must_reach:
-            self.AddField('must_reach', must_reach)
+            self._component_add_field('must_reach', must_reach)
         if must_see:
-            self.AddField('must_see', must_see)
+            self._component_add_field('must_see', must_see)
         if not must_see_forget_duration == 3.0:
-            self.AddField('must_see_forget_duration', must_see_forget_duration)
+            self._component_add_field('must_see_forget_duration', must_see_forget_duration)
         if not persist_time == 0.0:
-            self.AddField('persist_time', persist_time)
+            self._component_add_field('persist_time', persist_time)
+        if reevaluate_description:
+            self._component_add_field('reevaluate_description', reevaluate_description)
         if reselect_targets:
-            self.AddField('reselect_targets', reselect_targets)
+            self._component_add_field('reselect_targets', reselect_targets)
         if not scan_interval == 10:
-            self.AddField('scan_interval', scan_interval)
+            self._component_add_field('scan_interval', scan_interval)
         if set_persistent:
-            self.AddField('set_persistent', set_persistent)
+            self._component_add_field('set_persistent', set_persistent)
         if not target_invisible_multiplier == 0.7:
-            self.AddField('target_invisible_multiplier',
+            self._component_add_field('target_invisible_multiplier',
                           target_invisible_multiplier)
         if not target_search_height == -0.1:
-            self.AddField('target_search_height', target_search_height)
+            self._component_add_field('target_search_height', target_search_height)
         if not target_sneak_visibility_multiplier == 0.8:
-            self.AddField('target_sneak_visibility_multiplier',
+            self._component_add_field('target_sneak_visibility_multiplier',
                           target_sneak_visibility_multiplier)
         if not within_radius == 0.0:
-            self.AddField('within_radius', within_radius)
+            self._component_add_field('within_radius', within_radius)
 
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
-    def add_target(self, filters: Filter, must_see: bool = False, max_dist: int = 32, reevaluate_description: bool = False,):
+    def add_target(self, 
+                   filters: Filter, 
+                   cooldown : int = 0,
+                   max_dist: int = 32, 
+                   must_see: bool = False,
+                   must_see_forget_duration : float = 3.0,
+                   sprint_speed_multiplier : float = 1.0,
+                   walk_speed_multiplier : float = 1.0,
+                ):
         # empty dicts will be removed at compilation
         self[self._component_namespace]['entity_types'].append({
             "filters": filters,
+            "cooldown": cooldown if cooldown > 0 else {},
+            "max_dist": max_dist if max_dist != 32 else {},
             "must_see": must_see if must_see else {},
-            "max_dist": max_dist if max_dist != max_dist else {},
-            "reevaluate_description": reevaluate_description if reevaluate_description else {}
+            "must_see_forget_duration": must_see_forget_duration if must_see_forget_duration != 3.0 else {},
+            "sprint_speed_multiplier": sprint_speed_multiplier if sprint_speed_multiplier != 1.0 else {},
+            "walk_speed_multiplier": walk_speed_multiplier if walk_speed_multiplier != 1.0 else {},
         })
         return self
 
@@ -987,18 +1023,18 @@ class RandomLookAround(_component):
                  look_time: list[float, float] | float = (2, 4)) -> None:
         """Allows an entity to choose a random direction to look in for a random duration within a range."""
         super().__init__('behavior.random_look_around')
-        self.AddField('probability', clamp(probability, 0, 1))
+        self._component_add_field('probability', clamp(probability, 0, 1))
         if not angle_of_view_horizontal == 360:
-            self.AddField('angle_of_view_horizontal', angle_of_view_horizontal)
+            self._component_add_field('angle_of_view_horizontal', angle_of_view_horizontal)
         if not angle_of_view_vertical == 360:
-            self.AddField('angle_of_view_vertical', angle_of_view_vertical)
+            self._component_add_field('angle_of_view_vertical', angle_of_view_vertical)
         if not look_distance == 8:
-            self.AddField('look_distance', look_distance)
+            self._component_add_field('look_distance', look_distance)
         if not look_time == (2, 4):
-            self.AddField('look_time', look_time)
+            self._component_add_field('look_time', look_time)
 
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
 
@@ -1012,20 +1048,20 @@ class Timer(_component):
         """Adds a timer after which an event will fire."""
         super().__init__('timer')
 
-        self.AddField('time_down_event', {
+        self._component_add_field('time_down_event', {
             "event": event,
             "target": target
         })
 
         if not looping:
-            self.AddField('looping', looping)
+            self._component_add_field('looping', looping)
         if not randomInterval:
-            self.AddField('randomInterval', randomInterval)
+            self._component_add_field('randomInterval', randomInterval)
         if not time == (0, 0):
-            self.AddField('time', time)
+            self._component_add_field('time', time)
 
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
 
@@ -1044,24 +1080,24 @@ class Rideable(_component):
 
         if not interact_text == 'Mount':
             t = interact_text.lower().replace(' ', '_')
-            self.AddField('interact_text', f'action.interact.{t}')
+            self._component_add_field('interact_text', f'action.interact.{t}')
             ANVIL.localize(f'action.interact.{t}={interact_text}')
         if not controlling_seat == 0:
-            self.AddField('controlling_seat', controlling_seat)
+            self._component_add_field('controlling_seat', controlling_seat)
         if not crouching_skip_interact:
-            self.AddField('crouching_skip_interact', crouching_skip_interact)
+            self._component_add_field('crouching_skip_interact', crouching_skip_interact)
         if pull_in_entities:
-            self.AddField('pull_in_entities', pull_in_entities)
+            self._component_add_field('pull_in_entities', pull_in_entities)
         if rider_can_interact:
-            self.AddField('rider_can_interact', rider_can_interact)
+            self._component_add_field('rider_can_interact', rider_can_interact)
 
-        self.AddField('family_types', family_types if len(
+        self._component_add_field('family_types', family_types if len(
             family_types) > 0 else [])
-        self.AddField('seats', [])
+        self._component_add_field('seats', [])
 
     def add_seat(self, position: position, max_rider_count: int, min_rider_count: int = 0, lock_rider_rotation: int = 181, rotate_rider_by: int = 0):
         self._seat_count += 1
-        self.AddField('seat_count', self._seat_count)
+        self._component_add_field('seat_count', self._seat_count)
 
         self[self._component_namespace]['seats'].append({
             "max_rider_count": max_rider_count,
@@ -1109,66 +1145,66 @@ class Projectile(_component):
         """Allows the entity to be a thrown entity."""
         super().__init__('projectile')
         if anchor != 0:
-            self.AddField('anchor', anchor)
+            self._component_add_field('anchor', anchor)
         if angle_offset != 0:
-            self.AddField('angle_offset', angle_offset)
+            self._component_add_field('angle_offset', angle_offset)
         if catch_fire:
-            self.AddField('catch_fire', catch_fire)
+            self._component_add_field('catch_fire', catch_fire)
         if crit_particle_on_hurt:
-            self.AddField('crit_particle_on_hurt', crit_particle_on_hurt)
+            self._component_add_field('crit_particle_on_hurt', crit_particle_on_hurt)
         if destroy_on_hurt:
-            self.AddField('destroy_on_hurt', destroy_on_hurt)
+            self._component_add_field('destroy_on_hurt', destroy_on_hurt)
         if fire_affected_by_griefing:
-            self.AddField('fire_affected_by_griefing', fire_affected_by_griefing)
+            self._component_add_field('fire_affected_by_griefing', fire_affected_by_griefing)
         if gravity != 0.05:
-            self.AddField('gravity', gravity)
+            self._component_add_field('gravity', gravity)
         if hit_sound != '':
-            self.AddField('hit_sound', hit_sound)
+            self._component_add_field('hit_sound', hit_sound)
         if hit_ground_sound != '':
-            self.AddField('hit_ground_sound', hit_ground_sound)
+            self._component_add_field('hit_ground_sound', hit_ground_sound)
         if homing:
-            self.AddField('homing', homing)
+            self._component_add_field('homing', homing)
         if inertia != 0.09:
-            self.AddField('inertia', inertia)
+            self._component_add_field('inertia', inertia)
         if is_dangerous:
-            self.AddField('is_dangerous', is_dangerous)
+            self._component_add_field('is_dangerous', is_dangerous)
         if not knockback:
-            self.AddField('knockback', knockback)
+            self._component_add_field('knockback', knockback)
         if lightning:
-            self.AddField('lightning', lightning)
+            self._component_add_field('lightning', lightning)
         if liquid_inertia != 0.6:
-            self.AddField('liquid_inertia', liquid_inertia)
+            self._component_add_field('liquid_inertia', liquid_inertia)
         if not multiple_targets:
-            self.AddField('multiple_targets', multiple_targets)
+            self._component_add_field('multiple_targets', multiple_targets)
         if offset != (0, 0, 0):
-            self.AddField('offset', offset)
+            self._component_add_field('offset', offset)
         if on_fire_timer != 0.0:
-            self.AddField('on_fire_timer', on_fire_timer)
+            self._component_add_field('on_fire_timer', on_fire_timer)
         if particle != 'particle':
-            self.AddField('particle', particle)
+            self._component_add_field('particle', particle)
         if power != 1.3:
-            self.AddField('power', power)
+            self._component_add_field('power', power)
         if reflect_on_hurt :
-            self.AddField('reflect_on_hurt', reflect_on_hurt)
+            self._component_add_field('reflect_on_hurt', reflect_on_hurt)
         if shoot_sound != '':
-            self.AddField('shoot_sound', shoot_sound)
+            self._component_add_field('shoot_sound', shoot_sound)
         if not shoot_target:
-            self.AddField('shoot_target', shoot_target)
+            self._component_add_field('shoot_target', shoot_target)
         if should_bounce:
-            self.AddField('should_bounce', should_bounce)
+            self._component_add_field('should_bounce', should_bounce)
         if splash_potion:
-            self.AddField('splash_potion', splash_potion)
+            self._component_add_field('splash_potion', splash_potion)
         if splash_range != 4:
-            self.AddField('splash_range', splash_range)
+            self._component_add_field('splash_range', splash_range)
         if stop_on_hurt:
-            self.AddField('stop_on_hurt', stop_on_hurt)
+            self._component_add_field('stop_on_hurt', stop_on_hurt)
         if uncertainty_base != 0:
-            self.AddField('uncertainty_base', uncertainty_base)
+            self._component_add_field('uncertainty_base', uncertainty_base)
         if uncertainty_multiplier != 0:
-            self.AddField('uncertainty_multiplier', uncertainty_multiplier)
+            self._component_add_field('uncertainty_multiplier', uncertainty_multiplier)
 
     def filter(self, filter: Filter):
-        self.AddField('filter', filter)
+        self._component_add_field('filter', filter)
         return self
     
     def on_hit(self,
@@ -1181,7 +1217,7 @@ class Projectile(_component):
                 teleport_owner: bool = False,   #Determines if the owner is transported on hit.
             ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
         if catch_fire:
             self[self._component_namespace]['on_hit']['catch_fire'] = catch_fire
         if douse_fire:
@@ -1213,7 +1249,7 @@ class Projectile(_component):
             set_last_hurt_requires_damage: bool = False,   #If true, then the hit must cause damage to update the last hurt property.
         ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
         self[self._component_namespace]['on_hit']['impact_damage'] = {}
         if not filter is None:
             self[self._component_namespace]['on_hit']['impact_damage']['filter'] = filter
@@ -1252,7 +1288,7 @@ class Projectile(_component):
             affect_target: bool = False,    #The target will be affected by this event.
         ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
         self[self._component_namespace]['on_hit']['definition_event'] = {'event_trigger': {'event': event, 'target': target}}
 
         if affect_projectile:
@@ -1279,7 +1315,7 @@ class Projectile(_component):
                          reapplication_delay: int = 0,
         ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
 
         self[self._component_namespace]['on_hit']['spawn_aoe_cloud'] = {}
         
@@ -1311,7 +1347,7 @@ class Projectile(_component):
                      second_spawn_count: int = 0,
         ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
 
         self[self._component_namespace]['on_hit']['spawn_chance'] = {'spawn_definition': spawn_definition}
 
@@ -1335,7 +1371,7 @@ class Projectile(_component):
                      num_particles: int = 6,
         ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
 
         self[self._component_namespace]['on_hit']['particle_on_hit'] = {'particle_type': particle_type}
 
@@ -1349,7 +1385,7 @@ class Projectile(_component):
         return self
     
     def mob_effect(self,
-                   effect: str,
+                   effect: Effects,
                    amplifier: int = 1,
                    ambient: bool = False,
                    visible: bool = False,
@@ -1359,7 +1395,7 @@ class Projectile(_component):
                    durationnormal: int = 200,
         ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
 
         self[self._component_namespace]['on_hit']['mob_effect'] = {'effect': effect}
 
@@ -1386,7 +1422,7 @@ class Projectile(_component):
                       shape: str = "sphere",
         ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
 
         self[self._component_namespace]['on_hit']['freeze_on_hit'] = {'size': size, 'snap_to_block': snap_to_block}
         if shape not in ['sphere', 'cube']:
@@ -1397,7 +1433,7 @@ class Projectile(_component):
     
     def grant_xp(self, xp: tuple[int, int]):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
 
         if xp[0] == xp[1]:
             self[self._component_namespace]['on_hit']['grant_xp'] = {'xp': xp}
@@ -1412,7 +1448,7 @@ class Projectile(_component):
                    ignite: bool = False,
         ):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
 
         self[self._component_namespace]['on_hit']['hurt_owner'] = {}
 
@@ -1428,7 +1464,7 @@ class Projectile(_component):
     @property
     def remove_on_hit(self):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
         
         self[self._component_namespace]['on_hit']['remove_on_hit'] = {'remove': True}
 
@@ -1437,7 +1473,7 @@ class Projectile(_component):
     def stick_in_ground(self, shake_time: float):
         try: self[self._component_namespace]['on_hit']
         except KeyError:
-            self.AddField('on_hit', {})
+            self._component_add_field('on_hit', {})
         
         self[self._component_namespace]['on_hit']['stick_in_ground'] = {'shake_time': shake_time}
 
@@ -1446,7 +1482,7 @@ class Projectile(_component):
     @property
     def thrown_potion_effect(self):
         try: self[self._component_namespace]['on_hit']
-        except KeyError: self.AddField('on_hit', {})
+        except KeyError: self._component_add_field('on_hit', {})
         
         self[self._component_namespace]['on_hit']['thrown_potion_effect'] = {}
 
@@ -1467,21 +1503,21 @@ class Explode(_component):
         super().__init__('explode')
 
         if not breaks_blocks:
-            self.AddField('breaks_blocks', breaks_blocks)
+            self._component_add_field('breaks_blocks', breaks_blocks)
         if causes_fire:
-            self.AddField('causes_fire', causes_fire)
+            self._component_add_field('causes_fire', causes_fire)
         if destroy_affected_by_griefing:
-            self.AddField('destroy_affected_by_griefing', destroy_affected_by_griefing)
+            self._component_add_field('destroy_affected_by_griefing', destroy_affected_by_griefing)
         if fire_affected_by_griefing:
-            self.AddField('fire_affected_by_griefing', fire_affected_by_griefing)
+            self._component_add_field('fire_affected_by_griefing', fire_affected_by_griefing)
         if fuse_length != [0.0, 0.0]:
-            self.AddField('fuse_length', fuse_length)
+            self._component_add_field('fuse_length', fuse_length)
         if fuse_lit:
-            self.AddField('fuse_lit', fuse_lit)
+            self._component_add_field('fuse_lit', fuse_lit)
         if max_resistance != 3.40282e+38:
-            self.AddField('max_resistance', max_resistance)
+            self._component_add_field('max_resistance', max_resistance)
         if power != 3:
-            self.AddField('power', power)
+            self._component_add_field('power', power)
 
 
 class KnockbackRoar(_component):
@@ -1500,32 +1536,32 @@ class KnockbackRoar(_component):
         super().__init__('behavior.knockback_roar')
         
         if not attack_time == 0.5:
-            self.AddField('attack_time', attack_time)
+            self._component_add_field('attack_time', attack_time)
         if not cooldown_time == 0.1:
-            self.AddField('cooldown_time', cooldown_time)
+            self._component_add_field('cooldown_time', cooldown_time)
         if not damage_filters is None:
-            self.AddField('damage_filters', damage_filters)
+            self._component_add_field('damage_filters', damage_filters)
         if not duration == 1:
-            self.AddField('duration', duration)
+            self._component_add_field('duration', duration)
         if not knockback_damage == 6:
-            self.AddField('knockback_damage', knockback_damage)
+            self._component_add_field('knockback_damage', knockback_damage)
         if not knockback_filters is None:
-            self.AddField('knockback_filters', knockback_filters)
+            self._component_add_field('knockback_filters', knockback_filters)
         if not knockback_height_cap == 0.4:
-            self.AddField('knockback_height_cap', knockback_height_cap)
+            self._component_add_field('knockback_height_cap', knockback_height_cap)
         if not knockback_horizontal_strength == 4:
-            self.AddField('knockback_horizontal_strength', knockback_horizontal_strength)
+            self._component_add_field('knockback_horizontal_strength', knockback_horizontal_strength)
         if not knockback_range == 4:
-            self.AddField('knockback_range', knockback_range)
+            self._component_add_field('knockback_range', knockback_range)
         if not knockback_vertical_strength == 4:
-            self.AddField('knockback_vertical_strength', knockback_vertical_strength)
+            self._component_add_field('knockback_vertical_strength', knockback_vertical_strength)
 
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
     
     def on_roar_end(self, on_roar_end: event):
-        self.AddField('on_roar_end', {'event': on_roar_end})
+        self._component_add_field('on_roar_end', {'event': on_roar_end})
         return self
 
 
@@ -1538,22 +1574,22 @@ class MobEffect(_component):
                  effect_time: int = 10) -> None:
         """Applies a mob effect to entities that get within range."""
         super().__init__('mob_effect')
-        self.AddField('mob_effect', mob_effect)
-        self.AddField('entity_filter', entity_filter)
+        self._component_add_field('mob_effect', mob_effect)
+        self._component_add_field('entity_filter', entity_filter)
         
         if not cooldown_time == 0:
-            self.AddField('cooldown_time', cooldown_time)
+            self._component_add_field('cooldown_time', cooldown_time)
         if not effect_range == 0.2:
-            self.AddField('effect_range', effect_range)
+            self._component_add_field('effect_range', effect_range)
         if not effect_time == 10:
-            self.AddField('effect_time', effect_time)
+            self._component_add_field('effect_time', effect_time)
 
 
 class SpawnEntity(_component):
     def __init__(self) -> None:
         """Adds a timer after which this entity will spawn another entity or item (similar to vanilla's chicken's egg-laying behavior)."""
         super().__init__('spawn_entity')
-        self.AddField('entities', [])
+        self._component_add_field('entities', [])
 
     def _template(self, 
                      identifier: str,
@@ -1635,7 +1671,7 @@ class Loot(_component):
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__('loot')
-        self.AddField('table', MakePath('loot_tables', path + '.loot_table.json'))
+        self._component_add_field('table', MakePath('loot_tables', path + '.loot_table.json'))
 
 
 class Float(_component):
@@ -1644,10 +1680,10 @@ class Float(_component):
         """Allows an entity to float on water. Passengers will be kicked out the moment the mob's head goes underwater, which may not happen for tall mobs."""
         super().__init__('behavior.float')
         if sink_with_passengers:
-            self.AddField('sink_with_passengers', sink_with_passengers)
+            self._component_add_field('sink_with_passengers', sink_with_passengers)
             
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
 
@@ -1660,16 +1696,16 @@ class RandomStroll(_component):
         """Compels an entity to choose a random direction to walk towards."""
         super().__init__('behavior.random_stroll')
         if interval != 120:
-            self.AddField('interval', interval)
+            self._component_add_field('interval', interval)
         if speed_multiplier != 1.0:
-            self.AddField('speed_multiplier', speed_multiplier)
+            self._component_add_field('speed_multiplier', speed_multiplier)
         if xz_dist != 10:
-            self.AddField('xz_dist', xz_dist)
+            self._component_add_field('xz_dist', xz_dist)
         if y_dist != 7:
-            self.AddField('y_dist', y_dist)
+            self._component_add_field('y_dist', y_dist)
             
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
 
@@ -1684,20 +1720,20 @@ class LookAtPlayer(_component):
         """Compels an entity to look at the player by rotating the head bone pose within a set limit."""
         super().__init__('behavior.look_at_player')
         if angle_of_view_horizontal != 360:
-            self.AddField('angle_of_view_horizontal', angle_of_view_horizontal)
+            self._component_add_field('angle_of_view_horizontal', angle_of_view_horizontal)
         if angle_of_view_vertical != 360:
-            self.AddField('angle_of_view_vertical', angle_of_view_vertical)
+            self._component_add_field('angle_of_view_vertical', angle_of_view_vertical)
         if look_distance != 8.0:
-            self.AddField('look_distance', look_distance)
+            self._component_add_field('look_distance', look_distance)
         if look_time != (2, 4):
-            self.AddField('look_time', look_time)
+            self._component_add_field('look_time', look_time)
         if probability != 0.02:
-            self.AddField('probability', probability)
+            self._component_add_field('probability', probability)
         if target_distance != 0.6:
-            self.AddField('target_distance', target_distance)
+            self._component_add_field('target_distance', target_distance)
             
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
 
@@ -1712,20 +1748,20 @@ class RandomLookAround(_component):
         """Compels an entity to choose a random direction to look in for a random duration within a range."""
         super().__init__('behavior.random_look_around')
         if angle_of_view_horizontal != 360:
-            self.AddField('angle_of_view_horizontal', angle_of_view_horizontal)
+            self._component_add_field('angle_of_view_horizontal', angle_of_view_horizontal)
         if angle_of_view_vertical != 360:
-            self.AddField('angle_of_view_vertical', angle_of_view_vertical)
+            self._component_add_field('angle_of_view_vertical', angle_of_view_vertical)
         if look_distance != 8.0:
-            self.AddField('look_distance', look_distance)
+            self._component_add_field('look_distance', look_distance)
         if look_time != (2, 4):
-            self.AddField('look_time', look_time)
+            self._component_add_field('look_time', look_time)
         if probability != 0.02:
-            self.AddField('probability', probability)
+            self._component_add_field('probability', probability)
         if target_distance != 0.6:
-            self.AddField('target_distance', target_distance)
+            self._component_add_field('target_distance', target_distance)
             
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
 
@@ -1745,26 +1781,26 @@ class HurtByTarget(_component):
         super().__init__('behavior.hurt_by_target')
 
         if alert_same_type:
-            self.AddField('alert_same_type', alert_same_type)
+            self._component_add_field('alert_same_type', alert_same_type)
         if entity_types != None:
-            self.AddField('entity_types', {"filters": entity_types})
+            self._component_add_field('entity_types', {"filters": entity_types})
         if max_dist != 16:
-            self.AddField('max_dist', max_dist)
+            self._component_add_field('max_dist', max_dist)
         if must_see:
-            self.AddField('must_see', must_see)
+            self._component_add_field('must_see', must_see)
         if must_see_forget_duration != 3.0:
-            self.AddField('must_see_forget_duration', must_see_forget_duration)
+            self._component_add_field('must_see_forget_duration', must_see_forget_duration)
         if reevaluate_description:
-            self.AddField('reevaluate_description', reevaluate_description)
+            self._component_add_field('reevaluate_description', reevaluate_description)
         if sprint_speed_multiplier != 1.0:
-            self.AddField('sprint_speed_multiplier', sprint_speed_multiplier)
+            self._component_add_field('sprint_speed_multiplier', sprint_speed_multiplier)
         if walk_speed_multiplier != 1.0:
-            self.AddField('walk_speed_multiplier', walk_speed_multiplier)
+            self._component_add_field('walk_speed_multiplier', walk_speed_multiplier)
         if hurt_owner:
-            self.AddField('hurt_owner', hurt_owner)
+            self._component_add_field('hurt_owner', hurt_owner)
             
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
 
@@ -1791,56 +1827,56 @@ class MeleeAttack(_component):
         """Compels entities to make close combat melee attacks."""
         super().__init__('behavior.melee_attack')
         if attack_once:
-            self.AddField('attack_once', attack_once)
+            self._component_add_field('attack_once', attack_once)
         if cooldown_time != 1:
-            self.AddField('cooldown_time', cooldown_time)
+            self._component_add_field('cooldown_time', cooldown_time)
         if inner_boundary_time_increase != 0.75:
-            self.AddField('inner_boundary_time_increase', inner_boundary_time_increase)
+            self._component_add_field('inner_boundary_time_increase', inner_boundary_time_increase)
         if max_path_time != 0.75:
-            self.AddField('max_path_time', max_path_time)
+            self._component_add_field('max_path_time', max_path_time)
         if melee_fov != 90:
-            self.AddField('melee_fov', melee_fov)
+            self._component_add_field('melee_fov', melee_fov)
         if min_path_time != 0.2:
-            self.AddField('min_path_time', min_path_time)
+            self._component_add_field('min_path_time', min_path_time)
         if outer_boundary_time_increase != 0.5:
-            self.AddField('outer_boundary_time_increase', outer_boundary_time_increase)
+            self._component_add_field('outer_boundary_time_increase', outer_boundary_time_increase)
         if path_fail_time_increase != 0.75:
-            self.AddField('path_fail_time_increase', path_fail_time_increase)
+            self._component_add_field('path_fail_time_increase', path_fail_time_increase)
         if path_inner_boundary != 16:
-            self.AddField('path_inner_boundary', path_inner_boundary)
+            self._component_add_field('path_inner_boundary', path_inner_boundary)
         if path_outer_boundary != 32:
-            self.AddField('path_outer_boundary', path_outer_boundary)
+            self._component_add_field('path_outer_boundary', path_outer_boundary)
         if random_stop_interval != 0:
-            self.AddField('random_stop_interval', random_stop_interval)
+            self._component_add_field('random_stop_interval', random_stop_interval)
         if reach_multiplier != 2:
-            self.AddField('reach_multiplier', reach_multiplier)
+            self._component_add_field('reach_multiplier', reach_multiplier)
         if require_complete_path:
-            self.AddField('require_complete_path', require_complete_path)
+            self._component_add_field('require_complete_path', require_complete_path)
         if set_persistent:
-            self.AddField('set_persistent', set_persistent)
+            self._component_add_field('set_persistent', set_persistent)
         if speed_multiplier != 1:
-            self.AddField('speed_multiplier', speed_multiplier)
+            self._component_add_field('speed_multiplier', speed_multiplier)
         if track_target:
-            self.AddField('track_target', track_target)
+            self._component_add_field('track_target', track_target)
         if x_max_rotation != 30:
-            self.AddField('x_max_rotation', x_max_rotation)
+            self._component_add_field('x_max_rotation', x_max_rotation)
         if y_max_head_rotation != 30:
-            self.AddField('y_max_head_rotation', y_max_head_rotation)
+            self._component_add_field('y_max_head_rotation', y_max_head_rotation)
             
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
     def attack_types(self, attack_types : str):
-        self.AddField('attack_types', attack_types)
+        self._component_add_field('attack_types', attack_types)
         return self
 
     def on_attack(self, on_attack : event):
-        self.AddField('on_attack', on_attack)
+        self._component_add_field('on_attack', on_attack)
         return self
 
     def on_kill(self, on_kill : event):
-        self.AddField('on_kill', on_kill)
+        self._component_add_field('on_kill', on_kill)
         return self
 
 
@@ -1862,44 +1898,48 @@ class RangedAttack(_component):
                  target_in_sight_time : int = 1,
                  x_max_rotation : int = 30,
                  y_max_head_rotation : int = 30) -> None:
-        """Allows an entity to attack by using ranged shots. charge_shoot_trigger must be greater than 0 to enable charged up burst-shot attacks. Requires minecraft:shooter to define projectile behavior."""
+        """Allows an entity to attack by using ranged shots. charge_shoot_trigger must be greater than 0 to enable charged up burst-shot attacks. Requires minecraft:shooter to define projectile behavior.
+        
+        - attack_interval: Animation length
+        - charge_shoot_trigger: Shoot timestamp
+        """
         super().__init__('behavior.ranged_attack')
 
         if attack_interval != 0:
-            self.AddField('attack_interval', attack_interval)
+            self._component_add_field('attack_interval', attack_interval)
         if attack_interval_max != 0:
-            self.AddField('attack_interval_max', attack_interval_max)
+            self._component_add_field('attack_interval_max', attack_interval_max)
         if attack_interval_min != 0:
-            self.AddField('attack_interval_min', attack_interval_min)
+            self._component_add_field('attack_interval_min', attack_interval_min)
         if attack_radius != 0:
-            self.AddField('attack_radius', attack_radius)
+            self._component_add_field('attack_radius', attack_radius)
         if attack_radius_min != 0:
-            self.AddField('attack_radius_min', attack_radius_min)
+            self._component_add_field('attack_radius_min', attack_radius_min)
         if burst_interval != 0:
-            self.AddField('burst_interval', burst_interval)
+            self._component_add_field('burst_interval', burst_interval)
         if burst_shots != 1:
-            self.AddField('burst_shots', burst_shots)
+            self._component_add_field('burst_shots', burst_shots)
         if charge_charged_trigger != 0:
-            self.AddField('charge_charged_trigger', charge_charged_trigger)
+            self._component_add_field('charge_charged_trigger', charge_charged_trigger)
         if charge_shoot_trigger != 0:
-            self.AddField('charge_shoot_trigger', charge_shoot_trigger)
+            self._component_add_field('charge_shoot_trigger', charge_shoot_trigger)
         if ranged_fov != 90:
-            self.AddField('ranged_fov', ranged_fov)
+            self._component_add_field('ranged_fov', ranged_fov)
         if set_persistent:
-            self.AddField('set_persistent', set_persistent)
+            self._component_add_field('set_persistent', set_persistent)
         if speed_multiplier != 1:
-            self.AddField('speed_multiplier', speed_multiplier)
+            self._component_add_field('speed_multiplier', speed_multiplier)
         if swing:
-            self.AddField('swing', swing)
+            self._component_add_field('swing', swing)
         if target_in_sight_time != 1:
-            self.AddField('target_in_sight_time', target_in_sight_time)
+            self._component_add_field('target_in_sight_time', target_in_sight_time)
         if x_max_rotation != 30:
-            self.AddField('x_max_rotation', x_max_rotation)
+            self._component_add_field('x_max_rotation', x_max_rotation)
         if y_max_head_rotation != 30:
-            self.AddField('y_max_head_rotation', y_max_head_rotation)
+            self._component_add_field('y_max_head_rotation', y_max_head_rotation)
 
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
 
@@ -1912,23 +1952,23 @@ class Shooter(_component):
                 ) -> None:
         """Defines the entity's ranged attack behavior. The "minecraft:behavior.ranged_attack" goal uses this component to determine which projectiles to shoot."""
         super().__init__('shooter')
-        self.AddField('def', identifier)
+        self._component_add_field('def', identifier)
         if magic:
-            self.AddField('magic', magic)
+            self._component_add_field('magic', magic)
         if power != 0:
-            self.AddField('power', power)
+            self._component_add_field('power', power)
         if aux_value != -1:
-            self.AddField('aux_value', aux_value)
+            self._component_add_field('aux_value', aux_value)
 
 
 class SummonEntity(_component):
     def __init__(self) -> None:
         """compels an entity to attack other entities by summoning new entities."""
         super().__init__('behavior.summon_entity')
-        self.AddField('summon_choices', [])
+        self._component_add_field('summon_choices', [])
 
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
     
     def summon_choice(self, 
@@ -1991,11 +2031,11 @@ class Boss(_component):
                  should_darken_sky: bool = False) -> None:
         """Defines the current state of the boss for updating the boss HUD."""
         super().__init__('boss')
-        self.AddField('name', name)
+        self._component_add_field('name', name)
         if hud_range != 55:
-            self.AddField('power', hud_range)
+            self._component_add_field('power', hud_range)
         if should_darken_sky:
-            self.AddField('should_darken_sky', should_darken_sky)
+            self._component_add_field('should_darken_sky', should_darken_sky)
 
 
 class DelayedAttack(_component):
@@ -2023,60 +2063,60 @@ class DelayedAttack(_component):
         """Compels an entity to attack while also delaying the damage dealt until a specific time in the attack animation."""
         super().__init__('behavior.delayed_attack')
         if attack_duration != 0.75:
-            self.AddField('attack_duration', attack_duration)
+            self._component_add_field('attack_duration', attack_duration)
         if attack_once:
-            self.AddField('attack_once', attack_once)
+            self._component_add_field('attack_once', attack_once)
         if cooldown_time != 1:
-            self.AddField('cooldown_time', cooldown_time)
+            self._component_add_field('cooldown_time', cooldown_time)
         if hit_delay_pct != 0.5:
-            self.AddField('hit_delay_pct', clamp(hit_delay_pct, 0, 1))
-        if inner_boundary_time_increase != 0.75:
-            self.AddField('inner_boundary_time_increase', inner_boundary_time_increase)
-        if max_path_time != 0.75:
-            self.AddField('max_path_time', max_path_time)
+            self._component_add_field('hit_delay_pct', clamp(hit_delay_pct, 0, 1))
+        if inner_boundary_time_increase != 0.25:
+            self._component_add_field('inner_boundary_time_increase', inner_boundary_time_increase)
+        if max_path_time != 0.55:
+            self._component_add_field('max_path_time', max_path_time)
         if melee_fov != 90:
-            self.AddField('melee_fov', melee_fov)
+            self._component_add_field('melee_fov', melee_fov)
         if min_path_time != 0.2:
-            self.AddField('min_path_time', min_path_time)
+            self._component_add_field('min_path_time', min_path_time)
         if outer_boundary_time_increase != 0.5:
-            self.AddField('outer_boundary_time_increase', outer_boundary_time_increase)
+            self._component_add_field('outer_boundary_time_increase', outer_boundary_time_increase)
         if path_fail_time_increase != 0.75:
-            self.AddField('path_fail_time_increase', path_fail_time_increase)
+            self._component_add_field('path_fail_time_increase', path_fail_time_increase)
         if path_inner_boundary != 16:
-            self.AddField('path_inner_boundary', path_inner_boundary)
+            self._component_add_field('path_inner_boundary', path_inner_boundary)
         if path_outer_boundary != 32:
-            self.AddField('path_outer_boundary', path_outer_boundary)
+            self._component_add_field('path_outer_boundary', path_outer_boundary)
         if random_stop_interval != 0:
-            self.AddField('random_stop_interval', random_stop_interval)
+            self._component_add_field('random_stop_interval', random_stop_interval)
         if reach_multiplier != 2:
-            self.AddField('reach_multiplier', reach_multiplier)
+            self._component_add_field('reach_multiplier', reach_multiplier)
         if require_complete_path:
-            self.AddField('require_complete_path', require_complete_path)
+            self._component_add_field('require_complete_path', require_complete_path)
         if set_persistent:
-            self.AddField('set_persistent', set_persistent)
+            self._component_add_field('set_persistent', set_persistent)
         if speed_multiplier != 1:
-            self.AddField('speed_multiplier', speed_multiplier)
+            self._component_add_field('speed_multiplier', speed_multiplier)
         if track_target:
-            self.AddField('track_target', track_target)
+            self._component_add_field('track_target', track_target)
         if x_max_rotation != 30:
-            self.AddField('x_max_rotation', x_max_rotation)
+            self._component_add_field('x_max_rotation', x_max_rotation)
         if y_max_head_rotation != 30:
-            self.AddField('y_max_head_rotation', y_max_head_rotation)
+            self._component_add_field('y_max_head_rotation', y_max_head_rotation)
             
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
     def attack_types(self, attack_types : str):
-        self.AddField('attack_types', attack_types)
+        self._component_add_field('attack_types', attack_types)
         return self
 
     def on_attack(self, on_attack : event):
-        self.AddField('on_attack', on_attack)
+        self._component_add_field('on_attack', on_attack)
         return self
 
     def on_kill(self, on_kill : event):
-        self.AddField('on_kill', on_kill)
+        self._component_add_field('on_kill', on_kill)
         return self
 
 
@@ -2094,37 +2134,167 @@ class MoveToBlock(_component):
                  tick_interval : int = 20) -> None:
         """Compels a mob to move towards a block."""
         super().__init__('behavior.move_to_block')
-        self.AddField('target_blocks', target_blocks)
+        self._component_add_field('target_blocks', target_blocks)
         if goal_radius != 0.5:
-            self.AddField('goal_radius', goal_radius)
+            self._component_add_field('goal_radius', goal_radius)
         if search_height != 1:
-            self.AddField('search_height', search_height)
+            self._component_add_field('search_height', search_height)
         if search_range != 0:
-            self.AddField('search_range', search_range)
+            self._component_add_field('search_range', search_range)
         if speed_multiplier != 1.0:
-            self.AddField('speed_multiplier', speed_multiplier)
+            self._component_add_field('speed_multiplier', speed_multiplier)
         if start_chance != 1.0:
-            self.AddField('start_chance', start_chance)
+            self._component_add_field('start_chance', start_chance)
         if stay_duration != 0.0:
-            self.AddField('stay_duration', stay_duration)
+            self._component_add_field('stay_duration', stay_duration)
         if target_offset != (0, 0, 0):
-            self.AddField('target_offset', target_offset)
+            self._component_add_field('target_offset', target_offset)
         if target_selection_method != 'nearest':
-            self.AddField('target_selection_method', target_selection_method)
+            self._component_add_field('target_selection_method', target_selection_method)
         if tick_interval != 20:
-            self.AddField('tick_interval', tick_interval)
+            self._component_add_field('tick_interval', tick_interval)
             
     def priority(self, priority : int):
-        self.AddField('priority', priority)
+        self._component_add_field('priority', priority)
         return self
 
     def on_reach(self, event: event, target: FilterSubject = FilterSubject.Self):
-        self.AddField('on_reach', {'event': event, 'target': target})
+        self._component_add_field('on_reach', {'event': event, 'target': target})
         return self
 
     def on_stay_completed(self, event: event, target: FilterSubject = FilterSubject.Self):
-        self.AddField('on_stay_completed', {'event': event, 'target': target})
+        self._component_add_field('on_stay_completed', {'event': event, 'target': target})
         return self
+
+
+class InsideBlockNotifier(_component):
+    def __init__(self) -> None:
+        """Verifies whether the entity is inside any of the listed blocks."""
+        super().__init__('inside_block_notifier')
+        self._component_add_field('block_list', [])
+            
+    def blocks(self, 
+               block_name : str,
+               entered_block_event: str,
+               exited_block_event: str,
+            ):
+        self[self._component_namespace]['block_list'].append({
+            "block":{
+                "name": block_name,
+            },
+            "entered_block_event" : entered_block_event,
+            "exited_block_event": exited_block_event
+        })
+        return self
+
+
+class Transformation(_component):
+    def __init__(
+            self,
+            into: Identifier,
+            transform_event: str = None,
+            drop_equipment: bool = False,
+            drop_inventory: bool = False,
+            keep_level: bool = False,
+            keep_owner: bool = False,
+            preserve_equipment: bool = False,
+        ) -> None:
+        """Defines an entity's transformation from the current definition into another."""
+        super().__init__('transformation')
+        self._component_add_field('into', into + f'<{transform_event}>' if not transform_event is None else '')
+        self._component_add_field('add', {"component_groups":[]})
+        self._component_add_field('delay', {})
+        if drop_equipment:
+            self._component_add_field('drop_equipment', drop_equipment)
+        if drop_inventory:
+            self._component_add_field('drop_inventory', drop_inventory)
+        if keep_level:
+            self._component_add_field('keep_level', keep_level)
+        if keep_owner:
+            self._component_add_field('keep_owner', keep_owner)
+        if preserve_equipment:
+            self._component_add_field('preserve_equipment', preserve_equipment)
+    
+    def add(self, *component_groups: str):
+        self[self._component_namespace]['add']['component_groups'].extend(component_groups)
+        return self
+    
+    def begin_transform_sound(self, sound: str):
+        self._component_add_field('begin_transform_sound', sound)
+        return self
+    
+    def transformation_sound(self, sound: str):
+        self._component_add_field('transformation_sound', sound)
+        return self
+    
+    def delay(self, 
+              block_assist_chance: float = 0.0,
+              block_chance : int = 0,
+              block_max: int = 0,
+              block_radius: int = 0,
+              value: int = 0,
+              block_type: list = []
+        ):
+        if not block_assist_chance == 0.0:
+            self[self._component_namespace]['delay']['block_assist_chance'] = block_assist_chance
+        if not block_chance == 0:
+            self[self._component_namespace]['delay']['block_chance'] = block_chance
+        if not block_max == 0:
+            self[self._component_namespace]['delay']['block_max'] = block_max
+        if not block_radius == 0:
+            self[self._component_namespace]['delay']['block_radius'] = block_radius
+        if not value == 0:
+            self[self._component_namespace]['delay']['value'] = value
+        if len(block_type) > 0:
+            self[self._component_namespace]['delay']['block_type'] = block_type
+
+        return self
+
+
+class NPC(_component):
+    def __init__(self, skin_list: list[int]) -> None:
+        """Allows an entity to be an NPC."""
+        super().__init__('npc')
+        self._component_add_field('npc_data', {
+            'skin_list': [{"variant": i} for i in skin_list]
+        })
+    
+    def portrait_offsets(self, translate : coordinates, scale: coordinates):
+        self[self._component_namespace]['npc_data']['portrait_offsets'] = {
+            'translate': translate,
+            'scale': scale
+        }
+        return self
+    
+    def picker_offsets(self, translate : coordinates, scale: coordinates):
+        self[self._component_namespace]['npc_data']['picker_offsets'] = {
+            'translate': translate,
+            'scale': scale
+        }
+        return self
+
+
+class Equipment(_component):
+    def __init__(self, path) -> None:
+        """Sets the loot table for what items this entity drops upon death."""
+        super().__init__('equipment')
+        self._component_add_field('table', MakePath('loot_tables', path))
+
+
+class _EquipItem(_component):
+    def __init__(self) -> None:
+        """Compels the entity to equip desired equipment."""
+        super().__init__('equip_item')
+
+class EquipItem(_component):
+    def __init__(self) -> None:
+        """Compels an entity to equip an item."""
+        super().__init__('behavior.equip_item')
+            
+    def priority(self, priority : int):
+        self._component_add_field('priority', priority)
+        return self
+
 
 
 

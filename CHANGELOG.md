@@ -2,12 +2,78 @@
 
 ---
 
+Version 0.3.5
+=============
+  [Anvil]
+  -------
+  - Updated the extensions of generated files.
+  - Vanilla entities are automatically exported to the vanilla directory, regardless of the provided directory.
+  - Updated to release ``1.19.81.01`` and preview ``1.20.0.20``.
+  - Actors client ``scale`` values is properly set to a string.
+  - ``TimedFunction`` is no longer tied to an actor and will be executed on the server fake player.
+    - Tags are also no longer required.
+    - To get the scoreboard objective for the TimedFunction, call it's str representation.
+    - To test if the TimedFunction has finished it's run, check if the objective is equal to -1.
+  - Added an error validation for path length exceeding 80 characters.
+  - Anvil packaging function allows for applying an overlay to keyarts now.
+  - Replaced the Exporter Parent class with ``AddonObject`` and moved extensions and paths to each individual class.
+  - Moved ``LootTable``, ``Recipe``, ``Particle`` from the old ``EngineComponent`` to ``AddonObject``.
+  - ``Items`` still rely on ``EngineComponent`` until the rework in ``1.20``
+  - Removed unnecessary modules.
+  - Added an items module in preparation for the new items.
+  - Pack versioning is now supported using the ``release`` key in ``config.ini``
+  
+  [Components]
+  ------------
+  - Added ``InsideBlockNotifier()``, ``Transformation()``, ``Equipment()``, ``EquipItem()`` components
+  - Added ``is_raider``, ``is_variant``, ``is_mark_variant``, ``is_skin_id`` filters.
+  
+  [Blocks]
+  --------
+  - Fully implemented ``BlockTransformation``, ``BlockDisplayName`` and ``BlockCraftingTable`` components.
+  - 
+  
+  [Items]
+  --------
+  - Added the basic Items class.
+  - Added ``ItemDurability``, ``ItemDisplayName``, ``ItemFuel``, ``ItemEntityPlacer``.
+  - Partially added ``ItemIcon``.
+
+  [Commands]
+  ----------
+  - Added ``InputPermission()`` command.
+  - Added ``haspermission``, ``hasitem``, ``gamemode`` and ``scores`` arguments to the target Selector.
+  - Added ``Scoreboard()`` command.
+  
+  [Molang]
+  --------
+  - `&`, `|` and `~` binary operators wrap the expression in parentheses `()`.
+  - Added ``RotationToCamera()``, ``Health``, ``MaxHealth``
+
+> <span style="color:red">**Breaking behaviour**</span>
+> 
+  >To ensure the interpreter functions as intended, it is recommended to wrap expressions in your own parentheses to insure a proper order of operations, as Anvil wraps expressions left to right, it may result in several bugs.
+  >
+  >For instance, consider the following example:
+  >  
+  >``Query.Property('interacted') & Query.MarkVariant == 1``
+  >  
+  > Although the expression may seem logical at first, it will be compiled to 
+  >
+  >``"(q.property('starktma:interacted') && q.mark_variant) == 1"`` which is not functioning correctly.
+  >  
+  >To avoid this issue, we suggest writing the expression as follows:
+  >  
+  >``Query.Property('interacted') & (Query.MarkVariant == 1)``
+
+---
+
 Version 0.3.4
 =============
   [Anvil]
   -------
   - Anvil clones the bedrock samples again, untracked. `https://github.com/Mojang/bedrock-samples.git`
-  - Updated to Release 1.19.71.02
+  - Updated to Release ``1.19.71.02``
   - Changed the CHANGELOG, README and TODO to md from rst.
   
   [Components]

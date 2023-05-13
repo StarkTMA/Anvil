@@ -63,16 +63,16 @@ class TitleRaw(Command):
     def __init__(self) -> None:
         super().__init__('titleraw')
 
-    def title(self, target: Target):
+    def title(self, target: Selector | Target):
         return _RawText('title', target)
 
-    def subtitle(self, target: Target):
+    def subtitle(self, target: Selector | Target):
         return _RawText('subtitle', target)
 
-    def actionbar(self, target: Target):
+    def actionbar(self, target: Selector | Target):
         return _RawText('actionbar', target)
 
-    def times(self, target: Target, fade_in: int, stay: int, fade_out: int):
+    def times(self, target: Selector | Target, fade_in: int, stay: int, fade_out: int):
         self._append_cmd(target, 'times', fade_in, stay, fade_out)
         return self
     
@@ -191,27 +191,78 @@ class CameraShake(Command):
         super()._new_cmd('stop', target)
 
 class Summon(Command):
-    def __init__(self, entity, coordinates: coordinates = ('~', '~', '~'), event: str = 'minecraft:entity_spawned', name: str = '', __rotation:rotation=('~', '~')):
+    def __init__(self, entity: Identifier, coordinates : coordinates = ('~', '~', '~')):
+        self.argument = {
+            'coordinates': (str(c) for c in coordinates),
+            'lookAtEntity': None,
+            'lookAtPosition': None,
+            'rotation': None,
+            'spawnEvent': None,
+            'nameTag': None,
+        }
         super().__init__('summon', entity)
-        self._command += f' {" ".join(map(str, coordinates))}'
 
-        if not event == 'minecraft:entity_spawned':
-            self._command += f' {event}'
+    def nameTag(self, nameTag: str):
+        self.argument['nameTag'] = nameTag
+        return self
+    
+    def spawnEvent(self, spawnEvent: str):
+        self.argument['spawnEvent'] = spawnEvent
+        return self
+    
+    def lookAtEntity(self, entity: Selector | Target):
+        self.argument['lookAtEntity'] = entity
+        return self
+    
+    def lookAtPosition(self, coordinates : coordinates):
+        self.argument['lookAtPosition'] = coordinates
+        return self
+    
+    def rotation(self, ry = '~', rx = '~'):
+        self.argument['rotation'] = (str(ry), str(rx))
+        return self
+    
+    def __str__(self):
+        rots = sum([x is not None for x in (self.argument.get('lookAtEntity'), self.argument.get('lookAtPosition'), self.argument.get('rotation'))])
+        if rots > 1:
+            RaiseError('Multiple rotation overloads used.')
 
-        if not name == '':
-            if event == 'minecraft:entity_spawned':
-                self._command += f' {event}'
-            self._command += f' "{name}"'
+        if rots == 0 and self.argument.get('spawnEvent') is None:
+            self._append_cmd(self.argument.get('nameTag'))
+            self._append_cmd(" ".join(self.argument.get('coordinates')))
+            
+        else:
+            if rots == 0:
+                self.argument['rotation'] = ('~', '~')
 
-        #if not __rotation == ('~', '~'):
-        #    self._command += f' {" ".join(map(str, rotation))}'
+            self._append_cmd(" ".join(self.argument.get('coordinates')))
+
+            if self.argument.get('lookAtEntity') != None:
+                self._append_cmd('facing', self.argument.get('lookAtEntity'))
+
+            elif self.argument.get('lookAtPosition') != None:
+                self._append_cmd('facing', " ".join(self.argument.get('lookAtPosition')))
+
+            else:
+                self._append_cmd(" ".join(self.argument.get('rotation')))
+
+            if self.argument.get('spawnEvent') != None:
+                self._append_cmd(self.argument.get('spawnEvent'))
+
+            if self.argument.get('nameTag') != None:
+                if self.argument.get('spawnEvent') == None:
+                    self._append_cmd('minecraft:entity_spawned')
+                self._append_cmd(self.argument.get('nameTag'))
+
+        return super().__str__()
+
 
 class XP(Command):
     """Adds or removes player experience.
 
     Args:
         amount (int): Specifies the amount of experience points or levels to be added or removed from the player
-        player (str): Target Selector (Must be player type)
+        player (str): Selector | Target Selector (Must be player type)
 
     Returns:
         Command: xp command
@@ -351,8 +402,9 @@ class Teleport(Command):
             'teleport',
             target,
             ' '.join(map(str, destination)),
-            ' '.join(map(str, (normalize_180(rotation[0]), rotation[1]))) if not rotation == ('~', '~') else ''
+            ' '.join(map(str, (normalize_180(round(rotation[0], 2)), round(rotation[1], 2)))) if not rotation == ('~', '~') else ''
         )
+    
     def Facing(self, poistion: coordinates):
         super()._append_cmd('facing', ' '.join(map(str, poistion)))
         return self
@@ -362,7 +414,7 @@ class Teleport(Command):
         return self
 
 class Event(Command):
-    def __init__(self, target: Target, event: event) -> None:
+    def __init__(self, target: Selector | Target, event: event) -> None:
         super().__init__('event', 'entity',target, event)
         
 class Function(Command):
@@ -370,8 +422,12 @@ class Function(Command):
         super().__init__('function', path)
 
 class Give(ItemComponents):
-    def __init__(self, target: Target, item: str, amount: int = 1, data: int = 0) -> None:
-        super().__init__('give', target, item, amount, data)
+    def __init__(self, target: Selector | Target, item: str, amount: int = 1, data: int = 0) -> None:
+        super().__init__('give', target, item)
+        if amount > 1:
+            self._append_cmd(amount)
+        if data != 0:
+            self._append_cmd(data)
 
 class ReplaceItem(ItemComponents):
     def __init__(self) -> None:
@@ -386,10 +442,10 @@ class ReplaceItem(ItemComponents):
         return self
 
 class Damage(ItemComponents):
-    def __init__(self, target: Target, amount: int, cause: DamageCause) -> None:
+    def __init__(self, target: Selector | Target, amount: int, cause: DamageCause) -> None:
         super().__init__('damage', target, amount, cause)
 
-    def damager(self, damager: Target) -> None:
+    def damager(self, damager: Selector | Target) -> None:
         self._append_cmd('entity', damager)
         return self
     
@@ -397,9 +453,113 @@ class Playsound(Command):
     def __init__(
             self , 
             sound: str, 
-            target: Target = Target.S, 
+            target: Selector | Target = Target.S, 
             position : position = ('~', '~', '~'),
             volume : int = 1,
             pitch: int = 1,
             minimumVolume : int = 0) -> None:
         super().__init__('playsound', sound, target, *position, volume, pitch, minimumVolume)
+
+class InputPermission(Command):
+    def __init__(self) -> None:
+        super().__init__('inputpermission', 'set')
+
+    def enable(self, 
+               permission : Permission,
+               target: Selector | Target = Target.S):
+        self._append_cmd(target, permission, 'enabled')
+        return self
+
+    def disable(self, 
+               permission : Permission,
+               target: Selector | Target = Target.S):
+        self._append_cmd(target, permission, 'disabled')
+        return self
+
+class Scoreboard(Command):
+    class _ScoreboardObjective:
+        class _ScoreboardObjectiveDisplay:
+            def __init__(self, parent: 'Scoreboard') -> None:
+                self.parent = parent
+            
+            def list(self, objective, ascending: bool = True):
+                self.parent._append_cmd('list', objective, 'ascending' if ascending else 'descending')
+                return self.parent
+            
+            def sidebar(self, objective: str, ascending: bool = True):
+                self.parent._append_cmd('sidebar', objective, 'ascending' if ascending else 'descending')
+                return self.parent
+            
+            def belowName(self, objective):
+                self.parent._append_cmd('belowName', objective)
+                return self.parent
+
+        def __init__(self, parent: 'Scoreboard') -> None:
+            self.parent= parent
+
+        def add(self, objective: str, display_name: str = None):
+            cmd_args = [objective, 'dummy']
+            if display_name:
+                cmd_args.append(display_name)
+            self.parent._append_cmd('add', *cmd_args)
+            return self.parent
+
+        def remove(self, objective: str):
+            self.parent._append_cmd('remove', objective)
+            return self.parent
+
+        @property
+        def list(self):
+            self.parent._append_cmd('list')
+            return self.parent
+
+        @property
+        def setdisplay(self):
+            self.parent._append_cmd('setdisplay')
+            return self._ScoreboardObjectiveDisplay(self.parent)
+
+    class _ScoreboardPlayers:
+        def __init__(self, parent: 'Scoreboard') -> None:
+            self.parent = parent
+
+        def set(self, target: Selector | Target, objective: str, count: int):
+            self.parent._append_cmd('set', target, objective, count)
+            return self.parent
+        
+        def add(self, target: Selector | Target, objective: str, count: int):
+            self.parent._append_cmd('add', target, objective, count)
+            return self.parent
+        
+        def remove(self, target: Selector | Target, objective: str, count: int):
+            self.parent._append_cmd('remove', target, objective, count)
+            return self.parent
+
+        def list(self, target: Selector | Target):
+            self.parent._append_cmd('list', target)
+            return self.parent
+
+        def operation(self, target: Selector | Target, objective1: str, operation: ScoreboardOperation, source: str, objective2: str):
+            self.parent._append_cmd('operation', target, objective1, operation, source, objective2)
+            return self.parent
+
+        def random(self, target: Selector | Target, objective: str, min: int, max: int):
+            self.parent._append_cmd('random', target, objective, min, max)
+            return self.parent
+        
+        def reset(self, target: Selector | Target, objective: str):
+            self.parent._append_cmd('reset', target, objective)
+            return self.parent
+        
+    def __init__(self) -> None:
+        super().__init__('scoreboard')
+
+    @property
+    def objective(self):
+        self._append_cmd('objectives')
+        return self._ScoreboardObjective(self)
+
+    @property
+    def players(self):
+        self._append_cmd('players')
+        return self._ScoreboardPlayers(self)
+

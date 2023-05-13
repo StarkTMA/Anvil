@@ -1,5 +1,7 @@
+from typing import Dict
+
 from ..core import (ANVIL, NAMESPACE, NAMESPACE_FORMAT, PASCAL_PROJECT_NAME,
-                    Exporter, _MinecraftDescription)
+                    AddonObject, _MinecraftDescription)
 from ..packages import *
 from .actors import _Components
 from .components import _component
@@ -11,93 +13,63 @@ __all__ = ['Block', 'VanillaBlockTexture',
            'BlockCraftingTable', 'BlockPlacementFilter'
            ]
 
-# Experimental
-class _BlockRotation(_component):
-    def __init__(self, rotation: rotation) -> None:
-        super().__init__('rotation')
-        self.SetValue(rotation)
-
-
-class _BlockDisplayName(_component):
-    def __init__(self, display_name: str) -> None:
-        """Describes the destructible by mining properties for this block."""
-        super().__init__('display_name')
-        self.SetValue(display_name)
-
-class _BlockTransformation(_component):
-    def __init__(self, table_name: str, *crafting_tags: str) -> None:
-        """The block's transfomration."""
-        super().__init__('transformation')
-    
-    def translation(self, translation: position):
-        self.AddField('translation', translation)
-        return self
-    
-    def scale(self, scale: position):
-        self.AddField('scale', scale)
-        return self
-    
-    def rotation(self, rotation: rotation):
-        self.AddField('rotation', rotation)
-        return self
-
 # Released
 
 class BlockDestructibleByExplosion(_component):
     def __init__(self, explosion_resistance: int) -> None:
         """Describes the destructible by explosion properties for this block."""
         super().__init__('destructible_by_explosion')
-        self.AddField('explosion_resistance', explosion_resistance)
+        self._component_add_field('explosion_resistance', explosion_resistance)
 
 
 class BlockDestructibleByMining(_component):
     def __init__(self, seconds_to_destroy: int) -> None:
         """Describes the destructible by mining properties for this block."""
         super().__init__('destructible_by_mining')
-        self.AddField('seconds_to_destroy', seconds_to_destroy)
+        self._component_add_field('seconds_to_destroy', seconds_to_destroy)
 
 
 class BlockFlammable(_component):
     def __init__(self, catch_chance_modifier: int, destroy_chance_modifier: int) -> None:
         """Describes the flammable properties for this block."""
         super().__init__('flammable')
-        self.AddField('catch_chance_modifier', catch_chance_modifier)
-        self.AddField('destroy_chance_modifier', destroy_chance_modifier)
+        self._component_add_field('catch_chance_modifier', catch_chance_modifier)
+        self._component_add_field('destroy_chance_modifier', destroy_chance_modifier)
 
 
 class BlockFriction(_component):
     def __init__(self, friction: float = 0.4) -> None:
         """Describes the friction for this block in a range of 0.0 to 0.9."""
         super().__init__('flammable')
-        self.SetValue(clamp(friction, 0, 0.9))
+        self._component_set_value(clamp(friction, 0, 0.9))
 
 
 class BlockLightDampening(_component):
     def __init__(self, light_dampening: int = 15) -> None:
         """The amount that light will be dampened when it passes through the block in a range (0-15)."""
         super().__init__('light_dampening')
-        self.SetValue(clamp(light_dampening, 0, 15))
+        self._component_set_value(clamp(light_dampening, 0, 15))
 
 
 class BlockLightEmission(_component):
     def __init__(self, light_emission: int = 0) -> None:
         """The amount of light this block will emit in a range (0-15)."""
         super().__init__('light_emission')
-        self.SetValue(clamp(light_emission, 0, 15))
+        self._component_set_value(clamp(light_emission, 0, 15))
 
 
 class BlockLootTable(_component):
     def __init__(self, loot: str) -> None:
         """Specifies the path to the loot table."""
         super().__init__('loot')
-        self.SetValue(loot)
+        self._component_set_value(loot)
 
 
 class BlockMapColor(_component):
     def __init__(self, map_color: str) -> None:
         """Sets the color of the block when rendered to a map."""
         super().__init__('map_color')
-        self.SetValue(map_color)
+        self._component_set_value(map_color)
 
 
 class BlockMaterialInstance(_component):
@@ -124,7 +96,13 @@ class BlockGeometry(_component):
     def __init__(self, geometry_name) -> None:
         """The description identifier of the geometry file to use to render this block."""
         super().__init__('geometry')
-        self.SetValue(f'geometry.{NAMESPACE_FORMAT}.{geometry_name}')
+        self._component_set_value(f'geometry.{NAMESPACE_FORMAT}.{geometry_name}')
+
+    def bone_visibility(self, **bone: Dict[str, bool]):
+        self._component_add_field('bone_visibility', [
+            {b:v for b, v in bone.items()}
+        ])
+        return self
 
 
 class BlockCollisionBox(_component): 
@@ -132,10 +110,10 @@ class BlockCollisionBox(_component):
         """Defines the area of the block that collides with entities."""
         super().__init__('collision_box')
         if size == (0, 0, 0):
-            self.SetValue(False)
+            self._component_set_value(False)
         else:
-            self.AddField('size', size)
-            self.AddField('origin', origin)
+            self._component_add_field('size', size)
+            self._component_add_field('origin', origin)
 
 
 class BlockSelectionBox(_component): 
@@ -143,18 +121,10 @@ class BlockSelectionBox(_component):
         """Defines the area of the block that is selected by the player's cursor."""
         super().__init__('selection_box')
         if size == (0, 0, 0):
-            self.SetValue(False)
+            self._component_set_value(False)
         else:
-            self.AddField('size', size)
-            self.AddField('origin', origin)
-
-
-class BlockCraftingTable(_component):
-    def __init__(self, table_name: str, *crafting_tags: str) -> None:
-        """Makes your block into a custom crafting table."""
-        super().__init__('transformation')
-        self.AddField('table_name', table_name)
-        self.AddField('crafting_tags', crafting_tags)
+            self._component_add_field('size', size)
+            self._component_add_field('origin', origin)
 
 
 class BlockPlacementFilter(_component):
@@ -162,7 +132,7 @@ class BlockPlacementFilter(_component):
 
     def __init__(self) -> None:
         super().__init__('placement_filter')
-        self.AddField('conditions', [])
+        self._component_add_field('conditions', [])
 
     def add_condition(self, allowed_faces: list[BlockFaces], block_filter: list[Union[BlockDescriptor, str]]):
         if BlockFaces.Side in allowed_faces:
@@ -177,6 +147,47 @@ class BlockPlacementFilter(_component):
             "block_filter": block_filter,
         })
         return self
+
+
+class BlockTransformation(_component):
+    def __init__(self) -> None:
+        """The block's transfomration."""
+        super().__init__('transformation')
+    
+    def translation(self, translation: position):
+        self._component_add_field('translation', translation)
+        return self
+    
+    def scale(self, scale: position):
+        self._component_add_field('scale', scale)
+        return self
+    
+    def rotation(self, rotation: rotation):
+        self._component_add_field('rotation', rotation)
+        return self
+
+
+class BlockDisplayName(_component):
+    def __init__(self, display_name: str) -> None:
+        """This component is specified as a Localization String. If this component is omitted, the default value for this component is the name of the block."""
+        super().__init__('display_name')
+        self._component_set_value(display_name)
+
+
+class BlockCraftingTable(_component):
+    def __init__(self, table_name: str, *crafting_tags: str) -> None:
+        """Makes your block into a custom crafting table which enables the crafting table UI and the ability to craft recipes."""
+        super().__init__('crafting_table')
+        self._component_add_field('table_name', table_name)
+
+        if len(crafting_tags) > 64:
+            raise IndexError('Crafting Table tags cannot exceed 64 tags.')
+        
+        for tag in crafting_tags:
+            if len(tag) > 64:
+                raise ValueError('Crafting Table tags are limited to 64 characters.')
+
+        self._component_add_field('crafting_tags', crafting_tags)
 
 #Blocks
 class _PermutationComponents(_Components):
@@ -212,7 +223,11 @@ class _BlockServerDescription(_MinecraftDescription):
         return super()._export
 
 
-class _BlockServer(Exporter):
+class _BlockServer(AddonObject):
+    _extensions = {
+        0: ".block.json", 
+        1: ".block.json"
+    }
     def _check_model(self, block_name):
         CheckAvailability(f'{block_name}.geo.json', 'geometry',
                           MakePath('assets', 'models', 'blocks'))
@@ -224,7 +239,7 @@ class _BlockServer(Exporter):
                     f'The geometry file {block_name}.geo.json doesn\'t contain a geometry called {geo_namespace}')
 
     def __init__(self, identifier: str, is_vanilla: bool) -> None:
-        super().__init__(identifier, 'server_block')
+        super().__init__(identifier, MakePath("behavior_packs", f"BP_{PASCAL_PROJECT_NAME}", "blocks"))
         self._identifier = identifier
         self._server_block = Schemes('server_block')
         self._description = _BlockServerDescription(identifier, is_vanilla)
@@ -250,8 +265,6 @@ class _BlockServer(Exporter):
         self._server_block['minecraft:block']['components'].update(self._components._export()['components'])
         comps = self._server_block['minecraft:block']['components']
         self._server_block['minecraft:block']['permutations'] = [permutation._export() for permutation in self._permutations]
-
-            
 
         if 'minecraft:geometry' in comps:
             target_model = self._server_block['minecraft:block']['components']['minecraft:geometry'].split('.')[-1]
