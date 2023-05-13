@@ -1,16 +1,18 @@
-from ..packages import *
 from ..core import NAMESPACE
+from ..packages import *
 
 
 class _molang(str):
     def __invert__(self):
-        return _molang(f"!{self}")
+        return _molang(f"!({self})")
     
     def __eq__(self, other):
-        return _molang(f"{self} == " f"'{other}'" if type(other) is str else other) 
+        o = f"'{other}'" if type(other) is str else f"{other}"
+        return _molang(f"{self} == {o}")
 
     def __ne__(self, other):
-        return _molang(f"{self} != " f"'{other}'" if type(other) is str else other)
+        o = f"'{other}'" if type(other) is str else f"{other}"
+        return _molang(f"{self} != {o}")
 
     def __lt__(self, other):
         return _molang(f"{self} < {other}")
@@ -25,13 +27,61 @@ class _molang(str):
         return _molang(f"{self} >= {other}")
 
     def __and__(self, other):
-        return _molang(f"{self} && {other}")
+        return _molang(f"({self} && {other})")
 
     def __or__(self, other):
-        return _molang(f"{self} || {other}")
-
+        return _molang(f"({self} || {other})")
+    
     def __add__(self, other):
-        return _molang(f"{self} + {other}")
+        return _molang(f"({self} + {other})")
+    
+    def __sub__(self, other):
+        return _molang(f"({self} - {other})")
+    
+    def __mul__(self, other):
+        return _molang(f"({self} * {other})")
+    
+    def __neg__(self):
+        return _molang(f"-{self}")
+    
+    def __truediv__ (self, other):
+        return _molang(f"({self} / {other})")
+    
+    def __floordiv__ (self, other):
+        return Math.floor(f"({self} / {other})")
+    
+    def __mod__ (self, other):
+        return Math.mod(self, other)
+    
+    def __pow__(self, other):
+        return Math.pow(self, other)
+    
+    def __radd__(self, other):
+        return _molang(f"({other} + {self})")
+    
+    def __rsub__(self, other):
+        return _molang(f"({other} - {self})")
+    
+    def __rmul__(self, other):
+        return _molang(f"({other} * {self})")
+    
+    def __rtruediv__(self, other):
+        return _molang(f"({other} / {self})")
+    
+    def __rfloordiv__(self, other):
+        return Math.floor(f"({other} / {self})")
+    
+    def __rmod__(self, other):
+        return Math.mod(other, self)
+    
+    def __rpow__(self, other):
+        return Math.pow(other, self)
+
+    def __abs__(self):
+        return Math.abs(self)
+    
+    def __round__(self):
+        return Math.round(self)
 
     def _query(self, qtype, query, *arguments):
         a = f'{qtype}.{query}'
@@ -59,6 +109,10 @@ class Query(_molang):
     def Variant(self):
         return self._query(self, 'q', 'variant')
 
+    @classmethod
+    @property
+    def MarkVariant(self):
+        return self._query(self, 'q', 'mark_variant')
 
     @classmethod
     @property
@@ -83,7 +137,6 @@ class Query(_molang):
     def InRange(self, value: float, min: float, max: float):
         return self._query(self, 'q', 'in_range', value, min, max)
 
-
     @classmethod
     def MovementDirection(self, axis: int):
         return self._query(self, 'q', 'movement_direction', axis)
@@ -93,14 +146,26 @@ class Query(_molang):
         return self._query(self, 'q', 'property', f'{NAMESPACE}:{property}')
 
     @classmethod
-    @property
-    def BodyYRotation(self):
-        return self._query(self, 'q', 'body_y_rotation')
+    def HasProperty(self, property: str):
+        return self._query(self, 'q', 'has_property', f'{NAMESPACE}:{property}')
 
     @classmethod
     @property
     def BodyXRotation(self):
         return self._query(self, 'q', 'body_x_rotation')
+
+    @classmethod
+    @property
+    def BodyYRotation(self):
+        return self._query(self, 'q', 'body_y_rotation')
+
+    @classmethod
+    def HeadXRotation(self, head_number: int = 0):
+        return self._query(self, 'q', 'head_x_rotation', head_number)
+
+    @classmethod
+    def HeadYRotation(self, head_number: int = 0):
+        return self._query(self, 'q', 'head_y_rotation', head_number)
 
     @classmethod
     @property
@@ -147,8 +212,106 @@ class Query(_molang):
     def IsSneaking(self):
         return self._query(self, 'q', 'is_sneaking')
 
+    @classmethod
+    @property
+    def IsLocalPlayer(self):
+        return self._query(self, 'q', 'is_local_player')
+    
+    @classmethod
+    def IsItemNameAny(self, slot: Slots, index: int = 0, *items: str):
+        return self._query(self, 'q', 'is_item_name_any', slot, index, ','.join(items))
+    
+    @classmethod
+    def BlockProperty(self, property: str):
+        return self._query(self, 'q', 'block_property', f'{NAMESPACE}:{property}')
 
+    @classmethod
+    def GetEquippedItemName(self, hand_slot: int, index = 0):
+        return self._query(self, 'q', 'get_equipped_item_name', clamp(hand_slot, 0, 1), index)
+    
+    @classmethod
+    def Position(self, axis: int):
+        return self._query(self, 'q', 'position', clamp(axis, 0, 2))
+    
+    @classmethod
+    def PositionDelta(self, axis: int):
+        return self._query(self, 'q', 'position_delta', clamp(axis, 0, 2))
+    
+    @classmethod
+    @property
+    def AllAnimationsFinished(self):
+        return self._query(self, 'q', 'all_animations_finished')
+    
+    @classmethod
+    @property
+    def AnyAnimationFinished(self):
+        return self._query(self, 'q', 'any_animation_finished')
+    
+    @classmethod
+    @property
+    def ItemIsCharged(self):
+        return self._query(self, 'q', 'item_is_charged')
+    
+    @classmethod
+    @property
+    def ItemInUseDuration(self):
+        return self._query(self, 'q', 'item_in_use_duration')
+    
+    @classmethod
+    @property
+    def AnimTime(self):
+        return self._query(self, 'q', 'anim_time')
+    
+    @classmethod
+    @property
+    def IsRiding(self):
+        return self._query(self, 'q', 'is_riding')
 
+    @classmethod
+    @property
+    def ModifiedMoveSpeed(self):
+        return self._query(self, 'q', 'modified_move_speed')
+    
+    @classmethod
+    @property
+    def IsDelayedAttacking(self):
+        return self._query(self, 'q', 'is_delayed_attacking')
+    
+    @classmethod
+    @property
+    def IsCharged(self):
+        return self._query(self, 'q', 'is_charged')
+    
+    @classmethod
+    @property
+    def IsCharging(self):
+        return self._query(self, 'q', 'is_charging')
+    
+    @classmethod
+    @property
+    def IsCasting(self):
+        return self._query(self, 'q', 'is_casting')
+
+    @classmethod
+    @property
+    def IsRoaring(self):
+        return self._query(self, 'q', 'is_roaring')
+
+    @classmethod
+    def RotationToCamera(self, axis: int):
+        return self._query(self, 'q', 'rotation_to_camera', clamp(axis, 0, 1))
+
+    @classmethod
+    @property
+    def Health(self):
+        return self._query(self, 'q', 'health')
+    
+    @classmethod
+    @property
+    def MaxHealth(self):
+        return self._query(self, 'q', 'max_health')
+
+  
 class Variable(_molang):
     def __init__(self) -> None:
         super().__init__('v')
@@ -170,7 +333,8 @@ class Variable(_molang):
     @property
     def IsPaperdoll(self):
         return self._query(self, 'v', 'is_paperdoll')
-    
+
+
 class Math(_molang):
     def __init__(self) -> None:
         super().__init__('math')
@@ -288,6 +452,10 @@ class Math(_molang):
     def trunc(self, value):
         return self._query(self, 'math', 'trunc', value)
 
+
+def molang_conditions(condition, expression, expression2):
+    return f'{condition} ? {expression} : ({expression2})'
+    
 
 q = Query
 v = Variable

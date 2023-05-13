@@ -1,5 +1,6 @@
 from configparser import ConfigParser
 
+
 class _config:
     def __init__(self) -> None:
         self._config = ConfigParser()
@@ -18,6 +19,9 @@ class _config:
     
     def has_option(self, section, option):
         return option in self._config[section]
+    
+    def has_section(self, section):
+        return section in self._config
     
     def get(self, section, option):
         return self._config[section][option]
