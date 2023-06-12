@@ -1,4 +1,4 @@
-from ..packages import *
+from ..lib import *
 from ..core import ANVIL, RawTextConstructor
 
 class Command:
@@ -203,7 +203,7 @@ class Summon(Command):
         super().__init__('summon', entity)
 
     def nameTag(self, nameTag: str):
-        self.argument['nameTag'] = nameTag
+        self.argument['nameTag'] = f'\"{nameTag}\"'
         return self
     
     def spawnEvent(self, spawnEvent: str):
@@ -227,7 +227,7 @@ class Summon(Command):
         if rots > 1:
             RaiseError('Multiple rotation overloads used.')
 
-        if rots == 0 and self.argument.get('spawnEvent') is None:
+        if rots == 0 and not self.argument.get('nameTag') is None:
             self._append_cmd(self.argument.get('nameTag'))
             self._append_cmd(" ".join(self.argument.get('coordinates')))
             
@@ -255,7 +255,6 @@ class Summon(Command):
                 self._append_cmd(self.argument.get('nameTag'))
 
         return super().__str__()
-
 
 class XP(Command):
     """Adds or removes player experience.
@@ -371,7 +370,7 @@ class Tag(Command):
         return self
 
 class Clear(Command):
-    def __init__(self ,target: str, itemname: str = '', date : int = -1, max_count: int = -1) -> None:
+    def __init__(self ,target: Target, itemname: str = '', date : int = -1, max_count: int = -1) -> None:
         super().__init__('clear', target, itemname, date if not date == -1 else '', max_count if not max_count == -1 else '')
 
 class Effect(Command):
@@ -423,11 +422,7 @@ class Function(Command):
 
 class Give(ItemComponents):
     def __init__(self, target: Selector | Target, item: str, amount: int = 1, data: int = 0) -> None:
-        super().__init__('give', target, item)
-        if amount > 1:
-            self._append_cmd(amount)
-        if data != 0:
-            self._append_cmd(data)
+        super().__init__('give', target, item, amount, data)
 
 class ReplaceItem(ItemComponents):
     def __init__(self) -> None:
@@ -465,13 +460,13 @@ class InputPermission(Command):
         super().__init__('inputpermission', 'set')
 
     def enable(self, 
-               permission : Permission,
+               permission : InputPermissions,
                target: Selector | Target = Target.S):
         self._append_cmd(target, permission, 'enabled')
         return self
 
     def disable(self, 
-               permission : Permission,
+               permission : InputPermissions,
                target: Selector | Target = Target.S):
         self._append_cmd(target, permission, 'disabled')
         return self

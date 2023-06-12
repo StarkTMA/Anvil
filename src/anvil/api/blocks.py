@@ -1,8 +1,8 @@
 from typing import Dict
 
-from ..core import (ANVIL, NAMESPACE, NAMESPACE_FORMAT, PASCAL_PROJECT_NAME,
-                    AddonObject, _MinecraftDescription)
-from ..packages import *
+from ..core import (ANVIL, AddonObject, _MinecraftDescription)
+from ..lib import *
+from ..lib import _JsonSchemes
 from .actors import _Components
 from .components import _component
 
@@ -79,16 +79,17 @@ class BlockMaterialInstance(_component):
         super().__init__('material_instances')
 
     def add_instance(self, texture_name: str, block_face: str = '*', render_method: BlockMaterial = BlockMaterial.Opaque, ambient_occlusion: bool = True, face_dimming: bool = True):
-        CheckAvailability(f'{texture_name}.png', 'texture',
-                          MakePath('assets', 'textures', 'blocks'))
-        self[self._component_namespace].update({
-            block_face: {
-                'texture': texture_name,
-                'render_method': render_method if not render_method == BlockMaterial.Opaque else {},
-                'ambient_occlusion': ambient_occlusion if ambient_occlusion is False else {},
-                'face_dimming': face_dimming if face_dimming is False else {},
-            }
-        })
+        if FileExists(os.path.join('assets', 'textures', 'blocks', f'{texture_name}.png')):
+            self[self._component_namespace].update({
+                block_face: {
+                    'texture': texture_name,
+                    'render_method': render_method if not render_method == BlockMaterial.Opaque else {},
+                    'ambient_occlusion': ambient_occlusion if ambient_occlusion is False else {},
+                    'face_dimming': face_dimming if face_dimming is False else {},
+                }
+            })
+        else:
+            ANVIL.Logger.file_exist_error(f'{texture_name}.png', os.path.join('assets', 'textures', 'blocks'))
         return self
 
 
@@ -96,7 +97,7 @@ class BlockGeometry(_component):
     def __init__(self, geometry_name) -> None:
         """The description identifier of the geometry file to use to render this block."""
         super().__init__('geometry')
-        self._component_set_value(f'geometry.{NAMESPACE_FORMAT}.{geometry_name}')
+        self._component_set_value(f'geometry.{ANVIL.NAMESPACE_FORMAT}.{geometry_name}')
 
     def bone_visibility(self, **bone: Dict[str, bool]):
         self._component_add_field('bone_visibility', [
@@ -208,7 +209,7 @@ class _BlockServerDescription(_MinecraftDescription):
         })
 
     def add_property(self, name, range: tuple[float, float]):
-        self._description['description']['properties'][f'{NAMESPACE}:{name}'] = range
+        self._description['description']['properties'][f'{ANVIL.NAMESPACE}:{name}'] = range
         return self
 
     def menu_category(self, category: BlockCategory = BlockCategory.none, group: str = None):
@@ -229,19 +230,19 @@ class _BlockServer(AddonObject):
         1: ".block.json"
     }
     def _check_model(self, block_name):
-        CheckAvailability(f'{block_name}.geo.json', 'geometry',
-                          MakePath('assets', 'models', 'blocks'))
-        geo_namespace = f'geometry.{NAMESPACE_FORMAT}.{block_name}'
-        with open(MakePath('assets', 'models', 'blocks', f'{block_name}.geo.json')) as file:
-            data = file.read()
-            if geo_namespace not in data:
-                RaiseError(
-                    f'The geometry file {block_name}.geo.json doesn\'t contain a geometry called {geo_namespace}')
-
+        if FileExists(os.path.join('assets', 'models', 'blocks', f'{block_name}.geo.json')):
+            geo_namespace = f'geometry.{ANVIL.NAMESPACE_FORMAT}.{block_name}'
+            with open(os.path.join('assets', 'models', 'blocks', f'{block_name}.geo.json')) as file:
+                data = file.read()
+                if geo_namespace not in data:
+                    RaiseError(
+                        f'The geometry file {block_name}.geo.json doesn\'t contain a geometry called {geo_namespace}')
+        else:
+            ANVIL.Logger.file_exist_error(f'{block_name}.geo.json', os.path.join('assets', 'models', 'blocks'))
     def __init__(self, identifier: str, is_vanilla: bool) -> None:
-        super().__init__(identifier, MakePath("behavior_packs", f"BP_{PASCAL_PROJECT_NAME}", "blocks"))
+        super().__init__(identifier, os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "blocks"))
         self._identifier = identifier
-        self._server_block = Schemes('server_block')
+        self._server_block = _JsonSchemes.server_block()
         self._description = _BlockServerDescription(identifier, is_vanilla)
         self._components = _Components()
         self._permutations : list[_PermutationComponents] = []
@@ -270,8 +271,8 @@ class _BlockServer(AddonObject):
             target_model = self._server_block['minecraft:block']['components']['minecraft:geometry'].split('.')[-1]
             self._check_model(target_model)
             CopyFiles(
-                MakePath('assets', 'models', 'blocks'),
-                MakePath('resource_packs',f'RP_{PASCAL_PROJECT_NAME}', 'models', 'blocks'),
+                os.path.join('assets', 'models', 'blocks'),
+                os.path.join('resource_packs',f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'models', 'blocks'),
                 f'{target_model}.geo.json'
             )
         
@@ -280,21 +281,20 @@ class _BlockServer(AddonObject):
                 target_model = p['components']['minecraft:geometry'].split('.')[-1]
                 self._check_model(target_model)
                 CopyFiles(
-                    MakePath('assets', 'models', 'blocks'),
-                    MakePath('resource_packs',f'RP_{PASCAL_PROJECT_NAME}', 'models', 'blocks'),
+                    os.path.join('assets', 'models', 'blocks'),
+                    os.path.join('resource_packs',f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'models', 'blocks'),
                     f'{target_model}.geo.json'
                 )
         
         if not 'minecraft:material_instances' in comps:
-            RaiseError(MISSING_TEXTURE(f"{NAMESPACE}:{self._identifier}"))
-
+            RaiseError(MISSING_TEXTURE(f"{ANVIL.NAMESPACE}:{self._identifier}"))
 
         for i, m in comps['minecraft:material_instances'].items():
             try:
-                CopyFiles(MakePath('assets', 'textures', 'blocks'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'blocks'), f'{m["texture"]}.png')
+                CopyFiles(os.path.join('assets', 'textures', 'blocks'), os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'textures', 'blocks', 'anvil'), f'{m["texture"]}.png')
             except:
-                CopyFiles(MakePath('assets', 'textures', 'blocks'), MakePath('resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'blocks'), f'{m["texture"]}.tga')
-            ANVIL._terrain_texture.add_block(m['texture'], '', m['texture'])
+                CopyFiles(os.path.join('assets', 'textures', 'blocks'), os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'textures', 'blocks', 'anvil'), f'{m["texture"]}.tga')
+            ANVIL._terrain_texture.add_block(m['texture'], 'anvil', m['texture'])
 
         self.content(self._server_block)
         super().queue()
@@ -318,7 +318,7 @@ class Block():
         self._server = _BlockServer(identifier, is_vanilla)
         self._client = _BlockClient(identifier, is_vanilla)
 
-        self._namespace_format = NAMESPACE_FORMAT
+        self._namespace_format = ANVIL.NAMESPACE_FORMAT
         if self._is_vanilla:
             self._namespace_format = 'minecraft'
 
@@ -336,11 +336,8 @@ class Block():
 
     @property
     def queue(self):
-        display_name = RawText(self._identifier)[1]
-        ANVIL.localize(
-            f'tile.{self._namespace_format}:{self._identifier}.name={display_name}')
-        ANVIL._blocks.update({f'{self._namespace_format}:{self._identifier}': {
-                             "Display Name": display_name}})
+        display_name = self._identifier.replace("_", " ").title()
+        ANVIL.localize(f'tile.{self._namespace_format}:{self._identifier}.name', display_name)
         self.Server.queue
 
 #  TODO: Integrate with the Block class
@@ -354,20 +351,17 @@ class VanillaBlockTexture(_MinecraftDescription):
     def update_texture(self):
         self._ext = ''
         try:
-            CheckAvailability(f'{self._identifier}.png', 'texture', MakePath(
-                'assets', 'textures', 'blocks'))
+            CheckAvailability(f'{self._identifier}.png', 'texture', os.path.join('assets', 'textures', 'blocks'))
             self._ext = 'png'
         except:
-            CheckAvailability(f'{self._identifier}.tga', 'texture', MakePath(
-                'assets', 'textures', 'blocks'))
+            CheckAvailability(f'{self._identifier}.tga', 'texture', os.path.join('assets', 'textures', 'blocks'))
             self._ext = 'tga'
 
         return self
 
     def queue(self, directory: str = None):
         CopyFiles(
-            MakePath('assets', 'textures', 'blocks'),
-            MakePath(
-                'resource_packs', f'RP_{PASCAL_PROJECT_NAME}', 'textures', 'blocks', directory),
+            os.path.join('assets', 'textures', 'blocks'),
+            os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'textures', 'blocks', directory),
             f'{self._identifier}.{self._ext}'
         )

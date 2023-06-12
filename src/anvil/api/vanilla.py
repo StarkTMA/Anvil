@@ -1,4 +1,4 @@
-from anvil import NAMESPACE, Dimension
+from anvil import Dimension, ANVIL
 
 ENTITY_LIST = []
 BLOCK_LIST = []
@@ -10,13 +10,17 @@ ITEMS_LIST = []
 class Items:
     class _basic_item():
         def __init__(self, name : str, is_vanilla: bool = True) -> None:
-            self._namespace = 'minecraft' if is_vanilla else NAMESPACE
+            self._namespace = 'minecraft' if is_vanilla else ANVIL.NAMESPACE
             self._name = name
             ITEMS_LIST.append(self)
 
         def __str__(self) -> str:
-            return self._namespace + ':' + self._name
-        
+            return f'{self._namespace}:{self._name}'
+    # Waiting to be added
+    # - Piglin Mob Head
+
+    # Added in 1.20.0
+    # ---------------------------------------------------------------------------------------------------
     CoastArmorTrim = _basic_item('coast_armor_trim_smithing_template')
     DuneArmorTrim = _basic_item('dune_armor_trim_smithing_template')
     EyeArmorTrim = _basic_item('eye_armor_trim_smithing_template')
@@ -55,12 +59,15 @@ class Items:
     ShelterPotteryShard = _basic_item("shelter_pottery_shard")
     SkullPotteryShard = _basic_item("skull_pottery_shard")
     SnortPotteryShard = _basic_item("snort_pottery_shard")
+    
     Brush = _basic_item("brush")
 
-    # Added in 1.20.0.20
     Torchflower = _basic_item("torchflower")
     TorchflowerSeeds = _basic_item("torchflower_seeds")
     PitcherPod = _basic_item("pitcher_pod")
+
+    RelicMusicDisc = _basic_item("music_disc_relic")
+    # ---------------------------------------------------------------------------------------------------
 
 
 class VanillaBlocksItems:
@@ -82,10 +89,10 @@ class VanillaBlocksItems:
             setattr(self, state.name, state)
 
         def __str__(self):
-            return f"{'minecraft' if self._vanilla else NAMESPACE}:{self._identifier}"
+            return f"{'minecraft' if self._vanilla else ANVIL.NAMESPACE}:{self._identifier}"
 
         def __repr__(self):
-            return f"{'minecraft' if self._vanilla else NAMESPACE}:{self._identifier}"
+            return f"{'minecraft' if self._vanilla else ANVIL.NAMESPACE}:{self._identifier}"
 
     class _state:
         def __init__(self, name, values):
@@ -98,6 +105,16 @@ class VanillaBlocksItems:
             else:
                 raise AttributeError(
                     f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+    # Added in 1.20.0
+    # ---------------------------------------------------------------------------------------------------
+    Tourchflower = _block("tourchflower", Dimension.Overworld, True, False)
+    TourchflowerSeeds = _block("tourchflower_seeds", Dimension.Overworld, True, False)
+
+    DecoratedPot = _block("decorated_pot", Dimension.Overworld, True, False)
+
+    SuspiciousSand = _block("suspicious_sand", Dimension.Overworld, True, False)
+    SuspiciousGravel = _block("suspicious_gravel", Dimension.Overworld, True, False)
 
     CherryBoat = _block("cherry_boat", Dimension.Overworld, True, False)
     CherryButton = _block("cherry_button", Dimension.Overworld, True, False)
@@ -116,13 +133,12 @@ class VanillaBlocksItems:
     CherryStairs = _block("cherry_stairs", Dimension.Overworld, True, False)
     CherryTrapdoor = _block("cherry_trapdoor", Dimension.Overworld, True, False)
     CherryWood = _block("cherry_wood", Dimension.Overworld, True, False)
+
     StrippedCherryLog = _block("stripped_cherry_log", Dimension.Overworld, True, False)
     StrippedCherryWood = _block("stripped_cherry_wood", Dimension.Overworld, True, False)
+
     PinkPetals = _block("pink_petals", Dimension.Overworld, True, False)
-    DecoratedPot = _block("decorated_pot", Dimension.Overworld, True, False)
-    SuspiciousSand = _block("suspicious_sand", Dimension.Overworld, True, False)
-    Tourchflower = _block("tourchflower", Dimension.Overworld, True, False)
-    TourchflowerSeeds = _block("tourchflower_seeds", Dimension.Overworld, True, False)
+
     BambooBlock = _block("bamboo_block", Dimension.Overworld, True, False)
     StrippedBambooBlock = _block("stripped_bamboo_block", Dimension.Overworld, True, False)
     BambooPlanks = _block("bamboo_planks", Dimension.Overworld, True, False)
@@ -135,11 +151,12 @@ class VanillaBlocksItems:
     BambooSlab = _block("bamboo_slab", Dimension.Overworld, True, False)
     BambooMosaicSlab = _block("bamboo_mosaic_slab", Dimension.Overworld, True, False)
     BambooMosaicStairs = _block("bamboo_mosaic_stairs", Dimension.Overworld, True, False)
-    BambooBoat = _block("bamboo_boat", Dimension.Overworld, True, False)
-    BambooChestBoat = _block("bamboo_chest_boat", Dimension.Overworld, True, False)
+    BambooRaft = _block("bamboo_raft", Dimension.Overworld, True, False)
+    BambooChestRaft = _block("bamboo_raft_boat", Dimension.Overworld, True, False)
     BambooButton = _block("bamboo_button", Dimension.Overworld, True, False)
     BambooPressurePlate = _block("bamboo_pressure_plate", Dimension.Overworld, True, False)
     BambooSign = _block("bamboo_sign", Dimension.Overworld, True, False)
+
     CamelSpawnEgg = _block("camel_spawn_egg", Dimension.Overworld, True, True)
     ChiseledBookshelf = _block("chiseled_bookshelf", Dimension.Overworld, True, True)
     BambooHangingSign = _block("bamboo_hanging_sign", Dimension.Overworld, True, True)
@@ -999,7 +1016,6 @@ class VanillaBlocksItems:
     Portal = _block("portal", Dimension.Nether, True, True)
     EndPortal = _block("end_portal", Dimension.End, True, True, )
     EndGateway = _block("end_gateway", Dimension.End, True, True, )
-    SuspiciousGravel = _block("suspicious_gravel", Dimension.Overworld, True, False)
     CalibratedSculkSensor = _block('calibrated_sculk_sensor', Dimension.Overworld, True, False)
     SnifferEgg = _block('sniffer_egg', Dimension.Overworld, True, False)
     PitcherPlant = _block('pitcher_plant', Dimension.Overworld, True, False)
@@ -1067,12 +1083,13 @@ class VanillaBlocksItems:
     
 
 class Entities:
-    class _basic_entity():
-        def __init__(self, name : str, is_vanilla: bool = True) -> None:
+    class vanilla_entity():
+        def __init__(self, name : str, is_vanilla: bool = True, allow_runtime: bool = True) -> None:
             super().__init__()
             ENTITY_LIST.append(self)
-            self._namespace = 'minecraft' if is_vanilla else NAMESPACE
+            self._namespace = 'minecraft' if is_vanilla else ANVIL.NAMESPACE
             self._name = name
+            self._allow_runtime = allow_runtime
         
         @property
         def namespace(self):
@@ -1091,95 +1108,95 @@ class Entities:
         def __iter__(self):
             yield self._name
 
-    ArmorStand = _basic_entity("armor_stand")
-    Arrow = _basic_entity("arrow")
-    Axolotl = _basic_entity("axolotl")
-    Bat = _basic_entity("bat")
-    Bee = _basic_entity("bee")
-    Blaze = _basic_entity("blaze")
-    Cat = _basic_entity("cat")
-    CaveSpider = _basic_entity("cave_spider")
-    Chicken = _basic_entity("chicken")
-    Cow = _basic_entity("cow")
-    Creeper = _basic_entity("creeper")
-    Dolphin = _basic_entity("dolphin")
-    Donkey = _basic_entity("donkey")
-    Drowned = _basic_entity("drowned")
-    ElderGuardian = _basic_entity("elder_guardian")
-    EnderDragon = _basic_entity("ender_dragon")
-    Enderman = _basic_entity("enderman")
-    Endermite = _basic_entity("endermite")
-    EvocationIllager = _basic_entity("evocation_illager")
-    Fish = _basic_entity("fish")
-    FishingHook = _basic_entity("fishing_hook")
-    Fireball = _basic_entity("fireball")
-    Fox = _basic_entity("fox")
-    Ghast = _basic_entity("ghast")
-    GlowSquid = _basic_entity("glow_squid")
-    Goat = _basic_entity("goat")
-    Guardian = _basic_entity("guardian")
-    Hoglin = _basic_entity("hoglin")
-    Horse = _basic_entity("horse")
-    Husk = _basic_entity("husk")
-    IronGolem = _basic_entity("iron_golem")
-    Llama = _basic_entity("llama")
-    LlamaSpit = _basic_entity("llama_spit")
-    MagmaCube = _basic_entity("magma_cube")
-    Mooshroom = _basic_entity("mooshroom")
-    Mule = _basic_entity("mule")
-    Npc = _basic_entity("npc")
-    Ocelot = _basic_entity("ocelot")
-    Panda = _basic_entity("panda")
-    Parrot = _basic_entity("parrot")
-    Phantom = _basic_entity("phantom")
-    Pig = _basic_entity("pig")
-    PiglinBrute = _basic_entity("piglin_brute")
-    Piglin = _basic_entity("piglin")
-    Pillager = _basic_entity("pillager")
-    Player = _basic_entity("player")
-    PolarBear = _basic_entity("polar_bear")
-    Pufferfish = _basic_entity("pufferfish")
-    Rabbit = _basic_entity("rabbit")
-    Ravager = _basic_entity("ravager")
-    Salmon = _basic_entity("salmon")
-    Sheep = _basic_entity("sheep")
-    Shulker = _basic_entity("shulker")
-    Silverfish = _basic_entity("silverfish")
-    SkeletonHorse = _basic_entity("skeleton_horse")
-    Skeleton = _basic_entity("skeleton")
-    Slime = _basic_entity("slime")
-    SnowGolem = _basic_entity("snow_golem")
-    Spider = _basic_entity("spider")
-    Squid = _basic_entity("squid")
-    Stray = _basic_entity("stray")
-    Strider = _basic_entity("strider")
-    Tropicalfish = _basic_entity("tropicalfish")
-    ThrownTrident = _basic_entity("thrown_trident")
-    Turtle = _basic_entity("turtle")
-    Vex = _basic_entity("vex")
-    Villager = _basic_entity("villager_v2")
-    Vindicator = _basic_entity("vindicator")
-    WanderingTrader = _basic_entity("wandering_trader")
-    Witch = _basic_entity("witch")
-    WitherSkull = _basic_entity("wither_skull")
-    WitherSkullDangeroud = _basic_entity("wither_skull_dangerous")
-    WitherSkeleton = _basic_entity("wither_skeleton")
-    Wither = _basic_entity("wither")
-    Wolf = _basic_entity("wolf")
-    Zoglin = _basic_entity("zoglin")
-    ZombieHorse = _basic_entity("zombie_horse")
-    ZombiePigman = _basic_entity("zombie_pigman")
-    ZombieVillager = _basic_entity("zombie_villager_v2")
-    Zombie = _basic_entity("zombie")
-    Boat = _basic_entity("boat")
-    Snowball = _basic_entity("snowball")
-    LightningBolt = _basic_entity('lightning_bolt')
+    ArmorStand = vanilla_entity("armor_stand")
+    Arrow = vanilla_entity("arrow")
+    Axolotl = vanilla_entity("axolotl")
+    Bat = vanilla_entity("bat")
+    Bee = vanilla_entity("bee")
+    Blaze = vanilla_entity("blaze")
+    Cat = vanilla_entity("cat")
+    CaveSpider = vanilla_entity("cave_spider")
+    Chicken = vanilla_entity("chicken")
+    Cow = vanilla_entity("cow")
+    Creeper = vanilla_entity("creeper")
+    Dolphin = vanilla_entity("dolphin")
+    Donkey = vanilla_entity("donkey")
+    Drowned = vanilla_entity("drowned")
+    ElderGuardian = vanilla_entity("elder_guardian")
+    EnderDragon = vanilla_entity("ender_dragon")
+    Enderman = vanilla_entity("enderman")
+    Endermite = vanilla_entity("endermite")
+    EvocationIllager = vanilla_entity("evocation_illager")
+    Fish = vanilla_entity("fish")
+    FishingHook = vanilla_entity("fishing_hook")
+    Fireball = vanilla_entity("fireball")
+    Fox = vanilla_entity("fox")
+    Ghast = vanilla_entity("ghast")
+    GlowSquid = vanilla_entity("glow_squid")
+    Goat = vanilla_entity("goat")
+    Guardian = vanilla_entity("guardian")
+    Hoglin = vanilla_entity("hoglin")
+    Horse = vanilla_entity("horse")
+    Husk = vanilla_entity("husk")
+    IronGolem = vanilla_entity("iron_golem")
+    Llama = vanilla_entity("llama")
+    LlamaSpit = vanilla_entity("llama_spit")
+    MagmaCube = vanilla_entity("magma_cube")
+    Mooshroom = vanilla_entity("mooshroom")
+    Mule = vanilla_entity("mule")
+    Npc = vanilla_entity("npc")
+    Ocelot = vanilla_entity("ocelot")
+    Panda = vanilla_entity("panda")
+    Parrot = vanilla_entity("parrot")
+    Phantom = vanilla_entity("phantom")
+    Pig = vanilla_entity("pig")
+    PiglinBrute = vanilla_entity("piglin_brute")
+    Piglin = vanilla_entity("piglin")
+    Pillager = vanilla_entity("pillager")
+    Player = vanilla_entity("player")
+    PolarBear = vanilla_entity("polar_bear")
+    Pufferfish = vanilla_entity("pufferfish")
+    Rabbit = vanilla_entity("rabbit")
+    Ravager = vanilla_entity("ravager")
+    Salmon = vanilla_entity("salmon")
+    Sheep = vanilla_entity("sheep")
+    Shulker = vanilla_entity("shulker")
+    Silverfish = vanilla_entity("silverfish")
+    SkeletonHorse = vanilla_entity("skeleton_horse")
+    Skeleton = vanilla_entity("skeleton")
+    Slime = vanilla_entity("slime")
+    SnowGolem = vanilla_entity("snow_golem")
+    Spider = vanilla_entity("spider")
+    Squid = vanilla_entity("squid")
+    Stray = vanilla_entity("stray")
+    Strider = vanilla_entity("strider")
+    Tropicalfish = vanilla_entity("tropicalfish")
+    ThrownTrident = vanilla_entity("thrown_trident")
+    Turtle = vanilla_entity("turtle")
+    Vex = vanilla_entity("vex")
+    Villager = vanilla_entity("villager_v2")
+    Vindicator = vanilla_entity("vindicator")
+    WanderingTrader = vanilla_entity("wandering_trader")
+    Witch = vanilla_entity("witch")
+    WitherSkull = vanilla_entity("wither_skull")
+    WitherSkullDangeroud = vanilla_entity("wither_skull_dangerous")
+    WitherSkeleton = vanilla_entity("wither_skeleton")
+    Wither = vanilla_entity("wither")
+    Wolf = vanilla_entity("wolf")
+    Zoglin = vanilla_entity("zoglin")
+    ZombieHorse = vanilla_entity("zombie_horse")
+    ZombiePigman = vanilla_entity("zombie_pigman")
+    ZombieVillager = vanilla_entity("zombie_villager_v2")
+    Zombie = vanilla_entity("zombie")
+    Boat = vanilla_entity("boat")
+    Snowball = vanilla_entity("snowball")
+    LightningBolt = vanilla_entity('lightning_bolt')
     # 1.19.0
     # Updated on 11-07-2022
-    Warden = _basic_entity("warden")
+    Warden = vanilla_entity("warden")
     # 1.19.50.21
     # Updated on 21-10-2022
-    Camel = _basic_entity("camel")
+    Camel = vanilla_entity("camel")
     # 1.19.70.23
     # Updated on 28-02-2023
-    Sniffer = _basic_entity("sniffer")
+    Sniffer = vanilla_entity("sniffer")

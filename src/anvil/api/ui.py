@@ -1,5 +1,5 @@
-from ..core import ANVIL, NAMESPACE, PASCAL_PROJECT_NAME, AddonObject
-from ..packages import *
+from ..core import ANVIL, AddonObject
+from ..lib import *
 
 __all__ = [
     "UIBindingType",
@@ -118,7 +118,7 @@ class _UIVariables(AddonObject):
         1: ".json"
     }
     def __init__(self) -> None:
-        super().__init__("_global_variables", MakePath("resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "ui"))
+        super().__init__("_global_variables", os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "ui"))
 
     def add_variable(self, variable, value):
         self._content.update({variable: value})
@@ -279,11 +279,11 @@ class _UIElement:
 
     def texture(self, texture: str, *nineslice_size: int):
         if not "$" in texture:
-            CheckAvailability(
-                f"{texture}.png", "sprite", MakePath("assets", "textures", "ui")
-            )
-            self.element["texture"] = MakePath("textures", "ui", texture)
-            self._textures.append(texture)
+            if FileExists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
+                self.element["texture"] = os.path.join("textures", "ui", texture)
+                self._textures.append(texture)
+            else:
+                ANVIL.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
         else:
             self.element["texture"] = texture
 
@@ -293,26 +293,26 @@ class _UIElement:
                 {
                     "nineslice_size": nineslice_size,
                     "base_size": Image.open(
-                        MakePath("assets", "textures", "ui", f"{texture}.png")
+                        os.path.join("assets", "textures", "ui", f"{texture}.png")
                     ).size,
                 },
-                MakePath(
-                    "resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "textures", "ui"
+                os.path.join(
+                    "resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "textures", "ui"
                 ),
                 "w",
             )
         return self
 
     def aseprite_texture(self, texture: str):
-        CheckAvailability(
-            f"{texture}.png", "sprite", MakePath("assets", "textures", "ui")
-        )
-        self.element["texture"] = MakePath("textures", "ui", texture)
-        CopyFiles(
-            MakePath("assets", "textures", "ui"),
-            MakePath("resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "textures", "ui"),
-            f"{texture}.json",
-        )
+        if FileExists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
+            self.element["texture"] = os.path.join("textures", "ui", texture)
+            CopyFiles(
+                os.path.join("assets", "textures", "ui"),
+                os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "textures", "ui"),
+                f"{texture}.json",
+            )
+        else:
+            ANVIL.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
         return self
 
     def keys(self, key, value):
@@ -328,25 +328,25 @@ class _UIElement:
         return self
 
     def texture_key(self, key: str, texture: str, *nineslice_size: int):
-        CheckAvailability(
-            f"{texture}.png", "sprite", MakePath("assets", "textures", "ui")
-        )
-        self.element[f"${key}"] = MakePath("textures", "ui", texture)
-        self._textures.append(texture)
-        if len(nineslice_size) > 0:
-            File(
-                f"{texture}.json",
-                {
-                    "nineslice_size": nineslice_size,
-                    "base_size": Image.open(
-                        MakePath("assets", "textures", "ui", f"{texture}.png")
-                    ).size,
-                },
-                MakePath(
-                    "resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "textures", "ui"
-                ),
-                "w",
-            )
+        if FileExists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
+            self.element[f"${key}"] = os.path.join("textures", "ui", texture)
+            self._textures.append(texture)
+            if len(nineslice_size) > 0:
+                File(
+                    f"{texture}.json",
+                    {
+                        "nineslice_size": nineslice_size,
+                        "base_size": Image.open(
+                            os.path.join("assets", "textures", "ui", f"{texture}.png")
+                        ).size,
+                    },
+                    os.path.join(
+                        "resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "textures", "ui"
+                    ),
+                    "w",
+                )
+        else:
+            ANVIL.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
         return self 
 
     @property
@@ -424,8 +424,8 @@ class _UIElement:
         self.element["clip_offset"] = clip_offset
         return self
 
-    def keep_ratio(self, visible: bool):
-        self.element["keep_ratio"] = visible
+    def keep_ratio(self, keep_ratio: bool):
+        self.element["keep_ratio"] = keep_ratio
         return self
 
     def allow_clipping(self, allow_clipping: bool):
@@ -504,8 +504,8 @@ class _UIElement:
     def queue(self):
         for texture in self._textures:
             CopyFiles(
-                MakePath("assets", "textures", "ui"),
-                MakePath("resource_packs",f"RP_{PASCAL_PROJECT_NAME}","textures","ui",),
+                os.path.join("assets", "textures", "ui"),
+                os.path.join("resource_packs",f"RP_{ANVIL.PASCAL_PROJECT_NAME}","textures","ui",),
                 f"{texture}.png",
             )
         for bind in self._bindings:
@@ -615,13 +615,33 @@ class _UIAnimationElement:
         return self._animation_name
 
 
+class _UIDefs(AddonObject):
+    def __init__(self) -> None:
+        super().__init__("_ui_defs", os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}"))
+        self.do_not_shorten
+        self._files = []
+
+    def add_file(self, path):
+        self._files.append(path)
+
+    @property
+    def queue(self):
+        self.content({
+            "ui_defs": self._files
+        })
+        return super().queue('ui')
+
+
 class _UIAnimation(AddonObject):
     _extensions = {
         0: ".json", 
         1: ".json"
     }
-    def __init__(self, name: str, namespace: str) -> None:
-        super().__init__(name, MakePath("resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "ui"))
+    
+    def __init__(self, name: str, namespace: str, defs: _UIDefs) -> None:
+        super().__init__(name, os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "ui"))
+        self.name = name
+        self._defs = defs
         self.namespace = namespace
         self._animations: list[_UIAnimationElement] = []
         self._content = {
@@ -635,6 +655,8 @@ class _UIAnimation(AddonObject):
     def queue(self, directory: str = ""):
         for anim in self._animations:
             self._content.update(anim.queue)
+
+        self._defs.add_file(os.path.join('ui', directory, f'{self.name}{_UIScreen._extension}'))
         return super().queue(directory)
 
 
@@ -643,21 +665,25 @@ class _UIScreen(AddonObject):
         0: ".json", 
         1: ".json"
     }
+    
     def __init__(
         self,
         name: str,
         namespace: str,
         anvil_animation: _UIAnimation,
         variables: _UIVariables,
+        defs: _UIDefs
     ) -> None:
-        super().__init__(name, MakePath("resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "ui"))
+        super().__init__(name, os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "ui"))
         self._content = {
             "namespace": namespace,
         }
+        self.name = name
         self.namespace = namespace
         self._elements: list[_UIElement] = []
         self._anvil_animation = anvil_animation
         self._variables = variables
+        self._defs = defs
         self._ignored_title_texts = []
         self._ignored_actionbar_texts = []
         self.do_not_shorten
@@ -678,7 +704,7 @@ class _UIScreen(AddonObject):
             case "title":
                 if not keyword is None:
                     self._variables.add_variable(
-                        f"$anvil.{element_name}.text", f"{NAMESPACE}:{keyword}"
+                        f"$anvil.{element_name}.text", f"{ANVIL.NAMESPACE}:{keyword}"
                     )
                     self._variables.add_variable(
                         f"$anvil.{element_name}.bool",
@@ -699,7 +725,7 @@ class _UIScreen(AddonObject):
             case "actionbar":
                 if not keyword is None:
                     self._variables.add_variable(
-                        f"$anvil.{element_name}.text", f"{NAMESPACE}:{keyword}"
+                        f"$anvil.{element_name}.text", f"{ANVIL.NAMESPACE}:{keyword}"
                     )
                     self._variables.add_variable(
                         f"$anvil.{element_name}.bool",
@@ -725,15 +751,16 @@ class _UIScreen(AddonObject):
         for element in self._elements:
             self._content.update(element.queue)
         
-        if self._content != {"namespace": self.namespace,}:
+        if self._content != {"namespace": self.namespace}:
+            self._defs.add_file(os.path.join('ui', directory, f'{self.name}{_UIScreen._extension}'))
             return super().queue(directory)
 
 
 class _HUDScreen(_UIScreen):
     def __init__(
-        self, anvil_animation: _UIAnimation, variables: _UIVariables
+        self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
     ) -> None:
-        super().__init__("hud_screen", "hud", anvil_animation, variables)
+        super().__init__("hud_screen", "hud", anvil_animation, variables, defs)
         # Disable HUD
         self.root_panel = self.add_element("root_panel")
         self.root_panel.binding.binding_name("#hud_title_text_string").binding_name_override("#text")
@@ -753,8 +780,8 @@ class _HUDScreen(_UIScreen):
         # Add a modifications controlling class
         anvil_element.binding.binding_name("#hud_visible").binding_name_override("#visible").binding_type(UIBindingType.Global)
         anvil_element.modification.insert_front("anvil@anvil_hud.anvil_hud")
-        variables.add_variable("$anvil.show.text", f"{NAMESPACE}:show")
-        variables.add_variable("$anvil.hide.text", f"{NAMESPACE}:hide")
+        variables.add_variable("$anvil.show.text", f"{ANVIL.NAMESPACE}:show")
+        variables.add_variable("$anvil.hide.text", f"{ANVIL.NAMESPACE}:hide")
         self._ignored_title_texts = ["(#text = $anvil.show.text)","(#text = $anvil.hide.text)",]
         self._ignored_actionbar_texts = []
 
@@ -775,12 +802,16 @@ class _HUDScreen(_UIScreen):
         self.root_panel.modification.remove("emote_expediate_helpers")
         return self
 
+    @property
+    def queue(self):
+        return super().queue()
+
 
 class _AnvilHUDScreen(_UIScreen):
     def __init__(
-        self, anvil_animation: _UIAnimation, variables: _UIVariables
+        self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
     ) -> None:
-        super().__init__("hud", "anvil_hud", anvil_animation, variables)
+        super().__init__("hud", "anvil_hud", anvil_animation, variables, defs)
         self.test_hud : _UIElement = self.add_element("anvil_hud")
         self.test_hud.type(UIElementType.Panel)
 
@@ -964,13 +995,13 @@ class _AnvilHUDScreen(_UIScreen):
         black_bars.size("$anim_size")
 
         self._variables.add_variable(
-            f"$anvil.black_bars_in.text", f"{NAMESPACE}:bars_in"
+            f"$anvil.black_bars_in.text", f"{ANVIL.NAMESPACE}:bars_in"
         )
         self._variables.add_variable(
             f"$anvil.black_bars_in.bool", f"($text = $anvil.black_bars_in.text)"
         )
         self._variables.add_variable(
-            f"$anvil.black_bars_out.text", f"{NAMESPACE}:bars_out"
+            f"$anvil.black_bars_out.text", f"{ANVIL.NAMESPACE}:bars_out"
         )
         self._variables.add_variable(
             f"$anvil.black_bars_out.bool", f"($text = $anvil.black_bars_out.text)"
@@ -983,34 +1014,53 @@ class _AnvilHUDScreen(_UIScreen):
             ]
         )
 
+    @property
     def queue(self):
         return super().queue("anvil")
 
 
 class _NPCScreen(_UIScreen):
-    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables) -> None:
-        super().__init__("npc_interact_screen", "npc_interact", anvil_animation, variables)
+    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
+        super().__init__("npc_interact_screen", "npc_interact", anvil_animation, variables, defs)
         self._npc_screen = self.add_element('npc_screen@common.base_screen').keys('screen_content', 'anvil_npc.npc_screen_chooser')
+    
+    @property
+    def queue(self):
+        return super().queue()
 
 
 class _AnvilNPCScreen(_UIScreen):
-    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables) -> None:
-        super().__init__("npc", "anvil_npc", anvil_animation, variables)
+    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
+        super().__init__("npc", "anvil_npc", anvil_animation, variables, defs)
         self._ignored_panel_texts = []
         
         self._npc_screen_chooser = self.add_element('npc_screen_chooser').type(UIElementType.Panel)
         vanilla = self._npc_screen_chooser.controls('vanilla@npc_interact.npc_screen_contents').layer(500)
-        vanilla.binding.binding_type(UIBindingType.Global).binding_name('#dialogtext').binding_name_override('#dialogtext')
+        vanilla.binding.binding_type(UIBindingType.Global).binding_name('#title_text').binding_name_override('#title_text')
         vanilla.binding.binding_type(UIBindingType.View).source_property_name('$anvil.npc_screen.vanilla').target_property_name('#visible')
 
+    @property
     def queue(self):
-        self._variables.add_variable("$anvil.npc_screen.vanilla", f'({" or ".join(self._ignored_panel_texts)})')
+        self._variables.add_variable("$anvil.npc_screen.vanilla", f'({" and ".join(self._ignored_panel_texts)})')
+        return super().queue("anvil")
+
+
+class _AnvilCommon(_UIScreen):
+    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
+        super().__init__("common", "anvil_common", anvil_animation, variables, defs)
+
+    @property
+    def queue(self):
         return super().queue("anvil")
 
 
 class _AnvilAnimations(_UIAnimation):
-    def __init__(self) -> None:
-        super().__init__("animations", "anvil_animations")
+    def __init__(self, defs: _UIDefs) -> None:
+        super().__init__("animations", "anvil_animations", defs)
+
+    @property
+    def queue(self):
+        return super().queue("anvil")
 
 
 class UI:
@@ -1018,29 +1068,25 @@ class UI:
         0: ".json", 
         1: ".json"
     }
+    
     def __init__(self) -> None:
+        self._defs = _UIDefs()
         self.variables = _UIVariables()
 
-        self._defs = AddonObject("_ui_defs", MakePath("resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "ui")).content({
-            "ui_defs": [
-                "ui/anvil/npc.json",
-                "ui/anvil/hud.json",
-                "ui/anvil/animations.json",
-            ]
-        })
+        self.animations_screen = _AnvilAnimations(self._defs)
 
-        self.animations_screen = _AnvilAnimations()
+        self.hud_screen = _HUDScreen(self.animations_screen, self.variables, self._defs)
+        self.anvil_hud_screen = _AnvilHUDScreen(self.animations_screen, self.variables, self._defs)
 
-        self.hud_screen = _HUDScreen(self.animations_screen, self.variables)
-        self.anvil_hud_screen = _AnvilHUDScreen(self.animations_screen, self.variables)
+        self.npc_screen = _NPCScreen(self.animations_screen, self.variables, self._defs)
+        self.anvil_npc_screen = _AnvilNPCScreen(self.animations_screen, self.variables, self._defs)
 
-        self.npc_screen = _NPCScreen(self.animations_screen, self.variables)
-        self.anvil_npc_screen = _AnvilNPCScreen(self.animations_screen, self.variables)
+        self.anvil_common = _AnvilCommon(self.animations_screen, self.variables, self._defs)
 
         self._screens : list[_UIScreen] = []
 
     def add_ui_screen(self, filename, namespace):
-        self._screens.append(_UIScreen(filename, namespace, self.animations_screen, self.variables))
+        self._screens.append(_UIScreen(filename, namespace, self.animations_screen, self.variables, self._defs))
         return self._screens[-1]
 
     def queue(self):
@@ -1061,10 +1107,16 @@ class UI:
         # Add to ANVIL queue
         for screen in self._screens:
             screen.queue()
-        self.hud_screen.queue()
-        self.anvil_hud_screen.queue()
-        self.anvil_npc_screen.queue()
-        self.npc_screen.queue()
-        self.animations_screen.queue("anvil")
+        
+        self.hud_screen.queue
+        self.anvil_hud_screen.queue
+
+        self.npc_screen.queue
+        self.anvil_npc_screen.queue
+
+        self.anvil_common.queue
+
+        self.animations_screen.queue
         self.variables.queue()
-        self._defs.queue()
+
+        self._defs.queue

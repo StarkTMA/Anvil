@@ -2,6 +2,82 @@
 
 ---
 
+Version 0.4.0
+=============
+  [Anvil]
+  -------
+  - Added support for ScriptAPI
+    - To include scripting in your project use the flag ``--scriptapi`` when creating a new project. 
+    - Scripts can be added or removed anytime from ``config.ini``.
+  - Added support for PBR
+    - To include pbr in your project use the flag ``--pbr`` when creating a new project. 
+    - PBR can be added or removed anytime from ``config.ini``.
+  - Removed the #packaging comment from the generated python script, it's outdated and doesn't represent the functionality of the method anymore.
+  - Updated to release ``1.20.1.0``.
+  - Preview builds are no longer tracked, instead focusing solely on releases.
+  - Reusable geometries no longer make copies of the same geometry files, instead only reference them. Referenced entities must be queues before the referencing entity.
+  - Renamed ``Permission`` enumerator to ``InputPermissions``.
+  - ``package.py`` changes:
+    - Added a lot of docstring.
+    - Removed ``RawText``, ``random_character_generator``, ``CreateImage``, ``GetColors``, ``CreateTreeFromPath``, ``GetPathFromTree``, ``MoveFiles``, ``DownloadFile``.
+    - Moved ``CreateDirectoriesFromTree`` to ``cli.py``
+    - Moved ``ShortenDict`` inside the ``AddonObject`` class.
+  - Added docstrings to the ``cli`` tool.
+  - Started moving from the basic ``RaiseError`` to proper Errors.
+  - Removing a component from an Actor no longer results in an error if the component doesn't exist.
+  - Empty functions will no longer be exported.
+  - Restructured the Schemes function, now it's a proper class.
+  - Created a Logger class to track error and operations.
+  - Removed type subdirectory from RP animation and render controllers.
+  - Added a version enforcing method to components.
+    - Implemented the enforcements in the items components.
+    - Components that require a minimum format version will raise an error if Anvil format version is not equal or higher.
+    - This change will allow us to work on implementing experimental features safely.
+  - Added the new Items and Blocks to the vanilla module.
+  - Added ``all_slots_empty`` and ``any_slots_empty`` filters.
+  - Added the ``spawn_item_event`` key to the ``SpawnEntity`` component class.
+  - Formatted some Logger error messages.
+  - Updated ``ITEM_SERVER_VERSION`` to ``1.20.0``
+  
+> <span style="color:red">**Breaking behaviour**</span>
+>
+  >- Config file is no longer automatically initialized, instead it's an ``ANVIL`` property.
+  >- The gloabl variables such as ``NAMESPACE`` and ``PROJECTNAME`` are now accessible through the ``ANVIL`` instance.
+  >   - ``NAMESPACE -> ANVIL.NAMESPACE``
+  >- Localizing uses a key_value arguments instead of a manual string now
+
+  [Components]
+  ------------
+  - Added ``InsideBlockNotifier()``, ``Transformation()``, ``Equipment()``, ``EquipItem()``, ``FireImmune()``, ``SendEvent()`` components.
+  - Added ``is_raider``, ``is_variant``, ``is_mark_variant``, ``is_skin_id`` filters.
+  - Removed the ``particle`` argument from the ``Particle`` component, use ``particle_on_hit`` method instead.
+  - 
+  
+  [Blocks]
+  --------
+  - Custom blocks textures are moved inside a ``anvil`` folder to separate them from vanilla textures.
+
+  [Items]
+  -------
+  - 
+
+  [Commands]
+  ----------
+  - ``Give`` command always include the amount and data, this is done to account for possible use of item components.
+  - ``Summon`` command now always wraps nametags inside additional double quotes.
+  - ``name`` argument in the target selectors wraps names inside additional double quotes.
+  
+  [Molang]
+  -------
+  - 
+
+  [UI]
+  ----
+  - New UI screen will automatically populate the ``_ui_defs.json`` file.
+  - Added an ``anvil_common`` screen to host common elements.
+
+---
+
 Version 0.3.5
 =============
   [Anvil]
@@ -31,7 +107,6 @@ Version 0.3.5
   [Blocks]
   --------
   - Fully implemented ``BlockTransformation``, ``BlockDisplayName`` and ``BlockCraftingTable`` components.
-  - 
   
   [Items]
   --------
@@ -91,8 +166,9 @@ Version 0.3.4
   - Added `GetEquippedItemName`, `Position`, `PositionDelta`, `ItemIsCharged`, `ItemInUseDuration`, `IsRiding`, `ModifiedMoveSpeed`, `IsDelayedAttacking`, `IsCharged`, `IsCasting`, `IsRoaring`, `MarkVariant`
   - Fixed some bugs with arithmetic operations.
   - 
-  
+
 ---
+
 
 Version 0.3.3
 =============
@@ -155,7 +231,7 @@ Version 0.3.2
   
   [Blocks]
   --------
-    - Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
+  - Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
   
 ---
 
@@ -169,6 +245,7 @@ Version 0.3.1
   - Added the filters `is_block`, 
   - Molangs now support subtraction and multiplication.
   - Added a snippets module to serve as a host for useful and quick functions.
+  
   [Bug Fixes]
   -----------
   - Fixed the ANVIL.mcworld packagin method, now output a non corrupted world.
@@ -280,7 +357,7 @@ Version 0.1.0
   - Added a command validator to the commands namespace.
   - Server animations now append new commands instead of overwriting them if not called in the same line.
   - Reformatted Tellraw and Titleraw to support text, selector, score and translate of the rawtext components.
-  - Updated the Exported class to use the MakePath function.
+  - Updated the Exported class to use the os.path.join function.
   - Integrated AddDespawnMechanic and OptimizeEntity to the NewEntity class, now included with all entities.
    
 ---

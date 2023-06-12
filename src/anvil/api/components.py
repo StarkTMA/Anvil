@@ -1,5 +1,5 @@
-from .. import ANVIL, NAMESPACE
-from ..packages import *
+from .. import ANVIL, Particle
+from ..lib import *
 
 # __all__ = [
 #    'AddRider', 'AdmireItem', 'Ageable',
@@ -118,30 +118,57 @@ class Filter:
     def is_skin_id(self, value: int, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
         return self._construct_filter('is_skin_id', subject, operator, None, value)
 
+    @classmethod
+    def all_slots_empty(self, value: FilterEquipmentDomain = FilterEquipmentDomain.Any, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        """Returns true when the designated equipment location for the subject entity is completely empty.
+
+        Args:
+            value (FilterEquipmentDomain, optional): The equipment location to test. Defaults to FilterEquipmentDomain.Any.
+            subject (FilterSubject, optional): Subject to test the value against. Defaults to FilterSubject.Self.
+            operator (FilterOperation, optional): Operation to use in testing. Defaults to FilterOperation.Equals.
+        """
+        return self._construct_filter('all_slots_empty', subject, operator, None, value)
+
+    @classmethod
+    def any_slot_empty(self, value: FilterEquipmentDomain = FilterEquipmentDomain.Any, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
+        """Returns true when the designated equipment location for the subject entity has any empty slot.
+
+        Args:
+            value (FilterEquipmentDomain, optional): The equipment location to test. Defaults to FilterEquipmentDomain.Any.
+            subject (FilterSubject, optional): Subject to test the value against. Defaults to FilterSubject.Self.
+            operator (FilterOperation, optional): Operation to use in testing. Defaults to FilterOperation.Equals.
+        """
+        return self._construct_filter('all_slots_empty', subject, operator, None, value)
+
+
     # Properties
 
     @classmethod
     def int_property(self, value: int, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('int_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+        return self._construct_filter('int_property', subject, operator, f'{ANVIL.NAMESPACE}:{domain}', value)
 
     @classmethod
     def bool_property(self, value: bool, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('bool_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+        return self._construct_filter('bool_property', subject, operator, f'{ANVIL.NAMESPACE}:{domain}', value)
 
     @classmethod
     def float_property(self, value: float, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('float_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+        return self._construct_filter('float_property', subject, operator, f'{ANVIL.NAMESPACE}:{domain}', value)
 
     @classmethod
     def enum_property(self, value: str, domain: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('enum_property', subject, operator, f'{NAMESPACE}:{domain}', value)
+        return self._construct_filter('enum_property', subject, operator, f'{ANVIL.NAMESPACE}:{domain}', value)
 
     @classmethod
     def has_property(self, value: str, *, subject: FilterSubject = FilterSubject.Self, operator: FilterOperation = FilterOperation.Equals):
-        return self._construct_filter('has_property', subject, operator, None, f'{NAMESPACE}:{value}')
+        return self._construct_filter('has_property', subject, operator, None, f'{ANVIL.NAMESPACE}:{value}')
 
 
 class _component():
+    def _enforce_version(self, current_version, target_version):
+        if current_version < target_version:
+            ANVIL.Logger.component_version_error(self._component_name, current_version, target_version)
+        
     def __init__(self, component_name) -> None:
         self._component_reset_namespace(component_name)
 
@@ -280,8 +307,17 @@ class Pushable(_component):
 
 
 class PushThrough(_component):
-    def __init__(self, value: int) -> None:
-        """Sets the distance through which the entity can push through."""
+    def __init__(self, value: float) -> None:
+        """Sets the distance through which the entity can push through.
+
+        This component sets the distance through which an entity can exert force to move through other entities or blocks.
+        
+        Parameters
+        ----------
+        value : float, optional
+            The distance in blocks that the entity can push through. It can be thought of as a "buffer zone" that the entity creates around itself to navigate through crowded spaces. The default value is 0.0, which means the entity follows the standard collision rules of the game and cannot move through solid entities or blocks. Positive values increase the entity's ability to move through crowds, while negative values are rounded to 0.
+
+        """
         super().__init__('push_through')
         self._component_add_field('value', value)
 
@@ -1130,7 +1166,7 @@ class Projectile(_component):
                  multiple_targets: bool =  True,
                  offset: coordinate = (0, 0, 0),
                  on_fire_timer: float = 0.0,
-                 particle: str = 'particle',
+                 #particle: str = 'particle', Not used in game
                  power: float = 1.3,
                  reflect_on_hurt : bool = False,
                  shoot_sound: str = '',
@@ -1180,8 +1216,8 @@ class Projectile(_component):
             self._component_add_field('offset', offset)
         if on_fire_timer != 0.0:
             self._component_add_field('on_fire_timer', on_fire_timer)
-        if particle != 'particle':
-            self._component_add_field('particle', particle)
+        #if particle != 'particle':
+        #    self._component_add_field('particle', particle)
         if power != 1.3:
             self._component_add_field('power', power)
         if reflect_on_hurt :
@@ -1235,7 +1271,7 @@ class Projectile(_component):
         return self
 
     def impact_damage(self,
-            filter: Filter = None,   #The identifier of an entity that can be hit.
+            filter: str = None,   #The identifier of an entity that can be hit.
             catch_fire: bool = False,   #Determines if the struck object is set on fire.
             channeling: bool = True,   #Whether lightning can be channeled through the weapon.
             damage: int = 1,   #The damage dealt on impact.
@@ -1368,20 +1404,19 @@ class Projectile(_component):
                      particle_type: str,
                      on_other_hit: bool = False,
                      on_entity_hit: bool = False,
-                     num_particles: int = 6,
+                     num_particles: int = 0,
         ):
         try: self[self._component_namespace]['on_hit']
         except KeyError: self._component_add_field('on_hit', {})
 
-        self[self._component_namespace]['on_hit']['particle_on_hit'] = {'particle_type': particle_type}
+        self[self._component_namespace]['on_hit']['particle_on_hit'] = {'particle_type': f"{particle_type}"}
 
         if on_other_hit:
             self[self._component_namespace]['on_hit']['particle_on_hit']['on_other_hit'] = on_other_hit
         if on_entity_hit:
             self[self._component_namespace]['on_hit']['particle_on_hit']['on_entity_hit'] = on_entity_hit
-        if num_particles != 6:
+        if num_particles != 0:
             self[self._component_namespace]['on_hit']['particle_on_hit']['num_particles'] = num_particles
-
         return self
     
     def mob_effect(self,
@@ -1644,7 +1679,7 @@ class SpawnEntity(_component):
 
     def spawn_item(self,
                      identifier: str,
-                     spawn_event: str = 'minecraft:entity_born',
+                     spawn_item_event: str = 'minecraft:entity_born',
                      spawn_method: str = 'born',
                      spawn_sound: str = 'plop',
                      filters: Filter = None, 
@@ -1656,7 +1691,7 @@ class SpawnEntity(_component):
         return self._template(
             identifier, 
             'spawn_item', 
-            spawn_event, 
+            spawn_item_event, 
             spawn_method, 
             spawn_sound, 
             filters, 
@@ -1671,7 +1706,7 @@ class Loot(_component):
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__('loot')
-        self._component_add_field('table', MakePath('loot_tables', path + '.loot_table.json'))
+        self._component_add_field('table', os.path.join('loot_tables', path + '.loot_table.json'))
 
 
 class Float(_component):
@@ -2201,7 +2236,7 @@ class Transformation(_component):
         ) -> None:
         """Defines an entity's transformation from the current definition into another."""
         super().__init__('transformation')
-        self._component_add_field('into', into + f'<{transform_event}>' if not transform_event is None else '')
+        self._component_add_field('into', into + f'<{transform_event}>' if not transform_event is None else into)
         self._component_add_field('add', {"component_groups":[]})
         self._component_add_field('delay', {})
         if drop_equipment:
@@ -2278,13 +2313,14 @@ class Equipment(_component):
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__('equipment')
-        self._component_add_field('table', MakePath('loot_tables', path))
+        self._component_add_field('table', os.path.join('loot_tables', path))
 
 
 class _EquipItem(_component):
     def __init__(self) -> None:
         """Compels the entity to equip desired equipment."""
         super().__init__('equip_item')
+
 
 class EquipItem(_component):
     def __init__(self) -> None:
@@ -2296,6 +2332,71 @@ class EquipItem(_component):
         return self
 
 
+class FireImmune(_component):
+    def __init__(self) -> None:
+        """Allows an entity to take 0 damage from fire."""
+        super().__init__('fire_immune')
+
+
+class SendEvent(_component):
+    def __init__(self) -> None:
+        """Compels an entity to send an event to another entity."""
+        super().__init__('behavior.send_event')
+        self._component_add_field('event_choices', [])
+    
+    def priority(self, priority : int):
+        self._component_add_field('priority', priority)
+        return self
+    
+    def choice(self,
+                 cast_duration: Seconds,
+                 cooldown_time: Seconds,
+                 look_at_target: bool = True,
+                 min_activation_range: float = 0.0,
+                 max_activation_range: float = 16.0,
+                 particle_color: str = None,
+                 weight: int = 1,
+                 filters: Filter = None,
+                 start_sound_event: str = None,
+                 ):
+        choice = {
+            'cast_duration': cast_duration,
+            'cooldown_time': cooldown_time,
+            'sequence': [],
+        }
+        if not look_at_target:
+            choice['look_at_target'] = look_at_target
+        if not min_activation_range == 0.0:
+            choice['min_activation_range'] = min_activation_range
+        if not max_activation_range == 16.0:
+            choice['max_activation_range'] = max_activation_range
+        if not particle_color is None:
+            choice['particle_color'] = particle_color
+        if not weight == 1:
+            choice['weight'] = weight
+        if not filters is None:
+            choice['filters'] = filters
+        if not start_sound_event is None:
+            choice['start_sound_event'] = start_sound_event
+
+        self[self._component_namespace]['event_choices'].append(choice)
+
+        return self
+
+    def sequence(self,
+                 base_delay: Seconds, 
+                 event: str, 
+                 sound_event: str = None
+                 ):
+        seq = {
+            'base_delay': base_delay,
+            'event': event,
+        }
+        if not sound_event is None:
+            seq['sound_event'] = sound_event
+        
+        self[self._component_namespace]['event_choices'][-1]['sequence'].append(seq)
+        return self
 
 
 # Unfinished

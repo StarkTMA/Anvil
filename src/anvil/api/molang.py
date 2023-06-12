@@ -1,5 +1,5 @@
-from ..core import NAMESPACE
-from ..packages import *
+from ..core import ANVIL
+from ..lib import *
 
 
 class _molang(str):
@@ -143,11 +143,11 @@ class Query(_molang):
 
     @classmethod
     def Property(self, property: str):
-        return self._query(self, 'q', 'property', f'{NAMESPACE}:{property}')
+        return self._query(self, 'q', 'property', f'{ANVIL.NAMESPACE}:{property}')
 
     @classmethod
     def HasProperty(self, property: str):
-        return self._query(self, 'q', 'has_property', f'{NAMESPACE}:{property}')
+        return self._query(self, 'q', 'has_property', f'{ANVIL.NAMESPACE}:{property}')
 
     @classmethod
     @property
