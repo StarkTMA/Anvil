@@ -1,18 +1,18 @@
-from .. import Math, Query, Variable
-from ..core import (ANVIL, AddonObject,
+from anvil import Math, Query, Variable
+from anvil.core import (ANVIL, AddonObject,
                     Geometry, Particle, _MinecraftDescription,
-                    _SoundDefinition, Animation)
-from ..lib import *
-from ..lib import _JsonSchemes
-from .components import (CollisionBox, Filter, InstantDespawn, Physics,
+                    _SoundDescription, Animation)
+from anvil.lib import *
+from anvil.lib import _JsonSchemes
+from anvil.api.components import (CollisionBox, Filter, InstantDespawn, Physics,
                          Rideable, Scale, _component)
-from .vanilla import Entities, ENTITY_LIST, ITEMS_LIST
+from anvil.api.vanilla import Entities, ENTITY_LIST, ITEMS_LIST
 
 __all__ = [ 'Entity', 'Attachable' ]
 
 class _ActorDescription(_MinecraftDescription):
-    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
-        super().__init__(identifier, is_vanilla)
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        super().__init__(name, is_vanilla)
         self._animation_controllers_list = []
         self._animations_list = []
         self._description['description'].update({
@@ -45,7 +45,7 @@ class _ActorDescription(_MinecraftDescription):
                 self._animate_append({controller_shortname: condition})
 
         self._description['description']['animations'].update(
-            {controller_shortname: f'controller.animation.{ANVIL.NAMESPACE_FORMAT}.{self._identifier}.{controller_shortname}'}
+            {controller_shortname: f'controller.animation.{ANVIL.NAMESPACE_FORMAT}.{self._name}.{controller_shortname}'}
         )
 
     def _animations(self, animation_shortname: str, animate: bool = False, condition: str = None):
@@ -69,7 +69,7 @@ class _ActorDescription(_MinecraftDescription):
                 self._animate_append({animation_shortname: condition})
                 
         self._description['description']['animations'].update(
-            {animation_shortname: f'animation.{ANVIL.NAMESPACE_FORMAT}.{self._identifier}.{animation_shortname}'}
+            {animation_shortname: f'animation.{ANVIL.NAMESPACE_FORMAT}.{self._name}.{animation_shortname}'}
         )
     
 class _ActorClientDescription(_ActorDescription):
@@ -97,26 +97,26 @@ class _ActorClientDescription(_ActorDescription):
                 raise KeyError(f"{os.path.join('assets', 'models', self._type, f'{entity_name}.geo.json')} doesn't contain a geometry called {geo_namespace}")
     
     def _check_animation(self, animation_name):
-        if not FileExists(os.path.join('assets', 'animations', f'{self._identifier}{Animation._extension}')):
-            raise FileNotFoundError(green(os.path.join('assets', 'animations', f'{self._identifier}{Animation._extension}')))
+        if not FileExists(os.path.join('assets', 'animations', f'{self._name}{Animation._extension}')):
+            raise FileNotFoundError(green(os.path.join('assets', 'animations', f'{self._name}{Animation._extension}')))
         
-        anim_namespace = f'animation.{ANVIL.NAMESPACE_FORMAT}.{self._identifier}.{animation_name}'
-        with open(f'assets/animations/{self._identifier}{Animation._extension}') as file:
+        anim_namespace = f'animation.{ANVIL.NAMESPACE_FORMAT}.{self._name}.{animation_name}'
+        with open(f'assets/animations/{self._name}{Animation._extension}') as file:
             if anim_namespace not in file.read():
-                raise KeyError(f"{os.path.join('assets', 'animations', f'{self._identifier}{Animation._extension}')} doesn't contain an animation called {anim_namespace}")
+                raise KeyError(f"{os.path.join('assets', 'animations', f'{self._name}{Animation._extension}')} doesn't contain an animation called {anim_namespace}")
 
     def _render_append(self, key):
         if key not in self._description['description']['render_controllers']:
             self._description['description']['render_controllers'].append(key)
 
-    def __init__(self, identifier: str, is_vanilla: bool = False, type: str = 'entity') -> None:
+    def __init__(self, name: str, is_vanilla: bool = False, type: str = 'entity') -> None:
         if type not in ['entity', 'attachables']:
-            RaiseError(CLIENT_TYPE_UNSUPPORTED(type, f"{self._namespace_format}:{self._identifier}"))
-        super().__init__(identifier, is_vanilla)
+            RaiseError(CLIENT_TYPE_UNSUPPORTED(type, f"{self._namespace_format}:{self._name}"))
+        super().__init__(name, is_vanilla)
         self._type = type
         self._is_vanilla = is_vanilla
-        self._animation_controllers = _RP_AnimationControllers(self._identifier, self._is_vanilla)
-        self._render_controllers = _RenderControllers(self._identifier, self._is_vanilla)
+        self._animation_controllers = _RP_AnimationControllers(self._name, self._is_vanilla)
+        self._render_controllers = _RenderControllers(self._name, self._is_vanilla)
         self._description['description'].update({
             'materials': {
                 'default': 'entity_alphatest'
@@ -132,14 +132,13 @@ class _ActorClientDescription(_ActorDescription):
             'sound_effects': {},
             'render_controllers': []
         })
-        
         self._reused_geometries = []
         
         self._added_geos = 0
         self._added_textures = []
         self._added_anims = []
 
-        self._sounds : list[_SoundDefinition] = []
+        self._sounds : list[_SoundDescription] = []
 
     @property
     def dummy(self):
@@ -187,7 +186,7 @@ class _ActorClientDescription(_ActorDescription):
             self._check_model(reuse_from_entity, geometry_name)
             self._reused_geometries.append(reuse_from_entity)
         else:
-            self._check_model(self._identifier, geometry_name)
+            self._check_model(self._name, geometry_name)
             self._added_geos = 1
         self._description['description']['geometry'].update({geometry_shortname: f'geometry.{ANVIL.NAMESPACE_FORMAT}.{geometry_name}'})
 
@@ -195,9 +194,9 @@ class _ActorClientDescription(_ActorDescription):
 
     def texture(self, texture_id: str, texture_name: str):
         if not FileExists(os.path.join('assets', 'textures', self._type, f'{texture_name}.png')):
-            raise FileNotFoundError(green(os.path.join('assets', 'textures', self._type, f'{texture_name}.png')))
+            ANVIL.Logger.file_exist_error(f'{texture_name}.png', os.path.join('assets', 'textures', self._type))
 
-        self._description['description']['textures'].update({texture_id: os.path.join('textures', self._type, self._identifier, texture_name)})
+        self._description['description']['textures'].update({texture_id: os.path.join('textures', self._type, self._name, texture_name)})
         self._added_textures.append(texture_name)
 
         return self
@@ -219,9 +218,9 @@ class _ActorClientDescription(_ActorDescription):
 
     def render_controller(self, controller_name: str, condition: str = None):
         if condition is None:
-            self._render_append(f'controller.render.{ANVIL.NAMESPACE_FORMAT}.{self._identifier}.{controller_name}')
+            self._render_append(f'controller.render.{ANVIL.NAMESPACE_FORMAT}.{self._name}.{controller_name}')
         else:
-            self._render_append({f'controller.render.{ANVIL.NAMESPACE_FORMAT}.{self._identifier}.{controller_name}': condition})
+            self._render_append({f'controller.render.{ANVIL.NAMESPACE_FORMAT}.{self._name}.{controller_name}': condition})
 
         return self._render_controllers.add_controller(controller_name)
 
@@ -232,34 +231,47 @@ class _ActorClientDescription(_ActorDescription):
 
     def sound_effect(self, sound_shortname: str, sound_identifier: str, category: SoundCategory = SoundCategory.Neutral):
         self._description['description']['sound_effects'].update({sound_shortname: sound_identifier})
-        sound  : _SoundDefinition = ANVIL.sound(sound_identifier, category)
+        sound  : _SoundDescription = ANVIL.sound(sound_identifier, category)
+        self._sounds.append(sound)
+        return sound
+    
+    def sound_event(self, 
+                    sound_identifier,
+                    sound_event: EntitySoundEvent, 
+                    category: SoundCategory = SoundCategory.Neutral,
+                    volume : float = 1.0, 
+                    pitch: tuple[float, float] = (0.8, 1.2)
+                    ):
+        ANVIL._sound_event.add_entity_event(self.identifier, sound_event, sound_identifier, volume, pitch)
+
+        sound  : _SoundDescription = ANVIL.sound(sound_identifier, category)
         self._sounds.append(sound)
         return sound
 
     def queue(self, directory: str = None):
         if len(self._description['description']['geometry']) == 0:
-            raise RuntimeError(f"{self._namespace_format}:{self._identifier} does not have a geometry.")
+            raise RuntimeError(f"{self._namespace_format}:{self._name} does not have a geometry.")
 
         if len(self._description['description']['textures']) == 0:
-            RaiseError(MISSING_TEXTURE(f"{self._namespace_format}:{self._identifier}"))
+            RaiseError(MISSING_TEXTURE(f"{self._namespace_format}:{self._name}"))
 
         if len(self._description['description']['render_controllers']) == 0:
-            RaiseError(MISSING_RENDER_CONTROLLER(f"{self._namespace_format}:{self._identifier}"))
+            RaiseError(MISSING_RENDER_CONTROLLER(f"{self._namespace_format}:{self._name}"))
         
         if self._added_geos > 0:
-            CopyFiles(os.path.join('assets', 'models', self._type), os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'models', 'entity', self._type, directory), f'{self._identifier}.geo.json')
-            _ActorClientDescription._queued_entities.add(self._identifier)
+            CopyFiles(os.path.join('assets', 'models', self._type), os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'models', 'entity', self._type, directory), f'{self._name}.geo.json')
+            _ActorClientDescription._queued_entities.add(self._name)
 
         for entity in self._reused_geometries:
             if entity not in _ActorClientDescription._queued_entities:
                 raise Exception(f"Geometries were referenced from '{entity}' but this entity has not been queued yet. Please queue all entities that are referred to by reused geometries before this one.")
         
         for text in self._added_textures:
-            CopyFiles(os.path.join('assets','textures', self._type), os.path.join('resource_packs',f'RP_{ANVIL.PASCAL_PROJECT_NAME}','textures',self._type,self._identifier), f'{text}.png')
+            CopyFiles(os.path.join('assets','textures', self._type), os.path.join('resource_packs',f'RP_{ANVIL.PASCAL_PROJECT_NAME}','textures',self._type,self._name), f'{text}.png')
             
         for animation in self._added_anims:
             if animation != 'controller':
-                CopyFiles(os.path.join('assets', 'animations'), os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'animations', directory), f'{self._identifier}{Animation._extension}')
+                CopyFiles(os.path.join('assets', 'animations'), os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'animations', directory), f'{self._name}{Animation._extension}')
               
         if 'particle_effects' in self._description['description']:
             for particle in self._description['description']['particle_effects']:
@@ -274,8 +286,8 @@ class _ActorClientDescription(_ActorDescription):
         return self._description
 
 class _EntityServerDescription(_ActorDescription):
-    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
-        super().__init__(identifier, is_vanilla)
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        super().__init__(name, is_vanilla)
         self._properties = _Properties()
         self._description['description'].update({
             'properties': {},
@@ -322,8 +334,8 @@ class _EntityServerDescription(_ActorDescription):
 
         Parameters
         ----------
-        identifier : Vanilla.Entities
-            The identifier of the entity.
+        entity : Vanilla.Entities
+            The vanilla entity.
 
         Returns
         -------
@@ -348,8 +360,8 @@ class _EntityServerDescription(_ActorDescription):
         return super()._export
 
 class _EntityClientDescription(_ActorClientDescription):
-    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
-        super().__init__(identifier, is_vanilla, 'entity')
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        super().__init__(name, is_vanilla, 'entity')
 
     @property
     def EnableAttachables(self):
@@ -389,7 +401,7 @@ class _EntityClientDescription(_ActorClientDescription):
     
     @property
     def get_vanilla(self):
-        vanilla_entity = ANVIL.get_github_file(f'resource_pack/entity/{self._identifier}.entity.json')
+        vanilla_entity = ANVIL.get_github_file(f'resource_pack/entity/{self._name}.entity.json')
         self._description['description'].update(vanilla_entity['minecraft:client_entity']['description'])
 
     def spawn_egg(self, item_sprite: str):
@@ -415,8 +427,8 @@ class _EntityClientDescription(_ActorClientDescription):
         return self._description
 
 class _AttachableClientDescription(_ActorClientDescription):
-    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
-        super().__init__(identifier, is_vanilla, 'attachables')
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        super().__init__(name, is_vanilla, 'attachables')
 
 class _EntityServer(AddonObject):
     _extensions = {
@@ -442,15 +454,14 @@ class _EntityServer(AddonObject):
             }
         })
     
-    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
-        self._identifier = identifier
-        super().__init__(identifier, os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "entities"))
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        super().__init__(name, os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "entities"))
         self._is_vanilla = is_vanilla
         self._server_entity = _JsonSchemes.server_entity()
-        self._description = _EntityServerDescription(self._identifier, self._is_vanilla)
-        self._animation_controllers = _BP_AnimationControllers(self._identifier, self._is_vanilla)
-        self._animations = _BPAnimations(self._identifier, self._is_vanilla)
-        self._spawn_rule = _SpawnRule(self._identifier, self._is_vanilla)
+        self._description = _EntityServerDescription(self._name, self._is_vanilla)
+        self._animation_controllers = _BP_AnimationControllers(self._name, self._is_vanilla)
+        self._animations = _BPAnimations(self._name, self._is_vanilla)
+        self._spawn_rule = _SpawnRule(self._name, self._is_vanilla)
         self._components = _Components()
         self._events : list[_Event] = []
         self._component_groups : list[_ComponentGroup] = []
@@ -487,7 +498,7 @@ class _EntityServer(AddonObject):
 
     @property
     def get_vanilla(self):
-        vanilla_entity = ANVIL.get_github_file(f'behavior_pack/entities/{self._identifier}.json')
+        vanilla_entity = ANVIL.get_github_file(f'behavior_pack/entities/{self._name}.json')
         self._server_entity['minecraft:entity'] = vanilla_entity['minecraft:entity']
 
     def animation_controller(self, controller_shortname: str, animate: bool = False, condition: str = None):
@@ -547,12 +558,11 @@ class _EntityClient(AddonObject):
         1: ".entity.json"
     }
     
-    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
-        super().__init__(identifier, os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "entity"))
-        self._identifier = identifier
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        super().__init__(name, os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "entity"))
         self._is_vanilla = is_vanilla
         self._client_entity = _JsonSchemes.client_entity()
-        self._description = _EntityClientDescription(self._identifier, self._is_vanilla)
+        self._description = _EntityClientDescription(self._name, self._is_vanilla)
 
     @property
     def description(self):
@@ -710,7 +720,7 @@ class _BP_ControllerState():
         
         '''
         for command in commands:
-            if str(command).startswith(Target.S):
+            if str(command).startswith(Target.S.value):
                 self._controller_state[self._state_name]['on_entry'].append(command)
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
                 self._controller_state[self._state_name]['on_entry'].append(f'{command};')
@@ -732,7 +742,7 @@ class _BP_ControllerState():
         
         '''
         for command in commands:
-            if str(command).startswith(Target.S):
+            if str(command).startswith(Target.S.value):
                 self._controller_state[self._state_name]['on_exit'].append(f'{command}')
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
                 self._controller_state[self._state_name]['on_exit'].append(f'{command};')
@@ -1908,9 +1918,9 @@ class _Properties():
 
 # ========================================================================================================
 class Entity():
-    def _validate_name(self, identifier):
-        if ':' in identifier:
-            raise ValueError(NAMESPACES_NOT_ALLOWED(identifier))
+    def _validate_name(self, name):
+        if ':' in name:
+            raise ValueError(ANVIL.Logger.namespaces_not_allowed(name))
 
     def __init__(self, name: str) -> None:
         self._is_vanilla = name in ENTITY_LIST
@@ -1972,14 +1982,14 @@ class Attachable(AddonObject):
         0: '.attachable.json',
         1: '.attachable.json'
     }
-    def __init__(self, identifier: str) -> None:
-        super().__init__(identifier, os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'attachables'))
-        self._identifier = identifier
-        self._is_vanilla = identifier in ITEMS_LIST
+    def __init__(self, name: str) -> None:
+        super().__init__(name, os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'attachables'))
+        self._name = name
+        self._is_vanilla = name in ITEMS_LIST
         self._namespace_format = 'minecraft' if self._is_vanilla else ANVIL.NAMESPACE_FORMAT
         
         self._attachable = _JsonSchemes.attachable()
-        self._description = _AttachableClientDescription(self._identifier, False)
+        self._description = _AttachableClientDescription(self._name, False)
     
     @property
     def description(self):
@@ -1987,11 +1997,11 @@ class Attachable(AddonObject):
 
     @property
     def identifier(self):
-        return f'{self._namespace_format}:{self._identifier}'
+        return f'{self._namespace_format}:{self._name}'
     
     @property
     def name(self):
-        return self._identifier
+        return self._name
 
     @property
     def queue(self):

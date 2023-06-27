@@ -1,5 +1,5 @@
-from ..core import ANVIL, AddonObject
-from ..lib import *
+from anvil.core import ANVIL, AddonObject
+from anvil.lib import *
 
 __all__ = [
     "UIBindingType",
@@ -12,7 +12,6 @@ __all__ = [
     "UIFontSize",
     "UI",
 ]
-
 
 class UIBindingType:
     View = "view"
@@ -621,8 +620,8 @@ class _UIDefs(AddonObject):
         self.do_not_shorten
         self._files = []
 
-    def add_file(self, path):
-        self._files.append(path)
+    def add_file(self, path:str):
+        self._files.append(path.replace('\\', '/'))
 
     @property
     def queue(self):
@@ -752,7 +751,9 @@ class _UIScreen(AddonObject):
             self._content.update(element.queue)
         
         if self._content != {"namespace": self.namespace}:
-            self._defs.add_file(os.path.join('ui', directory, f'{self.name}{_UIScreen._extension}'))
+            self._defs.add_file(
+                os.path.join('ui', directory, f'{self.name}{_UIScreen._extension}')
+            )
             return super().queue(directory)
 
 
@@ -830,8 +831,10 @@ class _AnvilHUDScreen(_UIScreen):
         self,
         name: str,
         background: bool = False,
-        zoom: bool = True,
-        duration: float = 8,
+        direction_out: bool = True,
+        zoom_in: float = 1,
+        zoom_wait: float = 6,
+        zoom_out: float = 1,
     ):
         # element
         image_element = self.add_element(name, UIElementTrigger.Title, name)
@@ -851,69 +854,66 @@ class _AnvilHUDScreen(_UIScreen):
         image.type(UIElementType.Image)
         image.texture(name)
         image.anchor(UIAnchor.Center, UIAnchor.Center)
-        image.offset((0, "-50px"))
 
         tip = image_element.controls(f"{name}_tip")
         tip.type(UIElementType.Label)
         tip.text_alignment(UITextAlignment.Center)
         tip.size(("80%", 'default'))
-        tip.offset((0, "50px"))
+        tip.offset((0, '60px'))
         tip.text("#text").shadow.font_size(UIFontSize.Large)
         tip.binding.binding_name("#hud_subtitle_text_string").binding_name_override("#text")
 
-        if zoom:
-            # animations
-            self._variables.add_variable(f"$anvil.image.{name}_zoom", duration - 1)
-            image_zoom_in = self._anvil_animation.add_animation(f"{name}_zoom_in")
-            image_zoom_in.anim_type(UIAnimType.Size)
-            image_zoom_in.easing(UIEasing.Linear)
-            image_zoom_in.from_(("30%", "30%")).to(("40%", "40%"))
-            image_zoom_in.duration("$title_fade_in_time")
-            image_zoom_in.next(f"@anvil_animations.{name}_zoom_wait")
-            image_zoom_wait = self._anvil_animation.add_animation(f"{name}_zoom_wait")
-            image_zoom_wait.anim_type(UIAnimType.Wait)
-            image_zoom_wait.duration(f"$anvil.image.{name}_zoom")
-            image_zoom_wait.next(f"@anvil_animations.{name}_zoom_out")
-            image_zoom_out = self._anvil_animation.add_animation(f"{name}_zoom_out")
-            image_zoom_out.anim_type(UIAnimType.Size)
-            image_zoom_out.easing(UIEasing.Linear)
-            image_zoom_out.from_(("40%", "40%")).to(("30%", "30%"))
-            image_zoom_out.duration("$title_fade_out_time")
-
-            image_alpha_in = self._anvil_animation.add_animation(f"{name}_alpha_in")
-            image_alpha_in.anim_type(UIAnimType.Alpha)
-            image_alpha_in.easing(UIEasing.OutQuad)
-            image_alpha_in.from_(0)
-            image_alpha_in.to(1)
-            image_alpha_in.duration("$title_fade_in_time")
-            image_alpha_in.next(f"@anvil_animations.{name}_alpha_wait")
-            image_alpha_wait = self._anvil_animation.add_animation(f"{name}_alpha_wait")
-            image_alpha_wait.anim_type(UIAnimType.Wait)
-            image_alpha_wait.duration(f"$anvil.image.{name}_zoom")
-            image_alpha_wait.next(f"@anvil_animations.{name}_alpha_out")
-            image_alpha_out = self._anvil_animation.add_animation(f"{name}_alpha_out")
-            image_alpha_out.anim_type(UIAnimType.Alpha)
-            image_alpha_out.easing(UIEasing.InOutSine)
-            image_alpha_out.from_(1)
-            image_alpha_out.to(0)
-            image_alpha_out.duration("$title_fade_out_time")
-
-            image.size(f"@anvil_animations.{name}_zoom_in")
-            image.alpha(f"@anvil_animations.{name}_alpha_in")
+        zoom_steps = []
+        if direction_out:
+            zoom_steps = ['30%', '40%', '50%']
         else:
-            image_alpha_destroy = self._anvil_animation.add_animation(f"{name}_destroy")
-            image_alpha_destroy.anim_type(UIAnimType.Alpha)
-            image_alpha_destroy.easing(UIEasing.Linear)
-            image_alpha_destroy.from_(1)
-            image_alpha_destroy.to(0)
-            image_alpha_destroy.duration("$title_fade_out_time")
-            #image_alpha_destroy.destroy_at_end('hud_title_text')
-            image.size(("40%", "40%"))
-            image.alpha(f"@anvil_animations.{name}_destroy")
+            zoom_steps = ['400%', '70%', '60%']
+
+        # animations
+        self._variables.add_variable(f"$anvil.image.{name}_in", zoom_in)
+        self._variables.add_variable(f"$anvil.image.{name}_wait", zoom_wait)
+        self._variables.add_variable(f"$anvil.image.{name}_out", zoom_out)
+
+        image_zoom_in = self._anvil_animation.add_animation(f"{name}_zoom_in")
+        image_zoom_in.anim_type(UIAnimType.Size)
+        image_zoom_in.easing(UIEasing.Linear)
+        image_zoom_in.from_((zoom_steps[0], zoom_steps[0])).to((zoom_steps[1], zoom_steps[1]))
+        image_zoom_in.duration(f"$anvil.image.{name}_in")
+        image_zoom_in.next(f"@anvil_animations.{name}_zoom_wait")
+        image_zoom_wait = self._anvil_animation.add_animation(f"{name}_zoom_wait")
+        image_zoom_wait.anim_type(UIAnimType.Wait)
+        image_zoom_wait.duration(f"$anvil.image.{name}_wait")
+        image_zoom_wait.next(f"@anvil_animations.{name}_zoom_out")
+        image_zoom_out = self._anvil_animation.add_animation(f"{name}_zoom_out")
+        image_zoom_out.anim_type(UIAnimType.Size)
+        image_zoom_out.easing(UIEasing.Linear)
+        image_zoom_out.from_((zoom_steps[1], zoom_steps[1])).to((zoom_steps[2], zoom_steps[2]))
+        image_zoom_out.duration(f"$anvil.image.{name}_out")
+
+        image_alpha_in = self._anvil_animation.add_animation(f"{name}_alpha_in")
+        image_alpha_in.anim_type(UIAnimType.Alpha)
+        image_alpha_in.easing(UIEasing.OutQuad)
+        image_alpha_in.from_(0)
+        image_alpha_in.to(1)
+        image_alpha_in.duration(f"$anvil.image.{name}_in")
+        image_alpha_in.next(f"@anvil_animations.{name}_alpha_wait")
+        image_alpha_wait = self._anvil_animation.add_animation(f"{name}_alpha_wait")
+        image_alpha_wait.anim_type(UIAnimType.Wait)
+        image_alpha_wait.duration(f"$anvil.image.{name}_wait")
+        image_alpha_wait.next(f"@anvil_animations.{name}_alpha_out")
+        image_alpha_out = self._anvil_animation.add_animation(f"{name}_alpha_out")
+        image_alpha_out.anim_type(UIAnimType.Alpha)
+        image_alpha_out.easing(UIEasing.InOutSine)
+        image_alpha_out.from_(1)
+        image_alpha_out.to(0)
+        image_alpha_out.duration(f"$anvil.image.{name}_out")
+
+        image.size(f"@anvil_animations.{name}_zoom_in" if zoom_in > 0 else ('50%', '50%'))
+        image.alpha(f"@anvil_animations.{name}_alpha_in" if zoom_in > 0 else 1)
 
     # Layer 100
     def add_logo(self):
-        self.add_image_zoom("logo", True)
+        self.add_image_panel("logo", True)
 
     # Layer 101
     def add_blinking_screen(self):
@@ -1026,7 +1026,7 @@ class _NPCScreen(_UIScreen):
     
     @property
     def queue(self):
-        return super().queue()
+        return super().queue("")
 
 
 class _AnvilNPCScreen(_UIScreen):

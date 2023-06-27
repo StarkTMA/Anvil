@@ -1,9 +1,8 @@
-from ..core import ANVIL, AddonObject, _MinecraftDescription
-from ..lib import *
-from ..lib import _JsonSchemes
-from .actors import _Components
-from .components import _component
-
+from anvil.core import ANVIL, AddonObject, _MinecraftDescription
+from anvil.lib import *
+from anvil.lib import _JsonSchemes
+from anvil.api.actors import _Components
+from anvil.api.components import _component
 
 # LEGACY COMPONENTS
 class LEGACYItemHandEquipped(_component):
@@ -38,20 +37,23 @@ class LEGACYItemUseDuration(_component):
 
 class LEGACYItemFood(_component):
     def __init__(self, can_always_eat: bool = False) -> None:
-        super().__init__("use_duration")
+        super().__init__("food")
         self._component_add_field("effects", [])
         if can_always_eat:
             self._component_add_field("can_always_eat", True)
 
     def nutrition(self, nutrition: int):
         self._component_add_field("nutrition", max(1, nutrition))
+        return self
 
     def saturation_modifier(self, saturation_modifier: float):
         self._component_add_field("saturation_modifier", max(0, saturation_modifier))
+        return self
 
     def cooldown(self, cooldown_time: Seconds, cooldown_type: str):
         self._component_add_field("cooldown_time", clamp(cooldown_time, 1, inf))
         self._component_add_field("cooldown_type", cooldown_type)
+        return self
 
     def effects(self, effect: Effects, chance: float, duration: Seconds, amplifier):
         self[self._component_namespace]["effects"].append(
@@ -62,9 +64,11 @@ class LEGACYItemFood(_component):
                 "amplifier": amplifier,
             }
         )
+        return self
 
 
 # Components
+# Require ITEM_SERVER_VERSION >= 1.19.80
 class ItemDisplayName(_component):
     def __init__(self, display_name: str, localize: bool = True) -> None:
         """Sets the item display name within Minecraft: Bedrock Edition. This component may also be used to pull from the localization file by referencing a key from it.
@@ -76,7 +80,7 @@ class ItemDisplayName(_component):
         super().__init__("display_name")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
         if localize:
-            key = f'item.{display_name.lower().replace(" ", "_")}.name'
+            key = f'item.{ANVIL.NAMESPACE}:{display_name.lower().replace(" ", "_")}.name'
             ANVIL.localize(key, display_name)
             self._component_add_field("value", key)
         else:
@@ -159,8 +163,8 @@ class ItemIcon(_component):
 
 # Items
 class _ItemServerDescription(_MinecraftDescription):
-    def __init__(self, identifier, is_vanilla) -> None:
-        super().__init__(identifier, is_vanilla)
+    def __init__(self, name, is_vanilla) -> None:
+        super().__init__(name, is_vanilla)
         self._description["description"]["properties"] = {}
 
     @property
@@ -171,14 +175,12 @@ class _ItemServerDescription(_MinecraftDescription):
 class _ItemServer(AddonObject):
     _extensions = {0: ".item.json", 1: ".item.json"}
 
-    def __init__(self, identifier: str, is_vanilla: bool) -> None:
-        super().__init__(
-            identifier,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "items"),
-        )
-        self._identifier = identifier
+    def __init__(self, name: str, is_vanilla: bool) -> None:
+        super().__init__(name, os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "items"))
+        self._name = name
+        self._is_vanilla = is_vanilla
         self._server_item = _JsonSchemes.server_item()
-        self._description = _ItemServerDescription(identifier, is_vanilla)
+        self._description = _ItemServerDescription(name, is_vanilla)
         self._components = _Components()
 
     @property
@@ -198,29 +200,52 @@ class _ItemServer(AddonObject):
         self.content(self._server_item)
         super().queue()
 
+# To be removed after 1.20.10
+class _ItemClient(AddonObject):
+    _extensions = {0: ".item.json", 1: ".item.json"}
+
+    def __init__(self, name: str, is_vanilla: bool) -> None:
+        super().__init__(name, os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "items"))
+        self._name = name
+        self._is_vanilla = is_vanilla
+        self._client_item = _JsonSchemes.client_item()
+        self._description = _MinecraftDescription(name, is_vanilla)
+
+        key = f'item.{ANVIL.NAMESPACE}:{self._name}.name'
+        ANVIL.localize(key, name.replace("_", " ").title())
+
+        ANVIL._item_texture.add_item(name, "", name)
+
+    @property
+    def queue(self):
+        self._client_item["minecraft:item"].update(self._description._export)
+        self._client_item["minecraft:item"]["components"].update({"minecraft:icon": self._name})
+        self.content(self._client_item)
+        super().queue()
+# ---------------------------
 
 class Item:
-    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
-        self._identifier = identifier
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        self._name = name
         self._is_vanilla = is_vanilla
-        self._server = _ItemServer(identifier, is_vanilla)
+        self._server = _ItemServer(name, is_vanilla)
+        self._client = _ItemClient(name, is_vanilla)
 
-        self._namespace_format = (
-            "minecraft" if self._is_vanilla else ANVIL.NAMESPACE_FORMAT
-        )
+        self._namespace_format = "minecraft" if self._is_vanilla else ANVIL.NAMESPACE
 
     @property
     def Server(self):
         return self._server
 
     @property
+    def Client(self):
+        return self._client
+
+    @property
     def identifier(self):
-        return f"{self._namespace_format}:{self._identifier}"
+        return f"{self._namespace_format}:{self._name}"
 
     @property
     def queue(self):
-        display_name = self._identifier.replace("_", " ").title()
-        ANVIL.localize(
-            f"item.{self._namespace_format}:{self._identifier}.name", display_name
-        )
+        self.Client.queue
         self.Server.queue

@@ -1,4 +1,6 @@
-from anvil import Dimension, ANVIL
+from enum import Enum
+
+from anvil import ANVIL, Dimension
 
 ENTITY_LIST = []
 BLOCK_LIST = []
@@ -6,6 +8,1046 @@ ITEMS_LIST = []
 
 # Updated on 05-04-2023
 # Latest Updated release: 1.19.81.01
+class BlockStates:
+    class ButtonPressedBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class FacingDirection(Enum):
+        ENUM5 = "5"
+        ENUM4 = "4"
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+
+    class Direction(Enum):
+        ENUM0 = "0"
+        ENUM2 = "2"
+        ENUM1 = "1"
+        ENUM3 = "3"
+
+    class DoorHingeBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class OpenBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class UpperBlockBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class InWallBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class AttachedBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class GroundSignDirection(Enum):
+        ENUM12 = "12"
+        ENUM10 = "10"
+        ENUM5 = "5"
+        ENUM7 = "7"
+        ENUM13 = "13"
+        ENUM9 = "9"
+        ENUM4 = "4"
+        ENUM11 = "11"
+        ENUM0 = "0"
+        ENUM6 = "6"
+        ENUM14 = "14"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM8 = "8"
+        ENUM15 = "15"
+
+    class Hanging(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class PillarAxis(Enum):
+        Z = "z"
+        X = "x"
+        Y = "y"
+
+    class RedstoneSignal(Enum):
+        ENUM12 = "12"
+        ENUM10 = "10"
+        ENUM5 = "5"
+        ENUM13 = "13"
+        ENUM9 = "9"
+        ENUM4 = "4"
+        ENUM0 = "0"
+        ENUM6 = "6"
+        ENUM14 = "14"
+        ENUM1 = "1"
+        ENUM15 = "15"
+        ENUM8 = "8"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM7 = "7"
+        ENUM11 = "11"
+
+    class UpsideDownBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class WeirdoDirection(Enum):
+        ENUM0 = "0"
+        ENUM2 = "2"
+        ENUM1 = "1"
+        ENUM3 = "3"
+
+    class RailDataBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class RailDirection(Enum):
+        ENUM5 = "5"
+        ENUM9 = "9"
+        ENUM4 = "4"
+        ENUM0 = "0"
+        ENUM6 = "6"
+        ENUM1 = "1"
+        ENUM8 = "8"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM7 = "7"
+
+    class Damage(Enum):
+        UNDAMAGED = "undamaged"
+        SLIGHTLY_DAMAGED = "slightly_damaged"
+        VERY_DAMAGED = "very_damaged"
+        BROKEN = "broken"
+
+    class PersistentBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class UpdateBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class AgeBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class BambooLeafSize(Enum):
+        NO_LEAVES = "no_leaves"
+        SMALL_LEAVES = "small_leaves"
+        LARGE_LEAVES = "large_leaves"
+
+    class BambooStalkThickness(Enum):
+        THIN = "thin"
+        THICK = "thick"
+
+    class TopSlotBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class SaplingType(Enum):
+        DARK_OAK = "dark_oak"
+        ACACIA = "acacia"
+        SPRUCE = "spruce"
+        BIRCH = "birch"
+        JUNGLE = "jungle"
+        OAK = "oak"
+
+    class HeadPieceBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class OccupiedBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class InfiniburnBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class HoneyLevel(Enum):
+        ENUM5 = "5"
+        ENUM4 = "4"
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+
+    class Growth(Enum):
+        ENUM5 = "5"
+        ENUM4 = "4"
+        ENUM0 = "0"
+        ENUM6 = "6"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM7 = "7"
+
+    class Attachment(Enum):
+        STANDING = "standing"
+        SIDE = "side"
+        MULTIPLE = "multiple"
+        HANGING = "hanging"
+
+    class ToggleBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class BigDripleafHead(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class BigDripleafTilt(Enum):
+        NONE = "none"
+        UNSTABLE = "unstable"
+        PARTIAL_TILT = "partial_tilt"
+        FULL_TILT = "full_tilt"
+
+    class WallConnectionTypeEast(Enum):
+        TALL = "tall"
+        NONE = "none"
+        SHORT = "short"
+
+    class WallConnectionTypeNorth(Enum):
+        TALL = "tall"
+        NONE = "none"
+        SHORT = "short"
+
+    class WallConnectionTypeSouth(Enum):
+        TALL = "tall"
+        NONE = "none"
+        SHORT = "short"
+
+    class WallConnectionTypeWest(Enum):
+        TALL = "tall"
+        NONE = "none"
+        SHORT = "short"
+
+    class WallPostBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class Candles(Enum):
+        ENUM0 = "0"
+        ENUM2 = "2"
+        ENUM1 = "1"
+        ENUM3 = "3"
+
+    class Lit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class Deprecated(Enum):
+        ENUM0 = "0"
+        ENUM2 = "2"
+        ENUM1 = "1"
+        ENUM3 = "3"
+
+    class BrewingStandSlotABit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class BrewingStandSlotBBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class BrewingStandSlotCBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class HugeMushroomBits(Enum):
+        ENUM12 = "12"
+        ENUM10 = "10"
+        ENUM5 = "5"
+        ENUM13 = "13"
+        ENUM9 = "9"
+        ENUM4 = "4"
+        ENUM0 = "0"
+        ENUM6 = "6"
+        ENUM14 = "14"
+        ENUM1 = "1"
+        ENUM15 = "15"
+        ENUM8 = "8"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM7 = "7"
+        ENUM11 = "11"
+
+    class DragDown(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class Age(Enum):
+        ENUM12 = "12"
+        ENUM10 = "10"
+        ENUM5 = "5"
+        ENUM13 = "13"
+        ENUM9 = "9"
+        ENUM4 = "4"
+        ENUM0 = "0"
+        ENUM6 = "6"
+        ENUM14 = "14"
+        ENUM1 = "1"
+        ENUM15 = "15"
+        ENUM8 = "8"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM7 = "7"
+        ENUM11 = "11"
+
+    class BiteCounter(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+
+    class SculkSensorPhase(Enum):
+        ENUM0 = "0"
+        ENUM2 = "2"
+        ENUM1 = "1"
+
+    class Extinguished(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class CardinalDirection(Enum):
+        SOUTH = "south"
+        WEST = "west"
+        NORTH = "north"
+        EAST = "east"
+
+    class CauldronLiquid(Enum):
+        WATER = "water"
+        LAVA = "lava"
+        POWDER_SNOW = "powder_snow"
+
+    class FillLevel(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+
+    class GrowingPlantAge(Enum):
+        ENUM22 = "22"
+        ENUM0 = "0"
+        ENUM23 = "23"
+        ENUM15 = "15"
+        ENUM17 = "17"
+        ENUM9 = "9"
+        ENUM4 = "4"
+        ENUM16 = "16"
+        ENUM19 = "19"
+        ENUM8 = "8"
+        ENUM11 = "11"
+        ENUM5 = "5"
+        ENUM24 = "24"
+        ENUM13 = "13"
+        ENUM18 = "18"
+        ENUM6 = "6"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM7 = "7"
+        ENUM20 = "20"
+        ENUM12 = "12"
+        ENUM10 = "10"
+        ENUM21 = "21"
+        ENUM25 = "25"
+        ENUM14 = "14"
+        ENUM1 = "1"
+
+    class ConditionalBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class ChemistryTableType(Enum):
+        COMPOUND_CREATOR = "compound_creator"
+        MATERIAL_REDUCER = "material_reducer"
+        ELEMENT_CONSTRUCTOR = "element_constructor"
+        LAB_TABLE = "lab_table"
+
+    class StrippedBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class BooksStored(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+        ENUM8 = "8"
+        ENUM9 = "9"
+        ENUM10 = "10"
+        ENUM11 = "11"
+        ENUM12 = "12"
+        ENUM13 = "13"
+        ENUM14 = "14"
+        ENUM15 = "15"
+        ENUM16 = "16"
+        ENUM17 = "17"
+        ENUM18 = "18"
+        ENUM19 = "19"
+        ENUM20 = "20"
+        ENUM21 = "21"
+        ENUM22 = "22"
+        ENUM23 = "23"
+        ENUM24 = "24"
+        ENUM25 = "25"
+        ENUM26 = "26"
+        ENUM27 = "27"
+        ENUM28 = "28"
+        ENUM29 = "29"
+        ENUM30 = "30"
+        ENUM31 = "31"
+        ENUM32 = "32"
+        ENUM33 = "33"
+        ENUM34 = "34"
+        ENUM35 = "35"
+        ENUM36 = "36"
+        ENUM37 = "37"
+        ENUM38 = "38"
+        ENUM39 = "39"
+        ENUM40 = "40"
+        ENUM41 = "41"
+        ENUM42 = "42"
+        ENUM43 = "43"
+        ENUM44 = "44"
+        ENUM45 = "45"
+        ENUM46 = "46"
+        ENUM47 = "47"
+        ENUM48 = "48"
+        ENUM49 = "49"
+        ENUM50 = "50"
+        ENUM51 = "51"
+        ENUM52 = "52"
+        ENUM53 = "53"
+        ENUM54 = "54"
+        ENUM55 = "55"
+        ENUM56 = "56"
+        ENUM57 = "57"
+        ENUM58 = "58"
+        ENUM59 = "59"
+        ENUM60 = "60"
+        ENUM61 = "61"
+        ENUM62 = "62"
+        ENUM63 = "63"
+
+    class WallBlockType(Enum):
+        COBBLESTONE = "cobblestone"
+        MOSSY_COBBLESTONE = "mossy_cobblestone"
+        GRANITE = "granite"
+        DIORITE = "diorite"
+        ANDESITE = "andesite"
+        SANDSTONE = "sandstone"
+        BRICK = "brick"
+        STONE_BRICK = "stone_brick"
+        MOSSY_STONE_BRICK = "mossy_stone_brick"
+        NETHER_BRICK = "nether_brick"
+        END_BRICK = "end_brick"
+        PRISMARINE = "prismarine"
+        RED_SANDSTONE = "red_sandstone"
+        RED_NETHER_BRICK = "red_nether_brick"
+
+    class ColorBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class TorchFacingDirection(Enum):
+        UNKNOWN = "unknown"
+        WEST = "west"
+        SOUTH = "south"
+        NORTH = "north"
+        EAST = "east"
+        TOP = "top"
+
+    class ComposterFillLevel(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+        ENUM8 = "8"
+
+    class Color(Enum):
+        BLACK = "black"
+        SILVER = "silver"
+        RED = "red"
+        ORANGE = "orange"
+        LIME = "lime"
+        PINK = "pink"
+        PURPLE = "purple"
+        MAGENTA = "magenta"
+        LIGHT_BLUE = "light_blue"
+        YELLOW = "yellow"
+        GRAY = "gray"
+        CYAN = "cyan"
+        WHITE = "white"
+        BLUE = "blue"
+        GREEN = "green"
+        BROWN = "brown"
+
+    class CoralColor(Enum):
+        RED = "red"
+        PINK = "pink"
+        PURPLE = "purple"
+        YELLOW = "yellow"
+        BLUE = "blue"
+
+    class DeadBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class CoralFanDirection(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+
+    class CoralDirection(Enum):
+        ENUM0 = "0"
+        ENUM2 = "2"
+        ENUM1 = "1"
+        ENUM3 = "3"
+
+    class CoralHangTypeBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class DirtType(Enum):
+        NORMAL = "normal"
+        COARSE = "coarse"
+
+    class TriggeredBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class DoublePlantType(Enum):
+        SUNFLOWER = "sunflower"
+        SYRINGA = "syringa"
+        GRASS = "grass"
+        FERN = "fern"
+        ROSE = "rose"
+        PAEONIA = "paeonia"
+
+    class StoneSlabType(Enum):
+        BRICK = "brick"
+        SANDSTONE = "sandstone"
+        WOOD = "wood"
+        STONE_BRICK = "stone_brick"
+        SMOOTH_STONE = "smooth_stone"
+        COBBLESTONE = "cobblestone"
+        NETHER_BRICK = "nether_brick"
+        QUARTZ = "quartz"
+
+    class StoneSlabType2(Enum):
+        RED_SANDSTONE = "red_sandstone"
+        PRISMARINE_ROUGH = "prismarine_rough"
+        PURPUR = "purpur"
+        PRISMARINE_BRICK = "prismarine_brick"
+        SMOOTH_SANDSTONE = "smooth_sandstone"
+        PRISMARINE_DARK = "prismarine_dark"
+        MOSSY_COBBLESTONE = "mossy_cobblestone"
+        RED_NETHER_BRICK = "red_nether_brick"
+
+    class StoneSlabType3(Enum):
+        END_STONE_BRICK = "end_stone_brick"
+        DIORITE = "diorite"
+        GRANITE = "granite"
+        POLISHED_ANDESITE = "polished_andesite"
+        ANDESITE = "andesite"
+        POLISHED_GRANITE = "polished_granite"
+        SMOOTH_RED_SANDSTONE = "smooth_red_sandstone"
+        POLISHED_DIORITE = "polished_diorite"
+
+    class StoneSlabType4(Enum):
+        STONE = "stone"
+        CUT_SANDSTONE = "cut_sandstone"
+        CUT_RED_SANDSTONE = "cut_red_sandstone"
+        SMOOTH_QUARTZ = "smooth_quartz"
+        MOSSY_STONE_BRICK = "mossy_stone_brick"
+
+    class WoodType(Enum):
+        DARK_OAK = "dark_oak"
+        ACACIA = "acacia"
+        SPRUCE = "spruce"
+        BIRCH = "birch"
+        JUNGLE = "jungle"
+        OAK = "oak"
+
+    class EndPortalEyeBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class MoisturizedAmount(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+
+    class LiquidDepth(Enum):
+        ENUM12 = "12"
+        ENUM10 = "10"
+        ENUM5 = "5"
+        ENUM13 = "13"
+        ENUM9 = "9"
+        ENUM4 = "4"
+        ENUM0 = "0"
+        ENUM6 = "6"
+        ENUM14 = "14"
+        ENUM1 = "1"
+        ENUM15 = "15"
+        ENUM8 = "8"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM7 = "7"
+        ENUM11 = "11"
+
+    class ItemFrameMapBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class ItemFramePhotoBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class MultiFaceDirectionBits(Enum):
+        ENUM35 = "35"
+        ENUM22 = "22"
+        ENUM62 = "62"
+        ENUM45 = "45"
+        ENUM0 = "0"
+        ENUM36 = "36"
+        ENUM53 = "53"
+        ENUM30 = "30"
+        ENUM59 = "59"
+        ENUM47 = "47"
+        ENUM23 = "23"
+        ENUM15 = "15"
+        ENUM50 = "50"
+        ENUM17 = "17"
+        ENUM9 = "9"
+        ENUM4 = "4"
+        ENUM16 = "16"
+        ENUM27 = "27"
+        ENUM60 = "60"
+        ENUM32 = "32"
+        ENUM33 = "33"
+        ENUM19 = "19"
+        ENUM8 = "8"
+        ENUM26 = "26"
+        ENUM31 = "31"
+        ENUM11 = "11"
+        ENUM38 = "38"
+        ENUM46 = "46"
+        ENUM58 = "58"
+        ENUM5 = "5"
+        ENUM24 = "24"
+        ENUM13 = "13"
+        ENUM18 = "18"
+        ENUM40 = "40"
+        ENUM54 = "54"
+        ENUM63 = "63"
+        ENUM42 = "42"
+        ENUM6 = "6"
+        ENUM29 = "29"
+        ENUM43 = "43"
+        ENUM52 = "52"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM41 = "41"
+        ENUM44 = "44"
+        ENUM7 = "7"
+        ENUM20 = "20"
+        ENUM51 = "51"
+        ENUM12 = "12"
+        ENUM10 = "10"
+        ENUM21 = "21"
+        ENUM61 = "61"
+        ENUM56 = "56"
+        ENUM25 = "25"
+        ENUM57 = "57"
+        ENUM55 = "55"
+        ENUM34 = "34"
+        ENUM14 = "14"
+        ENUM1 = "1"
+        ENUM39 = "39"
+        ENUM28 = "28"
+        ENUM49 = "49"
+        ENUM37 = "37"
+        ENUM48 = "48"
+
+    class Rotation(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+
+    class KelpAge(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+        ENUM8 = "8"
+        ENUM9 = "9"
+        ENUM10 = "10"
+        ENUM11 = "11"
+        ENUM12 = "12"
+        ENUM13 = "13"
+        ENUM14 = "14"
+        ENUM15 = "15"
+        ENUM16 = "16"
+        ENUM17 = "17"
+        ENUM18 = "18"
+        ENUM19 = "19"
+        ENUM20 = "20"
+        ENUM21 = "21"
+        ENUM22 = "22"
+        ENUM23 = "23"
+        ENUM24 = "24"
+        ENUM25 = "25"
+
+    class OldLeafType(Enum):
+        OAK = "oak"
+        SPRUCE = "spruce"
+        BIRCH = "birch"
+        JUNGLE = "jungle"
+
+    class NewLeafType(Enum):
+        ACACIA = "acacia"
+        DARK_OAK = "dark_oak"
+
+    class PoweredBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class LeverDirection(Enum):
+        DOWN_EAST_WEST = "down_east_west"
+        EAST = "east"
+        WEST = "west"
+        SOUTH = "south"
+        NORTH = "north"
+        UP_NORTH_SOUTH = "up_north_south"
+        UP_EAST_WEST = "up_east_west"
+        DOWN_NORTH_SOUTH = "down_north_south"
+
+    class BlockLightLevel(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+        ENUM8 = "8"
+        ENUM9 = "9"
+        ENUM10 = "10"
+        ENUM11 = "11"
+        ENUM12 = "12"
+        ENUM13 = "13"
+        ENUM14 = "14"
+        ENUM15 = "15"
+
+    class PropaguleStage(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+
+    class MonsterEggStoneType(Enum):
+        STONE = "stone"
+        COBBLESTONE = "cobblestone"
+        STONE_BRICK = "stone_brick"
+        MOSSY_STONE_BRICK = "mossy_stone_brick"
+        CRACKED_STONE_BRICK = "cracked_stone_brick"
+        CHISELED_STONE_BRICK = "chiseled_stone_brick"
+
+    class DripstoneThickness(Enum):
+        TIP = "tip"
+        FRUSTUM = "frustum"
+        MIDDLE = "middle"
+        BASE = "base"
+        MERGE = "merge"
+
+    class PortalAxis(Enum):
+        UNKNOWN = "unknown"
+        X = "x"
+        Z = "z"
+
+    class OutputLitBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class OutputSubtractBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class RepeaterDelay(Enum):
+        ENUM0 = "0"
+        ENUM2 = "2"
+        ENUM1 = "1"
+        ENUM3 = "3"
+
+    class PrismarineBlockType(Enum):
+        DEFAULT = "default"
+        DARK = "dark"
+        BRICKS = "bricks"
+
+    class ChiselType(Enum):
+        CHISELED = "chiseled"
+        DEFAULT = "default"
+        SMOOTH = "smooth"
+        LINES = "lines"
+
+    class FlowerType(Enum):
+        POPPY = "poppy"
+        ORCHID = "orchid"
+        ALLIUM = "allium"
+        HOUSTONIA = "houstonia"
+        TULIP_RED = "tulip_red"
+        TULIP_ORANGE = "tulip_orange"
+        TULIP_WHITE = "tulip_white"
+        TULIP_PINK = "tulip_pink"
+        OXEYE = "oxeye"
+        CORNFLOWER = "cornflower"
+        LILY_OF_THE_VALLEY = "lily_of_the_valley"
+
+    class SandStoneType(Enum):
+        HEIROGLYPHS = "heiroglyphs"
+        DEFAULT = "default"
+        CUT = "cut"
+        SMOOTH = "smooth"
+
+    class RespawnAnchorCharge(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+
+    class SandType(Enum):
+        NORMAL = "normal"
+        RED = "red"
+
+    class Stability(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+
+    class StabilityCheck(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class Bloom(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class Active(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class CanSummon(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class SeaGrassType(Enum):
+        DEFAULT = "default"
+        DOUBLE_TOP = "double_top"
+        DOUBLE_BOT = "double_bot"
+
+    class ClusterCount(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+
+    class CrackedState(Enum):
+        MAX_CRACKED = "max_cracked"
+        CRACKED = "cracked"
+        NO_CRACKS = "no_cracks"
+
+    class CoveredBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class Height(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+
+    class SpongeType(Enum):
+        DRY = "dry"
+        WET = "wet"
+
+    class StoneType(Enum):
+        STONE = "stone"
+        GRANITE = "granite"
+        GRANITE_SMOOTH = "granite_smooth"
+        DIORITE = "diorite"
+        DIORITE_SMOOTH = "diorite_smooth"
+        ANDESITE = "andesite"
+        ANDESITE_SMOOTH = "andesite_smooth"
+
+    class StoneBrickType(Enum):
+        DEFAULT = "default"
+        MOSSY = "mossy"
+        CRACKED = "cracked"
+        CHISELED = "chiseled"
+        SMOOTH = "smooth"
+
+    class StructureBlockType(Enum):
+        DATA = "data"
+        SAVE = "save"
+        LOAD = "load"
+        CORNER = "corner"
+        INVALID = "invalid"
+        EXPORT = "export"
+
+    class StructureVoidType(Enum):
+        VOID = "void"
+        AIR = "air"
+
+    class BrushedProgress(Enum):
+        ENUM0 = "0"
+        ENUM2 = "2"
+        ENUM1 = "1"
+        ENUM3 = "3"
+
+    class TallGrassType(Enum):
+        DEFAULT = "default"
+        TALL = "tall"
+        FERN = "fern"
+        SNOW = "snow"
+
+    class AllowUnderwaterBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class ExplodeBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class DisarmedBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class SuspendedBit(Enum):
+        ENUM0B = "0b"
+        ENUM1B = "1b"
+
+    class TurtleEggCount(Enum):
+        ONE_EGG = "one_egg"
+        TWO_EGG = "two_egg"
+        THREE_EGG = "three_egg"
+        FOUR_EGG = "four_egg"
+
+    class TwistingVinesAge(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+        ENUM8 = "8"
+        ENUM9 = "9"
+        ENUM10 = "10"
+        ENUM11 = "11"
+        ENUM12 = "12"
+        ENUM13 = "13"
+        ENUM14 = "14"
+        ENUM15 = "15"
+        ENUM16 = "16"
+        ENUM17 = "17"
+        ENUM18 = "18"
+        ENUM19 = "19"
+        ENUM20 = "20"
+        ENUM21 = "21"
+        ENUM22 = "22"
+        ENUM23 = "23"
+        ENUM24 = "24"
+        ENUM25 = "25"
+
+    class VineDirectionBits(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+        ENUM8 = "8"
+        ENUM9 = "9"
+        ENUM10 = "10"
+        ENUM11 = "11"
+        ENUM12 = "12"
+        ENUM13 = "13"
+        ENUM14 = "14"
+        ENUM15 = "15"
+
+    class WeepingVinesAge(Enum):
+        ENUM0 = "0"
+        ENUM1 = "1"
+        ENUM2 = "2"
+        ENUM3 = "3"
+        ENUM4 = "4"
+        ENUM5 = "5"
+        ENUM6 = "6"
+        ENUM7 = "7"
+        ENUM8 = "8"
+        ENUM9 = "9"
+        ENUM10 = "10"
+        ENUM11 = "11"
+        ENUM12 = "12"
+        ENUM13 = "13"
+        ENUM14 = "14"
+        ENUM15 = "15"
+        ENUM16 = "16"
+        ENUM17 = "17"
+        ENUM18 = "18"
+        ENUM19 = "19"
+        ENUM20 = "20"
+        ENUM21 = "21"
+        ENUM22 = "22"
+        ENUM23 = "23"
+        ENUM24 = "24"
+        ENUM25 = "25"
+
 
 class Items:
     class _basic_item():
@@ -69,8 +1111,8 @@ class Items:
     RelicMusicDisc = _basic_item("music_disc_relic")
     # ---------------------------------------------------------------------------------------------------
 
-
-class VanillaBlocksItems:
+#TO BE REMOVED
+class LEGACYItems:
     class _block:
         def __init__(self, identifier, dimension, is_vanilla, creative, *states):
             self._identifier = identifier
@@ -1080,7 +2122,7 @@ class VanillaBlocksItems:
     Log = _block("log", Dimension.Overworld, True, False)
     Log2 = _block("log2", Dimension.Overworld, True, False)
     Coral = _block("coral", Dimension.Overworld, True, False)
-    
+
 
 class Entities:
     class vanilla_entity():
@@ -1200,3 +2242,4237 @@ class Entities:
     # 1.19.70.23
     # Updated on 28-02-2023
     Sniffer = vanilla_entity("sniffer")
+
+
+class Blocks:
+    class _MinecraftBlock():
+        def __init__(self, name: str, is_vanilla: bool = True):
+            self._namespace = 'minecraft' if is_vanilla else ANVIL.NAMESPACE
+            self._name = name
+            self._is_vanilla = is_vanilla
+            BLOCK_LIST.append(self)
+
+        @property
+        def identifier(self):
+            return f'{self._namespace}:{self._name}'
+        
+        @property
+        def states(self):
+            return [
+                f'"{k[1:]}":"{v.value}"' 
+                for k, v in self.__dict__.items() 
+                if v is not None
+                if (k[1:].removeprefix('namespace').removeprefix('name').removeprefix('is_vanilla')) == k[1:] 
+            ]
+        
+
+        def __str__(self):
+            return f'{self.identifier} [{", ".join(self.states)}]'
+
+    class AcaciaButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("acacia_button", True)
+
+    class AcaciaDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("acacia_door", True)
+
+    class AcaciaFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("acacia_fence", True)
+
+    class AcaciaFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("acacia_fence_gate", True)
+
+    class AcaciaHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("acacia_hanging_sign", True)
+
+    class AcaciaLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("acacia_log", True)
+
+    class AcaciaPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("acacia_pressure_plate", True)
+
+    class AcaciaStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("acacia_stairs", True)
+
+    class AcaciaStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("acacia_standing_sign", True)
+
+    class AcaciaTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("acacia_trapdoor", True)
+
+    class AcaciaWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("acacia_wall_sign", True)
+
+    class ActivatorRail(_MinecraftBlock):
+        def __init__(self, rail_data_bit:'BlockStates.RailDataBit'=None, rail_direction:'BlockStates.RailDirection'=None):
+            self._rail_data_bit = rail_data_bit
+            self._rail_direction = rail_direction
+            super().__init__("activator_rail", True)
+
+    class Air(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("air", True)
+
+    class Allow(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("allow", True)
+
+    class AmethystBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("amethyst_block", True)
+
+    class AmethystCluster(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("amethyst_cluster", True)
+
+    class AncientDebris(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("ancient_debris", True)
+
+    class AndesiteStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("andesite_stairs", True)
+
+    class Anvil(_MinecraftBlock):
+        def __init__(self, damage:'BlockStates.Damage'=None, direction:'BlockStates.Direction'=None):
+            self._damage = damage
+            self._direction = direction
+            super().__init__("anvil", True)
+
+    class Azalea(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("azalea", True)
+
+    class AzaleaLeaves(_MinecraftBlock):
+        def __init__(self, persistent_bit:'BlockStates.PersistentBit'=None, update_bit:'BlockStates.UpdateBit'=None):
+            self._persistent_bit = persistent_bit
+            self._update_bit = update_bit
+            super().__init__("azalea_leaves", True)
+
+    class AzaleaLeavesFlowered(_MinecraftBlock):
+        def __init__(self, persistent_bit:'BlockStates.PersistentBit'=None, update_bit:'BlockStates.UpdateBit'=None):
+            self._persistent_bit = persistent_bit
+            self._update_bit = update_bit
+            super().__init__("azalea_leaves_flowered", True)
+
+    class Bamboo(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None, bamboo_leaf_size:'BlockStates.BambooLeafSize'=None, bamboo_stalk_thickness:'BlockStates.BambooStalkThickness'=None):
+            self._age_bit = age_bit
+            self._bamboo_leaf_size = bamboo_leaf_size
+            self._bamboo_stalk_thickness = bamboo_stalk_thickness
+            super().__init__("bamboo", True)
+
+    class BambooBlock(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("bamboo_block", True)
+
+    class BambooButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("bamboo_button", True)
+
+    class BambooDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("bamboo_door", True)
+
+    class BambooDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("bamboo_double_slab", True)
+
+    class BambooFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("bamboo_fence", True)
+
+    class BambooFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("bamboo_fence_gate", True)
+
+    class BambooHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("bamboo_hanging_sign", True)
+
+    class BambooMosaic(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("bamboo_mosaic", True)
+
+    class BambooMosaicDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("bamboo_mosaic_double_slab", True)
+
+    class BambooMosaicSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("bamboo_mosaic_slab", True)
+
+    class BambooMosaicStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("bamboo_mosaic_stairs", True)
+
+    class BambooPlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("bamboo_planks", True)
+
+    class BambooPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("bamboo_pressure_plate", True)
+
+    class BambooSapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None, sapling_type:'BlockStates.SaplingType'=None):
+            self._age_bit = age_bit
+            self._sapling_type = sapling_type
+            super().__init__("bamboo_sapling", True)
+
+    class BambooSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("bamboo_slab", True)
+
+    class BambooStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("bamboo_stairs", True)
+
+    class BambooStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("bamboo_standing_sign", True)
+
+    class BambooTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("bamboo_trapdoor", True)
+
+    class BambooWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("bamboo_wall_sign", True)
+
+    class Barrel(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._facing_direction = facing_direction
+            self._open_bit = open_bit
+            super().__init__("barrel", True)
+
+    class Barrier(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("barrier", True)
+
+    class Basalt(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("basalt", True)
+
+    class Beacon(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("beacon", True)
+
+    class Bed(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, head_piece_bit:'BlockStates.HeadPieceBit'=None, occupied_bit:'BlockStates.OccupiedBit'=None):
+            self._direction = direction
+            self._head_piece_bit = head_piece_bit
+            self._occupied_bit = occupied_bit
+            super().__init__("bed", True)
+
+    class Bedrock(_MinecraftBlock):
+        def __init__(self, infiniburn_bit:'BlockStates.InfiniburnBit'=None):
+            self._infiniburn_bit = infiniburn_bit
+            super().__init__("bedrock", True)
+
+    class Beehive(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, honey_level:'BlockStates.HoneyLevel'=None):
+            self._direction = direction
+            self._honey_level = honey_level
+            super().__init__("beehive", True)
+
+    class Beetroot(_MinecraftBlock):
+        def __init__(self, growth:'BlockStates.Growth'=None):
+            self._growth = growth
+            super().__init__("beetroot", True)
+
+    class BeeNest(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, honey_level:'BlockStates.HoneyLevel'=None):
+            self._direction = direction
+            self._honey_level = honey_level
+            super().__init__("bee_nest", True)
+
+    class Bell(_MinecraftBlock):
+        def __init__(self, attachment:'BlockStates.Attachment'=None, direction:'BlockStates.Direction'=None, toggle_bit:'BlockStates.ToggleBit'=None):
+            self._attachment = attachment
+            self._direction = direction
+            self._toggle_bit = toggle_bit
+            super().__init__("bell", True)
+
+    class BigDripleaf(_MinecraftBlock):
+        def __init__(self, big_dripleaf_head:'BlockStates.BigDripleafHead'=None, big_dripleaf_tilt:'BlockStates.BigDripleafTilt'=None, direction:'BlockStates.Direction'=None):
+            self._big_dripleaf_head = big_dripleaf_head
+            self._big_dripleaf_tilt = big_dripleaf_tilt
+            self._direction = direction
+            super().__init__("big_dripleaf", True)
+
+    class BirchButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("birch_button", True)
+
+    class BirchDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("birch_door", True)
+
+    class BirchFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("birch_fence", True)
+
+    class BirchFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("birch_fence_gate", True)
+
+    class BirchHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("birch_hanging_sign", True)
+
+    class BirchLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("birch_log", True)
+
+    class BirchPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("birch_pressure_plate", True)
+
+    class BirchStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("birch_stairs", True)
+
+    class BirchStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("birch_standing_sign", True)
+
+    class BirchTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("birch_trapdoor", True)
+
+    class BirchWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("birch_wall_sign", True)
+
+    class Blackstone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("blackstone", True)
+
+    class BlackstoneDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("blackstone_double_slab", True)
+
+    class BlackstoneSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("blackstone_slab", True)
+
+    class BlackstoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("blackstone_stairs", True)
+
+    class BlackstoneWall(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("blackstone_wall", True)
+
+    class BlackCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("black_candle", True)
+
+    class BlackCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("black_candle_cake", True)
+
+    class BlackCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("black_carpet", True)
+
+    class BlackGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("black_glazed_terracotta", True)
+
+    class BlackWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("black_wool", True)
+
+    class BlastFurnace(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("blast_furnace", True)
+
+    class BlueCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("blue_candle", True)
+
+    class BlueCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("blue_candle_cake", True)
+
+    class BlueCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("blue_carpet", True)
+
+    class BlueGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("blue_glazed_terracotta", True)
+
+    class BlueIce(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("blue_ice", True)
+
+    class BlueWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("blue_wool", True)
+
+    class BoneBlock(_MinecraftBlock):
+        def __init__(self, deprecated:'BlockStates.Deprecated'=None, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._deprecated = deprecated
+            self._pillar_axis = pillar_axis
+            super().__init__("bone_block", True)
+
+    class Bookshelf(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("bookshelf", True)
+
+    class BorderBlock(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("border_block", True)
+
+    class BrainCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("brain_coral", True)
+
+    class BrewingStand(_MinecraftBlock):
+        def __init__(self, brewing_stand_slot_a_bit:'BlockStates.BrewingStandSlotABit'=None, brewing_stand_slot_b_bit:'BlockStates.BrewingStandSlotBBit'=None, brewing_stand_slot_c_bit:'BlockStates.BrewingStandSlotCBit'=None):
+            self._brewing_stand_slot_a_bit = brewing_stand_slot_a_bit
+            self._brewing_stand_slot_b_bit = brewing_stand_slot_b_bit
+            self._brewing_stand_slot_c_bit = brewing_stand_slot_c_bit
+            super().__init__("brewing_stand", True)
+
+    class BrickBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("brick_block", True)
+
+    class BrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("brick_stairs", True)
+
+    class BrownCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("brown_candle", True)
+
+    class BrownCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("brown_candle_cake", True)
+
+    class BrownCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("brown_carpet", True)
+
+    class BrownGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("brown_glazed_terracotta", True)
+
+    class BrownMushroom(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("brown_mushroom", True)
+
+    class BrownMushroomBlock(_MinecraftBlock):
+        def __init__(self, huge_mushroom_bits:'BlockStates.HugeMushroomBits'=None):
+            self._huge_mushroom_bits = huge_mushroom_bits
+            super().__init__("brown_mushroom_block", True)
+
+    class BrownWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("brown_wool", True)
+
+    class BubbleColumn(_MinecraftBlock):
+        def __init__(self, drag_down:'BlockStates.DragDown'=None):
+            self._drag_down = drag_down
+            super().__init__("bubble_column", True)
+
+    class BubbleCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("bubble_coral", True)
+
+    class BuddingAmethyst(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("budding_amethyst", True)
+
+    class Cactus(_MinecraftBlock):
+        def __init__(self, age:'BlockStates.Age'=None):
+            self._age = age
+            super().__init__("cactus", True)
+
+    class Cake(_MinecraftBlock):
+        def __init__(self, bite_counter:'BlockStates.BiteCounter'=None):
+            self._bite_counter = bite_counter
+            super().__init__("cake", True)
+
+    class Calcite(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("calcite", True)
+
+    class CalibratedSculkSensor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, sculk_sensor_phase:'BlockStates.SculkSensorPhase'=None):
+            self._direction = direction
+            self._sculk_sensor_phase = sculk_sensor_phase
+            super().__init__("calibrated_sculk_sensor", True)
+
+    class Camera(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("camera", True)
+
+    class Campfire(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, extinguished:'BlockStates.Extinguished'=None):
+            self._direction = direction
+            self._extinguished = extinguished
+            super().__init__("campfire", True)
+
+    class Candle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("candle", True)
+
+    class CandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("candle_cake", True)
+
+    class Carrots(_MinecraftBlock):
+        def __init__(self, growth:'BlockStates.Growth'=None):
+            self._growth = growth
+            super().__init__("carrots", True)
+
+    class CartographyTable(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cartography_table", True)
+
+    class CarvedPumpkin(_MinecraftBlock):
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None):
+            self._cardinal_direction = cardinal_direction
+            super().__init__("carved_pumpkin", True)
+
+    class Cauldron(_MinecraftBlock):
+        def __init__(self, cauldron_liquid:'BlockStates.CauldronLiquid'=None, fill_level:'BlockStates.FillLevel'=None):
+            self._cauldron_liquid = cauldron_liquid
+            self._fill_level = fill_level
+            super().__init__("cauldron", True)
+
+    class CaveVines(_MinecraftBlock):
+        def __init__(self, growing_plant_age:'BlockStates.GrowingPlantAge'=None):
+            self._growing_plant_age = growing_plant_age
+            super().__init__("cave_vines", True)
+
+    class CaveVinesBodyWithBerries(_MinecraftBlock):
+        def __init__(self, growing_plant_age:'BlockStates.GrowingPlantAge'=None):
+            self._growing_plant_age = growing_plant_age
+            super().__init__("cave_vines_body_with_berries", True)
+
+    class CaveVinesHeadWithBerries(_MinecraftBlock):
+        def __init__(self, growing_plant_age:'BlockStates.GrowingPlantAge'=None):
+            self._growing_plant_age = growing_plant_age
+            super().__init__("cave_vines_head_with_berries", True)
+
+    class Chain(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("chain", True)
+
+    class ChainCommandBlock(_MinecraftBlock):
+        def __init__(self, conditional_bit:'BlockStates.ConditionalBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._conditional_bit = conditional_bit
+            self._facing_direction = facing_direction
+            super().__init__("chain_command_block", True)
+
+    class ChemicalHeat(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("chemical_heat", True)
+
+    class ChemistryTable(_MinecraftBlock):
+        def __init__(self, chemistry_table_type:'BlockStates.ChemistryTableType'=None, direction:'BlockStates.Direction'=None):
+            self._chemistry_table_type = chemistry_table_type
+            self._direction = direction
+            super().__init__("chemistry_table", True)
+
+    class CherryButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("cherry_button", True)
+
+    class CherryDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("cherry_door", True)
+
+    class CherryDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("cherry_double_slab", True)
+
+    class CherryFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cherry_fence", True)
+
+    class CherryFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("cherry_fence_gate", True)
+
+    class CherryHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("cherry_hanging_sign", True)
+
+    class CherryLeaves(_MinecraftBlock):
+        def __init__(self, persistent_bit:'BlockStates.PersistentBit'=None, update_bit:'BlockStates.UpdateBit'=None):
+            self._persistent_bit = persistent_bit
+            self._update_bit = update_bit
+            super().__init__("cherry_leaves", True)
+
+    class CherryLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("cherry_log", True)
+
+    class CherryPlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cherry_planks", True)
+
+    class CherryPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("cherry_pressure_plate", True)
+
+    class CherrySapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None):
+            self._age_bit = age_bit
+            super().__init__("cherry_sapling", True)
+
+    class CherrySlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("cherry_slab", True)
+
+    class CherryStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("cherry_stairs", True)
+
+    class CherryStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("cherry_standing_sign", True)
+
+    class CherryTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("cherry_trapdoor", True)
+
+    class CherryWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("cherry_wall_sign", True)
+
+    class CherryWood(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None, stripped_bit:'BlockStates.StrippedBit'=None):
+            self._pillar_axis = pillar_axis
+            self._stripped_bit = stripped_bit
+            super().__init__("cherry_wood", True)
+
+    class Chest(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("chest", True)
+
+    class ChiseledBookshelf(_MinecraftBlock):
+        def __init__(self, books_stored:'BlockStates.BooksStored'=None, direction:'BlockStates.Direction'=None):
+            self._books_stored = books_stored
+            self._direction = direction
+            super().__init__("chiseled_bookshelf", True)
+
+    class ChiseledDeepslate(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("chiseled_deepslate", True)
+
+    class ChiseledNetherBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("chiseled_nether_bricks", True)
+
+    class ChiseledPolishedBlackstone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("chiseled_polished_blackstone", True)
+
+    class ChorusFlower(_MinecraftBlock):
+        def __init__(self, age:'BlockStates.Age'=None):
+            self._age = age
+            super().__init__("chorus_flower", True)
+
+    class ChorusPlant(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("chorus_plant", True)
+
+    class Clay(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("clay", True)
+
+    class ClientRequestPlaceholderBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("client_request_placeholder_block", True)
+
+    class CoalBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("coal_block", True)
+
+    class CoalOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("coal_ore", True)
+
+    class CobbledDeepslate(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cobbled_deepslate", True)
+
+    class CobbledDeepslateDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("cobbled_deepslate_double_slab", True)
+
+    class CobbledDeepslateSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("cobbled_deepslate_slab", True)
+
+    class CobbledDeepslateStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("cobbled_deepslate_stairs", True)
+
+    class CobbledDeepslateWall(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("cobbled_deepslate_wall", True)
+
+    class Cobblestone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cobblestone", True)
+
+    class CobblestoneWall(_MinecraftBlock):
+        def __init__(self, wall_block_type:'BlockStates.WallBlockType'=None, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_block_type = wall_block_type
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("cobblestone_wall", True)
+
+    class Cocoa(_MinecraftBlock):
+        def __init__(self, age:'BlockStates.Age'=None, direction:'BlockStates.Direction'=None):
+            self._age = age
+            self._direction = direction
+            super().__init__("cocoa", True)
+
+    class ColoredTorchBp(_MinecraftBlock):
+        def __init__(self, color_bit:'BlockStates.ColorBit'=None, torch_facing_direction:'BlockStates.TorchFacingDirection'=None):
+            self._color_bit = color_bit
+            self._torch_facing_direction = torch_facing_direction
+            super().__init__("colored_torch_bp", True)
+
+    class ColoredTorchRg(_MinecraftBlock):
+        def __init__(self, color_bit:'BlockStates.ColorBit'=None, torch_facing_direction:'BlockStates.TorchFacingDirection'=None):
+            self._color_bit = color_bit
+            self._torch_facing_direction = torch_facing_direction
+            super().__init__("colored_torch_rg", True)
+
+    class CommandBlock(_MinecraftBlock):
+        def __init__(self, conditional_bit:'BlockStates.ConditionalBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._conditional_bit = conditional_bit
+            self._facing_direction = facing_direction
+            super().__init__("command_block", True)
+
+    class Composter(_MinecraftBlock):
+        def __init__(self, composter_fill_level:'BlockStates.ComposterFillLevel'=None):
+            self._composter_fill_level = composter_fill_level
+            super().__init__("composter", True)
+
+    class Concrete(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("concrete", True)
+
+    class Concretepowder(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("concretePowder", True)
+
+    class ConcretePowder(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("concrete_powder", True)
+
+    class Conduit(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("conduit", True)
+
+    class CopperBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("copper_block", True)
+
+    class CopperOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("copper_ore", True)
+
+    class CoralBlock(_MinecraftBlock):
+        def __init__(self, coral_color:'BlockStates.CoralColor'=None, dead_bit:'BlockStates.DeadBit'=None):
+            self._coral_color = coral_color
+            self._dead_bit = dead_bit
+            super().__init__("coral_block", True)
+
+    class CoralFan(_MinecraftBlock):
+        def __init__(self, coral_color:'BlockStates.CoralColor'=None, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_color = coral_color
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("coral_fan", True)
+
+    class CoralFanDead(_MinecraftBlock):
+        def __init__(self, coral_color:'BlockStates.CoralColor'=None, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_color = coral_color
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("coral_fan_dead", True)
+
+    class CoralFanHang(_MinecraftBlock):
+        def __init__(self, coral_direction:'BlockStates.CoralDirection'=None, coral_hang_type_bit:'BlockStates.CoralHangTypeBit'=None, dead_bit:'BlockStates.DeadBit'=None):
+            self._coral_direction = coral_direction
+            self._coral_hang_type_bit = coral_hang_type_bit
+            self._dead_bit = dead_bit
+            super().__init__("coral_fan_hang", True)
+
+    class CoralFanHang2(_MinecraftBlock):
+        def __init__(self, coral_direction:'BlockStates.CoralDirection'=None, coral_hang_type_bit:'BlockStates.CoralHangTypeBit'=None, dead_bit:'BlockStates.DeadBit'=None):
+            self._coral_direction = coral_direction
+            self._coral_hang_type_bit = coral_hang_type_bit
+            self._dead_bit = dead_bit
+            super().__init__("coral_fan_hang2", True)
+
+    class CoralFanHang3(_MinecraftBlock):
+        def __init__(self, coral_direction:'BlockStates.CoralDirection'=None, coral_hang_type_bit:'BlockStates.CoralHangTypeBit'=None, dead_bit:'BlockStates.DeadBit'=None):
+            self._coral_direction = coral_direction
+            self._coral_hang_type_bit = coral_hang_type_bit
+            self._dead_bit = dead_bit
+            super().__init__("coral_fan_hang3", True)
+
+    class CrackedDeepslateBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cracked_deepslate_bricks", True)
+
+    class CrackedDeepslateTiles(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cracked_deepslate_tiles", True)
+
+    class CrackedNetherBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cracked_nether_bricks", True)
+
+    class CrackedPolishedBlackstoneBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cracked_polished_blackstone_bricks", True)
+
+    class CraftingTable(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("crafting_table", True)
+
+    class CrimsonButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("crimson_button", True)
+
+    class CrimsonDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("crimson_door", True)
+
+    class CrimsonDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("crimson_double_slab", True)
+
+    class CrimsonFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("crimson_fence", True)
+
+    class CrimsonFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("crimson_fence_gate", True)
+
+    class CrimsonFungus(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("crimson_fungus", True)
+
+    class CrimsonHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("crimson_hanging_sign", True)
+
+    class CrimsonHyphae(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("crimson_hyphae", True)
+
+    class CrimsonNylium(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("crimson_nylium", True)
+
+    class CrimsonPlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("crimson_planks", True)
+
+    class CrimsonPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("crimson_pressure_plate", True)
+
+    class CrimsonRoots(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("crimson_roots", True)
+
+    class CrimsonSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("crimson_slab", True)
+
+    class CrimsonStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("crimson_stairs", True)
+
+    class CrimsonStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("crimson_standing_sign", True)
+
+    class CrimsonStem(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("crimson_stem", True)
+
+    class CrimsonTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("crimson_trapdoor", True)
+
+    class CrimsonWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("crimson_wall_sign", True)
+
+    class CryingObsidian(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("crying_obsidian", True)
+
+    class CutCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cut_copper", True)
+
+    class CutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("cut_copper_slab", True)
+
+    class CutCopperStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("cut_copper_stairs", True)
+
+    class CyanCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("cyan_candle", True)
+
+    class CyanCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("cyan_candle_cake", True)
+
+    class CyanCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cyan_carpet", True)
+
+    class CyanGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("cyan_glazed_terracotta", True)
+
+    class CyanWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("cyan_wool", True)
+
+    class DarkoakStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("darkoak_standing_sign", True)
+
+    class DarkoakWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("darkoak_wall_sign", True)
+
+    class DarkOakButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("dark_oak_button", True)
+
+    class DarkOakDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("dark_oak_door", True)
+
+    class DarkOakFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dark_oak_fence", True)
+
+    class DarkOakFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("dark_oak_fence_gate", True)
+
+    class DarkOakHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("dark_oak_hanging_sign", True)
+
+    class DarkOakLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("dark_oak_log", True)
+
+    class DarkOakPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("dark_oak_pressure_plate", True)
+
+    class DarkOakStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("dark_oak_stairs", True)
+
+    class DarkOakTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("dark_oak_trapdoor", True)
+
+    class DarkPrismarineStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("dark_prismarine_stairs", True)
+
+    class DaylightDetector(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("daylight_detector", True)
+
+    class DaylightDetectorInverted(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("daylight_detector_inverted", True)
+
+    class Deadbush(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deadbush", True)
+
+    class DeadBrainCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dead_brain_coral", True)
+
+    class DeadBubbleCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dead_bubble_coral", True)
+
+    class DeadFireCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dead_fire_coral", True)
+
+    class DeadHornCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dead_horn_coral", True)
+
+    class DeadTubeCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dead_tube_coral", True)
+
+    class DecoratedPot(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None):
+            self._direction = direction
+            super().__init__("decorated_pot", True)
+
+    class Deepslate(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("deepslate", True)
+
+    class DeepslateBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_bricks", True)
+
+    class DeepslateBrickDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("deepslate_brick_double_slab", True)
+
+    class DeepslateBrickSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("deepslate_brick_slab", True)
+
+    class DeepslateBrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("deepslate_brick_stairs", True)
+
+    class DeepslateBrickWall(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("deepslate_brick_wall", True)
+
+    class DeepslateCoalOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_coal_ore", True)
+
+    class DeepslateCopperOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_copper_ore", True)
+
+    class DeepslateDiamondOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_diamond_ore", True)
+
+    class DeepslateEmeraldOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_emerald_ore", True)
+
+    class DeepslateGoldOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_gold_ore", True)
+
+    class DeepslateIronOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_iron_ore", True)
+
+    class DeepslateLapisOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_lapis_ore", True)
+
+    class DeepslateRedstoneOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_redstone_ore", True)
+
+    class DeepslateTiles(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deepslate_tiles", True)
+
+    class DeepslateTileDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("deepslate_tile_double_slab", True)
+
+    class DeepslateTileSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("deepslate_tile_slab", True)
+
+    class DeepslateTileStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("deepslate_tile_stairs", True)
+
+    class DeepslateTileWall(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("deepslate_tile_wall", True)
+
+    class Deny(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("deny", True)
+
+    class DetectorRail(_MinecraftBlock):
+        def __init__(self, rail_data_bit:'BlockStates.RailDataBit'=None, rail_direction:'BlockStates.RailDirection'=None):
+            self._rail_data_bit = rail_data_bit
+            self._rail_direction = rail_direction
+            super().__init__("detector_rail", True)
+
+    class DiamondBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("diamond_block", True)
+
+    class DiamondOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("diamond_ore", True)
+
+    class DioriteStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("diorite_stairs", True)
+
+    class Dirt(_MinecraftBlock):
+        def __init__(self, dirt_type:'BlockStates.DirtType'=None):
+            self._dirt_type = dirt_type
+            super().__init__("dirt", True)
+
+    class DirtWithRoots(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dirt_with_roots", True)
+
+    class Dispenser(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, triggered_bit:'BlockStates.TriggeredBit'=None):
+            self._facing_direction = facing_direction
+            self._triggered_bit = triggered_bit
+            super().__init__("dispenser", True)
+
+    class DoubleCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("double_cut_copper_slab", True)
+
+    class DoublePlant(_MinecraftBlock):
+        def __init__(self, double_plant_type:'BlockStates.DoublePlantType'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._double_plant_type = double_plant_type
+            self._upper_block_bit = upper_block_bit
+            super().__init__("double_plant", True)
+
+    class DoubleStoneBlockSlab(_MinecraftBlock):
+        def __init__(self, stone_slab_type:'BlockStates.StoneSlabType'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._stone_slab_type = stone_slab_type
+            self._top_slot_bit = top_slot_bit
+            super().__init__("double_stone_block_slab", True)
+
+    class DoubleStoneBlockSlab2(_MinecraftBlock):
+        def __init__(self, stone_slab_type_2:'BlockStates.StoneSlabType2'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._stone_slab_type_2 = stone_slab_type_2
+            self._top_slot_bit = top_slot_bit
+            super().__init__("double_stone_block_slab2", True)
+
+    class DoubleStoneBlockSlab3(_MinecraftBlock):
+        def __init__(self, stone_slab_type_3:'BlockStates.StoneSlabType3'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._stone_slab_type_3 = stone_slab_type_3
+            self._top_slot_bit = top_slot_bit
+            super().__init__("double_stone_block_slab3", True)
+
+    class DoubleStoneBlockSlab4(_MinecraftBlock):
+        def __init__(self, stone_slab_type_4:'BlockStates.StoneSlabType4'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._stone_slab_type_4 = stone_slab_type_4
+            self._top_slot_bit = top_slot_bit
+            super().__init__("double_stone_block_slab4", True)
+
+    class DoubleWoodenSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None, wood_type:'BlockStates.WoodType'=None):
+            self._top_slot_bit = top_slot_bit
+            self._wood_type = wood_type
+            super().__init__("double_wooden_slab", True)
+
+    class DragonEgg(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dragon_egg", True)
+
+    class DriedKelpBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dried_kelp_block", True)
+
+    class DripstoneBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dripstone_block", True)
+
+    class Dropper(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, triggered_bit:'BlockStates.TriggeredBit'=None):
+            self._facing_direction = facing_direction
+            self._triggered_bit = triggered_bit
+            super().__init__("dropper", True)
+
+    class Element0(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_0", True)
+
+    class Element1(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_1", True)
+
+    class Element10(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_10", True)
+
+    class Element100(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_100", True)
+
+    class Element101(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_101", True)
+
+    class Element102(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_102", True)
+
+    class Element103(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_103", True)
+
+    class Element104(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_104", True)
+
+    class Element105(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_105", True)
+
+    class Element106(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_106", True)
+
+    class Element107(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_107", True)
+
+    class Element108(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_108", True)
+
+    class Element109(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_109", True)
+
+    class Element11(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_11", True)
+
+    class Element110(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_110", True)
+
+    class Element111(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_111", True)
+
+    class Element112(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_112", True)
+
+    class Element113(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_113", True)
+
+    class Element114(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_114", True)
+
+    class Element115(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_115", True)
+
+    class Element116(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_116", True)
+
+    class Element117(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_117", True)
+
+    class Element118(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_118", True)
+
+    class Element12(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_12", True)
+
+    class Element13(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_13", True)
+
+    class Element14(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_14", True)
+
+    class Element15(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_15", True)
+
+    class Element16(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_16", True)
+
+    class Element17(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_17", True)
+
+    class Element18(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_18", True)
+
+    class Element19(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_19", True)
+
+    class Element2(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_2", True)
+
+    class Element20(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_20", True)
+
+    class Element21(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_21", True)
+
+    class Element22(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_22", True)
+
+    class Element23(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_23", True)
+
+    class Element24(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_24", True)
+
+    class Element25(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_25", True)
+
+    class Element26(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_26", True)
+
+    class Element27(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_27", True)
+
+    class Element28(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_28", True)
+
+    class Element29(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_29", True)
+
+    class Element3(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_3", True)
+
+    class Element30(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_30", True)
+
+    class Element31(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_31", True)
+
+    class Element32(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_32", True)
+
+    class Element33(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_33", True)
+
+    class Element34(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_34", True)
+
+    class Element35(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_35", True)
+
+    class Element36(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_36", True)
+
+    class Element37(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_37", True)
+
+    class Element38(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_38", True)
+
+    class Element39(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_39", True)
+
+    class Element4(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_4", True)
+
+    class Element40(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_40", True)
+
+    class Element41(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_41", True)
+
+    class Element42(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_42", True)
+
+    class Element43(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_43", True)
+
+    class Element44(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_44", True)
+
+    class Element45(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_45", True)
+
+    class Element46(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_46", True)
+
+    class Element47(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_47", True)
+
+    class Element48(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_48", True)
+
+    class Element49(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_49", True)
+
+    class Element5(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_5", True)
+
+    class Element50(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_50", True)
+
+    class Element51(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_51", True)
+
+    class Element52(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_52", True)
+
+    class Element53(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_53", True)
+
+    class Element54(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_54", True)
+
+    class Element55(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_55", True)
+
+    class Element56(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_56", True)
+
+    class Element57(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_57", True)
+
+    class Element58(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_58", True)
+
+    class Element59(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_59", True)
+
+    class Element6(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_6", True)
+
+    class Element60(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_60", True)
+
+    class Element61(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_61", True)
+
+    class Element62(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_62", True)
+
+    class Element63(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_63", True)
+
+    class Element64(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_64", True)
+
+    class Element65(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_65", True)
+
+    class Element66(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_66", True)
+
+    class Element67(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_67", True)
+
+    class Element68(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_68", True)
+
+    class Element69(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_69", True)
+
+    class Element7(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_7", True)
+
+    class Element70(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_70", True)
+
+    class Element71(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_71", True)
+
+    class Element72(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_72", True)
+
+    class Element73(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_73", True)
+
+    class Element74(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_74", True)
+
+    class Element75(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_75", True)
+
+    class Element76(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_76", True)
+
+    class Element77(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_77", True)
+
+    class Element78(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_78", True)
+
+    class Element79(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_79", True)
+
+    class Element8(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_8", True)
+
+    class Element80(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_80", True)
+
+    class Element81(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_81", True)
+
+    class Element82(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_82", True)
+
+    class Element83(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_83", True)
+
+    class Element84(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_84", True)
+
+    class Element85(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_85", True)
+
+    class Element86(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_86", True)
+
+    class Element87(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_87", True)
+
+    class Element88(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_88", True)
+
+    class Element89(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_89", True)
+
+    class Element9(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_9", True)
+
+    class Element90(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_90", True)
+
+    class Element91(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_91", True)
+
+    class Element92(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_92", True)
+
+    class Element93(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_93", True)
+
+    class Element94(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_94", True)
+
+    class Element95(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_95", True)
+
+    class Element96(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_96", True)
+
+    class Element97(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_97", True)
+
+    class Element98(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_98", True)
+
+    class Element99(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("element_99", True)
+
+    class EmeraldBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("emerald_block", True)
+
+    class EmeraldOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("emerald_ore", True)
+
+    class EnchantingTable(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("enchanting_table", True)
+
+    class EnderChest(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("ender_chest", True)
+
+    class EndBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("end_bricks", True)
+
+    class EndBrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("end_brick_stairs", True)
+
+    class EndGateway(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("end_gateway", True)
+
+    class EndPortal(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("end_portal", True)
+
+    class EndPortalFrame(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, end_portal_eye_bit:'BlockStates.EndPortalEyeBit'=None):
+            self._direction = direction
+            self._end_portal_eye_bit = end_portal_eye_bit
+            super().__init__("end_portal_frame", True)
+
+    class EndRod(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("end_rod", True)
+
+    class EndStone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("end_stone", True)
+
+    class ExposedCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("exposed_copper", True)
+
+    class ExposedCutCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("exposed_cut_copper", True)
+
+    class ExposedCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("exposed_cut_copper_slab", True)
+
+    class ExposedCutCopperStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("exposed_cut_copper_stairs", True)
+
+    class ExposedDoubleCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("exposed_double_cut_copper_slab", True)
+
+    class Farmland(_MinecraftBlock):
+        def __init__(self, moisturized_amount:'BlockStates.MoisturizedAmount'=None):
+            self._moisturized_amount = moisturized_amount
+            super().__init__("farmland", True)
+
+    class FenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("fence_gate", True)
+
+    class Fire(_MinecraftBlock):
+        def __init__(self, age:'BlockStates.Age'=None):
+            self._age = age
+            super().__init__("fire", True)
+
+    class FireCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("fire_coral", True)
+
+    class FletchingTable(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("fletching_table", True)
+
+    class FloweringAzalea(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("flowering_azalea", True)
+
+    class FlowerPot(_MinecraftBlock):
+        def __init__(self, update_bit:'BlockStates.UpdateBit'=None):
+            self._update_bit = update_bit
+            super().__init__("flower_pot", True)
+
+    class FlowingLava(_MinecraftBlock):
+        def __init__(self, liquid_depth:'BlockStates.LiquidDepth'=None):
+            self._liquid_depth = liquid_depth
+            super().__init__("flowing_lava", True)
+
+    class FlowingWater(_MinecraftBlock):
+        def __init__(self, liquid_depth:'BlockStates.LiquidDepth'=None):
+            self._liquid_depth = liquid_depth
+            super().__init__("flowing_water", True)
+
+    class Frame(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, item_frame_map_bit:'BlockStates.ItemFrameMapBit'=None, item_frame_photo_bit:'BlockStates.ItemFramePhotoBit'=None):
+            self._facing_direction = facing_direction
+            self._item_frame_map_bit = item_frame_map_bit
+            self._item_frame_photo_bit = item_frame_photo_bit
+            super().__init__("frame", True)
+
+    class FrogSpawn(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("frog_spawn", True)
+
+    class FrostedIce(_MinecraftBlock):
+        def __init__(self, age:'BlockStates.Age'=None):
+            self._age = age
+            super().__init__("frosted_ice", True)
+
+    class Furnace(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("furnace", True)
+
+    class GildedBlackstone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("gilded_blackstone", True)
+
+    class Glass(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("glass", True)
+
+    class GlassPane(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("glass_pane", True)
+
+    class Glowingobsidian(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("glowingobsidian", True)
+
+    class Glowstone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("glowstone", True)
+
+    class GlowFrame(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, item_frame_map_bit:'BlockStates.ItemFrameMapBit'=None, item_frame_photo_bit:'BlockStates.ItemFramePhotoBit'=None):
+            self._facing_direction = facing_direction
+            self._item_frame_map_bit = item_frame_map_bit
+            self._item_frame_photo_bit = item_frame_photo_bit
+            super().__init__("glow_frame", True)
+
+    class GlowLichen(_MinecraftBlock):
+        def __init__(self, multi_face_direction_bits:'BlockStates.MultiFaceDirectionBits'=None):
+            self._multi_face_direction_bits = multi_face_direction_bits
+            super().__init__("glow_lichen", True)
+
+    class GoldenRail(_MinecraftBlock):
+        def __init__(self, rail_data_bit:'BlockStates.RailDataBit'=None, rail_direction:'BlockStates.RailDirection'=None):
+            self._rail_data_bit = rail_data_bit
+            self._rail_direction = rail_direction
+            super().__init__("golden_rail", True)
+
+    class GoldBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("gold_block", True)
+
+    class GoldOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("gold_ore", True)
+
+    class GraniteStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("granite_stairs", True)
+
+    class Grass(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("grass", True)
+
+    class GrassPath(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("grass_path", True)
+
+    class Gravel(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("gravel", True)
+
+    class GrayCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("gray_candle", True)
+
+    class GrayCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("gray_candle_cake", True)
+
+    class GrayCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("gray_carpet", True)
+
+    class GrayGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("gray_glazed_terracotta", True)
+
+    class GrayWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("gray_wool", True)
+
+    class GreenCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("green_candle", True)
+
+    class GreenCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("green_candle_cake", True)
+
+    class GreenCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("green_carpet", True)
+
+    class GreenGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("green_glazed_terracotta", True)
+
+    class GreenWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("green_wool", True)
+
+    class Grindstone(_MinecraftBlock):
+        def __init__(self, attachment:'BlockStates.Attachment'=None, direction:'BlockStates.Direction'=None):
+            self._attachment = attachment
+            self._direction = direction
+            super().__init__("grindstone", True)
+
+    class HangingRoots(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("hanging_roots", True)
+
+    class HardenedClay(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("hardened_clay", True)
+
+    class HardGlass(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("hard_glass", True)
+
+    class HardGlassPane(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("hard_glass_pane", True)
+
+    class HardStainedGlass(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("hard_stained_glass", True)
+
+    class HardStainedGlassPane(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("hard_stained_glass_pane", True)
+
+    class HayBlock(_MinecraftBlock):
+        def __init__(self, deprecated:'BlockStates.Deprecated'=None, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._deprecated = deprecated
+            self._pillar_axis = pillar_axis
+            super().__init__("hay_block", True)
+
+    class HeavyWeightedPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("heavy_weighted_pressure_plate", True)
+
+    class HoneycombBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("honeycomb_block", True)
+
+    class HoneyBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("honey_block", True)
+
+    class Hopper(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, toggle_bit:'BlockStates.ToggleBit'=None):
+            self._facing_direction = facing_direction
+            self._toggle_bit = toggle_bit
+            super().__init__("hopper", True)
+
+    class HornCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("horn_coral", True)
+
+    class Ice(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("ice", True)
+
+    class InfestedDeepslate(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("infested_deepslate", True)
+
+    class InfoUpdate(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("info_update", True)
+
+    class InfoUpdate2(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("info_update2", True)
+
+    class InvisibleBedrock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("invisible_bedrock", True)
+
+    class IronBars(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("iron_bars", True)
+
+    class IronBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("iron_block", True)
+
+    class IronDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("iron_door", True)
+
+    class IronOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("iron_ore", True)
+
+    class IronTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("iron_trapdoor", True)
+
+    class Jigsaw(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, rotation:'BlockStates.Rotation'=None):
+            self._facing_direction = facing_direction
+            self._rotation = rotation
+            super().__init__("jigsaw", True)
+
+    class Jukebox(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("jukebox", True)
+
+    class JungleButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("jungle_button", True)
+
+    class JungleDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("jungle_door", True)
+
+    class JungleFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("jungle_fence", True)
+
+    class JungleFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("jungle_fence_gate", True)
+
+    class JungleHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("jungle_hanging_sign", True)
+
+    class JungleLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("jungle_log", True)
+
+    class JunglePressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("jungle_pressure_plate", True)
+
+    class JungleStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("jungle_stairs", True)
+
+    class JungleStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("jungle_standing_sign", True)
+
+    class JungleTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("jungle_trapdoor", True)
+
+    class JungleWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("jungle_wall_sign", True)
+
+    class Kelp(_MinecraftBlock):
+        def __init__(self, kelp_age:'BlockStates.KelpAge'=None):
+            self._kelp_age = kelp_age
+            super().__init__("kelp", True)
+
+    class Ladder(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("ladder", True)
+
+    class Lantern(_MinecraftBlock):
+        def __init__(self, hanging:'BlockStates.Hanging'=None):
+            self._hanging = hanging
+            super().__init__("lantern", True)
+
+    class LapisBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("lapis_block", True)
+
+    class LapisOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("lapis_ore", True)
+
+    class LargeAmethystBud(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("large_amethyst_bud", True)
+
+    class Lava(_MinecraftBlock):
+        def __init__(self, liquid_depth:'BlockStates.LiquidDepth'=None):
+            self._liquid_depth = liquid_depth
+            super().__init__("lava", True)
+
+    class Leaves(_MinecraftBlock):
+        def __init__(self, old_leaf_type:'BlockStates.OldLeafType'=None, persistent_bit:'BlockStates.PersistentBit'=None, update_bit:'BlockStates.UpdateBit'=None):
+            self._old_leaf_type = old_leaf_type
+            self._persistent_bit = persistent_bit
+            self._update_bit = update_bit
+            super().__init__("leaves", True)
+
+    class Leaves2(_MinecraftBlock):
+        def __init__(self, new_leaf_type:'BlockStates.NewLeafType'=None, persistent_bit:'BlockStates.PersistentBit'=None, update_bit:'BlockStates.UpdateBit'=None):
+            self._new_leaf_type = new_leaf_type
+            self._persistent_bit = persistent_bit
+            self._update_bit = update_bit
+            super().__init__("leaves2", True)
+
+    class Lectern(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, powered_bit:'BlockStates.PoweredBit'=None):
+            self._direction = direction
+            self._powered_bit = powered_bit
+            super().__init__("lectern", True)
+
+    class Lever(_MinecraftBlock):
+        def __init__(self, lever_direction:'BlockStates.LeverDirection'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._lever_direction = lever_direction
+            self._open_bit = open_bit
+            super().__init__("lever", True)
+
+    class LightningRod(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("lightning_rod", True)
+
+    class LightBlock(_MinecraftBlock):
+        def __init__(self, block_light_level:'BlockStates.BlockLightLevel'=None):
+            self._block_light_level = block_light_level
+            super().__init__("light_block", True)
+
+    class LightBlueCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("light_blue_candle", True)
+
+    class LightBlueCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("light_blue_candle_cake", True)
+
+    class LightBlueCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("light_blue_carpet", True)
+
+    class LightBlueGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("light_blue_glazed_terracotta", True)
+
+    class LightBlueWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("light_blue_wool", True)
+
+    class LightGrayCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("light_gray_candle", True)
+
+    class LightGrayCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("light_gray_candle_cake", True)
+
+    class LightGrayCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("light_gray_carpet", True)
+
+    class LightGrayWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("light_gray_wool", True)
+
+    class LightWeightedPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("light_weighted_pressure_plate", True)
+
+    class LimeCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("lime_candle", True)
+
+    class LimeCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("lime_candle_cake", True)
+
+    class LimeCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("lime_carpet", True)
+
+    class LimeGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("lime_glazed_terracotta", True)
+
+    class LimeWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("lime_wool", True)
+
+    class LitBlastFurnace(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("lit_blast_furnace", True)
+
+    class LitDeepslateRedstoneOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("lit_deepslate_redstone_ore", True)
+
+    class LitFurnace(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("lit_furnace", True)
+
+    class LitPumpkin(_MinecraftBlock):
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None):
+            self._cardinal_direction = cardinal_direction
+            super().__init__("lit_pumpkin", True)
+
+    class LitRedstoneLamp(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("lit_redstone_lamp", True)
+
+    class LitRedstoneOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("lit_redstone_ore", True)
+
+    class LitSmoker(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("lit_smoker", True)
+
+    class Lodestone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("lodestone", True)
+
+    class Loom(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None):
+            self._direction = direction
+            super().__init__("loom", True)
+
+    class MagentaCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("magenta_candle", True)
+
+    class MagentaCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("magenta_candle_cake", True)
+
+    class MagentaCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("magenta_carpet", True)
+
+    class MagentaGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("magenta_glazed_terracotta", True)
+
+    class MagentaWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("magenta_wool", True)
+
+    class Magma(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("magma", True)
+
+    class MangroveButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("mangrove_button", True)
+
+    class MangroveDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("mangrove_door", True)
+
+    class MangroveDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("mangrove_double_slab", True)
+
+    class MangroveFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("mangrove_fence", True)
+
+    class MangroveFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("mangrove_fence_gate", True)
+
+    class MangroveHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("mangrove_hanging_sign", True)
+
+    class MangroveLeaves(_MinecraftBlock):
+        def __init__(self, persistent_bit:'BlockStates.PersistentBit'=None, update_bit:'BlockStates.UpdateBit'=None):
+            self._persistent_bit = persistent_bit
+            self._update_bit = update_bit
+            super().__init__("mangrove_leaves", True)
+
+    class MangroveLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("mangrove_log", True)
+
+    class MangrovePlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("mangrove_planks", True)
+
+    class MangrovePressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("mangrove_pressure_plate", True)
+
+    class MangrovePropagule(_MinecraftBlock):
+        def __init__(self, hanging:'BlockStates.Hanging'=None, propagule_stage:'BlockStates.PropaguleStage'=None):
+            self._hanging = hanging
+            self._propagule_stage = propagule_stage
+            super().__init__("mangrove_propagule", True)
+
+    class MangroveRoots(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("mangrove_roots", True)
+
+    class MangroveSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("mangrove_slab", True)
+
+    class MangroveStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("mangrove_stairs", True)
+
+    class MangroveStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("mangrove_standing_sign", True)
+
+    class MangroveTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("mangrove_trapdoor", True)
+
+    class MangroveWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("mangrove_wall_sign", True)
+
+    class MangroveWood(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None, stripped_bit:'BlockStates.StrippedBit'=None):
+            self._pillar_axis = pillar_axis
+            self._stripped_bit = stripped_bit
+            super().__init__("mangrove_wood", True)
+
+    class MediumAmethystBud(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("medium_amethyst_bud", True)
+
+    class MelonBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("melon_block", True)
+
+    class MelonStem(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, growth:'BlockStates.Growth'=None):
+            self._facing_direction = facing_direction
+            self._growth = growth
+            super().__init__("melon_stem", True)
+
+    class MobSpawner(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("mob_spawner", True)
+
+    class MonsterEgg(_MinecraftBlock):
+        def __init__(self, monster_egg_stone_type:'BlockStates.MonsterEggStoneType'=None):
+            self._monster_egg_stone_type = monster_egg_stone_type
+            super().__init__("monster_egg", True)
+
+    class MossyCobblestone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("mossy_cobblestone", True)
+
+    class MossyCobblestoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("mossy_cobblestone_stairs", True)
+
+    class MossyStoneBrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("mossy_stone_brick_stairs", True)
+
+    class MossBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("moss_block", True)
+
+    class MossCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("moss_carpet", True)
+
+    class MovingBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("moving_block", True)
+
+    class Mud(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("mud", True)
+
+    class MuddyMangroveRoots(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("muddy_mangrove_roots", True)
+
+    class MudBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("mud_bricks", True)
+
+    class MudBrickDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("mud_brick_double_slab", True)
+
+    class MudBrickSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("mud_brick_slab", True)
+
+    class MudBrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("mud_brick_stairs", True)
+
+    class MudBrickWall(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("mud_brick_wall", True)
+
+    class Mycelium(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("mycelium", True)
+
+    class NetheriteBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("netherite_block", True)
+
+    class Netherrack(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("netherrack", True)
+
+    class Netherreactor(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("netherreactor", True)
+
+    class NetherBrick(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("nether_brick", True)
+
+    class NetherBrickFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("nether_brick_fence", True)
+
+    class NetherBrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("nether_brick_stairs", True)
+
+    class NetherGoldOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("nether_gold_ore", True)
+
+    class NetherSprouts(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("nether_sprouts", True)
+
+    class NetherWart(_MinecraftBlock):
+        def __init__(self, age:'BlockStates.Age'=None):
+            self._age = age
+            super().__init__("nether_wart", True)
+
+    class NetherWartBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("nether_wart_block", True)
+
+    class NormalStoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("normal_stone_stairs", True)
+
+    class Noteblock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("noteblock", True)
+
+    class OakFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("oak_fence", True)
+
+    class OakHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("oak_hanging_sign", True)
+
+    class OakLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("oak_log", True)
+
+    class OakStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("oak_stairs", True)
+
+    class Observer(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, powered_bit:'BlockStates.PoweredBit'=None):
+            self._facing_direction = facing_direction
+            self._powered_bit = powered_bit
+            super().__init__("observer", True)
+
+    class Obsidian(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("obsidian", True)
+
+    class OchreFroglight(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("ochre_froglight", True)
+
+    class OrangeCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("orange_candle", True)
+
+    class OrangeCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("orange_candle_cake", True)
+
+    class OrangeCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("orange_carpet", True)
+
+    class OrangeGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("orange_glazed_terracotta", True)
+
+    class OrangeWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("orange_wool", True)
+
+    class OxidizedCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("oxidized_copper", True)
+
+    class OxidizedCutCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("oxidized_cut_copper", True)
+
+    class OxidizedCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("oxidized_cut_copper_slab", True)
+
+    class OxidizedCutCopperStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("oxidized_cut_copper_stairs", True)
+
+    class OxidizedDoubleCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("oxidized_double_cut_copper_slab", True)
+
+    class PackedIce(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("packed_ice", True)
+
+    class PackedMud(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("packed_mud", True)
+
+    class PearlescentFroglight(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("pearlescent_froglight", True)
+
+    class PinkCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("pink_candle", True)
+
+    class PinkCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("pink_candle_cake", True)
+
+    class PinkCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("pink_carpet", True)
+
+    class PinkGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("pink_glazed_terracotta", True)
+
+    class PinkPetals(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, growth:'BlockStates.Growth'=None):
+            self._direction = direction
+            self._growth = growth
+            super().__init__("pink_petals", True)
+
+    class PinkWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("pink_wool", True)
+
+    class Piston(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("piston", True)
+
+    class Pistonarmcollision(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("pistonArmCollision", True)
+
+    class PistonArmCollision(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("piston_arm_collision", True)
+
+    class PitcherCrop(_MinecraftBlock):
+        def __init__(self, growth:'BlockStates.Growth'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._growth = growth
+            self._upper_block_bit = upper_block_bit
+            super().__init__("pitcher_crop", True)
+
+    class PitcherPlant(_MinecraftBlock):
+        def __init__(self, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._upper_block_bit = upper_block_bit
+            super().__init__("pitcher_plant", True)
+
+    class Planks(_MinecraftBlock):
+        def __init__(self, wood_type:'BlockStates.WoodType'=None):
+            self._wood_type = wood_type
+            super().__init__("planks", True)
+
+    class Podzol(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("podzol", True)
+
+    class PointedDripstone(_MinecraftBlock):
+        def __init__(self, dripstone_thickness:'BlockStates.DripstoneThickness'=None, hanging:'BlockStates.Hanging'=None):
+            self._dripstone_thickness = dripstone_thickness
+            self._hanging = hanging
+            super().__init__("pointed_dripstone", True)
+
+    class PolishedAndesiteStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("polished_andesite_stairs", True)
+
+    class PolishedBasalt(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("polished_basalt", True)
+
+    class PolishedBlackstone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("polished_blackstone", True)
+
+    class PolishedBlackstoneBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("polished_blackstone_bricks", True)
+
+    class PolishedBlackstoneBrickDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("polished_blackstone_brick_double_slab", True)
+
+    class PolishedBlackstoneBrickSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("polished_blackstone_brick_slab", True)
+
+    class PolishedBlackstoneBrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("polished_blackstone_brick_stairs", True)
+
+    class PolishedBlackstoneBrickWall(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("polished_blackstone_brick_wall", True)
+
+    class PolishedBlackstoneButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("polished_blackstone_button", True)
+
+    class PolishedBlackstoneDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("polished_blackstone_double_slab", True)
+
+    class PolishedBlackstonePressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("polished_blackstone_pressure_plate", True)
+
+    class PolishedBlackstoneSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("polished_blackstone_slab", True)
+
+    class PolishedBlackstoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("polished_blackstone_stairs", True)
+
+    class PolishedBlackstoneWall(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("polished_blackstone_wall", True)
+
+    class PolishedDeepslate(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("polished_deepslate", True)
+
+    class PolishedDeepslateDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("polished_deepslate_double_slab", True)
+
+    class PolishedDeepslateSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("polished_deepslate_slab", True)
+
+    class PolishedDeepslateStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("polished_deepslate_stairs", True)
+
+    class PolishedDeepslateWall(_MinecraftBlock):
+        def __init__(self, wall_connection_type_east:'BlockStates.WallConnectionTypeEast'=None, wall_connection_type_north:'BlockStates.WallConnectionTypeNorth'=None, wall_connection_type_south:'BlockStates.WallConnectionTypeSouth'=None, wall_connection_type_west:'BlockStates.WallConnectionTypeWest'=None, wall_post_bit:'BlockStates.WallPostBit'=None):
+            self._wall_connection_type_east = wall_connection_type_east
+            self._wall_connection_type_north = wall_connection_type_north
+            self._wall_connection_type_south = wall_connection_type_south
+            self._wall_connection_type_west = wall_connection_type_west
+            self._wall_post_bit = wall_post_bit
+            super().__init__("polished_deepslate_wall", True)
+
+    class PolishedDioriteStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("polished_diorite_stairs", True)
+
+    class PolishedGraniteStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("polished_granite_stairs", True)
+
+    class Portal(_MinecraftBlock):
+        def __init__(self, portal_axis:'BlockStates.PortalAxis'=None):
+            self._portal_axis = portal_axis
+            super().__init__("portal", True)
+
+    class Potatoes(_MinecraftBlock):
+        def __init__(self, growth:'BlockStates.Growth'=None):
+            self._growth = growth
+            super().__init__("potatoes", True)
+
+    class PowderSnow(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("powder_snow", True)
+
+    class PoweredComparator(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, output_lit_bit:'BlockStates.OutputLitBit'=None, output_subtract_bit:'BlockStates.OutputSubtractBit'=None):
+            self._direction = direction
+            self._output_lit_bit = output_lit_bit
+            self._output_subtract_bit = output_subtract_bit
+            super().__init__("powered_comparator", True)
+
+    class PoweredRepeater(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, repeater_delay:'BlockStates.RepeaterDelay'=None):
+            self._direction = direction
+            self._repeater_delay = repeater_delay
+            super().__init__("powered_repeater", True)
+
+    class Prismarine(_MinecraftBlock):
+        def __init__(self, prismarine_block_type:'BlockStates.PrismarineBlockType'=None):
+            self._prismarine_block_type = prismarine_block_type
+            super().__init__("prismarine", True)
+
+    class PrismarineBricksStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("prismarine_bricks_stairs", True)
+
+    class PrismarineStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("prismarine_stairs", True)
+
+    class Pumpkin(_MinecraftBlock):
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None):
+            self._cardinal_direction = cardinal_direction
+            super().__init__("pumpkin", True)
+
+    class PumpkinStem(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None, growth:'BlockStates.Growth'=None):
+            self._facing_direction = facing_direction
+            self._growth = growth
+            super().__init__("pumpkin_stem", True)
+
+    class PurpleCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("purple_candle", True)
+
+    class PurpleCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("purple_candle_cake", True)
+
+    class PurpleCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("purple_carpet", True)
+
+    class PurpleGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("purple_glazed_terracotta", True)
+
+    class PurpleWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("purple_wool", True)
+
+    class PurpurBlock(_MinecraftBlock):
+        def __init__(self, chisel_type:'BlockStates.ChiselType'=None, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._chisel_type = chisel_type
+            self._pillar_axis = pillar_axis
+            super().__init__("purpur_block", True)
+
+    class PurpurStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("purpur_stairs", True)
+
+    class QuartzBlock(_MinecraftBlock):
+        def __init__(self, chisel_type:'BlockStates.ChiselType'=None, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._chisel_type = chisel_type
+            self._pillar_axis = pillar_axis
+            super().__init__("quartz_block", True)
+
+    class QuartzBricks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("quartz_bricks", True)
+
+    class QuartzOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("quartz_ore", True)
+
+    class QuartzStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("quartz_stairs", True)
+
+    class Rail(_MinecraftBlock):
+        def __init__(self, rail_direction:'BlockStates.RailDirection'=None):
+            self._rail_direction = rail_direction
+            super().__init__("rail", True)
+
+    class RawCopperBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("raw_copper_block", True)
+
+    class RawGoldBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("raw_gold_block", True)
+
+    class RawIronBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("raw_iron_block", True)
+
+    class RedstoneBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("redstone_block", True)
+
+    class RedstoneLamp(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("redstone_lamp", True)
+
+    class RedstoneOre(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("redstone_ore", True)
+
+    class RedstoneTorch(_MinecraftBlock):
+        def __init__(self, torch_facing_direction:'BlockStates.TorchFacingDirection'=None):
+            self._torch_facing_direction = torch_facing_direction
+            super().__init__("redstone_torch", True)
+
+    class RedstoneWire(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("redstone_wire", True)
+
+    class RedCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("red_candle", True)
+
+    class RedCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("red_candle_cake", True)
+
+    class RedCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("red_carpet", True)
+
+    class RedFlower(_MinecraftBlock):
+        def __init__(self, flower_type:'BlockStates.FlowerType'=None):
+            self._flower_type = flower_type
+            super().__init__("red_flower", True)
+
+    class RedGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("red_glazed_terracotta", True)
+
+    class RedMushroom(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("red_mushroom", True)
+
+    class RedMushroomBlock(_MinecraftBlock):
+        def __init__(self, huge_mushroom_bits:'BlockStates.HugeMushroomBits'=None):
+            self._huge_mushroom_bits = huge_mushroom_bits
+            super().__init__("red_mushroom_block", True)
+
+    class RedNetherBrick(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("red_nether_brick", True)
+
+    class RedNetherBrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("red_nether_brick_stairs", True)
+
+    class RedSandstone(_MinecraftBlock):
+        def __init__(self, sand_stone_type:'BlockStates.SandStoneType'=None):
+            self._sand_stone_type = sand_stone_type
+            super().__init__("red_sandstone", True)
+
+    class RedSandstoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("red_sandstone_stairs", True)
+
+    class RedWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("red_wool", True)
+
+    class Reeds(_MinecraftBlock):
+        def __init__(self, age:'BlockStates.Age'=None):
+            self._age = age
+            super().__init__("reeds", True)
+
+    class ReinforcedDeepslate(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("reinforced_deepslate", True)
+
+    class RepeatingCommandBlock(_MinecraftBlock):
+        def __init__(self, conditional_bit:'BlockStates.ConditionalBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._conditional_bit = conditional_bit
+            self._facing_direction = facing_direction
+            super().__init__("repeating_command_block", True)
+
+    class Reserved6(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("reserved6", True)
+
+    class RespawnAnchor(_MinecraftBlock):
+        def __init__(self, respawn_anchor_charge:'BlockStates.RespawnAnchorCharge'=None):
+            self._respawn_anchor_charge = respawn_anchor_charge
+            super().__init__("respawn_anchor", True)
+
+    class Sand(_MinecraftBlock):
+        def __init__(self, sand_type:'BlockStates.SandType'=None):
+            self._sand_type = sand_type
+            super().__init__("sand", True)
+
+    class Sandstone(_MinecraftBlock):
+        def __init__(self, sand_stone_type:'BlockStates.SandStoneType'=None):
+            self._sand_stone_type = sand_stone_type
+            super().__init__("sandstone", True)
+
+    class SandstoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("sandstone_stairs", True)
+
+    class Sapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None, sapling_type:'BlockStates.SaplingType'=None):
+            self._age_bit = age_bit
+            self._sapling_type = sapling_type
+            super().__init__("sapling", True)
+
+    class Scaffolding(_MinecraftBlock):
+        def __init__(self, stability:'BlockStates.Stability'=None, stability_check:'BlockStates.StabilityCheck'=None):
+            self._stability = stability
+            self._stability_check = stability_check
+            super().__init__("scaffolding", True)
+
+    class Sculk(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("sculk", True)
+
+    class SculkCatalyst(_MinecraftBlock):
+        def __init__(self, bloom:'BlockStates.Bloom'=None):
+            self._bloom = bloom
+            super().__init__("sculk_catalyst", True)
+
+    class SculkSensor(_MinecraftBlock):
+        def __init__(self, sculk_sensor_phase:'BlockStates.SculkSensorPhase'=None):
+            self._sculk_sensor_phase = sculk_sensor_phase
+            super().__init__("sculk_sensor", True)
+
+    class SculkShrieker(_MinecraftBlock):
+        def __init__(self, active:'BlockStates.Active'=None, can_summon:'BlockStates.CanSummon'=None):
+            self._active = active
+            self._can_summon = can_summon
+            super().__init__("sculk_shrieker", True)
+
+    class SculkVein(_MinecraftBlock):
+        def __init__(self, multi_face_direction_bits:'BlockStates.MultiFaceDirectionBits'=None):
+            self._multi_face_direction_bits = multi_face_direction_bits
+            super().__init__("sculk_vein", True)
+
+    class Seagrass(_MinecraftBlock):
+        def __init__(self, sea_grass_type:'BlockStates.SeaGrassType'=None):
+            self._sea_grass_type = sea_grass_type
+            super().__init__("seagrass", True)
+
+    class SeaLantern(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("sea_lantern", True)
+
+    class SeaPickle(_MinecraftBlock):
+        def __init__(self, cluster_count:'BlockStates.ClusterCount'=None, dead_bit:'BlockStates.DeadBit'=None):
+            self._cluster_count = cluster_count
+            self._dead_bit = dead_bit
+            super().__init__("sea_pickle", True)
+
+    class Shroomlight(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("shroomlight", True)
+
+    class ShulkerBox(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("shulker_box", True)
+
+    class SilverGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("silver_glazed_terracotta", True)
+
+    class Skull(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("skull", True)
+
+    class Slime(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("slime", True)
+
+    class SmallAmethystBud(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("small_amethyst_bud", True)
+
+    class SmallDripleafBlock(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._upper_block_bit = upper_block_bit
+            super().__init__("small_dripleaf_block", True)
+
+    class SmithingTable(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("smithing_table", True)
+
+    class Smoker(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("smoker", True)
+
+    class SmoothBasalt(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("smooth_basalt", True)
+
+    class SmoothQuartzStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("smooth_quartz_stairs", True)
+
+    class SmoothRedSandstoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("smooth_red_sandstone_stairs", True)
+
+    class SmoothSandstoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("smooth_sandstone_stairs", True)
+
+    class SmoothStone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("smooth_stone", True)
+
+    class SnifferEgg(_MinecraftBlock):
+        def __init__(self, cracked_state:'BlockStates.CrackedState'=None):
+            self._cracked_state = cracked_state
+            super().__init__("sniffer_egg", True)
+
+    class Snow(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("snow", True)
+
+    class SnowLayer(_MinecraftBlock):
+        def __init__(self, covered_bit:'BlockStates.CoveredBit'=None, height:'BlockStates.Height'=None):
+            self._covered_bit = covered_bit
+            self._height = height
+            super().__init__("snow_layer", True)
+
+    class SoulCampfire(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, extinguished:'BlockStates.Extinguished'=None):
+            self._direction = direction
+            self._extinguished = extinguished
+            super().__init__("soul_campfire", True)
+
+    class SoulFire(_MinecraftBlock):
+        def __init__(self, age:'BlockStates.Age'=None):
+            self._age = age
+            super().__init__("soul_fire", True)
+
+    class SoulLantern(_MinecraftBlock):
+        def __init__(self, hanging:'BlockStates.Hanging'=None):
+            self._hanging = hanging
+            super().__init__("soul_lantern", True)
+
+    class SoulSand(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("soul_sand", True)
+
+    class SoulSoil(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("soul_soil", True)
+
+    class SoulTorch(_MinecraftBlock):
+        def __init__(self, torch_facing_direction:'BlockStates.TorchFacingDirection'=None):
+            self._torch_facing_direction = torch_facing_direction
+            super().__init__("soul_torch", True)
+
+    class Sponge(_MinecraftBlock):
+        def __init__(self, sponge_type:'BlockStates.SpongeType'=None):
+            self._sponge_type = sponge_type
+            super().__init__("sponge", True)
+
+    class SporeBlossom(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("spore_blossom", True)
+
+    class SpruceButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("spruce_button", True)
+
+    class SpruceDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("spruce_door", True)
+
+    class SpruceFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("spruce_fence", True)
+
+    class SpruceFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("spruce_fence_gate", True)
+
+    class SpruceHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("spruce_hanging_sign", True)
+
+    class SpruceLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("spruce_log", True)
+
+    class SprucePressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("spruce_pressure_plate", True)
+
+    class SpruceStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("spruce_stairs", True)
+
+    class SpruceStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("spruce_standing_sign", True)
+
+    class SpruceTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("spruce_trapdoor", True)
+
+    class SpruceWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("spruce_wall_sign", True)
+
+    class StainedGlass(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("stained_glass", True)
+
+    class StainedGlassPane(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("stained_glass_pane", True)
+
+    class StainedHardenedClay(_MinecraftBlock):
+        def __init__(self, color:'BlockStates.Color'=None):
+            self._color = color
+            super().__init__("stained_hardened_clay", True)
+
+    class StandingBanner(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("standing_banner", True)
+
+    class StandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("standing_sign", True)
+
+    class Stickypistonarmcollision(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("stickyPistonArmCollision", True)
+
+    class StickyPiston(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("sticky_piston", True)
+
+    class StickyPistonArmCollision(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("sticky_piston_arm_collision", True)
+
+    class Stone(_MinecraftBlock):
+        def __init__(self, stone_type:'BlockStates.StoneType'=None):
+            self._stone_type = stone_type
+            super().__init__("stone", True)
+
+    class Stonebrick(_MinecraftBlock):
+        def __init__(self, stone_brick_type:'BlockStates.StoneBrickType'=None):
+            self._stone_brick_type = stone_brick_type
+            super().__init__("stonebrick", True)
+
+    class Stonecutter(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("stonecutter", True)
+
+    class StonecutterBlock(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("stonecutter_block", True)
+
+    class StoneBlockSlab(_MinecraftBlock):
+        def __init__(self, stone_slab_type:'BlockStates.StoneSlabType'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._stone_slab_type = stone_slab_type
+            self._top_slot_bit = top_slot_bit
+            super().__init__("stone_block_slab", True)
+
+    class StoneBlockSlab2(_MinecraftBlock):
+        def __init__(self, stone_slab_type_2:'BlockStates.StoneSlabType2'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._stone_slab_type_2 = stone_slab_type_2
+            self._top_slot_bit = top_slot_bit
+            super().__init__("stone_block_slab2", True)
+
+    class StoneBlockSlab3(_MinecraftBlock):
+        def __init__(self, stone_slab_type_3:'BlockStates.StoneSlabType3'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._stone_slab_type_3 = stone_slab_type_3
+            self._top_slot_bit = top_slot_bit
+            super().__init__("stone_block_slab3", True)
+
+    class StoneBlockSlab4(_MinecraftBlock):
+        def __init__(self, stone_slab_type_4:'BlockStates.StoneSlabType4'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._stone_slab_type_4 = stone_slab_type_4
+            self._top_slot_bit = top_slot_bit
+            super().__init__("stone_block_slab4", True)
+
+    class StoneBrickStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("stone_brick_stairs", True)
+
+    class StoneButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("stone_button", True)
+
+    class StonePressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("stone_pressure_plate", True)
+
+    class StoneStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("stone_stairs", True)
+
+    class StrippedAcaciaLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_acacia_log", True)
+
+    class StrippedBambooBlock(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_bamboo_block", True)
+
+    class StrippedBirchLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_birch_log", True)
+
+    class StrippedCherryLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_cherry_log", True)
+
+    class StrippedCherryWood(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_cherry_wood", True)
+
+    class StrippedCrimsonHyphae(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_crimson_hyphae", True)
+
+    class StrippedCrimsonStem(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_crimson_stem", True)
+
+    class StrippedDarkOakLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_dark_oak_log", True)
+
+    class StrippedJungleLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_jungle_log", True)
+
+    class StrippedMangroveLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_mangrove_log", True)
+
+    class StrippedMangroveWood(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_mangrove_wood", True)
+
+    class StrippedOakLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_oak_log", True)
+
+    class StrippedSpruceLog(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_spruce_log", True)
+
+    class StrippedWarpedHyphae(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_warped_hyphae", True)
+
+    class StrippedWarpedStem(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("stripped_warped_stem", True)
+
+    class StructureBlock(_MinecraftBlock):
+        def __init__(self, structure_block_type:'BlockStates.StructureBlockType'=None):
+            self._structure_block_type = structure_block_type
+            super().__init__("structure_block", True)
+
+    class StructureVoid(_MinecraftBlock):
+        def __init__(self, structure_void_type:'BlockStates.StructureVoidType'=None):
+            self._structure_void_type = structure_void_type
+            super().__init__("structure_void", True)
+
+    class SuspiciousGravel(_MinecraftBlock):
+        def __init__(self, brushed_progress:'BlockStates.BrushedProgress'=None, hanging:'BlockStates.Hanging'=None):
+            self._brushed_progress = brushed_progress
+            self._hanging = hanging
+            super().__init__("suspicious_gravel", True)
+
+    class SuspiciousSand(_MinecraftBlock):
+        def __init__(self, brushed_progress:'BlockStates.BrushedProgress'=None, hanging:'BlockStates.Hanging'=None):
+            self._brushed_progress = brushed_progress
+            self._hanging = hanging
+            super().__init__("suspicious_sand", True)
+
+    class SweetBerryBush(_MinecraftBlock):
+        def __init__(self, growth:'BlockStates.Growth'=None):
+            self._growth = growth
+            super().__init__("sweet_berry_bush", True)
+
+    class Tallgrass(_MinecraftBlock):
+        def __init__(self, tall_grass_type:'BlockStates.TallGrassType'=None):
+            self._tall_grass_type = tall_grass_type
+            super().__init__("tallgrass", True)
+
+    class Target(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("target", True)
+
+    class TintedGlass(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("tinted_glass", True)
+
+    class Tnt(_MinecraftBlock):
+        def __init__(self, allow_underwater_bit:'BlockStates.AllowUnderwaterBit'=None, explode_bit:'BlockStates.ExplodeBit'=None):
+            self._allow_underwater_bit = allow_underwater_bit
+            self._explode_bit = explode_bit
+            super().__init__("tnt", True)
+
+    class Torch(_MinecraftBlock):
+        def __init__(self, torch_facing_direction:'BlockStates.TorchFacingDirection'=None):
+            self._torch_facing_direction = torch_facing_direction
+            super().__init__("torch", True)
+
+    class Torchflower(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("torchflower", True)
+
+    class TorchflowerCrop(_MinecraftBlock):
+        def __init__(self, growth:'BlockStates.Growth'=None):
+            self._growth = growth
+            super().__init__("torchflower_crop", True)
+
+    class Trapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("trapdoor", True)
+
+    class TrappedChest(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("trapped_chest", True)
+
+    class Tripwire(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, disarmed_bit:'BlockStates.DisarmedBit'=None, powered_bit:'BlockStates.PoweredBit'=None, suspended_bit:'BlockStates.SuspendedBit'=None):
+            self._attached_bit = attached_bit
+            self._disarmed_bit = disarmed_bit
+            self._powered_bit = powered_bit
+            self._suspended_bit = suspended_bit
+            super().__init__("tripWire", True)
+
+    class TripwireHook(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, direction:'BlockStates.Direction'=None, powered_bit:'BlockStates.PoweredBit'=None):
+            self._attached_bit = attached_bit
+            self._direction = direction
+            self._powered_bit = powered_bit
+            super().__init__("tripwire_hook", True)
+
+    class TripWire(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, disarmed_bit:'BlockStates.DisarmedBit'=None, powered_bit:'BlockStates.PoweredBit'=None, suspended_bit:'BlockStates.SuspendedBit'=None):
+            self._attached_bit = attached_bit
+            self._disarmed_bit = disarmed_bit
+            self._powered_bit = powered_bit
+            self._suspended_bit = suspended_bit
+            super().__init__("trip_wire", True)
+
+    class TubeCoral(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("tube_coral", True)
+
+    class Tuff(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("tuff", True)
+
+    class TurtleEgg(_MinecraftBlock):
+        def __init__(self, cracked_state:'BlockStates.CrackedState'=None, turtle_egg_count:'BlockStates.TurtleEggCount'=None):
+            self._cracked_state = cracked_state
+            self._turtle_egg_count = turtle_egg_count
+            super().__init__("turtle_egg", True)
+
+    class TwistingVines(_MinecraftBlock):
+        def __init__(self, twisting_vines_age:'BlockStates.TwistingVinesAge'=None):
+            self._twisting_vines_age = twisting_vines_age
+            super().__init__("twisting_vines", True)
+
+    class UnderwaterTorch(_MinecraftBlock):
+        def __init__(self, torch_facing_direction:'BlockStates.TorchFacingDirection'=None):
+            self._torch_facing_direction = torch_facing_direction
+            super().__init__("underwater_torch", True)
+
+    class UndyedShulkerBox(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("undyed_shulker_box", True)
+
+    class Unknown(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("unknown", True)
+
+    class UnlitRedstoneTorch(_MinecraftBlock):
+        def __init__(self, torch_facing_direction:'BlockStates.TorchFacingDirection'=None):
+            self._torch_facing_direction = torch_facing_direction
+            super().__init__("unlit_redstone_torch", True)
+
+    class UnpoweredComparator(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, output_lit_bit:'BlockStates.OutputLitBit'=None, output_subtract_bit:'BlockStates.OutputSubtractBit'=None):
+            self._direction = direction
+            self._output_lit_bit = output_lit_bit
+            self._output_subtract_bit = output_subtract_bit
+            super().__init__("unpowered_comparator", True)
+
+    class UnpoweredRepeater(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, repeater_delay:'BlockStates.RepeaterDelay'=None):
+            self._direction = direction
+            self._repeater_delay = repeater_delay
+            super().__init__("unpowered_repeater", True)
+
+    class VerdantFroglight(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("verdant_froglight", True)
+
+    class Vine(_MinecraftBlock):
+        def __init__(self, vine_direction_bits:'BlockStates.VineDirectionBits'=None):
+            self._vine_direction_bits = vine_direction_bits
+            super().__init__("vine", True)
+
+    class WallBanner(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("wall_banner", True)
+
+    class WallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("wall_sign", True)
+
+    class WarpedButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("warped_button", True)
+
+    class WarpedDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("warped_door", True)
+
+    class WarpedDoubleSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("warped_double_slab", True)
+
+    class WarpedFence(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("warped_fence", True)
+
+    class WarpedFenceGate(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, in_wall_bit:'BlockStates.InWallBit'=None, open_bit:'BlockStates.OpenBit'=None):
+            self._direction = direction
+            self._in_wall_bit = in_wall_bit
+            self._open_bit = open_bit
+            super().__init__("warped_fence_gate", True)
+
+    class WarpedFungus(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("warped_fungus", True)
+
+    class WarpedHangingSign(_MinecraftBlock):
+        def __init__(self, attached_bit:'BlockStates.AttachedBit'=None, facing_direction:'BlockStates.FacingDirection'=None, ground_sign_direction:'BlockStates.GroundSignDirection'=None, hanging:'BlockStates.Hanging'=None):
+            self._attached_bit = attached_bit
+            self._facing_direction = facing_direction
+            self._ground_sign_direction = ground_sign_direction
+            self._hanging = hanging
+            super().__init__("warped_hanging_sign", True)
+
+    class WarpedHyphae(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("warped_hyphae", True)
+
+    class WarpedNylium(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("warped_nylium", True)
+
+    class WarpedPlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("warped_planks", True)
+
+    class WarpedPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("warped_pressure_plate", True)
+
+    class WarpedRoots(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("warped_roots", True)
+
+    class WarpedSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("warped_slab", True)
+
+    class WarpedStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("warped_stairs", True)
+
+    class WarpedStandingSign(_MinecraftBlock):
+        def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
+            self._ground_sign_direction = ground_sign_direction
+            super().__init__("warped_standing_sign", True)
+
+    class WarpedStem(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None):
+            self._pillar_axis = pillar_axis
+            super().__init__("warped_stem", True)
+
+    class WarpedTrapdoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, open_bit:'BlockStates.OpenBit'=None, upside_down_bit:'BlockStates.UpsideDownBit'=None):
+            self._direction = direction
+            self._open_bit = open_bit
+            self._upside_down_bit = upside_down_bit
+            super().__init__("warped_trapdoor", True)
+
+    class WarpedWallSign(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("warped_wall_sign", True)
+
+    class WarpedWartBlock(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("warped_wart_block", True)
+
+    class Water(_MinecraftBlock):
+        def __init__(self, liquid_depth:'BlockStates.LiquidDepth'=None):
+            self._liquid_depth = liquid_depth
+            super().__init__("water", True)
+
+    class Waterlily(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waterlily", True)
+
+    class WaxedCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waxed_copper", True)
+
+    class WaxedCutCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waxed_cut_copper", True)
+
+    class WaxedCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("waxed_cut_copper_slab", True)
+
+    class WaxedCutCopperStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("waxed_cut_copper_stairs", True)
+
+    class WaxedDoubleCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("waxed_double_cut_copper_slab", True)
+
+    class WaxedExposedCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waxed_exposed_copper", True)
+
+    class WaxedExposedCutCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waxed_exposed_cut_copper", True)
+
+    class WaxedExposedCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("waxed_exposed_cut_copper_slab", True)
+
+    class WaxedExposedCutCopperStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("waxed_exposed_cut_copper_stairs", True)
+
+    class WaxedExposedDoubleCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("waxed_exposed_double_cut_copper_slab", True)
+
+    class WaxedOxidizedCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waxed_oxidized_copper", True)
+
+    class WaxedOxidizedCutCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waxed_oxidized_cut_copper", True)
+
+    class WaxedOxidizedCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("waxed_oxidized_cut_copper_slab", True)
+
+    class WaxedOxidizedCutCopperStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("waxed_oxidized_cut_copper_stairs", True)
+
+    class WaxedOxidizedDoubleCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("waxed_oxidized_double_cut_copper_slab", True)
+
+    class WaxedWeatheredCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waxed_weathered_copper", True)
+
+    class WaxedWeatheredCutCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("waxed_weathered_cut_copper", True)
+
+    class WaxedWeatheredCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("waxed_weathered_cut_copper_slab", True)
+
+    class WaxedWeatheredCutCopperStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("waxed_weathered_cut_copper_stairs", True)
+
+    class WaxedWeatheredDoubleCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("waxed_weathered_double_cut_copper_slab", True)
+
+    class WeatheredCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("weathered_copper", True)
+
+    class WeatheredCutCopper(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("weathered_cut_copper", True)
+
+    class WeatheredCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("weathered_cut_copper_slab", True)
+
+    class WeatheredCutCopperStairs(_MinecraftBlock):
+        def __init__(self, upside_down_bit:'BlockStates.UpsideDownBit'=None, weirdo_direction:'BlockStates.WeirdoDirection'=None):
+            self._upside_down_bit = upside_down_bit
+            self._weirdo_direction = weirdo_direction
+            super().__init__("weathered_cut_copper_stairs", True)
+
+    class WeatheredDoubleCutCopperSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
+            self._top_slot_bit = top_slot_bit
+            super().__init__("weathered_double_cut_copper_slab", True)
+
+    class Web(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("web", True)
+
+    class WeepingVines(_MinecraftBlock):
+        def __init__(self, weeping_vines_age:'BlockStates.WeepingVinesAge'=None):
+            self._weeping_vines_age = weeping_vines_age
+            super().__init__("weeping_vines", True)
+
+    class Wheat(_MinecraftBlock):
+        def __init__(self, growth:'BlockStates.Growth'=None):
+            self._growth = growth
+            super().__init__("wheat", True)
+
+    class WhiteCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("white_candle", True)
+
+    class WhiteCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("white_candle_cake", True)
+
+    class WhiteCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("white_carpet", True)
+
+    class WhiteGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("white_glazed_terracotta", True)
+
+    class WhiteWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("white_wool", True)
+
+    class WitherRose(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("wither_rose", True)
+
+    class Wood(_MinecraftBlock):
+        def __init__(self, pillar_axis:'BlockStates.PillarAxis'=None, stripped_bit:'BlockStates.StrippedBit'=None, wood_type:'BlockStates.WoodType'=None):
+            self._pillar_axis = pillar_axis
+            self._stripped_bit = stripped_bit
+            self._wood_type = wood_type
+            super().__init__("wood", True)
+
+    class WoodenButton(_MinecraftBlock):
+        def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):
+            self._button_pressed_bit = button_pressed_bit
+            self._facing_direction = facing_direction
+            super().__init__("wooden_button", True)
+
+    class WoodenDoor(_MinecraftBlock):
+        def __init__(self, direction:'BlockStates.Direction'=None, door_hinge_bit:'BlockStates.DoorHingeBit'=None, open_bit:'BlockStates.OpenBit'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._direction = direction
+            self._door_hinge_bit = door_hinge_bit
+            self._open_bit = open_bit
+            self._upper_block_bit = upper_block_bit
+            super().__init__("wooden_door", True)
+
+    class WoodenPressurePlate(_MinecraftBlock):
+        def __init__(self, redstone_signal:'BlockStates.RedstoneSignal'=None):
+            self._redstone_signal = redstone_signal
+            super().__init__("wooden_pressure_plate", True)
+
+    class WoodenSlab(_MinecraftBlock):
+        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None, wood_type:'BlockStates.WoodType'=None):
+            self._top_slot_bit = top_slot_bit
+            self._wood_type = wood_type
+            super().__init__("wooden_slab", True)
+
+    class YellowCandle(_MinecraftBlock):
+        def __init__(self, candles:'BlockStates.Candles'=None, lit:'BlockStates.Lit'=None):
+            self._candles = candles
+            self._lit = lit
+            super().__init__("yellow_candle", True)
+
+    class YellowCandleCake(_MinecraftBlock):
+        def __init__(self, lit:'BlockStates.Lit'=None):
+            self._lit = lit
+            super().__init__("yellow_candle_cake", True)
+
+    class YellowCarpet(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("yellow_carpet", True)
+
+    class YellowFlower(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("yellow_flower", True)
+
+    class YellowGlazedTerracotta(_MinecraftBlock):
+        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
+            self._facing_direction = facing_direction
+            super().__init__("yellow_glazed_terracotta", True)
+
+    class YellowWool(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("yellow_wool", True)
+

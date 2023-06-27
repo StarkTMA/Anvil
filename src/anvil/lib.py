@@ -4,6 +4,7 @@ import logging
 import math
 import os
 import random
+import re
 import shutil
 import string
 import sys
@@ -21,6 +22,7 @@ from uuid import uuid4
 import click
 import commentjson as commentjson
 from click import style
+from halo import Halo
 from PIL import Image, ImageColor, ImageDraw, ImageEnhance, ImageFont, ImageQt
 
 from .__version__ import __version__
@@ -40,6 +42,11 @@ tick = NewType("Tick", int)
 _range = NewType("[range]", str)
 
 inf = 99999999999
+
+class Arguments(Enum):
+    def __str__(self) -> str:
+        return self.value
+
 def FileExists(path):
     return os.path.exists(path)
 
@@ -74,14 +81,16 @@ MOLANG_PREFIXES: tuple[str, ...] = (
 
 
 MANIFEST_BUILD: list[int] = [1, 19, 70]  # The build version of the manifest.
-BLOCK_SERVER_VERSION: str = "1.19.70"  # The version of the block server.
+BLOCK_SERVER_VERSION: str = "1.19.80"  # The version of the block server.
 ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
 # The version of the behavior pack animation.
 BP_ANIMATION_VERSION: str = "1.10.0"
 # The version of the resource pack animation.
 RP_ANIMATION_VERSION: str = "1.8.0"
-ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"  # The version of the animation controllers.
+ANIMATION_CONTROLLERS_VERSION: str = (
+    "1.10.0"  # The version of the animation controllers.
+)
 
 SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
 GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
@@ -92,10 +101,27 @@ SOUND_DEFINITIONS_VERSION: str = "1.14.0"
 DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
 FOG_VERSION: str = "1.16.100"  # The version of the fog.
 MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
-ITEM_SERVER_VERSION: str = "1.20.0"  # The version of the item server.
+ITEM_SERVER_VERSION: str = "1.12.0"  # The version of the item server.
 # The version of the Minecraft server module.
-MODULE_MINECRAFT_SERVER: str = "1.1.0"
+MODULE_MINECRAFT_SERVER: str = "1.2.0"
+MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"
 
+# --------------------------------------------------------------------------
+# Commands
+# --------------------------------------------------------------------------
+
+class FillMode(Arguments):
+    Replace = "replace"
+    Outline = "outline"
+    Hollow = "hollow"
+    Destroy = "destroy"
+    Keep = "keep"
+
+class MusicRepeatMode(Arguments):
+    Once = 'play_once'
+    Loop = 'loop'
+
+# --------------------------------------------------------------------------
 
 def clamp(value: float, _min: float, _max: float) -> float:
     """
@@ -129,7 +155,7 @@ def frange(start: int, stop: int, num: float = 1):
     return values
 
 
-class LootPoolType:
+class LootPoolType(Arguments):
     """
     Enumeration for the different types of loot pools.
     """
@@ -139,7 +165,7 @@ class LootPoolType:
     LootTable = "loot_table"
 
 
-class Population:
+class Population(Arguments):
     """
     Enumeration for the different types of in-game populations.
     """
@@ -150,7 +176,7 @@ class Population:
     Ambient = "ambient"
 
 
-class Difficulty:
+class Difficulty(Arguments):
     """
     Enumeration for the different levels of game difficulty.
     """
@@ -161,7 +187,7 @@ class Difficulty:
     Hard = "hard"
 
 
-class SoundCategory:
+class SoundCategory(Arguments):
     """
     Enumeration for the different categories of sounds in the game.
     """
@@ -176,7 +202,7 @@ class SoundCategory:
     UI = "ui"
 
 
-class MusicCategory:
+class MusicCategory(Arguments):
     """
     Enumeration for the different categories of music in the game.
     """
@@ -202,7 +228,7 @@ class MusicCategory:
     Water = "water"
 
 
-class DamageCause:
+class DamageCause(Arguments):
     """
     Enumeration for the different causes of damage in the game.
     """
@@ -237,7 +263,7 @@ class DamageCause:
     Wither = "wither"
 
 
-class Effects:
+class Effects(Arguments):
     """
     Enumeration for the different types of effects in the game.
     """
@@ -254,9 +280,10 @@ class Effects:
     Wither = "wither"
     Poison = "poison"
     Absorption = "absorption"
+    Invisibility = "invisibility"
 
 
-class Gamemodes:
+class Gamemodes(Arguments):
     """
     Enumeration for the different types of game modes.
     """
@@ -273,7 +300,7 @@ class Gamemodes:
     S = Survival
 
 
-class Style:
+class Style(Arguments):
     """
     Enumeration for the different styles of text in the game.
     """
@@ -301,7 +328,7 @@ class Style:
     Reset: str = "§r"
 
 
-class FogCameraLocation:
+class FogCameraLocation(Arguments):
     """
     Enumeration for the different locations of the fog camera in the game.
     """
@@ -314,7 +341,7 @@ class FogCameraLocation:
     Weather = "weather"
 
 
-class RenderDistanceType:
+class RenderDistanceType(Arguments):
     """
     Enumeration for the different types of render distances in the game.
     """
@@ -323,7 +350,7 @@ class RenderDistanceType:
     Fixed = "fixed"
 
 
-class Dimension:
+class Dimension(Arguments):
     """
     Enumeration for the different dimensions in the game.
     """
@@ -333,7 +360,7 @@ class Dimension:
     End = "the_end"
 
 
-class Operator:
+class Operator(Arguments):
     """
     Enumeration for the different types of mathematical operators.
     """
@@ -345,7 +372,7 @@ class Operator:
     GreaterEqual = ">="
 
 
-class ScoreboardOperation:
+class ScoreboardOperation(Arguments):
     """
     Enumeration for the different operations that can be performed on a scoreboard.
     """
@@ -361,7 +388,7 @@ class ScoreboardOperation:
     Swaps = "><"
 
 
-class Slots:
+class Slots(Arguments):
     """
     Enumeration for the different types of inventory slots in the game.
     """
@@ -382,7 +409,7 @@ class Slots:
     Container = "slots.container"
 
 
-class Target:
+class Target(Arguments):
     """
     Enumeration for the types of targets that can be selected in Minecraft.
     """
@@ -523,11 +550,11 @@ class Selector:
                         values = f"{{{', '.join(f'{k} = {v}' for k, v in value.items() if not v is None)}}}"
                     args.append(f"{key} = {values}")
 
-            self.target += f"[{', '.join(args)}]"
+            self.target = f"{self.target} [{', '.join(args)}]"
         return self.target
 
 
-class Anchor:
+class Anchor(Arguments):
     """
     Enumeration representing the two anchor points that can be used in Minecraft: the feet and the eyes.
     """
@@ -536,7 +563,7 @@ class Anchor:
     Eyes = "eyes"
 
 
-class BlockCategory:
+class BlockCategory(Arguments):
     """
     Enumeration representing the categories of blocks that can be used in Minecraft.
     """
@@ -548,7 +575,7 @@ class BlockCategory:
     none = "none"
 
 
-class BlockMaterial:
+class BlockMaterial(Arguments):
     """
     Enumeration representing the different types of rendering methods a block can use in Minecraft.
     """
@@ -559,7 +586,7 @@ class BlockMaterial:
     AlphaTest = "alpha_test"
 
 
-class BlockFaces:
+class BlockFaces(Arguments):
     """
     Enumeration representing the different faces of a block in Minecraft.
     """
@@ -592,7 +619,7 @@ class BlockDescriptor(dict):
         super().__init__(name=name, tags=tags, states=states)
 
 
-class CameraShakeType:
+class CameraShakeType(Arguments):
     """
     Enumeration representing the types of camera shakes that can occur in Minecraft.
     """
@@ -601,7 +628,7 @@ class CameraShakeType:
     rotational = "rotational"
 
 
-class MaskMode:
+class MaskMode(Arguments):
     """
     Enumeration representing the different mask modes that can be applied in Minecraft.
     """
@@ -610,7 +637,7 @@ class MaskMode:
     masked = "masked"
 
 
-class CloneMode:
+class CloneMode(Arguments):
     """
     Enumeration representing the different modes that can be used when cloning in Minecraft.
     """
@@ -620,7 +647,7 @@ class CloneMode:
     normal = "normal"
 
 
-class WeatherSet:
+class WeatherSet(Arguments):
     """
     Enumeration representing the different types of weather that can be set in Minecraft.
     """
@@ -630,7 +657,7 @@ class WeatherSet:
     Thunder = "thunder"
 
 
-class FilterSubject:
+class FilterSubject(Arguments):
     """
     Enumeration representing the different subjects that can be used in filters in Minecraft.
     """
@@ -644,7 +671,7 @@ class FilterSubject:
     Target = "target"
 
 
-class FilterOperation:
+class FilterOperation(Arguments):
     """
     Enumeration representing the different operations that can be used in filters in Minecraft.
     """
@@ -657,7 +684,7 @@ class FilterOperation:
     Not = "not"
 
 
-class FilterEquipmentDomain:
+class FilterEquipmentDomain(Arguments):
     """
     Enumeration representing the different equipment domains that can be used in filters in Minecraft.
     """
@@ -673,7 +700,7 @@ class FilterEquipmentDomain:
 
 
 # Materials classes
-class MaterialStates:
+class MaterialStates(Arguments):
     """
     Enumeration representing the different states a material can be in Minecraft.
     """
@@ -685,7 +712,7 @@ class MaterialStates:
     DisableDepthWrite = "DisableDepthWrite"
 
 
-class MaterialDefinitions:
+class MaterialDefinitions(Arguments):
     """
     Enumeration representing the different definitions that can be set for a material in Minecraft.
     """
@@ -697,7 +724,7 @@ class MaterialDefinitions:
     COLOR_BASED = "COLOR_BASED"
 
 
-class MaterialFunc:
+class MaterialFunc(Arguments):
     """
     Enumeration representing the different functions that can be set for a material in Minecraft.
     """
@@ -711,7 +738,7 @@ class MaterialFunc:
     LessEqual = "LessEqual"
 
 
-class MaterialOperation:
+class MaterialOperation(Arguments):
     """
     Enumeration representing the different operations that can be set for a material in Minecraft.
     """
@@ -720,7 +747,7 @@ class MaterialOperation:
     Replace = "Replace"
 
 
-class InputPermissions:
+class InputPermissions(Arguments):
     """
     Enumeration representing the different input permissions that can be set for a player in Minecraft.
     """
@@ -729,32 +756,126 @@ class InputPermissions:
     Movement = "movement"
 
 
+class EntitySoundEvent(Arguments):
+    Ambient = "ambient"
+    Hurt = "hurt"
+    Death = "death"
+    Takeoff = "takeoff"
+    AmbientTame = "ambient.tame"
+    Purr = "purr"
+    Purreow = "purreow"
+    Eat = "eat"
+    Step = "step"
+    Plop = "plop"
+    Fuse = "fuse"
+    Breathe = "breathe"
+    Attack = "attack"
+    Splash = "splash"
+    Swim = "swim"
+    AmbientInWater = "ambient.in.water"
+    HurtInWater = "hurt.in.water"
+    DeathInWater = "death.in.water"
+    Jump = "jump"
+    Mad = "mad"
+    Stare = "stare"
+    Flap = "flap"
+    Fizz = "fizz"
+    Sniff = "sniff"
+    Screech = "screech"
+    Sleep = "sleep"
+    Spit = "spit"
+    Scream = "scream"
+    Warn = "warn"
+    Shoot = "shoot"
+    GuardianFlop = "guardian.flop"
+    Flop = "flop"
+    CastSpell = "cast.spell"
+    PrepareAttack = "prepare.attack"
+    PrepareSummon = "prepare.summon"
+    PrepareWololo = "prepare.wololo"
+    AmbientInRaid = "ambient.in.raid"
+    Celebrate = "celebrate"
+    Fang = "fang"
+    Charge = "charge"
+    Armor = "armor"
+    AddChest = "add.chest"
+    Saddle = "saddle"
+    Land = "land"
+    Throw = "throw"
+    AttackStrong = "attack.strong"
+    Roar = "roar"
+    Stun = "stun"
+    Thunder = "thunder"
+    Explode = "explode"
+    Fly = "fly"
+    ImitateBlaze = "imitate.blaze"
+    ImitateCaveSpider = "imitate.cave_spider"
+    ImitateCreeper = "imitate.creeper"
+    ImitateElderGuardian = "imitate.elder_guardian"
+    ImitateEnderDragon = "imitate.ender_dragon"
+    ImitateEnderman = "imitate.enderman"
+    ImitateEndermite = "imitate.endermite"
+    ImitateEvocationIllager = "imitate.evocation_illager"
+    ImitateGhast = "imitate.ghast"
+    ImitateHusk = "imitate.husk"
+    ImitateIllusionIllager = "imitate.illusion_illager"
+    ImitateMagmaCube = "imitate.magma_cube"
+    ImitatePolarBear = "imitate.polar_bear"
+    ImitatePanda = "imitate.panda"
+    ImitateShulker = "imitate.shulker"
+    ImitateSilverfish = "imitate.silverfish"
+    ImitateSkeleton = "imitate.skeleton"
+    ImitateSlime = "imitate.slime"
+    ImitateSpider = "imitate.spider"
+    ImitateStray = "imitate.stray"
+    ImitateVex = "imitate.vex"
+    ImitateVindicationIllager = "imitate.vindication_illager"
+    ImitateWitch = "imitate.witch"
+    ImitateWither = "imitate.wither"
+    ImitateWitherSkeleton = "imitate.wither_skeleton"
+    ImitateWolf = "imitate.wolf"
+    ImitateZombie = "imitate.zombie"
+    ImitateDrowned = "imitate.drowned"
+    ImitateZombiePigman = "imitate.zombie_pigman"
+    ImitateZombieVillager = "imitate.zombie_villager"
+    Swoop = "swoop"
+    Boost = "boost"
+    DeathToZombie = "death.to.zombie"
+    AttackNodamage = "attack.nodamage"
+    ElderguardianCurse = "elderguardian.curse"
+    AmbientBaby = "ambient.baby"
+    MobWarning = "mob.warning"
+    AmbientAggressive = "ambient.aggressive"
+    AmbientWorried = "ambient.worried"
+    Presneeze = "presneeze"
+    Sneeze = "sneeze"
+    CantBreed = "cant_breed"
+    ShulkerOpen = "shulker.open"
+    ShulkerClose = "shulker.close"
+    HurtBaby = "hurt.baby"
+    DeathBaby = "death.baby"
+    StepBaby = "step.baby"
+    Born = "born"
+    SquishBig = "squish.big"
+    SquishSmall = "squish.small"
+    Haggle = "haggle"
+    HaggleYes = "haggle.yes"
+    HaggleNo = "haggle.no"
+    Disappeared = "disappeared"
+    Drink = "drink"
+    Reappeared = "reappeared"
+    DeathMinVolume = "death.min.volume"
+    DeathMidVolume = "death.mid.volume"
+    Spawn = "spawn"
+    BreakBlock = "break.block"
+    Shake = "shake"
+    Growl = "growl"
+    Whine = "whine"
+    Pant = "pant"
+
+
 def Defaults(type, *args):
     match type:
-        case "rp_item_v1":
-            return {
-                "format_version": "1.10.0",
-                "minecraft:item": {
-                    "description": {
-                        "identifier": f"{args[0]}:{args[1]}",
-                        "category": "Nature",
-                    },
-                    "components": {
-                        "minecraft:icon": f"{args[1]}",
-                        "minecraft:render_offsets": "apple",
-                    },
-                },
-            }
-        case "bp_item_v1":
-            return {
-                "format_version": "1.10.0",
-                "minecraft:item": {
-                    "description": {
-                        "identifier": f"{args[0]}:{args[1]}",
-                    },
-                    "components": {"minecraft:use_animation": "none"},
-                },
-            }
         case "recipe_shaped":
             return {
                 "format_version": "1.16.0",
@@ -1029,13 +1150,11 @@ class _Logger:
     def packaging_mcaddon(self):
         m = "Packaging .mcaddon"
         self.logger.info(m)
-        click.echo(_Logger.Cyan(m))
 
     # Info
     def packaging_mcworld(self):
         m = "Packaging .mcworld"
         self.logger.info(m)
-        click.echo(_Logger.Cyan(m))
 
     # Warn
     def file_exist_warning(self, filename):
@@ -1066,12 +1185,37 @@ class _Logger:
         m = f"Runtime Identifier type must be a [Vanilla.Entities] type. Error at {entity}."
         self.logger.error(m)
         raise TypeError(_Logger.Red("[ERROR]: " + m))
-    
+
     # Error
     def runtime_entity_not_allowed(self, entity):
         m = f"Entity [{entity}] does not allow runtime identifier usage."
         self.logger.error(m)
         raise TypeError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    def unsupported_font_size(self):
+        m = f"Font character_size must be a multiple of 16."
+        self.logger.error(m)
+        raise TypeError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    def unsupported_block_type(self, block):
+        m = f"block must be  of a [Blocks] or [str] type. Error at {block}."
+        self.logger.error(m)
+        raise TypeError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    def namespace_not_in_geo(self, geo_file, geo_namespace):
+        m = f'The geometry file {geo_file}.geo.json doesn\'t contain a geometry called {geo_namespace}'
+        self.logger.error(m)
+        raise TypeError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    def multiple_rotations(self):
+        m = f'Multiple rotation arguments were used. A maximum of 1 is allowed.'
+        self.logger.error(m)
+        raise TypeError(_Logger.Red("[ERROR]: " + m))
+
 
 
 
@@ -1147,9 +1291,6 @@ class _Logger:
             f'{style("[Exporting]", "green")}: {style(filename, "green")}               '
             + "\033[A"
         )
-
-    def unsupported_font_size(self):
-        return f"{Message.ERROR}: character_size must be a multiple of 16."
 
     # Identifiers
     def namespaces_not_allowed(self, identifier):
@@ -1278,7 +1419,7 @@ class _JsonSchemes:
                     "version": version,
                     "type": "script",
                     "language": "javascript",
-                    "entry": "scripts/index.js",
+                    "entry": "scripts/Main.js",
                 }
             )
             m.update(
@@ -1287,7 +1428,11 @@ class _JsonSchemes:
                         {
                             "module_name": "@minecraft/server",
                             "version": MODULE_MINECRAFT_SERVER,
-                        }
+                        },
+                        {
+                            "module_name": "@minecraft/server",
+                            "version": MODULE_MINECRAFT_SERVER_UI,
+                        },
                     ]
                 }
             )
@@ -1356,7 +1501,7 @@ class _JsonSchemes:
             "name": project_name,
             "version": version,
             "description": description,
-            "main": "index.js",
+            "main": "scripts/Main.js",
             "scripts": {"test": 'echo "Error: no test specified" && exit 1'},
             "keywords": [],
             "author": author,
@@ -1390,8 +1535,8 @@ class _JsonSchemes:
         }
 
     @staticmethod
-    def description(identifier1, identifier2):
-        return {"description": {"identifier": f"{identifier1}:{identifier2}"}}
+    def description(namespace, identifier):
+        return {"description": {"identifier": f"{namespace}:{identifier}"}}
 
     @staticmethod
     def item_texture(resource_pack_name):
@@ -1644,6 +1789,23 @@ class _JsonSchemes:
             "minecraft:item": {"components": {}},
         }
 
+    # To be removed after 1.20.10
+    @staticmethod
+    def client_item():
+        return {
+            "format_version": ITEM_SERVER_VERSION,
+            "minecraft:item": {"components": {}},
+        }
+
+    # ---------------------------
+    @staticmethod
+    def sounds():
+        return {
+            "individual_event_sounds": {},
+            "block_sounds": {},
+            "entity_sounds": {"entities":{}},
+            "interactive_sounds": {},
+        }
 
 def CreateDirectory(path: str) -> None:
     """

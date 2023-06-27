@@ -1,16 +1,16 @@
 from typing import Dict
 
-from ..core import (ANVIL, AddonObject, _MinecraftDescription)
-from ..lib import *
-from ..lib import _JsonSchemes
-from .actors import _Components
-from .components import _component
+from anvil.core import (ANVIL, AddonObject, _MinecraftDescription)
+from anvil.lib import *
+from anvil.lib import _JsonSchemes
+from anvil.api.actors import _Components
+from anvil.api.components import _component
 
 __all__ = ['Block', 'VanillaBlockTexture',
            'BlockDestructibleByExplosion', 'BlockDestructibleByMining', 
            'BlockFlammable', 'BlockFriction', 'BlockLightDampening', 'BlockLightEmission',
            'BlockLootTable', 'BlockMapColor', 'BlockMaterialInstance', 'BlockGeometry', 'BlockCollisionBox',
-           'BlockCraftingTable', 'BlockPlacementFilter'
+           'BlockSelectionBox', 'BlockPlacementFilter', 'BlockTransformation', 'BlockDisplayName', 'BlockCraftingTable', 
            ]
 
 # Released
@@ -163,7 +163,7 @@ class BlockTransformation(_component):
         self._component_add_field('scale', scale)
         return self
     
-    def rotation(self, rotation: rotation):
+    def rotation(self, rotation: tuple[float, float, float]):
         self._component_add_field('rotation', rotation)
         return self
 
@@ -208,13 +208,13 @@ class _BlockServerDescription(_MinecraftDescription):
             'properties': {},
         })
 
-    def add_property(self, name, range: tuple[float, float]):
+    def add_property(self, name: str, *range: float | str |bool):
         self._description['description']['properties'][f'{ANVIL.NAMESPACE}:{name}'] = range
         return self
 
     def menu_category(self, category: BlockCategory = BlockCategory.none, group: str = None):
         self._description['description']['menu_category'] = {
-            'category': category if not category is None else {},
+            'category': category.value if not category == BlockCategory.none else {},
             'group': group if not group is None else {},
         }
         return self
@@ -235,8 +235,8 @@ class _BlockServer(AddonObject):
             with open(os.path.join('assets', 'models', 'blocks', f'{block_name}.geo.json')) as file:
                 data = file.read()
                 if geo_namespace not in data:
-                    RaiseError(
-                        f'The geometry file {block_name}.geo.json doesn\'t contain a geometry called {geo_namespace}')
+                    ANVIL.Logger.namespace_not_in_geo(block_name, geo_namespace)
+
         else:
             ANVIL.Logger.file_exist_error(f'{block_name}.geo.json', os.path.join('assets', 'models', 'blocks'))
     def __init__(self, identifier: str, is_vanilla: bool) -> None:

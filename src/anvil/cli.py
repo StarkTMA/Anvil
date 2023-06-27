@@ -155,6 +155,7 @@ def create(namespace: str, project_name: str, preview: bool = False, fullns: boo
 
         # os.system('npm install -g typescript')
         os.system("npm install @minecraft/server")
+        os.system("npm install @minecraft/server-ui")
 
     Config.save()
     # os.system(f'start {os.path.join(base_dir,project_name)}')
