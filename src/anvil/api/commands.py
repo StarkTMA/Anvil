@@ -1,5 +1,7 @@
-from ..packages import *
-from ..core import ANVIL, RawTextConstructor
+from anvil.lib import *
+from anvil.core import ANVIL, RawTextConstructor
+from anvil.api.vanilla import Blocks
+from anvil.api.blocks import Block
 
 class Command:
     def __init__(self, prefix: str, *commands) -> None:
@@ -94,17 +96,23 @@ class Execute(Command):
             self._parent._append_cmd(self._condition, 'entity', target)
             return self._parent
 
-        def Block(self, block_position: coordinates, block: str, data = None):
-            self._parent._append_cmd(self._condition, 'block', ' '.join(map(str, block_position)), block, data if not data is None else '')
+        def Block(self, block_position: coordinates, tile: Blocks._MinecraftBlock | str | Block, **properties):
+            name = tile.identifier if isinstance(tile, (Blocks._MinecraftBlock, Block)) else tile if isinstance(tile, str) else ANVIL.Logger.unsupported_block_type(tile)
+            states = tile.states if isinstance(tile, Blocks._MinecraftBlock) else '' if isinstance(tile, (str, Block)) else ANVIL.Logger.unsupported_block_type(tile)
+
+            for k, v in properties.items():
+                states.append(f'"{k}" : "{v}"')
+
+            self._parent._append_cmd(self._condition, 'block', *block_position, name, f'[{", ".join(states)}]')
             return self._parent
 
         def Blocks(self, begin: coordinates, end: coordinates, destination: coordinates, masked: bool = False):
             self._parent._append_cmd(
                 self._condition, 
                 'blocks', 
-                ' '.join(map(str, begin)),
-                ' '.join(map(str, end)), 
-                ' '.join(map(str, destination)), 
+                *begin,
+                *end, 
+                *destination, 
                 masked if masked == True else ''
             )
             return self._parent
@@ -203,7 +211,7 @@ class Summon(Command):
         super().__init__('summon', entity)
 
     def nameTag(self, nameTag: str):
-        self.argument['nameTag'] = nameTag
+        self.argument['nameTag'] = f'\"{nameTag}\"'
         return self
     
     def spawnEvent(self, spawnEvent: str):
@@ -225,9 +233,9 @@ class Summon(Command):
     def __str__(self):
         rots = sum([x is not None for x in (self.argument.get('lookAtEntity'), self.argument.get('lookAtPosition'), self.argument.get('rotation'))])
         if rots > 1:
-            RaiseError('Multiple rotation overloads used.')
+            ANVIL.Logger.multiple_rotations()
 
-        if rots == 0 and self.argument.get('spawnEvent') is None:
+        if rots == 0 and not self.argument.get('nameTag') is None and self.argument.get('spawnEvent') is None:
             self._append_cmd(self.argument.get('nameTag'))
             self._append_cmd(" ".join(self.argument.get('coordinates')))
             
@@ -256,30 +264,35 @@ class Summon(Command):
 
         return super().__str__()
 
-
 class XP(Command):
-    """Adds or removes player experience.
-
-    Args:
-        amount (int): Specifies the amount of experience points or levels to be added or removed from the player
-        player (str): Selector | Target Selector (Must be player type)
-
-    Returns:
-        Command: xp command
-
-    Example:
-        >>> xp('-2000', '@a')
-        >>> xp('-5L', '@a')
-    """
-
     def __init__(self):
+        """Adds or removes player experience.
+        """
         super().__init__('xp')
     
-    def add(self, target, amount):
+    def add(self, target: Selector | Target | str, amount: int) -> Command:
+        """Adds experience to a player.
+
+        Args:
+            target (Selector | Target | str): The target to add experience to.
+            amount (int): The amount of experience to add.
+
+        Returns:
+            Command: The command.
+        """
         super()._new_cmd(amount, target)
         return self
     
-    def remove(self, target, amount):
+    def remove(self, target: Selector | Target | str, amount: int) -> Command:
+        """Removes experience from a player.
+
+        Args:
+            target (Selector | Target | str): The target to remove experience from.
+            amount (int): The amount of experience to remove.
+
+        Returns:
+            Command: The command.
+        """
         super()._new_cmd(f'-{amount}', target)
         return self
 
@@ -326,7 +339,7 @@ class Spawnpoint(Command):
 
 class Say(Command):
     def __init__(self, text: str):
-        super().__init__('say', text)
+        super().__init__('say', f'\"{text}\"')
 
 class Gamerule(Command):
     def __init__(self) -> None:
@@ -371,7 +384,7 @@ class Tag(Command):
         return self
 
 class Clear(Command):
-    def __init__(self ,target: str, itemname: str = '', date : int = -1, max_count: int = -1) -> None:
+    def __init__(self ,target: Target, itemname: str = '', date : int = -1, max_count: int = -1) -> None:
         super().__init__('clear', target, itemname, date if not date == -1 else '', max_count if not max_count == -1 else '')
 
 class Effect(Command):
@@ -414,20 +427,16 @@ class Teleport(Command):
         return self
 
 class Event(Command):
-    def __init__(self, target: Selector | Target, event: event) -> None:
-        super().__init__('event', 'entity',target, event)
+    def __init__(self, target: Selector | Target | str, event: event) -> None:
+        super().__init__('event', 'entity', target, event)
         
 class Function(Command):
     def __init__(self, path) -> None:
         super().__init__('function', path)
 
 class Give(ItemComponents):
-    def __init__(self, target: Selector | Target, item: str, amount: int = 1, data: int = 0) -> None:
-        super().__init__('give', target, item)
-        if amount > 1:
-            self._append_cmd(amount)
-        if data != 0:
-            self._append_cmd(data)
+    def __init__(self, target: Selector | Target | str, item: str, amount: int = 1, data: int = 0) -> None:
+        super().__init__('give', target, item, amount, data)
 
 class ReplaceItem(ItemComponents):
     def __init__(self) -> None:
@@ -437,12 +446,12 @@ class ReplaceItem(ItemComponents):
         super()._new_cmd('block', *poistion, Slots.Container, slot_id, item_name, amount, data)
         return self
 
-    def entity(self, target: Selector | Target, slot: Slots, slot_id: int, item_name: str, amount: int = 1, data: int = 0):
+    def entity(self, target: Selector | Target | str, slot: Slots, slot_id: int, item_name: str, amount: int = 1, data: int = 0):
         super()._new_cmd('entity', target, slot, slot_id, item_name, amount, data)
         return self
 
 class Damage(ItemComponents):
-    def __init__(self, target: Selector | Target, amount: int, cause: DamageCause) -> None:
+    def __init__(self, target: Selector | Target | str, amount: int, cause: DamageCause) -> None:
         super().__init__('damage', target, amount, cause)
 
     def damager(self, damager: Selector | Target) -> None:
@@ -454,24 +463,27 @@ class Playsound(Command):
             self , 
             sound: str, 
             target: Selector | Target = Target.S, 
-            position : position = ('~', '~', '~'),
+            position : position = None,
             volume : int = 1,
             pitch: int = 1,
             minimumVolume : int = 0) -> None:
-        super().__init__('playsound', sound, target, *position, volume, pitch, minimumVolume)
+        super().__init__('playsound', sound, target)
+
+        if position != None:
+            self._append_cmd(*position, volume, pitch, minimumVolume)
 
 class InputPermission(Command):
     def __init__(self) -> None:
         super().__init__('inputpermission', 'set')
 
     def enable(self, 
-               permission : Permission,
+               permission : InputPermissions,
                target: Selector | Target = Target.S):
         self._append_cmd(target, permission, 'enabled')
         return self
 
     def disable(self, 
-               permission : Permission,
+               permission : InputPermissions,
                target: Selector | Target = Target.S):
         self._append_cmd(target, permission, 'disabled')
         return self
@@ -522,15 +534,15 @@ class Scoreboard(Command):
         def __init__(self, parent: 'Scoreboard') -> None:
             self.parent = parent
 
-        def set(self, target: Selector | Target, objective: str, count: int):
+        def set(self, target: Selector | Target | str, objective: str, count: int):
             self.parent._append_cmd('set', target, objective, count)
             return self.parent
         
-        def add(self, target: Selector | Target, objective: str, count: int):
+        def add(self, target: Selector | Target | str, objective: str, count: int):
             self.parent._append_cmd('add', target, objective, count)
             return self.parent
         
-        def remove(self, target: Selector | Target, objective: str, count: int):
+        def remove(self, target: Selector | Target | str, objective: str, count: int):
             self.parent._append_cmd('remove', target, objective, count)
             return self.parent
 
@@ -538,15 +550,15 @@ class Scoreboard(Command):
             self.parent._append_cmd('list', target)
             return self.parent
 
-        def operation(self, target: Selector | Target, objective1: str, operation: ScoreboardOperation, source: str, objective2: str):
+        def operation(self, target: Selector | Target | str, objective1: str, operation: ScoreboardOperation, source: str, objective2: str):
             self.parent._append_cmd('operation', target, objective1, operation, source, objective2)
             return self.parent
 
-        def random(self, target: Selector | Target, objective: str, min: int, max: int):
+        def random(self, target: Selector | Target | str, objective: str, min: int, max: int):
             self.parent._append_cmd('random', target, objective, min, max)
             return self.parent
         
-        def reset(self, target: Selector | Target, objective: str):
+        def reset(self, target: Selector | Target | str, objective: str):
             self.parent._append_cmd('reset', target, objective)
             return self.parent
         
@@ -563,3 +575,103 @@ class Scoreboard(Command):
         self._append_cmd('players')
         return self._ScoreboardPlayers(self)
 
+class Setblock(Command):
+    def __init__(self,
+            tile: Blocks._MinecraftBlock | str | Block,
+            position : position = ('~', '~', '~'),
+            **properties: str,
+            
+        ) -> None:
+        super().__init__('setblock')
+
+        name = tile.identifier if isinstance(tile, (Blocks._MinecraftBlock, Block)) else tile if isinstance(tile, str) else ANVIL.Logger.unsupported_block_type(tile)
+        states = tile.states if isinstance(tile, Blocks._MinecraftBlock) else '' if isinstance(tile, (str, Block)) else ANVIL.Logger.unsupported_block_type(tile)
+                
+        for k, v in properties.items():
+            states.append(f'"{k}" = "{v}"')
+
+        
+        self._append_cmd(*position, name, f'[{", ".join(states)}]')
+
+class Fill(Command):
+    def __init__(self,
+            tile: Blocks._MinecraftBlock | str | Block,
+            start : position = ('~', '~', '~'),
+            end : position = ('~', '~', '~'),
+            old_block_handling: FillMode = FillMode.Replace,
+            **properties: str,
+            
+        ) -> None:
+        super().__init__('fill')
+
+        name = tile.identifier if isinstance(tile, (Blocks._MinecraftBlock, Block)) else tile if isinstance(tile, str) else ANVIL.Logger.unsupported_block_type(tile)
+        states = tile.states if isinstance(tile, Blocks._MinecraftBlock) else '' if isinstance(tile, (str, Block)) else ANVIL.Logger.unsupported_block_type(tile)
+                
+        for k, v in properties.items():
+            states.append(f'"{k}" = "{v}"')
+
+        self._append_cmd(*start, *end, name, f'[{", ".join(states)}]', old_block_handling if old_block_handling != FillMode.Replace else '')
+    
+    def replace(self,
+            tile: Blocks._MinecraftBlock | str | Block,
+            **properties: str,
+        ):
+
+        name = tile.identifier if isinstance(tile, (Blocks._MinecraftBlock, Block)) else tile if isinstance(tile, str) else ANVIL.Logger.unsupported_block_type(tile)
+        states = tile.states if isinstance(tile, Blocks._MinecraftBlock) else '' if isinstance(tile, (str, Block)) else ANVIL.Logger.unsupported_block_type(tile)
+                
+        for k, v in properties.items():
+            states.append(f'"{k}" = "{v}"')
+
+        self._append_cmd(FillMode.Replace, name, f'[{", ".join(states)}]')
+
+class Music(Command):
+    def __init__(self) -> None:
+        super().__init__('music')
+
+    def _base(self, 
+              track_name: str, 
+              volume: float = 1,
+              fade_seconds: float = 1,
+              repeat_mode: MusicRepeatMode = MusicRepeatMode.Once):
+        
+        self._append_cmd(track_name)
+        if volume != 1:
+            self._append_cmd(volume)
+
+        if fade_seconds != 1:
+            self._append_cmd(fade_seconds)
+
+        if repeat_mode != MusicRepeatMode.Once:
+            self._append_cmd(repeat_mode)
+
+        return self
+
+    def queue(self, 
+              track_name: str, 
+              volume: float = 1,
+              fade_seconds: float = 1,
+              repeat_mode: MusicRepeatMode = MusicRepeatMode.Once):
+        self._append_cmd('queue')
+        return self._base(track_name, volume, fade_seconds, repeat_mode)
+
+    def play(self, 
+              track_name: str, 
+              volume: float = 1,
+              fade_seconds: float = 1,
+              repeat_mode: MusicRepeatMode = MusicRepeatMode.Once):
+        self._append_cmd('play')
+        return self._base(track_name, volume, fade_seconds, repeat_mode)
+    
+    def stop(self, fade_seconds: float = 1):
+        self._append_cmd('stop')
+        
+        if fade_seconds != 1:
+            self._append_cmd(fade_seconds)
+
+        return self
+
+    def volume(self, volume: float):
+        self._append_cmd('volume', volume)
+
+        return self

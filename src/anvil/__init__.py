@@ -1,4 +1,4 @@
-from .packages import __version__, os, sys
+from .lib import __version__, sys
 
 if sys.argv[0].endswith('.py'):
     from .api.molang import Math, Query, Variable, molang_conditions

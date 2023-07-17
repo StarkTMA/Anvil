@@ -2,53 +2,190 @@
 
 ---
 
+Version 0.4.2 - 0.4.2.6
+=============
+  [Anvil]
+  -------
+  - Updated to release `1.20.11`.
+  - Updated ``ITEM_SERVER_VERSION`` to `[1.12.10]`
+  - Added lots of docstrings
+  - Changed README from rst to md.
+  - Added basic documentations.
+  
+  [Items]
+  ------------
+  - Added `ItemCooldown`, `ItemRepairable`, `ItemMaxStackSize`, `ItemBlockPlacer`, `ItemRecord`, `ItemShooter`, `ItemProjectile`, `ItemThrowable`.
+  
+  [Commands]
+  ------------
+  - Block states in commands will use equals instead of colon.
+  
+  [UI]
+  ------------
+  - Rewrote the UI trigger mechanic to allow for more complex ui elements.
+
+Version 0.4.1
+=============
+  [Anvil]
+  -------
+  - Added a proper integration of vanilla blocks.
+  - Added a proper `Blocks()` class and `BlockStates` Enumerator to the `vanilla` api. The vanilla blocks will allow you to customize them using their block states.
+  - Components and Commands will only accept `vanilla.Blocks()`, `str()` and `Block()` as inputs and will raise an error otherwise.
+  - Fixed an issue that caused music and sound to not be compiled.
+  - Classes use proper Enumerators.
+  - Added `_debug` a rawtext attribute to ANVIL. this can be useful to display score and debug text as actionbar if DEBUG = 1.
+  - Added a `_SoundEvent()` class to `core.py`. This call will serve as sound manager for Minecraft Vanilla sound event triggers.
+    - Sound Events are only supported for Entities as of now, a new method was added to `Entity.Client.description` that allows adding default sound triggers.
+
+  [Components]
+  ------------
+  - Components that have block inputs will only accept `vanilla.Blocks()`, `str()` and `Block()` instances as inputs and will raise an error otherwise.
+
+  [Items]
+  --------
+  - Rolled `ITEM_SERVER_VERSION` back to `[1.12.1]`.
+  - Added a `Client` property to items, used to set the `Name` and `Icon` of an item as a temporary solution until the full list of item components leave experimental.
+
+  [Commands]
+  ----------
+  - Added `Setblock()` command.
+  - Added `Fill()` command.
+  - Added `Music()` command.
+  - Updated `Execute().If/Unless.Block()` tpo use block states instead of legacy data values.
+  - Commands that have block inputs will only accept `vanilla.Blocks()`, `str()` and `Block()` instances as inputs and will raise an error otherwise.
+  - `Playsound()` no longer appends position by default.
+  - `Say()` now wraps all texts with "" by default.
+
+  [Molang]
+  -------
+  - Added the rest of the molang queries.
+    - Some queries need more information to properly implement therefore they may not work.
+
+
+---
+
+Version 0.4.0
+=============
+  [Anvil]
+  -------
+  - Added support for ScriptAPI
+    - To include scripting in your project use the flag `--scriptapi` when creating a new project. 
+    - Scripts can be added or removed anytime from `config.ini`.
+  - Added support for PBR
+    - To include pbr in your project use the flag `--pbr` when creating a new project. 
+    - PBR can be added or removed anytime from `config.ini`.
+  - Removed the #packaging comment from the generated python script, it's outdated and doesn't represent the functionality of the method anymore.
+  - Updated to release `1.20.1.0`.
+  - Preview builds are no longer tracked, instead focusing solely on releases.
+  - Reusable geometries no longer make copies of the same geometry files, instead only reference them. Referenced entities must be queues before the referencing entity.
+  - Renamed `Permission` enumerator to `InputPermissions`.
+  - `package.py` changes:
+    - Added a lot of docstring.
+    - Removed `RawText`, `random_character_generator`, `CreateImage`, `GetColors`, `CreateTreeFromPath`, `GetPathFromTree`, `MoveFiles`, `DownloadFile`.
+    - Moved `CreateDirectoriesFromTree` to `cli.py`
+    - Moved `ShortenDict` inside the `AddonObject` class.
+  - Added docstrings to the `cli` tool.
+  - Started moving from the basic `RaiseError` to proper Errors.
+  - Removing a component from an Actor no longer results in an error if the component doesn't exist.
+  - Empty functions will no longer be exported.
+  - Restructured the Schemes function, now it's a proper class.
+  - Created a Logger class to track error and operations.
+  - Removed type subdirectory from RP animation and render controllers.
+  - Added a version enforcing method to components.
+    - Implemented the enforcements in the items components.
+    - Components that require a minimum format version will raise an error if Anvil format version is not equal or higher.
+    - This change will allow us to work on implementing experimental features safely.
+  - Added the new Items and Blocks to the vanilla module.
+  - Added `all_slots_empty` and `any_slots_empty` filters.
+  - Added the `spawn_item_event` key to the `SpawnEntity` component class.
+  - Formatted some Logger error messages.
+  - Updated `ITEM_SERVER_VERSION` to `1.20.0`
+  
+> <span style="color:red">**Breaking behaviour**</span>
+>
+  >- Config file is no longer automatically initialized, instead it's an `ANVIL` property.
+  >- The gloabl variables such as `NAMESPACE` and `PROJECTNAME` are now accessible through the `ANVIL` instance.
+  >   - `NAMESPACE -> ANVIL.NAMESPACE`
+  >- Localizing uses a key_value arguments instead of a manual string now
+
+  [Components]
+  ------------
+  - Added `InsideBlockNotifier()`, `Transformation()`, `Equipment()`, `EquipItem()`, `FireImmune()`, `SendEvent()` components.
+  - Added `is_raider`, `is_variant`, `is_mark_variant`, `is_skin_id` filters.
+  - Removed the `particle` argument from the `Particle` component, use `particle_on_hit` method instead.
+  - 
+  
+  [Blocks]
+  --------
+  - Custom blocks textures are moved inside a `anvil` folder to separate them from vanilla textures.
+
+  [Items]
+  -------
+  - 
+
+  [Commands]
+  ----------
+  - `Give` command always include the amount and data, this is done to account for possible use of item components.
+  - `Summon` command now always wraps nametags inside additional double quotes.
+  - `name` argument in the target selectors wraps names inside additional double quotes.
+  
+  [Molang]
+  -------
+  - 
+
+  [UI]
+  ----
+  - New UI screen will automatically populate the `_ui_defs.json` file.
+  - Added an `anvil_common` screen to host common elements.
+
+---
+
 Version 0.3.5
 =============
   [Anvil]
   -------
   - Updated the extensions of generated files.
   - Vanilla entities are automatically exported to the vanilla directory, regardless of the provided directory.
-  - Updated to release ``1.19.81.01`` and preview ``1.20.0.20``.
-  - Actors client ``scale`` values is properly set to a string.
-  - ``TimedFunction`` is no longer tied to an actor and will be executed on the server fake player.
+  - Updated to release `1.19.81.01` and preview `1.20.0.20`.
+  - Actors client `scale` values is properly set to a string.
+  - `TimedFunction` is no longer tied to an actor and will be executed on the server fake player.
     - Tags are also no longer required.
     - To get the scoreboard objective for the TimedFunction, call it's str representation.
     - To test if the TimedFunction has finished it's run, check if the objective is equal to -1.
   - Added an error validation for path length exceeding 80 characters.
   - Anvil packaging function allows for applying an overlay to keyarts now.
-  - Replaced the Exporter Parent class with ``AddonObject`` and moved extensions and paths to each individual class.
-  - Moved ``LootTable``, ``Recipe``, ``Particle`` from the old ``EngineComponent`` to ``AddonObject``.
-  - ``Items`` still rely on ``EngineComponent`` until the rework in ``1.20``
+  - Replaced the Exporter Parent class with `AddonObject` and moved extensions and paths to each individual class.
+  - Moved `LootTable`, `Recipe`, `Particle` from the old `EngineComponent` to `AddonObject`.
+  - `Items` still rely on `EngineComponent` until the rework in `1.20`
   - Removed unnecessary modules.
   - Added an items module in preparation for the new items.
-  - Pack versioning is now supported using the ``release`` key in ``config.ini``
+  - Pack versioning is now supported using the `release` key in `config.ini`
   
   [Components]
   ------------
-  - Added ``InsideBlockNotifier()``, ``Transformation()``, ``Equipment()``, ``EquipItem()`` components
-  - Added ``is_raider``, ``is_variant``, ``is_mark_variant``, ``is_skin_id`` filters.
+  - Added `InsideBlockNotifier()`, `Transformation()`, `Equipment()`, `EquipItem()` components
+  - Added `is_raider`, `is_variant`, `is_mark_variant`, `is_skin_id` filters.
   
   [Blocks]
   --------
-  - Fully implemented ``BlockTransformation``, ``BlockDisplayName`` and ``BlockCraftingTable`` components.
-  - 
+  - Fully implemented `BlockTransformation`, `BlockDisplayName` and `BlockCraftingTable` components.
   
   [Items]
   --------
   - Added the basic Items class.
-  - Added ``ItemDurability``, ``ItemDisplayName``, ``ItemFuel``, ``ItemEntityPlacer``.
-  - Partially added ``ItemIcon``.
+  - Added `ItemDurability`, `ItemDisplayName`, `ItemFuel`, `ItemEntityPlacer`.
+  - Partially added `ItemIcon`.
 
   [Commands]
   ----------
-  - Added ``InputPermission()`` command.
-  - Added ``haspermission``, ``hasitem``, ``gamemode`` and ``scores`` arguments to the target Selector.
-  - Added ``Scoreboard()`` command.
+  - Added `InputPermission()` command.
+  - Added `haspermission`, `hasitem`, `gamemode` and `scores` arguments to the target Selector.
+  - Added `Scoreboard()` command.
   
   [Molang]
   --------
   - `&`, `|` and `~` binary operators wrap the expression in parentheses `()`.
-  - Added ``RotationToCamera()``, ``Health``, ``MaxHealth``
+  - Added `RotationToCamera()`, `Health`, `MaxHealth`
 
 > <span style="color:red">**Breaking behaviour**</span>
 > 
@@ -56,15 +193,15 @@ Version 0.3.5
   >
   >For instance, consider the following example:
   >  
-  >``Query.Property('interacted') & Query.MarkVariant == 1``
+  >`Query.Property('interacted') & Query.MarkVariant == 1`
   >  
   > Although the expression may seem logical at first, it will be compiled to 
   >
-  >``"(q.property('starktma:interacted') && q.mark_variant) == 1"`` which is not functioning correctly.
+  >`"(q.property('starktma:interacted') && q.mark_variant) == 1"` which is not functioning correctly.
   >  
   >To avoid this issue, we suggest writing the expression as follows:
   >  
-  >``Query.Property('interacted') & (Query.MarkVariant == 1)``
+  >`Query.Property('interacted') & (Query.MarkVariant == 1)`
 
 ---
 
@@ -73,7 +210,7 @@ Version 0.3.4
   [Anvil]
   -------
   - Anvil clones the bedrock samples again, untracked. `https://github.com/Mojang/bedrock-samples.git`
-  - Updated to Release ``1.19.71.02``
+  - Updated to Release `1.19.71.02`
   - Changed the CHANGELOG, README and TODO to md from rst.
   
   [Components]
@@ -91,8 +228,9 @@ Version 0.3.4
   - Added `GetEquippedItemName`, `Position`, `PositionDelta`, `ItemIsCharged`, `ItemInUseDuration`, `IsRiding`, `ModifiedMoveSpeed`, `IsDelayedAttacking`, `IsCharged`, `IsCasting`, `IsRoaring`, `MarkVariant`
   - Fixed some bugs with arithmetic operations.
   - 
-  
+
 ---
+
 
 Version 0.3.3
 =============
@@ -155,7 +293,7 @@ Version 0.3.2
   
   [Blocks]
   --------
-    - Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
+  - Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
   
 ---
 
@@ -169,6 +307,7 @@ Version 0.3.1
   - Added the filters `is_block`, 
   - Molangs now support subtraction and multiplication.
   - Added a snippets module to serve as a host for useful and quick functions.
+  
   [Bug Fixes]
   -----------
   - Fixed the ANVIL.mcworld packagin method, now output a non corrupted world.
@@ -207,7 +346,7 @@ Version 0.2.6
 
 Version 0.2.5
 =============
-  - Sounds ``load_on_low_memory`` is set to `False` by default.
+  - Sounds `load_on_low_memory` is set to `False` by default.
   - UI `text_alignment` use `UITextAlignment` now instead of `UIAnchor`.
   
 ---
@@ -280,7 +419,7 @@ Version 0.1.0
   - Added a command validator to the commands namespace.
   - Server animations now append new commands instead of overwriting them if not called in the same line.
   - Reformatted Tellraw and Titleraw to support text, selector, score and translate of the rawtext components.
-  - Updated the Exported class to use the MakePath function.
+  - Updated the Exported class to use the os.path.join function.
   - Integrated AddDespawnMechanic and OptimizeEntity to the NewEntity class, now included with all entities.
    
 ---

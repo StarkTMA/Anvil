@@ -1,0 +1,53 @@
+site_name: Anvil Documentation
+
+theme:
+  name: material
+  
+  palette:
+    scheme: slate
+    primary: red
+    
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.footer
+
+copyright: Copyright © 2023 StarkTMA
+
+extra:
+  homepage: https://starktma.net
+  generator: false
+  social:
+    - icon: fontawesome/brands/github 
+      link: https://github.com/starktma
+
+    - icon: fontawesome/brands/discord
+      link: https://discord.com/invite/qKsKWbB
+    
+    - icon: fontawesome/brands/linkedin 
+      link: https://linkedin.com/in/yasser-benfoughal
+
+    - icon: fontawesome/brands/twitter 
+      link: https://twitter.com/@starktma_
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+
+nav:
+  - Home: index.md
+  - Api Reference: 
+    - Anvil: api/lib.md
+    - Actors: api/actors.md
+    - Blocks: api/blocks.md
+    - Commands: api/commands.md
+    - Components: api/components.md
+    - Items: api/items.md
+    - Molang: api/molang.md
+    - UI: api/ui.md
+    - Vanilla: api/vanilla.md
+
