@@ -1,3 +1,4 @@
+"""A collection of useful functions and classes used throughout the program."""
 import csv
 import json as json
 import logging
@@ -8,7 +9,6 @@ import re
 import shutil
 import string
 import sys
-import time
 import zipfile
 from collections import OrderedDict, defaultdict
 from configparser import ConfigParser
@@ -43,85 +43,37 @@ _range = NewType("[range]", str)
 
 inf = 99999999999
 
+
 class Arguments(Enum):
+    """Enumeration for the different types of arguments. """
+
     def __str__(self) -> str:
         return self.value
 
-def FileExists(path):
+
+def FileExists(path) -> bool:
+    """ Checks if a file exists.
+
+    Args:
+        path (_type_): The path to the file.
+
+    Returns:
+        bool: True if the file exists, False otherwise.
+    """
     return os.path.exists(path)
 
 
-# A function that checks if a file or directory exists at the specified path.
+def normalize_180(angle: float) -> float:
+    """Normalizes an angle between -180 and 180.
 
+    Args:
+        angle (float): The angle to be normalized.
 
-def normalize_180(angle):
+    Returns:
+        float: The normalized angle.
+    """
     return (angle + 540) % 360 - 180
 
-
-# A function that normalizes an angle to the range [-180, 180].
-
-
-APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")
-# The path to the AppData directory.
-
-DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")
-# The path to the desktop directory.
-
-MOLANG_PREFIXES: tuple[str, ...] = (
-    "q.",
-    "v.",
-    "c.",
-    "t.",
-    "query.",
-    "variable.",
-    "context.",
-    "temp.",
-)
-# A tuple of prefixes commonly used in MoLang expressions.
-
-
-MANIFEST_BUILD: list[int] = [1, 19, 70]  # The build version of the manifest.
-BLOCK_SERVER_VERSION: str = "1.19.80"  # The version of the block server.
-ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
-ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
-# The version of the behavior pack animation.
-BP_ANIMATION_VERSION: str = "1.10.0"
-# The version of the resource pack animation.
-RP_ANIMATION_VERSION: str = "1.8.0"
-ANIMATION_CONTROLLERS_VERSION: str = (
-    "1.10.0"  # The version of the animation controllers.
-)
-
-SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
-GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
-# The version of the render controller.
-RENDER_CONTROLLER_VERSION: str = "1.10.0"
-# The version of the sound definitions.
-SOUND_DEFINITIONS_VERSION: str = "1.14.0"
-DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
-FOG_VERSION: str = "1.16.100"  # The version of the fog.
-MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
-ITEM_SERVER_VERSION: str = "1.12.0"  # The version of the item server.
-# The version of the Minecraft server module.
-MODULE_MINECRAFT_SERVER: str = "1.2.0"
-MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"
-
-# --------------------------------------------------------------------------
-# Commands
-# --------------------------------------------------------------------------
-
-class FillMode(Arguments):
-    Replace = "replace"
-    Outline = "outline"
-    Hollow = "hollow"
-    Destroy = "destroy"
-    Keep = "keep"
-
-class MusicRepeatMode(Arguments):
-    Once = 'play_once'
-    Loop = 'loop'
-
-# --------------------------------------------------------------------------
 
 def clamp(value: float, _min: float, _max: float) -> float:
     """
@@ -153,6 +105,53 @@ def frange(start: int, stop: int, num: float = 1):
     step = (stop - start) / (num - 1)
     values = [round(start + i * step, 2) for i in range(num)]
     return values
+
+
+APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")
+DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")
+MOLANG_PREFIXES: tuple[str] = (
+    "q.",
+    "v.",
+    "c.",
+    "t.",
+    "query.",
+    "variable.",
+    "context.",
+    "temp.",
+)
+MANIFEST_BUILD: list[int] = [1, 19, 70]  # The build version of the manifest.
+BLOCK_SERVER_VERSION: str = "1.19.80"  # The version of the block server.
+ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
+ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
+BP_ANIMATION_VERSION: str = "1.10.0" # The version of the behavior pack animation.
+RP_ANIMATION_VERSION: str = "1.8.0" # The version of the resource pack animation.
+ANIMATION_CONTROLLERS_VERSION: str = "1.10.0" # The version of the animation controllers.
+SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
+GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
+RENDER_CONTROLLER_VERSION: str = "1.10.0" # The version of the render controller.
+SOUND_DEFINITIONS_VERSION: str = "1.14.0" # The version of the sound definitions.
+DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
+FOG_VERSION: str = "1.16.100"  # The version of the fog.
+MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
+ITEM_SERVER_VERSION: str = "1.20.10"  # The version of the item server.
+MODULE_MINECRAFT_SERVER: str = "1.2.0" # The version of the Minecraft server module.
+MODULE_MINECRAFT_SERVER_UI: str = "1.1.0" # The version of the Minecraft UI module.
+
+
+# --------------------------------------------------------------------------
+
+
+class FillMode(Arguments):
+    Replace = "replace"
+    Outline = "outline"
+    Hollow = "hollow"
+    Destroy = "destroy"
+    Keep = "keep"
+
+
+class MusicRepeatMode(Arguments):
+    Once = "play_once"
+    Loop = "loop"
 
 
 class LootPoolType(Arguments):
@@ -281,6 +280,7 @@ class Effects(Arguments):
     Poison = "poison"
     Absorption = "absorption"
     Invisibility = "invisibility"
+    SlowFalling = "slow_falling"
 
 
 class Gamemodes(Arguments):
@@ -424,136 +424,6 @@ class Target(Arguments):
     Initiator = "@initiator"
 
 
-class Selector:
-    """
-    A class used to construct a target selector for Minecraft commands. The class offers various methods to set target
-    parameters such as its type, name, count, coordinates, distance, volume, scores, rotation, permissions, and gamemode.
-    """
-
-    def __init__(self, target: Target = Target.S) -> None:
-        """
-        Initializes a Selector object.
-
-        Args:
-            target (Target, optional): The target type. Defaults to Target.S (self).
-        """
-        self.target = target
-        self.arguments = []
-
-    def _args(self, **args):
-        for key, value in args.items():
-            if not value is None and {key: value} not in self.arguments:
-                self.arguments.append({key: value})
-        return self
-
-    def type(self, *types: str):
-        for type in types:
-            self._args(type=type)
-        return self
-
-    def name(self, name: str):
-        self._args(name=f'"{name}"')
-        return self
-
-    def family(self, family: str):
-        self._args(family=family)
-        return self
-
-    def count(self, count: int):
-        self._args(c=count)
-        return self
-
-    def coordinates(
-        self, *, x: coordinate = None, y: coordinate = None, z: coordinate = None
-    ):
-        self._args(x=x, y=y, z=z)
-        return self
-
-    def distance(self, *, r: coordinate = None, rm: coordinate = None):
-        self._args(r=r, rm=rm)
-        return self
-
-    def volume(
-        self, *, dx: coordinate = None, dy: coordinate = None, dz: coordinate = None
-    ):
-        self._args(dx=dx, dy=dy, dz=dz)
-        return self
-
-    def scores(self, **scores):
-        score_values = {}
-        for score, value in scores.items():
-            score_values.update({score: value})
-        self._args(scores=score_values)
-        return self
-
-    def tag(self, *tags: str):
-        for tag in tags:
-            self._args(tag=tag)
-        return self
-
-    def rotation(
-        self,
-        *,
-        ry: rotation = None,
-        rym: rotation = None,
-        rx: rotation = None,
-        rxm: rotation = None,
-    ):
-        self._args(
-            ry=normalize_180(round(ry, 2)) if not ry is None else ry,
-            rym=normalize_180(round(rym, 2)) if not rym is None else rym,
-            rx=clamp(round(rx, 2), -90, 90) if not rx is None else rx,
-            rxm=clamp(round(rxm, 2), -90, 90) if not rxm is None else rxm,
-        )
-        return self
-
-    def has_permission(self, *, camera: bool = None, movement: bool = None):
-        permission = {}
-        if not camera is None:
-            permission.update({"camera": "enabled" if camera else "disabled"})
-        if not movement is None:
-            permission.update({"movement": "enabled" if movement else "disabled"})
-
-        self._args(haspermission=permission)
-        return self
-
-    def has_item(
-        self,
-        *,
-        item,
-        data: int = -1,
-        quantity: int = None,
-        location: Slots = None,
-        slot: int = None,
-    ):
-        test_item = {
-            "item": item,
-            "data": data if data != -1 else None,
-            "quantity": quantity,
-            "location": location,
-            "slot": slot,
-        }
-        self._args(hasitem=test_item)
-        return self
-
-    def gamemode(self, gamemode: Gamemodes):
-        self._args(m=gamemode)
-        return self
-
-    def __str__(self):
-        if len(self.arguments) > 0:
-            args = []
-            for i in self.arguments:
-                for key, value in i.items():
-                    values = value
-                    if type(value) is dict:
-                        values = f"{{{', '.join(f'{k} = {v}' for k, v in value.items() if not v is None)}}}"
-                    args.append(f"{key} = {values}")
-
-            self.target = f"{self.target} [{', '.join(args)}]"
-        return self.target
-
-
 class Anchor(Arguments):
     """
     Enumeration representing the two anchor points that can be used in Minecraft: the feet and the eyes.
@@ -599,24 +469,6 @@ class BlockFaces(Arguments):
     West = "west"
     Side = "side"
     All = "all"
-
-
-class BlockDescriptor(dict):
-    """
-    A class that inherits from Python's built-in dict class. It is used to create a descriptor for a block in Minecraft
-    with its name, tags, and states.
-    """
-
-    def __init__(self, name: str, tags: "Molang", **states):
-        """
-        Initializes a BlockDescriptor object.
-
-        Args:
-            name (str): The name of the block.
-            tags (Molang): The tags of the block.
-            **states: The states of the block.
-        """
-        super().__init__(name=name, tags=tags, states=states)
 
 
 class CameraShakeType(Arguments):
@@ -699,7 +551,6 @@ class FilterEquipmentDomain(Arguments):
     Torso = "torso"
 
 
-# Materials classes
 class MaterialStates(Arguments):
     """
     Enumeration representing the different states a material can be in Minecraft.
@@ -874,7 +725,248 @@ class EntitySoundEvent(Arguments):
     Pant = "pant"
 
 
+class Selector:
+    """
+    A class used to construct a target selector for Minecraft commands. The class offers various methods to set target
+    parameters such as its type, name, count, coordinates, distance, volume, scores, rotation, permissions, and gamemode.
+    """
+
+    def __init__(self, target: Target = Target.S) -> None:
+        """
+        Initializes a Selector object.
+
+        Args:
+            target (Target, optional): The target type. Defaults to Target.S (self).
+        """
+        self.target = target
+        self.arguments = []
+
+    def _args(self, **args):
+        for key, value in args.items():
+            if not value is None and {key: value} not in self.arguments:
+                self.arguments.append({key: value})
+        return self
+
+    def type(self, *types: str | Identifier):
+        """Sets the type of the target."""
+        for type in types:
+            self._args(type=type)
+        return self
+
+    def name(self, name: str):
+        """Sets the name of the target.
+
+        Args:
+            name (str): The name of the target.
+
+        """
+        self._args(name=f'"{name}"')
+        return self
+
+    def family(self, family: str):
+        """Sets the family of the target.
+
+        Args:
+            family (str): The family of the target.
+
+        """
+        self._args(family=family)
+        return self
+
+    def count(self, count: int):
+        """Sets the count of the target.
+
+        Args:
+            count (int): The number of targets to select.
+
+        """
+        self._args(c=count)
+        return self
+
+    def coordinates(
+        self, *, x: coordinate = None, y: coordinate = None, z: coordinate = None
+    ):
+        """Sets the coordinates of the target.
+
+        Args:
+            x (coordinate, optional): The x coordinate. Defaults to None.
+            y (coordinate, optional): The y coordinate. Defaults to None.
+            z (coordinate, optional): The z coordinate. Defaults to None.
+
+        """
+        self._args(x=x, y=y, z=z)
+        return self
+
+    def distance(self, *, r: coordinate = None, rm: coordinate = None):
+        """Sets the distance of the target.
+
+        Args:
+            r (coordinate, optional): The maximum distance. Defaults to None.
+            rm (coordinate, optional): The minimum distance. Defaults to None.
+
+        """
+        self._args(r=r, rm=rm)
+        return self
+
+    def volume(
+        self, *, dx: float = None, dy: float = None, dz: float = None
+    ):
+        """Sets the volume of the target.
+
+        Args:
+            dx (float, optional): The x volume. Defaults to None.
+            dy (float, optional): The y volume. Defaults to None.
+            dz (float, optional): The z volume. Defaults to None.
+
+        """
+        self._args(dx=dx, dy=dy, dz=dz)
+        return self
+
+    def scores(self, **scores):
+        """Sets the scores of the target.
+
+        Example:
+            >>> selector.scores(score1=1, score2=2, score3=3)
+        """
+        score_values = {}
+        for score, value in scores.items():
+            score_values.update({score: value})
+        self._args(scores=score_values)
+        return self
+
+    def tag(self, *tags: str):
+        """Sets the tags of the target.
+
+        Example:
+            >>> selector.tag("tag1", "!tag2")
+        """
+        for tag in tags:
+            self._args(tag=tag)
+        return self
+
+    def rotation(
+        self,
+        *,
+        ry: float = None,
+        rym: float = None,
+        rx: float = None,
+        rxm: float = None,
+    ):
+        """Sets the rotation of the target.
+
+        Args:
+            ry (float, optional): The maximum yaw. Defaults to None.
+            rym (float, optional): The minimum yaw. Defaults to None.
+            rx (float, optional): The maximum pitch. Defaults to None.
+            rxm (float, optional): The minimum pitch. Defaults to None.
+
+        """
+        self._args(
+            ry=normalize_180(round(ry, 2)) if not ry is None else ry,
+            rym=normalize_180(round(rym, 2)) if not rym is None else rym,
+            rx=clamp(round(rx, 2), -90, 90) if not rx is None else rx,
+            rxm=clamp(round(rxm, 2), -90, 90) if not rxm is None else rxm,
+        )
+        return self
+
+    def has_permission(self, *, camera: bool = None, movement: bool = None):
+        """Selects targets that have the specified permissions.
+
+        Args:
+            camera (bool, optional): Defaults to None.
+            movement (bool, optional): Defaults to None.
+
+        """
+        permission = {}
+        if not camera is None:
+            permission.update({"camera": "enabled" if camera else "disabled"})
+        if not movement is None:
+            permission.update({"movement": "enabled" if movement else "disabled"})
+
+        self._args(haspermission=permission)
+        return self
+
+    def has_item(
+        self,
+        *,
+        item : str | Identifier,
+        data: int = -1,
+        quantity: int = None,
+        location: Slots = None,
+        slot: int = None,
+    ):
+        """Selects targets that have the specified item.
+
+        Args:
+            item (str | Identifier): The item to check for.
+            data (int, optional): The data value of the item. Defaults to -1.
+            quantity (int, optional): The quantity of the item. Defaults to None.
+            location (Slots, optional): The location of the item. Defaults to None.
+            slot (int, optional): The slot of the item. Defaults to None.
+
+        """
+        test_item = {
+            "item": item,
+            "data": data if data != -1 else None,
+            "quantity": quantity,
+            "location": location,
+            "slot": slot,
+        }
+        self._args(hasitem=test_item)
+        return self
+
+    def gamemode(self, gamemode: Gamemodes):
+        """Selects targets that have the specified gamemode.
+
+        Args:
+            gamemode (Gamemodes): The gamemode to check for.
+
+        """
+        self._args(m=gamemode)
+        return self
+
+    def __str__(self) -> str:
+        """Returns the target selector as a string."""
+        if len(self.arguments) > 0:
+            args = []
+            for i in self.arguments:
+                for key, value in i.items():
+                    values = value
+                    if type(value) is dict:
+                        values = f"{{{', '.join(f'{k} = {v}' for k, v in value.items() if not v is None)}}}"
+                    args.append(f"{key} = {values}")
+
+            self.target = f"{self.target} [{', '.join(args)}]"
+        return self.target
+
+
+class BlockDescriptor(dict):
+    """
+    A class that inherits from Python's built-in dict class. It is used to create a descriptor for a block in Minecraft
+    with its name, tags, and states.
+    """
+
+    def __init__(self, name: str, tags: "Molang", **states):
+        """
+        Initializes a BlockDescriptor object.
+
+        Args:
+            name (str): The name of the block.
+            tags (Molang): The tags of the block.
+            **states: The states of the block.
+        """
+        super().__init__(name=name, tags=tags, states=states)
+
+#Legacy code, will be removed in the future.
 def Defaults(type, *args):
+    """
+
+    Args:
+        type (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     match type:
         case "recipe_shaped":
             return {
@@ -938,8 +1030,6 @@ def Defaults(type, *args):
                     "conditions": [],
                 },
             }
-        case "music_definitions":
-            return {}
         case "loot_table":
             return {"pools": []}
 
@@ -1038,42 +1128,94 @@ def zipit(zip_name, dir_list: dict) -> None:
     zipf.close()
 
 
-# ------------------------------------------------------------------------
-# Control classes
-# ------------------------------------------------------------------------
+def CreateDirectory(path: str) -> None:
+    """
+    Creates a new directory.
+
+    Args:
+        path (str): The path to the new directory.
+    """
+    this_path = os.path.join("./", path.lstrip("/"))
+    os.makedirs(this_path, exist_ok=True)
 
 
 class _Config:
+    """A class used to read and write to the config.ini file.
+    """
     def __init__(self) -> None:
+        """Initializes a Config object.
+        """
         self._config = ConfigParser()
         self._config.read("config.ini")
 
     def save(self):
+        """Saves the config.ini file."""
         with open("config.ini", "w") as f:
             self._config.write(f)
 
-    def set(self, section, option, value):
+    def set(self, section: str, option: str, value):
+        """Sets a value in the config.ini file.
+
+        Args:
+            section (str): The section to set the value in.
+            option (str): The option to set the value in.
+            value (Any): The value to set.
+        """
         if not self._config.has_section(section):
             self._config.add_section(section)
 
         self._config[section][option] = str(value)
         self.save()
 
-    def has_option(self, section, option):
+    def has_option(self, section: str, option: str) -> bool:
+        """Checks if an option exists in the config.ini file.
+
+        Args:
+            section (str): The section to check the option in.
+            option (str): The option to check.
+
+        Returns:
+            bool: True if the option exists, False otherwise.
+        """
         return option in self._config[section]
 
-    def has_section(self, section):
+    def has_section(self, section: str) -> bool:
+        """Checks if a section exists in the config.ini file.
+
+        Args:
+            section (str): The section to check.
+
+        Returns:
+            bool: True if the section exists, False otherwise.
+        """
         return section in self._config
 
-    def get(self, section, option):
+    def get(self, section, option) -> str:
+        """Gets a value from the config.ini file.
+
+        Args:
+            section (str): The section to get the value from.
+            option (str): The option to get the value from.
+
+        Returns:
+            str: The value of the option.
+        """
         return self._config[section][option]
 
 
 class _Logger:
-    Red = lambda text: style(text, "red")
-    Yellow = lambda text: style(text, "yellow")
-    Green = lambda text: style(text, "green")
-    Cyan = lambda text: style(text, "cyan")
+    """A class used to log messages to the console and to a log file."""
+    def Red(text):
+        return style(text, "red")
+
+    def Yellow(text):
+        return style(text, "yellow")
+
+    def Green(text):
+        return style(text, "green")
+
+    def Cyan(text):
+        return style(text, "cyan")
 
     def __init__(self) -> None:
         logging.basicConfig(
@@ -1196,35 +1338,74 @@ class _Logger:
     def unsupported_font_size(self):
         m = f"Font character_size must be a multiple of 16."
         self.logger.error(m)
-        raise TypeError(_Logger.Red("[ERROR]: " + m))
+        raise ValueError(_Logger.Red("[ERROR]: " + m))
 
     # Error
     def unsupported_block_type(self, block):
         m = f"block must be  of a [Blocks] or [str] type. Error at {block}."
         self.logger.error(m)
-        raise TypeError(_Logger.Red("[ERROR]: " + m))
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
     # Error
     def namespace_not_in_geo(self, geo_file, geo_namespace):
-        m = f'The geometry file {geo_file}.geo.json doesn\'t contain a geometry called {geo_namespace}'
+        m = f"The geometry file {geo_file}.geo.json doesn't contain a geometry called {geo_namespace}"
         self.logger.error(m)
-        raise TypeError(_Logger.Red("[ERROR]: " + m))
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
     # Error
     def multiple_rotations(self):
-        m = f'Multiple rotation arguments were used. A maximum of 1 is allowed.'
+        m = f"Multiple rotation arguments were used. A maximum of 1 is allowed."
         self.logger.error(m)
-        raise TypeError(_Logger.Red("[ERROR]: " + m))
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
+    # Warn
+    def missing_state(self, target, controller, state):
+        m = f'{target} {controller} is missing the animation state "{state}".'
+        self.logger.warn(m)
+        click.echo(_Logger.Yellow("[WARNING]: " + m))
 
+    # Error
+    def dialogue_max_buttons(self, scene_tag, buttons_len):
+        m = f"The Dialogue scene {scene_tag} has {buttons_len} buttons, The maximum allowed is 6."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
+    # Error
+    def fog_start_end(self, fog_start, fog_end):
+        m = f"fog_end: [{fog_end}] must be greater than fog_start: [{fog_start}]."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
+    # Error
+    def unsupported_model_type(self, model):
+        m = f"model must be of a [entity], [attachables] or [blocks] type. Error at {model}."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
+    # Error
+    def no_geo_found(self, geo):
+        m = f"The Geometry file {geo} does not have any geometry."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
-    # Actor Client
+    # Error
+    def no_anim_found(self, anim):
+        m = f"The Animation file {anim} does not have any animations."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
     def client_type_unsupported(self, type, entity):
-        return f"{Message.ERROR}: {type} is an unsupported Actor Type, at {entity}."
+        m = f"{type} is not a supported Actor Type, error at {entity}."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
+    # Identifiers
+    def namespaces_not_allowed(self, name):
+        m = f"Identifiers are not valid name formats, error at {name}."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
+    
     # Entity Client
     def missing_texture(self, entity):
         return f'{Message.ERROR}: {style(entity, "green")} missing a texture.'
@@ -1247,16 +1428,8 @@ class _Logger:
     def damage_cause_error(self):
         return f"{Message.ERROR}: Invalid damage cause."
 
-    # Entity Server
-    def missing_state(self, identifier, controller, state):
-        return f'{Message.WARNING}: {style(identifier, "green")} - {controller} - Missing state "{style(state, "green")}".'
-
     def function_error(self, type, function):
         return f"{Message.ERROR}: ANVIL.{type}() accepts Function objects only, Error at {function}"
-
-    # Dialogues
-    def dialogue_max_buttons(self, scene_tag, buttons_len):
-        return f"{Message.ERROR}: The Dialogue scene {scene_tag} has {buttons_len} buttons, The maximum allowed is 6."
 
     # General
     def check_update(self):
@@ -1292,11 +1465,6 @@ class _Logger:
             + "\033[A"
         )
 
-    # Identifiers
-    def namespaces_not_allowed(self, identifier):
-        return (
-            f'{Message.ERROR}: Namespaces are not allowed. {style(identifier, "green")}'
-        )
 
     # Molang
     def molang_only(self, command):
@@ -1304,6 +1472,8 @@ class _Logger:
 
 
 class _JsonSchemes:
+    """A class used to read and write to the json_schemes.json file."""
+
     @staticmethod
     def structure(project_name):
         return {
@@ -1789,7 +1959,7 @@ class _JsonSchemes:
             "minecraft:item": {"components": {}},
         }
 
-    # To be removed after 1.20.10
+    # To be removed after HCF items are fully supported
     @staticmethod
     def client_item():
         return {
@@ -1803,19 +1973,9 @@ class _JsonSchemes:
         return {
             "individual_event_sounds": {},
             "block_sounds": {},
-            "entity_sounds": {"entities":{}},
+            "entity_sounds": {"entities": {}},
             "interactive_sounds": {},
         }
-
-def CreateDirectory(path: str) -> None:
-    """
-    Creates a new directory.
-
-    Args:
-        path (str): The path to the new directory.
-    """
-    this_path = os.path.join("./", path.lstrip("/"))
-    os.makedirs(this_path, exist_ok=True)
 
 
 def File(

@@ -1,12 +1,12 @@
-import os
 import json
-import click
-from github import Github
-from pathlib import Path
+import os
 from datetime import datetime
 from uuid import uuid4
 
-from .lib import _JsonSchemes, File, CreateDirectory, APPDATA, DESKTOP, _Config, _Logger
+import click
+from github import Github
+
+from .lib import APPDATA, DESKTOP, CreateDirectory, File, _Config, _JsonSchemes, _Logger
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -58,12 +58,42 @@ def cli() -> None:
 @cli.command(help="Initiate an Anvil project")
 @click.argument("namespace")
 @click.argument("project_name")
-@click.option("--preview", is_flag=True, default=False, show_default=True, help="Generates the project in Minecraft Preview com.mojang instead of release.")
-@click.option("--fullns", is_flag=True, default=False, show_default=True, help="Sets the Project namespace to the full namespace.project_name")
-@click.option("--scriptapi", is_flag=True, default=False, show_default=True, help="Adds dependencies support of ScriptAPI")
-@click.option("--pbr", is_flag=True, default=False, show_default=True, help="Adds dependencies support of Physically based rendering")
-
-def create(namespace: str, project_name: str, preview: bool = False, fullns: bool = False, scriptapi: bool = False, pbr: bool = False) -> None:
+@click.option(
+    "--preview",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Generates the project in Minecraft Preview com.mojang instead of release.",
+)
+@click.option(
+    "--fullns",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Sets the Project namespace to the full namespace.project_name.",
+)
+@click.option(
+    "--scriptapi",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Adds dependencies support of ScriptAPI.",
+)
+@click.option(
+    "--pbr",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Adds dependencies support of Physically based rendering.",
+)
+def create(
+    namespace: str,
+    project_name: str,
+    preview: bool = False,
+    fullns: bool = False,
+    scriptapi: bool = False,
+    pbr: bool = False,
+) -> None:
     """
     Create an Anvil project.
 
@@ -83,10 +113,16 @@ def create(namespace: str, project_name: str, preview: bool = False, fullns: boo
 
     # Checks for Value Errors
     if len(namespace) > 8:
-        raise ValueError(click.style("Namespace must be 8 characters or less.", fg="red"))
-
+        raise ValueError(
+            click.style("Namespace must be 8 characters or less.", fg="red")
+        )
+    if namespace == "minecraft":
+        raise ValueError('"minecraft" is a reserved namespace.')
+    
     if len(project_name) > 16:
-        raise ValueError(click.style("Project name must be 16 characters or less.", fg="red"))
+        raise ValueError(
+            click.style("Project name must be 16 characters or less.", fg="red")
+        )
 
     # Prints message
     click.echo(f'Initiating {project_name.title().replace("-", " ").replace("_", " ")}')
@@ -95,11 +131,24 @@ def create(namespace: str, project_name: str, preview: bool = False, fullns: boo
     github = Github().get_repo("Mojang/bedrock-samples")
     if preview:
         target = "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe"
-        latest_build = json.loads(github.get_contents("version.json", "preview").decoded_content.decode())["latest"]["version"]
+        latest_build = json.loads(
+            github.get_contents("version.json", "preview").decoded_content.decode()
+        )["latest"]["version"]
     else:
         target = "Microsoft.MinecraftUWP_8wekyb3d8bbwe"
-        latest_build = json.loads(github.get_contents("version.json", "main").decoded_content.decode())["latest"]["version"]
-    base_dir = os.path.join(APPDATA, "Local", "Packages", target, "LocalState", "games", "com.mojang", "minecraftWorlds")
+        latest_build = json.loads(
+            github.get_contents("version.json", "main").decoded_content.decode()
+        )["latest"]["version"]
+    base_dir = os.path.join(
+        APPDATA,
+        "Local",
+        "Packages",
+        target,
+        "LocalState",
+        "games",
+        "com.mojang",
+        "minecraftWorlds",
+    )
     os.chdir(base_dir)
 
     # Init the config file
@@ -108,8 +157,16 @@ def create(namespace: str, project_name: str, preview: bool = False, fullns: boo
     Config.set("PACKAGE", "company", namespace.title())
     Config.set("PACKAGE", "namespace", namespace)
     Config.set("PACKAGE", "project_name", project_name)
-    Config.set("PACKAGE", "display_name", project_name.title().replace("-", " ").replace("_", " "))
-    Config.set("PACKAGE", "project_description", f"{Config.get('PACKAGE', 'display_name')} Essentials")
+    Config.set(
+        "PACKAGE",
+        "display_name",
+        project_name.title().replace("-", " ").replace("_", " "),
+    )
+    Config.set(
+        "PACKAGE",
+        "project_description",
+        f"{Config.get('PACKAGE', 'display_name')} Essentials",
+    )
 
     Config.set("BUILD", "release", "1.0.0")
     Config.set("BUILD", "rp_uuid", str(uuid4()))
@@ -120,7 +177,11 @@ def create(namespace: str, project_name: str, preview: bool = False, fullns: boo
     Config.set("ANVIL", "scriptapi", int(scriptapi))
     Config.set("ANVIL", "pbr", int(pbr))
     Config.set("ANVIL", "namespace_format", int(fullns))
-    Config.set("ANVIL", "pascal_project_name", "".join(x for x in Config.get("PACKAGE", "display_name") if x.isupper()))
+    Config.set(
+        "ANVIL",
+        "pascal_project_name",
+        "".join(x for x in Config.get("PACKAGE", "display_name") if x.isupper()),
+    )
     Config.set("ANVIL", "last_check", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     CreateDirectoriesFromTree(_JsonSchemes.structure(project_name))
@@ -130,28 +191,109 @@ def create(namespace: str, project_name: str, preview: bool = False, fullns: boo
     File(".gitignore", _JsonSchemes.gitignore(), "", "w")
     File("CHANGELOG.md", "", "", "w")
 
-    File("en_US.lang", "\n".join(_JsonSchemes.pack_name_lang(Config.get("PACKAGE", "display_name"), Config.get("PACKAGE", "project_description"))), 
-         os.path.join("behavior_packs", "BP_" + Config.get("ANVIL", "pascal_project_name"), "texts"), "w")
-    File("en_US.lang", "\n".join(_JsonSchemes.pack_name_lang(Config.get("PACKAGE", "display_name"), Config.get("PACKAGE", "project_description"))),
-         os.path.join("resource_packs", "RP_" + Config.get("ANVIL", "pascal_project_name"), "texts"), "w")
-    File("manifest.json", _JsonSchemes.manifest_bp([1, 0, 0], Config.get("BUILD", "bp_uuid"), scriptapi),
-         os.path.join("behavior_packs", "BP_" + Config.get("ANVIL", "pascal_project_name")), "w")
-    File("manifest.json", _JsonSchemes.manifest_rp([1, 0, 0], Config.get("BUILD", "rp_uuid"), pbr),
-         os.path.join("resource_packs", "RP_" + Config.get("ANVIL", "pascal_project_name")), "w")
-    File("manifest.json", _JsonSchemes.manifest_world([1, 0, 0], Config.get("BUILD", "pack_uuid"), Config.get("PACKAGE", "company")),
-         "", "w")
+    File(
+        "en_US.lang",
+        "\n".join(
+            _JsonSchemes.pack_name_lang(
+                Config.get("PACKAGE", "display_name"),
+                Config.get("PACKAGE", "project_description"),
+            )
+        ),
+        os.path.join(
+            "behavior_packs",
+            "BP_" + Config.get("ANVIL", "pascal_project_name"),
+            "texts",
+        ),
+        "w",
+    )
+    File(
+        "en_US.lang",
+        "\n".join(
+            _JsonSchemes.pack_name_lang(
+                Config.get("PACKAGE", "display_name"),
+                Config.get("PACKAGE", "project_description"),
+            )
+        ),
+        os.path.join(
+            "resource_packs",
+            "RP_" + Config.get("ANVIL", "pascal_project_name"),
+            "texts",
+        ),
+        "w",
+    )
+    File(
+        "manifest.json",
+        _JsonSchemes.manifest_bp([1, 0, 0], Config.get("BUILD", "bp_uuid"), scriptapi),
+        os.path.join(
+            "behavior_packs", "BP_" + Config.get("ANVIL", "pascal_project_name")
+        ),
+        "w",
+    )
+    File(
+        "manifest.json",
+        _JsonSchemes.manifest_rp([1, 0, 0], Config.get("BUILD", "rp_uuid"), pbr),
+        os.path.join(
+            "resource_packs", "RP_" + Config.get("ANVIL", "pascal_project_name")
+        ),
+        "w",
+    )
+    File(
+        "manifest.json",
+        _JsonSchemes.manifest_world(
+            [1, 0, 0],
+            Config.get("BUILD", "pack_uuid"),
+            Config.get("PACKAGE", "company"),
+        ),
+        "",
+        "w",
+    )
 
-    File("world_behavior_packs.json", _JsonSchemes.world_packs(Config.get("BUILD", "bp_uuid"), [1, 0, 0]), 
-         "", "w")
-    File("world_resource_packs.json", _JsonSchemes.world_packs(Config.get("BUILD", "rp_uuid"), [1, 0, 0]), 
-         "", "w")
+    File(
+        "world_behavior_packs.json",
+        _JsonSchemes.world_packs(Config.get("BUILD", "bp_uuid"), [1, 0, 0]),
+        "",
+        "w",
+    )
+    File(
+        "world_resource_packs.json",
+        _JsonSchemes.world_packs(Config.get("BUILD", "rp_uuid"), [1, 0, 0]),
+        "",
+        "w",
+    )
 
-    File(f"{project_name}.code-workspace", _JsonSchemes.code_workspace(Config.get("PACKAGE", "company"), base_dir, project_name), DESKTOP, "w")
+    File(
+        f"{project_name}.code-workspace",
+        _JsonSchemes.code_workspace(
+            Config.get("PACKAGE", "company"), base_dir, project_name
+        ),
+        DESKTOP,
+        "w",
+    )
 
     if scriptapi:
         click.echo("Initiating ScriptingAPI modules")
-        File("index.js", "", os.path.join("behavior_packs", "BP_" + Config.get("ANVIL", "pascal_project_name"), "scripts"), "w")
-        File("package.json", _JsonSchemes.packagejson(project_name, "1.0.0", Config.get("PACKAGE", "display_name") + " Essentials", Config.get("PACKAGE", "company")), "", "w", True,)
+        File(
+            "index.js",
+            "",
+            os.path.join(
+                "behavior_packs",
+                "BP_" + Config.get("ANVIL", "pascal_project_name"),
+                "scripts",
+            ),
+            "w",
+        )
+        File(
+            "package.json",
+            _JsonSchemes.packagejson(
+                project_name,
+                "1.0.0",
+                Config.get("PACKAGE", "display_name") + " Essentials",
+                Config.get("PACKAGE", "company"),
+            ),
+            "",
+            "w",
+            True,
+        )
 
         # os.system('npm install -g typescript')
         os.system("npm install @minecraft/server")

@@ -103,9 +103,9 @@ class Query(_molang):
             z (int): Y position.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
-        return self._query(self, "q", "above_top_solid")
+        return self._query(self, "q", "above_top_solid", x, z)
 
     @classmethod
     @property
@@ -113,7 +113,7 @@ class Query(_molang):
         """Returns the number of actors rendered in the last frame. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "actor_count")
 
@@ -126,7 +126,7 @@ class Query(_molang):
             args (int): arguments to test against.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "all", query, *args)
 
@@ -136,7 +136,7 @@ class Query(_molang):
         """Only valid in an animation controller. Returns 1.0 if all animations in the current animation controller state have played through at least once, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "all_animations_finished")
 
@@ -148,7 +148,7 @@ class Query(_molang):
             tags (str): entity tags to test for.
         
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "all_tags", *tags)
 
@@ -158,7 +158,7 @@ class Query(_molang):
         """If available, returns the anger level of the actor as an integer value from 0 to 1 less than the 'max_anger' defined on the actor, otherwise returns 0. Only returns a non-zero value in behavior packs. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "anger_level")
 
@@ -168,7 +168,7 @@ class Query(_molang):
         """Returns the time in seconds since the current animation started, else 0.0 if not called within an animation. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "anim_time")
 
@@ -181,7 +181,7 @@ class Query(_molang):
             args (int): arguments to test against.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "any", query, *args)
 
@@ -191,7 +191,7 @@ class Query(_molang):
         """Only valid in an animation controller. Returns 1.0 if any animation in the current animation controller state has played through at least once, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "any_animation_finished")
 
@@ -203,7 +203,7 @@ class Query(_molang):
             tags (str): entity tags to test for.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "any_tag", *tags)
 
@@ -215,7 +215,7 @@ class Query(_molang):
             args (Any): Arguments to test for approximate equality.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "approx_eq", *args)
 
@@ -227,7 +227,7 @@ class Query(_molang):
             index (int): Armour slot index.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "armor_color_slot", index)
 
@@ -239,7 +239,7 @@ class Query(_molang):
             index (int): Armour slot index.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "armor_material_slot", index)
 
@@ -251,7 +251,7 @@ class Query(_molang):
             index (int): Armour slot index.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "armor_texture_slot", index)
 
@@ -270,7 +270,7 @@ class Query(_molang):
             frame (int): Frame number.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "average_frame_time", clamp(frame, 0, 30))
 
@@ -280,7 +280,7 @@ class Query(_molang):
         """Returns the block face for this (only valid for certain triggers such as placing blocks, or interacting with block) (Down=0.0, Up=1.0, North=2.0, South=3.0, West=4.0, East=5.0, Undefined=6.0). 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "block_face")
 
@@ -292,7 +292,7 @@ class Query(_molang):
             property (str): The block property to query, no namespace.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "block_property", f'{ANVIL.NAMESPACE}:{property}')
 
@@ -305,7 +305,7 @@ class Query(_molang):
         
         
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, 'q', 'property', f'{ANVIL.NAMESPACE}:{property}')
     
@@ -317,7 +317,7 @@ class Query(_molang):
             property (str): The block property to query, no namespace.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, 'q', 'has_property', f'{ANVIL.NAMESPACE}:{property}')
 
@@ -327,7 +327,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is blocking, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "blocking")
 
@@ -337,7 +337,7 @@ class Query(_molang):
         """Returns the body pitch rotation if called on an actor, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "body_x_rotation")
 
@@ -347,7 +347,7 @@ class Query(_molang):
         """Returns the body yaw rotation if called on an actor, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "body_y_rotation")
 
@@ -358,7 +358,7 @@ class Query(_molang):
         """Returns the axis aligned bounding box of a bone as a struct with members '.min', '.max', along with '.x', '.y', and '.z' values for each. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "bone_aabb")
 
@@ -369,7 +369,7 @@ class Query(_molang):
         """Returns the initial (from the .geo) pivot of a bone as a struct with members '.x', '.y', and '.z'. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "bone_origin")
 
@@ -380,7 +380,7 @@ class Query(_molang):
         """Returns the initial (from the .geo) rotation of a bone as a struct with members '.x', '.y', and '.z' in degrees. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "bone_rotation")
 
@@ -392,7 +392,7 @@ class Query(_molang):
         If you pass in (20, 10), a distance of 20 will return 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "camera_distance_range_lerp", d1, d2)
 
@@ -404,7 +404,7 @@ class Query(_molang):
             axis (int): 0 for x, 1 for y
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "camera_rotation", clamp(axis, 0, 1))
 
@@ -414,7 +414,7 @@ class Query(_molang):
         """Returns 1.0 if the entity can climb, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "can_climb")
 
@@ -424,7 +424,7 @@ class Query(_molang):
         """Returns 1.0 if the entity can damage nearby mobs, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "can_damage_nearby_mobs")
 
@@ -434,7 +434,7 @@ class Query(_molang):
         """Returns 1.0 if the entity can fly, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "can_fly")
 
@@ -444,7 +444,7 @@ class Query(_molang):
         """Returns 1.0 if the entity can power jump, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "can_power_jump")
 
@@ -454,7 +454,7 @@ class Query(_molang):
         """Returns 1.0 if the entity can swim, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "can_swim")
 
@@ -464,7 +464,7 @@ class Query(_molang):
         """Returns 1.0 if the entity can walk, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "can_walk")
 
@@ -474,18 +474,18 @@ class Query(_molang):
         """Returns value between 0.0 and 1.0 with 0.0 meaning "cape is fully down" and 1.0 means "cape is fully up." 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "cape_flap_amount")
 
-    @deprecated
     @classmethod
     @property
+    @deprecated
     def CardinalBlockFacePlacedOn(self):
         """DEPRECATED (please use query.block_face instead) Returns the block face for this (only valid for on_placed_by_player trigger) (Down=0.0, Up=1.0, North=2.0, South=3.0, West=4.0, East=5.0, Undefined=6.0). 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "cardinal_block_face_placed_on")
 
@@ -503,7 +503,7 @@ class Query(_molang):
         - Undefined=6.0
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "cardinal_facing")
 
@@ -519,7 +519,7 @@ class Query(_molang):
         - Undefined=6.0
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "cardinal_facing_2d")
 
@@ -537,7 +537,7 @@ class Query(_molang):
         - Undefined=6.0 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "cardinal_player_facing")
 
@@ -548,7 +548,7 @@ class Query(_molang):
         """Combines any valid entity references from all arguments into a single array.  Note that order is not preserved, and duplicates and invalid values are removed. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "combine_entities")
 
@@ -557,7 +557,7 @@ class Query(_molang):
         """Counts the number of things passed to it (arrays are counted as the number of elements they contain; non-arrays count as 1). 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "count", *element)
 
@@ -567,7 +567,7 @@ class Query(_molang):
         """Returns the squish value for the current entity, or 0.0 if this doesn't make sense. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "current_squish_value")
 
@@ -577,7 +577,7 @@ class Query(_molang):
         """Returns the day of the current level. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "day")
 
@@ -587,7 +587,7 @@ class Query(_molang):
         """Returns the elapsed ticks since the mob started dying. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "death_ticks")
 
@@ -599,7 +599,7 @@ class Query(_molang):
         Debug log a value to the output debug window for builds that have one. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "debug_output")
 
@@ -609,7 +609,7 @@ class Query(_molang):
         """Returns the time in seconds since the previous frame. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "delta_time")
 
@@ -619,7 +619,7 @@ class Query(_molang):
         """Returns the distance of the root of this actor or particle emitter from the camera. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "distance_from_camera")
 
@@ -629,7 +629,7 @@ class Query(_molang):
         """Returns the total number of active emitters of the callee's particle effect type. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "effect_emitter_count")
 
@@ -639,7 +639,7 @@ class Query(_molang):
         """Returns the total number of active particles of the callee's particle effect type. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "effect_particle_count")
 
@@ -649,7 +649,7 @@ class Query(_molang):
         """Returns the number of equipped armor pieces for an actor from 0 to 4, not counting items held in hands. (To query for hand slots, use query.is_item_equipped or query.is_item_name_any).
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "equipment_count")
 
@@ -658,7 +658,7 @@ class Query(_molang):
         """Takes a slot name followed by any tag you want to check for in the form of 'tag_name' and returns 1 if all of the tags are on that equipped item, 0 otherwise. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "equipped_item_all_tags", slot, *tags)
 
@@ -667,7 +667,7 @@ class Query(_molang):
         """Takes a slot name followed by any tag you want to check for in the form of 'tag_name' and returns 0 if none of the tags are on that equipped item or 1 if at least 1 tag exists. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "equipped_item_any_tag", slot, *tags)
 
@@ -679,7 +679,7 @@ class Query(_molang):
             hand (int): 0 for main hand, 1 for off hand
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "equipped_item_is_attachable", clamp(hand, 0, 1))
 
@@ -689,7 +689,7 @@ class Query(_molang):
         """Returns the X eye rotation of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "eye_target_x_rotation")
 
@@ -699,7 +699,7 @@ class Query(_molang):
         """Returns the Y eye rotation of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "eye_target_y_rotation")
 
@@ -709,7 +709,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is attacking from range (minecraft:behavior.ranged_attack), else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "facing_target_to_range_attack")
 
@@ -719,7 +719,7 @@ class Query(_molang):
         """Returns the ratio (from 0 to 1) of how much between AI ticks this frame is being rendered. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "frame_alpha")
 
@@ -729,7 +729,7 @@ class Query(_molang):
         """Returns the integer ID of an actor by its string name. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "get_actor_info_id")
 
@@ -739,7 +739,7 @@ class Query(_molang):
         """Returns the current texture of the item. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "get_animation_frame")
 
@@ -750,17 +750,17 @@ class Query(_molang):
         """Gets the specified axis of the specified bone orientation pivot. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "get_default_bone_pivot")
 
-    @deprecated
     @classmethod
+    @deprecated
     def GetEquippedItemName(self, hand_slot: int, index = 0):
         """DEPRECATED (Use query.is_item_name_any instead if possible so names can be changed later without breaking content.) Takes one optional hand slot as a parameter (0 or 'main_hand' for main hand, 1 or 'off_hand' for off hand), and a second parameter (0=default) if you would like the equipped item or any non-zero number for the currently rendered item, and returns the name of the item in the requested slot (defaulting to the main hand if no parameter is supplied) if there is one, otherwise returns ''. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "get_equipped_item_name", clamp(hand_slot, 0, 1), index)
 
@@ -771,18 +771,18 @@ class Query(_molang):
         """Gets specified axis of the specified locator offset. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "get_locator_offset")
 
-    @deprecated
     @classmethod
     @property
+    @deprecated
     def GetName(self):
         """DEPRECATED (Use query.is_name_any instead if possible so names can be changed later without breaking content.) Get the name of the mob if there is one, otherwise return ''. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "get_name")
     
@@ -793,7 +793,7 @@ class Query(_molang):
         """Gets specified axis of the specified locator offset of the root model. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "get_root_locator_offset")
 
@@ -803,7 +803,7 @@ class Query(_molang):
         """Returns the ground speed of the entity in meters/second. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "ground_speed")
 
@@ -814,7 +814,7 @@ class Query(_molang):
         Usable only in behavior packs when determining the default value for an entity's Property. Requires one string argument. If the entity is being loaded from data that was last saved with a component_group with the specified name, returns 1.0, otherwise returns 0.0. The purpose of this query is to allow entity definitions to change and still be able to load the correct state of entities.  
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "had_component_group", component_group)
 
@@ -823,7 +823,7 @@ class Query(_molang):
         """Returns 1 if the entity has any of the specified families, else 0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_any_family", *family)
 
@@ -832,7 +832,7 @@ class Query(_molang):
         """Takes the armor slot index as a parameter and returns 1.0 if the entity has armor in the requested slot, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_armor_slot", slot)
 
@@ -841,7 +841,7 @@ class Query(_molang):
         """Returns whether or not a Block Placement Target has a specific biome tag. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_biome_tag", tag)
 
@@ -853,7 +853,7 @@ class Query(_molang):
             property (str): The block property to query, no namespace.
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_block_property", f'{ANVIL.NAMESPACE}:{property}')
 
@@ -863,7 +863,7 @@ class Query(_molang):
         """Returns 1.0 if the player has a cape, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_cape")
 
@@ -873,7 +873,7 @@ class Query(_molang):
         """Returns 1.0 if the entity has collisions enabled, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_collision")
 
@@ -883,7 +883,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is affected by gravity, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_gravity")
 
@@ -893,7 +893,7 @@ class Query(_molang):
         """Returns true if the entity has an owner ID, else it returns false. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_owner")
 
@@ -903,7 +903,7 @@ class Query(_molang):
         """Returns 1.0 if the entity has a rider, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_rider")
 
@@ -913,7 +913,7 @@ class Query(_molang):
         """Returns 1.0 if the entity has a target, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "has_target")
 
@@ -923,7 +923,7 @@ class Query(_molang):
         """Returns the roll angle of the head of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "head_roll_angle")
 
@@ -932,7 +932,7 @@ class Query(_molang):
         """ Takes one argument as a parameter. Returns the nth head x rotation of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "head_x_rotation", head_number)
 
@@ -941,7 +941,7 @@ class Query(_molang):
         """ Takes one argument as a parameter. Returns the nth head y rotation of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "head_y_rotation", head_number)
 
@@ -951,7 +951,7 @@ class Query(_molang):
         """Returns the health of the entity, or 0.0 if it doesn't make sense to call on this entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "health")
 
@@ -961,7 +961,7 @@ class Query(_molang):
         """Returns the heartbeat interval of the actor in seconds. Returns 0 when the actor has no heartbeat. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "heartbeat_interval")
 
@@ -973,7 +973,7 @@ class Query(_molang):
         Returns the heartbeat phase of the actor. 0.0 if at start of current heartbeat, 1.0 if at the end. Returns 0 on errors or when the actor has no heartbeat. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "heartbeat_phase")
 
@@ -982,7 +982,7 @@ class Query(_molang):
         """Takes two arguments: X and Z world values. Returns the world height (Y value) of the terrain at the specified position. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "heightmap", x, z)
 
@@ -992,7 +992,7 @@ class Query(_molang):
         """Returns the hurt direction for the actor, otherwise returns 0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "hurt_direction")
 
@@ -1002,7 +1002,7 @@ class Query(_molang):
         """Returns the hurt time for the actor, otherwise returns 0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "hurt_time")
 
@@ -1011,7 +1011,7 @@ class Query(_molang):
         """Requires 3 numerical arguments: some value, a minimum, and a maximum. If the first argument is between the minimum and maximum (inclusive), returns 1.0. Otherwise it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "in_range", value, min, max)
 
@@ -1021,7 +1021,7 @@ class Query(_molang):
         """Returns the number of ticks of invulnerability the entity has left if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "invulnerable_ticks")
 
@@ -1031,7 +1031,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is admiring, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_admiring")
 
@@ -1041,7 +1041,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is alive, and 0.0 if it's dead. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_alive")
 
@@ -1051,7 +1051,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is angry, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_angry")
 
@@ -1061,7 +1061,7 @@ class Query(_molang):
         """Returns 1.0 if the actor is attached to an entity, else it will return 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_attached_to_entity")
 
@@ -1071,7 +1071,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is fleeing from a block, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_avoiding_block")
 
@@ -1081,7 +1081,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is fleeing from mobs, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_avoiding_mobs")
 
@@ -1091,7 +1091,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is a baby, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_baby")
 
@@ -1101,7 +1101,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is breathing, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_breathing")
 
@@ -1111,7 +1111,7 @@ class Query(_molang):
         """Returns 1.0 if the entity has been bribed, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_bribed")
 
@@ -1121,7 +1121,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is carrying a block, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_carrying_block")
 
@@ -1131,7 +1131,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is casting, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_casting")
 
@@ -1141,7 +1141,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is celebrating, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_celebrating")
 
@@ -1151,7 +1151,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is doing a special celebration, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_celebrating_special")
 
@@ -1161,7 +1161,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is charged, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_charged")
 
@@ -1171,7 +1171,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is charging, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_charging")
 
@@ -1181,7 +1181,7 @@ class Query(_molang):
         """Returns 1.0 if the entity has chests attached to it, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_chested")
 
@@ -1191,7 +1191,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is critical, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_critical")
 
@@ -1201,7 +1201,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is croaking, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_croaking")
 
@@ -1211,7 +1211,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is dancing, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_dancing")
 
@@ -1221,7 +1221,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is attacking using the delayed attack, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_delayed_attacking")
 
@@ -1231,7 +1231,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is digging, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_digging")
 
@@ -1241,7 +1241,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is eating, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_eating")
 
@@ -1251,7 +1251,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is eating a mob, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_eating_mob")
 
@@ -1261,7 +1261,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is an elder version of it, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_elder")
 
@@ -1271,7 +1271,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is emerging, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_emerging")
 
@@ -1281,7 +1281,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is emoting, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_emoting")
 
@@ -1291,7 +1291,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is enchanted, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_enchanted")
 
@@ -1301,7 +1301,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is immune to fire, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_fire_immune")
 
@@ -1311,7 +1311,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is being rendered in first person mode, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_first_person")
 
@@ -1321,7 +1321,7 @@ class Query(_molang):
         """Returns 1.0 if an entity is a ghost, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_ghost")
 
@@ -1331,7 +1331,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is gliding, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_gliding")
 
@@ -1341,7 +1341,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is grazing, or 0.0 if not. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_grazing")
 
@@ -1351,7 +1351,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is idling, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_idling")
 
@@ -1361,7 +1361,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is ignited, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_ignited")
 
@@ -1371,7 +1371,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is an illager captain, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_illager_captain")
 
@@ -1381,7 +1381,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is in contact with any water (water, rain, splash water bottle), else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_in_contact_with_water")
 
@@ -1391,17 +1391,17 @@ class Query(_molang):
         """Returns 1.0 if the entity is in love, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_in_love")
 
     @classmethod
     @property
-    def IsInUi(self):
+    def IsInUI(self):
         """Returns 1.0 if the entity is rendered as part of the UI, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_in_ui")
 
@@ -1411,7 +1411,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is in water, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_in_water")
 
@@ -1421,7 +1421,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is in water or rain, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_in_water_or_rain")
 
@@ -1431,7 +1431,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is interested, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_interested")
 
@@ -1441,7 +1441,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is invisible, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_invisible")
 
@@ -1453,7 +1453,7 @@ class Query(_molang):
         - 1 = off_hand
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_item_equipped", clamp(hand, 0, 1))
 
@@ -1462,7 +1462,7 @@ class Query(_molang):
         """ Takes an equipment slot name (see the replaceitem command) and an optional slot index value. After that, takes one or more full name (with 'namespace:') strings to check for. Returns 1.0 if an item in the specified slot has any of the specified names, otherwise returns 0.0. An empty string '' can be specified to check for an empty slot. Note that querying slot.enderchest, slot.saddle, slot.armor, or slot.chest will only work in behavior packs. A preferred query to query.get_equipped_item_name, as it can be adjusted by Mojang to avoid breaking content if names are changed. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_item_name_any", slot, index, *item_identifiers)
 
@@ -1472,7 +1472,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is jumping, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_jumping")
 
@@ -1482,7 +1482,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is laying down, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_laying_down")
 
@@ -1492,7 +1492,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is laying an egg, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_laying_egg")
 
@@ -1502,7 +1502,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is leashed to something, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_leashed")
 
@@ -1512,7 +1512,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is levitating, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_levitating")
 
@@ -1522,17 +1522,18 @@ class Query(_molang):
         """Returns 1.0 if the entity is lingering, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_lingering")
 
     @classmethod
     @property
     def IsLocalPlayer(self):
-        """ Takes no arguments. Returns 1.0 if the entity is the local player for the current game window, else it returns 0.0. In splitscreen returns 0.0 for the other local players for other views. Always returns 0.0 if used in a behavior pack. 
+        """### Client Only
+        Takes no arguments. Returns 1.0 if the entity is the local player for the current game window, else it returns 0.0. In splitscreen returns 0.0 for the other local players for other views. Always returns 0.0 if used in a behavior pack. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_local_player")
 
@@ -1542,7 +1543,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is moving, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_moving")
 
@@ -1553,7 +1554,7 @@ class Query(_molang):
         A preferred query to query.get_name, as it can be adjusted by Mojang to avoid breaking content if names are changed. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_name_any", *names)
 
@@ -1563,7 +1564,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is on fire, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_on_fire")
 
@@ -1573,7 +1574,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is on the ground, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_on_ground")
 
@@ -1583,7 +1584,7 @@ class Query(_molang):
         """Returns 1.0 if this is called on an entity at a time when it is known if it is on screen, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_on_screen")
 
@@ -1593,7 +1594,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is on fire, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_onfire")
 
@@ -1603,7 +1604,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is orphaned, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_orphaned")
 
@@ -1613,7 +1614,7 @@ class Query(_molang):
         """ Takes one or more arguments. Returns whether the root actor identifier is any of the specified strings. A preferred query to query.owner_identifier, as it can be adjusted by Mojang to avoid breaking content if names are changed. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_owner_identifier_any")
 
@@ -1623,7 +1624,7 @@ class Query(_molang):
         """Returns 1.0 if the player has a persona or premium skin, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_persona_or_premium_skin")
 
@@ -1633,7 +1634,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is playing dead, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_playing_dead")
 
@@ -1643,7 +1644,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is powered, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_powered")
 
@@ -1653,7 +1654,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is pregnant, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_pregnant")
 
@@ -1663,7 +1664,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is using a ram attack, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_ram_attacking")
 
@@ -1673,7 +1674,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is resting, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_resting")
 
@@ -1683,7 +1684,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is riding, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_riding")
 
@@ -1693,7 +1694,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is currently roaring, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_roaring")
 
@@ -1703,7 +1704,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is rolling, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_rolling")
 
@@ -1713,7 +1714,7 @@ class Query(_molang):
         """Returns 1.0 if the entity has a saddle, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_saddled")
 
@@ -1723,7 +1724,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is scared, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_scared")
 
@@ -1733,7 +1734,7 @@ class Query(_molang):
         """Returns true if the player has selected an item in the inventory, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_selected_item")
 
@@ -1743,7 +1744,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is casting, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_shaking")
 
@@ -1753,7 +1754,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is shaking water off, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_shaking_wetness")
 
@@ -1763,7 +1764,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is able to be sheared and is sheared, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_sheared")
 
@@ -1773,7 +1774,7 @@ class Query(_molang):
         """Returns 1.0f if the entity has an active powered shield if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_shield_powered")
 
@@ -1783,7 +1784,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is silent, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_silent")
 
@@ -1793,7 +1794,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is sitting, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_sitting")
 
@@ -1803,7 +1804,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is sleeping, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_sleeping")
 
@@ -1813,7 +1814,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is sneaking, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_sneaking")
 
@@ -1823,7 +1824,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is sneezing, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_sneezing")
 
@@ -1833,7 +1834,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is sniffing, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_sniffing")
 
@@ -1843,7 +1844,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is using sonic boom, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_sonic_boom")
 
@@ -1853,7 +1854,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is sprinting, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_sprinting")
 
@@ -1863,7 +1864,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is stackable, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_stackable")
 
@@ -1873,7 +1874,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is stalking, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_stalking")
 
@@ -1883,7 +1884,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is standing, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_standing")
 
@@ -1893,7 +1894,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is currently stunned, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_stunned")
 
@@ -1903,7 +1904,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is swimming, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_swimming")
 
@@ -1913,7 +1914,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is tamed, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_tamed")
 
@@ -1923,7 +1924,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is transforming, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_transforming")
 
@@ -1933,7 +1934,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is using an item, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_using_item")
 
@@ -1943,7 +1944,7 @@ class Query(_molang):
         """Returns 1.0 if the entity is climbing a wall, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "is_wall_climbing")
 
@@ -1953,7 +1954,7 @@ class Query(_molang):
         """Returns the amount of time an item has been in use in seconds up to the maximum duration, else 0.0 if it doesn't make sense. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "item_in_use_duration")
 
@@ -1965,7 +1966,7 @@ class Query(_molang):
         - 1 = off_hand
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "item_is_charged", clamp(hand, 0, 1))
 
@@ -1975,7 +1976,7 @@ class Query(_molang):
         """Returns the maximum amount of time the item can be used, else 0.0 if it doesn't make sense. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "item_max_use_duration")
 
@@ -1987,7 +1988,7 @@ class Query(_molang):
         - off_hand = 1
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "item_remaining_use_duration", clamp(hand, 0, 1))
 
@@ -1996,7 +1997,7 @@ class Query(_molang):
         """Requires one parameter: the name of the equipment slot. This function returns the name of the bone this entity has mapped to that slot. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "item_slot_to_bone_name", slot)
 
@@ -2006,7 +2007,7 @@ class Query(_molang):
         """Returns the ratio between the previous and next key frames 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "key_frame_lerp_time")
 
@@ -2023,7 +2024,7 @@ class Query(_molang):
 
         
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "last_frame_time", clamp(frame, 0, 30))
 
@@ -2035,7 +2036,7 @@ class Query(_molang):
         Returns 1.0 if the entity was last hit by the player, else it returns 0.0. If called by the client always returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "last_hit_by_player")
 
@@ -2045,7 +2046,7 @@ class Query(_molang):
         """Returns the lie down amount for the entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "lie_amount")
 
@@ -2055,7 +2056,7 @@ class Query(_molang):
         """Returns the limited life span of an entity, or 0.0 if it lives forever 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "life_span")
 
@@ -2065,7 +2066,7 @@ class Query(_molang):
         """Returns the time in seconds since the current animation started, else 0.0 if not called within an animation. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "life_time")
 
@@ -2076,7 +2077,7 @@ class Query(_molang):
         For example, 'query.lod_index(10, 20, 30)' will return 0, 1, or 2 based on whether the mob is less than 10, 20, or 30 units away from the camera, or it will return 3 if it is greater than 30. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "lod_index", d1, d2, d3)
 
@@ -2085,7 +2086,7 @@ class Query(_molang):
         """ Debug log a value to the content log. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "log", query)
 
@@ -2095,7 +2096,7 @@ class Query(_molang):
         """Returns the use time maximum duration for the main hand item if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "main_hand_item_max_duration")
 
@@ -2105,7 +2106,7 @@ class Query(_molang):
         """Returns the use time for the main hand item. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "main_hand_item_use_duration")
 
@@ -2115,7 +2116,7 @@ class Query(_molang):
         """Returns the entity's mark variant. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "mark_variant")
 
@@ -2125,7 +2126,7 @@ class Query(_molang):
         """Returns the max durability an item can take. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "max_durability")
 
@@ -2135,7 +2136,7 @@ class Query(_molang):
         """Returns the maximum health of the entity, or 0.0 if it doesn't make sense to call on this entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "max_health")
 
@@ -2145,7 +2146,7 @@ class Query(_molang):
         """Returns the maximum trade tier of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "max_trade_tier")
 
@@ -2161,7 +2162,7 @@ class Query(_molang):
         Asking for more frames will result in only sampling the number of frames stored. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "maximum_frame_time", clamp(frame, 0, 30))
 
@@ -2177,7 +2178,7 @@ class Query(_molang):
         Asking for more frames will result in only sampling the number of frames stored. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "minimum_frame_time", clamp(frame, 0, 30))
 
@@ -2187,7 +2188,7 @@ class Query(_molang):
         """Returns the scale of the current entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "model_scale")
 
@@ -2197,7 +2198,7 @@ class Query(_molang):
         """Returns the total distance the entity has moved horizontally in meters (since the entity was last loaded, not necessarily since it was originally created) modified along the way by status flags such as is_baby or on_fire. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "modified_distance_moved")
 
@@ -2207,7 +2208,7 @@ class Query(_molang):
         """Returns the current walk speed of the entity modified by status flags such as is_baby or on_fire. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "modified_move_speed")
 
@@ -2226,7 +2227,7 @@ class Query(_molang):
         - WAXING_GIBBOUS = 0.75
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "moon_brightness")
 
@@ -2245,7 +2246,7 @@ class Query(_molang):
         - WAXING_GIBBOUS = 7
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "moon_phase")
 
@@ -2254,7 +2255,7 @@ class Query(_molang):
         """Returns the specified axis of the normalized position delta of the entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "movement_direction", axis)
 
@@ -2264,7 +2265,7 @@ class Query(_molang):
         """Queries Perlin Noise Map. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "noise")
 
@@ -2274,7 +2275,7 @@ class Query(_molang):
         """Returns the time that the entity is on fire, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "on_fire_time")
 
@@ -2284,29 +2285,29 @@ class Query(_molang):
         """Returns 1.0 if the entity is out of control, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "out_of_control")
 
-    @deprecated
     @classmethod
     @property
+    @deprecated
     def OverlayAlpha(self):
         """DEPRECATED (Do not use - this function is deprecated and will be removed). 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "overlay_alpha")
 
-    @deprecated
     @classmethod
     @property
+    @deprecated
     def OwnerIdentifier(self):
         """DEPRECATED (Use query.is_owner_identifier_any instead if possible so names can be changed later without breaking content.) Returns the root actor identifier. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "owner_identifier")
 
@@ -2316,7 +2317,7 @@ class Query(_molang):
         """Returns the players level if the actor is a player, otherwise returns 0 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "player_level")
 
@@ -2325,7 +2326,7 @@ class Query(_molang):
         """Returns the absolute position of an actor.  Takes one argument that represents the desired axis (0 == x-axis, 1 == y-axis, 2 == z-axis). 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "position", clamp(axis, 0, 2))
 
@@ -2334,7 +2335,7 @@ class Query(_molang):
         """Returns the position delta for an actor.  Takes one argument that represents the desired axis (0 == x-axis, 1 == y-axis, 2 == z-axis). 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "position_delta", clamp(axis, 0, 2))
 
@@ -2344,7 +2345,7 @@ class Query(_molang):
         """Returns the previous squish value for the current entity, or 0.0 if this doesn't make sense. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "previous_squish_value")
 
@@ -2354,7 +2355,7 @@ class Query(_molang):
         """Returns the how much durability an item has remaining. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "remaining_durability")
 
@@ -2364,7 +2365,7 @@ class Query(_molang):
         """Returns the roll counter of the entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "roll_counter")
 
@@ -2373,7 +2374,7 @@ class Query(_molang):
         """Returns the rotation required to aim at the camera.  Requires one argument representing the rotation axis you would like (0 for x, 1 for y) 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "rotation_to_camera", clamp(axis, 0, 1))
 
@@ -2383,7 +2384,7 @@ class Query(_molang):
         """Returns the shaking angle of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "shake_angle")
 
@@ -2393,7 +2394,7 @@ class Query(_molang):
         """Returns the shake time of the entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "shake_time")
 
@@ -2403,7 +2404,7 @@ class Query(_molang):
         """Returns the how much the offhand shield should translate down when blocking and being hit. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "shield_blocking_bob")
 
@@ -2413,7 +2414,7 @@ class Query(_molang):
         """Returns 1.0 if we render the entity's bottom, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "show_bottom")
 
@@ -2423,7 +2424,7 @@ class Query(_molang):
         """Returns the current sit amount of the entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "sit_amount")
 
@@ -2433,7 +2434,7 @@ class Query(_molang):
         """Returns the entity's skin ID 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "skin_id")
 
@@ -2443,7 +2444,7 @@ class Query(_molang):
         """Returns the rotation of the bed the player is sleeping on. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "sleep_rotation")
 
@@ -2453,7 +2454,7 @@ class Query(_molang):
         """Returns the sneeze counter of the entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "sneeze_counter")
 
@@ -2463,7 +2464,7 @@ class Query(_molang):
         """Returns a struct representing the entity spell color for the specified entity. The struct contains '.r' '.g' '.b' and '.a' members, each 0.0 to 1.0. If no actor is specified, each member value will be 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "spellcolor")
 
@@ -2473,7 +2474,7 @@ class Query(_molang):
         """Returns the scale of how standing up the entity is. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "standing_scale")
 
@@ -2483,7 +2484,7 @@ class Query(_molang):
         """Returns the structural integrity for the actor, otherwise returns 0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "structural_integrity")
 
@@ -2495,7 +2496,7 @@ class Query(_molang):
         Returns the particle color for the block located in the surface below the actor (scanned up to 10 blocks down). The struct contains '.r' '.g' '.b' and '.a' members, each 0.0 to 1.0. If no actor is specified or if no surface is found, each member value is set to 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "surface_particle_color")
 
@@ -2507,7 +2508,7 @@ class Query(_molang):
         Returns the texture coordinate for generating particles for the block located in the surface below the actor (scanned up to 10 blocks down) in a struct with 'u' and 'v' keys. If no actor is specified or if no surface is found, u and v will be 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "surface_particle_texture_coordinate")
 
@@ -2519,7 +2520,7 @@ class Query(_molang):
         Returns the texture size for generating particles for the block located in the surface below the actor (scanned up to 10 blocks down). If no actor is specified or if no surface is found, each member value will be 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "surface_particle_texture_size")
 
@@ -2529,7 +2530,7 @@ class Query(_molang):
         """Returns how swollen the entity is. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "swell_amount")
 
@@ -2539,7 +2540,7 @@ class Query(_molang):
         """Returns the swelling direction of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "swelling_dir")
 
@@ -2549,7 +2550,7 @@ class Query(_molang):
         """Returns the amount the current entity is swimming. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "swim_amount")
 
@@ -2559,7 +2560,7 @@ class Query(_molang):
         """Returns the angle of the tail of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "tail_angle")
 
@@ -2569,7 +2570,7 @@ class Query(_molang):
         """Returns the x rotation required to aim at the entity's current target if it has one, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "target_x_rotation")
 
@@ -2579,7 +2580,7 @@ class Query(_molang):
         """Returns the y rotation required to aim at the entity's current target if it has one, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "target_y_rotation")
 
@@ -2589,7 +2590,7 @@ class Query(_molang):
         """Returns the icon index of the experience orb 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "texture_frame_index")
 
@@ -2599,7 +2600,7 @@ class Query(_molang):
         """Returns the time of day (midnight=0.0, sunrise=0.25, noon=0.5, sunset=0.75) of the dimension the entity is in. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "time_of_day")
 
@@ -2611,7 +2612,7 @@ class Query(_molang):
         Returns the time in seconds since the last vibration detected by the actor. On errors or if no vibration has been detected yet, returns -1. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "time_since_last_vibration_detection")
 
@@ -2621,7 +2622,7 @@ class Query(_molang):
         """Returns the current time stamp of the level. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "time_stamp")
 
@@ -2631,7 +2632,7 @@ class Query(_molang):
         """Returns the total number of active emitters in the world. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "total_emitter_count")
 
@@ -2641,7 +2642,7 @@ class Query(_molang):
         """Returns the total number of active particles in the world. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "total_particle_count")
 
@@ -2651,7 +2652,7 @@ class Query(_molang):
         """Returns the trade tier of the entity if it makes sense, else it returns 0.0. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "trade_tier")
 
@@ -2661,7 +2662,7 @@ class Query(_molang):
         """Returns how unhappy the entity is. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "unhappy_counter")
 
@@ -2671,7 +2672,7 @@ class Query(_molang):
         """Returns the entity's variant index. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "variant")
 
@@ -2681,7 +2682,7 @@ class Query(_molang):
         """Returns the speed of the entity up or down in meters/second, where positive is up. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "vertical_speed")
 
@@ -2691,7 +2692,7 @@ class Query(_molang):
         """Returns the walk distance of the entity. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "walk_distance")
 
@@ -2701,7 +2702,7 @@ class Query(_molang):
         """Returns the wing flap position of the entity, or 0.0 if this doesn't make sense. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "wing_flap_position")
 
@@ -2711,7 +2712,7 @@ class Query(_molang):
         """Returns the wing flap speed of the entity, or 0.0 if this doesn't make sense. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "wing_flap_speed")
 
@@ -2721,7 +2722,7 @@ class Query(_molang):
         """Returns the entity's yaw speed. 
 
         Returns:
-            _molang: A Molang Instance
+            Molang(_molang): A Molang Instance
         """
         return self._query(self, "q", "yaw_speed")
 

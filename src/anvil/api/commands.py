@@ -265,28 +265,34 @@ class Summon(Command):
         return super().__str__()
 
 class XP(Command):
-    """Adds or removes player experience.
-
-    Args:
-        amount (int): Specifies the amount of experience points or levels to be added or removed from the player
-        player (str): Selector | Target Selector (Must be player type)
-
-    Returns:
-        Command: xp command
-
-    Example:
-        >>> xp('-2000', '@a')
-        >>> xp('-5L', '@a')
-    """
-
     def __init__(self):
+        """Adds or removes player experience.
+        """
         super().__init__('xp')
     
-    def add(self, target, amount):
+    def add(self, target: Selector | Target | str, amount: int) -> Command:
+        """Adds experience to a player.
+
+        Args:
+            target (Selector | Target | str): The target to add experience to.
+            amount (int): The amount of experience to add.
+
+        Returns:
+            Command: The command.
+        """
         super()._new_cmd(amount, target)
         return self
     
-    def remove(self, target, amount):
+    def remove(self, target: Selector | Target | str, amount: int) -> Command:
+        """Removes experience from a player.
+
+        Args:
+            target (Selector | Target | str): The target to remove experience from.
+            amount (int): The amount of experience to remove.
+
+        Returns:
+            Command: The command.
+        """
         super()._new_cmd(f'-{amount}', target)
         return self
 
@@ -582,7 +588,7 @@ class Setblock(Command):
         states = tile.states if isinstance(tile, Blocks._MinecraftBlock) else '' if isinstance(tile, (str, Block)) else ANVIL.Logger.unsupported_block_type(tile)
                 
         for k, v in properties.items():
-            states.append(f'"{k}" : "{v}"')
+            states.append(f'"{k}" = "{v}"')
 
         
         self._append_cmd(*position, name, f'[{", ".join(states)}]')
@@ -602,7 +608,7 @@ class Fill(Command):
         states = tile.states if isinstance(tile, Blocks._MinecraftBlock) else '' if isinstance(tile, (str, Block)) else ANVIL.Logger.unsupported_block_type(tile)
                 
         for k, v in properties.items():
-            states.append(f'"{k}" : "{v}"')
+            states.append(f'"{k}" = "{v}"')
 
         self._append_cmd(*start, *end, name, f'[{", ".join(states)}]', old_block_handling if old_block_handling != FillMode.Replace else '')
     
@@ -615,7 +621,7 @@ class Fill(Command):
         states = tile.states if isinstance(tile, Blocks._MinecraftBlock) else '' if isinstance(tile, (str, Block)) else ANVIL.Logger.unsupported_block_type(tile)
                 
         for k, v in properties.items():
-            states.append(f'"{k}" : "{v}"')
+            states.append(f'"{k}" = "{v}"')
 
         self._append_cmd(FillMode.Replace, name, f'[{", ".join(states)}]')
 

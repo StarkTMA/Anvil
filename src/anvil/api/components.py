@@ -611,8 +611,8 @@ class SpellEffects(_component):
         self[self._component_namespace]["add_effects"].append(effect)
         return self
 
-    def remove_effects(self, *effects: str):
-        self[self._component_namespace]["remove_effects"] = effects
+    def remove_effects(self, *effects: Effects):
+        self[self._component_namespace]["remove_effects"] = [e.value for e in effects]
         return self
 
 
@@ -1839,14 +1839,25 @@ class Projectile(_component):
 
     def on_hit(
         self,
-        catch_fire: bool = False,  # Determines if the struck object is set on fire.
-        douse_fire: bool = False,  # If the target is on fire, then douse the fire.
-        ignite: bool = False,  # Determines if a fire may be started on a flammable target.
-        on_fire_time: float = 0,  # The amount of time a target will remain on fire.
-        potion_effect: int = -1,  # Defines the effect the arrow will apply to the entity it hits.
-        spawn_aoe_cloud: bool = False,  # Potion spawns an area of effect cloud. See the table below for all spawn_aoe_cloud parameters.
-        teleport_owner: bool = False,  # Determines if the owner is transported on hit.
+        catch_fire: bool = False,
+        douse_fire: bool = False,
+        ignite: bool = False,
+        on_fire_time: float = 0,
+        potion_effect: int = -1,
+        spawn_aoe_cloud: bool = False,
+        teleport_owner: bool = False,
     ):
+        """_summary_
+
+        Args:
+            catch_fire (bool, optional): Determines if the struck object is set on fire. Defaults to False.
+            douse_fire (bool, optional): If the target is on fire, then douse the fire. Defaults to False.
+            ignite (bool, optional): Determines if a fire may be started on a flammable target. Defaults to False.
+            on_fire_time (float, optional): The amount of time a target will remain on fire. Defaults to 0.
+            potion_effect (int, optional): Defines the effect the arrow will apply to the entity it hits.. Defaults to -1.
+            spawn_aoe_cloud (bool, optional): Potion spawns an area of effect cloud. See the table below for all spawn_aoe_cloud parameters.. Defaults to False.
+            teleport_owner (bool, optional): Determines if the owner is transported on hit. Defaults to False.
+        """
         try:
             self[self._component_namespace]["on_hit"]
         except KeyError:

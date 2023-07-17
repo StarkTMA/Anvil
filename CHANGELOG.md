@@ -2,6 +2,28 @@
 
 ---
 
+Version 0.4.2
+=============
+  [Anvil]
+  -------
+  - Updated to release `1.20.11`.
+  - Updated ``ITEM_SERVER_VERSION`` to `[1.12.10]`
+  - Added lots of docstrings
+  - Changed README from rst to md.
+  - Added basic documentations.
+  
+  [Items]
+  ------------
+  - Added `ItemCooldown`, `ItemRepairable`, `ItemMaxStackSize`, `ItemBlockPlacer`, `ItemRecord`, `ItemShooter`, `ItemProjectile`, `ItemThrowable`.
+  
+  [Commands]
+  ------------
+  - Block states in commands will use equals instead of colon.
+  
+  [UI]
+  ------------
+  - Rewrote the UI trigger mechanic to allow for more complex ui elements.
+
 Version 0.4.1
 =============
   [Anvil]
