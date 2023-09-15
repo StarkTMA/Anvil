@@ -87,8 +87,7 @@ class _molang(str):
     def _query(self, qtype, query, *arguments):
         a = f'{qtype}.{query}'
         if len(arguments):
-            args = ', '.join(f"'{arg}'" if type(arg) is str and not arg.startswith(
-                MOLANG_PREFIXES) else f"{arg}" for arg in arguments)
+            args = ', '.join(f"'{arg}'" if type(arg) is str and not arg.startswith(MOLANG_PREFIXES) else f"{arg}" for arg in arguments)
             a += f"({args})"
         return _molang(a)
 

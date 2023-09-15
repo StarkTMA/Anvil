@@ -1,27 +1,24 @@
-# Anvil -  a Minecraft bedrock content development tool
+Anvil is a Minecraft Bedrock development tool designed to make creating content for Minecraft Bedrock easier and consistent. It is build around modularity and extensibility, allowing you to create your own modules and plugins to extend the functionality of Anvil.
 
------
+Anvil leverages the power of [**Python**](https://www.python.org/downloads/) at automating repetitive tasks and generating code for you, so you can focus on the important stuff.
 
-![Anvil Status](https://img.shields.io/badge/status-beta-yellow.svg)
-![Anvil Version](https://img.shields.io/badge/release-0.4.2-blue.svg)
-![Python 10](https://img.shields.io/badge/python-3.10-g.svg)
-![Python 11](https://img.shields.io/badge/python-3.11-g.svg)
+The design philosophy of Anvil is to be as modular as possible, where the entire project can be entirely generated using the python script and its assets.
 
-
-### Requirements
-
+## Requirements
 To use Anvil, [**python**](https://www.python.org/downloads/) `3.10.0` or higher must be installed.
 
-### Installation
+Due to Minecraft bedrock being primarily developed on Windows, the file paths are Windows specific, so Anvil is only supported on Windows.
 
+## Installing
 To install Anvil, run the following command in your terminal:
 
-```bash 
-pip install anvil
+```bash
+pip install mcanvil
 ```
 
-### Usage
+This should install Anvil and all of its dependencies.
 
+## Usage
 ```bash
 anvil create <namespace> <project_name> [options]
 
@@ -32,10 +29,5 @@ project_name        The name of the project.
     --preview           Generates the project in Minecraft Preview com.mojang instead of release.
     --fullns            Sets the Project namespace to the full namespace.project_name
     --scriptapi         Adds dependencies support of ScriptAPI
-    --pbr               Adds dependencies support of Physically based rendering
+    --pbr               Adds capabilities support of Physically based rendering
 ```
-
-### Links & Resources
-
-* [**Documentation**](https:///) - Official docs for **anvil**.
-* [**Bedrock Learn Portal**](https://learn.microsoft.com/en-gb/minecraft/creator/reference/) - Official Minecraft Bedrock Documentation.

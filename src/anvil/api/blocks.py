@@ -1,10 +1,10 @@
 from typing import Dict
 
-from anvil.core import (ANVIL, AddonObject, _MinecraftDescription)
-from anvil.lib import *
-from anvil.lib import _JsonSchemes
 from anvil.api.actors import _Components
 from anvil.api.components import _component
+from anvil.core import ANVIL, AddonObject, _MinecraftDescription
+from anvil.lib import *
+from anvil.lib import _JsonSchemes
 
 __all__ = ['Block', 'VanillaBlockTexture',
            'BlockDestructibleByExplosion', 'BlockDestructibleByMining', 
@@ -15,6 +15,7 @@ __all__ = ['Block', 'VanillaBlockTexture',
 
 # Components
 class BlockDestructibleByExplosion(_component):
+    component_namespace = 'minecraft:destructible_by_explosion'
     def __init__(self, explosion_resistance: int) -> None:
         """Describes the destructible by explosion properties for this block.
 
@@ -26,6 +27,7 @@ class BlockDestructibleByExplosion(_component):
 
 
 class BlockDestructibleByMining(_component):
+    component_namespace = 'minecraft:destructible_by_mining'
     def __init__(self, seconds_to_destroy: int) -> None:
         """Describes the destructible by mining properties for this block.
 
@@ -37,6 +39,7 @@ class BlockDestructibleByMining(_component):
 
 
 class BlockFlammable(_component):
+    component_namespace = 'minecraft:flammable'
     def __init__(self, catch_chance_modifier: int, destroy_chance_modifier: int) -> None:
         """Describes the flammable properties for this block.
 
@@ -50,6 +53,7 @@ class BlockFlammable(_component):
 
 
 class BlockFriction(_component):
+    component_namespace = 'minecraft:friction'
     def __init__(self, friction: float = 0.4) -> None:
         """Describes the friction for this block in a range of 0.0 to 0.9.
 
@@ -61,6 +65,7 @@ class BlockFriction(_component):
 
 
 class BlockLightDampening(_component):
+    component_namespace = 'minecraft:light_dampening'
     def __init__(self, light_dampening: int = 15) -> None:
         """The amount that light will be dampened when it passes through the block in a range of 0 to 15.
 
@@ -72,6 +77,7 @@ class BlockLightDampening(_component):
 
 
 class BlockLightEmission(_component):
+    component_namespace = 'minecraft:light_emission'
     def __init__(self, light_emission: int = 0) -> None:
         """The amount of light this block will emit in a range of 0 to 15.
 
@@ -83,6 +89,7 @@ class BlockLightEmission(_component):
 
 
 class BlockLootTable(_component):
+    component_namespace = 'minecraft:loot'
     def __init__(self, loot: str) -> None:
         """Specifies the path to the loot table.
 
@@ -94,6 +101,7 @@ class BlockLootTable(_component):
 
 
 class BlockMapColor(_component):
+    component_namespace = 'minecraft:map_color'
     def __init__(self, map_color: str) -> None:
         """Sets the color of the block when rendered to a map.
 
@@ -105,6 +113,7 @@ class BlockMapColor(_component):
 
 
 class BlockMaterialInstance(_component):
+    component_namespace = 'minecraft:material_instances'
     def __init__(self) -> None:
         """Maps face or material_instance names in a geometry file to an actual material instance."""
         super().__init__('material_instances')
@@ -121,10 +130,10 @@ class BlockMaterialInstance(_component):
 
         """
         if FileExists(os.path.join('assets', 'textures', 'blocks', f'{texture_name}.png')):
-            self[self._component_namespace].update({
+            self[self.component_namespace].update({
                 "*" if block_face == BlockFaces.All else block_face: {
                     'texture': texture_name,
-                    'render_method': render_method if not render_method == BlockMaterial.Opaque else {},
+                    'render_method': render_method.value if not render_method == BlockMaterial.Opaque else {},
                     'ambient_occlusion': ambient_occlusion if ambient_occlusion is False else {},
                     'face_dimming': face_dimming if face_dimming is False else {},
                 }
@@ -135,6 +144,7 @@ class BlockMaterialInstance(_component):
 
 
 class BlockGeometry(_component):
+    component_namespace = 'minecraft:geometry'
     def __init__(self, geometry_name: str) -> None:
         """The description identifier of the geometry file to use to render this block.
 
@@ -158,6 +168,7 @@ class BlockGeometry(_component):
 
 
 class BlockCollisionBox(_component): 
+    component_namespace = 'minecraft:collision_box'
     def __init__(self, size: coordinates, origin: coordinates) -> None:
         """Defines the area of the block that collides with entities.
 
@@ -174,6 +185,7 @@ class BlockCollisionBox(_component):
 
 
 class BlockSelectionBox(_component): 
+    component_namespace = 'minecraft:selection_box'
     def __init__(self, size: coordinates, origin: coordinates) -> None:
         """Defines the area of the block that is selected by the player's cursor.
 
@@ -190,6 +202,7 @@ class BlockSelectionBox(_component):
 
 
 class BlockPlacementFilter(_component):
+    component_namespace = 'minecraft:placement_filter'
     def __init__(self) -> None:
         """By default, custom blocks can be placed anywhere and do not have placement restrictions unless you specify them in this component."""
         super().__init__('placement_filter')
@@ -209,7 +222,7 @@ class BlockPlacementFilter(_component):
             allowed_faces.remove(BlockFaces.West)
         if BlockFaces.All in allowed_faces:
             allowed_faces = [BlockFaces.All]
-        self[self._component_namespace]['conditions'].append({
+        self[self.component_namespace]['conditions'].append({
             "allowed_faces": allowed_faces,
             "block_filter": block_filter,
         })
@@ -217,6 +230,7 @@ class BlockPlacementFilter(_component):
 
 
 class BlockTransformation(_component):
+    component_namespace = 'minecraft:transformation'
     def __init__(self) -> None:
         """The block's transfomration.
         """
@@ -252,6 +266,7 @@ class BlockTransformation(_component):
 
 
 class BlockDisplayName(_component):
+    component_namespace = 'minecraft:display_name'
     def __init__(self, display_name: str) -> None:
         """This component is specified as a Localization String. If this component is omitted, the default value for this component is the name of the block.
 
@@ -263,6 +278,7 @@ class BlockDisplayName(_component):
 
 
 class BlockCraftingTable(_component):
+    component_namespace = 'minecraft:crafting_table'
     def __init__(self, table_name: str, *crafting_tags: str) -> None:
         """Makes your block into a custom crafting table which enables the crafting table UI and the ability to craft recipes.
 
@@ -408,34 +424,38 @@ class _BlockServer(AddonObject):
         comps = self._server_block['minecraft:block']['components']
         self._server_block['minecraft:block']['permutations'] = [permutation._export() for permutation in self._permutations]
 
-        if 'minecraft:geometry' in comps:
-            target_model = self._server_block['minecraft:block']['components']['minecraft:geometry'].split('.')[-1]
-            self._check_model(target_model)
+        target_models = []
+        target_textures = []
+
+        if not BlockMaterialInstance.component_namespace in comps:
+            ANVIL.Logger.block_missing_texture(self._name)
+        else:
+            for i, m in comps[BlockMaterialInstance.component_namespace].items():
+                target_textures.append(m['texture'])
+
+        if not BlockGeometry.component_namespace in comps:
+            ANVIL.Logger.block_missing_geometry(self._name)
+        else:
+            target_models.append(self._server_block['minecraft:block']['components'][BlockGeometry.component_namespace].split('.')[-1])
+
+        for p in self._server_block['minecraft:block']['permutations']:
+            if BlockGeometry.component_namespace in p['components']:
+                target_models.append(p['components'][BlockGeometry.component_namespace].split('.')[-1])
+            if BlockMaterialInstance.component_namespace in p['components']:
+                for i, m in p['components'][BlockMaterialInstance.component_namespace].items():
+                    target_textures.append(m['texture'])
+        
+        for model in target_models:
+            self._check_model(model)
             CopyFiles(
                 os.path.join('assets', 'models', 'blocks'),
                 os.path.join('resource_packs',f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'models', 'blocks'),
-                f'{target_model}.geo.json'
-            )
+                f'{model}.geo.json'
+            ) 
         
-        for p in self._server_block['minecraft:block']['permutations']:
-            if 'minecraft:geometry' in p['components']:
-                target_model = p['components']['minecraft:geometry'].split('.')[-1]
-                self._check_model(target_model)
-                CopyFiles(
-                    os.path.join('assets', 'models', 'blocks'),
-                    os.path.join('resource_packs',f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'models', 'blocks'),
-                    f'{target_model}.geo.json'
-                )
-        
-        if not 'minecraft:material_instances' in comps:
-            RaiseError(MISSING_TEXTURE(f"{ANVIL.NAMESPACE}:{self._identifier}"))
+        for texture in target_textures:
+            ANVIL._terrain_texture.add_block(texture, '', texture)
 
-        for i, m in comps['minecraft:material_instances'].items():
-            try:
-                CopyFiles(os.path.join('assets', 'textures', 'blocks'), os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'textures', 'blocks', 'anvil'), f'{m["texture"]}.png')
-            except:
-                CopyFiles(os.path.join('assets', 'textures', 'blocks'), os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'textures', 'blocks', 'anvil'), f'{m["texture"]}.tga')
-            ANVIL._terrain_texture.add_block(m['texture'], 'anvil', m['texture'])
 
         self.content(self._server_block)
         super().queue()

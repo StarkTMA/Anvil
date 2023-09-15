@@ -2,12 +2,59 @@
 
 ---
 
+Version 0.5.1
+=============
+  [Anvil]
+  - Added workflows to publish to pypi and testpypi.
+  - Gone Public!!!!!!!!
+
+
+Version 0.5.0
+=============
+  [Anvil]
+  - Docs are now build when pushing to the main branch.
+  - Added a universal way to require project specific configuration.
+    * To use call `ANVIL.require_config()` and pass the required configs as arguments.
+  - Additional work on documentation.
+  - Fonts can now generate a 'numbers' particle texture that contains numbers from 0-999.
+  - Replaced `dependecies` with `capabilities` in resource pack manifest.
+  - Added a new API module `texture_pack` (WIP).
+  - Added `GlobalLighting` and `Atmospherics` to the `texture_pack` module to support the new PBR pipeline.
+  - A `version` function will now generate every time there is a compilation, includes the time, Minecraft version and the build version.
+  - Rolled `ITEM_SERVER_VERSION` back to `[1.16.0]`, a lot of necessary functionalities are missing, waiting for `[1.12.40]`.
+  - Added a new module, `anvil.tools.functions`
+  - Added 3 new systems to `anvil.tools.functions`: `StateMachine`, `TimedFunction` and `StepTimedFunction`.
+  - Added a new property to Anvil Core `ANVIL.new_score`, this will register and return a new incremental score every time it's called. (Improved the score creation in `TimedFunction`)
+
+  [Components]
+  - Added and `_ai_goal()` parent class.
+  - Added new components: `MoveTowardsTarget()`, `EntitySensor()`, `AmbientSoundInterval()`.
+  - Slightly modified the way components are coded, this allows for much easier use of the `remove` method from events.
+  - Fixed a bug that wrapped filters in additional brackets for `all_of`, `any_of` and `none_of` conditions.
+  - Fixed a bug with `SendEvent()` that caused it to not write some important data to the json file therefore causing it to not work.
+
+  [Actors]
+  - Similar to geometries, animations can now be referenced from other entities, reducing redundancy.
+  - Entity Sound Events can now specify a min and max distance of a sound.
+
+  [Commands]
+  - Fixed a bug with the `CameraShake()` command returning `None` on export.
+  
+  [UI]
+  - Added a `Credits Constructor` class method to `AnvilHUDScreen` to facilitate creating UI based credits.
+  - Titles and Actionbars will now ignore keywords created in screens other that `anvil_hud`.
+  
+  [Documentation]
+  - Finished the tutorial for adding an entity.
+  - Added a documentation for adding a block.
+  - Added a tutorial for creating a One Block SkyBlock map.
+
 Version 0.4.2 - 0.4.2.6
 =============
   [Anvil]
   -------
   - Updated to release `1.20.11`.
-  - Updated ``ITEM_SERVER_VERSION`` to `[1.12.10]`
+  - Updated `ITEM_SERVER_VERSION` to `[1.12.10]`
   - Added lots of docstrings
   - Changed README from rst to md.
   - Added basic documentations.

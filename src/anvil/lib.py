@@ -15,8 +15,9 @@ from configparser import ConfigParser
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
+from pickle import GLOBAL
 from typing import NewType, Tuple, Type, Union, overload
-from urllib import request
+import requests
 from uuid import uuid4
 
 import click
@@ -27,7 +28,7 @@ from PIL import Image, ImageColor, ImageDraw, ImageEnhance, ImageFont, ImageQt
 
 from .__version__ import __version__
 
-Seconds = NewType("Seconds", str)
+Seconds = NewType("Seconds", float)
 Molang = NewType("Molang", str)
 coordinate = NewType("coordinate", [float | str])
 coordinates = NewType("tuple(x, y, z)", tuple[coordinate, coordinate, coordinate])
@@ -45,14 +46,14 @@ inf = 99999999999
 
 
 class Arguments(Enum):
-    """Enumeration for the different types of arguments. """
+    """Enumeration for the different types of arguments."""
 
     def __str__(self) -> str:
         return self.value
 
 
 def FileExists(path) -> bool:
-    """ Checks if a file exists.
+    """Checks if a file exists.
 
     Args:
         path (_type_): The path to the file.
@@ -107,35 +108,47 @@ def frange(start: int, stop: int, num: float = 1):
     return values
 
 
-APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")
-DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")
-MOLANG_PREFIXES: tuple[str] = (
-    "q.",
-    "v.",
-    "c.",
-    "t.",
-    "query.",
-    "variable.",
-    "context.",
-    "temp.",
-)
+Color = NewType("Color", [tuple[int, int, int] | tuple[int, int, int, int] | str])
+
+def process_color(color: Color, add_alpha: bool = False) -> str | list[float]:
+    if isinstance(color, tuple):
+        if len(color) not in [3, 4]:
+            raise ValueError("Color tuple must have 3 or 4 elements.")
+        if len(color) == 3 and add_alpha:
+            color = (*color, 255)
+        return [clamp(c, 0.0, 255.0) for c in color]
+    elif isinstance(color, str):
+        if color[0] != "#" or len(color) not in [7, 9]:
+            raise ValueError("Invalid color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'.")
+        if len(color) == 7 and add_alpha:
+            color += "ff"
+        return color
+    else:
+        raise TypeError("Color must be either a tuple of 3 or 4 integers or a hexadecimal string.")
+
+
+APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")  # type: ignore
+DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
+MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
+
 MANIFEST_BUILD: list[int] = [1, 19, 70]  # The build version of the manifest.
 BLOCK_SERVER_VERSION: str = "1.19.80"  # The version of the block server.
 ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
-BP_ANIMATION_VERSION: str = "1.10.0" # The version of the behavior pack animation.
-RP_ANIMATION_VERSION: str = "1.8.0" # The version of the resource pack animation.
-ANIMATION_CONTROLLERS_VERSION: str = "1.10.0" # The version of the animation controllers.
+BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
+RP_ANIMATION_VERSION: str = "1.8.0"  # The version of the resource pack animation.
+ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"  # The version of the animation controllers.
 SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
 GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
-RENDER_CONTROLLER_VERSION: str = "1.10.0" # The version of the render controller.
-SOUND_DEFINITIONS_VERSION: str = "1.14.0" # The version of the sound definitions.
+RENDER_CONTROLLER_VERSION: str = "1.10.0"  # The version of the render controller.
+SOUND_DEFINITIONS_VERSION: str = "1.14.0"  # The version of the sound definitions.
 DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
 FOG_VERSION: str = "1.16.100"  # The version of the fog.
 MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
-ITEM_SERVER_VERSION: str = "1.20.10"  # The version of the item server.
-MODULE_MINECRAFT_SERVER: str = "1.2.0" # The version of the Minecraft server module.
-MODULE_MINECRAFT_SERVER_UI: str = "1.1.0" # The version of the Minecraft UI module.
+ITEM_SERVER_VERSION: str = "1.16.0"  # The version of the item server.
+MODULE_MINECRAFT_SERVER: str = "1.2.0"  # The version of the Minecraft server module.
+MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"  # The version of the Minecraft UI module.
+GLOBAL_LIGHTING = [1, 0, 0]
 
 
 # --------------------------------------------------------------------------
@@ -561,6 +574,7 @@ class MaterialStates(Arguments):
     InvertCulling = "InvertCulling"
     DisableCulling = "DisableCulling"
     DisableDepthWrite = "DisableDepthWrite"
+    Blending = "Blending"
 
 
 class MaterialDefinitions(Arguments):
@@ -573,6 +587,11 @@ class MaterialDefinitions(Arguments):
     USE_COLOR_MASK = "USE_COLOR_MASK"
     MULTI_COLOR_TINT = "MULTI_COLOR_TINT"
     COLOR_BASED = "COLOR_BASED"
+    USE_UV_ANIM = "USE_UV_ANIM"
+    TINTED = "TINTED"
+    USE_COLOR_BLEND = "USE_COLOR_BLEND"
+    MULTIPLICATIVE_TINT = "MULTIPLICATIVE_TINT"
+    MULTIPLICATIVE_TINT_COLOR = "MULTIPLICATIVE_TINT_COLOR"
 
 
 class MaterialFunc(Arguments):
@@ -783,9 +802,7 @@ class Selector:
         self._args(c=count)
         return self
 
-    def coordinates(
-        self, *, x: coordinate = None, y: coordinate = None, z: coordinate = None
-    ):
+    def coordinates(self, *, x: coordinate = None, y: coordinate = None, z: coordinate = None):
         """Sets the coordinates of the target.
 
         Args:
@@ -808,9 +825,7 @@ class Selector:
         self._args(r=r, rm=rm)
         return self
 
-    def volume(
-        self, *, dx: float = None, dy: float = None, dz: float = None
-    ):
+    def volume(self, *, dx: float = None, dy: float = None, dz: float = None):
         """Sets the volume of the target.
 
         Args:
@@ -889,7 +904,7 @@ class Selector:
     def has_item(
         self,
         *,
-        item : str | Identifier,
+        item: str | Identifier,
         data: int = -1,
         quantity: int = None,
         location: Slots = None,
@@ -957,7 +972,8 @@ class BlockDescriptor(dict):
         """
         super().__init__(name=name, tags=tags, states=states)
 
-#Legacy code, will be removed in the future.
+
+# Legacy code, will be removed in the future.
 def Defaults(type, *args):
     """
 
@@ -1066,13 +1082,9 @@ def CopyFiles(old_dir: str, new_dir: str, target_file: str, rename: str = None) 
     """
     CreateDirectory(new_dir)
     if rename is None:
-        shutil.copyfile(
-            os.path.join(old_dir, target_file), os.path.join(new_dir, target_file)
-        )
+        shutil.copyfile(os.path.join(old_dir, target_file), os.path.join(new_dir, target_file))
     else:
-        shutil.copyfile(
-            os.path.join(old_dir, target_file), os.path.join(new_dir, rename)
-        )
+        shutil.copyfile(os.path.join(old_dir, target_file), os.path.join(new_dir, rename))
 
 
 def CopyFolder(old_dir: str, new_dir: str) -> None:
@@ -1084,9 +1096,7 @@ def CopyFolder(old_dir: str, new_dir: str) -> None:
         new_dir (str): The path to the destination directory.
     """
     CreateDirectory(new_dir)
-    shutil.copytree(
-        os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True
-    )
+    shutil.copytree(os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True)
 
 
 def zipit(zip_name, dir_list: dict) -> None:
@@ -1109,17 +1119,13 @@ def zipit(zip_name, dir_list: dict) -> None:
                         os.path.join(root, file),
                         os.path.join(
                             target,
-                            os.path.relpath(
-                                os.path.join(root, file), os.path.join(source, ".")
-                            ),
+                            os.path.relpath(os.path.join(root, file), os.path.join(source, ".")),
                         ),
                     )
         else:
             ziph.write(
                 source,
-                os.path.relpath(
-                    os.path.join(target, source), os.path.join(source, "..")
-                ),
+                os.path.relpath(os.path.join(target, source), os.path.join(source, "..")),
             )
 
     zipf = zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED)
@@ -1140,11 +1146,10 @@ def CreateDirectory(path: str) -> None:
 
 
 class _Config:
-    """A class used to read and write to the config.ini file.
-    """
+    """A class used to read and write to the config.ini file."""
+
     def __init__(self) -> None:
-        """Initializes a Config object.
-        """
+        """Initializes a Config object."""
         self._config = ConfigParser()
         self._config.read("config.ini")
 
@@ -1205,16 +1210,21 @@ class _Config:
 
 class _Logger:
     """A class used to log messages to the console and to a log file."""
-    def Red(text):
+
+    @staticmethod
+    def Red(text: str):
         return style(text, "red")
 
-    def Yellow(text):
+    @staticmethod
+    def Yellow(text: str):
         return style(text, "yellow")
 
-    def Green(text):
+    @staticmethod
+    def Green(text: str):
         return style(text, "green")
 
-    def Cyan(text):
+    @staticmethod
+    def Cyan(text: str):
         return style(text, "cyan")
 
     def __init__(self) -> None:
@@ -1400,21 +1410,78 @@ class _Logger:
         self.logger.error(m)
         raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
-    # Identifiers
+    # Error
     def namespaces_not_allowed(self, name):
         m = f"Identifiers are not valid name formats, error at {name}."
         self.logger.error(m)
         raise RuntimeError(_Logger.Red("[ERROR]: " + m))
-    
-    # Entity Client
-    def missing_texture(self, entity):
-        return f'{Message.ERROR}: {style(entity, "green")} missing a texture.'
 
+    # Info
+    def project_missing_config(self):
+        m = f"The project require missing configuration. Please fill in the following options:"
+        self.logger.info(m)
+        click.echo(_Logger.Cyan("[Info]: " + m))
+
+    # Info
+    def config_added_option(self, section: str, option: str):
+        m = f"{option} was added to {section}"
+        self.logger.info(m)
+        click.echo(_Logger.Cyan("[Info]: " + m))
+
+    # Info
+    def config_option_changeable(self, *options: str):
+        m = f"The options {options} can be changed from the config file at any time, recompilation will be required."
+        self.logger.info(m)
+        click.echo(_Logger.Cyan("[Info]: " + m))
+
+    # Error
+    @staticmethod
+    def namespace_too_long(self, namespace):
+        m = f"Namespace must be 8 characters or less. {namespace} is {len(namespace)} characters long."
+        # self.logger.error(m)
+        raise ValueError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    @staticmethod
+    def project_name_too_long(self, project_name):
+        m = f"Project name must be 16 characters or less. {project_name} is {len(project_name)} characters long."
+        # self.logger.error(m)
+        raise ValueError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    @staticmethod
+    def reserved_namespace(self, namespace):
+        m = f"{namespace} is a reserved namespace."
+        # self.logger.error(m)
+        raise ValueError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    def missing_animation(self, animation_path, animation):
+        m = f"{animation_path} is missing the animation {animation}"
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    def entity_missing_texture(self, entity):
+        m = f"{entity} has no textures added."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
+    
+    # Error
+    def block_missing_texture(self, block):
+        m = f"{block} has no default material instance added."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    def block_missing_geometry(self, block):
+        m = f"{block} has no default geometry added."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
+
+    # ===================================
     def missing_render_controller(self, entity):
         return f'{Message.ERROR}: {style(entity, "green")} missing a render_controller.'
-
-    def missing_animation(self, NAMESPACE, entity, animation):
-        return f'{Message.ERROR}: The animation file {style(f"{entity}.animation.json", "green")} doesn\'t contain an animation called {style(NAMESPACE, "green")}.'
 
     def lang_error(self, text):
         return f'{Message.ERROR}: Invalid localized string at {style(text, "green")}'
@@ -1442,33 +1509,24 @@ class _Logger:
         return f'Execution starts at: {style(time, "cyan")}'
 
     def compiling(self, filename):
-        return (
-            f'{style("[Compiling]", "cyan")}: {style(filename, "green")}               '
-            + "\033[A"
-        )
+        return f'{style("[Compiling]", "cyan")}: {style(filename, "green")}               ' + "\033[A"
 
     def compilation_time(self, time):
         return f'{style("[Compilation Time]", "cyan")}: {style(time, "green") if time < 15 else style(time, "red")} s.               '
 
     def translating(self, filename):
-        return (
-            f'{style("[Translating]", "cyan")}: {style(filename, "green")}               '
-            + "\033[A"
-        )
+        return f'{style("[Translating]", "cyan")}: {style(filename, "green")}               ' + "\033[A"
 
     def translation_time(self, time):
         return f'{style("[Translation Time]", "cyan")}: {style(time, "green")} s.               '
 
     def exporting(self, filename):
-        return (
-            f'{style("[Exporting]", "green")}: {style(filename, "green")}               '
-            + "\033[A"
-        )
-
+        return f'{style("[Exporting]", "green")}: {style(filename, "green")}               ' + "\033[A"
 
     # Molang
     def molang_only(self, command):
         return f'{Message.ERROR}: Molang operations only, Error at "{style(command, "green")}".'
+
 
 
 class _JsonSchemes:
@@ -1480,6 +1538,7 @@ class _JsonSchemes:
             project_name: {
                 "behavior_packs": {},
                 "resource_packs": {},
+                "scripts": {},
                 "assets": {
                     "skins": {},
                     "animations": {},
@@ -1628,7 +1687,7 @@ class _JsonSchemes:
             ],
         }
         if has_pbr:
-            m.update({"dependencies": ["pbr"]})
+            m.update({"capabilities": ["pbr"]})
         return m
 
     @staticmethod
@@ -1936,9 +1995,7 @@ class _JsonSchemes:
         }
 
     @staticmethod
-    def dialogue_scene(
-        scene_tag, npc_name, text, on_open_commands, on_close_commands, buttons
-    ):
+    def dialogue_scene(scene_tag, npc_name, text, on_open_commands, on_close_commands, buttons):
         return {
             "scene_tag": scene_tag,
             "npc_name": npc_name,
@@ -1977,10 +2034,21 @@ class _JsonSchemes:
             "interactive_sounds": {},
         }
 
+    @staticmethod
+    def directional_lights():
+        return {
+            "format_version": GLOBAL_LIGHTING,
+            "directional_lights": {},
+            "pbr": {},
+        }
+    @staticmethod
+    def atmospherics():
+        return {
+            "horizon_blend_stops": {},
+        }
 
-def File(
-    name: str, content: str, directory: str, mode: str, skip_tag: bool = False, *args
-) -> None:
+
+def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bool = False, *args) -> None:
     """
     Create or modify a file with the given content.
 
@@ -2000,27 +2068,19 @@ def File(
     out_content = ""
     file_content = content
     stamp = f"Generated with Anvil@StarkTMA {__version__}"
-    time = datetime.now(datetime.now().astimezone().tzinfo).strftime(
-        "%d-%m-%Y %H:%M:%S %z"
-    )
+    time = datetime.now(datetime.now().astimezone().tzinfo).strftime("%d-%m-%Y %H:%M:%S %z")
     # copyright=f'Property of {COMPANY}'
     copyright = ""
     path = os.path.normpath(os.path.join(directory, name))
     if mode == "w":
         match type:
             case "json" | "material" | "code-workspace":
-                out_content = (
-                    f"//Filename: {name}\n//{stamp}\n//{time}\n//{copyright}\n\n"
-                )
-                file_content = json.dumps(
-                    content, sort_keys=False, indent=4, ensure_ascii=False
-                )
+                out_content = f"//Filename: {name}\n//{stamp}\n//{time}\n//{copyright}\n\n"
+                file_content = json.dumps(content, sort_keys=False, indent=4, ensure_ascii=False)
             case "py" | "mcfunction":
                 out_content = f"#Filename: {name}\n#{stamp}\n#{time}\n#{copyright}\n\n"
             case "lang":
-                out_content = (
-                    f"##Filename: {name}\n##{stamp}\n##{time}\n##{copyright}\n\n"
-                )
+                out_content = f"##Filename: {name}\n##{stamp}\n##{time}\n##{copyright}\n\n"
     if skip_tag:
         out_content = file_content
     else:

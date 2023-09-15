@@ -1,8 +1,9 @@
 name: docs
+
 on:
   push:
     branches:
-      - develop
+      - main
 
 permissions:
   contents: write

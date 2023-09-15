@@ -1,6 +1,6 @@
-from anvil import ANVIL, Particle
-from anvil.lib import *
 from anvil.api.vanilla import Blocks
+from anvil.core import ANVIL, Particle
+from anvil.lib import *
 
 # __all__ = [
 #    'AddRider', 'AdmireItem', 'Ageable',
@@ -27,22 +27,22 @@ class Filter:
         if operator != FilterOperation.Equals:
             filter.update({"operator": operator.value})
         if domain != None:
-            filter.update({"domain": domain.value})
+            filter.update({"domain": domain.value if isinstance(domain, Arguments) else domain})
 
         return filter
 
     # Filter Groups
     @staticmethod
     def all_of(*filters: "Filter"):
-        return {"all_of": [filters]}
+        return {"all_of": [*filters]}
 
     @staticmethod
     def any_of(*filters: "Filter"):
-        return {"any_of": [filters]}
+        return {"any_of": [*filters]}
 
     @staticmethod
     def none_of(*filters: "Filter"):
-        return {"none_of": [filters]}
+        return {"none_of": [*filters]}
 
     # Actual Filters
     @classmethod
@@ -53,9 +53,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter(
-            "distance_to_nearest_player", subject, operator, None, max(0, value)
-        )
+        return self._construct_filter("distance_to_nearest_player", subject, operator, None, max(0, value))
 
     @classmethod
     def has_component(
@@ -283,9 +281,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter(
-            "int_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value
-        )
+        return self._construct_filter("int_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value)
 
     @classmethod
     def bool_property(
@@ -296,9 +292,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter(
-            "bool_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value
-        )
+        return self._construct_filter("bool_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value)
 
     @classmethod
     def float_property(
@@ -309,9 +303,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter(
-            "float_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value
-        )
+        return self._construct_filter("float_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value)
 
     @classmethod
     def enum_property(
@@ -322,9 +314,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter(
-            "enum_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value
-        )
+        return self._construct_filter("enum_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value)
 
     @classmethod
     def has_property(
@@ -334,31 +324,28 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter(
-            "has_property", subject, operator, None, f"{ANVIL.NAMESPACE}:{value}"
-        )
+        return self._construct_filter("has_property", subject, operator, None, f"{ANVIL.NAMESPACE}:{value}")
 
 
 class _component:
+    component_namespace = "minecraft:component"
+
     def _enforce_version(self, current_version, target_version):
         if current_version < target_version:
-            ANVIL.Logger.component_version_error(
-                self._component_name, current_version, target_version
-            )
+            ANVIL.Logger.component_version_error(self.component_namespace, current_version, target_version)
 
-    def __init__(self, component_name) -> None:
+    def __init__(self, component_name: str) -> None:
         self._component_reset_namespace(component_name)
 
-    def _component_reset_namespace(self, component_name):
-        self._component_name = component_name
-        self._component_namespace = f"minecraft:{self._component_name}"
-        self._cmp = {self._component_namespace: {}}
+    def _component_reset_namespace(self, component_name: str):
+        self.component_namespace = f"minecraft:{component_name}"
+        self._cmp = {self.component_namespace: {}}
 
     def _component_add_field(self, key, value):
-        self._cmp[self._component_namespace][key] = value
+        self._cmp[self.component_namespace][key] = value
 
     def _component_set_value(self, value):
-        self._cmp[self._component_namespace] = value
+        self._cmp[self.component_namespace] = value
 
     def keys(self):
         return list(self._cmp.keys())
@@ -367,10 +354,20 @@ class _component:
         return self._cmp[key]
 
 
+class _ai_goal(_component):
+    def __init__(self, component_name: str) -> None:
+        super().__init__(component_name)
+
+    def priority(self, priority: int):
+        self._component_add_field("priority", priority)
+        return self
+
+
 # Components ==========================================================================
 
 
 class AddRider(_component):
+    component_namespace = "minecraft:addrider"
     def __init__(self, entity_type: Identifier, spawn_event: event = None) -> None:
         """Adds a rider to the entity. Requires `minecraft:rideable.`.
 
@@ -389,9 +386,8 @@ class AddRider(_component):
 
 
 class AdmireItem(_component):
-    def __init__(
-        self, cooldown_after_being_attacked: Seconds, duration: Seconds = 10
-    ) -> None:
+    component_namespace = "minecraft:admire_item"
+    def __init__(self, cooldown_after_being_attacked: Seconds, duration: Seconds = 10) -> None:
         """Causes the mob to ignore attackable targets for a given duration.
 
         Parameters
@@ -403,14 +399,13 @@ class AdmireItem(_component):
 
         """
         super().__init__("admire_item")
-        self._component_add_field(
-            "cooldown_after_being_attacked", cooldown_after_being_attacked
-        )
+        self._component_add_field("cooldown_after_being_attacked", cooldown_after_being_attacked)
         if not duration == 10:
             self._component_add_field("duration", duration)
 
 
 class Ageable(_component):
+    component_namespace = "minecraft:ageable"
     def __init__(self, duration: Seconds, event: event) -> None:
         """Adds a timer for the entity to grow up. It can be accelerated by giving the entity the items it likes.
 
@@ -424,10 +419,11 @@ class Ageable(_component):
         """
         super().__init__("ageable")
         self._component_add_field("duration", duration)
-        self[self._component_namespace]["grow_up"] = {"event": event, "target": "self"}
+        self[self.component_namespace]["grow_up"] = {"event": event, "target": "self"}
 
 
 class CollisionBox(_component):
+    component_namespace = "minecraft:collision_box"
     def __init__(self, height: float, width: float) -> None:
         """Sets the width and height of the Entity's collision box."""
         super().__init__("collision_box")
@@ -436,6 +432,7 @@ class CollisionBox(_component):
 
 
 class TypeFamily(_component):
+    component_namespace = "minecraft:type_family"
     def __init__(self, *family: str) -> None:
         """Defines the families this entity belongs to."""
         super().__init__("type_family")
@@ -443,6 +440,7 @@ class TypeFamily(_component):
 
 
 class InstantDespawn(_component):
+    component_namespace = "minecraft:instant_despawn"
     def __init__(self, remove_child_entities: bool = False) -> None:
         """"""
         super().__init__("instant_despawn")
@@ -451,6 +449,7 @@ class InstantDespawn(_component):
 
 
 class Health(_component):
+    component_namespace = "minecraft:health"
     def __init__(self, value: int, min: int = None, max: int = None) -> None:
         """Sets the amount of health this mob has."""
         super().__init__("health")
@@ -462,6 +461,7 @@ class Health(_component):
 
 
 class Physics(_component):
+    component_namespace = "minecraft:physics"
     def __init__(self, has_collision: bool = True, has_gravity: bool = True) -> None:
         """Defines physics properties of an actor, including if it is affected by gravity or if it collides with objects."""
         super().__init__("physics")
@@ -470,6 +470,7 @@ class Physics(_component):
 
 
 class KnockbackResistance(_component):
+    component_namespace = "minecraft:knockback_resistance"
     def __init__(self, value: float) -> None:
         """Determines the amount of knockback resistance that the item has."""
         super().__init__("knockback_resistance")
@@ -477,9 +478,8 @@ class KnockbackResistance(_component):
 
 
 class Pushable(_component):
-    def __init__(
-        self, is_pushable: bool = True, is_pushable_by_piston: bool = True
-    ) -> None:
+    component_namespace = "minecraft:pushable"
+    def __init__(self, is_pushable: bool = True, is_pushable_by_piston: bool = True) -> None:
         """Defines what can push an entity between other entities and pistons."""
         super().__init__("pushable")
         self._component_add_field("is_pushable", is_pushable)
@@ -487,6 +487,7 @@ class Pushable(_component):
 
 
 class PushThrough(_component):
+    component_namespace = "minecraft:push_through"
     def __init__(self, value: float) -> None:
         """Sets the distance through which the entity can push through.
 
@@ -503,6 +504,7 @@ class PushThrough(_component):
 
 
 class Movement(_component):
+    component_namespace = "minecraft:movement"
     def __init__(self, value: int, max: int = None) -> None:
         """Sets the amount of movement this mob has."""
         super().__init__("movement")
@@ -512,6 +514,7 @@ class Movement(_component):
 
 
 class TickWorld(_component):
+    component_namespace = "minecraft:tick_world"
     def __init__(
         self,
         never_despawn: bool = True,
@@ -528,33 +531,26 @@ class TickWorld(_component):
 
 
 class CustomHitTest(_component):
-    def __init__(
-        self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]
-    ) -> None:
+    component_namespace = "minecraft:custom_hit_test"
+    def __init__(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]) -> None:
         """List of hitboxes for melee and ranged hits against the entity."""
         super().__init__("custom_hit_test")
-        self._component_add_field(
-            "hitboxes", [{"width": width, "height": height, "pivot": pivot}]
-        )
+        self._component_add_field("hitboxes", [{"width": width, "height": height, "pivot": pivot}])
 
-    def add_hitbox(
-        self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]
-    ):
-        self[self._component_namespace]["hitboxes"].append(
-            {"width": width, "height": height, "pivot": pivot}
-        )
+    def add_hitbox(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]):
+        self[self.component_namespace]["hitboxes"].append({"width": width, "height": height, "pivot": pivot})
 
 
 class CanClimb(_component):
+    component_namespace = "minecraft:can_climb"
     def __init__(self) -> None:
         """Allows this entity to climb up ladders."""
         super().__init__("can_climb")
 
 
 class Attack(_component):
-    def __init__(
-        self, damage: int, effect_duration: int = None, effect_name: str = None
-    ) -> None:
+    component_namespace = "minecraft:attack"
+    def __init__(self, damage: int, effect_duration: int = None, effect_name: str = None) -> None:
         """Defines an entity's melee attack and any additional effects on it."""
         super().__init__("attack")
         self._component_add_field("damage", damage)
@@ -565,6 +561,7 @@ class Attack(_component):
 
 
 class JumpStatic(_component):
+    component_namespace = "minecraft:jump.static"
     def __init__(self, jump_power: float) -> None:
         """Gives the entity the ability to jump."""
         super().__init__("jump.static")
@@ -572,15 +569,15 @@ class JumpStatic(_component):
 
 
 class HorseJumpStrength(_component):
+    component_namespace = "minecraft:horse.jump_strength"
     def __init__(self, range_min: float, range_max: float) -> None:
         """Allows this mob to jump higher when being ridden by a player."""
         super().__init__("horse.jump_strength")
-        self._component_add_field(
-            "hitboxes", [{"range_min": range_min, "range_max": range_max}]
-        )
+        self._component_add_field("hitboxes", [{"range_min": range_min, "range_max": range_max}])
 
 
 class SpellEffects(_component):
+    component_namespace = "minecraft:spell_effects"
     def __init__(self) -> None:
         """Defines what mob effects to add and remove to the entity when adding this component."""
         super().__init__("spell_effects")
@@ -608,15 +605,16 @@ class SpellEffects(_component):
         if display_on_screen_animation is not True:
             effect.update({"display_on_screen_animation": display_on_screen_animation})
 
-        self[self._component_namespace]["add_effects"].append(effect)
+        self[self.component_namespace]["add_effects"].append(effect)
         return self
 
     def remove_effects(self, *effects: Effects):
-        self[self._component_namespace]["remove_effects"] = [e.value for e in effects]
+        self[self.component_namespace]["remove_effects"] = [e.value for e in effects]
         return self
 
 
 class FrictionModifier(_component):
+    component_namespace = "minecraft:friction_modifier"
     def __init__(self, value: int) -> None:
         """Defines how much friction affects this entity."""
         super().__init__("friction_modifier")
@@ -624,6 +622,7 @@ class FrictionModifier(_component):
 
 
 class Breathable(_component):
+    component_namespace = "minecraft:breathable"
     def __init__(
         self,
         breathes_air: bool = True,
@@ -692,6 +691,7 @@ class Breathable(_component):
 
 
 class Variant(_component):
+    component_namespace = "minecraft:variant"
     def __init__(self, value: int) -> None:
         """Used to differentiate the component group of a variant of an entity from others. (e.g. ocelot, villager)."""
         super().__init__("variant")
@@ -699,6 +699,7 @@ class Variant(_component):
 
 
 class MarkVariant(_component):
+    component_namespace = "minecraft:mark_variant"
     def __init__(self, value: int) -> None:
         """Additional variant value. Can be used to further differentiate variants."""
         super().__init__("mark_variant")
@@ -706,6 +707,7 @@ class MarkVariant(_component):
 
 
 class SkinID(_component):
+    component_namespace = "minecraft:skin_id"
     def __init__(self, value: int) -> None:
         """Skin ID value. Can be used to differentiate skins, such as base skins for villagers."""
         super().__init__("skin_id")
@@ -713,6 +715,7 @@ class SkinID(_component):
 
 
 class Scale(_component):
+    component_namespace = "minecraft:scale"
     def __init__(self, value: int) -> None:
         """Sets the entity's visual size."""
         super().__init__("scale")
@@ -720,6 +723,7 @@ class Scale(_component):
 
 
 class ScaleByAge(_component):
+    component_namespace = "minecraft:scale_by_age"
     def __init__(self, start_scale: int, end_scale: int) -> None:
         """Defines the entity's size interpolation based on the entity's age."""
         super().__init__("scale_by_age")
@@ -728,9 +732,8 @@ class ScaleByAge(_component):
 
 
 class AreaAttack(_component):
-    def __init__(
-        self, cause: DamageCause, damage_per_tick: int = 2, damage_range: float = 0.2
-    ) -> None:
+    component_namespace = "minecraft:area_attack"
+    def __init__(self, cause: DamageCause, damage_per_tick: int = 2, damage_range: float = 0.2) -> None:
         """Is a component that does damage to entities that get within range."""
         super().__init__("area_attack")
 
@@ -747,90 +750,105 @@ class AreaAttack(_component):
 
 
 class IsStackable(_component):
+    component_namespace = "minecraft:is_stackable"
     def __init__(self) -> None:
         """Sets that this entity can be stacked."""
         super().__init__("is_stackable")
 
 
 class IsIllagerCaptain(_component):
+    component_namespace = "minecraft:is_illager_captain"
     def __init__(self) -> None:
         """Sets that this entity is an illager captain."""
         super().__init__("is_illager_captain")
 
 
 class IsBaby(_component):
+    component_namespace = "minecraft:is_baby"
     def __init__(self) -> None:
         """Sets that this entity is a baby."""
         super().__init__("is_baby")
 
 
 class IsIgnited(_component):
+    component_namespace = "minecraft:is_ignited"
     def __init__(self) -> None:
         """Sets that this entity is currently on fire."""
         super().__init__("is_ignited")
 
 
 class IsTamed(_component):
+    component_namespace = "minecraft:is_tamed"
     def __init__(self) -> None:
         """Sets that this entity is currently tamed."""
         super().__init__("is_tamed")
 
 
 class IsCharged(_component):
+    component_namespace = "minecraft:is_charged"
     def __init__(self) -> None:
         """Sets that this entity is charged."""
         super().__init__("is_charged")
 
 
 class IsStunned(_component):
+    component_namespace = "minecraft:is_stunned"
     def __init__(self) -> None:
         """Sets that this entity is currently stunned."""
         super().__init__("is_stunned")
 
 
 class IsSaddled(_component):
+    component_namespace = "minecraft:is_saddled"
     def __init__(self) -> None:
         """Sets that this entity is currently saddled."""
         super().__init__("is_saddled")
 
 
 class CanClimb(_component):
+    component_namespace = "minecraft:can_climb"
     def __init__(self) -> None:
         """Allows this entity to climb up ladders."""
         super().__init__("can_climb")
 
 
 class IsSheared(_component):
+    component_namespace = "minecraft:is_sheared"
     def __init__(self) -> None:
         """Sets that this entity is currently sheared."""
         super().__init__("is_sheared")
 
 
 class CanFly(_component):
+    component_namespace = "minecraft:can_fly"
     def __init__(self) -> None:
         """Marks the entity as being able to fly, the pathfinder won't be restricted to paths where a solid block is required underneath it."""
         super().__init__("can_fly")
 
 
 class CanPowerJump(_component):
+    component_namespace = "minecraft:can_power_jump"
     def __init__(self) -> None:
         """Allows the entity to power jump like the horse does in vanilla."""
         super().__init__("can_power_jump")
 
 
 class IsChested(_component):
+    component_namespace = "minecraft:is_chested"
     def __init__(self) -> None:
         """Sets that this entity is currently carrying a chest."""
         super().__init__("is_chested")
 
 
 class OutOfControl(_component):
+    component_namespace = "minecraft:out_of_control"
     def __init__(self) -> None:
         """Defines the entity's 'out of control' state."""
         super().__init__("out_of_control")
 
 
 class DamageSensor(_component):
+    component_namespace = "minecraft:damage_sensor"
     def __init__(self) -> None:
         """Defines what events to call when this entity is damaged by specific entities or items."""
         super().__init__("damage_sensor")
@@ -847,7 +865,7 @@ class DamageSensor(_component):
     ):
         damage = {"deals_damage": deals_damage, "on_damage": {}}
         if not cause is DamageCause.All:
-            damage["cause"] = cause
+            damage["cause"] = cause.value
         if not on_damage_event is None:
             damage["on_damage"] = {"event": on_damage_event}
         if not on_damage_filter is None:
@@ -857,11 +875,12 @@ class DamageSensor(_component):
         if not damage_modifier == 0:
             damage["damage_modifier"] = damage_modifier
 
-        self[self._component_namespace]["triggers"].append(damage)
+        self[self.component_namespace]["triggers"].append(damage)
         return self
 
 
 class FollowRange(_component):
+    component_namespace = "minecraft:follow_range"
     def __init__(self, value: int, max: int = None) -> None:
         """Defines the range of blocks that a mob will pursue a target."""
         super().__init__("follow_range")
@@ -871,6 +890,7 @@ class FollowRange(_component):
 
 
 class MovementType(_component):
+    component_namespace = "minecraft:movement.basic"
     def _basic(self, type: str, max_turn: float = 30) -> None:
         super()._component_reset_namespace(f"movement.{type}")
         if not max_turn == 30:
@@ -956,6 +976,7 @@ class MovementType(_component):
 
 
 class NavigationType(_component):
+    component_namespace = "minecraft:navigation.basic"
     def _basic(
         self,
         type: str,
@@ -1364,22 +1385,20 @@ class NavigationType(_component):
 
 
 class EnvironmentSensor(_component):
+    component_namespace = "minecraft:environment_sensor"
     def __init__(self) -> None:
         """Creates a trigger based on environment conditions."""
         super().__init__("environment_sensor")
         self._component_add_field("triggers", [])
 
     def trigger(self, event: event, filters: Filter):
-        self[self._component_namespace]["triggers"].append(
-            {"filters": filters, "event": event}
-        )
+        self[self.component_namespace]["triggers"].append({"filters": filters, "event": event})
         return self
 
 
 class PreferredPath(_component):
-    def __init__(
-        self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks: int = 3
-    ) -> None:
+    component_namespace = "minecraft:preferred_path"
+    def __init__(self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks: int = 3) -> None:
         """Specifies costing information for mobs that prefer to walk on preferred paths."""
         super().__init__("preferred_path")
         self._component_add_field("default_block_cost", default_block_cost)
@@ -1388,7 +1407,7 @@ class PreferredPath(_component):
         self._component_add_field("preferred_path_blocks", [])
 
     def add_blocks(self, cost: int, *blocks: list[Blocks._MinecraftBlock | str]):
-        self[self._component_namespace]["preferred_path_blocks"].append(
+        self[self.component_namespace]["preferred_path_blocks"].append(
             {
                 "cost": cost,
                 "blocks": [
@@ -1405,9 +1424,8 @@ class PreferredPath(_component):
 
 
 class TargetNearbySensor(_component):
-    def __init__(
-        self, inside_range: int = 1, outside_range: int = 5, must_see: bool = False
-    ) -> None:
+    component_namespace = "minecraft:target_nearby_sensor"
+    def __init__(self, inside_range: int = 1, outside_range: int = 5, must_see: bool = False) -> None:
         """Defines the entity's range within which it can see or sense other entities to target them."""
         super().__init__("target_nearby_sensor")
         self._component_add_field("inside_range", inside_range)
@@ -1419,19 +1437,16 @@ class TargetNearbySensor(_component):
         return self
 
     def on_outside_range(self, event: event, target: FilterSubject):
-        self._component_add_field(
-            "on_outside_range", {"event": event, "target": target.value}
-        )
+        self._component_add_field("on_outside_range", {"event": event, "target": target.value})
         return self
 
     def on_vision_lost_inside_range(self, event: event, target: FilterSubject):
-        self._component_add_field(
-            "on_vision_lost_inside_range", {"event": event, "target": target.value}
-        )
+        self._component_add_field("on_vision_lost_inside_range", {"event": event, "target": target.value})
         return self
 
 
-class NearestAttackableTarget(_component):
+class NearestAttackableTarget(_ai_goal):
+    component_namespace = "minecraft:behavior.nearest_attackable_target"
     def __init__(
         self,
         attack_interval: int = 0,
@@ -1465,9 +1480,7 @@ class NearestAttackableTarget(_component):
         if must_see:
             self._component_add_field("must_see", must_see)
         if not must_see_forget_duration == 3.0:
-            self._component_add_field(
-                "must_see_forget_duration", must_see_forget_duration
-            )
+            self._component_add_field("must_see_forget_duration", must_see_forget_duration)
         if not persist_time == 0.0:
             self._component_add_field("persist_time", persist_time)
         if reevaluate_description:
@@ -1479,21 +1492,13 @@ class NearestAttackableTarget(_component):
         if set_persistent:
             self._component_add_field("set_persistent", set_persistent)
         if not target_invisible_multiplier == 0.7:
-            self._component_add_field(
-                "target_invisible_multiplier", target_invisible_multiplier
-            )
+            self._component_add_field("target_invisible_multiplier", target_invisible_multiplier)
         if not target_search_height == -0.1:
             self._component_add_field("target_search_height", target_search_height)
         if not target_sneak_visibility_multiplier == 0.8:
-            self._component_add_field(
-                "target_sneak_visibility_multiplier", target_sneak_visibility_multiplier
-            )
+            self._component_add_field("target_sneak_visibility_multiplier", target_sneak_visibility_multiplier)
         if not within_radius == 0.0:
             self._component_add_field("within_radius", within_radius)
-
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
     def add_target(
         self,
@@ -1506,27 +1511,22 @@ class NearestAttackableTarget(_component):
         walk_speed_multiplier: float = 1.0,
     ):
         # empty dicts will be removed at compilation
-        self[self._component_namespace]["entity_types"].append(
+        self[self.component_namespace]["entity_types"].append(
             {
                 "filters": filters,
                 "cooldown": cooldown if cooldown > 0 else {},
                 "max_dist": max_dist if max_dist != 32 else {},
                 "must_see": must_see if must_see else {},
-                "must_see_forget_duration": must_see_forget_duration
-                if must_see_forget_duration != 3.0
-                else {},
-                "sprint_speed_multiplier": sprint_speed_multiplier
-                if sprint_speed_multiplier != 1.0
-                else {},
-                "walk_speed_multiplier": walk_speed_multiplier
-                if walk_speed_multiplier != 1.0
-                else {},
+                "must_see_forget_duration": must_see_forget_duration if must_see_forget_duration != 3.0 else {},
+                "sprint_speed_multiplier": sprint_speed_multiplier if sprint_speed_multiplier != 1.0 else {},
+                "walk_speed_multiplier": walk_speed_multiplier if walk_speed_multiplier != 1.0 else {},
             }
         )
         return self
 
 
-class NearestPrioritizedAttackableTarget(_component):
+class NearestPrioritizedAttackableTarget(_ai_goal):
+    component_namespace = "minecraft:behavior.nearest_prioritized_attackable_target"
     def __init__(
         self,
         attack_interval: int = 0,
@@ -1560,9 +1560,7 @@ class NearestPrioritizedAttackableTarget(_component):
         if must_see:
             self._component_add_field("must_see", must_see)
         if not must_see_forget_duration == 3.0:
-            self._component_add_field(
-                "must_see_forget_duration", must_see_forget_duration
-            )
+            self._component_add_field("must_see_forget_duration", must_see_forget_duration)
         if not persist_time == 0.0:
             self._component_add_field("persist_time", persist_time)
         if reevaluate_description:
@@ -1574,21 +1572,13 @@ class NearestPrioritizedAttackableTarget(_component):
         if set_persistent:
             self._component_add_field("set_persistent", set_persistent)
         if not target_invisible_multiplier == 0.7:
-            self._component_add_field(
-                "target_invisible_multiplier", target_invisible_multiplier
-            )
+            self._component_add_field("target_invisible_multiplier", target_invisible_multiplier)
         if not target_search_height == -0.1:
             self._component_add_field("target_search_height", target_search_height)
         if not target_sneak_visibility_multiplier == 0.8:
-            self._component_add_field(
-                "target_sneak_visibility_multiplier", target_sneak_visibility_multiplier
-            )
+            self._component_add_field("target_sneak_visibility_multiplier", target_sneak_visibility_multiplier)
         if not within_radius == 0.0:
             self._component_add_field("within_radius", within_radius)
-
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
     def add_target(
         self,
@@ -1601,27 +1591,22 @@ class NearestPrioritizedAttackableTarget(_component):
         walk_speed_multiplier: float = 1.0,
     ):
         # empty dicts will be removed at compilation
-        self[self._component_namespace]["entity_types"].append(
+        self[self.component_namespace]["entity_types"].append(
             {
                 "filters": filters,
                 "cooldown": cooldown if cooldown > 0 else {},
                 "max_dist": max_dist if max_dist != 32 else {},
                 "must_see": must_see if must_see else {},
-                "must_see_forget_duration": must_see_forget_duration
-                if must_see_forget_duration != 3.0
-                else {},
-                "sprint_speed_multiplier": sprint_speed_multiplier
-                if sprint_speed_multiplier != 1.0
-                else {},
-                "walk_speed_multiplier": walk_speed_multiplier
-                if walk_speed_multiplier != 1.0
-                else {},
+                "must_see_forget_duration": must_see_forget_duration if must_see_forget_duration != 3.0 else {},
+                "sprint_speed_multiplier": sprint_speed_multiplier if sprint_speed_multiplier != 1.0 else {},
+                "walk_speed_multiplier": walk_speed_multiplier if walk_speed_multiplier != 1.0 else {},
             }
         )
         return self
 
 
-class RandomLookAround(_component):
+class RandomLookAround(_ai_goal):
+    component_namespace = "minecraft:behavior.random_look_around"
     def __init__(
         self,
         probability: float = 0.2,
@@ -1634,9 +1619,7 @@ class RandomLookAround(_component):
         super().__init__("behavior.random_look_around")
         self._component_add_field("probability", clamp(probability, 0, 1))
         if not angle_of_view_horizontal == 360:
-            self._component_add_field(
-                "angle_of_view_horizontal", angle_of_view_horizontal
-            )
+            self._component_add_field("angle_of_view_horizontal", angle_of_view_horizontal)
         if not angle_of_view_vertical == 360:
             self._component_add_field("angle_of_view_vertical", angle_of_view_vertical)
         if not look_distance == 8:
@@ -1644,12 +1627,9 @@ class RandomLookAround(_component):
         if not look_time == (2, 4):
             self._component_add_field("look_time", look_time)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
-
-class Timer(_component):
+class Timer(_ai_goal):
+    component_namespace = "minecraft:timer"
     def __init__(
         self,
         event: event,
@@ -1670,13 +1650,9 @@ class Timer(_component):
         if not time == (0, 0):
             self._component_add_field("time", time)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
-
 
 class Rideable(_component):
-    component_name = "rideable"
+    component_namespace = "minecraft:rideable"
 
     def __init__(
         self,
@@ -1688,7 +1664,7 @@ class Rideable(_component):
         *family_types: str,
     ) -> None:
         """Determines whether this entity can be ridden. Allows specifying the different seat positions and quantity."""
-        super().__init__(self.component_name)
+        super().__init__("rideable")
         self._seat_count = 0
 
         if not interact_text == "Mount":
@@ -1698,17 +1674,13 @@ class Rideable(_component):
         if not controlling_seat == 0:
             self._component_add_field("controlling_seat", controlling_seat)
         if not crouching_skip_interact:
-            self._component_add_field(
-                "crouching_skip_interact", crouching_skip_interact
-            )
+            self._component_add_field("crouching_skip_interact", crouching_skip_interact)
         if pull_in_entities:
             self._component_add_field("pull_in_entities", pull_in_entities)
         if rider_can_interact:
             self._component_add_field("rider_can_interact", rider_can_interact)
 
-        self._component_add_field(
-            "family_types", family_types if len(family_types) > 0 else []
-        )
+        self._component_add_field("family_types", family_types if len(family_types) > 0 else [])
         self._component_add_field("seats", [])
 
     def add_seat(
@@ -1722,13 +1694,11 @@ class Rideable(_component):
         self._seat_count += 1
         self._component_add_field("seat_count", self._seat_count)
 
-        self[self._component_namespace]["seats"].append(
+        self[self.component_namespace]["seats"].append(
             {
                 "max_rider_count": max_rider_count,
                 "position": position,
-                "lock_rider_rotation": lock_rider_rotation
-                if not lock_rider_rotation == 181
-                else {},
+                "lock_rider_rotation": lock_rider_rotation if not lock_rider_rotation == 181 else {},
                 "min_rider_count": min_rider_count if not min_rider_count == 0 else {},
                 "rotate_rider_by": rotate_rider_by if not rotate_rider_by == 0 else {},
             }
@@ -1738,6 +1708,7 @@ class Rideable(_component):
 
 
 class Projectile(_component):
+    component_namespace = "minecraft:projectile"
     def __init__(
         self,
         anchor: int = 0,
@@ -1783,9 +1754,7 @@ class Projectile(_component):
         if destroy_on_hurt:
             self._component_add_field("destroy_on_hurt", destroy_on_hurt)
         if fire_affected_by_griefing:
-            self._component_add_field(
-                "fire_affected_by_griefing", fire_affected_by_griefing
-            )
+            self._component_add_field("fire_affected_by_griefing", fire_affected_by_griefing)
         if gravity != 0.05:
             self._component_add_field("gravity", gravity)
         if hit_sound != "":
@@ -1854,30 +1823,28 @@ class Projectile(_component):
             douse_fire (bool, optional): If the target is on fire, then douse the fire. Defaults to False.
             ignite (bool, optional): Determines if a fire may be started on a flammable target. Defaults to False.
             on_fire_time (float, optional): The amount of time a target will remain on fire. Defaults to 0.
-            potion_effect (int, optional): Defines the effect the arrow will apply to the entity it hits.. Defaults to -1.
-            spawn_aoe_cloud (bool, optional): Potion spawns an area of effect cloud. See the table below for all spawn_aoe_cloud parameters.. Defaults to False.
+            potion_effect (int, optional): Defines the effect the arrow will apply to the entity it hits. Defaults to -1.
+            spawn_aoe_cloud (bool, optional): Potion spawns an area of effect cloud. See the table below for all spawn_aoe_cloud parameters. Defaults to False.
             teleport_owner (bool, optional): Determines if the owner is transported on hit. Defaults to False.
         """
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
         if catch_fire:
-            self[self._component_namespace]["on_hit"]["catch_fire"] = catch_fire
+            self[self.component_namespace]["on_hit"]["catch_fire"] = catch_fire
         if douse_fire:
-            self[self._component_namespace]["on_hit"]["douse_fire"] = douse_fire
+            self[self.component_namespace]["on_hit"]["douse_fire"] = douse_fire
         if ignite:
-            self[self._component_namespace]["on_hit"]["ignite"] = ignite
+            self[self.component_namespace]["on_hit"]["ignite"] = ignite
         if on_fire_time != 0:
-            self[self._component_namespace]["on_hit"]["on_fire_time"] = on_fire_time
+            self[self.component_namespace]["on_hit"]["on_fire_time"] = on_fire_time
         if potion_effect != -1:
-            self[self._component_namespace]["on_hit"]["potion_effect"] = potion_effect
+            self[self.component_namespace]["on_hit"]["potion_effect"] = potion_effect
         if spawn_aoe_cloud:
-            self[self._component_namespace]["on_hit"][
-                "spawn_aoe_cloud"
-            ] = spawn_aoe_cloud
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"] = spawn_aoe_cloud
         if teleport_owner:
-            self[self._component_namespace]["on_hit"]["teleport_owner"] = teleport_owner
+            self[self.component_namespace]["on_hit"]["teleport_owner"] = teleport_owner
         return self
 
     def impact_damage(
@@ -1896,58 +1863,34 @@ class Projectile(_component):
         set_last_hurt_requires_damage: bool = False,  # If true, then the hit must cause damage to update the last hurt property.
     ):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
-        self[self._component_namespace]["on_hit"]["impact_damage"] = {}
+        self[self.component_namespace]["on_hit"]["impact_damage"] = {}
         if not filter is None:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "filter"
-            ] = filter
+            self[self.component_namespace]["on_hit"]["impact_damage"]["filter"] = filter
         if catch_fire:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "catch_fire"
-            ] = catch_fire
+            self[self.component_namespace]["on_hit"]["impact_damage"]["catch_fire"] = catch_fire
         if not channeling:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "channeling"
-            ] = channeling
+            self[self.component_namespace]["on_hit"]["impact_damage"]["channeling"] = channeling
         if damage != 1:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "damage"
-            ] = damage
+            self[self.component_namespace]["on_hit"]["impact_damage"]["damage"] = damage
         if destroy_on_hit:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "destroy_on_hit"
-            ] = destroy_on_hit
+            self[self.component_namespace]["on_hit"]["impact_damage"]["destroy_on_hit"] = destroy_on_hit
         if not destroy_on_hit_requires_damage:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "destroy_on_hit_requires_damage"
-            ] = destroy_on_hit_requires_damage
+            self[self.component_namespace]["on_hit"]["impact_damage"]["destroy_on_hit_requires_damage"] = destroy_on_hit_requires_damage
         if not knockback:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "knockback"
-            ] = knockback
+            self[self.component_namespace]["on_hit"]["impact_damage"]["knockback"] = knockback
         if max_critical_damage != 5:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "max_critical_damage"
-            ] = max_critical_damage
+            self[self.component_namespace]["on_hit"]["impact_damage"]["max_critical_damage"] = max_critical_damage
         if min_critical_damage != 0:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "min_critical_damage"
-            ] = min_critical_damage
+            self[self.component_namespace]["on_hit"]["impact_damage"]["min_critical_damage"] = min_critical_damage
         if power_multiplier != 2:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "power_multiplier"
-            ] = power_multiplier
+            self[self.component_namespace]["on_hit"]["impact_damage"]["power_multiplier"] = power_multiplier
         if semi_random_diff_damage:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "semi_random_diff_damage"
-            ] = semi_random_diff_damage
+            self[self.component_namespace]["on_hit"]["impact_damage"]["semi_random_diff_damage"] = semi_random_diff_damage
         if set_last_hurt_requires_damage:
-            self[self._component_namespace]["on_hit"]["impact_damage"][
-                "set_last_hurt_requires_damage"
-            ] = set_last_hurt_requires_damage
+            self[self.component_namespace]["on_hit"]["impact_damage"]["set_last_hurt_requires_damage"] = set_last_hurt_requires_damage
 
         return self
 
@@ -1962,33 +1905,21 @@ class Projectile(_component):
         affect_target: bool = False,  # The target will be affected by this event.
     ):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
-        self[self._component_namespace]["on_hit"]["definition_event"] = {
-            "event_trigger": {"event": event, "target": target.value}
-        }
+        self[self.component_namespace]["on_hit"]["definition_event"] = {"event_trigger": {"event": event, "target": target.value}}
 
         if affect_projectile:
-            self[self._component_namespace]["on_hit"]["definition_event"][
-                "affect_projectile"
-            ] = affect_projectile
+            self[self.component_namespace]["on_hit"]["definition_event"]["affect_projectile"] = affect_projectile
         if affect_shooter:
-            self[self._component_namespace]["on_hit"]["definition_event"][
-                "affect_shooter"
-            ] = affect_shooter
+            self[self.component_namespace]["on_hit"]["definition_event"]["affect_shooter"] = affect_shooter
         if affect_splash_area:
-            self[self._component_namespace]["on_hit"]["definition_event"][
-                "affect_splash_area"
-            ] = affect_splash_area
+            self[self.component_namespace]["on_hit"]["definition_event"]["affect_splash_area"] = affect_splash_area
         if splash_area:
-            self[self._component_namespace]["on_hit"]["definition_event"][
-                "splash_area"
-            ] = splash_area
+            self[self.component_namespace]["on_hit"]["definition_event"]["splash_area"] = splash_area
         if affect_target:
-            self[self._component_namespace]["on_hit"]["definition_event"][
-                "affect_target"
-            ] = affect_target
+            self[self.component_namespace]["on_hit"]["definition_event"]["affect_target"] = affect_target
 
         return self
 
@@ -2004,44 +1935,28 @@ class Projectile(_component):
         reapplication_delay: int = 0,
     ):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"] = {}
+        self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"] = {}
 
         if not affect_owner:
-            self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"][
-                "affect_owner"
-            ] = affect_owner
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"]["affect_owner"] = affect_owner
         if color != (1, 1, 1):
-            self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"][
-                "color"
-            ] = color
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"]["color"] = color
         if duration != 0:
-            self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"][
-                "duration"
-            ] = duration
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"]["duration"] = duration
         if particle != 0:
-            self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"][
-                "particle"
-            ] = particle
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"]["particle"] = particle
         if potion != -1:
-            self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"][
-                "potion"
-            ] = potion
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"]["potion"] = potion
         if radius != 0:
-            self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"][
-                "radius"
-            ] = radius
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"]["radius"] = radius
         if radius_on_use != -1:
-            self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"][
-                "radius_on_use"
-            ] = radius_on_use
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"]["radius_on_use"] = radius_on_use
         if reapplication_delay != 0:
-            self[self._component_namespace]["on_hit"]["spawn_aoe_cloud"][
-                "reapplication_delay"
-            ] = reapplication_delay
+            self[self.component_namespace]["on_hit"]["spawn_aoe_cloud"]["reapplication_delay"] = reapplication_delay
 
         return self
 
@@ -2055,34 +1970,22 @@ class Projectile(_component):
         second_spawn_count: int = 0,
     ):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["spawn_chance"] = {
-            "spawn_definition": spawn_definition
-        }
+        self[self.component_namespace]["on_hit"]["spawn_chance"] = {"spawn_definition": spawn_definition}
 
         if spawn_baby:
-            self[self._component_namespace]["on_hit"]["spawn_chance"][
-                "spawn_baby"
-            ] = spawn_baby
+            self[self.component_namespace]["on_hit"]["spawn_chance"]["spawn_baby"] = spawn_baby
         if first_spawn_count:
-            self[self._component_namespace]["on_hit"]["spawn_chance"][
-                "first_spawn_count"
-            ] = first_spawn_count
+            self[self.component_namespace]["on_hit"]["spawn_chance"]["first_spawn_count"] = first_spawn_count
         if first_spawn_percent_chance:
-            self[self._component_namespace]["on_hit"]["spawn_chance"][
-                "first_spawn_percent_chance"
-            ] = first_spawn_percent_chance
+            self[self.component_namespace]["on_hit"]["spawn_chance"]["first_spawn_percent_chance"] = first_spawn_percent_chance
         if second_spawn_chance:
-            self[self._component_namespace]["on_hit"]["spawn_chance"][
-                "second_spawn_chance"
-            ] = second_spawn_chance
+            self[self.component_namespace]["on_hit"]["spawn_chance"]["second_spawn_chance"] = second_spawn_chance
         if second_spawn_count:
-            self[self._component_namespace]["on_hit"]["spawn_chance"][
-                "second_spawn_count"
-            ] = second_spawn_count
+            self[self.component_namespace]["on_hit"]["spawn_chance"]["second_spawn_count"] = second_spawn_count
 
         return self
 
@@ -2094,26 +1997,18 @@ class Projectile(_component):
         num_particles: int = 0,
     ):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["particle_on_hit"] = {
-            "particle_type": f"{particle_type}"
-        }
+        self[self.component_namespace]["on_hit"]["particle_on_hit"] = {"particle_type": f"{particle_type}"}
 
         if on_other_hit:
-            self[self._component_namespace]["on_hit"]["particle_on_hit"][
-                "on_other_hit"
-            ] = on_other_hit
+            self[self.component_namespace]["on_hit"]["particle_on_hit"]["on_other_hit"] = on_other_hit
         if on_entity_hit:
-            self[self._component_namespace]["on_hit"]["particle_on_hit"][
-                "on_entity_hit"
-            ] = on_entity_hit
+            self[self.component_namespace]["on_hit"]["particle_on_hit"]["on_entity_hit"] = on_entity_hit
         if num_particles != 0:
-            self[self._component_namespace]["on_hit"]["particle_on_hit"][
-                "num_particles"
-            ] = num_particles
+            self[self.component_namespace]["on_hit"]["particle_on_hit"]["num_particles"] = num_particles
         return self
 
     def mob_effect(
@@ -2128,36 +2023,26 @@ class Projectile(_component):
         durationnormal: int = 200,
     ):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["mob_effect"] = {"effect": effect.value}
+        self[self.component_namespace]["on_hit"]["mob_effect"] = {"effect": effect.value}
 
         if amplifier != 1:
-            self[self._component_namespace]["on_hit"]["mob_effect"][
-                "amplifier"
-            ] = amplifier
+            self[self.component_namespace]["on_hit"]["mob_effect"]["amplifier"] = amplifier
         if ambient:
-            self[self._component_namespace]["on_hit"]["mob_effect"]["ambient"] = ambient
+            self[self.component_namespace]["on_hit"]["mob_effect"]["ambient"] = ambient
         if visible:
-            self[self._component_namespace]["on_hit"]["mob_effect"]["visible"] = visible
+            self[self.component_namespace]["on_hit"]["mob_effect"]["visible"] = visible
         if duration != 1:
-            self[self._component_namespace]["on_hit"]["mob_effect"][
-                "duration"
-            ] = duration
+            self[self.component_namespace]["on_hit"]["mob_effect"]["duration"] = duration
         if durationeasy != 0:
-            self[self._component_namespace]["on_hit"]["mob_effect"][
-                "durationeasy"
-            ] = durationeasy
+            self[self.component_namespace]["on_hit"]["mob_effect"]["durationeasy"] = durationeasy
         if durationheard != 800:
-            self[self._component_namespace]["on_hit"]["mob_effect"][
-                "durationheard"
-            ] = durationheard
+            self[self.component_namespace]["on_hit"]["mob_effect"]["durationheard"] = durationheard
         if durationnormal != 200:
-            self[self._component_namespace]["on_hit"]["mob_effect"][
-                "durationnormal"
-            ] = durationnormal
+            self[self.component_namespace]["on_hit"]["mob_effect"]["durationnormal"] = durationnormal
 
         return self
 
@@ -2168,30 +2053,30 @@ class Projectile(_component):
         shape: str = "sphere",
     ):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["freeze_on_hit"] = {
+        self[self.component_namespace]["on_hit"]["freeze_on_hit"] = {
             "size": size,
             "snap_to_block": snap_to_block,
         }
         if shape not in ["sphere", "cube"]:
             RaiseError("Unknown shape, must be sphere or cube")
-        self[self._component_namespace]["on_hit"]["freeze_on_hit"]["shape"] = shape
+        self[self.component_namespace]["on_hit"]["freeze_on_hit"]["shape"] = shape
 
         return self
 
     def grant_xp(self, xp: tuple[int, int]):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
         if xp[0] == xp[1]:
-            self[self._component_namespace]["on_hit"]["grant_xp"] = {"xp": xp}
+            self[self.component_namespace]["on_hit"]["grant_xp"] = {"xp": xp}
         else:
-            self[self._component_namespace]["on_hit"]["grant_xp"] = {
+            self[self.component_namespace]["on_hit"]["grant_xp"] = {
                 "minXP": min(xp),
                 "maxXP": max(xp),
             }
@@ -2205,61 +2090,56 @@ class Projectile(_component):
         ignite: bool = False,
     ):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["hurt_owner"] = {}
+        self[self.component_namespace]["on_hit"]["hurt_owner"] = {}
 
         if owner_damage != 0:
-            self[self._component_namespace]["on_hit"]["hurt_owner"][
-                "owner_damage"
-            ] = owner_damage
+            self[self.component_namespace]["on_hit"]["hurt_owner"]["owner_damage"] = owner_damage
         if knockback:
-            self[self._component_namespace]["on_hit"]["hurt_owner"][
-                "knockback"
-            ] = knockback
+            self[self.component_namespace]["on_hit"]["hurt_owner"]["knockback"] = knockback
         if ignite:
-            self[self._component_namespace]["on_hit"]["hurt_owner"]["ignite"] = ignite
+            self[self.component_namespace]["on_hit"]["hurt_owner"]["ignite"] = ignite
 
         return self
 
     @property
     def remove_on_hit(self):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["remove_on_hit"] = {"remove": True}
+        self[self.component_namespace]["on_hit"]["remove_on_hit"] = {"remove": True}
 
         return self
 
     def stick_in_ground(self, shake_time: float):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["stick_in_ground"] = {
-            "shake_time": shake_time
-        }
+        self[self.component_namespace]["on_hit"]["stick_in_ground"] = {"shake_time": shake_time}
 
         return self
 
     @property
     def thrown_potion_effect(self):
         try:
-            self[self._component_namespace]["on_hit"]
+            self[self.component_namespace]["on_hit"]
         except KeyError:
             self._component_add_field("on_hit", {})
 
-        self[self._component_namespace]["on_hit"]["thrown_potion_effect"] = {}
+        self[self.component_namespace]["on_hit"]["thrown_potion_effect"] = {}
 
         return self
 
 
 class Explode(_component):
+    component_namespace = "minecraft:explode"
     def __init__(
         self,
         breaks_blocks: bool = True,
@@ -2279,13 +2159,9 @@ class Explode(_component):
         if causes_fire:
             self._component_add_field("causes_fire", causes_fire)
         if destroy_affected_by_griefing:
-            self._component_add_field(
-                "destroy_affected_by_griefing", destroy_affected_by_griefing
-            )
+            self._component_add_field("destroy_affected_by_griefing", destroy_affected_by_griefing)
         if fire_affected_by_griefing:
-            self._component_add_field(
-                "fire_affected_by_griefing", fire_affected_by_griefing
-            )
+            self._component_add_field("fire_affected_by_griefing", fire_affected_by_griefing)
         if fuse_length != [0.0, 0.0]:
             self._component_add_field("fuse_length", fuse_length)
         if fuse_lit:
@@ -2296,7 +2172,8 @@ class Explode(_component):
             self._component_add_field("power", power)
 
 
-class KnockbackRoar(_component):
+class KnockbackRoar(_ai_goal):
+    component_namespace = "minecraft:behavior.knockback_roar"
     def __init__(
         self,
         attack_time: float = 0.5,
@@ -2328,19 +2205,11 @@ class KnockbackRoar(_component):
         if not knockback_height_cap == 0.4:
             self._component_add_field("knockback_height_cap", knockback_height_cap)
         if not knockback_horizontal_strength == 4:
-            self._component_add_field(
-                "knockback_horizontal_strength", knockback_horizontal_strength
-            )
+            self._component_add_field("knockback_horizontal_strength", knockback_horizontal_strength)
         if not knockback_range == 4:
             self._component_add_field("knockback_range", knockback_range)
         if not knockback_vertical_strength == 4:
-            self._component_add_field(
-                "knockback_vertical_strength", knockback_vertical_strength
-            )
-
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
+            self._component_add_field("knockback_vertical_strength", knockback_vertical_strength)
 
     def on_roar_end(self, on_roar_end: event):
         self._component_add_field("on_roar_end", {"event": on_roar_end})
@@ -2348,6 +2217,7 @@ class KnockbackRoar(_component):
 
 
 class MobEffect(_component):
+    component_namespace = "minecraft:mob_effect"
     def __init__(
         self,
         mob_effect: Effects,
@@ -2370,6 +2240,7 @@ class MobEffect(_component):
 
 
 class SpawnEntity(_component):
+    component_namespace = "minecraft:spawn_entity"
     def __init__(self) -> None:
         """Adds a timer after which this entity will spawn another entity or item (similar to vanilla's chicken's egg-laying behavior)."""
         super().__init__("spawn_entity")
@@ -2389,12 +2260,10 @@ class SpawnEntity(_component):
         should_leash: bool = False,
         single_use: bool = False,
     ):
-        self[self._component_namespace]["entities"].append(
+        self[self.component_namespace]["entities"].append(
             {
                 spawn_type: identifier,
-                "spawn_event": spawn_event
-                if spawn_event != "minecraft:entity_born"
-                else {},
+                "spawn_event": spawn_event if spawn_event != "minecraft:entity_born" else {},
                 "spawn_method": spawn_method if spawn_method != "born" else {},
                 "spawn_sound": spawn_sound if spawn_sound != "plop" else {},
                 "filters": filters if not filters is None else {},
@@ -2463,27 +2332,24 @@ class SpawnEntity(_component):
 
 
 class Loot(_component):
+    component_namespace = "minecraft:loot"
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__("loot")
-        self._component_add_field(
-            "table", os.path.join("loot_tables", path + ".loot_table.json")
-        )
+        self._component_add_field("table", os.path.join("loot_tables", path + ".loot_table.json"))
 
 
-class Float(_component):
+class Float(_ai_goal):
+    component_namespace = "minecraft:behavior.float"
     def __init__(self, sink_with_passengers: bool = False) -> None:
         """Allows an entity to float on water. Passengers will be kicked out the moment the mob's head goes underwater, which may not happen for tall mobs."""
         super().__init__("behavior.float")
         if sink_with_passengers:
             self._component_add_field("sink_with_passengers", sink_with_passengers)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
-
-class RandomStroll(_component):
+class RandomStroll(_ai_goal):
+    component_namespace = "minecraft:behavior.random_stroll"
     def __init__(
         self,
         interval: int = 120,
@@ -2502,12 +2368,9 @@ class RandomStroll(_component):
         if y_dist != 7:
             self._component_add_field("y_dist", y_dist)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
-
-class LookAtPlayer(_component):
+class LookAtPlayer(_ai_goal):
+    component_namespace = "minecraft:behavior.look_at_player"
     def __init__(
         self,
         angle_of_view_horizontal: int = 360,
@@ -2520,9 +2383,7 @@ class LookAtPlayer(_component):
         """Compels an entity to look at the player by rotating the head bone pose within a set limit."""
         super().__init__("behavior.look_at_player")
         if angle_of_view_horizontal != 360:
-            self._component_add_field(
-                "angle_of_view_horizontal", angle_of_view_horizontal
-            )
+            self._component_add_field("angle_of_view_horizontal", angle_of_view_horizontal)
         if angle_of_view_vertical != 360:
             self._component_add_field("angle_of_view_vertical", angle_of_view_vertical)
         if look_distance != 8.0:
@@ -2534,12 +2395,9 @@ class LookAtPlayer(_component):
         if target_distance != 0.6:
             self._component_add_field("target_distance", target_distance)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
-
-class RandomLookAround(_component):
+class RandomLookAround(_ai_goal):
+    component_namespace = "minecraft:behavior.random_look_around"
     def __init__(
         self,
         angle_of_view_horizontal: int = 360,
@@ -2552,9 +2410,7 @@ class RandomLookAround(_component):
         """Compels an entity to choose a random direction to look in for a random duration within a range."""
         super().__init__("behavior.random_look_around")
         if angle_of_view_horizontal != 360:
-            self._component_add_field(
-                "angle_of_view_horizontal", angle_of_view_horizontal
-            )
+            self._component_add_field("angle_of_view_horizontal", angle_of_view_horizontal)
         if angle_of_view_vertical != 360:
             self._component_add_field("angle_of_view_vertical", angle_of_view_vertical)
         if look_distance != 8.0:
@@ -2566,12 +2422,9 @@ class RandomLookAround(_component):
         if target_distance != 0.6:
             self._component_add_field("target_distance", target_distance)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
-
-class HurtByTarget(_component):
+class HurtByTarget(_ai_goal):
+    component_namespace = "minecraft:behavior.hurt_by_target"
     def __init__(
         self,
         alert_same_type: bool = False,
@@ -2596,26 +2449,19 @@ class HurtByTarget(_component):
         if must_see:
             self._component_add_field("must_see", must_see)
         if must_see_forget_duration != 3.0:
-            self._component_add_field(
-                "must_see_forget_duration", must_see_forget_duration
-            )
+            self._component_add_field("must_see_forget_duration", must_see_forget_duration)
         if reevaluate_description:
             self._component_add_field("reevaluate_description", reevaluate_description)
         if sprint_speed_multiplier != 1.0:
-            self._component_add_field(
-                "sprint_speed_multiplier", sprint_speed_multiplier
-            )
+            self._component_add_field("sprint_speed_multiplier", sprint_speed_multiplier)
         if walk_speed_multiplier != 1.0:
             self._component_add_field("walk_speed_multiplier", walk_speed_multiplier)
         if hurt_owner:
             self._component_add_field("hurt_owner", hurt_owner)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
-
-class MeleeAttack(_component):
+class MeleeAttack(_ai_goal):
+    component_namespace = "minecraft:behavior.melee_attack"
     def __init__(
         self,
         attack_once: bool = False,
@@ -2644,9 +2490,7 @@ class MeleeAttack(_component):
         if cooldown_time != 1:
             self._component_add_field("cooldown_time", cooldown_time)
         if inner_boundary_time_increase != 0.75:
-            self._component_add_field(
-                "inner_boundary_time_increase", inner_boundary_time_increase
-            )
+            self._component_add_field("inner_boundary_time_increase", inner_boundary_time_increase)
         if max_path_time != 0.75:
             self._component_add_field("max_path_time", max_path_time)
         if melee_fov != 90:
@@ -2654,13 +2498,9 @@ class MeleeAttack(_component):
         if min_path_time != 0.2:
             self._component_add_field("min_path_time", min_path_time)
         if outer_boundary_time_increase != 0.5:
-            self._component_add_field(
-                "outer_boundary_time_increase", outer_boundary_time_increase
-            )
+            self._component_add_field("outer_boundary_time_increase", outer_boundary_time_increase)
         if path_fail_time_increase != 0.75:
-            self._component_add_field(
-                "path_fail_time_increase", path_fail_time_increase
-            )
+            self._component_add_field("path_fail_time_increase", path_fail_time_increase)
         if path_inner_boundary != 16:
             self._component_add_field("path_inner_boundary", path_inner_boundary)
         if path_outer_boundary != 32:
@@ -2682,10 +2522,6 @@ class MeleeAttack(_component):
         if y_max_head_rotation != 30:
             self._component_add_field("y_max_head_rotation", y_max_head_rotation)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
-
     def attack_types(self, attack_types: str):
         self._component_add_field("attack_types", attack_types)
         return self
@@ -2699,7 +2535,8 @@ class MeleeAttack(_component):
         return self
 
 
-class RangedAttack(_component):
+class RangedAttack(_ai_goal):
+    component_namespace = "minecraft:behavior.ranged_attack"
     def __init__(
         self,
         attack_interval: int = 0,
@@ -2719,11 +2556,7 @@ class RangedAttack(_component):
         x_max_rotation: int = 30,
         y_max_head_rotation: int = 30,
     ) -> None:
-        """Allows an entity to attack by using ranged shots. charge_shoot_trigger must be greater than 0 to enable charged up burst-shot attacks. Requires minecraft:shooter to define projectile behavior.
-
-        - attack_interval: Animation length
-        - charge_shoot_trigger: Shoot timestamp
-        """
+        """Allows an entity to attack by using ranged shots. charge_shoot_trigger must be greater than 0 to enable charged up burst-shot attacks. Requires minecraft:shooter to define projectile behavior."""
         super().__init__("behavior.ranged_attack")
 
         if attack_interval != 0:
@@ -2759,12 +2592,9 @@ class RangedAttack(_component):
         if y_max_head_rotation != 30:
             self._component_add_field("y_max_head_rotation", y_max_head_rotation)
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
-
 
 class Shooter(_component):
+    component_namespace = "minecraft:shooter"
     def __init__(
         self,
         identifier: Identifier,
@@ -2783,15 +2613,12 @@ class Shooter(_component):
             self._component_add_field("aux_value", aux_value)
 
 
-class SummonEntity(_component):
+class SummonEntity(_ai_goal):
+    component_namespace = "minecraft:behavior.summon_entity"
     def __init__(self) -> None:
         """compels an entity to attack other entities by summoning new entities."""
         super().__init__("behavior.summon_entity")
         self._component_add_field("summon_choices", [])
-
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
     def summon_choice(
         self,
@@ -2805,22 +2632,16 @@ class SummonEntity(_component):
         start_sound_event: str = None,
         weight: int = 1,
     ):
-        self[self._component_namespace]["summon_choices"].append(
+        self[self.component_namespace]["summon_choices"].append(
             {
                 "cast_duration": cast_duration,
                 "cooldown_time": cooldown_time if cooldown_time != 0 else {},
                 "do_casting": do_casting if not do_casting else {},
                 "filters": filters if not filters is None != 0 else {},
-                "max_activation_range": max_activation_range
-                if max_activation_range != 32
-                else {},
-                "min_activation_range": min_activation_range
-                if min_activation_range != 1
-                else {},
+                "max_activation_range": max_activation_range if max_activation_range != 32 else {},
+                "min_activation_range": min_activation_range if min_activation_range != 1 else {},
                 "particle_color": particle_color if particle_color != 0 else {},
-                "start_sound_event": start_sound_event
-                if not start_sound_event is None
-                else {},
+                "start_sound_event": start_sound_event if not start_sound_event is None else {},
                 "weight": weight if weight != 1 else {},
                 "sequence": [],
             }
@@ -2841,22 +2662,18 @@ class SummonEntity(_component):
         summon_cap_radius: float = 0.0,
         target: FilterSubject = FilterSubject.Self,
     ):
-        self[self._component_namespace]["summon_choices"][-1]["sequence"].append(
+        self[self.component_namespace]["summon_choices"][-1]["sequence"].append(
             {
                 "entity_type": entity_type,
                 "base_delay": base_delay if base_delay != 0.0 else {},
                 "delay_per_summon": delay_per_summon if delay_per_summon != 0.0 else {},
                 "entity_lifespan": entity_lifespan if entity_lifespan != -1 else {},
-                "num_entities_spawned": num_entities_spawned
-                if num_entities_spawned != 1
-                else {},
+                "num_entities_spawned": num_entities_spawned if num_entities_spawned != 1 else {},
                 "shape": shape if shape != "line" else {},
                 "size": size if size != 1 else {},
                 "sound_event": sound_event if not sound_event is None else {},
                 "summon_cap": summon_cap if summon_cap != 0 else {},
-                "summon_cap_radius": summon_cap_radius
-                if summon_cap_radius != 0
-                else {},
+                "summon_cap_radius": summon_cap_radius if summon_cap_radius != 0 else {},
                 "target": target.value if target != FilterSubject.Self else {},
             }
         )
@@ -2864,9 +2681,8 @@ class SummonEntity(_component):
 
 
 class Boss(_component):
-    def __init__(
-        self, name: str, hud_range: int = 55, should_darken_sky: bool = False
-    ) -> None:
+    component_namespace = "minecraft:boss"
+    def __init__(self, name: str, hud_range: int = 55, should_darken_sky: bool = False) -> None:
         """Defines the current state of the boss for updating the boss HUD."""
         super().__init__("boss")
         self._component_add_field("name", name)
@@ -2876,7 +2692,8 @@ class Boss(_component):
             self._component_add_field("should_darken_sky", should_darken_sky)
 
 
-class DelayedAttack(_component):
+class DelayedAttack(_ai_goal):
+    component_namespace = "minecraft:behavior.delayed_attack"
     def __init__(
         self,
         attack_duration: float = 0.75,
@@ -2894,13 +2711,38 @@ class DelayedAttack(_component):
         random_stop_interval: int = 0,
         reach_multiplier: int = 2,
         require_complete_path: bool = False,
-        set_persistent: bool = False,
+        #set_persistent: bool = False,
         speed_multiplier: float = 1,
         track_target: bool = False,
         x_max_rotation: int = 30,
         y_max_head_rotation: int = 30,
     ) -> None:
-        """Compels an entity to attack while also delaying the damage dealt until a specific time in the attack animation."""
+        """Compels an entity to attack while also delaying the damage dealt until a specific time in the attack animation.
+
+        Args:
+            attack_duration (float, optional): The entity's attack animation will play out over this duration (in seconds). Also controls attack cooldown. Defaults to 0.75.
+            attack_once (bool, optional): Allows the entity to use this attack behavior, only once EVER. Defaults to False.
+            cooldown_time (int, optional): Cooldown time (in seconds) between attacks. Defaults to 1.
+            hit_delay_pct (float, optional): The percentage into the attack animation to apply the damage of the attack (1.0 = 100%). Defaults to 0.5.
+            inner_boundary_time_increase (float, optional): Time (in seconds) to add to attack path recalculation when the target is beyond the "path_inner_boundary". Defaults to 0.25.
+            max_path_time (float, optional): Maximum base time (in seconds) to recalculate new attack path to target (before increases applied). Defaults to 0.55.
+            melee_fov (int, optional): Field of view (in degrees) when using the sensing component to detect an attack target. Defaults to 90.
+            min_path_time (float, optional): Minimum base time (in seconds) to recalculate new attack path to target (before increases applied). Defaults to 0.2.
+            outer_boundary_time_increase (float, optional): Time (in seconds) to add to attack path recalculation when the target is beyond the "path_outer_boundary". Defaults to 0.5.
+            path_fail_time_increase (float, optional): Time (in seconds) to add to attack path recalculation when this entity cannot move along the current path. Defaults to 0.75.
+            path_inner_boundary (int, optional): Distance at which to increase attack path recalculation by "inner_boundary_tick_increase". Defaults to 16.
+            path_outer_boundary (int, optional): Distance at which to increase attack path recalculation by "outer_boundary_tick_increase". Defaults to 32.
+            random_stop_interval (int, optional): This entity will have a 1 in N chance to stop its current attack, where N = "random_stop_interval". Defaults to 0.
+            reach_multiplier (int, optional): Used with the base size of the entity to determine minimum target-distance before trying to deal attack damage. Defaults to 2.
+            require_complete_path (bool, optional): Toggles (on/off) the need to have a full path from the entity to the target when using this melee attack behavior. Defaults to False.
+            speed_multiplier (float, optional): This multiplier modifies the attacking entity's speed when moving toward the target. Defaults to 1.
+            track_target (bool, optional): Allows the entity to track the attack target, even if the entity has no sensing. Defaults to False.
+            x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Defaults to 30.
+            y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Defaults to 30.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_delayed_attack
+        """
+
         super().__init__("behavior.delayed_attack")
         if attack_duration != 0.75:
             self._component_add_field("attack_duration", attack_duration)
@@ -2911,9 +2753,7 @@ class DelayedAttack(_component):
         if hit_delay_pct != 0.5:
             self._component_add_field("hit_delay_pct", clamp(hit_delay_pct, 0, 1))
         if inner_boundary_time_increase != 0.25:
-            self._component_add_field(
-                "inner_boundary_time_increase", inner_boundary_time_increase
-            )
+            self._component_add_field("inner_boundary_time_increase", inner_boundary_time_increase)
         if max_path_time != 0.55:
             self._component_add_field("max_path_time", max_path_time)
         if melee_fov != 90:
@@ -2921,13 +2761,9 @@ class DelayedAttack(_component):
         if min_path_time != 0.2:
             self._component_add_field("min_path_time", min_path_time)
         if outer_boundary_time_increase != 0.5:
-            self._component_add_field(
-                "outer_boundary_time_increase", outer_boundary_time_increase
-            )
+            self._component_add_field("outer_boundary_time_increase", outer_boundary_time_increase)
         if path_fail_time_increase != 0.75:
-            self._component_add_field(
-                "path_fail_time_increase", path_fail_time_increase
-            )
+            self._component_add_field("path_fail_time_increase", path_fail_time_increase)
         if path_inner_boundary != 16:
             self._component_add_field("path_inner_boundary", path_inner_boundary)
         if path_outer_boundary != 32:
@@ -2938,8 +2774,8 @@ class DelayedAttack(_component):
             self._component_add_field("reach_multiplier", reach_multiplier)
         if require_complete_path:
             self._component_add_field("require_complete_path", require_complete_path)
-        if set_persistent:
-            self._component_add_field("set_persistent", set_persistent)
+        #if set_persistent:
+        #    self._component_add_field("set_persistent", set_persistent)
         if speed_multiplier != 1:
             self._component_add_field("speed_multiplier", speed_multiplier)
         if track_target:
@@ -2948,10 +2784,6 @@ class DelayedAttack(_component):
             self._component_add_field("x_max_rotation", x_max_rotation)
         if y_max_head_rotation != 30:
             self._component_add_field("y_max_head_rotation", y_max_head_rotation)
-
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
     def attack_types(self, attack_types: str):
         self._component_add_field("attack_types", attack_types)
@@ -2966,7 +2798,8 @@ class DelayedAttack(_component):
         return self
 
 
-class MoveToBlock(_component):
+class MoveToBlock(_ai_goal):
+    component_namespace = "minecraft:behavior.move_to_block"
     def __init__(
         self,
         target_blocks: list[Blocks._MinecraftBlock | str],
@@ -3009,30 +2842,21 @@ class MoveToBlock(_component):
         if target_offset != (0, 0, 0):
             self._component_add_field("target_offset", target_offset)
         if target_selection_method != "nearest":
-            self._component_add_field(
-                "target_selection_method", target_selection_method
-            )
+            self._component_add_field("target_selection_method", target_selection_method)
         if tick_interval != 20:
             self._component_add_field("tick_interval", tick_interval)
-
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
 
     def on_reach(self, event: event, target: FilterSubject = FilterSubject.Self):
         self._component_add_field("on_reach", {"event": event, "target": target.value})
         return self
 
-    def on_stay_completed(
-        self, event: event, target: FilterSubject = FilterSubject.Self
-    ):
-        self._component_add_field(
-            "on_stay_completed", {"event": event, "target": target.value}
-        )
+    def on_stay_completed(self, event: event, target: FilterSubject = FilterSubject.Self):
+        self._component_add_field("on_stay_completed", {"event": event, "target": target.value})
         return self
 
 
 class InsideBlockNotifier(_component):
+    component_namespace = "minecraft:inside_block_notifier"
     def __init__(self) -> None:
         """Verifies whether the entity is inside any of the listed blocks."""
         super().__init__("inside_block_notifier")
@@ -3044,7 +2868,7 @@ class InsideBlockNotifier(_component):
         entered_block_event: str,
         exited_block_event: str,
     ):
-        self[self._component_namespace]["block_list"].append(
+        self[self.component_namespace]["block_list"].append(
             {
                 "block": {
                     "name": [
@@ -3063,6 +2887,7 @@ class InsideBlockNotifier(_component):
 
 
 class Transformation(_component):
+    component_namespace = "minecraft:transformation"
     def __init__(
         self,
         into: Identifier,
@@ -3093,9 +2918,7 @@ class Transformation(_component):
             self._component_add_field("preserve_equipment", preserve_equipment)
 
     def add(self, *component_groups: str):
-        self[self._component_namespace]["add"]["component_groups"].extend(
-            component_groups
-        )
+        self[self.component_namespace]["add"]["component_groups"].extend(component_groups)
         return self
 
     def begin_transform_sound(self, sound: str):
@@ -3116,19 +2939,17 @@ class Transformation(_component):
         block_type: list[Blocks._MinecraftBlock | str] = [],
     ):
         if not block_assist_chance == 0.0:
-            self[self._component_namespace]["delay"][
-                "block_assist_chance"
-            ] = block_assist_chance
+            self[self.component_namespace]["delay"]["block_assist_chance"] = block_assist_chance
         if not block_chance == 0:
-            self[self._component_namespace]["delay"]["block_chance"] = block_chance
+            self[self.component_namespace]["delay"]["block_chance"] = block_chance
         if not block_max == 0:
-            self[self._component_namespace]["delay"]["block_max"] = block_max
+            self[self.component_namespace]["delay"]["block_max"] = block_max
         if not block_radius == 0:
-            self[self._component_namespace]["delay"]["block_radius"] = block_radius
+            self[self.component_namespace]["delay"]["block_radius"] = block_radius
         if not value == 0:
-            self[self._component_namespace]["delay"]["value"] = value
+            self[self.component_namespace]["delay"]["value"] = value
         if len(block_type) > 0:
-            self[self._component_namespace]["delay"]["block_type"] = [
+            self[self.component_namespace]["delay"]["block_type"] = [
                 block.identifier
                 if isinstance(block, Blocks._MinecraftBlock)
                 else block
@@ -3141,22 +2962,21 @@ class Transformation(_component):
 
 
 class NPC(_component):
+    component_namespace = "minecraft:npc"
     def __init__(self, skin_list: list[int]) -> None:
         """Allows an entity to be an NPC."""
         super().__init__("npc")
-        self._component_add_field(
-            "npc_data", {"skin_list": [{"variant": i} for i in skin_list]}
-        )
+        self._component_add_field("npc_data", {"skin_list": [{"variant": i} for i in skin_list]})
 
     def portrait_offsets(self, translate: coordinates, scale: coordinates):
-        self[self._component_namespace]["npc_data"]["portrait_offsets"] = {
+        self[self.component_namespace]["npc_data"]["portrait_offsets"] = {
             "translate": translate,
             "scale": scale,
         }
         return self
 
     def picker_offsets(self, translate: coordinates, scale: coordinates):
-        self[self._component_namespace]["npc_data"]["picker_offsets"] = {
+        self[self.component_namespace]["npc_data"]["picker_offsets"] = {
             "translate": translate,
             "scale": scale,
         }
@@ -3164,6 +2984,7 @@ class NPC(_component):
 
 
 class Equipment(_component):
+    component_namespace = "minecraft:equipment"
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__("equipment")
@@ -3171,42 +2992,38 @@ class Equipment(_component):
 
 
 class _EquipItem(_component):
+    component_namespace = "minecraft:equip_item"
     def __init__(self) -> None:
         """Compels the entity to equip desired equipment."""
         super().__init__("equip_item")
 
 
-class EquipItem(_component):
+class EquipItem(_ai_goal):
+    component_namespace = "minecraft:behavior.equip_item"
     def __init__(self) -> None:
         """Compels an entity to equip an item."""
         super().__init__("behavior.equip_item")
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
-
 
 class FireImmune(_component):
+    component_namespace = "minecraft:fire_immune"
     def __init__(self) -> None:
         """Allows an entity to take 0 damage from fire."""
         super().__init__("fire_immune")
 
 
-class SendEvent(_component):
+class SendEvent(_ai_goal):
+    component_namespace = "minecraft:behavior.send_event"
     def __init__(self) -> None:
         """Compels an entity to send an event to another entity."""
         super().__init__("behavior.send_event")
         self._component_add_field("event_choices", [])
 
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
-
     def choice(
         self,
         cast_duration: Seconds,
         cooldown_time: Seconds,
-        look_at_target: bool = True,
+        #look_at_target: bool = True,
         min_activation_range: float = 0.0,
         max_activation_range: float = 16.0,
         particle_color: str = None,
@@ -3217,24 +3034,21 @@ class SendEvent(_component):
         choice = {
             "cast_duration": cast_duration,
             "cooldown_time": cooldown_time,
+            "min_activation_range": min_activation_range,
+            "max_activation_range": max_activation_range,
+            "weight": weight,
             "sequence": [],
         }
-        if not look_at_target:
-            choice["look_at_target"] = look_at_target
-        if not min_activation_range == 0.0:
-            choice["min_activation_range"] = min_activation_range
-        if not max_activation_range == 16.0:
-            choice["max_activation_range"] = max_activation_range
+        #if not look_at_target:
+        #    choice["look_at_target"] = look_at_target
         if not particle_color is None:
             choice["particle_color"] = particle_color
-        if not weight == 1:
-            choice["weight"] = weight
         if not filters is None:
             choice["filters"] = filters
         if not start_sound_event is None:
             choice["start_sound_event"] = start_sound_event
 
-        self[self._component_namespace]["event_choices"].append(choice)
+        self[self.component_namespace]["event_choices"].append(choice)
 
         return self
 
@@ -3246,14 +3060,85 @@ class SendEvent(_component):
         if not sound_event is None:
             seq["sound_event"] = sound_event
 
-        self[self._component_namespace]["event_choices"][-1]["sequence"].append(seq)
+        self[self.component_namespace]["event_choices"][-1]["sequence"].append(seq)
         return self
 
+
+class MoveTowardsTarget(_ai_goal):
+    component_namespace = "minecraft:behavior.move_towards_target"
+    def __init__(self, within_radius: float = 0.0, speed_multiplier: float = 1.0) -> None:
+        """Compels an entity to move towards a target.
+
+        Args:
+            within_radius (float, optional): Defines the radius in blocks that the mob tries to be from the target. A value of 0 means it tries to occupy the same block as the target. Defaults to 0.0.
+            speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_target
+        """
+        super().__init__("behavior.move_towards_target")
+
+        if within_radius != 0.0:
+            self._component_add_field("within_radius", within_radius)
+        if speed_multiplier != 1.0:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+
+
+class EntitySensor(_component):
+    component_namespace = "minecraft:entity_sensor"
+    def __init__(self, event: str, event_filters: Filter, maximum_count: int = -1, minimum_count: int = -1, relative_range: bool = True, require_all: bool = False, sensor_range: int = 10) -> None:
+        """A component that initiates an event when a set of conditions are met by other entities within the defined range.
+
+        Args:
+            event (str): Event to initiate when the conditions are met.
+            event_filter (Filter): The set of conditions that must be satisfied to initiate the event.
+            maximum_count (int, optional): The maximum number of entities that must pass the filter conditions for the event to send. Defaults to -1.
+            minimum_count (int, optional): The minimum number of entities that must pass the filter conditions for the event to send. Defaults to -1.
+            relative_range (bool, optional): If true, the sensor range is additive on top of the entity's size. Defaults to True.
+            require_all (bool, optional): If true, requires all nearby entities to pass the filter conditions for the event to send. Defaults to False.
+            sensor_range (int, optional): The maximum distance another entity can be from this and have the filters checked against it. Defaults to 10.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor
+        """
+        super().__init__("entity_sensor")
+        self._component_add_field("event", event)
+        self._component_add_field("event_filters", event_filters)
+        if maximum_count != -1:
+            self._component_add_field("maximum_count", maximum_count)
+        if minimum_count != -1:
+            self._component_add_field("minimum_count", minimum_count)
+        if not relative_range:
+            self._component_add_field("relative_range", relative_range)
+        if require_all:
+            self._component_add_field("require_all", require_all)
+        if sensor_range != 10:
+            self._component_add_field("sensor_range", sensor_range)
+
+
+class AmbientSoundInterval(_component):
+    component_namespace = "minecraft:ambient_sound_interval"
+    def __init__(self, event_name: str, range: float = 16, value: float = 8) -> None:
+        """A component that will set the entity's delay between playing its ambient sound.
+
+        Args:
+            event_name (str): Level sound event to be played as the ambient sound.
+            range (float, optional): Maximum time in seconds to randomly add to the ambient sound delay time. Defaults to 16.
+            value (float, optional): Minimum time in seconds before the entity plays its ambient sound again. Defaults to 8.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ambient_sound_interval
+        """
+        super().__init__("ambient_sound_interval")
+
+        self._component_add_field("event_name", event_name)
+        if range != 16:
+            self._component_add_field("range", range)
+        if value != 8:
+            self._component_add_field("value", value)
 
 # Unfinished
 
 
 class ConditionalBandwidthOptimization(_component):
+    component_namespace = "minecraft:conditional_bandwidth_optimization"
     def __init__(self) -> None:
         """Defines the Conditional Spatial Update Bandwidth Optimizations of this entity."""
         super().__init__("conditional_bandwidth_optimization")

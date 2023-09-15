@@ -1,29 +1,12 @@
 from anvil import Math, Query, Variable
-from anvil.core import (
-    ANVIL,
-    AddonObject,
-    Geometry,
-    Particle,
-    _MinecraftDescription,
-    _SoundDescription,
-    Animation,
-)
+from anvil.api.components import (CollisionBox, DamageSensor, Filter, Health,
+                                  InstantDespawn, Physics, Pushable, Rideable,
+                                  Scale, TypeFamily, _component)
+from anvil.api.vanilla import ENTITY_LIST, ITEMS_LIST, Entities
+from anvil.core import (ANVIL, AddonObject, Animation, Geometry, Particle,
+                        _MinecraftDescription, _SoundDescription)
 from anvil.lib import *
 from anvil.lib import _JsonSchemes
-from anvil.api.components import (
-    CollisionBox,
-    DamageSensor,
-    Filter,
-    InstantDespawn,
-    Physics,
-    Rideable,
-    Scale,
-    Health,
-    Pushable,
-    TypeFamily,
-    _component,
-)
-from anvil.api.vanilla import Entities, ENTITY_LIST, ITEMS_LIST
 
 __all__ = ["Entity", "Attachable"]
 
@@ -79,7 +62,7 @@ class _ActorDescription(_MinecraftDescription):
         )
 
     def _animations(
-        self, animation_shortname: str, animate: bool = False, condition: str = None
+        self, animation_shortname: str, animate: bool = False, condition: str = None, reuse_from_entity: str = None
     ):
         """Sets the mapping of internal animation references to actual animations.
 
@@ -102,7 +85,7 @@ class _ActorDescription(_MinecraftDescription):
 
         self._description["description"]["animations"].update(
             {
-                animation_shortname: f"animation.{ANVIL.NAMESPACE_FORMAT}.{self._name}.{animation_shortname}"
+                animation_shortname: f"animation.{ANVIL.NAMESPACE_FORMAT}.{self._name if reuse_from_entity is None else reuse_from_entity}.{animation_shortname}"
             }
         )
 
@@ -125,9 +108,7 @@ class _ActorClientDescription(_ActorDescription):
         if not FileExists(
             os.path.join("assets", "models", self._type, f"{entity_name}.geo.json")
         ):
-            raise FileNotFoundError(
-                os.path.join("assets", "models", self._type, f"{entity_name}.geo.json")
-            )
+            ANVIL.Logger.file_exist_error(f"{entity_name}.geo.json", os.path.join("assets", "models", self._type))
 
         geo_namespace = f"geometry.{ANVIL.NAMESPACE_FORMAT}.{model_name}"
         with open(
@@ -135,30 +116,20 @@ class _ActorClientDescription(_ActorDescription):
         ) as file:
             data = file.read()
             if geo_namespace not in data:
-                raise KeyError(
-                    f"{os.path.join('assets', 'models', self._type, f'{entity_name}.geo.json')} doesn't contain a geometry called {geo_namespace}"
-                )
+                ANVIL.Logger.namespace_not_in_geo(os.path.join('assets', 'models', self._type, f'{entity_name}.geo.json'), geo_namespace)
 
-    def _check_animation(self, animation_name):
+    def _check_animation(self, entity_name, animation_name):
         if not FileExists(
-            os.path.join("assets", "animations", f"{self._name}{Animation._extension}")
+            os.path.join("assets", "animations", f"{entity_name}{Animation._extension}")
         ):
-            raise FileNotFoundError(
-                green(
-                    os.path.join(
-                        "assets", "animations", f"{self._name}{Animation._extension}"
-                    )
-                )
-            )
+            ANVIL.Logger.file_exist_error(f"{entity_name}{Animation._extension}", os.path.join("assets", "animations"))
 
         anim_namespace = (
-            f"animation.{ANVIL.NAMESPACE_FORMAT}.{self._name}.{animation_name}"
+            f"animation.{ANVIL.NAMESPACE_FORMAT}.{entity_name}.{animation_name}"
         )
-        with open(f"assets/animations/{self._name}{Animation._extension}") as file:
+        with open(f"assets/animations/{entity_name}{Animation._extension}") as file:
             if anim_namespace not in file.read():
-                raise KeyError(
-                    f"{os.path.join('assets', 'animations', f'{self._name}{Animation._extension}')} doesn't contain an animation called {anim_namespace}"
-                )
+                ANVIL.Logger.missing_animation(os.path.join('assets', 'animations', f'{entity_name}{Animation._extension}'), anim_namespace)
 
     def _render_append(self, key):
         if key not in self._description["description"]["render_controllers"]:
@@ -184,11 +155,14 @@ class _ActorClientDescription(_ActorDescription):
         )
         self._render_controllers = _RenderControllers(self._name, self._is_vanilla)
         self._description["description"].update(_JsonSchemes.client_description())
+
         self._reused_geometries = []
+        self._reused_textures = []
+        self._reused_anims = []
 
         self._added_geos = 0
+        self._added_anims = 0
         self._added_textures = []
-        self._added_anims = []
 
         self._sounds: list[_SoundDescription] = []
 
@@ -251,7 +225,7 @@ class _ActorClientDescription(_ActorDescription):
         return self._animation_controllers.add_controller(controller_shortname)
 
     def animation(
-        self, animation_name: str, animate: bool = False, condition: str | Molang = None
+        self, animation_name: str, animate: bool = False, condition: str | Molang = None, reuse_from_entity: str = None
     ):
         """Sets the mapping of internal animation references to actual animations.
 
@@ -261,9 +235,15 @@ class _ActorClientDescription(_ActorDescription):
             condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
 
         """
-        self._check_animation(animation_name)
-        self._animations(animation_name, animate, condition)
-        self._added_anims.append(animation_name)
+        
+        if not reuse_from_entity is None:
+            self._check_animation(reuse_from_entity, animation_name)
+            self._reused_anims.append(reuse_from_entity)
+        else:
+            self._check_animation(self._name, animation_name)
+            self._added_anims += 1
+        
+        self._animations(animation_name, animate, condition, reuse_from_entity)
         return self
 
     def material(self, material_id: str, material_name: str):
@@ -300,6 +280,7 @@ class _ActorClientDescription(_ActorDescription):
         else:
             self._check_model(self._name, geometry_name)
             self._added_geos = 1
+
         self._description["description"]["geometry"].update(
             {geometry_shortname: f"geometry.{ANVIL.NAMESPACE_FORMAT}.{geometry_name}"}
         )
@@ -421,6 +402,8 @@ class _ActorClientDescription(_ActorDescription):
         category: SoundCategory = SoundCategory.Neutral,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
+        max_distance: int = 0,
+        min_distance: int = 9999,
     ):
         """This method manages the sound events for an entity.
 
@@ -436,7 +419,7 @@ class _ActorClientDescription(_ActorDescription):
             self.identifier, sound_event, sound_identifier, volume, pitch
         )
 
-        sound: _SoundDescription = ANVIL.sound(sound_identifier, category)
+        sound: _SoundDescription = ANVIL.sound(sound_identifier, category, max_distance=max_distance, min_distance=min_distance)
         self._sounds.append(sound)
         return sound
 
@@ -485,6 +468,12 @@ class _ActorClientDescription(_ActorDescription):
                     f"Geometries were referenced from '{entity}' but this entity has not been queued yet. Please queue all entities that are referred to by reused geometries before this one."
                 )
 
+        for entity in self._reused_anims:
+            if entity not in _ActorClientDescription._queued_entities:
+                raise Exception(
+                    f"Animations were referenced from '{entity}' but this entity has not been queued yet. Please queue all entities that are referred to by reused animations before this one."
+                )
+
         for text in self._added_textures:
             CopyFiles(
                 os.path.join("assets", "textures", self._type),
@@ -498,18 +487,17 @@ class _ActorClientDescription(_ActorDescription):
                 f"{text}.png",
             )
 
-        for animation in self._added_anims:
-            if animation != "controller":
-                CopyFiles(
-                    os.path.join("assets", "animations"),
-                    os.path.join(
-                        "resource_packs",
-                        f"RP_{ANVIL.PASCAL_PROJECT_NAME}",
-                        "animations",
-                        directory,
-                    ),
-                    f"{self._name}{Animation._extension}",
-                )
+        if self._added_anims > 0:
+            CopyFiles(
+                os.path.join("assets", "animations"),
+                os.path.join(
+                    "resource_packs",
+                    f"RP_{ANVIL.PASCAL_PROJECT_NAME}",
+                    "animations",
+                    directory,
+                ),
+                f"{self._name}{Animation._extension}",
+            )
 
         if "particle_effects" in self._description["description"]:
             for particle in self._description["description"]["particle_effects"]:
@@ -914,7 +902,7 @@ class _EntityServer(AddonObject):
 
         self.content(self._server_entity)
 
-        if Rideable.component_name in json.dumps(self._server_entity):
+        if Rideable.component_namespace in json.dumps(self._server_entity):
             ANVIL.localize(
                 f"action.hint.exit.{ANVIL.NAMESPACE}:{self._name}", "Hold shift to exit"
             )
@@ -2418,13 +2406,10 @@ class _Components:
 
     def remove(self, *components: _component):
         for component in components:
-            if (
-                component._component_namespace
-                in self._components[self._component_group_name]
-            ):
-                self._components[self._component_group_name].pop(
-                    component._component_namespace
-                )
+            self._components[self._component_group_name].pop(
+                component.component_namespace,
+                {}
+            )
         return self
 
     def overwrite(self, *components: _component):
