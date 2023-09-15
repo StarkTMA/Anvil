@@ -32,7 +32,7 @@ pip install anvil
 
 ### Usage
 
-```python
+```bash
 anvil create <namespace> <project_name> [options]
 
 namespace           The namespace of the project. "minecraft" is a reserved namespace and cannot be used.
