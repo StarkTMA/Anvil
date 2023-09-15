@@ -2,6 +2,13 @@
 
 ---
 
+Version 0.5.1
+=============
+  [Anvil]
+  - Added workflows to publish to pypi and testpypi.
+  - Gone Public!!!!!!!!
+
+
 Version 0.5.0
 =============
   [Anvil]
