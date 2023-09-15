@@ -6,7 +6,8 @@ from uuid import uuid4
 import click
 from github import Github
 
-from .lib import APPDATA, DESKTOP, CreateDirectory, File, _Config, _JsonSchemes, _Logger
+from .lib import (APPDATA, DESKTOP, CreateDirectory, File, _Config,
+                  _JsonSchemes, _Logger)
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -84,7 +85,7 @@ def cli() -> None:
     is_flag=True,
     default=False,
     show_default=True,
-    help="Adds dependencies support of Physically based rendering.",
+    help="Adds capabilities support of Physically based rendering.",
 )
 def create(
     namespace: str,
@@ -103,7 +104,7 @@ def create(
         preview (bool, optional): Whether to generate the project in Minecraft Preview. Defaults to False.
         fullns (bool, optional): Whether to set the project namespace to the full namespace.project_name. Defaults to False.
         scriptapi (bool, optional): Whether to add dependencies support of ScriptAPI. Defaults to False.
-        pbr (bool, optional): Whether to add dependencies support of Physically based rendering. Defaults to False.
+        pbr (bool, optional): Whether to add capabilities support of Physically based rendering. Defaults to False.
 
     Returns:
         None
@@ -113,16 +114,13 @@ def create(
 
     # Checks for Value Errors
     if len(namespace) > 8:
-        raise ValueError(
-            click.style("Namespace must be 8 characters or less.", fg="red")
-        )
+        _Logger.namespace_too_long(namespace)
+        
     if namespace == "minecraft":
-        raise ValueError('"minecraft" is a reserved namespace.')
+        _Logger.namespace_too_long(namespace)
     
     if len(project_name) > 16:
-        raise ValueError(
-            click.style("Project name must be 16 characters or less.", fg="red")
-        )
+        _Logger.project_name_too_long(namespace)
 
     # Prints message
     click.echo(f'Initiating {project_name.title().replace("-", " ").replace("_", " ")}')

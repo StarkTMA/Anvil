@@ -1,7 +1,8 @@
-from anvil.lib import *
-from anvil.core import ANVIL, RawTextConstructor
-from anvil.api.vanilla import Blocks
 from anvil.api.blocks import Block
+from anvil.api.vanilla import Blocks
+from anvil.core import ANVIL, RawTextConstructor
+from anvil.lib import *
+
 
 class Command:
     def __init__(self, prefix: str, *commands) -> None:
@@ -118,7 +119,7 @@ class Execute(Command):
             return self._parent
 
         def ScoreMatches(self, target: str, objective: str, matches: range):
-            self._parent._append_cmd(self._condition, 'score', target, objective, 'matches', matches)
+            self._parent._append_cmd(self._condition, 'score', target, objective, 'matches', round(matches) if isinstance(matches, float) else matches)
             return self._parent
 
         def Score(self, target: str, target_objective: str, operator: Operator, source: str, source_objective: str):
@@ -193,10 +194,12 @@ class CameraShake(Command):
         super().__init__('camerashake')
 
     def add(self, target: str, intensity: float, seconds: float, shakeType: CameraShakeType):
-        super()._new_cmd('add', target, intensity, seconds, shakeType)
+        super()._append_cmd('add', target, intensity, seconds, shakeType)
+        return self
 
     def stop(self, target: str):
-        super()._new_cmd('stop', target)
+        super()._append_cmd('stop', target)
+        return self
 
 class Summon(Command):
     def __init__(self, entity: Identifier, coordinates : coordinates = ('~', '~', '~')):

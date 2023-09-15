@@ -1,18 +1,24 @@
 site_name: Anvil Documentation
+site_description: Anvil documentation.
+site_author: StarkTMA
+site_url: https://anvil.starktma.net
+repo_url: https://github.com/StarkTMA/Anvil
+remote_branch: generated
+copyright: Copyright © 2023 StarkTMA
 
 theme:
   name: material
-  
+  logo: assets/logo.png
+  favicon: assets/logo.ico
   palette:
     scheme: slate
-    primary: red
+    primary: black
     
   features:
     - navigation.tabs
     - navigation.sections
     - navigation.footer
-
-copyright: Copyright © 2023 StarkTMA
+    - content.code.copy
 
 extra:
   homepage: https://starktma.net
@@ -28,7 +34,7 @@ extra:
       link: https://linkedin.com/in/yasser-benfoughal
 
     - icon: fontawesome/brands/twitter 
-      link: https://twitter.com/@starktma_
+      link: https://x.com/@starktma_
 
 plugins:
   - search
@@ -40,6 +46,14 @@ plugins:
 
 nav:
   - Home: index.md
+  - Docs: 
+    - Introduction: guide/introduction.md
+    - Config: guide/config.md
+    - Tutorials: 
+        - Adding your first entity: guide/adding_your_first_entity.md
+        - Adding your first block: guide/adding_your_first_block.md
+        - Creating a simple OneBlock skyblock: guide/creating_a_one_block.md
+
   - Api Reference: 
     - Anvil: api/lib.md
     - Actors: api/actors.md
@@ -51,3 +65,14 @@ nav:
     - UI: api/ui.md
     - Vanilla: api/vanilla.md
 
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details

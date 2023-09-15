@@ -1,6 +1,6 @@
 from enum import Enum
 
-from anvil import ANVIL, Dimension
+from anvil.core import ANVIL, Dimension
 
 ENTITY_LIST = []
 BLOCK_LIST = []

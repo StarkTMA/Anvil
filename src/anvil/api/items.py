@@ -1,8 +1,8 @@
+from anvil.api.actors import _Components
+from anvil.api.components import _component
 from anvil.core import ANVIL, AddonObject, _MinecraftDescription
 from anvil.lib import *
 from anvil.lib import _JsonSchemes
-from anvil.api.actors import _Components
-from anvil.api.components import _component
 
 __all__ = [
     "Item",
@@ -29,30 +29,35 @@ __all__ = [
 
 # LEGACY COMPONENTS
 class LEGACYItemHandEquipped(_component):
+    component_namespace = "minecraft:hand_equipped"
     def __init__(self) -> None:
         super().__init__("hand_equipped")
         self._component_set_value(True)
 
 
 class LEGACYItemFoil(_component):
+    component_namespace = "minecraft:foil"
     def __init__(self) -> None:
         super().__init__("foil")
         self._component_set_value(True)
 
 
 class LEGACYItemStackedByData(_component):
+    component_namespace = "minecraft:stacked_by_data"
     def __init__(self) -> None:
         super().__init__("stacked_by_data")
         self._component_set_value(True)
 
 
 class LEGACYItemUseDuration(_component):
+    component_namespace = "minecraft:use_duration"
     def __init__(self, use_duration: Seconds) -> None:
         super().__init__("use_duration")
         self._component_set_value(clamp(use_duration, 0, inf))
 
 
 class LEGACYItemFood(_component):
+    component_namespace = "minecraft:food"
     def __init__(self, can_always_eat: bool = False) -> None:
         super().__init__("food")
         self._component_add_field("effects", [])
@@ -73,7 +78,7 @@ class LEGACYItemFood(_component):
         return self
 
     def effects(self, effect: Effects, chance: float, duration: Seconds, amplifier: int):
-        self[self._component_namespace]["effects"].append(
+        self[self.component_namespace]["effects"].append(
             {
                 "name": effect.value,
                 "chance": clamp(chance, 0, 1),
@@ -86,6 +91,7 @@ class LEGACYItemFood(_component):
 
 # Require ITEM_SERVER_VERSION >= 1.20.10
 class ItemCooldown(_component):
+    component_namespace = "minecraft:cooldown"
     def __init__(self, category: str, duration: float) -> None:
         """Sets an items "Cool down" time. After using an item, it becomes unusable for the duration specified by the 'duration' setting of this component.
 
@@ -101,6 +107,7 @@ class ItemCooldown(_component):
 
 
 class ItemRepairable(_component):
+    component_namespace = "minecraft:repairable"
     def __init__(self, on_repaired: str = None) -> None:
         """Defines the items that can be used to repair a defined item, and the amount of durability each item restores upon repair. Each entry needs to define a list of strings for 'items' that can be used for the repair and an optional 'repair_amount' for how much durability is repaired.
 
@@ -120,13 +127,14 @@ class ItemRepairable(_component):
             repair_amount (int): How much durability is repaired.
             repair_items (str): List of repair item entries.
         """
-        self[self._component_namespace]["repair_items"].append(
+        self[self.component_namespace]["repair_items"].append(
             {"items": repair_items, "repair_amount": repair_amount}
         )
         return self
 
 
 class ItemMaxStackSize(_component):
+    component_namespace = "minecraft:max_stack_size"
     def __init__(self, stack_size: int) -> None:
         super().__init__("max_stack_size")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
@@ -135,6 +143,7 @@ class ItemMaxStackSize(_component):
 
 
 class ItemBlockPlacer(_component):
+    component_namespace = "minecraft:block_placer"
     def __init__(self, block: str, *use_on: str) -> None:
         """Sets the item as a Planter item component for blocks. Planter items are items that can be planted into another block.
 
@@ -150,6 +159,7 @@ class ItemBlockPlacer(_component):
 
 
 class ItemRecord(_component):
+    component_namespace = "minecraft:record"
     def __init__(
         self, sound_event: str, duration: float, comparator_signal: int = 1
     ) -> None:
@@ -160,7 +170,7 @@ class ItemRecord(_component):
             duration (float): Duration of sound event in seconds float value.
             comparator_signal (int): Signal strength for comparator blocks to use from 1 - 13.
         """
-        super().__init__("block_placer")
+        super().__init__("record")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
 
         self._component_add_field("sound_event", sound_event)
@@ -169,6 +179,7 @@ class ItemRecord(_component):
 
 
 class ItemShooter(_component):
+    component_namespace = "minecraft:shooter"
     def __init__(
         self,
         charge_on_draw: bool = False,
@@ -196,7 +207,7 @@ class ItemShooter(_component):
             )
     
     def add_ammunition(self, ammunition: Identifier, search_inventory: bool = True, use_in_creative: bool = False, use_offhand: bool = False):
-        self[self._component_namespace]['ammunition'].append({
+        self[self.component_namespace]['ammunition'].append({
             "item": ammunition,
             "search_inventory": search_inventory,
             "use_in_creative": use_in_creative,
@@ -206,10 +217,11 @@ class ItemShooter(_component):
 
 
 class ItemProjectile(_component):
+    component_namespace = "minecraft:projectile"
     def __init__(
         self, projectile_entity: Identifier, minimum_critical_power: int
     ) -> None:
-        super().__init__("shooter")
+        super().__init__("projectile")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
 
         self._component_add_field("projectile_entity", projectile_entity)
@@ -217,6 +229,7 @@ class ItemProjectile(_component):
 
 
 class ItemThrowable(_component):
+    component_namespace = "minecraft:throwable"
     def __init__(
         self,
         do_swing_animation: bool = False,
@@ -258,6 +271,7 @@ class ItemThrowable(_component):
 # Components
 # Require ITEM_SERVER_VERSION >= 1.19.80
 class ItemDurability(_component):
+    component_namespace = "minecraft:durability"
     def __init__(
         self, max_durability: int, damage_chance: int | tuple[int, int] = 100
     ) -> None:
@@ -285,6 +299,7 @@ class ItemDurability(_component):
 
 
 class ItemDisplayName(_component):
+    component_namespace = "minecraft:display_name"
     def __init__(self, display_name: str, localize: bool = True) -> None:
         """Sets the item display name within Minecraft: Bedrock Edition. This component may also be used to pull from the localization file by referencing a key from it.
 
@@ -305,6 +320,7 @@ class ItemDisplayName(_component):
 
 
 class ItemFuel(_component):
+    component_namespace = "minecraft:fuel"
     def __init__(self, duration: float) -> None:
         """Allows this item to be used as fuel in a furnace to 'cook' other items.
 
@@ -317,6 +333,7 @@ class ItemFuel(_component):
 
 
 class ItemEntityPlacer(_component):
+    component_namespace = "minecraft:entity_placer"
     def __init__(self, entity: str) -> None:
         """Allows an item to place entities into the world. Additionally, the component allows the item to set the spawn type of a monster spawner.
 
@@ -339,6 +356,7 @@ class ItemEntityPlacer(_component):
 
 
 class ItemIcon(_component):
+    component_namespace = "minecraft:icon"
     def __init__(self, texture: str) -> None:
         """Sets the icon item component. Determines the icon to represent the item in the UI and elsewhere.
 
@@ -394,7 +412,7 @@ class _ItemServer(AddonObject):
         super().queue()
 
 
-# To be removed after 1.20.10
+# To be removed after 1.20.30
 class _ItemClient(AddonObject):
     _extensions = {0: ".item.json", 1: ".item.json"}
 
@@ -449,6 +467,6 @@ class Item:
 
     @property
     def queue(self):
-        if ITEM_SERVER_VERSION <= "1.12.0":
+        if ITEM_SERVER_VERSION <= "1.16.0":
             self.Client.queue
         self.Server.queue
