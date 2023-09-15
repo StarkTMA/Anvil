@@ -7,9 +7,11 @@ on:
 jobs:
   build-n-publish-pypi:
     runs-on: ubuntu-latest
+
+    environment: main
     permissions:
       id-token: write
-
+      
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
@@ -22,7 +24,6 @@ jobs:
         pip install build
     - name: Build package
       run: python -m build
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@v1.4.2
-      with:
-        repository-url: https://upload.pypi.org/legacy/
+      
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
