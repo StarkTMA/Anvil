@@ -27,7 +27,7 @@ Due to Minecraft bedrock being primarily developed on Windows, Anvil is only sup
 To install Anvil, run the following command in your terminal:
 
 ```bash 
-pip install anvil
+pip install mcanvil
 ```
 
 ### Usage

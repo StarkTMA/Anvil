@@ -13,7 +13,7 @@ Due to Minecraft bedrock being primarily developed on Windows, the file paths ar
 To install Anvil, run the following command in your terminal:
 
 ```bash
-pip install anvil
+pip install mcanvil
 ```
 
 This should install Anvil and all of its dependencies.
