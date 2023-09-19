@@ -33,7 +33,6 @@ class AddonObject:
 
         self._content = {}
         self._directory = ""
-
         _logger.object_initiated(self._name)
 
     @classmethod
@@ -454,8 +453,8 @@ class _SoundDescription:
         sound_definition: str,
         category: SoundCategory,
         use_legacy_max_distance: bool = False,
-        max_distance: int = 0,
-        min_distance: int = 9999,
+        max_distance: float = 0,
+        min_distance: float = 9999,
     ) -> None:
         """Initializes a _SoundDescription instance.
 
@@ -575,8 +574,8 @@ class _SoundDefinition(AddonObject):
         sound_definition: str,
         category: SoundCategory,
         use_legacy_max_distance: bool = False,
-        max_distance: int = 0,
-        min_distance: int = 9999,
+        max_distance: float = 0,
+        min_distance: float = 9999,
     ):
         """Defines a sound for the _SoundDefinition instance.
 
@@ -2546,7 +2545,7 @@ class _Anvil:
 
         File("manifest.json", _JsonSchemes.manifest_rp(self.RELEASE, self.Config.get("BUILD", "RP_UUID"), int(self.Config.get("ANVIL", "PBR"))), os.path.join("resource_packs", f"RP_{self.PASCAL_PROJECT_NAME}"), "w")
         File("manifest.json", _JsonSchemes.manifest_bp(self.RELEASE, self.Config.get("BUILD", "BP_UUID"), int(self.Config.get("ANVIL", "SCRIPTAPI"))), os.path.join("behavior_packs", f"BP_{self.PASCAL_PROJECT_NAME}"), "w")
-        File("manifest.json", _JsonSchemes.manifest_world(self.RELEASE, self.Config.get("BUILD", "PACK_UUID"), self.COMPANY), "", "w")
+        File("manifest.json", _JsonSchemes.manifest_world(self.RELEASE, self.Config.get("BUILD", "PACK_UUID"), self.COMPANY, int(self.Config.get("ANVIL", "SEED"))), "", "w")
 
         File("world_resource_packs.json", _JsonSchemes.world_packs(self.Config.get("BUILD", "RP_UUID"), self.RELEASE), ".", "w")
         File("world_behavior_packs.json", _JsonSchemes.world_packs(self.Config.get("BUILD", "BP_UUID"), self.RELEASE), ".", "w")

@@ -2490,9 +2490,11 @@ class _Properties:
 
 # ========================================================================================================
 class Entity:
-    def _validate_name(self, name):
+    def _validate_name(self, name: str):
         if ":" in name:
-            raise ValueError(ANVIL.Logger.namespaces_not_allowed(name))
+            ANVIL.Logger.namespaces_not_allowed(name)
+        if not name[0].isalpha():
+            ANVIL.Logger.digits_not_allowed(name)
 
     def __init__(self, name: str) -> None:
         self._is_vanilla = name in ENTITY_LIST

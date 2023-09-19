@@ -2482,6 +2482,7 @@ class MeleeAttack(_ai_goal):
         track_target: bool = False,
         x_max_rotation: int = 30,
         y_max_head_rotation: int = 30,
+        can_spread_on_fire: bool = False
     ) -> None:
         """Compels entities to make close combat melee attacks."""
         super().__init__("behavior.melee_attack")
@@ -2521,6 +2522,8 @@ class MeleeAttack(_ai_goal):
             self._component_add_field("x_max_rotation", x_max_rotation)
         if y_max_head_rotation != 30:
             self._component_add_field("y_max_head_rotation", y_max_head_rotation)
+        if can_spread_on_fire:
+            self._component_add_field("can_spread_on_fire", can_spread_on_fire)
 
     def attack_types(self, attack_types: str):
         self._component_add_field("attack_types", attack_types)
@@ -2716,6 +2719,7 @@ class DelayedAttack(_ai_goal):
         track_target: bool = False,
         x_max_rotation: int = 30,
         y_max_head_rotation: int = 30,
+        can_spread_on_fire: bool = False
     ) -> None:
         """Compels an entity to attack while also delaying the damage dealt until a specific time in the attack animation.
 
@@ -2784,6 +2788,8 @@ class DelayedAttack(_ai_goal):
             self._component_add_field("x_max_rotation", x_max_rotation)
         if y_max_head_rotation != 30:
             self._component_add_field("y_max_head_rotation", y_max_head_rotation)
+        if can_spread_on_fire:
+            self._component_add_field("can_spread_on_fire", can_spread_on_fire)
 
     def attack_types(self, attack_types: str):
         self._component_add_field("attack_types", attack_types)

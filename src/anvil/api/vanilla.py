@@ -1048,6 +1048,18 @@ class BlockStates:
         ENUM24 = "24"
         ENUM25 = "25"
 
+    #1.20.30
+    class BlockFace(Enum):
+        DOWN = "down"
+        UP = "up"
+        NORTH = "north"
+        SOUTH = "south"
+        EAST = "east"
+        WEST = "west"
+
+    class VerticalHalf(Enum):
+        BOTTOM = "bottom"
+        TOP = "top"
 
 class Items:
     class _basic_item():
@@ -2354,8 +2366,8 @@ class Blocks:
             super().__init__("amethyst_block", True)
 
     class AmethystCluster(_MinecraftBlock):
-        def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
-            self._facing_direction = facing_direction
+        def __init__(self, block_face:'BlockStates.BlockFace'=None):
+            self._block_face = block_face
             super().__init__("amethyst_cluster", True)
 
     class AncientDebris(_MinecraftBlock):
@@ -2369,9 +2381,9 @@ class Blocks:
             super().__init__("andesite_stairs", True)
 
     class Anvil(_MinecraftBlock):
-        def __init__(self, damage:'BlockStates.Damage'=None, direction:'BlockStates.Direction'=None):
+        def __init__(self, damage:'BlockStates.Damage'=None, cardinal_direction:'BlockStates.CardinalDirection'=None):
             self._damage = damage
-            self._direction = direction
+            self._cardinal_direction = cardinal_direction
             super().__init__("anvil", True)
 
     class Azalea(_MinecraftBlock):
@@ -2417,8 +2429,8 @@ class Blocks:
             super().__init__("bamboo_door", True)
 
     class BambooDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("bamboo_double_slab", True)
 
     class BambooFence(_MinecraftBlock):
@@ -2445,13 +2457,13 @@ class Blocks:
             super().__init__("bamboo_mosaic", True)
 
     class BambooMosaicDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("bamboo_mosaic_double_slab", True)
 
     class BambooMosaicSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("bamboo_mosaic_slab", True)
 
     class BambooMosaicStairs(_MinecraftBlock):
@@ -2476,8 +2488,8 @@ class Blocks:
             super().__init__("bamboo_sapling", True)
 
     class BambooSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("bamboo_slab", True)
 
     class BambooStairs(_MinecraftBlock):
@@ -2559,10 +2571,10 @@ class Blocks:
             super().__init__("bell", True)
 
     class BigDripleaf(_MinecraftBlock):
-        def __init__(self, big_dripleaf_head:'BlockStates.BigDripleafHead'=None, big_dripleaf_tilt:'BlockStates.BigDripleafTilt'=None, direction:'BlockStates.Direction'=None):
+        def __init__(self, big_dripleaf_head:'BlockStates.BigDripleafHead'=None, big_dripleaf_tilt:'BlockStates.BigDripleafTilt'=None, cardinal_direction:'BlockStates.CardinalDirection'=None):
             self._big_dripleaf_head = big_dripleaf_head
             self._big_dripleaf_tilt = big_dripleaf_tilt
-            self._direction = direction
+            self._cardinal_direction = cardinal_direction
             super().__init__("big_dripleaf", True)
 
     class BirchButton(_MinecraftBlock):
@@ -2636,13 +2648,13 @@ class Blocks:
             super().__init__("blackstone", True)
 
     class BlackstoneDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("blackstone_double_slab", True)
 
     class BlackstoneSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("blackstone_slab", True)
 
     class BlackstoneStairs(_MinecraftBlock):
@@ -2915,8 +2927,8 @@ class Blocks:
             super().__init__("cherry_door", True)
 
     class CherryDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("cherry_double_slab", True)
 
     class CherryFence(_MinecraftBlock):
@@ -2964,8 +2976,8 @@ class Blocks:
             super().__init__("cherry_sapling", True)
 
     class CherrySlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("cherry_slab", True)
 
     class CherryStairs(_MinecraftBlock):
@@ -3050,13 +3062,13 @@ class Blocks:
             super().__init__("cobbled_deepslate", True)
 
     class CobbledDeepslateDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("cobbled_deepslate_double_slab", True)
 
     class CobbledDeepslateSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("cobbled_deepslate_slab", True)
 
     class CobbledDeepslateStairs(_MinecraftBlock):
@@ -3218,8 +3230,8 @@ class Blocks:
             super().__init__("crimson_door", True)
 
     class CrimsonDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("crimson_double_slab", True)
 
     class CrimsonFence(_MinecraftBlock):
@@ -3268,8 +3280,8 @@ class Blocks:
             super().__init__("crimson_roots", True)
 
     class CrimsonSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("crimson_slab", True)
 
     class CrimsonStairs(_MinecraftBlock):
@@ -3309,8 +3321,8 @@ class Blocks:
             super().__init__("cut_copper", True)
 
     class CutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("cut_copper_slab", True)
 
     class CutCopperStairs(_MinecraftBlock):
@@ -3464,13 +3476,13 @@ class Blocks:
             super().__init__("deepslate_bricks", True)
 
     class DeepslateBrickDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("deepslate_brick_double_slab", True)
 
     class DeepslateBrickSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("deepslate_brick_slab", True)
 
     class DeepslateBrickStairs(_MinecraftBlock):
@@ -3525,13 +3537,13 @@ class Blocks:
             super().__init__("deepslate_tiles", True)
 
     class DeepslateTileDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("deepslate_tile_double_slab", True)
 
     class DeepslateTileSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("deepslate_tile_slab", True)
 
     class DeepslateTileStairs(_MinecraftBlock):
@@ -3589,8 +3601,8 @@ class Blocks:
             super().__init__("dispenser", True)
 
     class DoubleCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("double_cut_copper_slab", True)
 
     class DoublePlant(_MinecraftBlock):
@@ -3600,32 +3612,32 @@ class Blocks:
             super().__init__("double_plant", True)
 
     class DoubleStoneBlockSlab(_MinecraftBlock):
-        def __init__(self, stone_slab_type:'BlockStates.StoneSlabType'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+        def __init__(self, stone_slab_type:'BlockStates.StoneSlabType'=None, vertical_half:'BlockStates.VerticalHalf'=None):
             self._stone_slab_type = stone_slab_type
-            self._top_slot_bit = top_slot_bit
+            self._vertical_half = vertical_half
             super().__init__("double_stone_block_slab", True)
 
     class DoubleStoneBlockSlab2(_MinecraftBlock):
-        def __init__(self, stone_slab_type_2:'BlockStates.StoneSlabType2'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+        def __init__(self, stone_slab_type_2:'BlockStates.StoneSlabType2'=None, vertical_half:'BlockStates.VerticalHalf'=None):
             self._stone_slab_type_2 = stone_slab_type_2
-            self._top_slot_bit = top_slot_bit
+            self._vertical_half = vertical_half
             super().__init__("double_stone_block_slab2", True)
 
     class DoubleStoneBlockSlab3(_MinecraftBlock):
-        def __init__(self, stone_slab_type_3:'BlockStates.StoneSlabType3'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+        def __init__(self, stone_slab_type_3:'BlockStates.StoneSlabType3'=None, vertical_half:'BlockStates.VerticalHalf'=None):
             self._stone_slab_type_3 = stone_slab_type_3
-            self._top_slot_bit = top_slot_bit
+            self._vertical_half = vertical_half
             super().__init__("double_stone_block_slab3", True)
 
     class DoubleStoneBlockSlab4(_MinecraftBlock):
-        def __init__(self, stone_slab_type_4:'BlockStates.StoneSlabType4'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+        def __init__(self, stone_slab_type_4:'BlockStates.StoneSlabType4'=None, vertical_half:'BlockStates.VerticalHalf'=None):
             self._stone_slab_type_4 = stone_slab_type_4
-            self._top_slot_bit = top_slot_bit
+            self._vertical_half = vertical_half
             super().__init__("double_stone_block_slab4", True)
 
     class DoubleWoodenSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None, wood_type:'BlockStates.WoodType'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None, wood_type:'BlockStates.WoodType'=None):
+            self._vertical_half = vertical_half
             self._wood_type = wood_type
             super().__init__("double_wooden_slab", True)
 
@@ -4159,8 +4171,8 @@ class Blocks:
             super().__init__("end_portal", True)
 
     class EndPortalFrame(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, end_portal_eye_bit:'BlockStates.EndPortalEyeBit'=None):
-            self._direction = direction
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None, end_portal_eye_bit:'BlockStates.EndPortalEyeBit'=None):
+            self._cardinal_direction = cardinal_direction
             self._end_portal_eye_bit = end_portal_eye_bit
             super().__init__("end_portal_frame", True)
 
@@ -4182,8 +4194,8 @@ class Blocks:
             super().__init__("exposed_cut_copper", True)
 
     class ExposedCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("exposed_cut_copper_slab", True)
 
     class ExposedCutCopperStairs(_MinecraftBlock):
@@ -4193,8 +4205,8 @@ class Blocks:
             super().__init__("exposed_cut_copper_stairs", True)
 
     class ExposedDoubleCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("exposed_double_cut_copper_slab", True)
 
     class Farmland(_MinecraftBlock):
@@ -4607,8 +4619,8 @@ class Blocks:
             super().__init__("leaves2", True)
 
     class Lectern(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, powered_bit:'BlockStates.PoweredBit'=None):
-            self._direction = direction
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None, powered_bit:'BlockStates.PoweredBit'=None):
+            self._cardinal_direction = cardinal_direction
             self._powered_bit = powered_bit
             super().__init__("lectern", True)
 
@@ -4784,8 +4796,8 @@ class Blocks:
             super().__init__("mangrove_door", True)
 
     class MangroveDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("mangrove_double_slab", True)
 
     class MangroveFence(_MinecraftBlock):
@@ -4838,8 +4850,8 @@ class Blocks:
             super().__init__("mangrove_roots", True)
 
     class MangroveSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("mangrove_slab", True)
 
     class MangroveStairs(_MinecraftBlock):
@@ -4937,13 +4949,13 @@ class Blocks:
             super().__init__("mud_bricks", True)
 
     class MudBrickDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("mud_brick_double_slab", True)
 
     class MudBrickSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("mud_brick_slab", True)
 
     class MudBrickStairs(_MinecraftBlock):
@@ -5089,8 +5101,8 @@ class Blocks:
             super().__init__("oxidized_cut_copper", True)
 
     class OxidizedCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("oxidized_cut_copper_slab", True)
 
     class OxidizedCutCopperStairs(_MinecraftBlock):
@@ -5100,8 +5112,8 @@ class Blocks:
             super().__init__("oxidized_cut_copper_stairs", True)
 
     class OxidizedDoubleCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("oxidized_double_cut_copper_slab", True)
 
     class PackedIce(_MinecraftBlock):
@@ -5138,8 +5150,8 @@ class Blocks:
             super().__init__("pink_glazed_terracotta", True)
 
     class PinkPetals(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, growth:'BlockStates.Growth'=None):
-            self._direction = direction
+        def __init__(self, cardina_direction:'BlockStates.CardinalDirection'=None, growth:'BlockStates.Growth'=None):
+            self._cardina_direction = cardina_direction
             self._growth = growth
             super().__init__("pink_petals", True)
 
@@ -5208,13 +5220,13 @@ class Blocks:
             super().__init__("polished_blackstone_bricks", True)
 
     class PolishedBlackstoneBrickDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("polished_blackstone_brick_double_slab", True)
 
     class PolishedBlackstoneBrickSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("polished_blackstone_brick_slab", True)
 
     class PolishedBlackstoneBrickStairs(_MinecraftBlock):
@@ -5239,8 +5251,8 @@ class Blocks:
             super().__init__("polished_blackstone_button", True)
 
     class PolishedBlackstoneDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("polished_blackstone_double_slab", True)
 
     class PolishedBlackstonePressurePlate(_MinecraftBlock):
@@ -5249,8 +5261,8 @@ class Blocks:
             super().__init__("polished_blackstone_pressure_plate", True)
 
     class PolishedBlackstoneSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("polished_blackstone_slab", True)
 
     class PolishedBlackstoneStairs(_MinecraftBlock):
@@ -5273,13 +5285,13 @@ class Blocks:
             super().__init__("polished_deepslate", True)
 
     class PolishedDeepslateDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("polished_deepslate_double_slab", True)
 
     class PolishedDeepslateSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("polished_deepslate_slab", True)
 
     class PolishedDeepslateStairs(_MinecraftBlock):
@@ -5324,15 +5336,15 @@ class Blocks:
             super().__init__("powder_snow", True)
 
     class PoweredComparator(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, output_lit_bit:'BlockStates.OutputLitBit'=None, output_subtract_bit:'BlockStates.OutputSubtractBit'=None):
-            self._direction = direction
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None, output_lit_bit:'BlockStates.OutputLitBit'=None, output_subtract_bit:'BlockStates.OutputSubtractBit'=None):
+            self._cardinal_direction = cardinal_direction
             self._output_lit_bit = output_lit_bit
             self._output_subtract_bit = output_subtract_bit
             super().__init__("powered_comparator", True)
 
     class PoweredRepeater(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, repeater_delay:'BlockStates.RepeaterDelay'=None):
-            self._direction = direction
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None, repeater_delay:'BlockStates.RepeaterDelay'=None):
+            self._cardinal_direction = cardinal_direction
             self._repeater_delay = repeater_delay
             super().__init__("powered_repeater", True)
 
@@ -5639,8 +5651,8 @@ class Blocks:
             super().__init__("small_amethyst_bud", True)
 
     class SmallDripleafBlock(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
-            self._direction = direction
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None, upper_block_bit:'BlockStates.UpperBlockBit'=None):
+            self._cardinal_direction = cardinal_direction
             self._upper_block_bit = upper_block_bit
             super().__init__("small_dripleaf_block", True)
 
@@ -5695,7 +5707,7 @@ class Blocks:
             super().__init__("snow_layer", True)
 
     class SoulCampfire(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, extinguished:'BlockStates.Extinguished'=None):
+        def __init__(self, direction:'BlockStates.CardinalDirection'=None, extinguished:'BlockStates.Extinguished'=None):
             self._direction = direction
             self._extinguished = extinguished
             super().__init__("soul_campfire", True)
@@ -5798,21 +5810,6 @@ class Blocks:
             self._facing_direction = facing_direction
             super().__init__("spruce_wall_sign", True)
 
-    class StainedGlass(_MinecraftBlock):
-        def __init__(self, color:'BlockStates.Color'=None):
-            self._color = color
-            super().__init__("stained_glass", True)
-
-    class StainedGlassPane(_MinecraftBlock):
-        def __init__(self, color:'BlockStates.Color'=None):
-            self._color = color
-            super().__init__("stained_glass_pane", True)
-
-    class StainedHardenedClay(_MinecraftBlock):
-        def __init__(self, color:'BlockStates.Color'=None):
-            self._color = color
-            super().__init__("stained_hardened_clay", True)
-
     class StandingBanner(_MinecraftBlock):
         def __init__(self, ground_sign_direction:'BlockStates.GroundSignDirection'=None):
             self._ground_sign_direction = ground_sign_direction
@@ -5858,27 +5855,27 @@ class Blocks:
             super().__init__("stonecutter_block", True)
 
     class StoneBlockSlab(_MinecraftBlock):
-        def __init__(self, stone_slab_type:'BlockStates.StoneSlabType'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+        def __init__(self, stone_slab_type:'BlockStates.StoneSlabType'=None, vertical_half:'BlockStates.VerticalHalf'=None):
             self._stone_slab_type = stone_slab_type
-            self._top_slot_bit = top_slot_bit
+            self._vertical_half = vertical_half
             super().__init__("stone_block_slab", True)
 
     class StoneBlockSlab2(_MinecraftBlock):
-        def __init__(self, stone_slab_type_2:'BlockStates.StoneSlabType2'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+        def __init__(self, stone_slab_type_2:'BlockStates.StoneSlabType2'=None, vertical_half:'BlockStates.VerticalHalf'=None):
             self._stone_slab_type_2 = stone_slab_type_2
-            self._top_slot_bit = top_slot_bit
+            self._vertical_half = vertical_half
             super().__init__("stone_block_slab2", True)
 
     class StoneBlockSlab3(_MinecraftBlock):
-        def __init__(self, stone_slab_type_3:'BlockStates.StoneSlabType3'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+        def __init__(self, stone_slab_type_3:'BlockStates.StoneSlabType3'=None, vertical_half:'BlockStates.VerticalHalf'=None):
             self._stone_slab_type_3 = stone_slab_type_3
-            self._top_slot_bit = top_slot_bit
+            self._vertical_half = vertical_half
             super().__init__("stone_block_slab3", True)
 
     class StoneBlockSlab4(_MinecraftBlock):
-        def __init__(self, stone_slab_type_4:'BlockStates.StoneSlabType4'=None, top_slot_bit:'BlockStates.TopSlotBit'=None):
+        def __init__(self, stone_slab_type_4:'BlockStates.StoneSlabType4'=None, vertical_half:'BlockStates.VerticalHalf'=None):
             self._stone_slab_type_4 = stone_slab_type_4
-            self._top_slot_bit = top_slot_bit
+            self._vertical_half = vertical_half
             super().__init__("stone_block_slab4", True)
 
     class StoneBrickStairs(_MinecraftBlock):
@@ -6112,15 +6109,15 @@ class Blocks:
             super().__init__("unlit_redstone_torch", True)
 
     class UnpoweredComparator(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, output_lit_bit:'BlockStates.OutputLitBit'=None, output_subtract_bit:'BlockStates.OutputSubtractBit'=None):
-            self._direction = direction
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None, output_lit_bit:'BlockStates.OutputLitBit'=None, output_subtract_bit:'BlockStates.OutputSubtractBit'=None):
+            self._cardinal_direction = cardinal_direction
             self._output_lit_bit = output_lit_bit
             self._output_subtract_bit = output_subtract_bit
             super().__init__("unpowered_comparator", True)
 
     class UnpoweredRepeater(_MinecraftBlock):
-        def __init__(self, direction:'BlockStates.Direction'=None, repeater_delay:'BlockStates.RepeaterDelay'=None):
-            self._direction = direction
+        def __init__(self, cardinal_direction:'BlockStates.CardinalDirection'=None, repeater_delay:'BlockStates.RepeaterDelay'=None):
+            self._cardinal_direction = cardinal_direction
             self._repeater_delay = repeater_delay
             super().__init__("unpowered_repeater", True)
 
@@ -6159,8 +6156,8 @@ class Blocks:
             super().__init__("warped_door", True)
 
     class WarpedDoubleSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("warped_double_slab", True)
 
     class WarpedFence(_MinecraftBlock):
@@ -6209,8 +6206,8 @@ class Blocks:
             super().__init__("warped_roots", True)
 
     class WarpedSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("warped_slab", True)
 
     class WarpedStairs(_MinecraftBlock):
@@ -6263,8 +6260,8 @@ class Blocks:
             super().__init__("waxed_cut_copper", True)
 
     class WaxedCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("waxed_cut_copper_slab", True)
 
     class WaxedCutCopperStairs(_MinecraftBlock):
@@ -6274,8 +6271,8 @@ class Blocks:
             super().__init__("waxed_cut_copper_stairs", True)
 
     class WaxedDoubleCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("waxed_double_cut_copper_slab", True)
 
     class WaxedExposedCopper(_MinecraftBlock):
@@ -6287,8 +6284,8 @@ class Blocks:
             super().__init__("waxed_exposed_cut_copper", True)
 
     class WaxedExposedCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("waxed_exposed_cut_copper_slab", True)
 
     class WaxedExposedCutCopperStairs(_MinecraftBlock):
@@ -6298,8 +6295,8 @@ class Blocks:
             super().__init__("waxed_exposed_cut_copper_stairs", True)
 
     class WaxedExposedDoubleCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("waxed_exposed_double_cut_copper_slab", True)
 
     class WaxedOxidizedCopper(_MinecraftBlock):
@@ -6311,8 +6308,8 @@ class Blocks:
             super().__init__("waxed_oxidized_cut_copper", True)
 
     class WaxedOxidizedCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("waxed_oxidized_cut_copper_slab", True)
 
     class WaxedOxidizedCutCopperStairs(_MinecraftBlock):
@@ -6322,8 +6319,8 @@ class Blocks:
             super().__init__("waxed_oxidized_cut_copper_stairs", True)
 
     class WaxedOxidizedDoubleCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("waxed_oxidized_double_cut_copper_slab", True)
 
     class WaxedWeatheredCopper(_MinecraftBlock):
@@ -6335,8 +6332,8 @@ class Blocks:
             super().__init__("waxed_weathered_cut_copper", True)
 
     class WaxedWeatheredCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("waxed_weathered_cut_copper_slab", True)
 
     class WaxedWeatheredCutCopperStairs(_MinecraftBlock):
@@ -6346,8 +6343,8 @@ class Blocks:
             super().__init__("waxed_weathered_cut_copper_stairs", True)
 
     class WaxedWeatheredDoubleCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("waxed_weathered_double_cut_copper_slab", True)
 
     class WeatheredCopper(_MinecraftBlock):
@@ -6359,8 +6356,8 @@ class Blocks:
             super().__init__("weathered_cut_copper", True)
 
     class WeatheredCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("weathered_cut_copper_slab", True)
 
     class WeatheredCutCopperStairs(_MinecraftBlock):
@@ -6370,8 +6367,8 @@ class Blocks:
             super().__init__("weathered_cut_copper_stairs", True)
 
     class WeatheredDoubleCutCopperSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None):
+            self._vertical_half = vertical_half
             super().__init__("weathered_double_cut_copper_slab", True)
 
     class Web(_MinecraftBlock):
@@ -6443,8 +6440,8 @@ class Blocks:
             super().__init__("wooden_pressure_plate", True)
 
     class WoodenSlab(_MinecraftBlock):
-        def __init__(self, top_slot_bit:'BlockStates.TopSlotBit'=None, wood_type:'BlockStates.WoodType'=None):
-            self._top_slot_bit = top_slot_bit
+        def __init__(self, vertical_half:'BlockStates.VerticalHalf'=None, wood_type:'BlockStates.WoodType'=None):
+            self._vertical_half = vertical_half
             self._wood_type = wood_type
             super().__init__("wooden_slab", True)
 
@@ -6476,3 +6473,264 @@ class Blocks:
         def __init__(self, ):
             super().__init__("yellow_wool", True)
 
+    # 1.20.30.1
+    # Too repetitive, thanks ChatGPT
+    # Terracotta
+    class WhiteTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("white_terracotta", True)
+            
+    class OrangeTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("orange_terracotta", True)
+            
+    class MagentaTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("magenta_terracotta", True)
+            
+    class Light_blueTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("light_blue_terracotta", True)
+            
+    class YellowTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("yellow_terracotta", True)
+            
+    class LimeTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("lime_terracotta", True)
+            
+    class PinkTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("pink_terracotta", True)
+            
+    class GrayTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("gray_terracotta", True)
+            
+    class Light_grayTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("light_gray_terracotta", True)
+            
+    class CyanTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("cyan_terracotta", True)
+            
+    class PurpleTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("purple_terracotta", True)
+            
+    class BlueTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("blue_terracotta", True)
+            
+    class BrownTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("brown_terracotta", True)
+            
+    class GreenTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("green_terracotta", True)
+            
+    class RedTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("red_terracotta", True)
+            
+    class BlackTerracotta(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("black_terracotta", True)
+
+    # StainedGlass
+    class WhiteStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("white_stained_glass", True)
+
+    class OrangeStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("orange_stained_glass", True)
+
+    class MagentaStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("magenta_stained_glass", True)
+
+    class LightBlueStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("light_blue_stained_glass", True)
+
+    class YellowStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("yellow_stained_glass", True)
+
+    class LimeStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("lime_stained_glass", True)
+
+    class PinkStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("pink_stained_glass", True)
+
+    class GrayStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("gray_stained_glass", True)
+
+    class LightGrayStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("light_gray_stained_glass", True)
+
+    class CyanStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("cyan_stained_glass", True)
+
+    class PurpleStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("purple_stained_glass", True)
+
+    class BlueStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("blue_stained_glass", True)
+
+    class BrownStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("brown_stained_glass", True)
+
+    class GreenStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("green_stained_glass", True)
+
+    class RedStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("red_stained_glass", True)
+
+    class BlackStainedGlass(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("black_stained_glass", True)
+
+    # Stained Glass Pane
+    class WhiteStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("white_stained_glass_pane", True)
+
+    class OrangeStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("orange_stained_glass_pane", True)
+
+    class MagentaStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("magenta_stained_glass_pane", True)
+
+    class LightBlueStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("light_blue_stained_glass_pane", True)
+
+    class YellowStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("yellow_stained_glass_pane", True)
+
+    class LimeStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("lime_stained_glass_pane", True)
+
+    class PinkStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("pink_stained_glass_pane", True)
+
+    class GrayStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("gray_stained_glass_pane", True)
+
+    class LightGrayStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("light_gray_stained_glass_pane", True)
+
+    class CyanStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("cyan_stained_glass_pane", True)
+
+    class PurpleStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("purple_stained_glass_pane", True)
+
+    class BlueStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("blue_stained_glass_pane", True)
+
+    class BrownStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("brown_stained_glass_pane", True)
+
+    class GreenStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("green_stained_glass_pane", True)
+
+    class RedStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("red_stained_glass_pane", True)
+
+    class BlackStainedGlassPane(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("black_stained_glass_pane", True)
+
+    # Concrete Powder
+    class WhiteConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("white_concrete_powder", True)
+            
+    class OrangeConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("orange_concrete_powder", True)
+
+    class MagentaConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("magenta_concrete_powder", True)
+
+    class LightBlueConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("light_blue_concrete_powder", True)
+            
+    class YellowConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("yellow_concrete_powder", True)
+            
+    class LimeConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("lime_concrete_powder", True)
+            
+    class PinkConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("pink_concrete_powder", True)
+            
+    class GrayConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("gray_concrete_powder", True)
+            
+    class LightGrayConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("light_gray_concrete_powder", True)
+            
+    class CyanConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("cyan_concrete_powder", True)
+            
+    class PurpleConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("purple_concrete_powder", True)
+            
+    class BlueConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("blue_concrete_powder", True)
+            
+    class BrownConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("brown_concrete_powder", True)
+            
+    class GreenConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("green_concrete_powder", True)
+            
+    class RedConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("red_concrete_powder", True)
+            
+    class BlackConcretePowder(_MinecraftBlock):
+        def __init__(self,):
+            super().__init__("black_concrete_powder", True)

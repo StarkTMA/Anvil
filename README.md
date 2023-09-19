@@ -47,5 +47,5 @@ project_name        The name of the project.
 
 ### Links & Resources
 
-* [**Documentation**](https://StarkTMA.github.io/Anvil/) - Official docs for **anvil**.
+* [**Documentation**](https://anvil.starktma.net/) - Official docs for **anvil**.
 * [**Bedrock Learn Portal**](https://learn.microsoft.com/en-gb/minecraft/creator/reference/) - Official Minecraft Bedrock Documentation.

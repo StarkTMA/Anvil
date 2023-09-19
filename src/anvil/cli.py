@@ -55,7 +55,6 @@ def cli() -> None:
     """
     pass
 
-
 @cli.command(help="Initiate an Anvil project")
 @click.argument("namespace")
 @click.argument("project_name")
@@ -87,6 +86,13 @@ def cli() -> None:
     show_default=True,
     help="Adds capabilities support of Physically based rendering.",
 )
+@click.option(
+    "--seed",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Adds support of Random Seed Worlds.",
+)
 def create(
     namespace: str,
     project_name: str,
@@ -94,6 +100,7 @@ def create(
     fullns: bool = False,
     scriptapi: bool = False,
     pbr: bool = False,
+    seed: bool = False,
 ) -> None:
     """
     Create an Anvil project.
@@ -105,9 +112,8 @@ def create(
         fullns (bool, optional): Whether to set the project namespace to the full namespace.project_name. Defaults to False.
         scriptapi (bool, optional): Whether to add dependencies support of ScriptAPI. Defaults to False.
         pbr (bool, optional): Whether to add capabilities support of Physically based rendering. Defaults to False.
+        seed (bool, optional): Whether to add support of Random Seed Worlds. Defaults to False.
 
-    Returns:
-        None
     """
     # Prints header
     _Logger.header()
@@ -174,6 +180,7 @@ def create(
     Config.set("ANVIL", "debug", 0)
     Config.set("ANVIL", "scriptapi", int(scriptapi))
     Config.set("ANVIL", "pbr", int(pbr))
+    Config.set("ANVIL", "seed", int(seed))
     Config.set("ANVIL", "namespace_format", int(fullns))
     Config.set(
         "ANVIL",
@@ -241,6 +248,7 @@ def create(
             [1, 0, 0],
             Config.get("BUILD", "pack_uuid"),
             Config.get("PACKAGE", "company"),
+            seed
         ),
         "",
         "w",

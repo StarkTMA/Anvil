@@ -17,11 +17,11 @@ from datetime import datetime
 from enum import Enum
 from pickle import GLOBAL
 from typing import NewType, Tuple, Type, Union, overload
-import requests
 from uuid import uuid4
 
 import click
 import commentjson as commentjson
+import requests
 from click import style
 from halo import Halo
 from PIL import Image, ImageColor, ImageDraw, ImageEnhance, ImageFont, ImageQt
@@ -132,7 +132,7 @@ DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
 MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
 
 MANIFEST_BUILD: list[int] = [1, 19, 70]  # The build version of the manifest.
-BLOCK_SERVER_VERSION: str = "1.19.80"  # The version of the block server.
+BLOCK_SERVER_VERSION: str = "1.20.20"  # The version of the block server.
 ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
 BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
@@ -141,7 +141,7 @@ ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"  # The version of the animation co
 SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
 GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
 RENDER_CONTROLLER_VERSION: str = "1.10.0"  # The version of the render controller.
-SOUND_DEFINITIONS_VERSION: str = "1.14.0"  # The version of the sound definitions.
+SOUND_DEFINITIONS_VERSION: str = "1.20.20"  # The version of the sound definitions.
 DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
 FOG_VERSION: str = "1.16.100"  # The version of the fog.
 MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
@@ -743,6 +743,51 @@ class EntitySoundEvent(Arguments):
     Whine = "whine"
     Pant = "pant"
 
+
+class CameraPresets(Arguments):
+    FirstPerson = "minecraft:first_person"
+    Free = "minecraft:free"
+    ThirdPerson = "minecraft:third_person"
+    ThirdPersonFront = "minecraft:third_person_front"
+    ExampleFree = "example:example_free"
+    ExamplePlayerEffects = "example:example_player_effects"
+    ExamplePlayerListener = "example:example_player_listener"
+
+
+class CameraEasing(Arguments):
+    Linear = "linear"
+    Spring = "spring"
+    InQuad = "in_quad"
+    OutQuad = "out_quad"
+    InOutQuad = "in_out_quad"
+    InCubic = "in_cubic"
+    OutCubic = "out_cubic"
+    InOutCubic = "in_out_cubic"
+    InQuart = "in_quart"
+    OutQuart = "out_quart"
+    InOutQuart = "in_out_quart"
+    InQuint = "in_quint"
+    OutQuint = "out_quint"
+    InOutQuint = "in_out_quint"
+    InSine = "in_sine"
+    OutSine = "out_sine"
+    InOutSine = "in_out_sine"
+    InExpo = "in_expo"
+    OutExpo = "out_expo"
+    InOutExpo = "in_out_expo"
+    InCirc = "in_circ"
+    OutCirc = "out_circ"
+    InOutCirc = "in_out_circ"
+    InBounce = "in_bounce"
+    OutBounce = "out_bounce"
+    InOutBounce = "in_out_bounce"
+    InBack = "in_back"
+    OutBack = "out_back"
+    InOutBack = "in_out_back"
+    InElastic = "in_elastic"
+    OutElastic = "out_elastic"
+    InOutElastic = "in_out_elastic"
+    
 
 class Selector:
     """
@@ -1527,6 +1572,12 @@ class _Logger:
     def molang_only(self, command):
         return f'{Message.ERROR}: Molang operations only, Error at "{style(command, "green")}".'
 
+    # Error
+    def digits_not_allowed(self, identifier):
+        m = f"Names starting with a digit are not allowed {identifier}."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
+
 
 
 class _JsonSchemes:
@@ -1637,7 +1688,7 @@ class _JsonSchemes:
                 "name": "pack.name",
                 "uuid": uuid1,
                 "version": version,
-                "min_engine_version": MANIFEST_BUILD,
+                "min_engine_version": MANIFEST_BUILD
             },
             "modules": [{"type": "data", "uuid": str(uuid4()), "version": version}],
         }
@@ -1691,7 +1742,7 @@ class _JsonSchemes:
         return m
 
     @staticmethod
-    def manifest_world(version, uuid1, author):
+    def manifest_world(version, uuid1, author, seed):
         return {
             "format_version": 2,
             "header": {
@@ -1699,8 +1750,10 @@ class _JsonSchemes:
                 "description": "pack.description",
                 "version": version,
                 "uuid": uuid1,
+                "platform_locked": False,
                 "lock_template_options": True,
                 "base_game_version": MANIFEST_BUILD,
+                "allow_random_seed": seed
             },
             "modules": [
                 {

@@ -284,16 +284,16 @@ class Query(_molang):
         return self._query(self, "q", "block_face")
 
     @classmethod
-    def BlockProperty(self, property: str):
+    def blockState(self, state: str):
         """Returns the value of the associated block's Block State. 
 
         Args:
-            property (str): The block property to query, no namespace.
+            state (str): The block state to query, no namespace.
 
         Returns:
             Molang(_molang): A Molang Instance
         """
-        return self._query(self, "q", "block_property", f'{ANVIL.NAMESPACE}:{property}')
+        return self._query(self, "q", "block_state", f'{ANVIL.NAMESPACE}:{state}')
 
     @classmethod
     def Property(self, property: str):
@@ -845,16 +845,16 @@ class Query(_molang):
         return self._query(self, "q", "has_biome_tag", tag)
 
     @classmethod
-    def HasBlockProperty(self, property: str):
-        """Returns 1.0 if the associated block has the given block property or 0.0 if not. 
+    def has_block_state(self, state: str):
+        """Returns 1.0 if the associated block has the given block state or 0.0 if not. 
 
         Args:
-            property (str): The block property to query, no namespace.
+            state (str): The block state to query, no namespace.
 
         Returns:
             Molang(_molang): A Molang Instance
         """
-        return self._query(self, "q", "has_block_property", f'{ANVIL.NAMESPACE}:{property}')
+        return self._query(self, "q", "has_block_state", f'{ANVIL.NAMESPACE}:{state}')
 
     @classmethod
     @property

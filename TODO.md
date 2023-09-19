@@ -1,0 +1,22 @@
+# TODO:
+
+- [] Add `can_destroy_in_creative` to item components.
+- [] Add `hover_text_color` to item components.
+- 1.20.30 release:
+    - [] Add `wearable` to item components.
+    - [] Add `digger` to item components.
+    - [] Add `food` to item components.
+    - [] Add `damage` to item components.
+    - [] Add `use_duration` to item components.
+    - [] Add `max_use_duration` to item components.
+    - [] Add `menu_category` to class definitions.
+    - [] Add `stacked_by_data` to item components.
+    - [] Add `glint` to item components.
+    - [] Add `hand_equipped` to item components.
+    - [] Add `allow_offhand` to item components.
+    - [] Add `enchantable` to item components.
+    - [] Add `liquid_clipped` to item components.
+    - [] Add `use_animation` to item components.
+    - [] Add `should_despawn` to item components.
+- 1.20.40 release:
+    - [] Add `chargeable` (use_duration) to item components.
