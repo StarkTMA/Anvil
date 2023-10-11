@@ -2270,16 +2270,15 @@ class Blocks:
         
         @property
         def states(self):
-            return [
-                f'"{k[1:]}":"{v.value}"' 
+            return {
+                k: v
                 for k, v in self.__dict__.items() 
                 if v is not None
                 if (k[1:].removeprefix('namespace').removeprefix('name').removeprefix('is_vanilla')) == k[1:] 
-            ]
+            }
         
-
         def __str__(self):
-            return f'{self.identifier} [{", ".join(self.states)}]'
+            return f'{self.identifier} [{", ".join([f'"{k[1:]}":"{v.value}"' for k, v in self.states])}]'
 
     class AcaciaButton(_MinecraftBlock):
         def __init__(self, button_pressed_bit:'BlockStates.ButtonPressedBit'=None, facing_direction:'BlockStates.FacingDirection'=None):

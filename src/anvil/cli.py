@@ -87,7 +87,7 @@ def cli() -> None:
     help="Adds capabilities support of Physically based rendering.",
 )
 @click.option(
-    "--seed",
+    "--random_seed",
     is_flag=True,
     default=False,
     show_default=True,
@@ -100,7 +100,7 @@ def create(
     fullns: bool = False,
     scriptapi: bool = False,
     pbr: bool = False,
-    seed: bool = False,
+    random_seed: bool = False,
 ) -> None:
     """
     Create an Anvil project.
@@ -112,7 +112,7 @@ def create(
         fullns (bool, optional): Whether to set the project namespace to the full namespace.project_name. Defaults to False.
         scriptapi (bool, optional): Whether to add dependencies support of ScriptAPI. Defaults to False.
         pbr (bool, optional): Whether to add capabilities support of Physically based rendering. Defaults to False.
-        seed (bool, optional): Whether to add support of Random Seed Worlds. Defaults to False.
+        random_seed (bool, optional): Whether to add support of Random Seed Worlds. Defaults to False.
 
     """
     # Prints header
@@ -180,7 +180,7 @@ def create(
     Config.set("ANVIL", "debug", 0)
     Config.set("ANVIL", "scriptapi", int(scriptapi))
     Config.set("ANVIL", "pbr", int(pbr))
-    Config.set("ANVIL", "seed", int(seed))
+    Config.set("ANVIL", "random_seed", int(random_seed))
     Config.set("ANVIL", "namespace_format", int(fullns))
     Config.set(
         "ANVIL",
@@ -248,7 +248,7 @@ def create(
             [1, 0, 0],
             Config.get("BUILD", "pack_uuid"),
             Config.get("PACKAGE", "company"),
-            seed
+            random_seed
         ),
         "",
         "w",

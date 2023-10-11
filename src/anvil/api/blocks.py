@@ -11,7 +11,7 @@ __all__ = ['Block', 'VanillaBlockTexture',
            'BlockFlammable', 'BlockFriction', 'BlockLightDampening', 'BlockLightEmission',
            'BlockLootTable', 'BlockMapColor', 'BlockMaterialInstance', 'BlockGeometry', 'BlockCollisionBox',
            'BlockSelectionBox', 'BlockPlacementFilter', 'BlockTransformation', 'BlockDisplayName', 'BlockCraftingTable',
-           'PlacementDirectionTrait', 'PlacementPositionTrait', 'CardinalDirections', 'FacingDirections', 'BlockFaces', 'VerticalHalf',
+           'PlacementDirectionTrait', 'PlacementPositionTrait', 'CardinalDirectionsTrait', 'FacingDirectionsTrait', 'BlockFacesTrait', 'VerticalHalfTrait',
            ]
 
 # Block Traits
@@ -25,14 +25,14 @@ class PlacementPositionTrait(Arguments):
     VerticalHalf = "minecraft:vertical_half" # Top, Bottom
 
 
-class CardinalDirections(Arguments):
+class CardinalDirectionsTrait(Arguments):
     SOUTH = "south"
     WEST = "west"
     NORTH = "north"
     EAST = "east"
 
 
-class FacingDirections(Arguments):
+class FacingDirectionsTrait(Arguments):
     Up = "up"
     Down = "down"
     SOUTH = "south"
@@ -41,7 +41,7 @@ class FacingDirections(Arguments):
     EAST = "east"
 
 
-class BlockFaces(Arguments):
+class BlockFacesTrait(Arguments):
     Up = "up"
     Down = "down"
     SOUTH = "south"
@@ -50,7 +50,7 @@ class BlockFaces(Arguments):
     EAST = "east"
 
 
-class VerticalHalf(Arguments):
+class VerticalHalfTrait(Arguments):
     TOP = "top"
     BOTTOM = "bottom"
 
@@ -250,12 +250,12 @@ class BlockPlacementFilter(_component):
         super().__init__('placement_filter')
         self._component_add_field('conditions', [])
 
-    def add_condition(self, allowed_faces: list[BlockFaces], block_filter: list[Union[BlockDescriptor, str]]):
+    def add_condition(self, allowed_faces: list[BlockFaces], block_filter: list[BlockDescriptor | str]):
         """Adds a condition to the placement filter.
 
         Args:
             allowed_faces (list[BlockFaces]): The faces of the block that are allowed to be placed on.
-            block_filter (list[Union[BlockDescriptor, str]]): The blocks that are allowed to be placed on.
+            block_filter (list[BlockDescriptor | str]): The blocks that are allowed to be placed on.
         """
         if BlockFaces.Side in allowed_faces:
             allowed_faces.remove(BlockFaces.North)
@@ -406,7 +406,7 @@ class _BlockServerDescription(_MinecraftDescription):
         super().__init__(name, is_vanilla)
         self._traits = _BlockTraits()
         self._description['description'].update({
-            'state': {},
+            'states': {},
             "traits":{},
         })
 
@@ -418,7 +418,7 @@ class _BlockServerDescription(_MinecraftDescription):
             range (float | str |bool): Values this state can have.
 
         """
-        self._description['description']['state'][f'{ANVIL.NAMESPACE}:{name}'] = range
+        self._description['description']['states'][f'{ANVIL.NAMESPACE}:{name}'] = range
         return self
 
     def menu_category(self, category: BlockCategory = BlockCategory.none, group: str = None):
@@ -578,10 +578,26 @@ class Block():
 
     @property
     def queue(self):
-        """Queues the block to be exported.
-        """
-        display_name = self.name.replace("_", " ").title()
-        ANVIL.localize(f'tile.{self._namespace_format}:{self.name}.name', display_name)
+        """Queues the block to be exported."""
+
+        if not "minecraft:display_name" in self.Server._server_block["minecraft:block"]["components"]:
+            display_name = self.name.replace("_", " ").title()
+        elif self.Server._server_block["minecraft:block"]["components"]["minecraft:display_name"].startswith("tile."):
+            display_name = ANVIL._langs[self.Server._server_block["minecraft:block"]["components"]["minecraft:display_name"]]
+        else:
+            display_name = self.Server._server_block["minecraft:block"]["components"]["minecraft:display_name"]
+
+        ANVIL._report.add_report(
+            ReportType.BLOCK, 
+            vanilla = self._is_vanilla, 
+            col0 = display_name, 
+            col1 = self.identifier,
+            col2 = [
+                f"{key}: {[', '.join(value)]}"
+                for key, value in self.Server.description._description["description"]["states"].items()
+            ]
+        )
+
         self.Server.queue
 
 #  TODO: Integrate with the Block class
@@ -594,16 +610,14 @@ class VanillaBlockTexture(_MinecraftDescription):
     @property
     def update_texture(self):
         self._ext = ''
-        try:
-            CheckAvailability(f'{self._identifier}.png', 'texture', os.path.join('assets', 'textures', 'blocks'))
+        if FileExists(os.path.join('assets', 'textures', 'blocks', f'{self._identifier}.png')):
             self._ext = 'png'
-        except:
-            CheckAvailability(f'{self._identifier}.tga', 'texture', os.path.join('assets', 'textures', 'blocks'))
+        if FileExists(os.path.join('assets', 'textures', 'blocks', f'{self._identifier}.tga')):
             self._ext = 'tga'
 
         return self
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = ""):
         CopyFiles(
             os.path.join('assets', 'textures', 'blocks'),
             os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'textures', 'blocks', directory),

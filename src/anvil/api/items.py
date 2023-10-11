@@ -124,6 +124,56 @@ class ItemsInteractButton(_component):
             self._component_set_value(value)
 
 
+class ItemCanDestroyInCreative(_component):
+    component_namespace = "minecraft:can_destroy_in_creative"
+
+    def __init__(self, value: bool) -> None:
+        """Determines if an item will break blocks in Creative Mode while swinging.
+
+        Args:
+            value (bool): If an item will break blocks in Creative Mode while swinging.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative 
+        """
+        super().__init__("can_destroy_in_creative ")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
+
+        self._component_set_value(value)
+
+
+class ItemHoverTextColor(_component):
+    component_namespace = "minecraft:hover_text_color"
+
+    def __init__(self, color: str) -> None:
+        """Determines the color of the item name when hovering over it.
+
+        Args:
+            value (bool): The color of the item name when hovering over it.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hover_text_color
+        """
+        super().__init__("hover_text_color")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
+
+        self._component_set_value(color)
+
+
+class ItemLiquidClipped(_component):
+    component_namespace = "minecraft:can_destroy_in_creative"
+
+    def __init__(self, value: bool) -> None:
+        """Determines if an item will break blocks in Creative Mode while swinging.
+
+        Args:
+            value (bool): If an item will break blocks in Creative Mode while swinging.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative 
+        """
+        super().__init__("can_destroy_in_creative ")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
+
+        self._component_set_value(value)
+
 # Require ITEM_SERVER_VERSION >= 1.20.20
 class ItemWearable(_component):
     component_namespace = "minecraft:wearable"
@@ -710,6 +760,20 @@ class Item:
 
     @property
     def queue(self):
-        if ITEM_SERVER_VERSION <= "1.16.0":
-            self.Client.queue
         self.Server.queue
+        
+        if not "minecraft:display_name" in self.Server._server_item["minecraft:item"]["components"]:
+            display_name = self._name.replace("_", " ").title()
+        elif self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"].startswith("item."):
+            display_name = ANVIL._langs[self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]]
+        else:
+            display_name = self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
+
+        ANVIL._report.add_report(
+            ReportType.ITEM, 
+            vanilla = self._is_vanilla, 
+            col0 = display_name, 
+            col1 = self.identifier,
+        )
+        
+

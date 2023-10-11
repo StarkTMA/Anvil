@@ -48,9 +48,11 @@ This section contains information about Anvil.
 | `debug` | `int(bool)` | Enables or disables generation of additional debugging features. | `0` | None | Yes |
 | `scriptapi` | `int(bool)` | Enables or disables ScriptAPI support. | `0` | None | Yes |
 | `pbr` | `int(bool)` | Enables or disables Physically based rendering support. | `0` | None | Yes |
+| `random_seed` | `int(bool)` | Enables or disables random_seed support. | `0` | None | Yes |
 | `namespace_format` | `int(bool)` | The identifier and file extension formats to be enforced. | `0` | None | Yes |
 | `pascal_project_name` | `str` | Used in generation of Resource and Behavior packs. | `MP` | None | Yes |
 | `last_check` | `str` | The last time Anvil checked `@Mojang/bedrock-sample` for updates. | `datetime` | None | Not advised |
+
 
 ## Example
 

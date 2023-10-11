@@ -1,22 +1,17 @@
 """A collection of useful functions and classes used throughout the program."""
-import csv
 import json as json
 import logging
 import math
 import os
-import random
-import re
 import shutil
 import string
 import sys
 import zipfile
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from configparser import ConfigParser
-from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from pickle import GLOBAL
-from typing import NewType, Tuple, Type, Union, overload
+from typing import NewType, Tuple
 from uuid import uuid4
 
 import click
@@ -24,7 +19,7 @@ import commentjson as commentjson
 import requests
 from click import style
 from halo import Halo
-from PIL import Image, ImageColor, ImageDraw, ImageEnhance, ImageFont, ImageQt
+from PIL import Image, ImageDraw, ImageFont
 
 from .__version__ import __version__
 
@@ -116,7 +111,7 @@ def process_color(color: Color, add_alpha: bool = False) -> str | list[float]:
             raise ValueError("Color tuple must have 3 or 4 elements.")
         if len(color) == 3 and add_alpha:
             color = (*color, 255)
-        return [clamp(c, 0.0, 255.0) for c in color]
+        return (clamp(c, 0.0, 255.0) for c in color)
     elif isinstance(color, str):
         if color[0] != "#" or len(color) not in [7, 9]:
             raise ValueError("Invalid color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'.")
@@ -132,7 +127,7 @@ DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
 MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
 
 MANIFEST_BUILD: list[int] = [1, 19, 70]  # The build version of the manifest.
-BLOCK_SERVER_VERSION: str = "1.20.20"  # The version of the block server.
+BLOCK_SERVER_VERSION: str = "1.20.30"  # The version of the block server.
 ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
 BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
@@ -145,10 +140,11 @@ SOUND_DEFINITIONS_VERSION: str = "1.20.20"  # The version of the sound definitio
 DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
 FOG_VERSION: str = "1.16.100"  # The version of the fog.
 MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
-ITEM_SERVER_VERSION: str = "1.16.0"  # The version of the item server.
+ITEM_SERVER_VERSION: str = "1.20.30"  # The version of the item server.
 MODULE_MINECRAFT_SERVER: str = "1.2.0"  # The version of the Minecraft server module.
 MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"  # The version of the Minecraft UI module.
 GLOBAL_LIGHTING = [1, 0, 0]
+CAMERA_PRESET_VERSION = "1.19.50" # The version of the camera presets.
 
 
 # --------------------------------------------------------------------------
@@ -746,12 +742,9 @@ class EntitySoundEvent(Arguments):
 
 class CameraPresets(Arguments):
     FirstPerson = "minecraft:first_person"
-    Free = "minecraft:free"
     ThirdPerson = "minecraft:third_person"
     ThirdPersonFront = "minecraft:third_person_front"
-    ExampleFree = "example:example_free"
-    ExamplePlayerEffects = "example:example_player_effects"
-    ExamplePlayerListener = "example:example_player_listener"
+    Free = "minecraft:free"
 
 
 class CameraEasing(Arguments):
@@ -787,7 +780,45 @@ class CameraEasing(Arguments):
     InElastic = "in_elastic"
     OutElastic = "out_elastic"
     InOutElastic = "in_out_elastic"
-    
+
+
+class TimeSpec(Arguments):
+    DAY = "day"
+    SUNRISE = "sunrise"
+    NOON = "noon"
+    SUNSET = "sunset"
+    NIGHT = "night"
+    MIDNIGHT = "midnight" 
+
+
+class Biomes(Arguments):
+    BEACH = "beach"
+    DESERT = "desert"
+    EXTREME_HILLS = "extreme_hills"
+    FLAT = "flat"
+    FOREST = "forest"
+    ICE = "ice"
+    JUNGLE = "jungle"
+    MESA = "mesa"
+    MUSHROOM_ISLAND = "mushroom_island"
+    OCEAN = "ocean"
+    PLAIN = "plain"
+    RIVER = "river"
+    SAVANNA = "savanna"
+    STONE_BEACH = "stone_beach"
+    SWAMP = "swamp"
+    TAIGA = "taiga"
+    THE_END = "the_end"
+    THE_NETHER = "the_nether"
+
+
+class ReportType(Arguments):
+    SOUND = "sound"
+    ENTITY = "entity"
+    ATTACHABLE = "attachable"
+    ITEM = "item"
+    BLOCK = "block"
+    PARTICLE = "particle"
 
 class Selector:
     """
@@ -1579,7 +1610,6 @@ class _Logger:
         raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
 
-
 class _JsonSchemes:
     """A class used to read and write to the json_schemes.json file."""
 
@@ -1750,7 +1780,7 @@ class _JsonSchemes:
                 "description": "pack.description",
                 "version": version,
                 "uuid": uuid1,
-                "platform_locked": False,
+                #"platform_locked": False,
                 "lock_template_options": True,
                 "base_game_version": MANIFEST_BUILD,
                 "allow_random_seed": seed
@@ -2069,14 +2099,15 @@ class _JsonSchemes:
             "minecraft:item": {"components": {}},
         }
 
-    # To be removed after HCF items are fully supported
     @staticmethod
-    def client_item():
+    def camera_preset(namespace, name, inherit_from):
         return {
-            "format_version": ITEM_SERVER_VERSION,
-            "minecraft:item": {"components": {}},
+            "format_version": CAMERA_PRESET_VERSION,
+            "minecraft:camera_preset": {
+                "identifier": f"{namespace}:{name}", 
+                "inherit_from": inherit_from, 
+            },
         }
-
     # ---------------------------
     @staticmethod
     def sounds():
@@ -2094,6 +2125,7 @@ class _JsonSchemes:
             "directional_lights": {},
             "pbr": {},
         }
+    
     @staticmethod
     def atmospherics():
         return {

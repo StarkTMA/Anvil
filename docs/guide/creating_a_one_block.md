@@ -202,6 +202,6 @@ Now that we have the entire game Logic, we need to compile it and package it int
 if __name__ == "__main__":
     state_machine()
 
-    ANVIL.compile
-    ANVIL.mcworld
+    ANVIL.compile()
+    ANVIL.mcworld()
 ```

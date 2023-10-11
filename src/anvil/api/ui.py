@@ -264,8 +264,8 @@ class _UIElement:
         return self
 
     def anchor(self, anchor_from: UIAnchor, anchor_to: UIAnchor):
-        self.element["anchor_from"] = anchor_from.value
-        self.element["anchor_to"] = anchor_to.value
+        self.element["anchor_from"] = anchor_from.value if isinstance(anchor_from, UIAnchor) else anchor_from
+        self.element["anchor_to"] = anchor_to.value if isinstance(anchor_to, UIAnchor) else anchor_to
         return self
 
     def text_alignment(self, text_alignment: UITextAlignment):
@@ -358,7 +358,7 @@ class _UIElement:
         return self
 
     def keys(self, key, value):
-        self.element[f"${key}"] = value
+        self.element[f"${key}"] = value.value if isinstance(value, Arguments) else value
         return self
 
     def property_bag(self, **properties):
@@ -512,6 +512,10 @@ class _UIElement:
 
     def shadow(self, shadow: bool = False):
         self.element["shadow"] = shadow
+        return self
+
+    def use_anchored_offset(self, use_anchored_offset: bool = False):
+        self.element["use_anchored_offset"] = use_anchored_offset
         return self
 
     def clips_children(self, clips_children: bool):
@@ -1050,11 +1054,13 @@ class _AnvilHUDScreen(_UIScreen):
         image_zoom_in.from_((zoom_steps[0], zoom_steps[0])).to((zoom_steps[1], zoom_steps[1]))
         image_zoom_in.duration(f"$anvil.image.{name}_in")
         image_zoom_in.next(f"@anvil_animations.{name}_zoom_wait")
+
         image_zoom_wait = self._anvil_animation.add_animation(f"{name}_zoom_wait")
         image_zoom_wait.anim_type(UIAnimType.Wait)
         image_zoom_wait.duration(f"$anvil.image.{name}_wait")
         image_zoom_wait.next(f"@anvil_animations.{name}_zoom_out")
         image_zoom_out = self._anvil_animation.add_animation(f"{name}_zoom_out")
+
         image_zoom_out.anim_type(UIAnimType.Size)
         image_zoom_out.easing(UIEasing.Linear)
         image_zoom_out.from_((zoom_steps[1], zoom_steps[1])).to((zoom_steps[2], zoom_steps[2]))
@@ -1077,6 +1083,7 @@ class _AnvilHUDScreen(_UIScreen):
         image_alpha_out.from_(1)
         image_alpha_out.to(0)
         image_alpha_out.duration(f"$anvil.image.{name}_out")
+        image_alpha_out.destroy_at_end("hud_title_text")
 
         image.size(f"@anvil_animations.{name}_zoom_in" if zoom_in > 0 else ("50%", "50%"))
         image.alpha(f"@anvil_animations.{name}_alpha_in" if zoom_in > 0 else 1)
@@ -1184,6 +1191,7 @@ class _AnvilHUDScreen(_UIScreen):
         background_image.texture("black_element")
         background_image.size(("100%", "100%"))
         background_image.keep_ratio(False)
+        background_image.layer(-1)
 
         return _UICreditsConstructor(self, credits, credits_duration)
 
@@ -1217,6 +1225,7 @@ class _AnvilCommon(_UIScreen):
         self.image_label()
         self.title_actionbar()
         self.scoreboard_retrieve()
+        self.complex_components()
 
     def add_element(self, element_name: str, trigger: UIElementTrigger = UIElementTrigger.NONE, keyword: str = None):
         return super().add_element(element_name, trigger, keyword, False)
@@ -1249,6 +1258,32 @@ class _AnvilCommon(_UIScreen):
         panel = self.add_element("panel")
         panel.type(UIElementType.Panel)
 
+    def complex_components(self):
+        # npc model renderer (for npc screen)
+        npc_renderer = self.add_element("npc_renderer")
+        npc_renderer.type(UIElementType.Panel)
+        npc_renderer.size(("100%", "100%"))
+        npc_renderer.clips_children(True)
+        npc_model = npc_renderer.controls("npc_model")
+        npc_model.type(UIElementType.Custom)
+        npc_model.layer(5)
+        npc_model.renderer("actor_portrait_renderer")
+        npc_model.size(("120%", "120%"))
+        npc_model.enable_scissor_test
+        npc_model.binding.binding_type(UIBindingType.Collection).binding_collection_name("skins_collection").binding_name("#skin_index")
+
+        # player model renderer
+        player_renderer = self.add_element("player_renderer")
+        player_renderer.type(UIElementType.Panel)
+        player_renderer.size(("80%", "80%"))
+        player_renderer.clips_children(True)
+        player_model = player_renderer.controls("player_model")
+        player_model.type(UIElementType.Custom)
+        player_model.renderer("live_player_renderer")
+        player_model.size(("80%", "80%"))
+        player_model.enable_scissor_test
+        player_model.offset((0, "50%y"))
+
     def image_label(self):
         # ---------------------------
         # Image Label
@@ -1258,8 +1293,10 @@ class _AnvilCommon(_UIScreen):
         image_label = self.add_element("image_label@anvil_common.image")
         image_label.size(("100%c + 8px", "100%c + 4px"))
         image_label.keys("text", "PLACEHOLDER TEXT")
+        image_label.keys("localize", False)
         label = image_label.controls("label@anvil_common.label")
         label.text("$text")
+        label.localize("$localize")
 
         # ---------------------------
         # Image Label Binding
@@ -1271,9 +1308,7 @@ class _AnvilCommon(_UIScreen):
         label_binding = image_label_binding.controls("text@anvil_common.label")
         label_binding.text("#text")
         label_binding.layer(1)
-        label_binding.binding.binding_type(UIBindingType.View).source_control_name("$control_name").source_property_name(
-            "#text"
-        ).target_property_name("#text")
+        label_binding.binding.binding_type(UIBindingType.View).source_control_name("$control_name").source_property_name("#text").target_property_name("#text")
 
     def title_actionbar(self):
         title_binding = self.add_element("title_binding")
@@ -1299,15 +1334,9 @@ class _AnvilCommon(_UIScreen):
         scoreboard_score.color("$color")
         scoreboard_score.shadow("$shadow")
         scoreboard_score.layer(1)
-        scoreboard_score.binding.binding_name("#player_score_sidebar").binding_type(UIBindingType.Collection).binding_collection_name(
-            "scoreboard_scores"
-        )
-        scoreboard_score.binding.binding_type(UIBindingType.View).source_property_name(
-            "('§z' + ((#player_score_sidebar * 1) - $score_offset))"
-        ).target_property_name("#text")
-        scoreboard_score.binding.binding_type(UIBindingType.View).source_property_name(
-            "((#player_score_sidebar * 1) - $score_offset)"
-        ).target_property_name("#score")
+        scoreboard_score.binding.binding_name("#player_score_sidebar").binding_type(UIBindingType.Collection).binding_collection_name("scoreboard_scores")
+        scoreboard_score.binding.binding_type(UIBindingType.View).source_property_name("('§z' + ((#player_score_sidebar * 1) - $score_offset))").target_property_name("#text")
+        scoreboard_score.binding.binding_type(UIBindingType.View).source_property_name("((#player_score_sidebar * 1) - $score_offset)").target_property_name("#score")
 
         retrieve_score = self.add_element("retrieve_score@anvil_common.stack_panel")
         retrieve_score.size(("100%c", "100%c"))
@@ -1318,12 +1347,9 @@ class _AnvilCommon(_UIScreen):
         retrieve_score.keys("name", "('score_text_' + $index)")
         retrieve_score.collection_name("scoreboard_scores")
         retrieve_score.controls("$name@scoreboard_score_element").collection_index("$index")
-        retrieve_score.binding.binding_type(UIBindingType.View).source_control_name("$name").source_property_name("#text").target_property_name(
-            "#text"
-        )
-        retrieve_score.binding.binding_type(UIBindingType.View).source_control_name("$name").source_property_name("#score").target_property_name(
-            "#score"
-        )
+        retrieve_score.visible(False)
+        retrieve_score.binding.binding_type(UIBindingType.View).source_control_name("$name").source_property_name("#text").target_property_name("#text")
+        retrieve_score.binding.binding_type(UIBindingType.View).source_control_name("$name").source_property_name("#score").target_property_name("#score")
 
     def queue(self, directory: str = ""):
         return super().queue("anvil")
@@ -1400,8 +1426,9 @@ class UI:
         ).target_property_name("#visible")
         self.hud_screen.hud_actionbar_text.visible(f"$anvil.actionbar_visible.bool")
 
-        source_prop = f"({'(' * len(hides_hud)}#text - " + " - ".join(f"{var})" for var in hides_hud) + " = #text)"
+        source_prop = f"(#hud_visible and ({'(' * len(hides_hud)}#text - " + " - ".join(f"{var})" for var in hides_hud) + " = #text))"
 
+        self.hud_screen.root_panel.binding.binding_name("#hud_visible")
         self.hud_screen.root_panel.binding.binding_name("#hud_title_text_string").binding_name_override("#text")
         self.hud_screen.root_panel.binding.binding_type(UIBindingType.View).source_property_name(source_prop).target_property_name("#visible")
 

@@ -270,6 +270,46 @@ class Filter:
         """
         return self._construct_filter("all_slots_empty", subject, operator, None, value)
 
+    @classmethod
+    def is_biome(
+        self,
+        value: Biomes,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("is_biome", subject, operator, None, value.value)
+
+    @classmethod
+    def is_underwater(
+        self,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("is_underwater", subject, operator, None, value)
+
+    @classmethod
+    def in_water(
+        self,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("in_water", subject, operator, None, value)
+
+    @classmethod
+    def on_ground(
+        self,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("on_ground", subject, operator, None, value)
+
     # Properties
 
     @classmethod
@@ -368,6 +408,7 @@ class _ai_goal(_component):
 
 class AddRider(_component):
     component_namespace = "minecraft:addrider"
+
     def __init__(self, entity_type: Identifier, spawn_event: event = None) -> None:
         """Adds a rider to the entity. Requires `minecraft:rideable.`.
 
@@ -387,6 +428,7 @@ class AddRider(_component):
 
 class AdmireItem(_component):
     component_namespace = "minecraft:admire_item"
+
     def __init__(self, cooldown_after_being_attacked: Seconds, duration: Seconds = 10) -> None:
         """Causes the mob to ignore attackable targets for a given duration.
 
@@ -406,6 +448,7 @@ class AdmireItem(_component):
 
 class Ageable(_component):
     component_namespace = "minecraft:ageable"
+
     def __init__(self, duration: Seconds, event: event) -> None:
         """Adds a timer for the entity to grow up. It can be accelerated by giving the entity the items it likes.
 
@@ -424,6 +467,7 @@ class Ageable(_component):
 
 class CollisionBox(_component):
     component_namespace = "minecraft:collision_box"
+
     def __init__(self, height: float, width: float) -> None:
         """Sets the width and height of the Entity's collision box."""
         super().__init__("collision_box")
@@ -433,6 +477,7 @@ class CollisionBox(_component):
 
 class TypeFamily(_component):
     component_namespace = "minecraft:type_family"
+
     def __init__(self, *family: str) -> None:
         """Defines the families this entity belongs to."""
         super().__init__("type_family")
@@ -441,6 +486,7 @@ class TypeFamily(_component):
 
 class InstantDespawn(_component):
     component_namespace = "minecraft:instant_despawn"
+
     def __init__(self, remove_child_entities: bool = False) -> None:
         """"""
         super().__init__("instant_despawn")
@@ -450,6 +496,7 @@ class InstantDespawn(_component):
 
 class Health(_component):
     component_namespace = "minecraft:health"
+
     def __init__(self, value: int, min: int = None, max: int = None) -> None:
         """Sets the amount of health this mob has."""
         super().__init__("health")
@@ -462,6 +509,7 @@ class Health(_component):
 
 class Physics(_component):
     component_namespace = "minecraft:physics"
+
     def __init__(self, has_collision: bool = True, has_gravity: bool = True) -> None:
         """Defines physics properties of an actor, including if it is affected by gravity or if it collides with objects."""
         super().__init__("physics")
@@ -471,6 +519,7 @@ class Physics(_component):
 
 class KnockbackResistance(_component):
     component_namespace = "minecraft:knockback_resistance"
+
     def __init__(self, value: float) -> None:
         """Determines the amount of knockback resistance that the item has."""
         super().__init__("knockback_resistance")
@@ -479,6 +528,7 @@ class KnockbackResistance(_component):
 
 class Pushable(_component):
     component_namespace = "minecraft:pushable"
+
     def __init__(self, is_pushable: bool = True, is_pushable_by_piston: bool = True) -> None:
         """Defines what can push an entity between other entities and pistons."""
         super().__init__("pushable")
@@ -488,6 +538,7 @@ class Pushable(_component):
 
 class PushThrough(_component):
     component_namespace = "minecraft:push_through"
+
     def __init__(self, value: float) -> None:
         """Sets the distance through which the entity can push through.
 
@@ -505,6 +556,7 @@ class PushThrough(_component):
 
 class Movement(_component):
     component_namespace = "minecraft:movement"
+
     def __init__(self, value: int, max: int = None) -> None:
         """Sets the amount of movement this mob has."""
         super().__init__("movement")
@@ -515,6 +567,7 @@ class Movement(_component):
 
 class TickWorld(_component):
     component_namespace = "minecraft:tick_world"
+
     def __init__(
         self,
         never_despawn: bool = True,
@@ -532,6 +585,7 @@ class TickWorld(_component):
 
 class CustomHitTest(_component):
     component_namespace = "minecraft:custom_hit_test"
+
     def __init__(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]) -> None:
         """List of hitboxes for melee and ranged hits against the entity."""
         super().__init__("custom_hit_test")
@@ -543,6 +597,7 @@ class CustomHitTest(_component):
 
 class CanClimb(_component):
     component_namespace = "minecraft:can_climb"
+
     def __init__(self) -> None:
         """Allows this entity to climb up ladders."""
         super().__init__("can_climb")
@@ -550,6 +605,7 @@ class CanClimb(_component):
 
 class Attack(_component):
     component_namespace = "minecraft:attack"
+
     def __init__(self, damage: int, effect_duration: int = None, effect_name: str = None) -> None:
         """Defines an entity's melee attack and any additional effects on it."""
         super().__init__("attack")
@@ -562,14 +618,17 @@ class Attack(_component):
 
 class JumpStatic(_component):
     component_namespace = "minecraft:jump.static"
-    def __init__(self, jump_power: float) -> None:
+
+    def __init__(self, jump_power: float = 1) -> None:
         """Gives the entity the ability to jump."""
         super().__init__("jump.static")
-        self._component_add_field("jump_power", jump_power)
+        if not jump_power == 1:
+            self._component_add_field("jump_power", jump_power)
 
 
 class HorseJumpStrength(_component):
     component_namespace = "minecraft:horse.jump_strength"
+
     def __init__(self, range_min: float, range_max: float) -> None:
         """Allows this mob to jump higher when being ridden by a player."""
         super().__init__("horse.jump_strength")
@@ -578,6 +637,7 @@ class HorseJumpStrength(_component):
 
 class SpellEffects(_component):
     component_namespace = "minecraft:spell_effects"
+
     def __init__(self) -> None:
         """Defines what mob effects to add and remove to the entity when adding this component."""
         super().__init__("spell_effects")
@@ -615,6 +675,7 @@ class SpellEffects(_component):
 
 class FrictionModifier(_component):
     component_namespace = "minecraft:friction_modifier"
+
     def __init__(self, value: int) -> None:
         """Defines how much friction affects this entity."""
         super().__init__("friction_modifier")
@@ -623,16 +684,21 @@ class FrictionModifier(_component):
 
 class Breathable(_component):
     component_namespace = "minecraft:breathable"
+
     def __init__(
         self,
         breathes_air: bool = True,
+        breathes_water: bool = False,
         total_supply: int = 15,
         suffocate_time: int = -20,
         inhale_time: int = 0,
     ) -> None:
         """Defines what blocks this entity can breathe in and gives them the ability to suffocate."""
         super().__init__("breathable")
-        self._component_add_field("breathes_air", breathes_air)
+        if not breathes_air:
+            self._component_add_field("breathes_air", breathes_air)
+        if breathes_water:
+            self._component_add_field("breathes_water", breathes_water)
         if total_supply != 15:
             self._component_add_field("total_supply", total_supply)
         if suffocate_time != -20:
@@ -692,6 +758,7 @@ class Breathable(_component):
 
 class Variant(_component):
     component_namespace = "minecraft:variant"
+
     def __init__(self, value: int) -> None:
         """Used to differentiate the component group of a variant of an entity from others. (e.g. ocelot, villager)."""
         super().__init__("variant")
@@ -700,6 +767,7 @@ class Variant(_component):
 
 class MarkVariant(_component):
     component_namespace = "minecraft:mark_variant"
+
     def __init__(self, value: int) -> None:
         """Additional variant value. Can be used to further differentiate variants."""
         super().__init__("mark_variant")
@@ -708,6 +776,7 @@ class MarkVariant(_component):
 
 class SkinID(_component):
     component_namespace = "minecraft:skin_id"
+
     def __init__(self, value: int) -> None:
         """Skin ID value. Can be used to differentiate skins, such as base skins for villagers."""
         super().__init__("skin_id")
@@ -716,6 +785,7 @@ class SkinID(_component):
 
 class Scale(_component):
     component_namespace = "minecraft:scale"
+
     def __init__(self, value: int) -> None:
         """Sets the entity's visual size."""
         super().__init__("scale")
@@ -724,6 +794,7 @@ class Scale(_component):
 
 class ScaleByAge(_component):
     component_namespace = "minecraft:scale_by_age"
+
     def __init__(self, start_scale: int, end_scale: int) -> None:
         """Defines the entity's size interpolation based on the entity's age."""
         super().__init__("scale_by_age")
@@ -733,11 +804,12 @@ class ScaleByAge(_component):
 
 class AreaAttack(_component):
     component_namespace = "minecraft:area_attack"
+
     def __init__(self, cause: DamageCause, damage_per_tick: int = 2, damage_range: float = 0.2) -> None:
         """Is a component that does damage to entities that get within range."""
         super().__init__("area_attack")
 
-        self._component_add_field("cause", cause)
+        self._component_add_field("cause", cause.value)
 
         if not damage_per_tick == 2:
             self._component_add_field("damage_per_tick", damage_per_tick)
@@ -751,6 +823,7 @@ class AreaAttack(_component):
 
 class IsStackable(_component):
     component_namespace = "minecraft:is_stackable"
+
     def __init__(self) -> None:
         """Sets that this entity can be stacked."""
         super().__init__("is_stackable")
@@ -758,6 +831,7 @@ class IsStackable(_component):
 
 class IsIllagerCaptain(_component):
     component_namespace = "minecraft:is_illager_captain"
+
     def __init__(self) -> None:
         """Sets that this entity is an illager captain."""
         super().__init__("is_illager_captain")
@@ -765,6 +839,7 @@ class IsIllagerCaptain(_component):
 
 class IsBaby(_component):
     component_namespace = "minecraft:is_baby"
+
     def __init__(self) -> None:
         """Sets that this entity is a baby."""
         super().__init__("is_baby")
@@ -772,6 +847,7 @@ class IsBaby(_component):
 
 class IsIgnited(_component):
     component_namespace = "minecraft:is_ignited"
+
     def __init__(self) -> None:
         """Sets that this entity is currently on fire."""
         super().__init__("is_ignited")
@@ -779,6 +855,7 @@ class IsIgnited(_component):
 
 class IsTamed(_component):
     component_namespace = "minecraft:is_tamed"
+
     def __init__(self) -> None:
         """Sets that this entity is currently tamed."""
         super().__init__("is_tamed")
@@ -786,6 +863,7 @@ class IsTamed(_component):
 
 class IsCharged(_component):
     component_namespace = "minecraft:is_charged"
+
     def __init__(self) -> None:
         """Sets that this entity is charged."""
         super().__init__("is_charged")
@@ -793,6 +871,7 @@ class IsCharged(_component):
 
 class IsStunned(_component):
     component_namespace = "minecraft:is_stunned"
+
     def __init__(self) -> None:
         """Sets that this entity is currently stunned."""
         super().__init__("is_stunned")
@@ -800,6 +879,7 @@ class IsStunned(_component):
 
 class IsSaddled(_component):
     component_namespace = "minecraft:is_saddled"
+
     def __init__(self) -> None:
         """Sets that this entity is currently saddled."""
         super().__init__("is_saddled")
@@ -807,6 +887,7 @@ class IsSaddled(_component):
 
 class CanClimb(_component):
     component_namespace = "minecraft:can_climb"
+
     def __init__(self) -> None:
         """Allows this entity to climb up ladders."""
         super().__init__("can_climb")
@@ -814,6 +895,7 @@ class CanClimb(_component):
 
 class IsSheared(_component):
     component_namespace = "minecraft:is_sheared"
+
     def __init__(self) -> None:
         """Sets that this entity is currently sheared."""
         super().__init__("is_sheared")
@@ -821,6 +903,7 @@ class IsSheared(_component):
 
 class CanFly(_component):
     component_namespace = "minecraft:can_fly"
+
     def __init__(self) -> None:
         """Marks the entity as being able to fly, the pathfinder won't be restricted to paths where a solid block is required underneath it."""
         super().__init__("can_fly")
@@ -828,6 +911,7 @@ class CanFly(_component):
 
 class CanPowerJump(_component):
     component_namespace = "minecraft:can_power_jump"
+
     def __init__(self) -> None:
         """Allows the entity to power jump like the horse does in vanilla."""
         super().__init__("can_power_jump")
@@ -835,6 +919,7 @@ class CanPowerJump(_component):
 
 class IsChested(_component):
     component_namespace = "minecraft:is_chested"
+
     def __init__(self) -> None:
         """Sets that this entity is currently carrying a chest."""
         super().__init__("is_chested")
@@ -842,6 +927,7 @@ class IsChested(_component):
 
 class OutOfControl(_component):
     component_namespace = "minecraft:out_of_control"
+
     def __init__(self) -> None:
         """Defines the entity's 'out of control' state."""
         super().__init__("out_of_control")
@@ -849,6 +935,7 @@ class OutOfControl(_component):
 
 class DamageSensor(_component):
     component_namespace = "minecraft:damage_sensor"
+
     def __init__(self) -> None:
         """Defines what events to call when this entity is damaged by specific entities or items."""
         super().__init__("damage_sensor")
@@ -881,6 +968,7 @@ class DamageSensor(_component):
 
 class FollowRange(_component):
     component_namespace = "minecraft:follow_range"
+
     def __init__(self, value: int, max: int = None) -> None:
         """Defines the range of blocks that a mob will pursue a target."""
         super().__init__("follow_range")
@@ -891,6 +979,7 @@ class FollowRange(_component):
 
 class MovementType(_component):
     component_namespace = "minecraft:movement.basic"
+
     def _basic(self, type: str, max_turn: float = 30) -> None:
         super()._component_reset_namespace(f"movement.{type}")
         if not max_turn == 30:
@@ -977,6 +1066,7 @@ class MovementType(_component):
 
 class NavigationType(_component):
     component_namespace = "minecraft:navigation.basic"
+
     def _basic(
         self,
         type: str,
@@ -1386,6 +1476,7 @@ class NavigationType(_component):
 
 class EnvironmentSensor(_component):
     component_namespace = "minecraft:environment_sensor"
+
     def __init__(self) -> None:
         """Creates a trigger based on environment conditions."""
         super().__init__("environment_sensor")
@@ -1398,6 +1489,7 @@ class EnvironmentSensor(_component):
 
 class PreferredPath(_component):
     component_namespace = "minecraft:preferred_path"
+
     def __init__(self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks: int = 3) -> None:
         """Specifies costing information for mobs that prefer to walk on preferred paths."""
         super().__init__("preferred_path")
@@ -1425,6 +1517,7 @@ class PreferredPath(_component):
 
 class TargetNearbySensor(_component):
     component_namespace = "minecraft:target_nearby_sensor"
+
     def __init__(self, inside_range: int = 1, outside_range: int = 5, must_see: bool = False) -> None:
         """Defines the entity's range within which it can see or sense other entities to target them."""
         super().__init__("target_nearby_sensor")
@@ -1447,6 +1540,7 @@ class TargetNearbySensor(_component):
 
 class NearestAttackableTarget(_ai_goal):
     component_namespace = "minecraft:behavior.nearest_attackable_target"
+
     def __init__(
         self,
         attack_interval: int = 0,
@@ -1527,6 +1621,7 @@ class NearestAttackableTarget(_ai_goal):
 
 class NearestPrioritizedAttackableTarget(_ai_goal):
     component_namespace = "minecraft:behavior.nearest_prioritized_attackable_target"
+
     def __init__(
         self,
         attack_interval: int = 0,
@@ -1607,6 +1702,7 @@ class NearestPrioritizedAttackableTarget(_ai_goal):
 
 class RandomLookAround(_ai_goal):
     component_namespace = "minecraft:behavior.random_look_around"
+
     def __init__(
         self,
         probability: float = 0.2,
@@ -1630,6 +1726,7 @@ class RandomLookAround(_ai_goal):
 
 class Timer(_ai_goal):
     component_namespace = "minecraft:timer"
+
     def __init__(
         self,
         event: event,
@@ -1709,6 +1806,7 @@ class Rideable(_component):
 
 class Projectile(_component):
     component_namespace = "minecraft:projectile"
+
     def __init__(
         self,
         anchor: int = 0,
@@ -1878,7 +1976,9 @@ class Projectile(_component):
         if destroy_on_hit:
             self[self.component_namespace]["on_hit"]["impact_damage"]["destroy_on_hit"] = destroy_on_hit
         if not destroy_on_hit_requires_damage:
-            self[self.component_namespace]["on_hit"]["impact_damage"]["destroy_on_hit_requires_damage"] = destroy_on_hit_requires_damage
+            self[self.component_namespace]["on_hit"]["impact_damage"][
+                "destroy_on_hit_requires_damage"
+            ] = destroy_on_hit_requires_damage
         if not knockback:
             self[self.component_namespace]["on_hit"]["impact_damage"]["knockback"] = knockback
         if max_critical_damage != 5:
@@ -1890,7 +1990,9 @@ class Projectile(_component):
         if semi_random_diff_damage:
             self[self.component_namespace]["on_hit"]["impact_damage"]["semi_random_diff_damage"] = semi_random_diff_damage
         if set_last_hurt_requires_damage:
-            self[self.component_namespace]["on_hit"]["impact_damage"]["set_last_hurt_requires_damage"] = set_last_hurt_requires_damage
+            self[self.component_namespace]["on_hit"]["impact_damage"][
+                "set_last_hurt_requires_damage"
+            ] = set_last_hurt_requires_damage
 
         return self
 
@@ -2140,6 +2242,7 @@ class Projectile(_component):
 
 class Explode(_component):
     component_namespace = "minecraft:explode"
+
     def __init__(
         self,
         breaks_blocks: bool = True,
@@ -2174,6 +2277,7 @@ class Explode(_component):
 
 class KnockbackRoar(_ai_goal):
     component_namespace = "minecraft:behavior.knockback_roar"
+
     def __init__(
         self,
         attack_time: float = 0.5,
@@ -2218,6 +2322,7 @@ class KnockbackRoar(_ai_goal):
 
 class MobEffect(_component):
     component_namespace = "minecraft:mob_effect"
+
     def __init__(
         self,
         mob_effect: Effects,
@@ -2241,6 +2346,7 @@ class MobEffect(_component):
 
 class SpawnEntity(_component):
     component_namespace = "minecraft:spawn_entity"
+
     def __init__(self) -> None:
         """Adds a timer after which this entity will spawn another entity or item (similar to vanilla's chicken's egg-laying behavior)."""
         super().__init__("spawn_entity")
@@ -2333,6 +2439,7 @@ class SpawnEntity(_component):
 
 class Loot(_component):
     component_namespace = "minecraft:loot"
+
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__("loot")
@@ -2341,6 +2448,7 @@ class Loot(_component):
 
 class Float(_ai_goal):
     component_namespace = "minecraft:behavior.float"
+
     def __init__(self, sink_with_passengers: bool = False) -> None:
         """Allows an entity to float on water. Passengers will be kicked out the moment the mob's head goes underwater, which may not happen for tall mobs."""
         super().__init__("behavior.float")
@@ -2350,6 +2458,7 @@ class Float(_ai_goal):
 
 class RandomStroll(_ai_goal):
     component_namespace = "minecraft:behavior.random_stroll"
+
     def __init__(
         self,
         interval: int = 120,
@@ -2371,6 +2480,7 @@ class RandomStroll(_ai_goal):
 
 class LookAtPlayer(_ai_goal):
     component_namespace = "minecraft:behavior.look_at_player"
+
     def __init__(
         self,
         angle_of_view_horizontal: int = 360,
@@ -2398,6 +2508,7 @@ class LookAtPlayer(_ai_goal):
 
 class RandomLookAround(_ai_goal):
     component_namespace = "minecraft:behavior.random_look_around"
+
     def __init__(
         self,
         angle_of_view_horizontal: int = 360,
@@ -2425,6 +2536,7 @@ class RandomLookAround(_ai_goal):
 
 class HurtByTarget(_ai_goal):
     component_namespace = "minecraft:behavior.hurt_by_target"
+
     def __init__(
         self,
         alert_same_type: bool = False,
@@ -2462,6 +2574,7 @@ class HurtByTarget(_ai_goal):
 
 class MeleeAttack(_ai_goal):
     component_namespace = "minecraft:behavior.melee_attack"
+
     def __init__(
         self,
         attack_once: bool = False,
@@ -2482,7 +2595,7 @@ class MeleeAttack(_ai_goal):
         track_target: bool = False,
         x_max_rotation: int = 30,
         y_max_head_rotation: int = 30,
-        can_spread_on_fire: bool = False
+        can_spread_on_fire: bool = False,
     ) -> None:
         """Compels entities to make close combat melee attacks."""
         super().__init__("behavior.melee_attack")
@@ -2540,6 +2653,7 @@ class MeleeAttack(_ai_goal):
 
 class RangedAttack(_ai_goal):
     component_namespace = "minecraft:behavior.ranged_attack"
+
     def __init__(
         self,
         attack_interval: int = 0,
@@ -2598,6 +2712,7 @@ class RangedAttack(_ai_goal):
 
 class Shooter(_component):
     component_namespace = "minecraft:shooter"
+
     def __init__(
         self,
         identifier: Identifier,
@@ -2618,6 +2733,7 @@ class Shooter(_component):
 
 class SummonEntity(_ai_goal):
     component_namespace = "minecraft:behavior.summon_entity"
+
     def __init__(self) -> None:
         """compels an entity to attack other entities by summoning new entities."""
         super().__init__("behavior.summon_entity")
@@ -2685,6 +2801,7 @@ class SummonEntity(_ai_goal):
 
 class Boss(_component):
     component_namespace = "minecraft:boss"
+
     def __init__(self, name: str, hud_range: int = 55, should_darken_sky: bool = False) -> None:
         """Defines the current state of the boss for updating the boss HUD."""
         super().__init__("boss")
@@ -2697,6 +2814,7 @@ class Boss(_component):
 
 class DelayedAttack(_ai_goal):
     component_namespace = "minecraft:behavior.delayed_attack"
+
     def __init__(
         self,
         attack_duration: float = 0.75,
@@ -2714,12 +2832,12 @@ class DelayedAttack(_ai_goal):
         random_stop_interval: int = 0,
         reach_multiplier: int = 2,
         require_complete_path: bool = False,
-        #set_persistent: bool = False,
+        # set_persistent: bool = False,
         speed_multiplier: float = 1,
         track_target: bool = False,
         x_max_rotation: int = 30,
         y_max_head_rotation: int = 30,
-        can_spread_on_fire: bool = False
+        can_spread_on_fire: bool = False,
     ) -> None:
         """Compels an entity to attack while also delaying the damage dealt until a specific time in the attack animation.
 
@@ -2778,7 +2896,7 @@ class DelayedAttack(_ai_goal):
             self._component_add_field("reach_multiplier", reach_multiplier)
         if require_complete_path:
             self._component_add_field("require_complete_path", require_complete_path)
-        #if set_persistent:
+        # if set_persistent:
         #    self._component_add_field("set_persistent", set_persistent)
         if speed_multiplier != 1:
             self._component_add_field("speed_multiplier", speed_multiplier)
@@ -2806,6 +2924,7 @@ class DelayedAttack(_ai_goal):
 
 class MoveToBlock(_ai_goal):
     component_namespace = "minecraft:behavior.move_to_block"
+
     def __init__(
         self,
         target_blocks: list[Blocks._MinecraftBlock | str],
@@ -2863,6 +2982,7 @@ class MoveToBlock(_ai_goal):
 
 class InsideBlockNotifier(_component):
     component_namespace = "minecraft:inside_block_notifier"
+
     def __init__(self) -> None:
         """Verifies whether the entity is inside any of the listed blocks."""
         super().__init__("inside_block_notifier")
@@ -2884,6 +3004,7 @@ class InsideBlockNotifier(_component):
                         if isinstance(block_name, str)
                         else ANVIL.Logger.unsupported_block_type(block_name)
                     ],
+                    "states": block_name.states if isinstance(block_name, Blocks._MinecraftBlock) else {},
                 },
                 "entered_block_event": entered_block_event,
                 "exited_block_event": exited_block_event,
@@ -2894,6 +3015,7 @@ class InsideBlockNotifier(_component):
 
 class Transformation(_component):
     component_namespace = "minecraft:transformation"
+
     def __init__(
         self,
         into: Identifier,
@@ -2969,6 +3091,7 @@ class Transformation(_component):
 
 class NPC(_component):
     component_namespace = "minecraft:npc"
+
     def __init__(self, skin_list: list[int]) -> None:
         """Allows an entity to be an NPC."""
         super().__init__("npc")
@@ -2991,6 +3114,7 @@ class NPC(_component):
 
 class Equipment(_component):
     component_namespace = "minecraft:equipment"
+
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__("equipment")
@@ -2999,6 +3123,7 @@ class Equipment(_component):
 
 class _EquipItem(_component):
     component_namespace = "minecraft:equip_item"
+
     def __init__(self) -> None:
         """Compels the entity to equip desired equipment."""
         super().__init__("equip_item")
@@ -3006,6 +3131,7 @@ class _EquipItem(_component):
 
 class EquipItem(_ai_goal):
     component_namespace = "minecraft:behavior.equip_item"
+
     def __init__(self) -> None:
         """Compels an entity to equip an item."""
         super().__init__("behavior.equip_item")
@@ -3013,6 +3139,7 @@ class EquipItem(_ai_goal):
 
 class FireImmune(_component):
     component_namespace = "minecraft:fire_immune"
+
     def __init__(self) -> None:
         """Allows an entity to take 0 damage from fire."""
         super().__init__("fire_immune")
@@ -3020,6 +3147,7 @@ class FireImmune(_component):
 
 class SendEvent(_ai_goal):
     component_namespace = "minecraft:behavior.send_event"
+
     def __init__(self) -> None:
         """Compels an entity to send an event to another entity."""
         super().__init__("behavior.send_event")
@@ -3029,7 +3157,7 @@ class SendEvent(_ai_goal):
         self,
         cast_duration: Seconds,
         cooldown_time: Seconds,
-        #look_at_target: bool = True,
+        # look_at_target: bool = True,
         min_activation_range: float = 0.0,
         max_activation_range: float = 16.0,
         particle_color: str = None,
@@ -3045,7 +3173,7 @@ class SendEvent(_ai_goal):
             "weight": weight,
             "sequence": [],
         }
-        #if not look_at_target:
+        # if not look_at_target:
         #    choice["look_at_target"] = look_at_target
         if not particle_color is None:
             choice["particle_color"] = particle_color
@@ -3072,6 +3200,7 @@ class SendEvent(_ai_goal):
 
 class MoveTowardsTarget(_ai_goal):
     component_namespace = "minecraft:behavior.move_towards_target"
+
     def __init__(self, within_radius: float = 0.0, speed_multiplier: float = 1.0) -> None:
         """Compels an entity to move towards a target.
 
@@ -3091,7 +3220,17 @@ class MoveTowardsTarget(_ai_goal):
 
 class EntitySensor(_component):
     component_namespace = "minecraft:entity_sensor"
-    def __init__(self, event: str, event_filters: Filter, maximum_count: int = -1, minimum_count: int = -1, relative_range: bool = True, require_all: bool = False, sensor_range: int = 10) -> None:
+
+    def __init__(
+        self,
+        event: str,
+        event_filters: Filter,
+        maximum_count: int = -1,
+        minimum_count: int = -1,
+        relative_range: bool = True,
+        require_all: bool = False,
+        sensor_range: int = 10,
+    ) -> None:
         """A component that initiates an event when a set of conditions are met by other entities within the defined range.
 
         Args:
@@ -3122,6 +3261,7 @@ class EntitySensor(_component):
 
 class AmbientSoundInterval(_component):
     component_namespace = "minecraft:ambient_sound_interval"
+
     def __init__(self, event_name: str, range: float = 16, value: float = 8) -> None:
         """A component that will set the entity's delay between playing its ambient sound.
 
@@ -3140,11 +3280,243 @@ class AmbientSoundInterval(_component):
         if value != 8:
             self._component_add_field("value", value)
 
+
+class RandomSitting(_ai_goal):
+    component_namespace = "minecraft:behavior.random_sitting"
+
+    def __init__(
+        self, cooldown_time: float = 0, min_sit_time: float = 10, start_chance: float = 0.1, stop_chance: float = 0.3
+    ) -> None:
+        """Compels an entity to stop and sit for a random duration of time.
+
+        Args:
+            cooldown_time (float, optional): Time in seconds the entity has to wait before using the goal again. Defaults to 0.
+            min_sit_time (float, optional): The minimum amount of time in seconds before the entity can stand back up. Defaults to 10.
+            start_chance (float, optional): This is the chance that the entity will start this goal, from 0 to 1. Defaults to 0.1.
+            stop_chance (float, optional): This is the chance that the entity will stop this goal, from 0 to 1. Defaults to 0.3.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_sitting
+        """
+        super().__init__("behavior.random_sitting")
+
+        if cooldown_time != 0:
+            self._component_add_field("cooldown_time", cooldown_time)
+        if min_sit_time != 10:
+            self._component_add_field("min_sit_time", min_sit_time)
+        if start_chance != 0.1:
+            self._component_add_field("start_chance", clamp(start_chance, 0, 1))
+        if stop_chance != 0.3:
+            self._component_add_field("stop_chance", clamp(stop_chance, 0, 1))
+
+
+class StayWhileSitting(_ai_goal):
+    component_namespace = "minecraft:behavior.stay_while_sitting"
+
+    def __init__(self) -> None:
+        """Compels an entity to stay in place while sitting.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stay_while_sitting
+        """
+        super().__init__("behavior.stay_while_sitting")
+
+
+class UnderwaterMovement(_component):
+    component_namespace = "minecraft:underwater_movement"
+
+    def __init__(self, value: int, max: int = None) -> None:
+        """Sets the amount of underwater movement this mob has."""
+        super().__init__("underwater_movement")
+        self._component_add_field("value", value)
+        if not max is None:
+            self._component_add_field("max", max)
+
+
+class RandomSwim(_ai_goal):
+    component_namespace = "minecraft:behavior.random_swim"
+
+    def __init__(
+        self,
+        avoid_surface: bool = True,
+        interval: int = 120,
+        speed_multiplier: float = 1,
+        xz_dist: int = 10,
+        y_dist: int = 7,
+    ) -> None:
+        """Compels an entity to swim in a random point in water.
+
+        Args:
+            avoid_surface (bool, optional): If true, the entity will avoid surface water blocks by swimming below them. Defaults to True.
+            interval (int, optional): A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal. Defaults to 120.
+            speed_multiplier (float, optional): Movement speed multiplier of the entity when using this AI Goal. Defaults to 1.
+            xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
+            y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim
+        """
+
+        super().__init__("behavior.random_swim")
+
+        if not avoid_surface:
+            self._component_add_field("avoid_surface", avoid_surface)
+        if interval != 120:
+            self._component_add_field("interval", interval)
+        if speed_multiplier != 1:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+        if xz_dist != 10:
+            self._component_add_field("xz_dist", max(1, xz_dist))
+        if y_dist != 7:
+            self._component_add_field("y_dist", max(1, y_dist))
+
+
+class RandomBreach(_ai_goal):
+    component_namespace = "minecraft:behavior.random_breach"
+
+    def __init__(
+        self,
+        cooldown_time: float = 0,
+        interval: int = 120,
+        speed_multiplier: float = 1,
+        xz_dist: int = 10,
+        y_dist: int = 7,
+    ) -> None:
+        """Compels an entity to swim in a random point in water.
+
+        Args:
+            cooldown_time (float, optional): Time in seconds the mob has to wait before using the goal again. Defaults to 0.
+            interval (int, optional): A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal. Defaults to 120.
+            speed_multiplier (float, optional): Movement speed multiplier of the entity when using this AI Goal. Defaults to 1.
+            xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
+            y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_breach
+        """
+
+        super().__init__("behavior.random_breach")
+
+        if not cooldown_time:
+            self._component_add_field("avoid_surface", cooldown_time)
+        if interval != 120:
+            self._component_add_field("interval", interval)
+        if speed_multiplier != 1:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+        if xz_dist != 10:
+            self._component_add_field("xz_dist", max(1, xz_dist))
+        if y_dist != 7:
+            self._component_add_field("y_dist", max(1, y_dist))
+
+
+class MoveToWater(_ai_goal):
+    component_namespace = "minecraft:behavior.move_to_water"
+
+    def __init__(
+        self,
+        goal_radius: float = 0.5,
+        search_count: int = 10,
+        search_height: int = 1,
+        search_range: int = 0,
+        speed_multiplier: float = 1,
+    ) -> None:
+        """Compels an entity to move to water when on land.
+
+        Args:
+            goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Defaults to 0.5.
+            search_count (int, optional): The number of blocks each tick that the mob will check within its search range and height for a valid block to move to. A value of 0 will have the mob check every block within range in one tick. Defaults to 10.
+            search_height (int, optional): Height in blocks the mob will look for water to move towards. Defaults to 1.
+            search_range (int, optional): The distance in blocks it will look for water to move towards. Defaults to 0.
+            speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_water
+        """
+        super().__init__("behavior.move_to_water")
+
+        if goal_radius != 0.5:
+            self._component_add_field("goal_radius", goal_radius)
+        if search_count != 10:
+            self._component_add_field("search_count", search_count)
+        if search_height != 1:
+            self._component_add_field("search_height", search_height)
+        if search_range != 0:
+            self._component_add_field("search_range", search_range)
+        if speed_multiplier != 1:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+
+
+class MoveToLand(_ai_goal):
+    component_namespace = "minecraft:behavior.move_to_land"
+
+    def __init__(
+        self,
+        goal_radius: float = 0.5,
+        search_count: int = 10,
+        search_height: int = 1,
+        search_range: int = 0,
+        speed_multiplier: float = 1,
+    ) -> None:
+        """Compels an entity to move to land when on land.
+
+        Args:
+            goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Defaults to 0.5.
+            search_count (int, optional): The number of blocks each tick that the mob will check within its search range and height for a valid block to move to. A value of 0 will have the mob check every block within range in one tick. Defaults to 10.
+            search_height (int, optional): Height in blocks the mob will look for land to move towards. Defaults to 1.
+            search_range (int, optional): The distance in blocks it will look for land to move towards. Defaults to 0.
+            speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_land
+        """
+        super().__init__("behavior.move_to_land")
+
+        if goal_radius != 0.5:
+            self._component_add_field("goal_radius", goal_radius)
+        if search_count != 10:
+            self._component_add_field("search_count", search_count)
+        if search_height != 1:
+            self._component_add_field("search_height", search_height)
+        if search_range != 0:
+            self._component_add_field("search_range", search_range)
+        if speed_multiplier != 1:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+
+
+class MoveToLava(_ai_goal):
+    component_namespace = "minecraft:behavior.move_to_lava"
+
+    def __init__(
+        self,
+        goal_radius: float = 0.5,
+        search_count: int = 10,
+        search_height: int = 1,
+        search_range: int = 0,
+        speed_multiplier: float = 1,
+    ) -> None:
+        """Compels an entity to move to lava when on lava.
+
+        Args:
+            goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Defaults to 0.5.
+            search_count (int, optional): The number of blocks each tick that the mob will check within its search range and height for a valid block to move to. A value of 0 will have the mob check every block within range in one tick. Defaults to 10.
+            search_height (int, optional): Height in blocks the mob will look for lava to move towards. Defaults to 1.
+            search_range (int, optional): The distance in blocks it will look for lava to move towards. Defaults to 0.
+            speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_lava
+        """
+        super().__init__("behavior.move_to_lava")
+
+        if goal_radius != 0.5:
+            self._component_add_field("goal_radius", goal_radius)
+        if search_count != 10:
+            self._component_add_field("search_count", search_count)
+        if search_height != 1:
+            self._component_add_field("search_height", search_height)
+        if search_range != 0:
+            self._component_add_field("search_range", search_range)
+        if speed_multiplier != 1:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+
+
 # Unfinished
-
-
 class ConditionalBandwidthOptimization(_component):
     component_namespace = "minecraft:conditional_bandwidth_optimization"
+
     def __init__(self) -> None:
         """Defines the Conditional Spatial Update Bandwidth Optimizations of this entity."""
         super().__init__("conditional_bandwidth_optimization")

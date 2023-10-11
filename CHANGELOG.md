@@ -2,6 +2,39 @@
 
 ---
 
+Version 0.5.3
+=============
+  [Anvil]
+  -------
+  - Renamed `seed` cli option to `random_seed`.
+  - Updated `ITEM_SERVER_VERSION` to `[1.20.30]`.
+  - Added a new `generate_technical_notes()` method to `Anvil` class, the method will generate a pdf file containing a list of every entity, block, attachable, item, particle and sounds that were exported.
+  - `compile()`, `mcworld()`, `mcaddon()` are now proper methods instead of properties.
+  - Removed the `scipy` requirement from `setup.cfg`.
+  - Removed and/or replaced rarely used library imports.
+  - Added a new `CameraPreset()` class that creates new camera presets.
+  
+  [Blocks]
+  --------
+  - Renamed `FacingDirections`, `BlockFaces` and `VerticalHalf` to `FacingDirectionsTrait`, `BlockFacesTrait` and `VerticalHalfTrait`.
+  - Renames properties to states in Block Description.
+
+  [Commands]
+  - Fixed an issue with `Camera()` command where the keyword `ease` was not parsed.
+  - Added `Time()`, `Stopsound()` commands.
+  
+  [Components]
+  - Added `is_biome()`, `is_underwater()`, `on_ground()`, `in_water()` filters.
+  - Added `Biomes` enum.
+  - Added `RandomSitting()`, `StayWhileSitting()`, `UnderwaterMovement()`, `RandomSwim()`, `RandomBreach()`, `MoveToWater()`, `MoveToLand()`, `MoveToLava()` components.
+  
+  [Items]
+  - Added `ItemCanDestroyInCreative()` and `ItemHoverTextColor()` components.
+  
+  [Tools]
+  - `StateMachine()`:
+    - `active_player` counter now runs all the time regardless of the max player count.
+
 Version 0.5.2
 =============
   [Anvil]

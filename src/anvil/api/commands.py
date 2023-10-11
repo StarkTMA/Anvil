@@ -4,7 +4,7 @@ from anvil.core import ANVIL, RawTextConstructor
 from anvil.lib import *
 
 
-class Command:
+class Command():
     def __init__(self, prefix: str, *commands) -> None:
         self._prefix = prefix
         self._components = {}
@@ -371,16 +371,19 @@ class Gamerule(Command):
         super().__init__("gamerule")
 
     def SendCommandFeedback(self, value: bool = True):
-        super()._new_cmd("sendcommandfeedback", value)
+        return super()._new_cmd("sendcommandfeedback", value)
 
     def CommandBlockOutput(self, value: bool = True):
-        super()._new_cmd("commandblockoutput", value)
+        return super()._new_cmd("commandblockoutput", value)
 
     def ShowTags(self, value: bool = True):
-        super()._new_cmd("showtags", value)
+        return super()._new_cmd("showtags", value)
 
     def PlayerSleepingPercentage(self, percentage: int = 0):
-        super()._new_cmd("sendcommandfeedback", clamp(percentage, 0, 100))
+        return super()._new_cmd("sendcommandfeedback", clamp(percentage, 0, 100))
+
+    def dodaylightcycle(self, value: bool = True):
+        return super()._new_cmd("dodaylightcycle", value)
 
 
 class Fog(Command):
@@ -388,15 +391,15 @@ class Fog(Command):
         super().__init__("fog")
 
     def Push(self, target: str, fog_identifie: str, name: str):
-        super()._new_cmd(target, "push", fog_identifie, name)
+        super()._new_cmd(target, "push", fog_identifie, f'"{name}"')
         return self
 
     def Pop(self, target: str, name: str):
-        super()._new_cmd(target, "pop", name)
+        super()._new_cmd(target, "pop", f'"{name}"')
         return self
 
     def Remove(self, target: str, name: str):
-        super()._new_cmd(target, "remove", name)
+        super()._new_cmd(target, "remove", f'"{name}"')
         return self
 
 
@@ -441,13 +444,18 @@ class Gamemode(Command):
 
 
 class Teleport(Command):
-    def __init__(self, target, destination: coordinates, rotation: rotation = ("~", "~")) -> None:
+    def __init__(self, target, destination: coordinates | Target | Selector, rotation: rotation = ("~", "~")) -> None:
         super().__init__(
             "teleport",
-            target,
-            " ".join(map(str, destination)),
-            " ".join(map(str, (normalize_180(round(rotation[0], 2)), round(rotation[1], 2)))) if not rotation == ("~", "~") else "",
+            target
         )
+        if isinstance(destination, tuple):
+            self._append_cmd(
+                " ".join(map(str, destination)),
+                " ".join(map(str, (normalize_180(round(rotation[0], 2)), round(rotation[1], 2)))) if not rotation == ("~", "~") else "",
+            )
+        elif isinstance(destination, Target | Selector):
+            self._append_cmd(destination)
 
     def Facing(self, poistion: coordinates):
         super()._append_cmd("facing", " ".join(map(str, poistion)))
@@ -488,7 +496,7 @@ class ReplaceItem(ItemComponents):
 
 class Damage(ItemComponents):
     def __init__(self, target: Selector | Target | str, amount: int, cause: DamageCause) -> None:
-        super().__init__("damage", target, amount, cause)
+        super().__init__("damage", target, amount, cause.value)
 
     def damager(self, damager: Selector | Target) -> None:
         self._append_cmd("entity", damager)
@@ -789,7 +797,7 @@ class Camera(Command):
                 ANVIL.Logger.multiple_rotations()
 
             if self.argument["easing"] != None:
-                self._append_cmd(self.argument["easing"], self.argument["easing_time"])
+                self._append_cmd("ease", self.argument["easing_time"], self.argument["easing"])
             
             if self.argument["position"] != None:
                 self._append_cmd("pos", *self.argument["position"])
@@ -841,7 +849,6 @@ class Camera(Command):
         
     def __init__(self, target: Target | Selector) -> None:
         """Transforms the camera for the selected player to a different perspective."""
-        super().__init__("camera", target)
         self._target = target
 
     def set(self, preset: CameraPresets):
@@ -854,3 +861,46 @@ class Camera(Command):
     @property
     def fade(self):
         return self._CameraFade(self._target)
+
+
+class Time(Command):
+    def __init__(self) -> None:
+        """Changes the world's game time.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/time
+        """
+        super().__init__("time")
+    
+    def add(self, amount: int):
+        """Add an integer amount of time in-game.
+
+        Args:
+            amount (int): The amount of time to add.
+        """
+        self._append_cmd("add", amount)
+        return self
+    
+    def set(self, amount: TimeSpec | int):
+        """Set the time in-game.
+
+        Args:
+            amount (TimeSpec | int): The time to set.
+        """
+        self._append_cmd("set", amount)
+        return self
+
+
+class Stopsound(Command):
+    def __init__(self, target: Target, sound: str = "") -> None:
+        """Stop a sound for a player with an optional sound string .
+
+        Args:
+            target (Target): A player name string or Target to identify the player.
+            sound (str, optional): A string from the sound enum of the sound to stop. Defaults to "".
+        
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/stopsound
+        """
+        super().__init__("stopsound", target)    
+
+        if not sound == "":
+            self._append_cmd(f'"{sound}"')

@@ -446,7 +446,7 @@ class _ActorClientDescription(_ActorDescription):
             RaiseError(
                 MISSING_RENDER_CONTROLLER(f"{self._namespace_format}:{self._name}")
             )
-
+        directory = directory if not directory is None else ""
         if self._added_geos > 0:
             CopyFiles(
                 os.path.join("assets", "models", self._type),
@@ -1124,16 +1124,18 @@ class _BP_ControllerState:
 
         """
         for command in commands:
-            if str(command).startswith(Target.S.value):
-                self._controller_state[self._state_name]["on_entry"].append(command)
-            elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                self._controller_state[self._state_name]["on_entry"].append(
-                    f"{command};"
-                )
-            else:
+            if isinstance(command, str):
+                if str(command).startswith(Target.S.value):
+                    self._controller_state[self._state_name]["on_entry"].append(command)
+                if any(str(command).startswith(v) for v in MOLANG_PREFIXES):
+                    self._controller_state[self._state_name]["on_entry"].append(
+                        f"{command};"
+                    )
+            else :
                 self._controller_state[self._state_name]["on_entry"].append(
                     f"/{command}"
                 )
+
         return self
 
     def on_exit(self, *commands: str):
@@ -1723,7 +1725,7 @@ class _SpawnRuleDescription(_MinecraftDescription):
             Spawn Rule
 
         """
-        self._description["description"]["population_control"] = population
+        self._description["description"]["population_control"] = population.value
         return self._spawn_rule_obj
 
 
@@ -1935,7 +1937,7 @@ class _Condition:
         self._condition["minecraft:herd"].append(self_herd)
         return self
 
-    def BiomeFilter(self, filter: dict):
+    def BiomeFilter(self, filter: Filter):
         """Specifies which biomes the mob spawns in.
 
         Parameters
@@ -2547,6 +2549,7 @@ class Entity:
         spawn_egg_name = display_name if spawn_egg_name is None else spawn_egg_name
         if self._is_vanilla:
             directory = "vanilla"
+
         ANVIL.localize(
             f"entity.{self._namespace_format}:{self._name}.name", display_name
         )
@@ -2559,6 +2562,14 @@ class Entity:
         )
         self.Client.queue(directory)
         self.Server.queue(directory)
+        
+        ANVIL._report.add_report(
+            ReportType.ENTITY, 
+            vanilla = self._is_vanilla, 
+            col0 = display_name, 
+            col1 = self.identifier,
+            #col2 = [event._event_name for event in self.Server._events]
+        )
 
     def __str__(self):
         return self.identifier
@@ -2609,8 +2620,18 @@ class Attachable(AddonObject):
     def queue(self):
         """Queues the attachable.
         """
+        
+        display_name = self._name.replace("_", " ").title()
+
         self._attachable["minecraft:attachable"].update(self._description.queue(""))
         self.content(self._attachable)
+
+        ANVIL._report.add_report(
+            ReportType.ATTACHABLE, 
+            vanilla = self._is_vanilla, 
+            col0 = display_name, 
+            col1 = self.identifier,
+        )
         super().queue("")
 
     def __str__(self):

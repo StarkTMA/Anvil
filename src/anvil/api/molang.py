@@ -284,7 +284,7 @@ class Query(_molang):
         return self._query(self, "q", "block_face")
 
     @classmethod
-    def blockState(self, state: str):
+    def BlockState(self, state: str):
         """Returns the value of the associated block's Block State. 
 
         Args:
