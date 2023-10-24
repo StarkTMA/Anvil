@@ -2574,8 +2574,8 @@ class Structure:
                 f"BP_{ANVIL.PASCAL_PROJECT_NAME}",
                 "structures",
                 ANVIL.NAMESPACE_FORMAT,
-                f"{self._structure_name}.mcstructure",
             ),
+            f"{self._structure_name}.mcstructure",
         )
 
 
@@ -2694,10 +2694,10 @@ class _Anvil:
         self.PASCAL_PROJECT_NAME = self.Config.get("ANVIL", "PASCAL_PROJECT_NAME")
         self.LAST_CHECK = self.Config.get("ANVIL", "LAST_CHECK")
 
-        if len(self.NAMESPACE) > 8:
-            self.Logger.namespace_too_long(self.NAMESPACE)
-
         if self.NAMESPACE == "minecraft":
+            self.Logger.namespaces_not_allowed(self.NAMESPACE)
+
+        if len(self.NAMESPACE) > 8:
             self.Logger.namespace_too_long(self.NAMESPACE)
 
         if len(self.PROJECT_NAME) > 16:
@@ -3023,9 +3023,9 @@ class _Anvil:
         for tag in self._tags:
             self._remove_tags.add(Tag(Target.E).remove(tag))
 
-        self._setup_scores.queue(os.path.join("StateMachine", "misc"))
-        self._remove_scores.queue(os.path.join("StateMachine", "misc"))
-        self._remove_tags.queue(os.path.join("StateMachine", "misc"))
+        self._setup_scores.queue()
+        self._remove_scores.queue()
+        self._remove_tags.queue()
 
         self._setup_function.add(self._remove_tags.execute).add(self._remove_scores.execute).add(self._setup_scores.execute)
         self._setup_function.queue()
@@ -3039,6 +3039,21 @@ class _Anvil:
 
         for object in self._objects_list:
             object._export()
+
+        if int(self.Config.get("ANVIL", "SCRIPTAPI")):
+            source = os.path.join("assets", "javascript")
+            target = os.path.join("behavior_packs", f"BP_{self.PASCAL_PROJECT_NAME}", "scripts")
+
+            for subdir, dirname, files in os.walk(source):
+                for file in files:
+                    input_file_path = os.path.join(subdir, file)
+                    relative_subdir = os.path.relpath(subdir, source)
+                    new_output_dir = os.path.join(target, relative_subdir)
+                    if file.endswith(".ts"):
+                        CreateDirectory(new_output_dir)
+                        process_subcommand(f"tsc {input_file_path} --outDir {new_output_dir}", "Typescript compilation error")
+                    elif file.endswith(".js"):
+                        CopyFiles(subdir, new_output_dir, file)
 
         self._compiled = True
 

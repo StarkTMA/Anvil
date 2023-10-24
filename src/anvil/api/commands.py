@@ -452,7 +452,7 @@ class Teleport(Command):
         if isinstance(destination, tuple):
             self._append_cmd(
                 " ".join(map(str, destination)),
-                " ".join(map(str, (normalize_180(round(rotation[0], 2)), round(rotation[1], 2)))) if not rotation == ("~", "~") else "",
+                " ".join(map(str, (normalize_180(rotation[0]), rotation[1]))) if not rotation == ("~", "~") else "",
             )
         elif isinstance(destination, Target | Selector):
             self._append_cmd(destination)
@@ -496,7 +496,7 @@ class ReplaceItem(ItemComponents):
 
 class Damage(ItemComponents):
     def __init__(self, target: Selector | Target | str, amount: int, cause: DamageCause) -> None:
-        super().__init__("damage", target, amount, cause.value)
+        super().__init__("damage", target, amount, "entity_attack" if cause.value == "attack" else cause.value)
 
     def damager(self, damager: Selector | Target) -> None:
         self._append_cmd("entity", damager)

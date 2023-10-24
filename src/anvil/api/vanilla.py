@@ -3,7 +3,6 @@ from enum import Enum
 from anvil.core import ANVIL, Dimension
 
 ENTITY_LIST = []
-BLOCK_LIST = []
 ITEMS_LIST = []
 
 # Updated on 05-04-2023
@@ -1136,8 +1135,6 @@ class LEGACYItems:
             for state in states:
                 self.add_state(state)
 
-            BLOCK_LIST.append(self)
-
         def add_state(self, state):
             self.states[state.name] = state
             setattr(self, state.name, state)
@@ -2262,7 +2259,6 @@ class Blocks:
             self._namespace = 'minecraft' if is_vanilla else ANVIL.NAMESPACE
             self._name = name
             self._is_vanilla = is_vanilla
-            BLOCK_LIST.append(self)
 
         @property
         def identifier(self):
@@ -6733,3 +6729,10 @@ class Blocks:
     class BlackConcretePowder(_MinecraftBlock):
         def __init__(self,):
             super().__init__("black_concrete_powder", True)
+
+
+# Take all the subclasses of Blocks and add them to BLOCK_LIST
+BLOCK_LIST = []
+for block in Blocks.__dict__.values():
+    if isinstance(block, type) and issubclass(block, Blocks._MinecraftBlock) and block is not Blocks._MinecraftBlock:
+        BLOCK_LIST.append(block())

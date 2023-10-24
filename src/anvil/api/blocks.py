@@ -374,7 +374,7 @@ class _BlockTraits():
         """
 
         self._traits["minecraft:placement_direction"] = {
-            "enabled_states": traits,
+            "enabled_states": [str(t) for t in traits],
             "y_rotation_offset": y_rotation_offset
         }
 
@@ -556,7 +556,7 @@ class Block():
             name (str): The name of the block.
             is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
         """
-        self.name = name
+        self._name = name
         self._is_vanilla = is_vanilla
         self._server = _BlockServer(name, is_vanilla)
 
@@ -574,14 +574,18 @@ class Block():
     def identifier(self):
         """The block identifier.
         """
-        return f'{self._namespace_format}:{self.name}'
+        return f'{self._namespace_format}:{self._name}'
 
+    @property
+    def name(self):
+        return self._name
+    
     @property
     def queue(self):
         """Queues the block to be exported."""
 
         if not "minecraft:display_name" in self.Server._server_block["minecraft:block"]["components"]:
-            display_name = self.name.replace("_", " ").title()
+            display_name = self._name.replace("_", " ").title()
         elif self.Server._server_block["minecraft:block"]["components"]["minecraft:display_name"].startswith("tile."):
             display_name = ANVIL._langs[self.Server._server_block["minecraft:block"]["components"]["minecraft:display_name"]]
         else:

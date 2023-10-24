@@ -1,7 +1,10 @@
 from anvil import Math, Query, Variable
-from anvil.api.components import (CollisionBox, DamageSensor, Filter, Health,
-                                  InstantDespawn, Physics, Pushable, Rideable,
-                                  Scale, TypeFamily, _component)
+from anvil.api.components import (Breathable, CollisionBox, DamageSensor,
+                                  Filter, Health, InstantDespawn, JumpStatic,
+                                  KnockbackResistance, Movement, MovementType,
+                                  NavigationType, Physics, Pushable,
+                                  PushThrough, Rideable, Scale, TypeFamily,
+                                  _component)
 from anvil.api.vanilla import ENTITY_LIST, ITEMS_LIST, Entities
 from anvil.core import (ANVIL, AddonObject, Animation, Geometry, Particle,
                         _MinecraftDescription, _SoundDescription)
@@ -1124,14 +1127,13 @@ class _BP_ControllerState:
 
         """
         for command in commands:
-            if isinstance(command, str):
-                if str(command).startswith(Target.S.value):
-                    self._controller_state[self._state_name]["on_entry"].append(command)
-                if any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                    self._controller_state[self._state_name]["on_entry"].append(
-                        f"{command};"
-                    )
-            else :
+            if str(command).startswith(Target.S.value):
+                self._controller_state[self._state_name]["on_entry"].append(command)
+            elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
+                self._controller_state[self._state_name]["on_entry"].append(
+                    f"{command};"
+                )
+            else:
                 self._controller_state[self._state_name]["on_entry"].append(
                     f"/{command}"
                 )
@@ -2535,6 +2537,38 @@ class Entity:
     def name(self):
         return self._name
 
+    def add_basic_components(self):
+        """Adds basic server components to the entity.
+        
+        This includes:
+            - `JumpStatic`
+            - `MovementType`
+            - `NavigationType`
+            - `Movement`
+            - `Physics`
+            - `KnockbackResistance`
+            - `Health`
+            - `CollisionBox`
+            - `Breathable`
+            - `DamageSensor`
+            - `Pushable`
+            - `PushThrough`
+        """
+        self.Server.components.add(
+            JumpStatic(0),
+            MovementType().Basic(),
+            NavigationType().Walk(),
+            Movement(0),
+            Physics(True, True),
+            KnockbackResistance(10000),
+            Health(6),
+            CollisionBox(1, 1),
+            Breathable(),
+            DamageSensor().add_trigger(DamageCause.All, False),
+            Pushable(False, False),
+            PushThrough(1),
+        )
+        
     def queue(
         self,
         directory: str = None,

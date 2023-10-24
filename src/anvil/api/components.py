@@ -421,7 +421,7 @@ class AddRider(_component):
 
         """
         super().__init__("addrider")
-        self._component_add_field("entity_type", entity_type)
+        self._component_add_field("entity_type", str(entity_type))
         if not spawn_event is None:
             self._component_add_field("spawn_event", spawn_event)
 
@@ -1758,7 +1758,6 @@ class Rideable(_component):
         crouching_skip_interact: bool = True,
         pull_in_entities: bool = False,
         rider_can_interact: bool = False,
-        *family_types: str,
     ) -> None:
         """Determines whether this entity can be ridden. Allows specifying the different seat positions and quantity."""
         super().__init__("rideable")
@@ -1777,7 +1776,6 @@ class Rideable(_component):
         if rider_can_interact:
             self._component_add_field("rider_can_interact", rider_can_interact)
 
-        self._component_add_field("family_types", family_types if len(family_types) > 0 else [])
         self._component_add_field("seats", [])
 
     def add_seat(
@@ -1803,6 +1801,9 @@ class Rideable(_component):
 
         return self
 
+    def family_types(self, *families: str):
+        self._component_add_field("family_types", families)
+        return self
 
 class Projectile(_component):
     component_namespace = "minecraft:projectile"
@@ -2466,16 +2467,25 @@ class RandomStroll(_ai_goal):
         xz_dist: int = 10,
         y_dist: int = 7,
     ) -> None:
-        """Compels an entity to choose a random direction to walk towards."""
+        """Compels an entity to choose a random direction to walk towards.
+
+        Args:
+            interval (int, optional): A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal. Defaults to 120.
+            speed_multiplier (float, optional): Movement speed multiplier of the entity when using this AI Goal. Defaults to 1.0.
+            xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
+            y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
+        
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_stroll
+        """
         super().__init__("behavior.random_stroll")
         if interval != 120:
             self._component_add_field("interval", interval)
         if speed_multiplier != 1.0:
             self._component_add_field("speed_multiplier", speed_multiplier)
         if xz_dist != 10:
-            self._component_add_field("xz_dist", xz_dist)
+            self._component_add_field("xz_dist", max(1, xz_dist))
         if y_dist != 7:
-            self._component_add_field("y_dist", y_dist)
+            self._component_add_field("y_dist", max(1, y_dist))
 
 
 class LookAtPlayer(_ai_goal):
@@ -3511,6 +3521,34 @@ class MoveToLava(_ai_goal):
             self._component_add_field("search_range", search_range)
         if speed_multiplier != 1:
             self._component_add_field("speed_multiplier", speed_multiplier)
+
+
+class LookAtTarget(_ai_goal):
+    component_namespace = "minecraft:behavior.look_at_target"
+
+    def __init__(
+        self,
+        angle_of_view_horizontal: int = 360,
+        angle_of_view_vertical: int = 360,
+        look_distance: float = 8.0,
+        look_time: tuple[int, int] = (2, 4),
+        probability: float = 0.02,
+        target_distance: float = 0.6,
+    ) -> None:
+        """Compels an entity to look at the target by rotating the head bone pose within a set limit."""
+        super().__init__("behavior.look_at_target")
+        if angle_of_view_horizontal != 360:
+            self._component_add_field("angle_of_view_horizontal", angle_of_view_horizontal)
+        if angle_of_view_vertical != 360:
+            self._component_add_field("angle_of_view_vertical", angle_of_view_vertical)
+        if look_distance != 8.0:
+            self._component_add_field("look_distance", look_distance)
+        if look_time != (2, 4):
+            self._component_add_field("look_time", look_time)
+        if probability != 0.02:
+            self._component_add_field("probability", probability)
+        if target_distance != 0.6:
+            self._component_add_field("target_distance", target_distance)
 
 
 # Unfinished

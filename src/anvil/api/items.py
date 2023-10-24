@@ -731,7 +731,6 @@ class _ItemServer(AddonObject):
     def components(self):
         return self._components
 
-    @property
     def queue(self):
         self._server_item["minecraft:item"].update(self.description._export)
         self._server_item["minecraft:item"]["components"].update(self._components._export()["components"])
@@ -759,8 +758,11 @@ class Item:
         return f"{self._namespace_format}:{self._name}"
 
     @property
+    def name(self):
+        return self._name
+
     def queue(self):
-        self.Server.queue
+        self.Server.queue()
         
         if not "minecraft:display_name" in self.Server._server_item["minecraft:item"]["components"]:
             display_name = self._name.replace("_", " ").title()

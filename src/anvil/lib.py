@@ -5,6 +5,7 @@ import math
 import os
 import shutil
 import string
+import subprocess
 import sys
 import zipfile
 from collections import defaultdict
@@ -59,7 +60,7 @@ def FileExists(path) -> bool:
     return os.path.exists(path)
 
 
-def normalize_180(angle: float) -> float:
+def normalize_180(angle: float | str) -> float:
     """Normalizes an angle between -180 and 180.
 
     Args:
@@ -68,7 +69,10 @@ def normalize_180(angle: float) -> float:
     Returns:
         float: The normalized angle.
     """
-    return (angle + 540) % 360 - 180
+    if isinstance(angle, float):
+        return round((angle + 540) % 360 - 180)
+    else:
+        return angle
 
 
 def clamp(value: float, _min: float, _max: float) -> float:
@@ -141,10 +145,13 @@ DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
 FOG_VERSION: str = "1.16.100"  # The version of the fog.
 MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
 ITEM_SERVER_VERSION: str = "1.20.30"  # The version of the item server.
-MODULE_MINECRAFT_SERVER: str = "1.2.0"  # The version of the Minecraft server module.
-MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"  # The version of the Minecraft UI module.
 GLOBAL_LIGHTING = [1, 0, 0]
 CAMERA_PRESET_VERSION = "1.19.50" # The version of the camera presets.
+
+MODULE_MINECRAFT_SERVER: str = "1.5.0"  # The version of the Minecraft server module.
+MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"  # The version of the Minecraft UI module.
+MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"  # The version of the Minecraft UI module.
+MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"  # The version of the Minecraft UI module.
 
 
 # --------------------------------------------------------------------------
@@ -1619,7 +1626,6 @@ class _JsonSchemes:
             project_name: {
                 "behavior_packs": {},
                 "resource_packs": {},
-                "scripts": {},
                 "assets": {
                     "skins": {},
                     "animations": {},
@@ -1641,8 +1647,9 @@ class _JsonSchemes:
                         "ui": {},
                         "particle": {},
                     },
-                    "vanilla": {},
                     "output": {},
+                    "javascript":{},
+                    "anvilscripts": {},
                 },
             }
         }
@@ -1653,7 +1660,7 @@ class _JsonSchemes:
             [
                 "from anvil import *",
                 'if __name__ == "__main__":',
-                "    ANVIL.compile",
+                "    ANVIL.compile()",
                 "    #ANVIL.package()",
             ]
         )
@@ -1716,7 +1723,7 @@ class _JsonSchemes:
             "header": {
                 "description": "pack.description",
                 "name": "pack.name",
-                "uuid": uuid1,
+                "uuid": uuid1.split(",")[0],
                 "version": version,
                 "min_engine_version": MANIFEST_BUILD
             },
@@ -1729,7 +1736,7 @@ class _JsonSchemes:
                     "version": version,
                     "type": "script",
                     "language": "javascript",
-                    "entry": "scripts/Main.js",
+                    "entry": "scripts/main.js",
                 }
             )
             m.update(
@@ -1738,11 +1745,7 @@ class _JsonSchemes:
                         {
                             "module_name": "@minecraft/server",
                             "version": MODULE_MINECRAFT_SERVER,
-                        },
-                        {
-                            "module_name": "@minecraft/server",
-                            "version": MODULE_MINECRAFT_SERVER_UI,
-                        },
+                        }
                     ]
                 }
             )
@@ -1755,7 +1758,7 @@ class _JsonSchemes:
             "header": {
                 "description": "pack.description",
                 "name": "pack.name",
-                "uuid": uuid1,
+                "uuid": uuid1.split(",")[0],
                 "version": version,
                 "min_engine_version": MANIFEST_BUILD,
             },
@@ -1797,7 +1800,7 @@ class _JsonSchemes:
 
     @staticmethod
     def world_packs(pack_id, version):
-        return [{"pack_id": pack_id, "version": version}]
+        return [{"pack_id": i, "version": version} for i in pack_id.split(",")]
 
     @staticmethod
     def code_workspace(name, path1, path2):
@@ -1813,7 +1816,7 @@ class _JsonSchemes:
             "name": project_name,
             "version": version,
             "description": description,
-            "main": "scripts/Main.js",
+            "main": "scripts/main.js",
             "scripts": {"test": 'echo "Error: no test specified" && exit 1'},
             "keywords": [],
             "author": author,
@@ -2180,3 +2183,9 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
     if prev.split("\n")[6::] != file_content.split("\n"):
         with open(path, mode, encoding="utf-8") as file:
             file.write(out_content)
+
+def process_subcommand(command: str, error_handle: str = "Error"):
+    try:
+        subprocess.run(command, shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"{error_handle}: {e}")

@@ -13,7 +13,13 @@ Version 0.5.3
   - Removed the `scipy` requirement from `setup.cfg`.
   - Removed and/or replaced rarely used library imports.
   - Added a new `CameraPreset()` class that creates new camera presets.
-  
+  - Removed the `vanilla` folder from the `assets` directory, this is a step forward towards removing support for cloning vanilla packs.
+  - Scripting API files are now hosted in the `assets/javascript` directory, a quality of life improvement towards full support of js scripting.
+  - Anvil CLI will install both `@minecraft/server` and `@minecraft/serve-ui` modules if the `scriptapi` flag is set.
+  - Anvil will automatically run `tsc <filename>` on every `.ts` file in `assets/javascript` and copies every `.js` files preserving the relative paths in `BP/scripts`.
+  - Moved the scripts folder to host all Python files to `assets/anvilscripts`, you can place your files anywhere you wish to but this is done to keep inline with javascript files.
+  - Anvil now support multiple packs, generation will still take place in a single pack but if you wish to include other packs, add the uuid to `config.ini` separating by a `,` and copy your pack to their respective locations.
+
   [Blocks]
   --------
   - Renamed `FacingDirections`, `BlockFaces` and `VerticalHalf` to `FacingDirectionsTrait`, `BlockFacesTrait` and `VerticalHalfTrait`.
@@ -26,7 +32,8 @@ Version 0.5.3
   [Components]
   - Added `is_biome()`, `is_underwater()`, `on_ground()`, `in_water()` filters.
   - Added `Biomes` enum.
-  - Added `RandomSitting()`, `StayWhileSitting()`, `UnderwaterMovement()`, `RandomSwim()`, `RandomBreach()`, `MoveToWater()`, `MoveToLand()`, `MoveToLava()` components.
+  - Added `RandomSitting()`, `StayWhileSitting()`, `UnderwaterMovement()`, `RandomSwim()`, `RandomBreach()`, `MoveToWater()`, `MoveToLand()`, `MoveToLava()`, `LookAtTarget()` components.
+  - `Rideable()` family types are now added by passing family strings using `family_types()`.
   
   [Items]
   - Added `ItemCanDestroyInCreative()` and `ItemHoverTextColor()` components.

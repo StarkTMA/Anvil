@@ -293,7 +293,8 @@ class Query(_molang):
         Returns:
             Molang(_molang): A Molang Instance
         """
-        return self._query(self, "q", "block_state", f'{ANVIL.NAMESPACE}:{state}')
+        state = f'{state}' if isinstance(state, Arguments) else f'{ANVIL.NAMESPACE}:{state}'
+        return self._query(self, "q", "block_state", state)
 
     @classmethod
     def Property(self, property: str):

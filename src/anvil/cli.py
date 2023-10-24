@@ -7,7 +7,7 @@ import click
 from github import Github
 
 from .lib import (APPDATA, DESKTOP, CreateDirectory, File, _Config,
-                  _JsonSchemes, _Logger)
+                  _JsonSchemes, _Logger, requests, process_subcommand)
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -118,13 +118,13 @@ def create(
     # Prints header
     _Logger.header()
 
+    if namespace == "minecraft":
+        _Logger.namespace_too_long(namespace)
+    
     # Checks for Value Errors
     if len(namespace) > 8:
         _Logger.namespace_too_long(namespace)
         
-    if namespace == "minecraft":
-        _Logger.namespace_too_long(namespace)
-    
     if len(project_name) > 16:
         _Logger.project_name_too_long(namespace)
 
@@ -132,27 +132,9 @@ def create(
     click.echo(f'Initiating {project_name.title().replace("-", " ").replace("_", " ")}')
 
     # Setup the directory
-    github = Github().get_repo("Mojang/bedrock-samples")
-    if preview:
-        target = "Microsoft.MinecraftWindowsBeta_8wekyb3d8bbwe"
-        latest_build = json.loads(
-            github.get_contents("version.json", "preview").decoded_content.decode()
-        )["latest"]["version"]
-    else:
-        target = "Microsoft.MinecraftUWP_8wekyb3d8bbwe"
-        latest_build = json.loads(
-            github.get_contents("version.json", "main").decoded_content.decode()
-        )["latest"]["version"]
-    base_dir = os.path.join(
-        APPDATA,
-        "Local",
-        "Packages",
-        target,
-        "LocalState",
-        "games",
-        "com.mojang",
-        "minecraftWorlds",
-    )
+    latest_build = json.loads(requests.get(f"https://raw.githubusercontent.com/Mojang/bedrock-samples/{'preview' if preview else 'main'}/version.json").text)["latest"]["version"]
+    
+    base_dir = os.path.join(APPDATA, "Local", "Packages", f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe", "LocalState", "games", "com.mojang", "minecraftWorlds")
     os.chdir(base_dir)
 
     # Init the config file
@@ -161,16 +143,8 @@ def create(
     Config.set("PACKAGE", "company", namespace.title())
     Config.set("PACKAGE", "namespace", namespace)
     Config.set("PACKAGE", "project_name", project_name)
-    Config.set(
-        "PACKAGE",
-        "display_name",
-        project_name.title().replace("-", " ").replace("_", " "),
-    )
-    Config.set(
-        "PACKAGE",
-        "project_description",
-        f"{Config.get('PACKAGE', 'display_name')} Essentials",
-    )
+    Config.set("PACKAGE", "display_name", project_name.title().replace("-", " ").replace("_", " "))
+    Config.set("PACKAGE", "project_description", f"{Config.get('PACKAGE', 'display_name')} Essentials")
 
     Config.set("BUILD", "release", "1.0.0")
     Config.set("BUILD", "rp_uuid", str(uuid4()))
@@ -182,13 +156,11 @@ def create(
     Config.set("ANVIL", "pbr", int(pbr))
     Config.set("ANVIL", "random_seed", int(random_seed))
     Config.set("ANVIL", "namespace_format", int(fullns))
-    Config.set(
-        "ANVIL",
-        "pascal_project_name",
-        "".join(x for x in Config.get("PACKAGE", "display_name") if x.isupper()),
-    )
+    Config.set("ANVIL", "pascal_project_name", "".join(x for x in Config.get("PACKAGE", "display_name") if x.isupper()))
     Config.set("ANVIL", "last_check", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
+    Config._config.add_section(namespace)
+    
     CreateDirectoriesFromTree(_JsonSchemes.structure(project_name))
     os.chdir(project_name)
 
@@ -279,16 +251,6 @@ def create(
     if scriptapi:
         click.echo("Initiating ScriptingAPI modules")
         File(
-            "index.js",
-            "",
-            os.path.join(
-                "behavior_packs",
-                "BP_" + Config.get("ANVIL", "pascal_project_name"),
-                "scripts",
-            ),
-            "w",
-        )
-        File(
             "package.json",
             _JsonSchemes.packagejson(
                 project_name,
@@ -302,9 +264,9 @@ def create(
         )
 
         # os.system('npm install -g typescript')
-        os.system("npm install @minecraft/server")
-        os.system("npm install @minecraft/server-ui")
+        # os.system("npm i @minecraft/server")
+        # os.system("npm i @minecraft/server-ui")
 
     Config.save()
     # os.system(f'start {os.path.join(base_dir,project_name)}')
-    os.system(f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}")
+    process_subcommand(f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace")
