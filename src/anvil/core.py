@@ -2618,7 +2618,7 @@ class _Anvil:
         File(
             "manifest.json",
             _JsonSchemes.manifest_bp(
-                self.RELEASE, self.Config.get("BUILD", "BP_UUID"), int(self.Config.get("ANVIL", "SCRIPTAPI"))
+                self.RELEASE, self.Config.get("BUILD", "BP_UUID"), int(self.Config.get("ANVIL", "SCRIPTAPI")), int(self.Config.get("ANVIL", "SCRIPTUI"))
             ),
             os.path.join("behavior_packs", f"BP_{self.PASCAL_PROJECT_NAME}"),
             "w",
@@ -2737,8 +2737,11 @@ class _Anvil:
         # 12 Hours
         if self._deltatime > 12 * 3600:
             self.Logger.check_update()
-            j = requests.get("https://raw.githubusercontent.com/Mojang/bedrock-samples/main/version.json")
-            self.LATEST_BUILD = json.loads(j.text)["latest"]["version"]
+            try:
+                j = requests.get("https://raw.githubusercontent.com/Mojang/bedrock-samples/main/version.json")
+                self.LATEST_BUILD = json.loads(j.text)["latest"]["version"]
+            except:
+                self.LATEST_BUILD = self.VANILLA_VERSION
             if self.VANILLA_VERSION < self.LATEST_BUILD:
                 self.Logger.new_minecraft_build(self.VANILLA_VERSION, self.LATEST_BUILD)
             else:
@@ -3044,16 +3047,29 @@ class _Anvil:
             source = os.path.join("assets", "javascript")
             target = os.path.join("behavior_packs", f"BP_{self.PASCAL_PROJECT_NAME}", "scripts")
 
+            do_ts = False
             for subdir, dirname, files in os.walk(source):
                 for file in files:
                     input_file_path = os.path.join(subdir, file)
                     relative_subdir = os.path.relpath(subdir, source)
                     new_output_dir = os.path.join(target, relative_subdir)
-                    if file.endswith(".ts"):
-                        CreateDirectory(new_output_dir)
-                        process_subcommand(f"tsc {input_file_path} --outDir {new_output_dir}", "Typescript compilation error")
-                    elif file.endswith(".js"):
+                    if file.endswith(".js"):
                         CopyFiles(subdir, new_output_dir, file)
+                    elif file.endswith(".ts"):
+                        do_ts = True
+            
+            if do_ts:
+                tsconfig = {}
+                if FileExists("tsconfig.json"):
+                    with open("tsconfig.json", "r") as file:
+                        tsconfig = commentjson.load(file)
+                        tsconfig["compilerOptions"]["outDir"] = f"behavior_packs/BP_{ANVIL.PASCAL_PROJECT_NAME}/scripts"
+                        tsconfig["include"] = ["assets/javascript/**/*"]
+                else:
+                    tsconfig = _JsonSchemes.tsconfig(ANVIL.PASCAL_PROJECT_NAME)
+                
+                File("tsconfig.json", tsconfig, "", "w", False)
+                process_subcommand("tsc", "Typescript compilation error")
 
         self._compiled = True
 

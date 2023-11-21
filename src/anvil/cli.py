@@ -6,8 +6,8 @@ from uuid import uuid4
 import click
 from github import Github
 
-from .lib import (APPDATA, DESKTOP, CreateDirectory, File, _Config,
-                  _JsonSchemes, _Logger, requests, process_subcommand)
+from .lib import (APPDATA, DESKTOP, MANIFEST_BUILD, CreateDirectory, File,
+                  _Config, _JsonSchemes, _Logger, process_subcommand, requests)
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -132,8 +132,10 @@ def create(
     click.echo(f'Initiating {project_name.title().replace("-", " ").replace("_", " ")}')
 
     # Setup the directory
-    latest_build = json.loads(requests.get(f"https://raw.githubusercontent.com/Mojang/bedrock-samples/{'preview' if preview else 'main'}/version.json").text)["latest"]["version"]
-    
+    try:
+        latest_build = json.loads(requests.get(f"https://raw.githubusercontent.com/Mojang/bedrock-samples/{'preview' if preview else 'main'}/version.json").text)["latest"]["version"]
+    except:
+        latest_build = ".".join(str(i) for i in MANIFEST_BUILD)
     base_dir = os.path.join(APPDATA, "Local", "Packages", f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe", "LocalState", "games", "com.mojang", "minecraftWorlds")
     os.chdir(base_dir)
 
@@ -153,6 +155,7 @@ def create(
 
     Config.set("ANVIL", "debug", 0)
     Config.set("ANVIL", "scriptapi", int(scriptapi))
+    Config.set("ANVIL", "scriptui", 0)
     Config.set("ANVIL", "pbr", int(pbr))
     Config.set("ANVIL", "random_seed", int(random_seed))
     Config.set("ANVIL", "namespace_format", int(fullns))
@@ -200,7 +203,7 @@ def create(
     )
     File(
         "manifest.json",
-        _JsonSchemes.manifest_bp([1, 0, 0], Config.get("BUILD", "bp_uuid"), scriptapi),
+        _JsonSchemes.manifest_bp([1, 0, 0], Config.get("BUILD", "bp_uuid"), scriptapi, False),
         os.path.join(
             "behavior_packs", "BP_" + Config.get("ANVIL", "pascal_project_name")
         ),
@@ -262,6 +265,8 @@ def create(
             "w",
             True,
         )
+        File("tsconfig.json", _JsonSchemes.tsconfig(Config.get("ANVIL", "pascal_project_name")), "", "w", False)
+        File("launch.json", _JsonSchemes.vscode(Config.get("ANVIL", "pascal_project_name")), ".vscode", "w", False)
 
         # os.system('npm install -g typescript')
         # os.system("npm i @minecraft/server")

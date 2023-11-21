@@ -324,13 +324,13 @@ class Weather(Command):
 
     @property
     def clear(self):
-        super()._new_cmd("clear")
+        return super()._new_cmd("clear")
 
-    def rain(self, duration: tick):
-        super()._new_cmd("rain", duration)
+    def rain(self, duration: tick = inf):
+        return super()._new_cmd("rain", duration if duration != inf else "")
 
-    def thunder(self, duration: tick):
-        super()._new_cmd("thunder", duration)
+    def thunder(self, duration: tick = inf):
+        return super()._new_cmd("thunder", duration if duration != inf else "")
 
 
 class Clone(Command):
@@ -496,7 +496,7 @@ class ReplaceItem(ItemComponents):
 
 class Damage(ItemComponents):
     def __init__(self, target: Selector | Target | str, amount: int, cause: DamageCause) -> None:
-        super().__init__("damage", target, amount, "entity_attack" if cause.value == "attack" else cause.value)
+        super().__init__("damage", target, amount, cause.value)
 
     def damager(self, damager: Selector | Target) -> None:
         self._append_cmd("entity", damager)

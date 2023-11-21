@@ -7,12 +7,13 @@ import shutil
 import string
 import subprocess
 import sys
+import types
 import zipfile
 from collections import defaultdict
 from configparser import ConfigParser
 from datetime import datetime
-from enum import Enum
-from typing import NewType, Tuple
+from enum import Enum, StrEnum
+from typing import Any, NewType, Tuple
 from uuid import uuid4
 
 import click
@@ -24,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from .__version__ import __version__
 
+Color = NewType("Color", [tuple[int, int, int] | tuple[int, int, int, int] | str])
 Seconds = NewType("Seconds", float)
 Molang = NewType("Molang", str)
 coordinate = NewType("coordinate", [float | str])
@@ -34,19 +36,45 @@ level = NewType("tuple(lm,l)", tuple[float, float])
 Component = NewType("Component", str)
 Identifier = NewType("Identifier", str)
 event = NewType("Event", str)
-
 tick = NewType("Tick", int)
 _range = NewType("[range]", str)
-
 inf = 99999999999
 
+APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")  # type: ignore
+DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
+MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
 
-class Arguments(Enum):
+MANIFEST_BUILD: list[int] = [1, 20, 40]  # The build version of the manifest.
+BLOCK_SERVER_VERSION: str = "1.20.30"  # The version of the block server.
+ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
+ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
+BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
+RP_ANIMATION_VERSION: str = "1.8.0"  # The version of the resource pack animation.
+ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"  # The version of the animation controllers.
+SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
+GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
+RENDER_CONTROLLER_VERSION: str = "1.10.0"  # The version of the render controller.
+SOUND_DEFINITIONS_VERSION: str = "1.20.20"  # The version of the sound definitions.
+DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
+FOG_VERSION: str = "1.16.100"  # The version of the fog.
+MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
+ITEM_SERVER_VERSION: str = "1.20.40"  # The version of the item server.
+GLOBAL_LIGHTING = [1, 0, 0]
+CAMERA_PRESET_VERSION = "1.19.50"  # The version of the camera presets.
+
+MODULE_MINECRAFT_SERVER: str = "1.6.0"  # The version of the Minecraft server module.
+MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"  # The version of the Minecraft UI module.
+MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"  # The version of the Minecraft UI module.
+MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"  # The version of the Minecraft UI module.
+
+# --------------------------------------------------------------------------
+
+
+class Arguments(StrEnum):
     """Enumeration for the different types of arguments."""
 
     def __str__(self) -> str:
         return self.value
-
 
 def FileExists(path) -> bool:
     """Checks if a file exists.
@@ -107,8 +135,6 @@ def frange(start: int, stop: int, num: float = 1):
     return values
 
 
-Color = NewType("Color", [tuple[int, int, int] | tuple[int, int, int, int] | str])
-
 def process_color(color: Color, add_alpha: bool = False) -> str | list[float]:
     if isinstance(color, tuple):
         if len(color) not in [3, 4]:
@@ -118,43 +144,14 @@ def process_color(color: Color, add_alpha: bool = False) -> str | list[float]:
         return (clamp(c, 0.0, 255.0) for c in color)
     elif isinstance(color, str):
         if color[0] != "#" or len(color) not in [7, 9]:
-            raise ValueError("Invalid color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'.")
+            raise ValueError(
+                "Invalid color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'."
+            )
         if len(color) == 7 and add_alpha:
             color += "ff"
         return color
     else:
         raise TypeError("Color must be either a tuple of 3 or 4 integers or a hexadecimal string.")
-
-
-APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")  # type: ignore
-DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
-MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
-
-MANIFEST_BUILD: list[int] = [1, 19, 70]  # The build version of the manifest.
-BLOCK_SERVER_VERSION: str = "1.20.30"  # The version of the block server.
-ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
-ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
-BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
-RP_ANIMATION_VERSION: str = "1.8.0"  # The version of the resource pack animation.
-ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"  # The version of the animation controllers.
-SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
-GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
-RENDER_CONTROLLER_VERSION: str = "1.10.0"  # The version of the render controller.
-SOUND_DEFINITIONS_VERSION: str = "1.20.20"  # The version of the sound definitions.
-DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
-FOG_VERSION: str = "1.16.100"  # The version of the fog.
-MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
-ITEM_SERVER_VERSION: str = "1.20.30"  # The version of the item server.
-GLOBAL_LIGHTING = [1, 0, 0]
-CAMERA_PRESET_VERSION = "1.19.50" # The version of the camera presets.
-
-MODULE_MINECRAFT_SERVER: str = "1.5.0"  # The version of the Minecraft server module.
-MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"  # The version of the Minecraft UI module.
-MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"  # The version of the Minecraft UI module.
-MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"  # The version of the Minecraft UI module.
-
-
-# --------------------------------------------------------------------------
 
 
 class FillMode(Arguments):
@@ -250,7 +247,7 @@ class DamageCause(Arguments):
 
     All = "all"
     Anvil = "anvil"
-    Attack = "attack"
+    EntityAttack = "entity_attack"
     Block_explosion = "block_explosion"
     Contact = "contact"
     Drowning = "drowning"
@@ -795,7 +792,7 @@ class TimeSpec(Arguments):
     NOON = "noon"
     SUNSET = "sunset"
     NIGHT = "night"
-    MIDNIGHT = "midnight" 
+    MIDNIGHT = "midnight"
 
 
 class Biomes(Arguments):
@@ -826,6 +823,7 @@ class ReportType(Arguments):
     ITEM = "item"
     BLOCK = "block"
     PARTICLE = "particle"
+
 
 class Selector:
     """
@@ -1326,7 +1324,7 @@ class _Logger:
         click.echo(
             "\n".join(
                 [
-                    f"{_Logger.Cyan('Anvil')} - by Yasser A. Benfoguhal.",
+                    f"{_Logger.Cyan('Anvil')} - by Yasser A. Benfoughal.",
                     f"Version {_Logger.Cyan(__version__)}.",
                     f"Copyright © {datetime.now().year} {_Logger.Red('StarkTMA')}.",
                     "All rights reserved.",
@@ -1549,7 +1547,7 @@ class _Logger:
         m = f"{entity} has no textures added."
         self.logger.error(m)
         raise RuntimeError(_Logger.Red("[ERROR]: " + m))
-    
+
     # Error
     def block_missing_texture(self, block):
         m = f"{block} has no default material instance added."
@@ -1648,7 +1646,7 @@ class _JsonSchemes:
                         "particle": {},
                     },
                     "output": {},
-                    "javascript":{},
+                    "javascript": {},
                     "anvilscripts": {},
                 },
             }
@@ -1705,6 +1703,8 @@ class _JsonSchemes:
                 "ENV/",
                 "env.bak/",
                 "venv.bak/",
+                "# Typescript/Javascript",
+                "node_modules/",
             ]
         )
 
@@ -1717,7 +1717,7 @@ class _JsonSchemes:
         return [f"skinpack.{name}={display_name}"]
 
     @staticmethod
-    def manifest_bp(version, uuid1, has_script):
+    def manifest_bp(version, uuid1, has_script: bool, server_ui: bool):
         m = {
             "format_version": 2,
             "header": {
@@ -1725,7 +1725,7 @@ class _JsonSchemes:
                 "name": "pack.name",
                 "uuid": uuid1.split(",")[0],
                 "version": version,
-                "min_engine_version": MANIFEST_BUILD
+                "min_engine_version": MANIFEST_BUILD,
             },
             "modules": [{"type": "data", "uuid": str(uuid4()), "version": version}],
         }
@@ -1749,6 +1749,11 @@ class _JsonSchemes:
                     ]
                 }
             )
+            if server_ui:
+                m["dependencies"].append({
+                    "module_name": "@minecraft/server-ui",
+                    "version": MODULE_MINECRAFT_SERVER_UI,
+                })
         return m
 
     @staticmethod
@@ -1783,10 +1788,10 @@ class _JsonSchemes:
                 "description": "pack.description",
                 "version": version,
                 "uuid": uuid1,
-                #"platform_locked": False,
+                # "platform_locked": False,
                 "lock_template_options": True,
                 "base_game_version": MANIFEST_BUILD,
-                "allow_random_seed": seed
+                "allow_random_seed": seed,
             },
             "modules": [
                 {
@@ -2107,10 +2112,52 @@ class _JsonSchemes:
         return {
             "format_version": CAMERA_PRESET_VERSION,
             "minecraft:camera_preset": {
-                "identifier": f"{namespace}:{name}", 
-                "inherit_from": inherit_from, 
+                "identifier": f"{namespace}:{name}",
+                "inherit_from": inherit_from,
             },
         }
+
+    @staticmethod
+    def tsconfig(pascal_project_name):
+        return {
+            "compilerOptions": {
+                "target": "ESNext",
+                "module": "es2020",
+                "declaration": False,
+                "outDir": f"behavior_packs/BP_{pascal_project_name}/scripts",
+                "strict": True,
+                "pretty":True,
+                "esModuleInterop": True,
+                "moduleResolution": "Node",
+                "resolveJsonModule": True,
+                "noUnusedLocals": True,
+                "noUnusedParameters": True,
+                "forceConsistentCasingInFileNames": True,
+                "lib": [
+                    "ESNext",
+                    "dom",
+                ]
+            },
+            "include": ["assets/javascript/**/*"],
+            "exclude": ["node_modules"],
+        }
+
+    @staticmethod
+    def vscode(pascal_project_name):
+        return {
+            "version": "0.3.0",
+            "configurations": [
+                {
+                    "type": "minecraft-js",
+                    "request": "attach",
+                    "name": "Wait for Minecraft Debug Connections",
+                    "mode": "listen",
+                    "localRoot": f"${{workspaceFolder}}/behavior_packs/BP_{pascal_project_name}/scripts",
+                    "port": 19144,
+                }
+            ],
+        }
+
     # ---------------------------
     @staticmethod
     def sounds():
@@ -2128,7 +2175,7 @@ class _JsonSchemes:
             "directional_lights": {},
             "pbr": {},
         }
-    
+
     @staticmethod
     def atmospherics():
         return {
@@ -2183,6 +2230,7 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
     if prev.split("\n")[6::] != file_content.split("\n"):
         with open(path, mode, encoding="utf-8") as file:
             file.write(out_content)
+
 
 def process_subcommand(command: str, error_handle: str = "Error"):
     try:

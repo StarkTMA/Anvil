@@ -2437,7 +2437,7 @@ class _Properties:
         self._properties = {}
 
     def enum(
-        self, name: str, values: tuple[str], *, default: str, client_sync: bool = False
+        self, name: str, values: tuple[str], default: str, *, client_sync: bool = False
     ):
         self._properties[f"{ANVIL.NAMESPACE}:{name}"] = {
             "type": "enum",
@@ -2474,7 +2474,7 @@ class _Properties:
         self._properties[f"{ANVIL.NAMESPACE}:{name}"] = {
             "type": "float",
             "default": float(default),
-            "range": range,
+            "range": [float(f) for f in range],
             "client_sync": client_sync,
         }
         return self
@@ -2592,7 +2592,7 @@ class Entity:
         )
         ANVIL.localize(
             f"item.spawn_egg.entity.{self._namespace_format}:{self._name}.name",
-            f"Spawn {spawn_egg_name}",
+            spawn_egg_name,
         )
         self.Client.queue(directory)
         self.Server.queue(directory)

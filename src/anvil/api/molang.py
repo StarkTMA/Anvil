@@ -2749,6 +2749,11 @@ class Variable(_molang):
     def IsPaperdoll(self):
         return self._query(self, 'v', 'is_paperdoll')
 
+    @classmethod
+    @property
+    def AttackTime(self):
+        return self._query(self, 'v', 'attack_time')
+
 
 class Math(_molang):
     def __init__(self) -> None:

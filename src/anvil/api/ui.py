@@ -103,7 +103,7 @@ class UIEasing(Arguments):
 class UIElementTrigger(Arguments):
     Title = "title"
     Actionbar = "actionbar"
-    NONE = None
+    NONE = "None"
 
 
 class UIFontSize(Arguments):

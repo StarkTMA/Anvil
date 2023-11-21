@@ -2,6 +2,24 @@
 
 ---
 
+Version 0.5.4
+=============
+  [Anvil]
+  -------
+  - Updated `MODULE_MINECRAFT_SERVER` to `[1.6.0]`.
+  - Updated `ITEM_SERVER_VERSION` to `[1.20.40]`.
+  - tsc now runs using `tsconfig.json`. The tsconfig options can be added and/or changed but `outDir` and `include` will be overwritten by Anvil.
+  - Added a `launch.json` for script debugging.
+  - Added `node_modules/` to default `.gitignore`.
+  - Added `scriptui` option to `config.ini`.
+
+  [Components]
+  ------------
+  - Added `MovementMeters()` component that takes speed in m/s instead of whatever Minecraft is using.
+  - Added `MovementMeters()`, `FollowParent()`, `PlayerRideTamed()`, `InputGroundControlled()`, `FollowOwner()`, `WaterMovement()`, `Panic()`, `ChargeAttack()`, `RamAttack()`, `AvoidMobType()`, `LeapAtTarget()`, `OcelotAttack()`, `Angry()`, `OwnerHurtByTarget()`, `OwnerHurtTarget()`, `RandomSearchAndDig()`, `StompAttack()`, `FollowMob()`, `RandomSwim()`, `RandomBreach()` components.
+  - Added `has_damage()`, `is_daytime()`, `rider_count()`  filters.
+
+  
 Version 0.5.3
 =============
   [Anvil]
