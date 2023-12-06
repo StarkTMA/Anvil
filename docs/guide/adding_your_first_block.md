@@ -108,7 +108,7 @@ def create_block():
 if __name__ == "__main__":
     create_block()
 
-    ANVIL.compile
+    ANVIL.compile()
 ```
 !!! note
-    Note the use of ANVIL.compile at the end of the file. This is required to compile the project, anything added after this line will not be compiled.
+    Note the use of ANVIL.compile() at the end of the file. This is required to compile the project, anything added after this line will not be compiled.

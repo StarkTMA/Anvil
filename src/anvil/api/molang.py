@@ -284,16 +284,17 @@ class Query(_molang):
         return self._query(self, "q", "block_face")
 
     @classmethod
-    def BlockProperty(self, property: str):
+    def BlockState(self, state: str):
         """Returns the value of the associated block's Block State. 
 
         Args:
-            property (str): The block property to query, no namespace.
+            state (str): The block state to query, no namespace.
 
         Returns:
             Molang(_molang): A Molang Instance
         """
-        return self._query(self, "q", "block_property", f'{ANVIL.NAMESPACE}:{property}')
+        state = f'{state}' if isinstance(state, Arguments) else f'{ANVIL.NAMESPACE}:{state}'
+        return self._query(self, "q", "block_state", state)
 
     @classmethod
     def Property(self, property: str):
@@ -845,16 +846,16 @@ class Query(_molang):
         return self._query(self, "q", "has_biome_tag", tag)
 
     @classmethod
-    def HasBlockProperty(self, property: str):
-        """Returns 1.0 if the associated block has the given block property or 0.0 if not. 
+    def has_block_state(self, state: str):
+        """Returns 1.0 if the associated block has the given block state or 0.0 if not. 
 
         Args:
-            property (str): The block property to query, no namespace.
+            state (str): The block state to query, no namespace.
 
         Returns:
             Molang(_molang): A Molang Instance
         """
-        return self._query(self, "q", "has_block_property", f'{ANVIL.NAMESPACE}:{property}')
+        return self._query(self, "q", "has_block_state", f'{ANVIL.NAMESPACE}:{state}')
 
     @classmethod
     @property
@@ -2725,7 +2726,38 @@ class Query(_molang):
         """
         return self._query(self, "q", "yaw_speed")
 
+    @classmethod
+    @property
+    def timer_flag_1(self):
+        """Returns the value of timer_flag_1 set by behavior.timer_flag_1
 
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, "q", "timer_flag_1")
+
+    @classmethod
+    @property
+    def timer_flag_2(self):
+        """Returns the value of timer_flag_2 set by behavior.timer_flag_2
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, "q", "timer_flag_2")
+    
+    @classmethod
+    @property
+    def timer_flag_3(self):
+        """Returns the value of timer_flag_3 set by behavior.timer_flag_3
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, "q", "timer_flag_3")
+    
+
+    
 class Variable(_molang):
     def __init__(self) -> None:
         super().__init__('v')
@@ -2747,6 +2779,11 @@ class Variable(_molang):
     @property
     def IsPaperdoll(self):
         return self._query(self, 'v', 'is_paperdoll')
+
+    @classmethod
+    @property
+    def AttackTime(self):
+        return self._query(self, 'v', 'attack_time')
 
 
 class Math(_molang):

@@ -10,8 +10,50 @@ __all__ = ['Block', 'VanillaBlockTexture',
            'BlockDestructibleByExplosion', 'BlockDestructibleByMining', 
            'BlockFlammable', 'BlockFriction', 'BlockLightDampening', 'BlockLightEmission',
            'BlockLootTable', 'BlockMapColor', 'BlockMaterialInstance', 'BlockGeometry', 'BlockCollisionBox',
-           'BlockSelectionBox', 'BlockPlacementFilter', 'BlockTransformation', 'BlockDisplayName', 'BlockCraftingTable', 
+           'BlockSelectionBox', 'BlockPlacementFilter', 'BlockTransformation', 'BlockDisplayName', 'BlockCraftingTable',
+           'PlacementDirectionTrait', 'PlacementPositionTrait', 'CardinalDirectionsTrait', 'FacingDirectionsTrait', 'BlockFacesTrait', 'VerticalHalfTrait',
            ]
+
+# Block Traits
+class PlacementDirectionTrait(Arguments):
+    CardinalDirection = "minecraft:cardinal_direction" # North, South, East, West
+    FacingDirection = "minecraft:facing_direction" # Up, Down, North, South, East, West
+
+
+class PlacementPositionTrait(Arguments):
+    BlockFace = "minecraft:block_face" # Up, Down, North, South, East, West
+    VerticalHalf = "minecraft:vertical_half" # Top, Bottom
+
+
+class CardinalDirectionsTrait(Arguments):
+    SOUTH = "south"
+    WEST = "west"
+    NORTH = "north"
+    EAST = "east"
+
+
+class FacingDirectionsTrait(Arguments):
+    Up = "up"
+    Down = "down"
+    SOUTH = "south"
+    WEST = "west"
+    NORTH = "north"
+    EAST = "east"
+
+
+class BlockFacesTrait(Arguments):
+    Up = "up"
+    Down = "down"
+    SOUTH = "south"
+    WEST = "west"
+    NORTH = "north"
+    EAST = "east"
+
+
+class VerticalHalfTrait(Arguments):
+    TOP = "top"
+    BOTTOM = "bottom"
+
 
 # Components
 class BlockDestructibleByExplosion(_component):
@@ -132,7 +174,7 @@ class BlockMaterialInstance(_component):
         if FileExists(os.path.join('assets', 'textures', 'blocks', f'{texture_name}.png')):
             self[self.component_namespace].update({
                 "*" if block_face == BlockFaces.All else block_face: {
-                    'texture': texture_name,
+                    'texture': f"{ANVIL.NAMESPACE}:{texture_name}",
                     'render_method': render_method.value if not render_method == BlockMaterial.Opaque else {},
                     'ambient_occlusion': ambient_occlusion if ambient_occlusion is False else {},
                     'face_dimming': face_dimming if face_dimming is False else {},
@@ -208,12 +250,12 @@ class BlockPlacementFilter(_component):
         super().__init__('placement_filter')
         self._component_add_field('conditions', [])
 
-    def add_condition(self, allowed_faces: list[BlockFaces], block_filter: list[Union[BlockDescriptor, str]]):
+    def add_condition(self, allowed_faces: list[BlockFaces], block_filter: list[BlockDescriptor | str]):
         """Adds a condition to the placement filter.
 
         Args:
             allowed_faces (list[BlockFaces]): The faces of the block that are allowed to be placed on.
-            block_filter (list[Union[BlockDescriptor, str]]): The blocks that are allowed to be placed on.
+            block_filter (list[BlockDescriptor | str]): The blocks that are allowed to be placed on.
         """
         if BlockFaces.Side in allowed_faces:
             allowed_faces.remove(BlockFaces.North)
@@ -317,6 +359,42 @@ class _PermutationComponents(_Components):
         }
 
 
+class _BlockTraits():
+    def __init__(self) -> None:
+        self._traits = {}
+    
+    def placement_direction(self, y_rotation_offset: float = 0, *traits: PlacementDirectionTrait):
+        """can add states containing information about the player's rotation when the block is placed.
+
+        Args:
+            y_rotation_offset (float, optional): The y rotation offset. Defaults to 0.
+            traits (PlacementDirectionTrait): The traits for the block.
+            
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_direction-example
+        """
+
+        self._traits["minecraft:placement_direction"] = {
+            "enabled_states": [str(t) for t in traits],
+            "y_rotation_offset": y_rotation_offset
+        }
+
+    def placement_position(self, *traits: PlacementPositionTrait):
+        """Can add states containing information about the position of the block when it is placed.
+
+        Args:
+            traits (PlacementPositionTrait): The traits for the block.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_position-example
+        """
+        self._traits["minecraft:placement_position"] = {
+            "enabled_states": traits
+        }
+
+    @property
+    def export(self):
+        return self._traits
+
+
 class _BlockServerDescription(_MinecraftDescription):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """The block description.
@@ -326,19 +404,21 @@ class _BlockServerDescription(_MinecraftDescription):
             is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
         """
         super().__init__(name, is_vanilla)
+        self._traits = _BlockTraits()
         self._description['description'].update({
-            'properties': {},
+            'states': {},
+            "traits":{},
         })
 
-    def add_property(self, name: str, *range: float | str |bool):
-        """Adds a property to the block.
+    def add_state(self, name: str, *range: float | str |bool):
+        """Adds a state to the block.
 
         Args:
-            name (str): The name of the property.
-            range (float | str |bool): Values this property can have.
+            name (str): The name of the state.
+            range (float | str |bool): Values this state can have.
 
         """
-        self._description['description']['properties'][f'{ANVIL.NAMESPACE}:{name}'] = range
+        self._description['description']['states'][f'{ANVIL.NAMESPACE}:{name}'] = range
         return self
 
     def menu_category(self, category: BlockCategory = BlockCategory.none, group: str = None):
@@ -356,13 +436,21 @@ class _BlockServerDescription(_MinecraftDescription):
         return self
 
     @property
+    def traits(self):
+        """Sets the traits for the block.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits
+        """
+        return self._traits
+    
+    @property
     def _export(self):
+        self._description['description']['traits'] = self._traits.export
         return super()._export
 
 
 class _BlockServer(AddonObject):
-    """The block server object.
-    """
+    """The block server object."""
     
     _extensions = {
         0: ".block.json", 
@@ -395,8 +483,7 @@ class _BlockServer(AddonObject):
 
     @property
     def description(self):
-        """The block description.
-        """
+        """The block description."""
         return self._description
 
     @property
@@ -431,7 +518,7 @@ class _BlockServer(AddonObject):
             ANVIL.Logger.block_missing_texture(self._name)
         else:
             for i, m in comps[BlockMaterialInstance.component_namespace].items():
-                target_textures.append(m['texture'])
+                target_textures.append(m['texture'].removeprefix(f"{ANVIL.NAMESPACE}:"))
 
         if not BlockGeometry.component_namespace in comps:
             ANVIL.Logger.block_missing_geometry(self._name)
@@ -460,11 +547,6 @@ class _BlockServer(AddonObject):
         self.content(self._server_block)
         super().queue()
 
-# Placeholder class. Has no use
-class _BlockClient():
-    def __init__(self, name, is_vanilla) -> None:
-        pass
-
 
 class Block():
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
@@ -474,10 +556,9 @@ class Block():
             name (str): The name of the block.
             is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
         """
-        self.name = name
+        self._name = name
         self._is_vanilla = is_vanilla
         self._server = _BlockServer(name, is_vanilla)
-        self._client = _BlockClient(name, is_vanilla)
 
         self._namespace_format = ANVIL.NAMESPACE_FORMAT
         if self._is_vanilla:
@@ -490,23 +571,37 @@ class Block():
         return self._server
 
     @property
-    def Client(self):
-        """The block client object.
-        """
-        return self._client
-
-    @property
     def identifier(self):
         """The block identifier.
         """
-        return f'{self._namespace_format}:{self.name}'
+        return f'{self._namespace_format}:{self._name}'
 
     @property
+    def name(self):
+        return self._name
+    
+    @property
     def queue(self):
-        """Queues the block to be exported.
-        """
-        display_name = self.name.replace("_", " ").title()
-        ANVIL.localize(f'tile.{self._namespace_format}:{self.name}.name', display_name)
+        """Queues the block to be exported."""
+
+        if not "minecraft:display_name" in self.Server._server_block["minecraft:block"]["components"]:
+            display_name = self._name.replace("_", " ").title()
+        elif self.Server._server_block["minecraft:block"]["components"]["minecraft:display_name"].startswith("tile."):
+            display_name = ANVIL._langs[self.Server._server_block["minecraft:block"]["components"]["minecraft:display_name"]]
+        else:
+            display_name = self.Server._server_block["minecraft:block"]["components"]["minecraft:display_name"]
+
+        ANVIL._report.add_report(
+            ReportType.BLOCK, 
+            vanilla = self._is_vanilla, 
+            col0 = display_name, 
+            col1 = self.identifier,
+            col2 = [
+                f"{key}: {[', '.join(value)]}"
+                for key, value in self.Server.description._description["description"]["states"].items()
+            ]
+        )
+
         self.Server.queue
 
 #  TODO: Integrate with the Block class
@@ -519,16 +614,14 @@ class VanillaBlockTexture(_MinecraftDescription):
     @property
     def update_texture(self):
         self._ext = ''
-        try:
-            CheckAvailability(f'{self._identifier}.png', 'texture', os.path.join('assets', 'textures', 'blocks'))
+        if FileExists(os.path.join('assets', 'textures', 'blocks', f'{self._identifier}.png')):
             self._ext = 'png'
-        except:
-            CheckAvailability(f'{self._identifier}.tga', 'texture', os.path.join('assets', 'textures', 'blocks'))
+        if FileExists(os.path.join('assets', 'textures', 'blocks', f'{self._identifier}.tga')):
             self._ext = 'tga'
 
         return self
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = ""):
         CopyFiles(
             os.path.join('assets', 'textures', 'blocks'),
             os.path.join('resource_packs', f'RP_{ANVIL.PASCAL_PROJECT_NAME}', 'textures', 'blocks', directory),

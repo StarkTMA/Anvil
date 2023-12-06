@@ -1,24 +1,35 @@
+# Anvil
+![Python 10](https://img.shields.io/badge/python-3.10%20%20|%20%203.11%20%20|%20%203.12-g.svg)
+![Anvil Version](https://img.shields.io/badge/beta-0.5.5-yellow.svg)
+![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+-----
+
+## What is Anvil?
+
 Anvil is a Minecraft Bedrock development tool designed to make creating content for Minecraft Bedrock easier and consistent. It is build around modularity and extensibility, allowing you to create your own modules and plugins to extend the functionality of Anvil.
 
-Anvil leverages the power of [**Python**](https://www.python.org/downloads/) at automating repetitive tasks and generating code for you, so you can focus on the important stuff.
+### Requirements
 
-The design philosophy of Anvil is to be as modular as possible, where the entire project can be entirely generated using the python script and its assets.
-
-## Requirements
 To use Anvil, [**python**](https://www.python.org/downloads/) `3.10.0` or higher must be installed.
 
-Due to Minecraft bedrock being primarily developed on Windows, the file paths are Windows specific, so Anvil is only supported on Windows.
+Due to Minecraft bedrock being primarily developed on Windows, Anvil is only supported on Windows.
 
-## Installing
+### Features
+- Develop the entire project in python, no need to dive into json files.
+
+
+### Installing
+
 To install Anvil, run the following command in your terminal:
 
-```bash
+```bash 
 pip install mcanvil
 ```
 
-This should install Anvil and all of its dependencies.
+### Usage
 
-## Usage
 ```bash
 anvil create <namespace> <project_name> [options]
 
@@ -29,5 +40,10 @@ project_name        The name of the project.
     --preview           Generates the project in Minecraft Preview com.mojang instead of release.
     --fullns            Sets the Project namespace to the full namespace.project_name
     --scriptapi         Adds dependencies support of ScriptAPI
-    --pbr               Adds capabilities support of Physically based rendering
+    --pbr               Adds dependencies support of Physically based rendering
+    --random_seed       Adds support of Random Seed Worlds.
 ```
+
+### Links & Resources
+
+* [**Bedrock Learn Portal**](https://learn.microsoft.com/en-gb/minecraft/creator/reference/) - Official Minecraft Bedrock Documentation.

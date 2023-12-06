@@ -1,33 +1,31 @@
 """A collection of useful functions and classes used throughout the program."""
-import csv
 import json as json
 import logging
 import math
 import os
-import random
-import re
 import shutil
 import string
+import subprocess
 import sys
+import types
 import zipfile
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from configparser import ConfigParser
-from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
-from pickle import GLOBAL
-from typing import NewType, Tuple, Type, Union, overload
-import requests
+from enum import Enum, StrEnum
+from typing import Any, NewType, Tuple
 from uuid import uuid4
 
 import click
 import commentjson as commentjson
+import requests
 from click import style
 from halo import Halo
-from PIL import Image, ImageColor, ImageDraw, ImageEnhance, ImageFont, ImageQt
+from PIL import Image, ImageDraw, ImageFont
 
 from .__version__ import __version__
 
+Color = NewType("Color", [tuple[int, int, int] | tuple[int, int, int, int] | str])
 Seconds = NewType("Seconds", float)
 Molang = NewType("Molang", str)
 coordinate = NewType("coordinate", [float | str])
@@ -38,14 +36,41 @@ level = NewType("tuple(lm,l)", tuple[float, float])
 Component = NewType("Component", str)
 Identifier = NewType("Identifier", str)
 event = NewType("Event", str)
-
 tick = NewType("Tick", int)
 _range = NewType("[range]", str)
-
 inf = 99999999999
 
+APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")  # type: ignore
+DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
+MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
 
-class Arguments(Enum):
+MANIFEST_BUILD: list[int] = [1, 20, 40]  # The build version of the manifest.
+BLOCK_SERVER_VERSION: str = "1.20.30"  # The version of the block server.
+ENTITY_SERVER_VERSION: str = "1.20.50"  # The version of the entity server.
+ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
+BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
+RP_ANIMATION_VERSION: str = "1.8.0"  # The version of the resource pack animation.
+ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"  # The version of the animation controllers.
+SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
+GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
+RENDER_CONTROLLER_VERSION: str = "1.10.0"  # The version of the render controller.
+SOUND_DEFINITIONS_VERSION: str = "1.20.20"  # The version of the sound definitions.
+DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
+FOG_VERSION: str = "1.16.100"  # The version of the fog.
+MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
+ITEM_SERVER_VERSION: str = "1.20.50"  # The version of the item server.
+GLOBAL_LIGHTING = [1, 0, 0]
+CAMERA_PRESET_VERSION = "1.19.50"  # The version of the camera presets.
+
+MODULE_MINECRAFT_SERVER: str = "1.6.0"  # The version of the Minecraft server module.
+MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"  # The version of the Minecraft UI module.
+MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"  # The version of the Minecraft UI module.
+MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"  # The version of the Minecraft UI module.
+
+# --------------------------------------------------------------------------
+
+
+class Arguments(StrEnum):
     """Enumeration for the different types of arguments."""
 
     def __str__(self) -> str:
@@ -64,7 +89,7 @@ def FileExists(path) -> bool:
     return os.path.exists(path)
 
 
-def normalize_180(angle: float) -> float:
+def normalize_180(angle: float | str) -> float:
     """Normalizes an angle between -180 and 180.
 
     Args:
@@ -73,7 +98,10 @@ def normalize_180(angle: float) -> float:
     Returns:
         float: The normalized angle.
     """
-    return (angle + 540) % 360 - 180
+    if isinstance(angle, float):
+        return round((angle + 540) % 360 - 180)
+    else:
+        return angle
 
 
 def clamp(value: float, _min: float, _max: float) -> float:
@@ -108,50 +136,23 @@ def frange(start: int, stop: int, num: float = 1):
     return values
 
 
-Color = NewType("Color", [tuple[int, int, int] | tuple[int, int, int, int] | str])
-
 def process_color(color: Color, add_alpha: bool = False) -> str | list[float]:
     if isinstance(color, tuple):
         if len(color) not in [3, 4]:
             raise ValueError("Color tuple must have 3 or 4 elements.")
         if len(color) == 3 and add_alpha:
             color = (*color, 255)
-        return [clamp(c, 0.0, 255.0) for c in color]
+        return (clamp(c, 0.0, 255.0) for c in color)
     elif isinstance(color, str):
         if color[0] != "#" or len(color) not in [7, 9]:
-            raise ValueError("Invalid color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'.")
+            raise ValueError(
+                "Invalid color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'."
+            )
         if len(color) == 7 and add_alpha:
             color += "ff"
         return color
     else:
         raise TypeError("Color must be either a tuple of 3 or 4 integers or a hexadecimal string.")
-
-
-APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")  # type: ignore
-DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
-MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.")
-
-MANIFEST_BUILD: list[int] = [1, 19, 70]  # The build version of the manifest.
-BLOCK_SERVER_VERSION: str = "1.19.80"  # The version of the block server.
-ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
-ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
-BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
-RP_ANIMATION_VERSION: str = "1.8.0"  # The version of the resource pack animation.
-ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"  # The version of the animation controllers.
-SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
-GEOMETRY_VERSION: str = "1.12.0"  # The version of the geometry.
-RENDER_CONTROLLER_VERSION: str = "1.10.0"  # The version of the render controller.
-SOUND_DEFINITIONS_VERSION: str = "1.14.0"  # The version of the sound definitions.
-DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
-FOG_VERSION: str = "1.16.100"  # The version of the fog.
-MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
-ITEM_SERVER_VERSION: str = "1.16.0"  # The version of the item server.
-MODULE_MINECRAFT_SERVER: str = "1.2.0"  # The version of the Minecraft server module.
-MODULE_MINECRAFT_SERVER_UI: str = "1.1.0"  # The version of the Minecraft UI module.
-GLOBAL_LIGHTING = [1, 0, 0]
-
-
-# --------------------------------------------------------------------------
 
 
 class FillMode(Arguments):
@@ -247,7 +248,7 @@ class DamageCause(Arguments):
 
     All = "all"
     Anvil = "anvil"
-    Attack = "attack"
+    EntityAttack = "entity_attack"
     Block_explosion = "block_explosion"
     Contact = "contact"
     Drowning = "drowning"
@@ -744,6 +745,87 @@ class EntitySoundEvent(Arguments):
     Pant = "pant"
 
 
+class CameraPresets(Arguments):
+    FirstPerson = "minecraft:first_person"
+    ThirdPerson = "minecraft:third_person"
+    ThirdPersonFront = "minecraft:third_person_front"
+    Free = "minecraft:free"
+
+
+class CameraEasing(Arguments):
+    Linear = "linear"
+    Spring = "spring"
+    InQuad = "in_quad"
+    OutQuad = "out_quad"
+    InOutQuad = "in_out_quad"
+    InCubic = "in_cubic"
+    OutCubic = "out_cubic"
+    InOutCubic = "in_out_cubic"
+    InQuart = "in_quart"
+    OutQuart = "out_quart"
+    InOutQuart = "in_out_quart"
+    InQuint = "in_quint"
+    OutQuint = "out_quint"
+    InOutQuint = "in_out_quint"
+    InSine = "in_sine"
+    OutSine = "out_sine"
+    InOutSine = "in_out_sine"
+    InExpo = "in_expo"
+    OutExpo = "out_expo"
+    InOutExpo = "in_out_expo"
+    InCirc = "in_circ"
+    OutCirc = "out_circ"
+    InOutCirc = "in_out_circ"
+    InBounce = "in_bounce"
+    OutBounce = "out_bounce"
+    InOutBounce = "in_out_bounce"
+    InBack = "in_back"
+    OutBack = "out_back"
+    InOutBack = "in_out_back"
+    InElastic = "in_elastic"
+    OutElastic = "out_elastic"
+    InOutElastic = "in_out_elastic"
+
+
+class TimeSpec(Arguments):
+    DAY = "day"
+    SUNRISE = "sunrise"
+    NOON = "noon"
+    SUNSET = "sunset"
+    NIGHT = "night"
+    MIDNIGHT = "midnight"
+
+
+class Biomes(Arguments):
+    BEACH = "beach"
+    DESERT = "desert"
+    EXTREME_HILLS = "extreme_hills"
+    FLAT = "flat"
+    FOREST = "forest"
+    ICE = "ice"
+    JUNGLE = "jungle"
+    MESA = "mesa"
+    MUSHROOM_ISLAND = "mushroom_island"
+    OCEAN = "ocean"
+    PLAIN = "plain"
+    RIVER = "river"
+    SAVANNA = "savanna"
+    STONE_BEACH = "stone_beach"
+    SWAMP = "swamp"
+    TAIGA = "taiga"
+    THE_END = "the_end"
+    THE_NETHER = "the_nether"
+
+
+class ReportType(Arguments):
+    SOUND = "sound"
+    ENTITY = "entity"
+    ATTACHABLE = "attachable"
+    ITEM = "item"
+    BLOCK = "block"
+    PARTICLE = "particle"
+
+
 class Selector:
     """
     A class used to construct a target selector for Minecraft commands. The class offers various methods to set target
@@ -973,6 +1055,16 @@ class BlockDescriptor(dict):
         super().__init__(name=name, tags=tags, states=states)
 
 
+class Vibrations(Arguments):
+    EntityInteract = "entity_interact"
+    Shear = "shear"
+    none = "none"
+
+
+class ControlFlags(Arguments):
+    Move = "move"
+    Look = "look"
+
 # Legacy code, will be removed in the future.
 def Defaults(type, *args):
     """
@@ -1150,30 +1242,49 @@ class _Config:
 
     def __init__(self) -> None:
         """Initializes a Config object."""
-        self._config = ConfigParser()
-        self._config.read("config.ini")
+        with open("anvilconfig.json", "r") as f:
+            self._config = json.loads(f.read())
 
     def save(self):
-        """Saves the config.ini file."""
-        with open("config.ini", "w") as f:
-            self._config.write(f)
+        """Saves the anvilconfig.json file."""
+        with open("anvilconfig.json", "w") as f:
+            f.write(json.dumps(self._config, indent=4))
 
-    def set(self, section: str, option: str, value):
-        """Sets a value in the config.ini file.
+    def add_section(self, section: str) -> None:
+        """Adds a section to the anvilconfig.json file.
+
+        Args:
+            section (str): The section to add.
+        """
+        self._config[section] = {}
+
+    def has_section(self, section: str) -> bool:
+        """Checks if a section exists in the anvilconfig.json file.
+
+        Args:
+            section (str): The section to check.
+
+        Returns:
+            bool: True if the section exists, False otherwise.
+        """
+        return section in self._config
+
+    def add_option(self, section: str, option: str, value):
+        """Sets a value in the anvilconfig.json file.
 
         Args:
             section (str): The section to set the value in.
             option (str): The option to set the value in.
             value (Any): The value to set.
         """
-        if not self._config.has_section(section):
-            self._config.add_section(section)
+        if not self.has_section(section):
+            self.add_section(section)
 
-        self._config[section][option] = str(value)
+        self._config[section][option] = value
         self.save()
 
     def has_option(self, section: str, option: str) -> bool:
-        """Checks if an option exists in the config.ini file.
+        """Checks if an option exists in the anvilconfig.json file.
 
         Args:
             section (str): The section to check the option in.
@@ -1184,19 +1295,8 @@ class _Config:
         """
         return option in self._config[section]
 
-    def has_section(self, section: str) -> bool:
-        """Checks if a section exists in the config.ini file.
-
-        Args:
-            section (str): The section to check.
-
-        Returns:
-            bool: True if the section exists, False otherwise.
-        """
-        return section in self._config
-
-    def get(self, section, option) -> str:
-        """Gets a value from the config.ini file.
+    def get_option(self, section, option) -> str:
+        """Gets a value from the anvilconfig.json file.
 
         Args:
             section (str): The section to get the value from.
@@ -1243,7 +1343,7 @@ class _Logger:
         click.echo(
             "\n".join(
                 [
-                    f"{_Logger.Cyan('Anvil')} - by Yasser A. Benfoguhal.",
+                    f"{_Logger.Cyan('Anvil')} - by Yasser A. Benfoughal.",
                     f"Version {_Logger.Cyan(__version__)}.",
                     f"Copyright © {datetime.now().year} {_Logger.Red('StarkTMA')}.",
                     "All rights reserved.",
@@ -1436,8 +1536,22 @@ class _Logger:
 
     # Error
     @staticmethod
-    def namespace_too_long(self, namespace):
+    def namespace_too_long(namespace):
         m = f"Namespace must be 8 characters or less. {namespace} is {len(namespace)} characters long."
+        # self.logger.error(m)
+        raise ValueError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    @staticmethod
+    def reserved_namespace(namespace):
+        m = f"{namespace} is a reserved namespace and cannot be used."
+        # self.logger.error(m)
+        raise ValueError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    @staticmethod
+    def unique_namespace(namespace):
+        m = f"Every namespace must be unique to the pack. it should be {namespace}."
         # self.logger.error(m)
         raise ValueError(_Logger.Red("[ERROR]: " + m))
 
@@ -1445,13 +1559,6 @@ class _Logger:
     @staticmethod
     def project_name_too_long(self, project_name):
         m = f"Project name must be 16 characters or less. {project_name} is {len(project_name)} characters long."
-        # self.logger.error(m)
-        raise ValueError(_Logger.Red("[ERROR]: " + m))
-
-    # Error
-    @staticmethod
-    def reserved_namespace(self, namespace):
-        m = f"{namespace} is a reserved namespace."
         # self.logger.error(m)
         raise ValueError(_Logger.Red("[ERROR]: " + m))
 
@@ -1466,7 +1573,7 @@ class _Logger:
         m = f"{entity} has no textures added."
         self.logger.error(m)
         raise RuntimeError(_Logger.Red("[ERROR]: " + m))
-    
+
     # Error
     def block_missing_texture(self, block):
         m = f"{block} has no default material instance added."
@@ -1527,6 +1634,11 @@ class _Logger:
     def molang_only(self, command):
         return f'{Message.ERROR}: Molang operations only, Error at "{style(command, "green")}".'
 
+    # Error
+    def digits_not_allowed(self, identifier):
+        m = f"Names starting with a digit are not allowed {identifier}."
+        self.logger.error(m)
+        raise RuntimeError(_Logger.Red("[ERROR]: " + m))
 
 
 class _JsonSchemes:
@@ -1538,7 +1650,6 @@ class _JsonSchemes:
             project_name: {
                 "behavior_packs": {},
                 "resource_packs": {},
-                "scripts": {},
                 "assets": {
                     "skins": {},
                     "animations": {},
@@ -1560,8 +1671,9 @@ class _JsonSchemes:
                         "ui": {},
                         "particle": {},
                     },
-                    "vanilla": {},
                     "output": {},
+                    "javascript": {},
+                    "anvilscripts": {},
                 },
             }
         }
@@ -1572,7 +1684,7 @@ class _JsonSchemes:
             [
                 "from anvil import *",
                 'if __name__ == "__main__":',
-                "    ANVIL.compile",
+                "    ANVIL.compile()",
                 "    #ANVIL.package()",
             ]
         )
@@ -1617,6 +1729,8 @@ class _JsonSchemes:
                 "ENV/",
                 "env.bak/",
                 "venv.bak/",
+                "# Typescript/Javascript",
+                "node_modules/",
             ]
         )
 
@@ -1629,26 +1743,27 @@ class _JsonSchemes:
         return [f"skinpack.{name}={display_name}"]
 
     @staticmethod
-    def manifest_bp(version, uuid1, has_script):
+    def manifest_bp(version, uuid1, has_script: bool, server_ui: bool):
+        v = list(map(int, version.split(".")))
         m = {
             "format_version": 2,
             "header": {
                 "description": "pack.description",
                 "name": "pack.name",
-                "uuid": uuid1,
-                "version": version,
+                "uuid": uuid1[0],
+                "version": v,
                 "min_engine_version": MANIFEST_BUILD,
             },
-            "modules": [{"type": "data", "uuid": str(uuid4()), "version": version}],
+            "modules": [{"type": "data", "uuid": str(uuid4()), "version": v}],
         }
         if has_script:
             m["modules"].append(
                 {
                     "uuid": str(uuid4()),
-                    "version": version,
+                    "version": v,
                     "type": "script",
                     "language": "javascript",
-                    "entry": "scripts/Main.js",
+                    "entry": "scripts/main.js",
                 }
             )
             m.update(
@@ -1657,14 +1772,17 @@ class _JsonSchemes:
                         {
                             "module_name": "@minecraft/server",
                             "version": MODULE_MINECRAFT_SERVER,
-                        },
-                        {
-                            "module_name": "@minecraft/server",
-                            "version": MODULE_MINECRAFT_SERVER_UI,
-                        },
+                        }
                     ]
                 }
             )
+            if server_ui:
+                m["dependencies"].append(
+                    {
+                        "module_name": "@minecraft/server-ui",
+                        "version": MODULE_MINECRAFT_SERVER_UI,
+                    }
+                )
         return m
 
     @staticmethod
@@ -1674,7 +1792,7 @@ class _JsonSchemes:
             "header": {
                 "description": "pack.description",
                 "name": "pack.name",
-                "uuid": uuid1,
+                "uuid": uuid1[0],
                 "version": version,
                 "min_engine_version": MANIFEST_BUILD,
             },
@@ -1691,7 +1809,7 @@ class _JsonSchemes:
         return m
 
     @staticmethod
-    def manifest_world(version, uuid1, author):
+    def manifest_world(version, uuid1, author, seed):
         return {
             "format_version": 2,
             "header": {
@@ -1699,8 +1817,10 @@ class _JsonSchemes:
                 "description": "pack.description",
                 "version": version,
                 "uuid": uuid1,
+                # "platform_locked": False,
                 "lock_template_options": True,
                 "base_game_version": MANIFEST_BUILD,
+                "allow_random_seed": seed,
             },
             "modules": [
                 {
@@ -1714,7 +1834,7 @@ class _JsonSchemes:
 
     @staticmethod
     def world_packs(pack_id, version):
-        return [{"pack_id": pack_id, "version": version}]
+        return [{"pack_id": i, "version": version} for i in pack_id]
 
     @staticmethod
     def code_workspace(name, path1, path2):
@@ -1730,7 +1850,7 @@ class _JsonSchemes:
             "name": project_name,
             "version": version,
             "description": description,
-            "main": "scripts/Main.js",
+            "main": "scripts/main.js",
             "scripts": {"test": 'echo "Error: no test specified" && exit 1'},
             "keywords": [],
             "author": author,
@@ -2016,12 +2136,55 @@ class _JsonSchemes:
             "minecraft:item": {"components": {}},
         }
 
-    # To be removed after HCF items are fully supported
     @staticmethod
-    def client_item():
+    def camera_preset(namespace, name, inherit_from):
         return {
-            "format_version": ITEM_SERVER_VERSION,
-            "minecraft:item": {"components": {}},
+            "format_version": CAMERA_PRESET_VERSION,
+            "minecraft:camera_preset": {
+                "identifier": f"{namespace}:{name}",
+                "inherit_from": inherit_from,
+            },
+        }
+
+    @staticmethod
+    def tsconfig(pascal_project_name):
+        return {
+            "compilerOptions": {
+                "target": "ESNext",
+                "module": "es2020",
+                "declaration": False,
+                "outDir": f"behavior_packs/BP_{pascal_project_name}/scripts",
+                "strict": True,
+                "pretty": True,
+                "esModuleInterop": True,
+                "moduleResolution": "Node",
+                "resolveJsonModule": True,
+                "noUnusedLocals": True,
+                "noUnusedParameters": True,
+                "forceConsistentCasingInFileNames": True,
+                "lib": [
+                    "ESNext",
+                    "dom",
+                ],
+            },
+            "include": ["assets/javascript/**/*"],
+            "exclude": ["node_modules"],
+        }
+
+    @staticmethod
+    def vscode(pascal_project_name):
+        return {
+            "version": "0.3.0",
+            "configurations": [
+                {
+                    "type": "minecraft-js",
+                    "request": "attach",
+                    "name": "Wait for Minecraft Debug Connections",
+                    "mode": "listen",
+                    "localRoot": f"${{workspaceFolder}}/behavior_packs/BP_{pascal_project_name}/scripts",
+                    "port": 19144,
+                }
+            ],
         }
 
     # ---------------------------
@@ -2041,6 +2204,7 @@ class _JsonSchemes:
             "directional_lights": {},
             "pbr": {},
         }
+
     @staticmethod
     def atmospherics():
         return {
@@ -2067,7 +2231,7 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
     type = name.split(".")[-1]
     out_content = ""
     file_content = content
-    stamp = f"Generated with Anvil@StarkTMA {__version__}"
+    stamp = f"Generated with Anvil@starktma_lg {__version__}"
     time = datetime.now(datetime.now().astimezone().tzinfo).strftime("%d-%m-%Y %H:%M:%S %z")
     # copyright=f'Property of {COMPANY}'
     copyright = ""
@@ -2095,3 +2259,28 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
     if prev.split("\n")[6::] != file_content.split("\n"):
         with open(path, mode, encoding="utf-8") as file:
             file.write(out_content)
+
+
+def process_subcommand(command: str, error_handle: str = "Error"):
+    try:
+        subprocess.run(command, shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"{error_handle}: {e}")
+
+
+def validate_namespace_project_name(namespace: str, project_name: str):
+    display_name = project_name.title().replace("-", " ").replace("_", " ")
+    pascal_project_name = "".join(x for x in display_name if x.isupper())
+
+    if namespace == "minecraft":
+        _Logger.reserved_namespace(namespace)
+    
+    if len(namespace) > 8:
+        _Logger.namespace_too_long(namespace)
+    
+    if not namespace.endswith(f"_{pascal_project_name.lower()}"):
+        _Logger.unique_namespace(f"{namespace}_{pascal_project_name.lower()}")
+
+    if len(project_name) > 16:
+        _Logger.project_name_too_long(namespace)
+    

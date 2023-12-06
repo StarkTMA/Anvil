@@ -1,8 +1,8 @@
 <img src="https://starktma.net/wp-content/uploads/2022/04/logo.png" width="300" alt="Anvil Logo">
 
 # Anvil
-![Python 10](https://img.shields.io/badge/python-3.10%20%20|%20%203.11-g.svg)
-![Anvil Version](https://img.shields.io/badge/beta-0.5.1-yellow.svg)
+![Python 10](https://img.shields.io/badge/python-3.10%20%20|%20%203.11%20%20|%20%203.12-g.svg)
+![Anvil Version](https://img.shields.io/badge/beta-0.5.5-yellow.svg)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -43,9 +43,10 @@ project_name        The name of the project.
     --fullns            Sets the Project namespace to the full namespace.project_name
     --scriptapi         Adds dependencies support of ScriptAPI
     --pbr               Adds dependencies support of Physically based rendering
+    --random_seed       Adds support of Random Seed Worlds.
 ```
 
 ### Links & Resources
 
-* [**Documentation**](https://StarkTMA.github.io/Anvil/) - Official docs for **anvil**.
+* [**Documentation**](https://anvil.starktma.net/) - Official docs for **anvil**.
 * [**Bedrock Learn Portal**](https://learn.microsoft.com/en-gb/minecraft/creator/reference/) - Official Minecraft Bedrock Documentation.

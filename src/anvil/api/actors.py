@@ -1,10 +1,15 @@
 from anvil import Math, Query, Variable
-from anvil.api.components import (CollisionBox, DamageSensor, Filter, Health,
-                                  InstantDespawn, Physics, Pushable, Rideable,
-                                  Scale, TypeFamily, _component)
+from anvil.api.blockbench import Animation, Geometry
+from anvil.api.components import (Breathable, CollisionBox, DamageSensor,
+                                  Filter, Health, InstantDespawn, JumpStatic,
+                                  KnockbackResistance, Movement, MovementType,
+                                  NavigationType, Physics, Pushable,
+                                  PushThrough, Rideable, Scale, TypeFamily,
+                                  _component)
+from anvil.api.features import Particle
 from anvil.api.vanilla import ENTITY_LIST, ITEMS_LIST, Entities
-from anvil.core import (ANVIL, AddonObject, Animation, Geometry, Particle,
-                        _MinecraftDescription, _SoundDescription)
+from anvil.core import (ANVIL, AddonObject, _MinecraftDescription,
+                        _SoundDescription)
 from anvil.lib import *
 from anvil.lib import _JsonSchemes
 
@@ -303,7 +308,7 @@ class _ActorClientDescription(_ActorDescription):
             )
 
         self._description["description"]["textures"].update(
-            {texture_id: os.path.join("textures", self._type, self._name, texture_name)}
+            {texture_id: os.path.join("textures", ANVIL.NAMESPACE, self._type, self._name, texture_name)}
         )
         self._added_textures.append(texture_name)
 
@@ -376,8 +381,8 @@ class _ActorClientDescription(_ActorDescription):
 
     def sound_effect(
         self,
-        sound_shortname: str,
-        sound_identifier: str,
+        sound_name: str,
+        sound_reference: str,
         category: SoundCategory = SoundCategory.Neutral,
     ):
         """This method manages the sound effects for an entity.
@@ -389,9 +394,9 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         self._description["description"]["sound_effects"].update(
-            {sound_shortname: sound_identifier}
+            {sound_name: sound_reference}
         )
-        sound: _SoundDescription = ANVIL.sound(sound_identifier, category)
+        sound: _SoundDescription = ANVIL.sound(sound_reference, category)
         self._sounds.append(sound)
         return sound
 
@@ -416,7 +421,7 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         ANVIL._sound_event.add_entity_event(
-            self.identifier, sound_event, sound_identifier, volume, pitch
+            self.identifier, sound_identifier, sound_event, volume, pitch
         )
 
         sound: _SoundDescription = ANVIL.sound(sound_identifier, category, max_distance=max_distance, min_distance=min_distance)
@@ -446,7 +451,7 @@ class _ActorClientDescription(_ActorDescription):
             RaiseError(
                 MISSING_RENDER_CONTROLLER(f"{self._namespace_format}:{self._name}")
             )
-
+        directory = directory if not directory is None else ""
         if self._added_geos > 0:
             CopyFiles(
                 os.path.join("assets", "models", self._type),
@@ -481,6 +486,7 @@ class _ActorClientDescription(_ActorDescription):
                     "resource_packs",
                     f"RP_{ANVIL.PASCAL_PROJECT_NAME}",
                     "textures",
+                    ANVIL.NAMESPACE, 
                     self._type,
                     self._name,
                 ),
@@ -720,23 +726,6 @@ class _EntityServer(AddonObject):
         self.component_group("despawn").add(InstantDespawn())
         self.event("despawn").add("despawn")
 
-    def _add_essential_components(self):
-        """Adds essential components to the entity."""
-        self.components.add(
-            Physics(),
-            Scale(1),
-        )
-
-    def _optimize_entity(self):
-        """Optimizes the entity."""
-        self.components.add(
-            {
-                "minecraft:conditional_bandwidth_optimization": {
-                    "default_values": {"use_motion_prediction_hints": True}
-                }
-            }
-        )
-
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Base class for all server entities.
 
@@ -763,7 +752,6 @@ class _EntityServer(AddonObject):
         self._component_groups: list[_ComponentGroup] = []
         self._vars = []
         self._add_despawn_function()
-        self._optimize_entity()
 
     @property
     def description(self):
@@ -1134,6 +1122,7 @@ class _BP_ControllerState:
                 self._controller_state[self._state_name]["on_entry"].append(
                     f"/{command}"
                 )
+
         return self
 
     def on_exit(self, *commands: str):
@@ -1436,10 +1425,10 @@ class _BP_Controller:
                     for st in tr["transitions"]:
                         collected_states.extend(st.keys())
 
-        for state in collected_states:
+        for state in set(collected_states):
             if state not in self._states_names:
                 ANVIL.Logger.missing_state(
-                    self._side, self._controller_namespace, *st.keys()
+                    self._side, self._controller_namespace, state
                 )
 
         return self._controllers
@@ -1723,7 +1712,7 @@ class _SpawnRuleDescription(_MinecraftDescription):
             Spawn Rule
 
         """
-        self._description["description"]["population_control"] = population
+        self._description["description"]["population_control"] = population.value
         return self._spawn_rule_obj
 
 
@@ -1935,7 +1924,7 @@ class _Condition:
         self._condition["minecraft:herd"].append(self_herd)
         return self
 
-    def BiomeFilter(self, filter: dict):
+    def BiomeFilter(self, filter: Filter):
         """Specifies which biomes the mob spawns in.
 
         Parameters
@@ -2433,7 +2422,7 @@ class _Properties:
         self._properties = {}
 
     def enum(
-        self, name: str, values: tuple[str], *, default: str, client_sync: bool = False
+        self, name: str, values: tuple[str], default: str, *, client_sync: bool = False
     ):
         self._properties[f"{ANVIL.NAMESPACE}:{name}"] = {
             "type": "enum",
@@ -2470,7 +2459,7 @@ class _Properties:
         self._properties[f"{ANVIL.NAMESPACE}:{name}"] = {
             "type": "float",
             "default": float(default),
-            "range": range,
+            "range": [float(f) for f in range],
             "client_sync": client_sync,
         }
         return self
@@ -2490,9 +2479,11 @@ class _Properties:
 
 # ========================================================================================================
 class Entity:
-    def _validate_name(self, name):
+    def _validate_name(self, name: str):
         if ":" in name:
-            raise ValueError(ANVIL.Logger.namespaces_not_allowed(name))
+            ANVIL.Logger.namespaces_not_allowed(name)
+        if not name[0].isalpha():
+            ANVIL.Logger.digits_not_allowed(name)
 
     def __init__(self, name: str) -> None:
         self._is_vanilla = name in ENTITY_LIST
@@ -2531,6 +2522,38 @@ class Entity:
     def name(self):
         return self._name
 
+    def add_basic_components(self):
+        """Adds basic server components to the entity.
+        
+        This includes:
+            - `JumpStatic`
+            - `MovementType`
+            - `NavigationType`
+            - `Movement`
+            - `Physics`
+            - `KnockbackResistance`
+            - `Health`
+            - `CollisionBox`
+            - `Breathable`
+            - `DamageSensor`
+            - `Pushable`
+            - `PushThrough`
+        """
+        self.Server.components.add(
+            JumpStatic(0),
+            MovementType().Basic(),
+            NavigationType().Walk(),
+            Movement(0),
+            Physics(True, True),
+            KnockbackResistance(10000),
+            Health(6),
+            CollisionBox(1, 1),
+            Breathable(),
+            DamageSensor().add_trigger(DamageCause.All, False),
+            Pushable(False, False),
+            PushThrough(1),
+        )
+        
     def queue(
         self,
         directory: str = None,
@@ -2542,9 +2565,10 @@ class Entity:
             if display_name is None
             else display_name
         )
-        spawn_egg_name = display_name if spawn_egg_name is None else spawn_egg_name
+        spawn_egg_name = f"Spawn {display_name}" if spawn_egg_name is None else spawn_egg_name
         if self._is_vanilla:
             directory = "vanilla"
+
         ANVIL.localize(
             f"entity.{self._namespace_format}:{self._name}.name", display_name
         )
@@ -2553,10 +2577,18 @@ class Entity:
         )
         ANVIL.localize(
             f"item.spawn_egg.entity.{self._namespace_format}:{self._name}.name",
-            f"Spawn {spawn_egg_name}",
+            spawn_egg_name,
         )
         self.Client.queue(directory)
         self.Server.queue(directory)
+        
+        ANVIL._report.add_report(
+            ReportType.ENTITY, 
+            vanilla = self._is_vanilla, 
+            col0 = display_name, 
+            col1 = self.identifier,
+            #col2 = [event._event_name for event in self.Server._events]
+        )
 
     def __str__(self):
         return self.identifier
@@ -2607,8 +2639,18 @@ class Attachable(AddonObject):
     def queue(self):
         """Queues the attachable.
         """
+        
+        display_name = self._name.replace("_", " ").title()
+
         self._attachable["minecraft:attachable"].update(self._description.queue(""))
         self.content(self._attachable)
+
+        ANVIL._report.add_report(
+            ReportType.ATTACHABLE, 
+            vanilla = self._is_vanilla, 
+            col0 = display_name, 
+            col1 = self.identifier,
+        )
         super().queue("")
 
     def __str__(self):

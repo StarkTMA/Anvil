@@ -14,6 +14,7 @@ anvil create namespace my_project
     --fullns            Sets the Project namespace to the full namespace.project_name
     --scriptapi         Adds dependencies support of ScriptAPI
     --pbr               Adds capabilities support of Physically based rendering
+    --random_seed       Adds support of Random Seed Worlds.
 ```
 
 The command will do the following:

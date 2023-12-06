@@ -2,16 +2,185 @@
 
 ---
 
+Version 0.5.5
+=============
+  [Anvil]
+  -------
+  - Changed the directory configuration of some files to support the new Addons program.
+  - Changed `Config.ini` to `anvilconfig.json`. This is done so it's much easier to integrate with the Scripting API.
+  - A newer guidelines have been introduced to Anvil. Namespaces now require an additional abbreviation of the project name. For instance, if the namespace is `starktma` and the project name is `Beyond: Platformer`, the namespace will be `starktma_bp`. This is done to avoid conflicts with other projects.
+  - Item Texture and Terrain Texture references are now in this format `namespace:name`. This change does not require your attention as it's done automatically.
+  - Item and block textures are now save under `RP/textures/namespace/`. previously they were saved under `RP/textures/`.
+  - Added sounds and music will now use `RP/sounds/namespace/` instead of `RP/sounds/`.
+  - Sounds now use the format `namespace:sound_reference` instead of `sound_reference`. This is does not require your attention as it's done automatically.
+  - Calling `identifier` on a sound definitions will return the Sound reference in the format `namespace:sound_reference`.
+  - Moved `Dialogue()`, `Fog()`, `LootTable()`, `Recipe()`, `Function()`, `Particle()`, `CameraPreset()`, `Structure()`, `Fonts()` and `SkinPack()` classes to `anvil.api.features`.
+  - Dialogue scene tags now use the format `namespace:scene_tag` instead of `scene_tag`. This is does not require your attention as it's done automatically.
+  - Calling `identifier` on a dialogue scene will return the scene tag in the format `namespace:scene_tag`.
+  - Calling `identifier` on a fog instance will return its identifier.
+  - Moved `Geometry()` and `Animations()` classes to `anvil.api.blockbench`, this is in preparation to integrate `.bbmodel` files directly into Anvil without splitting them into multiple json files.
+  - LootTables will be exported to `BP/loot_tables/namespace/`
+  - Calling `path` on a loot table will return its execution path that can be used in Components or Commands. (Must be queued first)
+  - Particle textures will no be copied to `RP/textures/particle/namespace/`.
+  - Actor textures are now copied into `RP/textures/namespace/[entity-attachable]/` instead of `RP/textures/[entity-attachable]/`
+
+  [Components]
+  ------------
+  - Added `FlyingSpeed()`, `RandomHover()`, `Interact()`, `AngerLevel()`, `Roar()`, `FloatWander()`, `LayDown()`, `MeleeBoxAttack()`, `CanJoinRaid()`, `TimerFlag1()`, `TimerFlag2()`, `TimerFlag3()` components.
+  - Updated `ENTITY_SERVER_VERSION` to `[1.20.50]`.
+
+  [Vanilla]
+  ---------
+  - Split the Planks block into 6 individual blocks.
+  - Split the Stone block into 7 individual blocks.
+
+  [Items]
+  -------
+  - Renamed `ItemUseDuration()` to `ItemUseModifiers()`.
+  - Added `ItemTags()` component.
+  - Updated `ITEM_SERVER_VERSION` to `[1.20.50]`.
+
+  [Molang]
+  --------
+  - Added `timer_flag_1`, `timer_flag_2`, `timer_flag_3` queries.
+
+
+Version 0.5.4
+=============
+  [Anvil]
+  -------
+  - Updated `MODULE_MINECRAFT_SERVER` to `[1.6.0]`.
+  - Updated `ITEM_SERVER_VERSION` to `[1.20.40]`.
+  - tsc now runs using `tsconfig.json`. The tsconfig options can be added and/or changed but `outDir` and `include` will be overwritten by Anvil.
+  - Added a `launch.json` for script debugging.
+  - Added `node_modules/` to default `.gitignore`.
+  - Added `scriptui` option to `config.ini`.
+
+  [Components]
+  ------------
+  - Added `MovementMeters()` component that takes speed in m/s instead of whatever Minecraft is using.
+  - Added `MovementMeters()`, `FollowParent()`, `PlayerRideTamed()`, `InputGroundControlled()`, `FollowOwner()`, `WaterMovement()`, `Panic()`, `ChargeAttack()`, `RamAttack()`, `AvoidMobType()`, `LeapAtTarget()`, `OcelotAttack()`, `Angry()`, `OwnerHurtByTarget()`, `OwnerHurtTarget()`, `RandomSearchAndDig()`, `StompAttack()`, `FollowMob()`, `RandomSwim()`, `RandomBreach()` components.
+  - Added `has_damage()`, `is_daytime()`, `rider_count()`  filters.
+
+  
+Version 0.5.3
+=============
+  [Anvil]
+  -------
+  - Renamed `seed` cli option to `random_seed`.
+  - Updated `ITEM_SERVER_VERSION` to `[1.20.30]`.
+  - Added a new `generate_technical_notes()` method to `Anvil` class, the method will generate a pdf file containing a list of every entity, block, attachable, item, particle and sounds that were exported.
+  - `compile()`, `mcworld()`, `mcaddon()` are now proper methods instead of properties.
+  - Removed the `scipy` requirement from `setup.cfg`.
+  - Removed and/or replaced rarely used library imports.
+  - Added a new `CameraPreset()` class that creates new camera presets.
+  - Removed the `vanilla` folder from the `assets` directory, this is a step forward towards removing support for cloning vanilla packs.
+  - Scripting API files are now hosted in the `assets/javascript` directory, a quality of life improvement towards full support of js scripting.
+  - Anvil CLI will install both `@minecraft/server` and `@minecraft/serve-ui` modules if the `scriptapi` flag is set.
+  - Anvil will automatically run `tsc <filename>` on every `.ts` file in `assets/javascript` and copies every `.js` files preserving the relative paths in `BP/scripts`.
+  - Moved the scripts folder to host all Python files to `assets/anvilscripts`, you can place your files anywhere you wish to but this is done to keep inline with javascript files.
+  - Anvil now support multiple packs, generation will still take place in a single pack but if you wish to include other packs, add the uuid to `config.ini` separating by a `,` and copy your pack to their respective locations.
+
+  [Blocks]
+  --------
+  - Renamed `FacingDirections`, `BlockFaces` and `VerticalHalf` to `FacingDirectionsTrait`, `BlockFacesTrait` and `VerticalHalfTrait`.
+  - Renames properties to states in Block Description.
+
+  [Commands]
+  - Fixed an issue with `Camera()` command where the keyword `ease` was not parsed.
+  - Added `Time()`, `Stopsound()` commands.
+  
+  [Components]
+  - Added `is_biome()`, `is_underwater()`, `on_ground()`, `in_water()` filters.
+  - Added `Biomes` enum.
+  - Added `RandomSitting()`, `StayWhileSitting()`, `UnderwaterMovement()`, `RandomSwim()`, `RandomBreach()`, `MoveToWater()`, `MoveToLand()`, `MoveToLava()`, `LookAtTarget()` components.
+  - `Rideable()` family types are now added by passing family strings using `family_types()`.
+  
+  [Items]
+  - Added `ItemCanDestroyInCreative()` and `ItemHoverTextColor()` components.
+  
+  [Tools]
+  - `StateMachine()`:
+    - `active_player` counter now runs all the time regardless of the max player count.
+
+Version 0.5.2
+=============
+  [Anvil]
+  -------
+  - Split `StainedHardenedClay()` block into 16 individual blocks.
+  - Split `StainedGlass()` block into 16 individual blocks.
+  - Split `StainedGlassPane()` block into 16 individual blocks.
+  - Split `ConcretePowder()` block into 16 individual blocks.
+  - Entity names starting with a digit will raise an error.
+  - Updated the `SOUND_DEFINITIONS_VERSION` format version to `[1.20.20]`.
+  - Updated `BLOCK_SERVER_VERSION` to `[1.20.20]`.
+  - sound_definitions now accept both float and integer values for min_distance and max_distance.
+  - Added support of Random Seed Generation to both CLI and core Anvil.
+  - Updated some vanilla blocks to use `BlockStates.CardinalDirection` instead of `BlockStates.Direction`.
+  
+  [Components]
+  ------------
+  - Added `can_spread_on_fire` parameter to both `DelayedAttack()` `MeleeAttack()`.
+
+  [Molang]
+  --------
+  - Renamed `block_property` to `block_state`.
+  - Renamed `has_block_property` to `has_block_state`.
+
+  [Commands]
+  -------
+  - Added `PlayerSleepingPercentage()` to the `Gamerule` command.
+  - Added `ScriptEvent()`.
+  - Added `CameraPresets()` and `CameraEasing()` enums.
+  - Added `Camera()` command.
+
+  [Items]
+  -------
+  - Added `group`, `category` and `is_hidden_in_commands` to Item Server description.
+  - Added `ItemWearable()` component.
+  - Added `ItemHandEquipped()` component.
+  - Added `ItemGlint()` component.
+  - Added `ItemUseDuration()` component.
+  - Added `ItemStackedByData()` component.
+  - Added `ItemUseAnimation()` component.
+  - Added `ItemAllowOffHand()` component.
+  - Added `ItemShouldDespawn()` component.
+  - Added `ItemLiquidClipped()` component.
+  - Added `ItemDamage()` component.
+  - Added `ItemDigger()` component.
+  - Added `ItemEnchantable()` component.
+  - Added `ItemFood()` component.
+  - Added `ItemsInteractButton()` component.
+  - Removed `LEGACYItemHandEquipped()` component.
+  - Removed `LEGACYItemFoil()` component.
+  - Removed `LEGACYItemStackedByData()` component.
+  - Removed `LEGACYItemUseDuration()` component.
+  - Removed `LEGACYItemFood()` component.
+  - Removed the `_ItemClient()` class.
+
+  [Blocks]
+  --------
+  - Added `BlockFace` and `VerticalHalf` block states.
+  - Removed `_BlockClient()` class.
+  - Added `traits` property to blocks server description.
+  - Added the following enums: `PlacementDirectionTrait`, `PlacementPositionTrait`, `CardinalDirections`, `FacingDirections`, `BlockFaces`, `VerticalHalf`.
+  - Renamed `property` keys to `state`.
+  
+  [Documentation]
+  ---------------
+  - Exposed more APIs.
+
 Version 0.5.1
 =============
   [Anvil]
+  -------
   - Added workflows to publish to pypi and testpypi.
   - Gone Public!!!!!!!!
-
 
 Version 0.5.0
 =============
   [Anvil]
+  -------
   - Docs are now build when pushing to the main branch.
   - Added a universal way to require project specific configuration.
     * To use call `ANVIL.require_config()` and pass the required configs as arguments.
@@ -27,6 +196,7 @@ Version 0.5.0
   - Added a new property to Anvil Core `ANVIL.new_score`, this will register and return a new incremental score every time it's called. (Improved the score creation in `TimedFunction`)
 
   [Components]
+  -------
   - Added and `_ai_goal()` parent class.
   - Added new components: `MoveTowardsTarget()`, `EntitySensor()`, `AmbientSoundInterval()`.
   - Slightly modified the way components are coded, this allows for much easier use of the `remove` method from events.
@@ -34,17 +204,21 @@ Version 0.5.0
   - Fixed a bug with `SendEvent()` that caused it to not write some important data to the json file therefore causing it to not work.
 
   [Actors]
+  -------
   - Similar to geometries, animations can now be referenced from other entities, reducing redundancy.
   - Entity Sound Events can now specify a min and max distance of a sound.
 
   [Commands]
+  -------
   - Fixed a bug with the `CameraShake()` command returning `None` on export.
   
   [UI]
+  -------
   - Added a `Credits Constructor` class method to `AnvilHUDScreen` to facilitate creating UI based credits.
   - Titles and Actionbars will now ignore keywords created in screens other that `anvil_hud`.
   
   [Documentation]
+  -------
   - Finished the tutorial for adding an entity.
   - Added a documentation for adding a block.
   - Added a tutorial for creating a One Block SkyBlock map.

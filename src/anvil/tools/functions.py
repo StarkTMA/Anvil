@@ -1,6 +1,6 @@
 from anvil import *
-from anvil import ANVIL, Function
 from anvil.api.commands import Clear, Execute, Scoreboard, Tag, Tellraw
+from anvil.api.features import Function
 
 
 class StateMachine:
@@ -92,7 +92,6 @@ class StateMachine:
                 # Init player
                 Execute().As(Selector(Target.A).scores(player_level=self._index, player_state=0)).run(self._init_player.execute),
             )
-
             self._jumphere.add(
                 Scoreboard().players.set(Target.A, "player_level", self._index),
                 Scoreboard().players.set(Target.A, "player_state", 0),
@@ -102,7 +101,6 @@ class StateMachine:
 
     class SideState(_state):
         """Represent a side level in the game."""
-
         def __init__(self, index: int, next_state: Function, auto_progress: bool = True) -> None:
             """
             Initialize a side level.
@@ -112,8 +110,8 @@ class StateMachine:
             all_players (bool): Determines if all players should be pulled into the side level.
             auto_progress (bool): Determines if the game should automatically progress to the next level.
             """
-            self.next_state = next_state
             super().__init__(index, "side_level", auto_progress)
+            self._next_state = next_state
             self._root.add(
                 # Sync players
                 Execute()
@@ -172,7 +170,6 @@ class StateMachine:
                 Scoreboard().players.add(ANVIL.PROJECT_NAME, "player_id", 1),
                 Scoreboard().players.set(Target.S, "player_level", 0),
                 Scoreboard().players.set(Target.S, "player_state", 0),
-                Tag(Target.S).add("player_init"),
                 Tellraw(Target.A).text.text("A new player joined: [").selector(Target.S).text("]") if ANVIL.DEBUG else "",
             )
             .queue(os.path.join("StateMachine", "misc"))
@@ -229,7 +226,6 @@ class StateMachine:
             Function("root")
             .add(
                 Execute().As(Selector(Target.A).tag("!player_init")).run(self.init_player.execute),
-                self.active_players.execute,
             )
             .queue("StateMachine")
         )
@@ -238,7 +234,8 @@ class StateMachine:
             .add(
                 Execute().If.ScoreMatches(PROJECT_NAME, "active_players", f"..{self._max_player_count}").run(self.root.execute)
                 if self._max_player_count > 0
-                else self.root.execute
+                else self.root.execute,
+                self.active_players.execute,
             )
             .tick.queue("StateMachine")
         )
@@ -264,7 +261,6 @@ class StateMachine:
         Add a side level to the state machine.
 
         Parameters:
-        all_players (bool): Determines if all players should be pulled into the side level.
         auto_progress (bool): Determines if the game should automatically progress to the next level.
 
         Returns:
@@ -279,7 +275,7 @@ class StateMachine:
         """Add commands to the root function of the state machine.
 
         This is helpful if you want some commands and function to run at all times regardless of the level"""
-        self.root.add(*commands)
+        self.validator.add(*commands)
         return self
 
     @property
@@ -301,6 +297,7 @@ class StateMachine:
                 level.init_world.add(level.next_state.execute)
                 level.exit_world.add(level.next_state.execute)
 
+        self.init_player.add(Tag(Target.S).add("player_init"))
         if ANVIL.DEBUG:
             ANVIL._debug.text("Main Levels => ").text("game_level: ").score("game_level", ANVIL.PROJECT_NAME).text(" | ").text("game_state: ").score(
                 "game_state", ANVIL.PROJECT_NAME

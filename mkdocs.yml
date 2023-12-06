@@ -62,8 +62,10 @@ nav:
     - Components: api/components.md
     - Items: api/items.md
     - Molang: api/molang.md
+    - PBR: api/texture_pack.md
     - UI: api/ui.md
     - Vanilla: api/vanilla.md
+    - functions: api/functions.md
 
 markdown_extensions:
   - pymdownx.highlight:
