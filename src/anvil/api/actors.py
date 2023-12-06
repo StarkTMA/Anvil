@@ -1,13 +1,15 @@
 from anvil import Math, Query, Variable
+from anvil.api.blockbench import Animation, Geometry
 from anvil.api.components import (Breathable, CollisionBox, DamageSensor,
                                   Filter, Health, InstantDespawn, JumpStatic,
                                   KnockbackResistance, Movement, MovementType,
                                   NavigationType, Physics, Pushable,
                                   PushThrough, Rideable, Scale, TypeFamily,
                                   _component)
+from anvil.api.features import Particle
 from anvil.api.vanilla import ENTITY_LIST, ITEMS_LIST, Entities
-from anvil.core import (ANVIL, AddonObject, Animation, Geometry, Particle,
-                        _MinecraftDescription, _SoundDescription)
+from anvil.core import (ANVIL, AddonObject, _MinecraftDescription,
+                        _SoundDescription)
 from anvil.lib import *
 from anvil.lib import _JsonSchemes
 
@@ -306,7 +308,7 @@ class _ActorClientDescription(_ActorDescription):
             )
 
         self._description["description"]["textures"].update(
-            {texture_id: os.path.join("textures", self._type, self._name, texture_name)}
+            {texture_id: os.path.join("textures", ANVIL.NAMESPACE, self._type, self._name, texture_name)}
         )
         self._added_textures.append(texture_name)
 
@@ -379,8 +381,8 @@ class _ActorClientDescription(_ActorDescription):
 
     def sound_effect(
         self,
-        sound_shortname: str,
-        sound_identifier: str,
+        sound_name: str,
+        sound_reference: str,
         category: SoundCategory = SoundCategory.Neutral,
     ):
         """This method manages the sound effects for an entity.
@@ -392,9 +394,9 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         self._description["description"]["sound_effects"].update(
-            {sound_shortname: sound_identifier}
+            {sound_name: sound_reference}
         )
-        sound: _SoundDescription = ANVIL.sound(sound_identifier, category)
+        sound: _SoundDescription = ANVIL.sound(sound_reference, category)
         self._sounds.append(sound)
         return sound
 
@@ -419,7 +421,7 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         ANVIL._sound_event.add_entity_event(
-            self.identifier, sound_event, sound_identifier, volume, pitch
+            self.identifier, sound_identifier, sound_event, volume, pitch
         )
 
         sound: _SoundDescription = ANVIL.sound(sound_identifier, category, max_distance=max_distance, min_distance=min_distance)
@@ -484,6 +486,7 @@ class _ActorClientDescription(_ActorDescription):
                     "resource_packs",
                     f"RP_{ANVIL.PASCAL_PROJECT_NAME}",
                     "textures",
+                    ANVIL.NAMESPACE, 
                     self._type,
                     self._name,
                 ),
@@ -723,23 +726,6 @@ class _EntityServer(AddonObject):
         self.component_group("despawn").add(InstantDespawn())
         self.event("despawn").add("despawn")
 
-    def _add_essential_components(self):
-        """Adds essential components to the entity."""
-        self.components.add(
-            Physics(),
-            Scale(1),
-        )
-
-    def _optimize_entity(self):
-        """Optimizes the entity."""
-        self.components.add(
-            {
-                "minecraft:conditional_bandwidth_optimization": {
-                    "default_values": {"use_motion_prediction_hints": True}
-                }
-            }
-        )
-
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Base class for all server entities.
 
@@ -766,7 +752,6 @@ class _EntityServer(AddonObject):
         self._component_groups: list[_ComponentGroup] = []
         self._vars = []
         self._add_despawn_function()
-        self._optimize_entity()
 
     @property
     def description(self):
@@ -1440,10 +1425,10 @@ class _BP_Controller:
                     for st in tr["transitions"]:
                         collected_states.extend(st.keys())
 
-        for state in collected_states:
+        for state in set(collected_states):
             if state not in self._states_names:
                 ANVIL.Logger.missing_state(
-                    self._side, self._controller_namespace, *st.keys()
+                    self._side, self._controller_namespace, state
                 )
 
         return self._controllers
@@ -2580,7 +2565,7 @@ class Entity:
             if display_name is None
             else display_name
         )
-        spawn_egg_name = display_name if spawn_egg_name is None else spawn_egg_name
+        spawn_egg_name = f"Spawn {display_name}" if spawn_egg_name is None else spawn_egg_name
         if self._is_vanilla:
             directory = "vanilla"
 

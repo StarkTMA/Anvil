@@ -7,7 +7,8 @@ import click
 from github import Github
 
 from .lib import (APPDATA, DESKTOP, MANIFEST_BUILD, CreateDirectory, File,
-                  _Config, _JsonSchemes, _Logger, process_subcommand, requests)
+                  _Config, _JsonSchemes, _Logger, process_subcommand, requests,
+                  validate_namespace_project_name)
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -118,18 +119,11 @@ def create(
     # Prints header
     _Logger.header()
 
-    if namespace == "minecraft":
-        _Logger.namespace_too_long(namespace)
+    validate_namespace_project_name(namespace, project_name)
     
-    # Checks for Value Errors
-    if len(namespace) > 8:
-        _Logger.namespace_too_long(namespace)
-        
-    if len(project_name) > 16:
-        _Logger.project_name_too_long(namespace)
-
+    display_name = project_name.title().replace("-", " ").replace("_", " ")
     # Prints message
-    click.echo(f'Initiating {project_name.title().replace("-", " ").replace("_", " ")}')
+    click.echo(f'Initiating {display_name}')
 
     # Setup the directory
     try:
@@ -141,28 +135,28 @@ def create(
 
     # Init the config file
     Config = _Config()
-    Config.set("MINECRAFT", "vanilla_version", latest_build)
-    Config.set("PACKAGE", "company", namespace.title())
-    Config.set("PACKAGE", "namespace", namespace)
-    Config.set("PACKAGE", "project_name", project_name)
-    Config.set("PACKAGE", "display_name", project_name.title().replace("-", " ").replace("_", " "))
-    Config.set("PACKAGE", "project_description", f"{Config.get('PACKAGE', 'display_name')} Essentials")
+    Config.add_option("minecraft", "vanilla_version", latest_build)
+    Config.add_option("package", "company", namespace.title())
+    Config.add_option("package", "namespace", namespace)
+    Config.add_option("package", "project_name", project_name)
+    Config.add_option("package", "display_name", display_name)
+    Config.add_option("package", "project_description", f"{display_name} Packs")
 
-    Config.set("BUILD", "release", "1.0.0")
-    Config.set("BUILD", "rp_uuid", str(uuid4()))
-    Config.set("BUILD", "bp_uuid", str(uuid4()))
-    Config.set("BUILD", "pack_uuid", str(uuid4()))
+    Config.add_option("build", "release", [1, 0, 0])
+    Config.add_option("build", "rp_uuid", [str(uuid4())])
+    Config.add_option("build", "bp_uuid", [str(uuid4())])
+    Config.add_option("build", "pack_uuid", str(uuid4()))
 
-    Config.set("ANVIL", "debug", 0)
-    Config.set("ANVIL", "scriptapi", int(scriptapi))
-    Config.set("ANVIL", "scriptui", 0)
-    Config.set("ANVIL", "pbr", int(pbr))
-    Config.set("ANVIL", "random_seed", int(random_seed))
-    Config.set("ANVIL", "namespace_format", int(fullns))
-    Config.set("ANVIL", "pascal_project_name", "".join(x for x in Config.get("PACKAGE", "display_name") if x.isupper()))
-    Config.set("ANVIL", "last_check", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    Config.add_option("anvil", "debug", False)
+    Config.add_option("anvil", "scriptapi", scriptapi)
+    Config.add_option("anvil", "scriptui", False)
+    Config.add_option("anvil", "pbr", pbr)
+    Config.add_option("anvil", "random_seed", random_seed)
+    Config.add_option("anvil", "namespace_format", fullns)
+    Config.add_option("anvil", "pascal_project_name", "".join(x for x in display_name if x.isupper()))
+    Config.add_option("anvil", "last_check", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-    Config._config.add_section(namespace)
+    Config.add_section(namespace)
     
     CreateDirectoriesFromTree(_JsonSchemes.structure(project_name))
     os.chdir(project_name)
@@ -175,13 +169,13 @@ def create(
         "en_US.lang",
         "\n".join(
             _JsonSchemes.pack_name_lang(
-                Config.get("PACKAGE", "display_name"),
-                Config.get("PACKAGE", "project_description"),
+                Config.get_option("package", "display_name"),
+                Config.get_option("package", "project_description"),
             )
         ),
         os.path.join(
             "behavior_packs",
-            "BP_" + Config.get("ANVIL", "pascal_project_name"),
+            "BP_" + Config.get_option("anvil", "pascal_project_name"),
             "texts",
         ),
         "w",
@@ -190,30 +184,30 @@ def create(
         "en_US.lang",
         "\n".join(
             _JsonSchemes.pack_name_lang(
-                Config.get("PACKAGE", "display_name"),
-                Config.get("PACKAGE", "project_description"),
+                Config.get_option("package", "display_name"),
+                Config.get_option("package", "project_description"),
             )
         ),
         os.path.join(
             "resource_packs",
-            "RP_" + Config.get("ANVIL", "pascal_project_name"),
+            "RP_" + Config.get_option("anvil", "pascal_project_name"),
             "texts",
         ),
         "w",
     )
     File(
         "manifest.json",
-        _JsonSchemes.manifest_bp([1, 0, 0], Config.get("BUILD", "bp_uuid"), scriptapi, False),
+        _JsonSchemes.manifest_bp([1, 0, 0], Config.get_option("build", "bp_uuid"), scriptapi, False),
         os.path.join(
-            "behavior_packs", "BP_" + Config.get("ANVIL", "pascal_project_name")
+            "behavior_packs", "BP_" + Config.get_option("anvil", "pascal_project_name")
         ),
         "w",
     )
     File(
         "manifest.json",
-        _JsonSchemes.manifest_rp([1, 0, 0], Config.get("BUILD", "rp_uuid"), pbr),
+        _JsonSchemes.manifest_rp([1, 0, 0], Config.get_option("build", "rp_uuid"), pbr),
         os.path.join(
-            "resource_packs", "RP_" + Config.get("ANVIL", "pascal_project_name")
+            "resource_packs", "RP_" + Config.get_option("anvil", "pascal_project_name")
         ),
         "w",
     )
@@ -221,8 +215,8 @@ def create(
         "manifest.json",
         _JsonSchemes.manifest_world(
             [1, 0, 0],
-            Config.get("BUILD", "pack_uuid"),
-            Config.get("PACKAGE", "company"),
+            Config.get_option("build", "pack_uuid"),
+            Config.get_option("package", "company"),
             random_seed
         ),
         "",
@@ -231,13 +225,13 @@ def create(
 
     File(
         "world_behavior_packs.json",
-        _JsonSchemes.world_packs(Config.get("BUILD", "bp_uuid"), [1, 0, 0]),
+        _JsonSchemes.world_packs(Config.get_option("build", "bp_uuid"), [1, 0, 0]),
         "",
         "w",
     )
     File(
         "world_resource_packs.json",
-        _JsonSchemes.world_packs(Config.get("BUILD", "rp_uuid"), [1, 0, 0]),
+        _JsonSchemes.world_packs(Config.get_option("build", "rp_uuid"), [1, 0, 0]),
         "",
         "w",
     )
@@ -245,7 +239,7 @@ def create(
     File(
         f"{project_name}.code-workspace",
         _JsonSchemes.code_workspace(
-            Config.get("PACKAGE", "company"), base_dir, project_name
+            Config.get_option("package", "company"), base_dir, project_name
         ),
         DESKTOP,
         "w",
@@ -258,15 +252,15 @@ def create(
             _JsonSchemes.packagejson(
                 project_name,
                 "1.0.0",
-                Config.get("PACKAGE", "display_name") + " Essentials",
-                Config.get("PACKAGE", "company"),
+                Config.get_option("package", "display_name") + " Essentials",
+                Config.get_option("package", "company"),
             ),
             "",
             "w",
             True,
         )
-        File("tsconfig.json", _JsonSchemes.tsconfig(Config.get("ANVIL", "pascal_project_name")), "", "w", False)
-        File("launch.json", _JsonSchemes.vscode(Config.get("ANVIL", "pascal_project_name")), ".vscode", "w", False)
+        File("tsconfig.json", _JsonSchemes.tsconfig(Config.get_option("anvil", "pascal_project_name")), "", "w", False)
+        File("launch.json", _JsonSchemes.vscode(Config.get_option("anvil", "pascal_project_name")), ".vscode", "w", False)
 
         # os.system('npm install -g typescript')
         # os.system("npm i @minecraft/server")

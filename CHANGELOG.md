@@ -2,6 +2,49 @@
 
 ---
 
+Version 0.5.5
+=============
+  [Anvil]
+  -------
+  - Changed the directory configuration of some files to support the new Addons program.
+  - Changed `Config.ini` to `anvilconfig.json`. This is done so it's much easier to integrate with the Scripting API.
+  - A newer guidelines have been introduced to Anvil. Namespaces now require an additional abbreviation of the project name. For instance, if the namespace is `starktma` and the project name is `Beyond: Platformer`, the namespace will be `starktma_bp`. This is done to avoid conflicts with other projects.
+  - Item Texture and Terrain Texture references are now in this format `namespace:name`. This change does not require your attention as it's done automatically.
+  - Item and block textures are now save under `RP/textures/namespace/`. previously they were saved under `RP/textures/`.
+  - Added sounds and music will now use `RP/sounds/namespace/` instead of `RP/sounds/`.
+  - Sounds now use the format `namespace:sound_reference` instead of `sound_reference`. This is does not require your attention as it's done automatically.
+  - Calling `identifier` on a sound definitions will return the Sound reference in the format `namespace:sound_reference`.
+  - Moved `Dialogue()`, `Fog()`, `LootTable()`, `Recipe()`, `Function()`, `Particle()`, `CameraPreset()`, `Structure()`, `Fonts()` and `SkinPack()` classes to `anvil.api.features`.
+  - Dialogue scene tags now use the format `namespace:scene_tag` instead of `scene_tag`. This is does not require your attention as it's done automatically.
+  - Calling `identifier` on a dialogue scene will return the scene tag in the format `namespace:scene_tag`.
+  - Calling `identifier` on a fog instance will return its identifier.
+  - Moved `Geometry()` and `Animations()` classes to `anvil.api.blockbench`, this is in preparation to integrate `.bbmodel` files directly into Anvil without splitting them into multiple json files.
+  - LootTables will be exported to `BP/loot_tables/namespace/`
+  - Calling `path` on a loot table will return its execution path that can be used in Components or Commands. (Must be queued first)
+  - Particle textures will no be copied to `RP/textures/particle/namespace/`.
+  - Actor textures are now copied into `RP/textures/namespace/[entity-attachable]/` instead of `RP/textures/[entity-attachable]/`
+
+  [Components]
+  ------------
+  - Added `FlyingSpeed()`, `RandomHover()`, `Interact()`, `AngerLevel()`, `Roar()`, `FloatWander()`, `LayDown()`, `MeleeBoxAttack()`, `CanJoinRaid()`, `TimerFlag1()`, `TimerFlag2()`, `TimerFlag3()` components.
+  - Updated `ENTITY_SERVER_VERSION` to `[1.20.50]`.
+
+  [Vanilla]
+  ---------
+  - Split the Planks block into 6 individual blocks.
+  - Split the Stone block into 7 individual blocks.
+
+  [Items]
+  -------
+  - Renamed `ItemUseDuration()` to `ItemUseModifiers()`.
+  - Added `ItemTags()` component.
+  - Updated `ITEM_SERVER_VERSION` to `[1.20.50]`.
+
+  [Molang]
+  --------
+  - Added `timer_flag_1`, `timer_flag_2`, `timer_flag_3` queries.
+
+
 Version 0.5.4
 =============
   [Anvil]

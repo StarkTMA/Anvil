@@ -2726,7 +2726,38 @@ class Query(_molang):
         """
         return self._query(self, "q", "yaw_speed")
 
+    @classmethod
+    @property
+    def timer_flag_1(self):
+        """Returns the value of timer_flag_1 set by behavior.timer_flag_1
 
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, "q", "timer_flag_1")
+
+    @classmethod
+    @property
+    def timer_flag_2(self):
+        """Returns the value of timer_flag_2 set by behavior.timer_flag_2
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, "q", "timer_flag_2")
+    
+    @classmethod
+    @property
+    def timer_flag_3(self):
+        """Returns the value of timer_flag_3 set by behavior.timer_flag_3
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, "q", "timer_flag_3")
+    
+
+    
 class Variable(_molang):
     def __init__(self) -> None:
         super().__init__('v')

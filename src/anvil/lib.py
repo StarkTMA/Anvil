@@ -46,7 +46,7 @@ MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "t
 
 MANIFEST_BUILD: list[int] = [1, 20, 40]  # The build version of the manifest.
 BLOCK_SERVER_VERSION: str = "1.20.30"  # The version of the block server.
-ENTITY_SERVER_VERSION: str = "1.19.0"  # The version of the entity server.
+ENTITY_SERVER_VERSION: str = "1.20.50"  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
 BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
 RP_ANIMATION_VERSION: str = "1.8.0"  # The version of the resource pack animation.
@@ -58,7 +58,7 @@ SOUND_DEFINITIONS_VERSION: str = "1.20.20"  # The version of the sound definitio
 DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
 FOG_VERSION: str = "1.16.100"  # The version of the fog.
 MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
-ITEM_SERVER_VERSION: str = "1.20.40"  # The version of the item server.
+ITEM_SERVER_VERSION: str = "1.20.50"  # The version of the item server.
 GLOBAL_LIGHTING = [1, 0, 0]
 CAMERA_PRESET_VERSION = "1.19.50"  # The version of the camera presets.
 
@@ -75,6 +75,7 @@ class Arguments(StrEnum):
 
     def __str__(self) -> str:
         return self.value
+
 
 def FileExists(path) -> bool:
     """Checks if a file exists.
@@ -1054,6 +1055,16 @@ class BlockDescriptor(dict):
         super().__init__(name=name, tags=tags, states=states)
 
 
+class Vibrations(Arguments):
+    EntityInteract = "entity_interact"
+    Shear = "shear"
+    none = "none"
+
+
+class ControlFlags(Arguments):
+    Move = "move"
+    Look = "look"
+
 # Legacy code, will be removed in the future.
 def Defaults(type, *args):
     """
@@ -1231,30 +1242,49 @@ class _Config:
 
     def __init__(self) -> None:
         """Initializes a Config object."""
-        self._config = ConfigParser()
-        self._config.read("config.ini")
+        with open("anvilconfig.json", "r") as f:
+            self._config = json.loads(f.read())
 
     def save(self):
-        """Saves the config.ini file."""
-        with open("config.ini", "w") as f:
-            self._config.write(f)
+        """Saves the anvilconfig.json file."""
+        with open("anvilconfig.json", "w") as f:
+            f.write(json.dumps(self._config, indent=4))
 
-    def set(self, section: str, option: str, value):
-        """Sets a value in the config.ini file.
+    def add_section(self, section: str) -> None:
+        """Adds a section to the anvilconfig.json file.
+
+        Args:
+            section (str): The section to add.
+        """
+        self._config[section] = {}
+
+    def has_section(self, section: str) -> bool:
+        """Checks if a section exists in the anvilconfig.json file.
+
+        Args:
+            section (str): The section to check.
+
+        Returns:
+            bool: True if the section exists, False otherwise.
+        """
+        return section in self._config
+
+    def add_option(self, section: str, option: str, value):
+        """Sets a value in the anvilconfig.json file.
 
         Args:
             section (str): The section to set the value in.
             option (str): The option to set the value in.
             value (Any): The value to set.
         """
-        if not self._config.has_section(section):
-            self._config.add_section(section)
+        if not self.has_section(section):
+            self.add_section(section)
 
-        self._config[section][option] = str(value)
+        self._config[section][option] = value
         self.save()
 
     def has_option(self, section: str, option: str) -> bool:
-        """Checks if an option exists in the config.ini file.
+        """Checks if an option exists in the anvilconfig.json file.
 
         Args:
             section (str): The section to check the option in.
@@ -1265,19 +1295,8 @@ class _Config:
         """
         return option in self._config[section]
 
-    def has_section(self, section: str) -> bool:
-        """Checks if a section exists in the config.ini file.
-
-        Args:
-            section (str): The section to check.
-
-        Returns:
-            bool: True if the section exists, False otherwise.
-        """
-        return section in self._config
-
-    def get(self, section, option) -> str:
-        """Gets a value from the config.ini file.
+    def get_option(self, section, option) -> str:
+        """Gets a value from the anvilconfig.json file.
 
         Args:
             section (str): The section to get the value from.
@@ -1517,8 +1536,22 @@ class _Logger:
 
     # Error
     @staticmethod
-    def namespace_too_long(self, namespace):
+    def namespace_too_long(namespace):
         m = f"Namespace must be 8 characters or less. {namespace} is {len(namespace)} characters long."
+        # self.logger.error(m)
+        raise ValueError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    @staticmethod
+    def reserved_namespace(namespace):
+        m = f"{namespace} is a reserved namespace and cannot be used."
+        # self.logger.error(m)
+        raise ValueError(_Logger.Red("[ERROR]: " + m))
+
+    # Error
+    @staticmethod
+    def unique_namespace(namespace):
+        m = f"Every namespace must be unique to the pack. it should be {namespace}."
         # self.logger.error(m)
         raise ValueError(_Logger.Red("[ERROR]: " + m))
 
@@ -1526,13 +1559,6 @@ class _Logger:
     @staticmethod
     def project_name_too_long(self, project_name):
         m = f"Project name must be 16 characters or less. {project_name} is {len(project_name)} characters long."
-        # self.logger.error(m)
-        raise ValueError(_Logger.Red("[ERROR]: " + m))
-
-    # Error
-    @staticmethod
-    def reserved_namespace(self, namespace):
-        m = f"{namespace} is a reserved namespace."
         # self.logger.error(m)
         raise ValueError(_Logger.Red("[ERROR]: " + m))
 
@@ -1718,22 +1744,23 @@ class _JsonSchemes:
 
     @staticmethod
     def manifest_bp(version, uuid1, has_script: bool, server_ui: bool):
+        v = list(map(int, version.split(".")))
         m = {
             "format_version": 2,
             "header": {
                 "description": "pack.description",
                 "name": "pack.name",
-                "uuid": uuid1.split(",")[0],
-                "version": version,
+                "uuid": uuid1[0],
+                "version": v,
                 "min_engine_version": MANIFEST_BUILD,
             },
-            "modules": [{"type": "data", "uuid": str(uuid4()), "version": version}],
+            "modules": [{"type": "data", "uuid": str(uuid4()), "version": v}],
         }
         if has_script:
             m["modules"].append(
                 {
                     "uuid": str(uuid4()),
-                    "version": version,
+                    "version": v,
                     "type": "script",
                     "language": "javascript",
                     "entry": "scripts/main.js",
@@ -1750,10 +1777,12 @@ class _JsonSchemes:
                 }
             )
             if server_ui:
-                m["dependencies"].append({
-                    "module_name": "@minecraft/server-ui",
-                    "version": MODULE_MINECRAFT_SERVER_UI,
-                })
+                m["dependencies"].append(
+                    {
+                        "module_name": "@minecraft/server-ui",
+                        "version": MODULE_MINECRAFT_SERVER_UI,
+                    }
+                )
         return m
 
     @staticmethod
@@ -1763,7 +1792,7 @@ class _JsonSchemes:
             "header": {
                 "description": "pack.description",
                 "name": "pack.name",
-                "uuid": uuid1.split(",")[0],
+                "uuid": uuid1[0],
                 "version": version,
                 "min_engine_version": MANIFEST_BUILD,
             },
@@ -1805,7 +1834,7 @@ class _JsonSchemes:
 
     @staticmethod
     def world_packs(pack_id, version):
-        return [{"pack_id": i, "version": version} for i in pack_id.split(",")]
+        return [{"pack_id": i, "version": version} for i in pack_id]
 
     @staticmethod
     def code_workspace(name, path1, path2):
@@ -2126,7 +2155,7 @@ class _JsonSchemes:
                 "declaration": False,
                 "outDir": f"behavior_packs/BP_{pascal_project_name}/scripts",
                 "strict": True,
-                "pretty":True,
+                "pretty": True,
                 "esModuleInterop": True,
                 "moduleResolution": "Node",
                 "resolveJsonModule": True,
@@ -2136,7 +2165,7 @@ class _JsonSchemes:
                 "lib": [
                     "ESNext",
                     "dom",
-                ]
+                ],
             },
             "include": ["assets/javascript/**/*"],
             "exclude": ["node_modules"],
@@ -2202,7 +2231,7 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
     type = name.split(".")[-1]
     out_content = ""
     file_content = content
-    stamp = f"Generated with Anvil@StarkTMA {__version__}"
+    stamp = f"Generated with Anvil@starktma_lg {__version__}"
     time = datetime.now(datetime.now().astimezone().tzinfo).strftime("%d-%m-%Y %H:%M:%S %z")
     # copyright=f'Property of {COMPANY}'
     copyright = ""
@@ -2237,3 +2266,21 @@ def process_subcommand(command: str, error_handle: str = "Error"):
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"{error_handle}: {e}")
+
+
+def validate_namespace_project_name(namespace: str, project_name: str):
+    display_name = project_name.title().replace("-", " ").replace("_", " ")
+    pascal_project_name = "".join(x for x in display_name if x.isupper())
+
+    if namespace == "minecraft":
+        _Logger.reserved_namespace(namespace)
+    
+    if len(namespace) > 8:
+        _Logger.namespace_too_long(namespace)
+    
+    if not namespace.endswith(f"_{pascal_project_name.lower()}"):
+        _Logger.unique_namespace(f"{namespace}_{pascal_project_name.lower()}")
+
+    if len(project_name) > 16:
+        _Logger.project_name_too_long(namespace)
+    

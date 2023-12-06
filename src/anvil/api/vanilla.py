@@ -1060,11 +1060,13 @@ class BlockStates:
         BOTTOM = "bottom"
         TOP = "top"
 
+
 class Items:
     class _basic_item():
-        def __init__(self, name : str, is_vanilla: bool = True) -> None:
+        def __init__(self, name : str, is_vanilla: bool = True, item_dimension: Dimension = Dimension.Overworld) -> None:
             self._namespace = 'minecraft' if is_vanilla else ANVIL.NAMESPACE
             self._name = name
+            self.dimension = item_dimension
             ITEMS_LIST.append(self)
 
         def __str__(self) -> str:
@@ -1121,6 +1123,25 @@ class Items:
 
     RelicMusicDisc = _basic_item("music_disc_relic")
     # ---------------------------------------------------------------------------------------------------
+    
+    Bone = _basic_item("bone")
+    Beef = _basic_item("beef")
+    CookedBeef = _basic_item("cooked_beef")
+    Chicken = _basic_item("chicken")
+    CookedChicken = _basic_item("cooked_chicken")
+    Egg = _basic_item("egg")
+    Flint = _basic_item("flint")
+    IronNugget = _basic_item("iron_nugget")
+    GoldNugget = _basic_item("gold_nugget")
+    Emerald = _basic_item("emerald")
+    Coal = _basic_item("coal")
+    RottenFlesh = _basic_item("rotten_flesh")
+    Leather = _basic_item("leather")
+    RabbitFoot = _basic_item("rabbit_foot")
+    ClayBall = _basic_item("clay_ball")
+    RawCopper = _basic_item("raw_copper")
+    Arrow = _basic_item("arrow")
+    String = _basic_item("string")
 
 #TO BE REMOVED
 class LEGACYItems:
@@ -1159,40 +1180,10 @@ class LEGACYItems:
 
     # Added in 1.20.0
     # ---------------------------------------------------------------------------------------------------
-    Tourchflower = _block("tourchflower", Dimension.Overworld, True, False)
-    TourchflowerSeeds = _block("tourchflower_seeds", Dimension.Overworld, True, False)
-
-    DecoratedPot = _block("decorated_pot", Dimension.Overworld, True, False)
-
-    SuspiciousSand = _block("suspicious_sand", Dimension.Overworld, True, False)
-    SuspiciousGravel = _block("suspicious_gravel", Dimension.Overworld, True, False)
 
     CherryBoat = _block("cherry_boat", Dimension.Overworld, True, False)
-    CherryButton = _block("cherry_button", Dimension.Overworld, True, False)
     CherryChestBoat = _block("cherry_chest_boat", Dimension.Overworld, True, False)
-    CherryDoor = _block("cherry_door", Dimension.Overworld, True, False)
-    CherryFence = _block("cherry_fence", Dimension.Overworld, True, False)
-    CherryFenceGate = _block("cherry_fence_gate", Dimension.Overworld, True, False)
-    CherryHangingSign = _block("cherry_hanging_sign", Dimension.Overworld, True, False)
-    CherryLeaves = _block("cherry_leaves", Dimension.Overworld, True, False)
-    CherryLog = _block("cherry_log", Dimension.Overworld, True, False)
-    CherryPlanks = _block("cherry_planks", Dimension.Overworld, True, False)
-    CherryPressurePlate = _block("cherry_pressure_plate", Dimension.Overworld, True, False)
-    CherrySapling = _block("cherry_sapling", Dimension.Overworld, True, False)
-    CherrySign = _block("cherry_sign", Dimension.Overworld, True, False)
-    CherrySlab = _block("cherry_slab", Dimension.Overworld, True, False)
-    CherryStairs = _block("cherry_stairs", Dimension.Overworld, True, False)
-    CherryTrapdoor = _block("cherry_trapdoor", Dimension.Overworld, True, False)
-    CherryWood = _block("cherry_wood", Dimension.Overworld, True, False)
 
-    StrippedCherryLog = _block("stripped_cherry_log", Dimension.Overworld, True, False)
-    StrippedCherryWood = _block("stripped_cherry_wood", Dimension.Overworld, True, False)
-
-    PinkPetals = _block("pink_petals", Dimension.Overworld, True, False)
-
-    BambooBlock = _block("bamboo_block", Dimension.Overworld, True, False)
-    StrippedBambooBlock = _block("stripped_bamboo_block", Dimension.Overworld, True, False)
-    BambooPlanks = _block("bamboo_planks", Dimension.Overworld, True, False)
     BambooMosaic = _block("bamboo_mosaic", Dimension.Overworld, True, False)
     BambooFence = _block("bamboo_fence", Dimension.Overworld, True, False)
     BambooFenceGate = _block("bamboo_fence_gate", Dimension.Overworld, True, False)
@@ -1220,10 +1211,7 @@ class LEGACYItems:
     BirchHangingSign = _block("birch_hanging_sign",Dimension.Overworld, True, True)
     SpruceHangingSign = _block("spruce_hanging_sign", Dimension.Overworld, True, True)
     OakHangingSign = _block("oak_hanging_sign", Dimension.Overworld, True, True)
-    Planks = _block("planks", Dimension.Overworld, True, False,_state("variant", ["oak_planks", "spruce_planks", "birch_planks", "jungle_planks", "acacia_planks", "dark_oak_planks"]))
-    MangrovePlanks = _block("mangrove_planks", Dimension.Overworld, True, False)
-    CrimsonPlanks = _block("crimson_planks", Dimension.Nether, True, False)
-    WarpedPlanks = _block("warped_planks", Dimension.Nether, True, False)
+
     CobblestoneWall = _block("cobblestone_wall", Dimension.Overworld, True, False,_state("variant", ["cobblestone_wall", "mossy_cobblestone_wall", "granite_wall", "diorite_wall", "andesite_wall", "sandstone_wall", "red_sandstone_wall", "stone_brick_wall", "mossy_stone_brick_wall", "brick_wall", "nether_brick_wall", "red_nether_brick_wall", "end_stone_brick_wall", "prismarine_wall", ]))
     BlackstoneWall = _block("blackstone_wall", Dimension.Nether, True, False)
     PolishedBlackstoneWall = _block("polished_blackstone_wall", Dimension.Nether, True, False)
@@ -1454,7 +1442,6 @@ class LEGACYItems:
     Podzol = _block("podzol", Dimension.Overworld, True, False)
     Mycelium = _block("mycelium", Dimension.Overworld, True, False)
     Mud = _block("mud", Dimension.Overworld, True, False)
-    Stone = _block("stone", Dimension.Overworld, True, False,_state("variant", ["stone", "granite", "diorite", "andesite", "polished_granite", "polished_diorite", "polished_andesite", ]))
     IronOre = _block("iron_ore", Dimension.Overworld, True, False)
     GoldOre = _block("gold_ore", Dimension.Overworld, True, False)
     DiamondOre = _block("diamond_ore", Dimension.Overworld, True, False)
@@ -1596,9 +1583,7 @@ class LEGACYItems:
     SmallAmethystBud = _block("small_amethyst_bud",Dimension.Overworld, True, False)
     Tuff = _block("tuff", Dimension.Overworld, True, False)
     Calcite = _block("calcite", Dimension.Overworld, True, False)
-    Chicken = _block("chicken", Dimension.Overworld, True, False)
     Porkchop = _block("porkchop", Dimension.Overworld, True, False)
-    Beef = _block("beef", Dimension.Overworld, True, False)
     Mutton = _block("mutton", Dimension.Overworld, True, False)
     Rabbit = _block("rabbit", Dimension.Overworld, True, False)
     Cod = _block("cod", Dimension.Overworld, True, False)
@@ -1611,11 +1596,10 @@ class LEGACYItems:
     WarpedFungus = _block("warped_fungus", Dimension.Nether, True, False)
     BrownMushroomBlock = _block("brown_mushroom_block", Dimension.Overworld, True, False,_state("variant", ["brown_mushroom_block", "mushroom_stem", "mushroom", ]))
     RedMushroomBlock = _block("red_mushroom_block",Dimension.Overworld, True, False)
-    Egg = _block("egg", Dimension.Overworld, True, False)
+
     SugarCane = _block("sugar_cane", Dimension.Overworld, True, False)
     Sugar = _block("sugar", Dimension.Overworld, True, False)
     RottenFlesh = _block("rotten_flesh", Dimension.Overworld, True, False)
-    Bone = _block("bone", Dimension.Overworld, True, False)
     Web = _block("web", Dimension.Overworld, True, False)
     SpiderEye = _block("spider_eye", Dimension.Overworld, True, False)
     MobSpawner = _block("mob_spawner", Dimension.Nether, True, False)
@@ -1775,9 +1759,7 @@ class LEGACYItems:
     Crossbow = _block("crossbow", Dimension.Overworld, True, False)
     Arrow = _block("arrow", Dimension.Overworld, True, False,_state("variant", ["arrow", "night_vision_arrow_0_22", "night_vision_arrow_1", "invisibility_arrow_0_22", "invisibility_arrow_1", "leaping_arrow_0_22", "leaping_arrow_1", "leaping_2_arrow_1", "fire_resistance_arrow_0_22", "fire_resistance_arrow_1", "speed_arrow_0_22", "speed_arrow_1", "speed_2_arrow_1", "slowness_arrow_0_22", "slowness_arrow_1", "water_breathing_arrow_0_22", "water_breathing_arrow_1", "healing_arrow_1", "healing_arrow_2", "harming_arrow_1", "harming_arrow_2", "poison_arrow_0_05", "poison_arrow_0_15", "poison_2_arrow_0_02", "regeneration_arrow_0_05", "regeneration_arrow_0_15", "regeneration_2_arrow_0_02", "strength_arrow_0_22", "strength_arrow_1", "strength_2_arrow_0_11", "weakness_arrow_0_11", "weakness_arrow_0_30", "decay_arrow_0_05", "turtle_master_arrow_0_02", "turtle_master_arrow_0_05", "turtle_master_2_arrow_0_02", "slow_falling_arrow_0_11", "slow_falling_arrow_0_30", "slowness_arrow_0_02", ]))
     Shield = _block("shield", Dimension.Overworld, True, False)
-    CookedChicken = _block("cooked_chicken", Dimension.Overworld, True, False)
     CookedPorkchop = _block("cooked_porkchop", Dimension.Overworld, True, False)
-    CookedBeef = _block("cooked_beef", Dimension.Overworld, True, False)
     CookedMutton = _block("cooked_mutton", Dimension.Overworld, True, False)
     CookedRabbit = _block("cooked_rabbit", Dimension.Overworld, True, False)
     CookedCod = _block("cooked_cod", Dimension.Overworld, True, False)
@@ -5180,11 +5162,6 @@ class Blocks:
             self._upper_block_bit = upper_block_bit
             super().__init__("pitcher_plant", True)
 
-    class Planks(_MinecraftBlock):
-        def __init__(self, wood_type:'BlockStates.WoodType'=None):
-            self._wood_type = wood_type
-            super().__init__("planks", True)
-
     class Podzol(_MinecraftBlock):
         def __init__(self, ):
             super().__init__("podzol", True)
@@ -5829,11 +5806,6 @@ class Blocks:
         def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
             self._facing_direction = facing_direction
             super().__init__("sticky_piston_arm_collision", True)
-
-    class Stone(_MinecraftBlock):
-        def __init__(self, stone_type:'BlockStates.StoneType'=None):
-            self._stone_type = stone_type
-            super().__init__("stone", True)
 
     class Stonebrick(_MinecraftBlock):
         def __init__(self, stone_brick_type:'BlockStates.StoneBrickType'=None):
@@ -6730,6 +6702,60 @@ class Blocks:
         def __init__(self,):
             super().__init__("black_concrete_powder", True)
 
+    # Added in 1.20.50
+    # Planks
+    class OakPlans(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("oak_planks", True)
+
+    class SprucePlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("spruce_planks", True)
+
+    class BirchPlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("birch_planks", True)
+
+    class JunglePlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("jungle_planks", True)
+
+    class AcaciaPlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("acacia_planks", True)
+
+    class DarkOakPlanks(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("dark_oak_planks", True)
+    
+    # Stones
+    class Stone(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("stone", True)
+
+    class Granite(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("granite", True)
+
+    class Diorite(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("diorite", True)
+
+    class Andesite(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("andesite", True)
+
+    class PolishedGranite(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("polished_granite", True)
+
+    class PolishedDiorite(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("polished_diorite", True)
+
+    class PolishedAndesite(_MinecraftBlock):
+        def __init__(self, ):
+            super().__init__("polished_andesite", True)
 
 # Take all the subclasses of Blocks and add them to BLOCK_LIST
 BLOCK_LIST = []

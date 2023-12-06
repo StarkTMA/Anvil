@@ -36,6 +36,33 @@ __all__ = [
 ]
 
 # Components
+# Require ITEM_SERVER_VERSION >= 1.20.50
+class ItemTags(_component):
+    component_namespace = "minecraft:tags"
+    def __init__(self, *tags: str) -> None:
+        super().__init__("tags")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
+        self._component_add_field("tags", tags)
+
+class ItemUseModifiers(_component):
+    component_namespace = "minecraft:use_modifiers"
+
+    def __init__(self, use_duration: float, movement_modifier: float = 1.0) -> None:
+        """Determines how long an item takes to use in combination with components such as Shooter, Throwable, or Food.
+
+        Args:
+            use_duration (float): How long the item takes to use in seconds.
+            movement_modifier (float): Modifier value to scale the players movement speed when item is in use. Defaults to 1.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers?view=minecraft-bedrock-stable
+        """
+        super().__init__("use_modifiers")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
+
+        self._component_set_value(clamp(use_duration, 0, inf))
+        if not movement_modifier == 1.0:
+            self._component_add_field("movement_modifier", movement_modifier)
+
 # Require ITEM_SERVER_VERSION >= 1.20.30
 class ItemEnchantable(_component):
     component_namespace = "minecraft:enchantable"
@@ -49,7 +76,7 @@ class ItemEnchantable(_component):
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_enchantable
         """
-        super().__init__("wearable")
+        super().__init__("enchantable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
 
         self._component_add_field("type", type)
@@ -72,6 +99,7 @@ class ItemFood(_component):
         """
         super().__init__("food")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
+        #self._require_components(ItemUseModifiers)
 
         self._component_add_field("effects", [])
         if can_always_eat:
@@ -169,7 +197,7 @@ class ItemLiquidClipped(_component):
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative 
         """
-        super().__init__("can_destroy_in_creative ")
+        super().__init__("can_destroy_in_creative")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
 
         self._component_set_value(value)
@@ -228,23 +256,6 @@ class ItemGlint(_component):
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
 
         self._component_set_value(value)
-
-
-class ItemUseDuration(_component):
-    component_namespace = "minecraft:use_duration"
-
-    def __init__(self, value: float) -> None:
-        """Determines how long an item takes to use in combination with components such as Shooter, Throwable, or Food.
-
-        Args:
-            value (bool): The time it takes, in seconds, to use the item.
-
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_duration
-        """
-        super().__init__("use_duration")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._component_set_value(clamp(value, 0, inf))
 
 
 class ItemStackedByData(_component):
@@ -682,7 +693,7 @@ class ItemIcon(_component):
         super().__init__("icon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
         ANVIL._item_texture.add_item(texture, "", texture)
-        self._component_add_field("texture", texture)
+        self._component_add_field("texture", f"{ANVIL.NAMESPACE}:{texture}")
 
 
 # Items

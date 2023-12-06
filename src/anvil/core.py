@@ -5,9 +5,12 @@ from .lib import _Config, _JsonSchemes, _Logger
 
 class ReportCollector:
     def __init__(self) -> None:
-        # A dictionary where keys are ReportType and values are defaultdicts.
-        # These inner defaultdicts will automatically create a key if it doesn't exist
-        # and initialize it to a dictionary of empty sets.
+        """A dictionary where keys are ReportType and values are `list[defaultdict]`.
+        These inner `defaultdict` will automatically create a key if it doesn't exist
+        and initialize it to a dictionary of empty sets.
+
+        The dictionary is later used to generate a report of what have been added to the pack.
+        """
         self.dict = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
 
     def add_headers(self):
@@ -293,42 +296,6 @@ class _MinecraftDescription:
         return self._description
 
 
-class _Tick(AddonObject):
-    """Handles tick functions for the addon.
-
-    Attributes:
-        _functions (list): Stores all the tick functions.
-    """
-
-    def __init__(self) -> None:
-        """Initializes a _Tick instance."""
-        super().__init__(
-            "tick",
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "functions"),
-        )
-        self._functions = []
-        self.do_not_shorten
-
-    def add_function(self, *functions: "Function"):
-        """Adds the provided functions to the tick function list.
-
-        Args:
-            functions (Function): Functions to add to the list.
-        """
-        self._functions.extend([f.path for f in functions])
-        return self
-
-    @property
-    def queue(self):
-        """Generates the content and queues the functions.
-
-        Returns:
-            object: The parent's queue method result.
-        """
-        self.content({"values": self._functions})
-        return super().queue()
-
-
 class _ItemTextures(AddonObject):
     """Handles item textures for the addon."""
 
@@ -353,8 +320,8 @@ class _ItemTextures(AddonObject):
             if not FileExists(os.path.join("assets", "textures", "items", f"{item}.png")):
                 ANVIL.Logger.file_exist_error(f"{item}.png", os.path.join("assets", "textures", "items"))
 
-        self._content["texture_data"][item_name] = {
-            "textures": [*[os.path.join("textures", "items", directory, sprite).replace("\\", "/") for sprite in item_sprites]]
+        self._content["texture_data"][f"{ANVIL.NAMESPACE}:{item_name}"] = {
+            "textures": [*[os.path.join("textures", ANVIL.NAMESPACE, "items", directory, sprite).replace("\\", "/") for sprite in item_sprites]]
         }
 
     @property
@@ -406,8 +373,8 @@ class _TerrainTextures(AddonObject):
             directory (str): The directory path for the textures.
             block_textures (str): The names of the block textures.
         """
-        self._content["texture_data"][block_name] = {
-            "textures": [*[os.path.join("textures", "blocks", directory, face).replace("\\", "/") for face in block_textures]]
+        self._content["texture_data"][f"{ANVIL.NAMESPACE}:{block_name}"] = {
+            "textures": [*[os.path.join("textures", ANVIL.NAMESPACE, "blocks", directory, face).replace("\\", "/") for face in block_textures]]
         }
 
     @property
@@ -459,19 +426,10 @@ class _BlocksJSON(AddonObject):
 
 # Used for individual sounds
 class _SoundDescription:
-    """Handles sound descriptions.
-
-    Attributes:
-        sound_definition (str): The definition of the sound.
-        category (SoundCategory): The category of the sound.
-        use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
-        max_distance (int, optional): The maximum distance for the sound. Defaults to 0.
-        min_distance (int, optional): The minimum distance for the sound. Defaults to 9999.
-    """
 
     def __init__(
         self,
-        sound_definition: str,
+        sound_reference: str,
         category: SoundCategory,
         use_legacy_max_distance: bool = False,
         max_distance: float = 0,
@@ -480,14 +438,14 @@ class _SoundDescription:
         """Initializes a _SoundDescription instance.
 
         Args:
-            sound_definition (str): The definition of the sound.
+            sound_reference (str): The definition of the sound.
             category (SoundCategory): The category of the sound.
             use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
             max_distance (int, optional): The maximum distance for the sound. Defaults to 0.
             min_distance (int, optional): The minimum distance for the sound. Defaults to 9999.
         """
         self._category = category.value
-        self._sound_definition = sound_definition
+        self._sound_definition = f"{ANVIL.NAMESPACE}:{sound_reference}"
         self._sound = _JsonSchemes.sound(self._sound_definition, self._category)
 
         if use_legacy_max_distance != False:
@@ -523,8 +481,8 @@ class _SoundDescription:
             ANVIL.Logger.file_exist_error(f"{sound_name}.ogg", os.path.join("assets", "sounds"))
 
         self._sound_name = sound_name
-        splits = self._sound_definition.split(".")
-        self._path = ""
+        splits = self._sound_definition.removeprefix(f"{ANVIL.NAMESPACE}:").split(".")
+        self._path = ANVIL.NAMESPACE
         for i in range(len(splits) - 1):
             self._path = os.path.join(self._path, splits[i])
         sound = {"name": os.path.join("sounds", self._path, self._sound_name), "load_on_low_memory": load_on_low_memory}
@@ -548,6 +506,10 @@ class _SoundDescription:
         )
         return self
 
+    @property
+    def identifier(self):
+        return self._sound_reference
+    
     @property
     def _export(self):
         """Returns the sound description.
@@ -587,9 +549,9 @@ class _SoundDefinition(AddonObject):
         self.content(_JsonSchemes.sound_definitions())
         self._sounds: list[_SoundDescription] = []
 
-    def sound_definition(
+    def sound_reference(
         self,
-        sound_definition: str,
+        sound_reference: str,
         category: SoundCategory,
         use_legacy_max_distance: bool = False,
         max_distance: float = 0,
@@ -598,7 +560,7 @@ class _SoundDefinition(AddonObject):
         """Defines a sound for the _SoundDefinition instance.
 
         Args:
-            sound_definition (str): The definition of the sound.
+            sound_reference (str): The sound_reference of the sound.
             category (SoundCategory): The category of the sound.
             use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
             max_distance (int, optional): The maximum distance for the sound. Defaults to 0.
@@ -608,7 +570,7 @@ class _SoundDefinition(AddonObject):
             _SoundDescription: The created sound description instance.
         """
         sound = _SoundDescription(
-            sound_definition,
+            sound_reference,
             category,
             use_legacy_max_distance,
             max_distance,
@@ -707,8 +669,8 @@ class _SoundEvent(AddonObject):
     def add_entity_event(
         self,
         identifier: Identifier,
-        sound_event: EntitySoundEvent,
         sound_identifier: str,
+        sound_event: EntitySoundEvent,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
     ):
@@ -725,7 +687,7 @@ class _SoundEvent(AddonObject):
         if not identifier in self._content["entity_sounds"]["entities"]:
             self._content["entity_sounds"]["entities"][identifier] = {"volume": volume, "pitch": (0.8, 1.2), "events": {}}
 
-        self._content["entity_sounds"]["entities"][identifier]["events"][sound_event.value] = {"sound": sound_identifier}
+        self._content["entity_sounds"]["entities"][identifier]["events"][sound_event.value] = {"sound": f"{ANVIL.NAMESPACE}:{sound_identifier}"}
 
         if pitch != (0.8, 1.2):
             self._content["entity_sounds"]["entities"][identifier]["events"][sound_event.value]["pitch"] = pitch
@@ -783,231 +745,6 @@ class _Materials(AddonObject):
             for m in self._materials:
                 self._content["materials"].update(m._queue)
             super().queue("")
-
-
-class _DialogueButton:
-    """Handles dialogue buttons.
-
-    Attributes:
-        button_name (str): The name of the button.
-        _commands (list[str], optional): A list of commands for the button. Defaults to empty list.
-    """
-
-    def __init__(self, button_name: str, *commands: str):
-        """Initializes a _DialogueButton instance.
-
-        Args:
-            button_name (str): The name of the button.
-            *commands (str): The commands for the button.
-        """
-        self._button_name = button_name
-        self._commands = [f"/{command}" if not str(command).startswith("/") else command for command in commands]
-
-    def _export(self):
-        """Returns the dialogue button.
-
-        Returns:
-            dict: The dialogue button.
-        """
-        return _JsonSchemes.dialogue_button(self._button_name, self._commands)
-
-
-class _DialogueScene:
-    """Handles dialogue scenes.
-
-    Attributes:
-        scene_tag (str): The tag of the scene.
-        _buttons (list[_DialogueButton], optional): A list of dialogue buttons. Defaults to empty list.
-        _on_open_commands (list[str], optional): A list of commands to be executed when the scene opens. Defaults to empty list.
-        _on_close_commands (list[str], optional): A list of commands to be executed when the scene closes. Defaults to empty list.
-        _npc_name (str, optional): The name of the NPC for the scene. Defaults to None.
-        _text (str, optional): The text for the scene. Defaults to None.
-    """
-
-    def __init__(self, scene_tag: str):
-        """Initializes a _DialogueScene instance.
-
-        Args:
-            scene_tag (str): The tag of the scene.
-        """
-        self._tag = scene_tag
-        self._buttons: list[_DialogueButton] = []
-        self._on_open_commands = []
-        self._on_close_commands = []
-        self._npc_name = None
-        self._text = None
-
-    def properties(self, npc_name: str, text: str = ""):
-        """Sets the properties for the dialogue scene.
-
-        Args:
-            npc_name (str): The name of the NPC.
-            text (str, optional): The text for the scene. Defaults to ''.
-
-        Returns:
-            _DialogueScene: The dialogue scene instance.
-        """
-        self._npc_name: str = RawTextConstructor().text(npc_name)
-        if not text is None:
-            self._text: str = RawTextConstructor().translate(text)
-        return self
-
-    def button(self, button_name: str, *commands: str):
-        """Adds a button to the dialogue scene.
-
-        Args:
-            button_name (str): The name of the button.
-            *commands (str): The commands for the button.
-
-        Returns:
-            _DialogueScene: The dialogue scene instance.
-        """
-        if len(self._buttons) >= 6:
-            ANVIL.Logger.dialogue_max_buttons(self._tag, len(self._buttons))
-        # Buttons cannot be translated
-        button = _DialogueButton(button_name, *commands)
-        self._buttons.append(button)
-        return self
-
-    def on_open_commands(self, *commands: str):
-        """Sets the commands to be executed when the scene opens.
-
-        Args:
-            *commands (str): The commands to be executed.
-
-        Returns:
-            _DialogueScene: The dialogue scene instance.
-        """
-        self._on_open_commands = commands
-        return self
-
-    def on_close_commands(self, *commands: str):
-        """Sets the commands to be executed when the scene closes.
-
-        Args:
-            *commands (str): The commands to be executed.
-
-        Returns:
-            _DialogueScene: The dialogue scene instance.
-        """
-        self._on_close_commands = commands
-        return self
-
-    def _export(self):
-        """Returns the dialogue scene.
-
-        Returns:
-            dict: The dialogue scene.
-        """
-        return _JsonSchemes.dialogue_scene(
-            self._tag,
-            self._npc_name.__str__(),
-            self._text.__str__(),
-            ["/" + cmd.__str__() for cmd in self._on_open_commands],
-            ["/" + cmd.__str__() for cmd in self._on_close_commands],
-            [button._export() for button in self._buttons],
-        )
-
-
-class _FogDistance:
-    """
-    Class to handle fog distances based on camera location, color, and other parameters. Allows for setting fog color,
-    distance, and transition.
-
-    Attributes:
-        _camera_location (FogCameraLocation): Specifies the location of the camera.
-        _distance (dict): A dictionary containing the fog properties related to the camera location.
-    """
-
-    def __init__(self, camera_location: FogCameraLocation = FogCameraLocation.Air) -> None:
-        """
-        Initialize the _FogDistance instance.
-
-        Args:
-            camera_location (FogCameraLocation, optional): Enum specifying the location of the camera. Defaults to FogCameraLocation.Air.
-        """
-        self._camera_location = camera_location.value
-        self._distance = {self._camera_location: {}}
-
-    def color(self, color: str):
-        """
-        Set the color of the fog.
-
-        Args:
-            color (str | hex): The color to set the fog.
-
-        Returns:
-            _FogDistance: Returns self for chaining.
-        """
-        self._distance[self._camera_location]["fog_color"] = color
-        return self
-
-    def distance(
-        self,
-        fog_start: int,
-        fog_end: int,
-        render_distance_type: RenderDistanceType = RenderDistanceType.Render,
-    ):
-        """
-        Set the starting and ending distance of the fog along with the render distance type.
-
-        Args:
-            fog_start (int): The starting distance of the fog.
-            fog_end (int): The ending distance of the fog.
-            render_distance_type (RenderDistanceType, optional): The type of render distance. Defaults to RenderDistanceType.Render.
-
-        Raises:
-            ANVIL.Logger.fog_start_end: If fog_end is less than or equal to fog_start.
-
-        Returns:
-            _FogDistance: Returns self for chaining.
-        """
-        if fog_start >= fog_end:
-            raise ANVIL.Logger.fog_start_end(fog_start, fog_end)
-
-        self._distance[self._camera_location]["fog_start"] = fog_start
-        self._distance[self._camera_location]["fog_end"] = fog_end
-        self._distance[self._camera_location]["render_distance_type"] = render_distance_type.value
-        return self
-
-    def transition_fog(
-        self,
-        color: str,
-        fog_start: int,
-        fog_end: int,
-        render_distance_type: RenderDistanceType = RenderDistanceType.Render,
-    ):
-        """
-        Set the color, starting and ending distance of the fog for transitioning along with the render distance type.
-
-        Args:
-            color (str): The color to set the fog.
-            fog_start (int): The starting distance of the fog.
-            fog_end (int): The ending distance of the fog.
-            render_distance_type (RenderDistanceType, optional): The type of render distance. Defaults to RenderDistanceType.Render.
-
-        Raises:
-            ANVIL.Logger.fog_start_end: If fog_end is less than or equal to fog_start.
-
-        Returns:
-            _FogDistance: Returns self for chaining.
-        """
-        if fog_start >= fog_end:
-            raise ANVIL.Logger.fog_start_end(fog_start, fog_end)
-        self._distance[self._camera_location]["color"] = color
-        self._distance[self._camera_location]["fog_start"] = fog_start
-        self._distance[self._camera_location]["fog_end"] = fog_end
-        self._distance[self._camera_location]["render_distance_type"] = render_distance_type.value
-        return self
-
-    def _export(self):
-        """
-        Return the instance's distance data.
-
-        Returns:
-            dict: The distance data of the instance.
-        """
-        return self._distance
 
 
 class _Material:
@@ -1207,1378 +944,6 @@ class _Material:
         return self._material
 
 
-class _Bone:
-    """
-    The _Bone class represents a bone in the geometric model.
-
-    Attributes:
-        _bone (dict): The dictionary representation of a bone.
-    """
-
-    def __init__(self, name, pivot, parent) -> None:
-        """
-        Initializes the _Bone instance.
-
-        Args:
-            name (str): The name of the bone.
-            pivot (list): The pivot coordinates of the bone.
-            parent (str): The parent bone's name.
-        """
-        self._bone = {
-            "name": name,
-            "pivot": pivot,
-            "parent": parent if not parent is None else {},
-            "cubes": [],
-        }
-
-    def add_cube(
-        self,
-        origin: list[float, float, float],
-        size: list[float, float, float],
-        uv: list[int, int],
-        pivot: list[float, float, float] = (0, 0, 0),
-        rotation: list[float, float, float] = (0, 0, 0),
-        inflate: float = 0,
-        mirror: bool = False,
-        reset: bool = False,
-        uv_face: list[str, list[int, int], list[int, int]] = None,
-    ):
-        """
-        Adds a cube to the _Bone instance.
-
-        Args:
-            origin (list): The origin coordinates of the cube.
-            size (list): The size of the cube.
-            uv (list): The UV coordinates of the cube.
-            pivot (list, optional): The pivot coordinates of the cube. Defaults to (0,0,0).
-            rotation (list, optional): The rotation of the cube. Defaults to (0,0,0).
-            inflate (float, optional): The inflation level of the cube. Defaults to 0.
-            mirror (bool, optional): If the cube should be mirrored. Defaults to False.
-            reset (bool, optional): If the cube should be reset. Defaults to False.
-            uv_face (list, optional): The UV face of the cube. Defaults to None.
-
-        Returns:
-            _Bone: The instance of the _Bone class.
-        """
-        self._bone["cubes"].append(
-            {
-                "origin": origin,
-                "size": size,
-                "uv": uv if uv_face is None else {uv_face[0]: {"uv": uv_face[1], "uv_size": uv_face[2]}},
-                "pivot": pivot if not pivot == (0, 0, 0) else {},
-                "rotation": rotation if not rotation == (0, 0, 0) else {},
-                "inflate": inflate if not inflate == 0 else {},
-                "mirror": mirror if mirror else {},
-                "reset": reset if reset else {},
-            }
-        )
-        return self
-
-    @property
-    def _queue(self):
-        """
-        Getter for the _queue property of _Bone instance.
-
-        Returns:
-            dict: The dictionary representation of a bone.
-        """
-        return self._bone
-
-
-class _Geo:
-    """
-    The _Geo class represents the geometry of a model.
-
-    Attributes:
-        _geo_name (str): The name of the geometry.
-        _geo (dict): The dictionary representation of the geometry.
-        _bones (list): A list of bones in the geometry.
-    """
-
-    def __init__(self, geometry_name: str, texture_size: list[int, int] = (16, 16)) -> None:
-        self._geo_name = geometry_name
-        self._geo = {
-            "description": {
-                "identifier": f"geometry.{ANVIL.NAMESPACE}.{geometry_name}",
-                "texture_width": texture_size[0],
-                "texture_height": texture_size[1],
-            },
-            "bones": [],
-        }
-        self._bones: list[_Bone] = []
-
-    def set_visible_bounds(
-        self,
-        visible_bounds_wh: list[float, float],
-        visible_bounds_offset: list[float, float, float],
-    ):
-        self._geo["description"]["visible_bounds_width"] = visible_bounds_wh[0]
-        self._geo["description"]["visible_bounds_height"] = visible_bounds_wh[1]
-        self._geo["description"]["visible_bounds_offset"] = visible_bounds_offset
-        return self
-
-    def add_bone(self, name: str, pivot: list[int, int, int], parent: str = None) -> _Bone:
-        bone = _Bone(name, pivot, parent)
-        self._bones.append(bone)
-        return bone
-
-    @property
-    def _queue(self):
-        for bone in self._bones:
-            self._geo["bones"].append(bone._queue)
-        return self._geo
-
-
-class _Anim_Bone:
-    """
-    The _Anim_Bone class represents a bone in the animation.
-
-    Attributes:
-        _name (str): The name of the bone.
-        _bone (dict): The dictionary representation of the bone in the animation.
-    """
-
-    def __init__(self, name) -> None:
-        self._name = name
-        self._bone = {
-            self._name: {
-                "rotation": {},
-                "position": {},
-                "scale": {},
-            }
-        }
-
-    def rotation(self, rotation: list[float, float, float] = (0, 0, 0), keyframe: float = 0.0):
-        self._bone[self._name]["rotation"].update({keyframe: rotation})
-        return self
-
-    def position(self, position: list[float, float, float] = (0, 0, 0), keyframe: float = 0.0):
-        self._bone[self._name]["position"].update({keyframe: position})
-        return self
-
-    def scale(
-        self,
-        scale: list[float, float, float] | float | Molang = 1,
-        keyframe: float = 0.0,
-    ):
-        self._bone[self._name]["scale"].update({keyframe: scale if scale != 1 else {}})
-        return self
-
-    @property
-    def _queue(self):
-        if len(self._bone[self._name]["rotation"]) == 1 and list(self._bone[self._name]["rotation"].keys())[0] == 0:
-            self._bone[self._name]["rotation"] = self._bone[self._name]["rotation"][0]
-
-        if len(self._bone[self._name]["position"]) == 1 and list(self._bone[self._name]["position"].keys())[0] == 0:
-            self._bone[self._name]["position"] = self._bone[self._name]["position"][0]
-
-        if len(self._bone[self._name]["scale"]) == 1 and list(self._bone[self._name]["scale"].keys())[0] == 0:
-            self._bone[self._name]["scale"] = self._bone[self._name]["scale"][0]
-        return self._bone
-
-
-class _Anims:
-    """
-    The _Anims class represents the animations of a model.
-
-    Attributes:
-        _name (str): The name of the model.
-        _anim_name (str): The name of the animation.
-        _loop (bool): If the animation should loop.
-        _override_previous_animation (bool): If the animation should override the previous animation.
-        _anim (dict): The dictionary representation of the animation.
-        _bones (list): A list of bones in the animation.
-    """
-
-    def __init__(
-        self,
-        name,
-        animation_name: str,
-        loop: bool = False,
-        override_previous_animation: bool = False,
-    ) -> None:
-        self._name = name
-        self._anim_name = animation_name
-        self._loop = loop
-        self._override_previous_animation = override_previous_animation
-        self._anim = {
-            f"animation.{ANVIL.NAMESPACE}.{self._name}.{self._anim_name}": {
-                "loop": self._loop,
-                "override_previous_animation": self._override_previous_animation,
-                "bones": {},
-            }
-        }
-        self._bones: list[_Anim_Bone] = []
-
-    def add_bone(self, name: str):
-        self._bones.append(_Anim_Bone(name))
-        return self._bones[-1]
-
-    @property
-    def _queue(self):
-        for bone in self._bones:
-            self._anim[f"animation.{ANVIL.NAMESPACE}.{self._name}.{self._anim_name}"]["bones"].update(bone._queue)
-        return self._anim
-
-
-class Geometry(AddonObject):
-    """
-    The Geometry class represents the geometric model.
-
-    Attributes:
-        _geos (list): A list of geometries in the model.
-    """
-
-    _extensions = {0: ".geo.json", 1: ".geo.json"}
-
-    def __init__(self, name: str) -> None:
-        super().__init__(name, os.path.join("assets", "models"))
-        self._geos: list[_Geo] = []
-
-    def add_geo(self, geometry_name: str, texture_size: tuple[int, int] = (16, 16)):
-        geo = _Geo(geometry_name, texture_size)
-        self._geos.append(geo)
-        return geo
-
-    def queue(self, type: str):
-        if not type in ["entity", "attachables", "blocks"]:
-            ANVIL.Logger.unsupported_model_type(type)
-
-        if len(self._geos) == 0:
-            ANVIL.Logger.no_geo_found(self._name)
-
-        if FileExists(os.path.join("assets", "models", type, f"{self._name}.geo.json")):
-            with open(os.path.join("assets", "models", type, f"{self._name}.geo.json"), "r") as file:
-                self.content(commentjson.load(file))
-        else:
-            self.content(_JsonSchemes.geometry())
-
-        for g in self._geos:
-            for geo in self._content["minecraft:geometry"]:
-                if f"geometry.{ANVIL.NAMESPACE}.{g._geo_name}" == geo["description"]["identifier"]:
-                    self._content["minecraft:geometry"].remove(geo)
-
-            self._content["minecraft:geometry"].append(g._queue)
-        super().queue(type)
-        super()._export()
-
-
-class Animation(AddonObject):
-    """
-    A class used to represent an Animation.
-
-    Attributes
-    ----------
-    _extensions(dict) : A dictionary to map the animation extension types.
-    _name (str) : The name of the animation.
-    _anims (list) : A list of animation instances.
-    """
-
-    _extensions = {0: ".animation.json", 1: ".animation.json"}
-
-    def __init__(self, name: str) -> None:
-        """
-        Constructs all the necessary attributes for the Animation object.
-
-        Parameters
-        ----------
-        name : str
-            The name of the animation.
-        """
-        super().__init__(name, os.path.join("assets", "animations"))
-
-        self._name = name
-        self._anims: list[_Anims] = []
-
-    def add_animation(
-        self,
-        animation_name: str,
-        loop: bool = False,
-        override_previous_animation: bool = False,
-    ):
-        """
-        Adds an animation instance to the list of animations.
-
-        Parameters
-        ----------
-        animation_name : str
-            The name of the animation to be added.
-        loop : bool, optional
-            Whether the animation should loop (default is False).
-        override_previous_animation : bool, optional
-            Whether the new animation should override the previous one (default is False).
-
-        Returns
-        -------
-        _Anims
-            The newly created animation instance.
-        """
-        geo = _Anims(self._name, animation_name, loop, override_previous_animation)
-        self._anims.append(geo)
-        return geo
-
-    @property
-    def queue(self):
-        """
-        Gets the current state of the animation queue. If no animations are found, logs
-        an error. Also, updates the content with existing or new animation schemes.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the specified path does not exist.
-        """
-        if len(self._anims) == 0:
-            ANVIL.Logger.no_anim_found(self._name)
-        path = os.path.join("assets", "animations", f"{self._name}{self._extension}")
-        if FileExists(path):
-            with open(path, "r") as file:
-                self.content(commentjson.load(file))
-        else:
-            self.content(_JsonSchemes.rp_animations())
-
-        for a in self._anims:
-            self._content["animations"].update(a._queue)
-
-        super().queue()
-        self._export()
-
-
-# Legacy code, must improve
-class _LootPool:
-    class _entry:
-        class _Functions:
-            def __init__(self) -> None:
-                pass
-
-            def SetBookContent(self, author: str, title: str, *pages: str):
-                self._func = {
-                    "author": author,
-                    "title": title,
-                    "pages": [str(p) for p in pages],
-                    "function": "set_book_contents",
-                }
-                return self
-
-            def SetName(self, name: str):
-                self._func = {"function": "set_name", "name": name}
-                return self
-
-            def SetLore(self, *lore: str):
-                self._func = {"function": "set_lore", "lore": [lore]}
-                return self
-
-            def SpecificEnchants(self, *enchants: tuple[str, int]):
-                self._func = {
-                    "function": "specific_enchants",
-                    "enchants": [{"id": enchant[0], "level": enchant[1]} for enchant in enchants],
-                }
-                return self
-
-            def SetDamage(self, damage: tuple[float, float]):
-                self._func = {
-                    "function": "set_damage",
-                    "damage": {
-                        "min": clamp(damage[0], 0, 1),
-                        "max": clamp(damage[1], 0, 1),
-                    },
-                }
-                return self
-
-            def SetCount(self, count: int | tuple[int, int]):
-                if type(count) is tuple:
-                    self._func = {
-                        "function": "set_count",
-                        "count": {"min": count[0], "max": count[1]},
-                    }
-                elif type(count) is int:
-                    self._func = {"function": "set_count", "count": count}
-                return self
-
-            def SetData(self, data: int | tuple[int, int]):
-                if type(data) is tuple:
-                    self._func = {
-                        "function": "set_data",
-                        "data": {"min": data[0], "max": data[1]},
-                    }
-                elif type(data) is int:
-                    self._func = {"function": "set_data", "data": data}
-                return self
-
-            def EnchantRandomly(self):
-                self._func = {"function": "enchant_randomly"}
-                return self
-
-            def _export(self):
-                return self._func
-
-        def __init__(
-            self,
-            name: str,
-            count: int = 1,
-            weight: int = 1,
-            entry_type: LootPoolType = LootPoolType.Item,
-        ) -> None:
-            self._entry = {
-                "type": entry_type.value,
-                "name": name,
-                "count": count,
-                "weight": weight,
-            }
-            self._functions = []
-
-        def quality(self, quality: int):
-            self._entry.update({"quality": quality})
-
-        @property
-        def functions(self):
-            function = self._Functions()
-            self._functions.append(function)
-            return function
-
-        def _export(self):
-            for function in self._functions:
-                if "functions" not in self._entry:
-                    self._entry.update({"functions": []})
-                self._entry["functions"].append(function._export())
-            return self._entry
-
-    def __init__(
-        self,
-        rolls: int | Tuple[int, int] = 1,
-        loot_type: LootPoolType = LootPoolType.Item,
-    ):
-        self._pool = {}
-        self._entries = []
-        if type(rolls) is int:
-            self._pool.update({"rolls": rolls})
-        elif type(rolls) is tuple:
-            self._pool.update({"rolls": {rolls[0], rolls[1]}})
-        self._pool.update({"type": loot_type.value})
-
-    def tiers(self, bonus_chance: int = 0, bonus_rolls: int = 0, initial_range: int = 0):
-        self._pool.update({"tiers": {}})
-        if bonus_chance != 0:
-            self._pool["tiers"].update({"bonus_chance": bonus_chance})
-        if bonus_rolls != 0:
-            self._pool["tiers"].update({"bonus_rolls": bonus_rolls})
-        if initial_range != 0:
-            self._pool["tiers"].update({"initial_range": initial_range})
-
-    def entry(
-        self,
-        name: str,
-        count: int = 1,
-        weight: int = 1,
-        entry_type: LootPoolType = LootPoolType.Item,
-    ):
-        entry = self._entry(str(name), count, weight, entry_type)
-        self._entries.append(entry)
-        return entry
-
-    def _export(self):
-        for entry in self._entries:
-            if "entries" not in self._pool:
-                self._pool.update({"entries": []})
-            self._pool["entries"].append(entry._export())
-        return self._pool
-
-
-class LootTable(AddonObject):
-    """A class representing a LootTable."""
-
-    _extensions = {0: ".loot_table.json", 1: ".loot_table.json"}
-
-    def __init__(self, name: str):
-        """Initializes a LootTable instance.
-
-        Args:
-            name (str): The name of the LootTable.
-        """
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "loot_tables"),
-        )
-        self._content = Defaults("loot_table")
-        self._pools = []
-
-    def pool(
-        self,
-        rolls: int | Tuple[int, int] = 1,
-        loot_type: LootPoolType = LootPoolType.Item,
-    ):
-        pool = _LootPool(rolls, loot_type)
-        self._pools.append(pool)
-        return pool
-
-    def queue(self, directory: str = ""):
-        for pool in self._pools:
-            self._content["pools"].append(pool._export())
-        self.content(self._content)
-        return super().queue(directory=directory)
-
-
-class Recipe(AddonObject):
-    _extensions = {0: ".recipe.json", 1: ".recipe.json"}
-
-    class _Crafting:
-        class _Shapeless:
-            def __init__(
-                self,
-                parent,
-                identifier,
-                output_item_id: str,
-                data: int = 0,
-                count: int = 1,
-            ):
-                self._parent = parent
-                self._identifier = identifier
-                self._item_count = 9
-                self._ingredients = []
-                self._default = Defaults(
-                    "recipe_shapeless",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    ANVIL.NAMESPACE,
-                )
-
-            def add_item(self, item_id: str, data: int = 0, count: int = 1):
-                item_id = str(item_id)
-                if self._item_count == 0:
-                    RaiseError(f"The recipe {self._parent._name} has more than 9 items")
-                if item_id not in [item["item"] for item in self._ingredients]:
-                    self._ingredients.append({"item": item_id, "data": data, "count": count})
-                self._item_count -= 1
-                return self
-
-            def queue(self):
-                self._default["minecraft:recipe_shapeless"]["ingredients"] = self._ingredients
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
-
-        class _Shaped:
-            def __init__(self, parent, identifier, output_item_id, data, count, recipe_exactly):
-                self._parent = parent
-                self._identifier = identifier
-                self._recipe_exactly = recipe_exactly
-                self._keys = string.ascii_letters
-                self._items = {}
-                self._pattern = ["   ", "   ", "   "]
-                self._key = {}
-                self._default = Defaults(
-                    "recipe_shaped",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    ANVIL.NAMESPACE,
-                )
-                self._grid = [[" " for i in range(3)] for j in range(3)]
-
-            def item_0_0(self, item_identifier: str = " ", data: int = 0):
-                self._grid[0][0] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_0_1(self, item_identifier: str = " ", data: int = 0):
-                self._grid[0][1] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_0_2(self, item_identifier: str = " ", data: int = 0):
-                self._grid[0][2] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_1_0(self, item_identifier: str = " ", data: int = 0):
-                self._grid[1][0] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_1_1(self, item_identifier: str = " ", data: int = 0):
-                self._grid[1][1] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_1_2(self, item_identifier: str = " ", data: int = 0):
-                self._grid[1][2] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_2_0(self, item_identifier: str = " ", data: int = 0):
-                self._grid[2][0] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_2_1(self, item_identifier: str = " ", data: int = 0):
-                self._grid[2][1] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_2_2(self, item_identifier: str = " ", data: int = 0):
-                self._grid[2][2] = {"item": item_identifier, "data": data}
-                return self
-
-            def queue(self):
-                for i in range(0, 3):  # Row
-                    for j in range(0, 3):  # Column
-                        current_item = str(self._grid[i][j]["item"]) if type(self._grid[i][j]) is dict else " "
-                        current_data = self._grid[i][j]["data"] if type(self._grid[i][j]) is dict else 0
-                        current_key = self._keys[0]
-                        if current_item != " ":
-                            if current_item not in self._items:
-                                self._items.update(
-                                    {
-                                        current_item: {
-                                            "key": current_key,
-                                            "data": current_data,
-                                        }
-                                    }
-                                )
-                                self._pattern[i] = self._pattern[i][:j] + current_key + self._pattern[i][j + 1 : :]
-                                self._keys = self._keys[1::]
-                                self._key.update(
-                                    {
-                                        current_key: {
-                                            "item": current_item,
-                                            "data": current_data,
-                                        }
-                                    }
-                                )
-                            elif current_data != self._items[current_item]["data"]:
-                                self._items.update(
-                                    {
-                                        current_item: {
-                                            "key": current_key,
-                                            "data": current_data,
-                                        }
-                                    }
-                                )
-                                self._pattern[i] = self._pattern[i][:j] + current_key + self._pattern[i][j + 1 : :]
-                                self._keys = self._keys[1::]
-                                self._key.update(
-                                    {
-                                        current_key: {
-                                            "item": current_item,
-                                            "data": current_data,
-                                        }
-                                    }
-                                )
-                            else:
-                                self._pattern[i] = (
-                                    self._pattern[i][:j] + self._items[current_item]["key"] + self._pattern[i][j + 1 : :]
-                                )
-                if not self._recipe_exactly:
-                    for i in range(len(self._pattern[0])):
-                        if self._pattern[0].endswith(" ") and self._pattern[1].endswith(" ") and self._pattern[2].endswith(" "):
-                            for j in range(len(self._pattern)):
-                                self._pattern[j] = self._pattern[j].removesuffix(" ")
-
-                        if (
-                            self._pattern[0].startswith(" ")
-                            and self._pattern[1].startswith(" ")
-                            and self._pattern[2].startswith(" ")
-                        ):
-                            for j in range(len(self._pattern)):
-                                self._pattern[j] = self._pattern[j].removeprefix(" ")
-
-                    for i in range(len(self._pattern)):
-                        if len(self._pattern) > 0:
-                            if self._pattern[-1] == (" " * len(self._pattern[-1])):
-                                self._pattern.pop(-1)
-                        if len(self._pattern) > 0:
-                            if self._pattern[0] == (" " * len(self._pattern[0])):
-                                self._pattern.pop(0)
-
-                self._default["minecraft:recipe_shaped"]["pattern"] = self._pattern
-                self._default["minecraft:recipe_shaped"]["key"] = self._key
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
-
-        class _Stonecutter:
-            def __init__(
-                self,
-                parent,
-                identifier,
-                output_item_id: str,
-                data: int = 0,
-                count: int = 1,
-            ):
-                self._parent = parent
-                self._identifier = identifier
-                self._item_count = 1
-                self._ingredients = []
-                self._default = Defaults(
-                    "recipe_stonecutter",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    ANVIL.NAMESPACE,
-                )
-
-            def add_item(self, item_id: str, data: int = 0, count: int = 1):
-                if self._item_count == 0:
-                    RaiseError(f"The recipe {self._parent._name} has more than 9 items")
-                if item_id not in [item["item"] for item in self._ingredients]:
-                    self._ingredients.append({"item": item_id, "data": data, "count": count})
-                self._item_count -= 1
-                return self
-
-            def queue(self):
-                self._default["minecraft:recipe_shapeless"]["ingredients"] = self._ingredients
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
-
-        class _Stonecutter:
-            def __init__(
-                self,
-                parent,
-                identifier,
-                output_item_id: str,
-                data: int = 0,
-                count: int = 1,
-            ):
-                self._parent = parent
-                self._identifier = identifier
-                self._item_count = 1
-                self._ingredients = []
-                self._default = Defaults(
-                    "recipe_stonecutter",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    ANVIL.NAMESPACE,
-                )
-
-            def add_item(self, item_id: str, data: int = 0, count: int = 1):
-                if self._item_count == 0:
-                    RaiseError(f"The recipe {self._parent._name} can only take 1 item")
-                self._ingredients.append({"item": item_id, "data": data, "count": count})
-                self._item_count -= 1
-                return self
-
-            def queue(self):
-                self._default["minecraft:recipe_shapeless"]["ingredients"] = self._ingredients
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
-
-        class _SmithingTable:
-            def __init__(
-                self,
-                parent,
-                identifier,
-                output_item_id: str,
-                data: int = 0,
-                count: int = 1,
-            ):
-                self._parent = parent
-                self._identifier = identifier
-                self._item_count = 1
-                self._ingredients = []
-                self._default = Defaults(
-                    "recipe_smithing_table",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    ANVIL.NAMESPACE,
-                )
-
-            def add_item(self, item_id: str, data: int = 0, count: int = 1):
-                if self._item_count == 0:
-                    RaiseError(f"The recipe {self._parent._name} can only take 1 item")
-                self._ingredients.append({"item": item_id, "data": data, "count": count})
-                self._item_count -= 1
-                return self
-
-            def queue(self):
-                self._default["minecraft:recipe_shapeless"]["ingredients"].extend(self._ingredients)
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
-
-        def __init__(self, parent, identifier):
-            self._parent = parent
-            self._identifier = identifier
-
-        def shapeless(self, output_item_id: str, data: int = 0, count: int = 1):
-            return self._Shapeless(self._parent, self._identifier, output_item_id, data, count)
-
-        def shaped(
-            self,
-            output_item_id: str,
-            data: int = 0,
-            count: int = 1,
-            recipe_exactly: bool = False,
-        ):
-            return self._Shaped(
-                self._parent,
-                self._identifier,
-                output_item_id,
-                data,
-                count,
-                recipe_exactly,
-            )
-
-        def stonecutter(self, output_item_id: str, data: int = 0, count: int = 1):
-            return self._Stonecutter(self._parent, self._identifier, output_item_id, data, count)
-
-        def smithing_table(self, output_item_id: str, data: int = 0, count: int = 1):
-            return self._SmithingTable(self._parent, self._identifier, output_item_id, data, count)
-
-    class _Smelting:
-        def __init__(self, parent, identifier):
-            self._parent = parent
-            self._identifier = identifier
-            self._tags = []
-            self._output = " "
-            self._input = " "
-
-        def output(self, output_item_id: str, data: int = 0, count: int = 1):
-            self._output = f"{output_item_id}:{data}"
-            return self
-
-        def input(self, input_item_id: str, data: int = 0, count: int = 1):
-            self._input = f"{input_item_id}:{data}"
-            return self
-
-        @property
-        def furnace(self):
-            self._tags.append("furnace")
-            return self
-
-        @property
-        def blast_furnace(self):
-            self._tags.append("blast_furnace")
-            return self
-
-        @property
-        def smoker(self):
-            self._tags.append("smoker")
-            return self
-
-        @property
-        def campfire(self):
-            self._tags.append("campfire")
-            self._tags.append("soul_campfire")
-            return self
-
-        def queue(self):
-            if self._output == " ":
-                RaiseError("Recipe missing output item")
-            if self._input == " ":
-                RaiseError("Recipe missing input item")
-            self._tags = list(set(self._tags))
-            self._default = Defaults(
-                "recipe_furnace",
-                self._identifier,
-                self._output,
-                self._input,
-                self._tags,
-            )
-            self._parent.content(self._default)
-            self._parent.queue()
-            self._parent._export()
-
-    def __init__(self, name: str):
-        self._name = name
-        self._content = ""
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "recipe"),
-        )
-
-    def crafting(self, identifier: str):
-        return self._Crafting(self, identifier)
-
-    def smelting(self, identifier: str):
-        return self._Smelting(self, identifier)
-
-
-class Particle(AddonObject):
-    _extensions = {0: ".particle.json", 1: ".particle.json"}
-
-    def __init__(self, particle_name, use_vanilla_texture: bool = False):
-        super().__init__(
-            particle_name,
-            os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "particles"),
-        )
-        self._name = particle_name
-        self._content = ""
-        self._use_vanilla_texture = use_vanilla_texture
-
-    def queue(self):
-        ANVIL._report.add_report(
-            ReportType.PARTICLE, 
-            vanilla = False, 
-            col0 = self._name.replace("_", " ").title(), 
-            col1 = f"{ANVIL.NAMESPACE}:{self._name}",
-        )
-
-        return super().queue("particles")
-
-    def _export(self):
-        if self._content != "":
-            super()._export()
-        if not self._use_vanilla_texture:
-            if FileExists(os.path.join("assets", "particles", f"{self._name}.png")):
-                CopyFiles(
-                    "assets/particles",
-                    f"resource_packs/RP_{ANVIL.PASCAL_PROJECT_NAME}/textures/particle",
-                    f"{self._name}.png",
-                )
-            else:
-                ANVIL.Logger.file_exist_error(f"{self._name}.png", os.path.join("assets", "particles"))
-
-        if FileExists(os.path.join("assets", "particles", f"{self._name}.particle.json")):
-            CopyFiles(
-                "assets/particles",
-                f"resource_packs/RP_{ANVIL.PASCAL_PROJECT_NAME}/particles",
-                f"{self._name}.particle.json",
-            )
-        else:
-            ANVIL.Logger.file_exist_error(f"{self._name}.particle.json", os.path.join("assets", "particles"))
-
-
-class Dialogue(AddonObject):
-    _extensions = {0: ".dialogue.json", 1: ".dialogue.json"}
-
-    def __init__(self, name: str) -> None:
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "dialogue"),
-        )
-        self._dialogues = _JsonSchemes.dialogues()
-        self._scenes = []
-
-    def add_scene(self, scene_tag: str):
-        scene = _DialogueScene(scene_tag)
-        self._scenes.append(scene)
-        return scene
-
-    def queue(self, directory: str = None):
-        for scene in self._scenes:
-            self._dialogues["minecraft:npc_dialogue"]["scenes"].append(scene._export())
-        self.content(self._dialogues)
-        return super().queue(directory)
-
-
-class Function(AddonObject):
-    _extensions = {0: ".mcfunction", 1: ".mcfunction"}
-
-    _ticking: list["Function"] = set()
-    _setup: list["Function"] = set()
-    _function_limit: int = 10000
-
-    def __init__(self, name: str) -> None:
-        """Inintializes the Function class.
-        The function is limited to 10000 commands. If you exceed this limit, the function will be split into multiple functions.
-
-        Args:
-            name (str): The name of the function.
-        """
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "functions"),
-        )
-        self._function: list[str] = []
-        self._sub_functions: list[Function] = [self]
-
-    def add(self, *commands: str):
-        """Adds a command to the function."""
-        if len(self._sub_functions[-1]._function) >= self._function_limit - len(commands) - 1:
-            self._sub_functions.append(Function(f"{self._name}_{len(self._sub_functions)}"))
-        self._sub_functions[-1]._function.extend([str(func) for func in commands])
-        return self
-
-    @property
-    def path(self):
-        """Gets the path of the function. To use this properly, the function must be queued."""
-        return os.path.join(self._directory, self._name)
-
-    @property
-    def execute(self):
-        """Returns the execute command of the function."""
-        return f"function {self.path}"
-
-    @property
-    def tick(self):
-        """Adds the function to the tick.json file."""
-        Function._ticking.add(self)
-        return self
-
-    @property
-    def add_to_setup(self):
-        """Adds the function to the setup function. Meaning this will run when your execute your setup function."""
-        Function._setup.add(self)
-        return self
-
-    def queue(self, directory: str = None):
-        """Queues the function to be exported.
-
-        Args:
-            directory (str, optional): The directory to queue the function to. Defaults to None."""
-
-        self._directory = directory
-        return super().queue(self._directory)
-
-    def __len__(self):
-        """Returns the number of commands in the function."""
-        return len(self._function)
-
-    def _export(self):
-        """Exports the function to the file system."""
-        for function in self._sub_functions[1:]:
-            function.content("\n".join(function._function)).queue(self._directory)
-        self.content("\n".join(self._function))
-        if len(self._function) > 0:
-            return super()._export()
-
-
-class Fog(AddonObject):
-    """A class representing a Fog."""
-
-    _extensions = {
-        0: ".fog.json",
-        1: ".fog.json",
-    }
-
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """Initializes a Fog instance.
-
-        Args:
-            name (str): The name of the fog.
-            is_vanilla (bool, optional): Whether the fog is a vanilla fog. Defaults to False.
-        """
-        super().__init__(
-            name,
-            os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "fogs"),
-        )
-        self._name = name
-        self._description = _MinecraftDescription(self._name, is_vanilla)
-        self._fog = _JsonSchemes.fog()
-        self._locations: list[_FogDistance] = []
-        self._volumes = []
-
-    def add_distance_location(self, camera_location: FogCameraLocation = FogCameraLocation.Air):
-        """Adds a distance location to the fog.
-
-        Args:
-            camera_location (FogCameraLocation, optional): The camera location of the fog. Defaults to FogCameraLocation.Air.
-        """
-        self._locations.append(_FogDistance(camera_location))
-        return self._locations[-1]
-
-    def add_volume(self):
-        pass
-
-    @property
-    def queue(self):
-        """Queues the fog to be exported."""
-        for location in self._locations:
-            self._fog["minecraft:fog_settings"]["distance"].update(location._export())
-        self._fog["minecraft:fog_settings"].update(self._description._export)
-        self.content(self._fog)
-        return super().queue()
-
-    def __str__(self) -> str:
-        return self._description.identifier
-
-
-class SkinPack(AddonObject):
-    def __init__(self) -> None:
-        """Initializes a SkinPack instance."""
-        super().__init__("skins", os.path.join("assets", "skins"))
-        self.content(_JsonSchemes.skins_json(ANVIL.PROJECT_NAME))
-
-    def add_skin(
-        self,
-        filename: str,
-        display_name: str,
-        is_slim: bool = False,
-        free: bool = False,
-    ):
-        """Adds a skin to the SkinPack.
-
-        Args:
-            filename (str): The filename of the skin.
-            display_name (str): The display name of the skin.
-            is_slim (bool, optional): Whether the skin is slim. Defaults to False.
-            free (bool, optional): Whether the skin is free. Defaults to False.
-        """
-        if not FileExists(os.path.join(self._path, f"{filename}.png")):
-            ANVIL.Logger.file_exist_error(f"{filename}.png", self._path)
-        self._content["skins"].append(
-            {
-                "localization_name": filename,
-                "geometry": f"geometry.humanoid.{ 'customSlim' if is_slim else 'custom'}",
-                "texture": f"{filename}.png",
-                "type": "free" if free else "paid",
-            }
-        )
-        ANVIL._skins_langs[f"skin.{ANVIL.PROJECT_NAME}.{filename}"] = display_name
-
-    def _export(self):
-        """Exports the SkinPack to the file system."""
-        l = _JsonSchemes.skin_pack_name_lang(ANVIL.PROJECT_NAME, ANVIL.PROJECT_NAME + " Skin Pack")
-        l.extend([f"{k}={v}" for k, v in ANVIL._skins_langs.items()])
-
-        File("languages.json", _JsonSchemes.languages(), self._path, "w")
-        File("manifest.json", _JsonSchemes.manifest_skins(ANVIL.RELEASE), self._path, "w")
-        File("en_US.lang", "\n".join(l), os.path.join(self._path, "texts"), "w")
-
-        super()._export()
-
-
-class CameraPreset(AddonObject):
-    """A class representing a CameraPreset."""
-
-    _extensions = {
-        0: ".camera.json",
-        1: ".camera.json",
-    }
-
-    def __init__(self, name: str, inherit_from: CameraPresets) -> None:
-        """Initializes a CameraPreset instance.
-
-        Args:
-            name (str): The name of the camera preset.
-            is_vanilla (bool, optional): Whether the camera preset is a vanilla camera preset. Defaults to False.
-        """
-        super().__init__(name, os.path.join("behaviour_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "cameras", "presets"))
-        self._name = name
-        self._inherit = inherit_from.value if isinstance(inherit_from, CameraPresets) else str(inherit_from)
-        self._camera_preset = _JsonSchemes.camera_preset(ANVIL.NAMESPACE, name, self._inherit)
-
-    def position(self, x: float = 0, y: float = 0, z: float = 0):
-        """Sets the position of the camera preset.
-
-        Args:
-            x (float): The x position of the camera preset.
-            y (float): The y position of the camera preset.
-            z (float): The z position of the camera preset.
-        """
-        if x != 0:
-            self._camera_preset["minecraft:camera_preset"]["pos_x"] = x
-        if y != 0:
-            self._camera_preset["minecraft:camera_preset"]["pos_y"] = y
-        if z != 0:
-            self._camera_preset["minecraft:camera_preset"]["pos_z"] = z
-        return self
-    
-    def rotation(self, x: float = 0, y: float = 0):
-        """Sets the rotation of the camera preset.
-
-        Args:
-            x (float): The x rotation of the camera preset.
-            y (float): The y rotation of the camera preset.
-        """
-        if x != 0:
-            self._camera_preset["minecraft:camera_preset"]["rot_x"] = x
-        if y != 0:
-            self._camera_preset["minecraft:camera_preset"]["rot_y"] = y
-        return self
-    
-    def player_effects(self, value: bool):
-        """Sets whether the player effects are enabled.
-
-        Args:
-            value (bool): Whether the player effects are enabled.
-        """
-        self._camera_preset["minecraft:camera_preset"]["player_effects"] = value
-        return self
-    
-    def listener(self, value: bool):
-        """Sets whether the listener is enabled.
-
-        Args:
-            value (bool): Whether the listener is enabled.
-        """
-        self._camera_preset["minecraft:camera_preset"]["listener"] = value
-        return self
-    
-    @property
-    def queue(self):
-        """Queues the camera preset to be exported."""
-        self.content(self._camera_preset)
-        return super().queue()
-
-    def __str__(self) -> str:
-        return f"{ANVIL.NAMESPACE}:{self._name}"
-
-
-class Fonts:
-    """A class representing a Fonts."""
-
-    def __init__(self, font_name: str, character_size: int = 32) -> None:
-        """Initializes a Fonts instance.
-
-        Args:
-            font_name (str): The name of the font.
-            character_size (int, optional): The size of the character. Defaults to 32.
-        """
-        if character_size % 16 != 0:
-            ANVIL.Logger.unsupported_font_size()
-        font_size = round(character_size * 0.8)
-
-        try:
-            self.font = ImageFont.truetype(f"assets/textures/ui/{font_name}.ttf", font_size)
-        except FileNotFoundError:
-            self.font = ImageFont.truetype(f"assets/textures/ui/{font_name}.otf", font_size)
-        except:
-            self.font = ImageFont.truetype(f"{font_name}.ttf", font_size)
-
-        self.character_size = character_size
-        self._path = os.path.join("resource_packs", f"RP_{PASCAL_PROJECT_NAME}", "font")
-
-    def generate_font(self):
-        """Generates a default8 font image"""
-
-        font_size = round(self.character_size * 0.8)
-        image_size = self.character_size * 16
-
-        image = Image.new("RGBA", (image_size, image_size))
-        backup_font = ImageFont.truetype("arial.ttf", font_size)
-
-        ascii = "ÀÁÂÈÉÊÍÓÔÕÚßãõǧÎ¹ŒœŞşŴŵŽê§©      !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~⌂"
-        extended_ascii = "ÇüéâäàåçêëèïîìÄÅÉ§ÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴├├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■	"
-        default8 = ascii + extended_ascii
-
-        offset = [0, 0]
-
-        img_draw = ImageDraw.Draw(image)
-        for i in default8:
-            font_target = self.font if i in ascii else backup_font
-
-            bbox = font_target.getbbox(i)
-
-            char_height = bbox[3] - bbox[1]
-
-            x = offset[0] * self.character_size - bbox[0]
-            y = offset[1] * self.character_size
-
-            img_draw.text((x, y), i, fill=(255, 255, 255), font=font_target)
-
-            offset[0] += 1
-            if offset[0] >= 16:
-                offset[0] = 0
-                offset[1] += 1
-
-            image.save(os.path.join("assets", "textures", "ui", "default8.png"))
-
-        return self
-
-    def generate_numbers_particle(self):
-        """Generates a numbers particle from 0 to 999."""
-        img_path = os.path.join("assets", "particles", "numbers.png")
-        particle_path = os.path.join("assets", "particles", "numbers.particle.json")
-
-        max_size = int(self.font.getlength("999"))
-        image_size = (max_size * 10, self.character_size * 100)
-
-        if not FileExists(img_path):
-            image = Image.new("RGBA", image_size)
-            offset = [0, 0]
-
-            img_draw = ImageDraw.Draw(image)
-            for i in range(0, 1000):
-                bbox = self.font.getbbox(str(i))
-
-                x = offset[0] * max_size
-                y = offset[1] * self.character_size
-
-                img_draw.text((x, y), str(i), fill=(255, 255, 255), font=self.font)
-
-                offset[0] += 1
-                if offset[0] >= 10:
-                    offset[0] = 0
-                    offset[1] += 1
-
-                image.save(img_path)
-
-        # if not FileExists(particle_path):
-        #    File(
-        #        "numbers.particle.json",
-        #        {
-        #            "format_version": "1.10.0",
-        #            "particle_effect": {
-        #                "description": {
-        #                    "identifier": f"{ANVIL.NAMESPACE}:numbers",
-        #                    "basic_render_parameters": {"material": "particles_alpha", "texture": "textures/particle/numbers"},
-        #                },
-        #                "components": {
-        #                    "minecraft:emitter_local_space": {"position": True, "rotation": True, "velocity": True},
-        #                    "minecraft:emitter_rate_steady": {"spawn_rate": 10, "max_particles": 1},
-        #                    "minecraft:emitter_lifetime_looping": {"active_time": 1},
-        #                    "minecraft:particle_lifetime_expression": {"max_lifetime": 0.75},
-        #                    "minecraft:emitter_shape_point": {"offset": [0, 0, 0]},
-        #                    "minecraft:particle_initial_speed": 0,
-        #                    "minecraft:particle_motion_dynamic": {"linear_drag_coefficient": 1},
-        #                    "minecraft:particle_appearance_billboard": {
-        #                        "size": [0.18, 0.1],
-        #                        "facing_camera_mode": "rotate_xyz",
-        #                        "direction": {"mode": "custom", "custom_direction": [0, 0, -1]},
-        #                        "uv": {
-        #                            "texture_width": image_size[0],
-        #                            "texture_height": image_size[1],
-        #                            "uv": ["v.number_x_uv", "v.number_y_uv"],
-        #                            "uv_size": [image_size[0] // 10, image_size[1] // 100],
-        #                        },
-        #                    },
-        #                },
-        #            },
-        #        },
-        #        os.path.join("assets", "particles"),
-        #        "w",
-        #    )
-
-        return self
-
-    @property
-    def queue(self):
-        """Queues the font to be exported."""
-        for file in ["glyph_E1.png", "default8.png"]:
-            if FileExists(os.path.join("assets", "textures", "ui", file)):
-                CopyFiles(os.path.join("assets", "textures", "ui"), self._path, file)
-
-
-class Structure:
-    """A class representing a Structure."""
-
-    def __init__(self, structure_name: str):
-        """Initializes a Structure instance.
-
-        Args:
-            structure_name (str): The name of the structure.
-        """
-        self._structure_name = structure_name
-        if not FileExists(os.path.join("assets", "structures", f"{self._structure_name}.mcstructure")):
-            ANVIL.Logger.file_exist_error(f"{self._structure_name}.mcstructure", os.path.join("assets", "structures"))
-
-    @property
-    def queue(self):
-        """Queues the structure to be exported."""
-        ANVIL._queue(self)
-
-    @property
-    def identifier(self) -> Identifier:
-        """Returns the identifier of the structure."""
-        return f"{ANVIL.NAMESPACE_FORMAT}:{self._structure_name}"
-
-    def _export(self):
-        """Exports the structure to the file system."""
-        CopyFiles(
-            os.path.join("assets", "structures"),
-            os.path.join(
-                "behavior_packs",
-                f"BP_{ANVIL.PASCAL_PROJECT_NAME}",
-                "structures",
-                ANVIL.NAMESPACE_FORMAT,
-            ),
-            f"{self._structure_name}.mcstructure",
-        )
-
-
 class _Anvil:
     """A class representing an Anvil instance."""
 
@@ -2611,14 +976,14 @@ class _Anvil:
 
         File(
             "manifest.json",
-            _JsonSchemes.manifest_rp(self.RELEASE, self.Config.get("BUILD", "RP_UUID"), int(self.Config.get("ANVIL", "PBR"))),
+            _JsonSchemes.manifest_rp(self.RELEASE, self.Config.get_option("build", "rp_uuid"), self.Config.get_option("anvil", "pbr")),
             os.path.join("resource_packs", f"RP_{self.PASCAL_PROJECT_NAME}"),
             "w",
         )
         File(
             "manifest.json",
             _JsonSchemes.manifest_bp(
-                self.RELEASE, self.Config.get("BUILD", "BP_UUID"), int(self.Config.get("ANVIL", "SCRIPTAPI")), int(self.Config.get("ANVIL", "SCRIPTUI"))
+                self.RELEASE, self.Config.get_option("build", "bp_uuid"), self.Config.get_option("anvil", "scriptapi"), self.Config.get_option("anvil", "scriptui")
             ),
             os.path.join("behavior_packs", f"BP_{self.PASCAL_PROJECT_NAME}"),
             "w",
@@ -2626,39 +991,24 @@ class _Anvil:
         File(
             "manifest.json",
             _JsonSchemes.manifest_world(
-                self.RELEASE, self.Config.get("BUILD", "PACK_UUID"), self.COMPANY, bool(int(self.Config.get("ANVIL", "RANDOM_SEED")))
+                self.RELEASE, self.Config.get_option("build", "pack_uuid"), self.COMPANY, self.Config.get_option("anvil", "random_seed")
             ),
             "",
             "w",
         )
 
-        File("world_resource_packs.json", _JsonSchemes.world_packs(self.Config.get("BUILD", "RP_UUID"), self.RELEASE), ".", "w")
-        File("world_behavior_packs.json", _JsonSchemes.world_packs(self.Config.get("BUILD", "BP_UUID"), self.RELEASE), ".", "w")
-        if int(self.Config.get("ANVIL", "SCRIPTAPI")):
+        File("world_resource_packs.json", _JsonSchemes.world_packs(self.Config.get_option("build", "rp_uuid"), self.RELEASE), ".", "w")
+        File("world_behavior_packs.json", _JsonSchemes.world_packs(self.Config.get_option("build", "bp_uuid"), self.RELEASE), ".", "w")
+        if self.Config.get_option("anvil", "scriptapi"):
             File(
                 "package.json",
                 _JsonSchemes.packagejson(
-                    self.PROJECT_NAME, ".".join(str(i) for i in self.RELEASE), self.PROJECT_DESCRIPTION, self.COMPANY
+                    self.PROJECT_NAME, self.RELEASE, self.PROJECT_DESCRIPTION, self.COMPANY
                 ),
                 "",
                 "w",
                 True,
             )
-
-    def _clone_vanilla(self):
-        import git
-
-        build = self.Config.get("ANVIL", "BUILD")
-        repo = git.Repo.clone_from(
-            "https://github.com/Mojang/bedrock-samples.git",
-            os.path.join("assets", "vanilla"),
-            branch=build.lower(),
-        )
-
-    def _pull_vanilla(self):
-        import git
-
-        git.Remote(git.Repo(os.path.join("assets", "vanilla")), "origin").pull()
 
     def get_github_file(self, path: str):
         if not FileExists(os.path.join("assets", "vanilla", path)):
@@ -2681,27 +1031,20 @@ class _Anvil:
 
         self.Config = config
         # ------------------------------------------------------------------------
-        self.VANILLA_VERSION = self.Config.get("MINECRAFT", "VANILLA_VERSION")
-        self.COMPANY = self.Config.get("PACKAGE", "COMPANY")
-        self.NAMESPACE = self.Config.get("PACKAGE", "NAMESPACE")
-        self.PROJECT_NAME = self.Config.get("PACKAGE", "PROJECT_NAME")
-        self.DISPLAY_NAME = self.Config.get("PACKAGE", "DISPLAY_NAME")
-        self.PROJECT_DESCRIPTION = self.Config.get("PACKAGE", "PROJECT_DESCRIPTION")
-        self.RELEASE = [int(_) for _ in self.Config.get("BUILD", "RELEASE").split(".")]
-        self.DEBUG = int(self.Config.get("ANVIL", "DEBUG"))
-        self.NAMESPACE_FORMAT_BIT = int(self.Config.get("ANVIL", "NAMESPACE_FORMAT"))
+        self.VANILLA_VERSION = self.Config.get_option("minecraft", "vanilla_version")
+        self.COMPANY = self.Config.get_option("package", "company")
+        self.NAMESPACE = self.Config.get_option("package", "namespace")
+        self.PROJECT_NAME = self.Config.get_option("package", "project_name")
+        self.DISPLAY_NAME = self.Config.get_option("package", "display_name")
+        self.PROJECT_DESCRIPTION = self.Config.get_option("package", "project_description")
+        self.RELEASE = self.Config.get_option("build", "release")
+        self.DEBUG = self.Config.get_option("anvil", "debug")
+        self.NAMESPACE_FORMAT_BIT = int(self.Config.get_option("anvil", "namespace_format"))
         self.NAMESPACE_FORMAT = self.NAMESPACE + f".{self.PROJECT_NAME}" * self.NAMESPACE_FORMAT_BIT
-        self.PASCAL_PROJECT_NAME = self.Config.get("ANVIL", "PASCAL_PROJECT_NAME")
-        self.LAST_CHECK = self.Config.get("ANVIL", "LAST_CHECK")
+        self.PASCAL_PROJECT_NAME = self.Config.get_option("anvil", "pascal_project_name")
+        self.LAST_CHECK = self.Config.get_option("anvil", "last_check")
 
-        if self.NAMESPACE == "minecraft":
-            self.Logger.namespaces_not_allowed(self.NAMESPACE)
-
-        if len(self.NAMESPACE) > 8:
-            self.Logger.namespace_too_long(self.NAMESPACE)
-
-        if len(self.PROJECT_NAME) > 16:
-            self.Logger.project_name_too_long(self.PROJECT_NAME)
+        validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME)
 
         global PASCAL_PROJECT_NAME, PROJECT_NAME
         PASCAL_PROJECT_NAME = self.PASCAL_PROJECT_NAME
@@ -2747,8 +1090,8 @@ class _Anvil:
             else:
                 click.echo(self.Logger.minecraft_build_up_to_date())
 
-            self.Config.set("MINECRAFT", "VANILLA_VERSION", self.LATEST_BUILD)
-            self.Config.set("ANVIL", "LAST_CHECK", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            self.Config.add_option("minecraft", "vanilla_version", self.LATEST_BUILD)
+            self.Config.add_option("anvil", "last_check", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     def require_config(self, *options):
         """Checks if the config has the required options.
@@ -2763,12 +1106,12 @@ class _Anvil:
         ):
             self.Logger.project_missing_config()
             if not self.Config.has_section(PROJECT_NAME):
-                ANVIL.Config._config.add_section(PROJECT_NAME)
+                ANVIL.Config.add_section(PROJECT_NAME)
 
         for option in options:
             if not self.Config.has_option(PROJECT_NAME, option):
                 missing = True
-                ANVIL.Config.set(PROJECT_NAME, str(option), input(f"Enter {option}: "))
+                ANVIL.Config.add_option(PROJECT_NAME, str(option), input(f"Enter {option}: "))
                 self.Logger.config_added_option(PROJECT_NAME, option)
 
         if missing:
@@ -2776,7 +1119,7 @@ class _Anvil:
 
     def sound(
         self,
-        sound_definition: str,
+        sound_reference: str,
         category: SoundCategory,
         use_legacy_max_distance: bool = False,
         max_distance: int = 0,
@@ -2785,14 +1128,14 @@ class _Anvil:
         """Adds a sound to the sound definition.
 
         Args:
-            sound_definition (str): The name of the sound definition.
+            sound_reference (str): The name of the sound definition.
             category (SoundCategory): The category of the sound.
             use_legacy_max_distance (bool, optional): Whether to use legacy max distance. Defaults to False.
             max_distance (int, optional): The max distance of the sound. Defaults to 0.
             min_distance (int, optional): The min distance of the sound. Defaults to 9999.
         """
-        return self._sound_definition.sound_definition(
-            sound_definition,
+        return self._sound_definition.sound_reference(
+            sound_reference,
             category,
             use_legacy_max_distance,
             max_distance,
@@ -2957,6 +1300,7 @@ class _Anvil:
     def compile(self) -> None:
         """Compiles the project."""
         from anvil.api.commands import Say, Scoreboard, Tag, Tellraw
+        from anvil.api.features import Function, _Tick
 
         self._manifests_and_langs()
 
@@ -3043,7 +1387,7 @@ class _Anvil:
         for object in self._objects_list:
             object._export()
 
-        if int(self.Config.get("ANVIL", "SCRIPTAPI")):
+        if self.Config.get_option("anvil", "scriptapi"):
             source = os.path.join("assets", "javascript")
             target = os.path.join("behavior_packs", f"BP_{self.PASCAL_PROJECT_NAME}", "scripts")
 
@@ -3416,7 +1760,7 @@ class _Anvil:
             title=f"{ANVIL.DISPLAY_NAME} Technical Notes",
             author=ANVIL.COMPANY,
             subject=f"{ANVIL.DISPLAY_NAME} Technical Notes",
-            creator=f"Anvil@StarkTMA {__version__}"
+            creator=f"Anvil@stark_lg {__version__}"
         )
 
         elements = [

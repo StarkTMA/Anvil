@@ -1,5 +1,6 @@
+from anvil.api.features import Particle
 from anvil.api.vanilla import Blocks
-from anvil.core import ANVIL, Particle
+from anvil.core import ANVIL
 from anvil.lib import *
 
 # __all__ = [
@@ -15,7 +16,53 @@ class EventObject:
         return {"event": event, "target": target}
 
 
-# Filters ==========================================================================
+class _component:
+    component_namespace = "minecraft:component"
+
+    def _require_components(self, *components: str):
+        self._dependencies.extend(components)
+
+    def _add_clashes(self, *components: str):
+        self._clashes.extend(components)
+
+    def _enforce_version(self, current_version, target_version):
+        if current_version < target_version:
+            ANVIL.Logger.component_version_error(self.component_namespace, current_version, target_version)
+
+    def __init__(self, component_name: str) -> None:
+        self._component_reset_namespace(component_name)
+        self._dependencies = []
+        self._clashes = []
+
+    def _component_reset_namespace(self, component_name: str):
+        self.component_namespace = f"minecraft:{component_name}"
+        self._cmp = {self.component_namespace: {}}
+
+    def _component_add_field(self, key, value):
+        self._cmp[self.component_namespace][key] = value
+
+    def _component_set_value(self, value):
+        self._cmp[self.component_namespace] = value
+
+    def keys(self):
+        return list(self._cmp.keys())
+
+    def __getitem__(self, key):
+        return self._cmp[key]
+
+
+class _ai_goal(_component):
+    def __init__(self, component_name: str) -> None:
+        super().__init__(component_name)
+
+    def priority(self, priority: int):
+        """The higher the priority, the sooner this behavior will be executed as a goal.
+
+        Args:
+            priority (int): The higher the priority, the sooner this behavior will be executed as a goal.
+        """
+        self._component_add_field("priority", priority)
+        return self
 
 
 class Filter:
@@ -397,42 +444,6 @@ class Filter:
         return self._construct_filter("rider_count", subject, operator, None, value)
 
 
-class _component:
-    component_namespace = "minecraft:component"
-
-    def _enforce_version(self, current_version, target_version):
-        if current_version < target_version:
-            ANVIL.Logger.component_version_error(self.component_namespace, current_version, target_version)
-
-    def __init__(self, component_name: str) -> None:
-        self._component_reset_namespace(component_name)
-
-    def _component_reset_namespace(self, component_name: str):
-        self.component_namespace = f"minecraft:{component_name}"
-        self._cmp = {self.component_namespace: {}}
-
-    def _component_add_field(self, key, value):
-        self._cmp[self.component_namespace][key] = value
-
-    def _component_set_value(self, value):
-        self._cmp[self.component_namespace] = value
-
-    def keys(self):
-        return list(self._cmp.keys())
-
-    def __getitem__(self, key):
-        return self._cmp[key]
-
-
-class _ai_goal(_component):
-    def __init__(self, component_name: str) -> None:
-        super().__init__(component_name)
-
-    def priority(self, priority: int):
-        self._component_add_field("priority", priority)
-        return self
-
-
 # Components ==========================================================================
 
 
@@ -588,7 +599,12 @@ class Movement(_component):
     component_namespace = "minecraft:movement"
 
     def __init__(self, value: int, max: int = None) -> None:
-        """Sets the amount of movement this mob has."""
+        """Defined the movement speed of the entity in block/tick.
+
+        Args:
+            value (int): The movement speed of the entity in block/tick.
+            max (int, optional): The maximum movement speed of the entity in block/tick. Defaults to None.
+        """
         super().__init__("movement")
         self._component_add_field("value", value)
         if not max is None:
@@ -722,6 +738,7 @@ class Breathable(_component):
         total_supply: int = 15,
         suffocate_time: int = -20,
         inhale_time: int = 0,
+        generates_bubbles: bool = True,
     ) -> None:
         """Defines what blocks this entity can breathe in and gives them the ability to suffocate."""
         super().__init__("breathable")
@@ -735,6 +752,8 @@ class Breathable(_component):
             self._component_add_field("suffocate_time", suffocate_time)
         if inhale_time != 0:
             self._component_add_field("inhale_time", inhale_time)
+        if not generates_bubbles:
+            self._component_add_field("generates_bubbles", generates_bubbles)
 
     @property
     def breathes_lava(self):
@@ -744,12 +763,6 @@ class Breathable(_component):
     @property
     def breathes_solids(self):
         self._component_add_field("breathes_solids", True)
-        return self
-
-    def breathes_water(self, generates_bubbles: bool = False):
-        self._component_add_field("breathes_water", True)
-        if generates_bubbles:
-            self._component_add_field("generates_bubbles", generates_bubbles)
         return self
 
     @property
@@ -999,12 +1012,12 @@ class DamageSensor(_component):
 class FollowRange(_component):
     component_namespace = "minecraft:follow_range"
 
-    def __init__(self, value: int, max: int = None) -> None:
+    def __init__(self, value: int, max_range: int = None) -> None:
         """Defines the range of blocks that a mob will pursue a target."""
         super().__init__("follow_range")
         self._component_add_field("value", value)
-        if not max is None:
-            self._component_add_field("max", max)
+        if not max_range is None:
+            self._component_add_field("max", max_range)
 
 
 class MovementType(_component):
@@ -1091,6 +1104,11 @@ class MovementType(_component):
             self._component_add_field("sway_amplitude", sway_amplitude)
         if not sway_frequency == 0.5:
             self._component_add_field("sway_frequency", sway_frequency)
+        return self
+
+    def Hover(self, max_turn: float = 30):
+        """Causes the mob to hover."""
+        self._basic("hover", max_turn)
         return self
 
 
@@ -1597,7 +1615,7 @@ class NearestAttackableTarget(_ai_goal):
         must_see: bool = False,
         must_see_forget_duration: float = 3.0,
         persist_time: float = 0.0,
-        reevaluate_description: bool = False,
+        # reevaluate_description: bool = False,
         reselect_targets: bool = False,
         scan_interval: int = 10,
         set_persistent: bool = False,
@@ -1624,8 +1642,7 @@ class NearestAttackableTarget(_ai_goal):
             self._component_add_field("must_see_forget_duration", must_see_forget_duration)
         if not persist_time == 0.0:
             self._component_add_field("persist_time", persist_time)
-        if reevaluate_description:
-            self._component_add_field("reevaluate_description", reevaluate_description)
+        # if reevaluate_description: self._component_add_field("reevaluate_description", reevaluate_description)
         if reselect_targets:
             self._component_add_field("reselect_targets", reselect_targets)
         if not scan_interval == 10:
@@ -3381,7 +3398,11 @@ class UnderwaterMovement(_component):
     component_namespace = "minecraft:underwater_movement"
 
     def __init__(self, value: int) -> None:
-        """Sets the amount of underwater movement this mob has."""
+        """A component that defines the entity's movement speed while underwater in block/tick
+
+        Args:
+            value (int): Movement speed of the entity while underwater in block/tick.
+        """
         super().__init__("underwater_movement")
         self._component_add_field("value", value)
 
@@ -3600,7 +3621,12 @@ class MovementMeters(_component):
     component_namespace = "minecraft:movement"
 
     def __init__(self, value: float, max: float = None) -> None:
-        """A component that defines the movement speed of an entity in meters per second instead of whatever Minecraft does."""
+        """A component that defines the entity's movement speed in meters per second.
+
+        Args:
+            value (float): Movement speed of the entity in meters per second.
+            max (float, optional): Maximum movement speed of the entity in meters per second. Defaults to None.
+        """
         super().__init__("movement")
         self._component_add_field("value", round(0.152 * math.sqrt(value), 2))
         if not max is None:
@@ -3712,19 +3738,28 @@ class ChargeAttack(_ai_goal):
         self,
         max_distance: int = 3,
         min_distance: int = 2,
-        speed_multiplier: float = 1.0,
         success_rate: float = 0.1428,
+        speed_multiplier: float = 1.0,
     ) -> None:
-        """Compels an entity to damage a target by using a running attack."""
+        """Compels an entity to damage a target by using a running attack.
+
+        Args:
+            max_distance (int, optional): A charge attack cannot start if the entity is farther than this distance to the target. Defaults to 3.
+            min_distance (int, optional): A charge attack cannot start if the entity is closer than this distance to the target. Defaults to 2.
+            success_rate (float, optional): Percent chance this entity will start a charge attack, if not already attacking (1.0 = 100%). Defaults to 0.1428.
+            speed_multiplier (float, optional): Modifies the entity's speed when charging toward the target. Defaults to 1.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_attack
+        """
         super().__init__("behavior.charge_attack")
         if max_distance != 3:
             self._component_add_field("max_distance", max_distance)
         if min_distance != 2:
             self._component_add_field("min_distance", min_distance)
-        if speed_multiplier != 1.0:
-            self._component_add_field("speed_multiplier", speed_multiplier)
         if success_rate != 0.1428:
             self._component_add_field("success_rate", success_rate)
+        if speed_multiplier != 1.0:
+            self._component_add_field("speed_multiplier", speed_multiplier)
 
 
 class RamAttack(_ai_goal):
@@ -3801,7 +3836,21 @@ class AvoidMobType(_ai_goal):
         check_if_outnumbered: bool = False,
         cooldown: float = 0.0,
     ) -> None:
-        """Compels the entity to run away from other entities that meet the criteria specified."""
+        """Compels an entity to run away from other entities that meet the criteria specified.
+
+        Args:
+            avoid_mob_sound (str, optional): The sound event to play when the mob is avoiding another mob. Defaults to None.
+            avoid_target_xz (int, optional): The next target position the entity chooses to avoid another entity will be chosen within this XZ Distance. Defaults to 16.
+            avoid_target_y (int, optional): The next target position the entity chooses to avoid another entity will be chosen within this Y Distance. Defaults to 7.
+            ignore_visibility (bool, optional): Whether or not to ignore direct line of sight while this entity is running away from other specified entities. Defaults to False.
+            probability_per_strength (float, optional): Percent chance this entity will stop avoiding another entity based on that entity's strength, where 1.0 = 100%. Defaults to 1.0.
+            remove_target (bool, optional): Determine if we should remove target when fleeing or not. Defaults to False.
+            sound_interval (list[float], optional): The range of time in seconds to randomly wait before playing the sound again. Defaults to [3.0, 8.0].
+            check_if_outnumbered (bool, optional): If true, the entity will only avoid other entities if it is outnumbered. Defaults to False.
+            cooldown (float, optional): Time in seconds the entity has to wait before using the goal again. Defaults to 0.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_avoid_mob_type
+        """
         super().__init__("behavior.avoid_mob_type")
 
         self._component_add_field("entity_types", [])
@@ -3833,6 +3882,17 @@ class AvoidMobType(_ai_goal):
         sprint_speed_multiplier: float = 1.0,
         walk_speed_multiplier: float = 1.0,
     ):
+        """Adds a new entity type to the list of conditions another entity must meet to be a valid target to avoid.
+
+        Args:
+            filter (Filter): Filter to determine which entities to avoid.
+            max_dist (float, optional): Maximum distance to look for an avoid target for the entity. Defaults to 3.0.
+            max_flee (float, optional): How many blocks away from its avoid target the entity must be for it to stop fleeing from the avoid target. Defaults to 10.0.
+            sprint_distance (float, optional): How many blocks within range of its avoid target the entity must be for it to begin sprinting away from the avoid target. Defaults to 7.0.
+            sprint_speed_multiplier (float, optional): Multiplier for sprint speed. 1.0 means keep the regular speed, while higher numbers make the sprint speed faster. Defaults to 1.0.
+            walk_speed_multiplier (float, optional): Multiplier for walking speed. 1.0 means keep the regular speed, while higher numbers make the walking speed faster. Defaults to 1.0.
+        """
+
         a = {"filters": filter}
         if max_dist != 3.0:
             a["max_dist"] = max_dist
@@ -3848,6 +3908,12 @@ class AvoidMobType(_ai_goal):
         return self
 
     def on_escape_event(self, event: str, target: FilterSubject = FilterSubject.Self):
+        """Event that is triggered when escaping from a mob.
+
+        Args:
+            event (str): Event to trigger.
+            target (FilterSubject, optional): Target of the event. Defaults to FilterSubject.Self.
+        """
         self._component_add_field("on_escape_event", {"event": event, "target": target.value})
         return self
 
@@ -4341,7 +4407,6 @@ class RandomSwim(_ai_goal):
         self,
         avoid_surface: bool = True,
         interval: int = 120,
-        priority: int = None,
         speed_multiplier: float = 1.0,
         xz_dist: int = 10,
         y_dist: int = 7,
@@ -4351,7 +4416,6 @@ class RandomSwim(_ai_goal):
         Args:
             avoid_surface (bool, optional): If true, the entity will avoid surface water blocks by swimming below them. Defaults to True.
             interval (int, optional): A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal. Defaults to 120.
-            priority (int, optional): The higher the priority, the sooner this behavior will be executed as a goal. Defaults to None.
             speed_multiplier (float, optional): Movement speed multiplier of the entity when using this AI Goal. Defaults to 1.0.
             xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
@@ -4364,8 +4428,6 @@ class RandomSwim(_ai_goal):
             self._component_add_field("avoid_surface", avoid_surface)
         if interval != 120:
             self._component_add_field("interval", interval)
-        if not priority is None:
-            self._component_add_field("priority", priority)
         if speed_multiplier != 1.0:
             self._component_add_field("speed_multiplier", speed_multiplier)
         if xz_dist != 10:
@@ -4380,7 +4442,6 @@ class RandomBreach(_ai_goal):
     def __init__(
         self,
         interval: int = 120,
-        priority: int = None,
         speed_multiplier: float = 1.0,
         xz_dist: int = 10,
         y_dist: int = 7,
@@ -4390,7 +4451,6 @@ class RandomBreach(_ai_goal):
 
         Args:
             interval (int, optional): A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal. Defaults to 120.
-            priority (int, optional): The higher the priority, the sooner this behavior will be executed as a goal. Defaults to None.
             speed_multiplier (float, optional): Movement speed multiplier of the entity when using this AI Goal. Defaults to 1.0.
             xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
@@ -4402,8 +4462,6 @@ class RandomBreach(_ai_goal):
 
         if interval != 120:
             self._component_add_field("interval", interval)
-        if not priority is None:
-            self._component_add_field("priority", priority)
         if speed_multiplier != 1.0:
             self._component_add_field("speed_multiplier", speed_multiplier)
         if xz_dist != 10:
@@ -4412,3 +4470,524 @@ class RandomBreach(_ai_goal):
             self._component_add_field("y_dist", y_dist)
         if cooldown_time != 10:
             self._component_add_field("cooldown_time", cooldown_time)
+
+
+class FlyingSpeed(_component):
+    component_namespace = "minecraft:flying_speed"
+
+    def __init__(self, value: int) -> None:
+        """Sets the speed, in Blocks, at which the entity flies.
+
+        Args:
+            value (int): Flying speed in blocks per tick.
+        """
+        super().__init__("flying_speed")
+        self._component_add_field("value", value)
+
+
+class RandomHover(_ai_goal):
+    component_namespace = "minecraft:behavior.random_hover"
+
+    def __init__(
+        self,
+        hover_height: tuple[float, float] = (0.0, 0.0),
+        interval: int = 120,
+        speed_multiplier: float = 1.0,
+        xz_dist: int = 10,
+        y_dist: int = 7,
+        y_offset: float = 0.0,
+    ) -> None:
+        """Compels an entity to hover around randomly, close to the surface.
+
+        Args:
+            hover_height (tuple[float, float], optional): The height above the surface which the entity will try to maintain. Defaults to (0.0, 0.0).
+            interval (int, optional): A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal. Defaults to 120.
+            speed_multiplier (float, optional): Movement speed multiplier of the entity when using this AI Goal. Defaults to 1.0.
+            xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
+            y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
+            y_offset (float, optional): Height in blocks to add to the selected target position. Defaults to 0.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_hover
+        """
+        super().__init__("behavior.random_hover")
+
+        if hover_height != (0.0, 0.0):
+            self._component_add_field("hover_height", hover_height)
+        if interval != 120:
+            self._component_add_field("interval", interval)
+        if speed_multiplier != 1.0:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+        if xz_dist != 10:
+            self._component_add_field("xz_dist", xz_dist)
+        if y_dist != 7:
+            self._component_add_field("y_dist", y_dist)
+        if y_offset != 0.0:
+            self._component_add_field("y_offset", y_offset)
+
+
+class Interact(_component):
+    component_namespace = "minecraft:interact"
+
+    def __init__(self) -> None:
+        """Defines the interactions that can be used with an entity.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact
+        """
+        super().__init__("interact")
+        self._component_add_field("interactions", [])
+
+    def add_interaction(
+        self,
+        event: str,
+        filter: Filter = None,
+        add_items: str = None,
+        cooldown: float = 0.0,
+        cooldown_after_being_attacked: float = 0.0,
+        equip_item_slot: int = -1,
+        health_amount: int = 0,
+        hurt_item: int = 0,
+        interact_text: str = None,
+        play_sounds: str = None,
+        spawn_entities: Identifier = None,
+        spawn_items: str = None,
+        swing: bool = False,
+        transform_to_item: str = None,
+        use_item: bool = False,
+        vibration: Vibrations = Vibrations.EntityInteract,
+    ):
+        """Adds an interaction to the entity.
+
+        Args:
+            event (str): Event to trigger when the interaction occurs.
+            filter (Filter, optional): Filter to determine which entities can interact with this entity. Defaults to None.
+            add_items (str, optional): File path, relative to the Behavior Pack's path, to the loot table file. Defaults to None.
+            cooldown (float, optional): Time in seconds before this entity can be interacted with again. Defaults to 0.0.
+            cooldown_after_being_attacked (float, optional): Time in seconds before this entity can be interacted with after being attacked. Defaults to 0.0.
+            equip_item_slot (int, optional): The entity's equipment slot to equip the item to, if any, upon successful interaction. Defaults to -1.
+            health_amount (int, optional): The amount of health this entity will recover or hurt when interacting with this item. Negative values will harm the entity. Defaults to 0.
+            hurt_item (int, optional): The amount of damage the item will take when used to interact with this entity. A value of 0 means the item won't lose durability. Defaults to 0.
+            interact_text (str, optional): Text to show while playing with touch-screen controls when the player is able to interact in this way with this entity. Defaults to None.
+            play_sounds (str, optional): One or more sound identifiers to play when the interaction occurs. Defaults to None.
+            spawn_entities (str, optional): Entity to spawn when the interaction occurs. Defaults to None.
+            spawn_items (str, optional): Loot table with items to drop on the ground upon successful interaction. Defaults to None.
+            swing (bool, optional): If true, the player will do the 'swing' animation when interacting with this entity. Defaults to False.
+            transform_to_item (str, optional): The item used will transform to this item upon successful interaction. Format: itemName:auxValue. Defaults to None.
+            use_item (bool, optional): If true, the interaction will use an item. Defaults to False.
+            vibration (str, optional): Vibration to emit when the interaction occurs. Admitted values are entity_interact (used by default), shear, and none (no vibration emitted). Defaults to None.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#parameter
+        """
+
+        interaction = {
+            "on_interact": {
+                "filters": filter if not filter is None else {},
+                "event": event,
+            }
+        }
+        if not add_items is None:
+            interaction["add_items"] = {"table": add_items}
+        if not cooldown == 0.0:
+            interaction["cooldown"] = cooldown
+        if not cooldown_after_being_attacked == 0.0:
+            interaction["cooldown_after_being_attacked"] = cooldown_after_being_attacked
+        if not equip_item_slot == -1:
+            interaction["equip_item_slot"] = equip_item_slot
+        if not health_amount == 0:
+            interaction["health_amount"] = health_amount
+        if not hurt_item == 0:
+            interaction["hurt_item"] = hurt_item
+        if not interact_text is None:
+            interaction["interact_text"] = interact_text
+        if not play_sounds is None:
+            interaction["play_sounds"] = play_sounds
+        if not spawn_entities is None:
+            interaction["spawn_entities"] = spawn_entities
+        if not spawn_items is None:
+            interaction["spawn_items"] = {"table": spawn_items}
+        if swing:
+            interaction["swing"] = swing
+        if not transform_to_item is None:
+            interaction["transform_to_item"] = transform_to_item
+        if use_item:
+            interaction["use_item"] = use_item
+        if not vibration is Vibrations.EntityInteract:
+            interaction["vibration"] = vibration.value
+
+        self[self.component_namespace]["interactions"].append(interaction)
+        return self
+
+    def particle_on_start(
+        self,
+        particle_type: str,
+        particle_offset_towards_interactor: bool = False,
+        particle_y_offset: float = 0.0,
+    ):
+        """Adds a particle effect when the interaction starts.
+
+        Args:
+            particle_type (str): Name of the particle system to run.
+            particle_offset_towards_interactor (bool, optional): Whether or not the particle will appear closer to who performed the interaction. Defaults to False.
+            particle_y_offset (float, optional): Vertical offset of the particle system. Defaults to 0.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#particle_on_start
+        """
+
+        # add this to the last interaction, if none exists, raise an error
+        if not self[self.component_namespace]["interactions"]:
+            raise ValueError("No interaction found to add the particle to.")
+        else:
+            self[self.component_namespace]["interactions"][-1]["particle_on_start"] = {
+                "particle_type": particle_type,
+                "particle_offset_towards_interactor": particle_offset_towards_interactor,
+                "particle_y_offset": particle_y_offset,
+            }
+
+
+class AngerLevel(_component):
+    component_namespace = "minecraft:anger_level"
+
+    def __init__(
+        self,
+        anger_decrement_interval: Seconds = 1.0,
+        angry_boost: int = 20,
+        angry_threshold: int = 80,
+        default_annoyingness: int = 0,
+        default_projectile_annoyingness: int = 0,
+        max_anger: int = 100,
+        nuisance_filter: Filter = None,
+        on_increase_sounds: list[dict[str, str]] = [],
+        remove_targets_below_angry_threshold: bool = True,
+    ) -> None:
+        """Compels the entity to track anger towards a set of nuisances.
+
+        Args:
+            anger_decrement_interval (Seconds, optional): Anger level will decay over time. Defines how often anger towards all nuisances will decrease by one. Defaults to 1.0.
+            angry_boost (int, optional): Anger boost applied to angry threshold when the entity gets angry. Defaults to 20.
+            angry_threshold (int, optional): Defines when the entity is considered angry at a nuisance. Defaults to 80.
+            default_annoyingness (int, optional): Specifies the amount to raise anger level with each provocation. Defaults to 0.
+            default_projectile_annoyingness (int, optional): Specifies the amount to raise anger level with each projectile hit. Defaults to 0.
+            max_anger (int, optional): The maximum anger level that can be reached. Applies to any nuisance. Defaults to 100.
+            nuisance_filter (Filter, optional): Filter that is applied to determine if a mob can be a nuisance. Defaults to None.
+            on_increase_sounds (list[dict[str, str]], optional): Sounds to play when the entity is getting provoked. Evaluated in order; the first matching condition wins. Defaults to [].
+            remove_targets_below_angry_threshold (bool, optional): Defines if the entity should remove target if it falls below 'angry' threshold. Defaults to True.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_anger_level
+        """
+        super().__init__("anger_level")
+
+        if anger_decrement_interval != 1.0:
+            self._component_add_field("anger_decrement_interval", anger_decrement_interval)
+        if angry_boost != 20:
+            self._component_add_field("angry_boost", angry_boost)
+        if angry_threshold != 80:
+            self._component_add_field("angry_threshold", angry_threshold)
+        if default_annoyingness != 0:
+            self._component_add_field("default_annoyingness", default_annoyingness)
+        if default_projectile_annoyingness != 0:
+            self._component_add_field("default_projectile_annoyingness", default_projectile_annoyingness)
+        if max_anger != 100:
+            self._component_add_field("max_anger", max_anger)
+        if not nuisance_filter is None:
+            self._component_add_field("nuisance_filter", nuisance_filter)
+        if not on_increase_sounds == []:
+            self._component_add_field("on_increase_sounds", on_increase_sounds)
+        if not remove_targets_below_angry_threshold:
+            self._component_add_field("remove_targets_below_angry_threshold", remove_targets_below_angry_threshold)
+
+
+class Roar(_ai_goal):
+    component_namespace = "minecraft:behavior.roar"
+
+    def __init__(
+        self,
+        duration: Seconds = 0.0,
+    ) -> None:
+        """Compels the entity to roar at another entity based on data in minecraft:anger_level. When the anger threshold specified in minecraft:anger_level has been reached, this entity will roar for the specified amount of time, look at the other entity, apply anger boost towards it, and finally target it.
+
+        Args:
+            duration (Seconds, optional): The amount of time to roar for. Defaults to 0.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_roar
+        """
+        super().__init__("behavior.roar")
+
+        if duration != 0.0:
+            self._component_add_field("duration", duration)
+
+
+class FloatWander(_ai_goal):
+    component_namespace = "minecraft:behavior.float_wander"
+
+    def __init__(
+        self,
+        float_duration: tuple[Seconds, Seconds] = (0.0, 0.0),
+        must_reach: bool = False,
+        priority: int = 0,
+        random_reselect: bool = False,
+        xz_dist: int = 10,
+        y_dist: int = 7,
+        y_offset: float = 0.0,
+    ) -> None:
+        """Compels an entity to float around in a random direction, similar to the ghast entity.
+
+        Args:
+            float_duration (tuple[Seconds, Seconds], optional): Range of time in seconds the mob will float around before landing and choosing to do something else. Defaults to (0.0, 0.0).
+            must_reach (bool, optional): If true, the point has to be reachable to be a valid target. Defaults to False.
+            priority (int, optional): The higher the priority, the sooner this behavior will be executed as a goal. Defaults to 0.
+            random_reselect (bool, optional): If true, the mob will randomly pick a new point while moving to the previously selected one. Defaults to False.
+            xz_dist (int, optional): Distance in blocks on ground that the mob will look for a new spot to move to. Must be at least 1. Defaults to 10.
+            y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
+            y_offset (float, optional): Height in blocks to add to the selected target position. Defaults to 0.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float_wander
+        """
+        super().__init__("behavior.float_wander")
+
+        if float_duration != (0.0, 0.0):
+            self._component_add_field("float_duration", float_duration)
+        if must_reach:
+            self._component_add_field("must_reach", must_reach)
+        if priority != 0:
+            self._component_add_field("priority", priority)
+        if random_reselect:
+            self._component_add_field("random_reselect", random_reselect)
+        if xz_dist != 10:
+            self._component_add_field("xz_dist", xz_dist)
+        if y_dist != 7:
+            self._component_add_field("y_dist", y_dist)
+
+
+class LayDown(_ai_goal):
+    component_namespace = "minecraft:behavior.lay_down"
+
+    def __init__(
+        self,
+        interval: int = 120,
+        random_stop_interval: int = 120,
+    ) -> None:
+        """Compels an entity randomly lay down for a period of time.
+
+        Args:
+            interval (int, optional): A random value to determine at what intervals something can occur. This has a 1/interval chance to choose this goal. Defaults to 120.
+            random_stop_interval (int, optional): A random value to determine at what interval the AI goal can stop. This has a 1/interval chance to stop this goal. Defaults to 120.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_lay_down
+        """
+        super().__init__("behavior.lay_down")
+
+        if interval != 120:
+            self._component_add_field("interval", interval)
+        if random_stop_interval != 120:
+            self._component_add_field("random_stop_interval", random_stop_interval)
+
+
+class MeleeBoxAttack(_ai_goal):
+    component_namespace = "minecraft:behavior.melee_box_attack"
+
+    def __init__(
+        self,
+        attack_once: bool = False,
+        attack_types: list[str] = [],
+        can_spread_on_fire: bool = False,
+        cooldown_time: Seconds = 1,
+        horizontal_reach: float = 0.8,
+        inner_boundary_time_increase: Seconds = 0.25,
+        max_path_time: Seconds = 0.55,
+        melee_fov: int = 90,
+        min_path_time: Seconds = 0.2,
+        outer_boundary_time_increase: Seconds = 0.5,
+        path_fail_time_increase: Seconds = 0.75,
+        path_inner_boundary: float = 16,
+        path_outer_boundary: float = 32,
+        random_stop_interval: int = 0,
+        box_increase: float = 2,
+        require_complete_path: bool = False,
+        set_persistent: bool = False,
+        speed_multiplier: float = 1,
+        track_target: bool = False,
+        x_max_rotation: int = 30,
+        y_max_head_rotation: int = 30,
+    ) -> None:
+        """Compels an entity to attack a target by stomping on them.
+
+        Args:
+            attack_once (bool, optional): If true, the entity will only use this attack behavior once. Defaults to False.
+            attack_types (list[str], optional): Defines the entity types this entity will attack. Defaults to [].
+            can_spread_on_fire (bool, optional): If the entity is on fire, this allows the entity's target to catch on fire after being hit. Defaults to False.
+            cooldown_time (Seconds, optional): Cooldown time (in seconds) between attacks. Defaults to 1.
+            horizontal_reach (float, optional): The attack reach of the entity will be a box with the size of the entity's bounds increased by this value in all horizontal directions. Defaults to 0.8.
+            inner_boundary_time_increase (Seconds, optional): Time (in seconds) to add to attack path recalculation when the target is beyond the "path_inner_boundary". Defaults to 0.25.
+            max_path_time (Seconds, optional): Maximum base time (in seconds) to recalculate new attack path to target (before increases applied). Defaults to 0.55.
+            melee_fov (int, optional): Field of view (in degrees) when using the sensing component to detect an attack target. Defaults to 90.
+            min_path_time (Seconds, optional): Minimum base time (in seconds) to recalculate new attack path to target (before increases applied). Defaults to 0.2.
+            outer_boundary_time_increase (Seconds, optional): Time (in seconds) to add to attack path recalculation when the target is beyond the "path_outer_boundary". Defaults to 0.5.
+            path_fail_time_increase (Seconds, optional): Time (in seconds) to add to attack path recalculation when this entity cannot move along the current path. Defaults to 0.75.
+            path_inner_boundary (float, optional): Distance at which to increase attack path recalculation by "inner_boundary_tick_increase". Defaults to 16.
+            path_outer_boundary (float, optional): Distance at which to increase attack path recalculation by "outer_boundary_tick_increase". Defaults to 32.
+            random_stop_interval (int, optional): This entity will have a 1 in N chance to stop its current attack, where N = "random_stop_interval". Defaults to 0.
+            box_increase (float, optional): Used with the base size of the entity to determine minimum target-distance before trying to deal attack damage. Defaults to 2.
+            require_complete_path (bool, optional): Toggles (on/off) the need to have a full path from the entity to the target when using this melee attack behavior. Defaults to False.
+            set_persistent (bool, optional): Allows the entity to be set to persist upon targeting a player. Defaults to False.
+            speed_multiplier (float, optional): This multiplier modifies the attacking entity's speed when moving toward the target. Defaults to 1.
+            track_target (bool, optional): Allows the entity to track the attack target, even if the entity has no sensing. Defaults to False.
+            x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Defaults to 30.
+            y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Defaults to 30.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_melee_box_attack
+        """
+        super().__init__("behavior.melee_box_attack")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.20.50")
+
+        if attack_once:
+            self._component_add_field("attack_once", attack_once)
+        if not attack_types == []:
+            self._component_add_field("attack_types", attack_types)
+        if can_spread_on_fire:
+            self._component_add_field("can_spread_on_fire", can_spread_on_fire)
+        if cooldown_time != 1:
+            self._component_add_field("cooldown_time", cooldown_time)
+        if horizontal_reach != 0.8:
+            self._component_add_field("horizontal_reach", horizontal_reach)
+        if inner_boundary_time_increase != 0.25:
+            self._component_add_field("inner_boundary_time_increase", inner_boundary_time_increase)
+        if max_path_time != 0.55:
+            self._component_add_field("max_path_time", max_path_time)
+        if melee_fov != 90:
+            self._component_add_field("melee_fov", melee_fov)
+        if min_path_time != 0.2:
+            self._component_add_field("min_path_time", min_path_time)
+        if outer_boundary_time_increase != 0.5:
+            self._component_add_field("outer_boundary_time_increase", outer_boundary_time_increase)
+        if path_fail_time_increase != 0.75:
+            self._component_add_field("path_fail_time_increase", path_fail_time_increase)
+        if path_inner_boundary != 16:
+            self._component_add_field("path_inner_boundary", path_inner_boundary)
+        if path_outer_boundary != 32:
+            self._component_add_field("path_outer_boundary", path_outer_boundary)
+        if random_stop_interval != 0:
+            self._component_add_field("random_stop_interval", random_stop_interval)
+        if box_increase != 2:
+            self._component_add_field("box_increase", box_increase)
+        if require_complete_path:
+            self._component_add_field("require_complete_path", require_complete_path)
+        if set_persistent:
+            self._component_add_field("set_persistent", set_persistent)
+        if speed_multiplier != 1:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+        if track_target:
+            self._component_add_field("track_target", track_target)
+        if x_max_rotation != 30:
+            self._component_add_field("x_max_rotation", x_max_rotation)
+        if y_max_head_rotation != 30:
+            self._component_add_field("y_max_head_rotation", y_max_head_rotation)
+
+    def on_attack(self, event: str, target: FilterSubject = FilterSubject.Self):
+        self._component_add_field("on_attack", {"event": event, "target": target.value})
+        return self
+
+
+class CanJoinRaid(_component):
+    component_namespace = "minecraft:can_join_raid"
+
+    def __init__(self) -> None:
+        """Determines that a given entity can join an existing raid."""
+        super().__init__("can_join_raid")
+
+
+class TimerFlag1(_ai_goal):
+    component_namespace = "minecraft:behavior.timer_flag_1"
+
+    def __init__(
+        self,
+        cooldown_range: tuple[Seconds, Seconds] = (10.0, 10.0),
+        duration_range: tuple[Seconds, Seconds] = (2.0, 2.0),
+        *control_flags: ControlFlags,
+    ) -> None:
+        """Fires an event when this behavior starts, then waits for a duration before stopping. When stopping to due the timeout or due to being interrupted by another behavior, the goal fires another event. query.timer_flag_1 will return 1.0 on both the client and server when this behavior is running, and 0.0 otherwise.
+
+        Args:
+            cooldown_range (tuple[Seconds, Seconds], optional): The goal cooldown range, in seconds. Defaults to (10.0, 10.0).
+            duration_range (tuple[Seconds, Seconds], optional): The goal duration range, in seconds. Defaults to (2.0, 2.0).
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_1
+        """
+        super().__init__("behavior.timer_flag_1")
+
+        if cooldown_range != (10.0, 10.0):
+            self._component_add_field("cooldown_range", cooldown_range)
+        if duration_range != (2.0, 2.0):
+            self._component_add_field("duration_range", duration_range)
+        if not control_flags == []:
+            self._component_add_field("control_flags", [flag.value for flag in control_flags])
+
+    def on_end(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
+        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+
+    def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
+        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+
+
+class TimerFlag2(_ai_goal):
+    component_namespace = "minecraft:behavior.timer_flag_2"
+
+    def __init__(
+        self,
+        cooldown_range: tuple[Seconds, Seconds] = (10.0, 10.0),
+        duration_range: tuple[Seconds, Seconds] = (2.0, 2.0),
+        *control_flags: ControlFlags,
+    ) -> None:
+        """Fires an event when this behavior starts, then waits for a duration before stopping. When stopping to due the timeout or due to being interrupted by another behavior, the goal fires another event. query.timer_flag_2 will return 1.0 on both the client and server when this behavior is running, and 0.0 otherwise.
+
+        Args:
+            cooldown_range (tuple[Seconds, Seconds], optional): The goal cooldown range, in seconds. Defaults to (10.0, 10.0).
+            duration_range (tuple[Seconds, Seconds], optional): The goal duration range, in seconds. Defaults to (2.0, 2.0).
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_2
+        """
+        super().__init__("behavior.timer_flag_2")
+
+        if cooldown_range != (10.0, 10.0):
+            self._component_add_field("cooldown_range", cooldown_range)
+        if duration_range != (2.0, 2.0):
+            self._component_add_field("duration_range", duration_range)
+        if not control_flags == []:
+            self._component_add_field("control_flags", [flag.value for flag in control_flags])
+
+    def on_end(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
+        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+
+    def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
+        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+
+
+class TimerFlag1(_ai_goal):
+    component_namespace = "minecraft:behavior.timer_flag_3"
+
+    def __init__(
+        self,
+        cooldown_range: tuple[Seconds, Seconds] = (10.0, 10.0),
+        duration_range: tuple[Seconds, Seconds] = (2.0, 2.0),
+        *control_flags: ControlFlags,
+    ) -> None:
+        """Fires an event when this behavior starts, then waits for a duration before stopping. When stopping to due the timeout or due to being interrupted by another behavior, the goal fires another event. query.timer_flag_3 will return 1.0 on both the client and server when this behavior is running, and 0.0 otherwise.
+
+        Args:
+            cooldown_range (tuple[Seconds, Seconds], optional): The goal cooldown range, in seconds. Defaults to (10.0, 10.0).
+            duration_range (tuple[Seconds, Seconds], optional): The goal duration range, in seconds. Defaults to (2.0, 2.0).
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_3
+        """
+        super().__init__("behavior.timer_flag_3")
+
+        if cooldown_range != (10.0, 10.0):
+            self._component_add_field("cooldown_range", cooldown_range)
+        if duration_range != (2.0, 2.0):
+            self._component_add_field("duration_range", duration_range)
+        if not control_flags == []:
+            self._component_add_field("control_flags", [flag.value for flag in control_flags])
+
+    def on_end(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
+        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+
+    def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
+        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})

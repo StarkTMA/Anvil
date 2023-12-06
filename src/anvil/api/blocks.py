@@ -174,7 +174,7 @@ class BlockMaterialInstance(_component):
         if FileExists(os.path.join('assets', 'textures', 'blocks', f'{texture_name}.png')):
             self[self.component_namespace].update({
                 "*" if block_face == BlockFaces.All else block_face: {
-                    'texture': texture_name,
+                    'texture': f"{ANVIL.NAMESPACE}:{texture_name}",
                     'render_method': render_method.value if not render_method == BlockMaterial.Opaque else {},
                     'ambient_occlusion': ambient_occlusion if ambient_occlusion is False else {},
                     'face_dimming': face_dimming if face_dimming is False else {},
@@ -518,7 +518,7 @@ class _BlockServer(AddonObject):
             ANVIL.Logger.block_missing_texture(self._name)
         else:
             for i, m in comps[BlockMaterialInstance.component_namespace].items():
-                target_textures.append(m['texture'])
+                target_textures.append(m['texture'].removeprefix(f"{ANVIL.NAMESPACE}:"))
 
         if not BlockGeometry.component_namespace in comps:
             ANVIL.Logger.block_missing_geometry(self._name)

@@ -1,6 +1,6 @@
 from anvil import *
-from anvil import ANVIL, Function
 from anvil.api.commands import Clear, Execute, Scoreboard, Tag, Tellraw
+from anvil.api.features import Function
 
 
 class StateMachine:
