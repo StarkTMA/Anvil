@@ -1,8 +1,14 @@
-from anvil.api.actors import _Components
+import os
+
+from anvil import ANVIL, CONFIG
+from anvil.api.actors import Attachable, _Components
+from anvil.api.commands import Effects, Slots
 from anvil.api.components import _component
-from anvil.core import ANVIL, AddonObject, _MinecraftDescription
-from anvil.lib import *
-from anvil.lib import _JsonSchemes
+from anvil.api.types import Identifier, Seconds, inf
+from anvil.lib.format_versions import ITEM_SERVER_VERSION
+from anvil.lib.lib import clamp
+from anvil.lib.reports import ReportType
+from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 
 __all__ = [
     "Item",
@@ -22,7 +28,7 @@ __all__ = [
     "ItemWearable",
     "ItemHandEquipped",
     "ItemGlint",
-    "ItemUseDuration",
+    "ItemUseModifiers",
     "ItemStackedByData",
     "ItemUseAnimation",
     "ItemAllowOffHand",
@@ -35,14 +41,17 @@ __all__ = [
     "ItemsInteractButton",
 ]
 
+
 # Components
 # Require ITEM_SERVER_VERSION >= 1.20.50
 class ItemTags(_component):
     component_namespace = "minecraft:tags"
+
     def __init__(self, *tags: str) -> None:
         super().__init__("tags")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
         self._component_add_field("tags", tags)
+
 
 class ItemUseModifiers(_component):
     component_namespace = "minecraft:use_modifiers"
@@ -59,9 +68,10 @@ class ItemUseModifiers(_component):
         super().__init__("use_modifiers")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
 
-        self._component_set_value(clamp(use_duration, 0, inf))
+        self._component_add_field("use_duration", clamp(use_duration, 0, inf))
         if not movement_modifier == 1.0:
             self._component_add_field("movement_modifier", movement_modifier)
+
 
 # Require ITEM_SERVER_VERSION >= 1.20.30
 class ItemEnchantable(_component):
@@ -86,7 +96,9 @@ class ItemEnchantable(_component):
 class ItemFood(_component):
     component_namespace = "minecraft:food"
 
-    def __init__(self, can_always_eat: bool = False, nutrition: int = 0, saturation_modifier: float = 0, using_converts_to: str = None) -> None:
+    def __init__(
+        self, can_always_eat: bool = False, nutrition: int = 0, saturation_modifier: float = 0, using_converts_to: str = None
+    ) -> None:
         """Sets the item as a food component, allowing it to be edible to the player.
 
         Args:
@@ -99,7 +111,7 @@ class ItemFood(_component):
         """
         super().__init__("food")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
-        #self._require_components(ItemUseModifiers)
+        self._require_components(ItemUseModifiers)
 
         self._component_add_field("effects", [])
         if can_always_eat:
@@ -161,7 +173,7 @@ class ItemCanDestroyInCreative(_component):
         Args:
             value (bool): If an item will break blocks in Creative Mode while swinging.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative 
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative
         """
         super().__init__("can_destroy_in_creative ")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -195,12 +207,13 @@ class ItemLiquidClipped(_component):
         Args:
             value (bool): If an item will break blocks in Creative Mode while swinging.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative 
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative
         """
         super().__init__("can_destroy_in_creative")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
 
         self._component_set_value(value)
+
 
 # Require ITEM_SERVER_VERSION >= 1.20.20
 class ItemWearable(_component):
@@ -278,11 +291,11 @@ class ItemStackedByData(_component):
 class ItemUseAnimation(_component):
     component_namespace = "minecraft:use_animation"
 
-    def __init__(self, value: bool) -> None:
+    def __init__(self, value: str) -> None:
         """Determines which animation plays when using an item.
 
         Args:
-            value (bool): Which animation to play when using an item.
+            value (str): Which animation to play when using an item.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_animation
         """
@@ -386,13 +399,13 @@ class ItemDigger(_component):
 class ItemCooldown(_component):
     component_namespace = "minecraft:cooldown"
 
-    def __init__(self, category: str, duration: float) -> None:
+    def __init__(self, category: str, duration: Seconds) -> None:
         """Sets an items "Cool down" time. After using an item, it becomes unusable for the duration specified by the 'duration' setting of this component.
 
         Args:
             category (str): The type of cool down for this item.
             duration (float): The duration of time (in seconds) items with a matching category will spend cooling down before becoming usable again.
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_cooldown
         """
         super().__init__("cooldown")
@@ -456,7 +469,7 @@ class ItemBlockPlacer(_component):
         Args:
             block (str): Set the placement block name for the planter item.
             use_on (str): List of block descriptors that contain blocks that this item can be used on. If left empty, all blocks will be allowed.
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer
         """
         super().__init__("block_placer")
@@ -499,10 +512,10 @@ class ItemShooter(_component):
         """Sets the shooter item component.
 
         Args:
-            charge_on_draw (bool, optional): Sets if the item is charged when drawn. Defaults to False.
+            charge_on_draw (bool, optional): Sets if the item is charged when drawn (Like crossbows). Defaults to False.
             max_draw_duration (float, optional): How long can it be drawn before it will release automatically. Defaults to 0.0.
             scale_power_by_draw_duration (bool, optional): Scale the power by draw duration? When true, the longer you hold, the more power it will have when released.. Defaults to False.
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_shooter
         """
         super().__init__("shooter")
@@ -516,9 +529,16 @@ class ItemShooter(_component):
         if scale_power_by_draw_duration:
             self._component_add_field("scale_power_by_draw_duration", scale_power_by_draw_duration)
 
-    def add_ammunition(self, ammunition: Identifier, search_inventory: bool = True, use_in_creative: bool = False, use_offhand: bool = False):
+    def add_ammunition(
+        self, ammunition: Identifier, search_inventory: bool = True, use_in_creative: bool = False, use_offhand: bool = False
+    ):
         self[self.component_namespace]["ammunition"].append(
-            {"item": ammunition, "search_inventory": search_inventory, "use_in_creative": use_in_creative, "use_offhand": use_offhand}
+            {
+                "item": ammunition,
+                "search_inventory": search_inventory,
+                "use_in_creative": use_in_creative,
+                "use_offhand": use_offhand,
+            }
         )
         return self
 
@@ -527,14 +547,14 @@ class ItemProjectile(_component):
     component_namespace = "minecraft:projectile"
 
     def __init__(self, projectile_entity: Identifier, minimum_critical_power: int) -> None:
-        """Compels the item to shoot, similarly to an arrow. 
-        Items with minecraft:projectile can be shot from dispensers or used as ammunition for items with the minecraft:shooter item component. 
+        """Compels the item to shoot, similarly to an arrow.
+        Items with minecraft:projectile can be shot from dispensers or used as ammunition for items with the minecraft:shooter item component.
         Additionally, this component sets the entity that is spawned for items that also contain the minecraft:throwable component.
 
         Args:
             projectile_entity (Identifier): The entity to be fired as a projectile.
             minimum_critical_power (int): Defines the time a projectile needs to charge in order to critically hit.
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_projectile
         """
         super().__init__("projectile")
@@ -565,7 +585,7 @@ class ItemThrowable(_component):
             max_launch_power (float, optional): The maximum power to launch the throwable item. Defaults to 1.0.
             min_draw_duration (float, optional): The minimum duration to draw a throwable item. Defaults to 0.0.
             scale_power_by_draw_duration (bool, optional): Whether or not the power of the throw increases with duration charged. When true, The longer you hold, the more power it will have when released. Defaults to False.
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_throwable
         """
         super().__init__("throwable")
@@ -589,7 +609,7 @@ class ItemThrowable(_component):
 class ItemDurability(_component):
     component_namespace = "minecraft:durability"
 
-    def __init__(self, max_durability: int, damage_chance: int | tuple[int, int] = 100) -> None:
+    def __init__(self, max_durability: int, damage_chance: tuple[int, int] = 100) -> None:
         """Sets how much damage the item can take before breaking, and allows the item to be combined at an anvil, grindstone, or crafting table.
 
         Args:
@@ -603,16 +623,13 @@ class ItemDurability(_component):
         self._component_add_field("max_durability", max(0, max_durability))
 
         if damage_chance != 100:
-            if type(damage_chance) is int:
-                self._component_add_field("damage_chance", clamp(damage_chance, 0, 100))
-            else:
-                self._component_add_field(
-                    "damage_chance",
-                    {
-                        "min": clamp(damage_chance[0], 0, 100),
-                        "max": clamp(damage_chance[1], 0, 100),
-                    },
-                )
+            self._component_add_field(
+                "damage_chance",
+                {
+                    "min": clamp(damage_chance[0], 0, 100),
+                    "max": clamp(damage_chance[1], 0, 100),
+                },
+            )
 
 
 class ItemDisplayName(_component):
@@ -630,8 +647,8 @@ class ItemDisplayName(_component):
         super().__init__("display_name")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
         if localize:
-            key = f'item.{ANVIL.NAMESPACE}:{display_name.lower().replace(" ", "_")}.name'
-            ANVIL.localize(key, display_name)
+            key = f'item.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_")}.name'
+            ANVIL.definitions.register_lang(key, display_name)
             self._component_add_field("value", key)
         else:
             self._component_add_field("value", display_name)
@@ -692,12 +709,12 @@ class ItemIcon(_component):
         """
         super().__init__("icon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
-        ANVIL._item_texture.add_item(texture, "", texture)
-        self._component_add_field("texture", f"{ANVIL.NAMESPACE}:{texture}")
+        ANVIL.definitions.register_item_textures(texture, "", texture)
+        self._component_add_field("texture", f"{CONFIG.NAMESPACE}:{texture}")
 
 
 # Items
-class _ItemServerDescription(_MinecraftDescription):
+class _ItemServerDescription(MinecraftDescription):
     def __init__(self, name, is_vanilla) -> None:
         super().__init__(name, is_vanilla)
         self._description["description"]["properties"] = {}
@@ -716,21 +733,19 @@ class _ItemServerDescription(_MinecraftDescription):
         return self
 
     @property
-    def _export(self):
-        return super()._export
+    def to_dict(self):
+        return super().to_dict
 
 
 class _ItemServer(AddonObject):
-    _extensions = {0: ".item.json", 1: ".item.json"}
+    _extension = ".item.json"
+    _path = os.path.join(CONFIG.BP_PATH, "items")
 
     def __init__(self, name: str, is_vanilla: bool) -> None:
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "items"),
-        )
+        super().__init__(name)
         self._name = name
         self._is_vanilla = is_vanilla
-        self._server_item = _JsonSchemes.server_item()
+        self._server_item = JsonSchemes.server_item()
         self._description = _ItemServerDescription(name, is_vanilla)
         self._components = _Components()
 
@@ -743,9 +758,15 @@ class _ItemServer(AddonObject):
         return self._components
 
     def queue(self):
-        self._server_item["minecraft:item"].update(self.description._export)
+        self._server_item["minecraft:item"].update(self.description.to_dict)
         self._server_item["minecraft:item"]["components"].update(self._components._export()["components"])
+
+        if not ItemDisplayName.component_namespace in self._server_item["minecraft:item"]["components"]:
+            display_name = self._name.replace("_", " ").title()
+            self._server_item["minecraft:item"]["components"][ItemDisplayName.component_namespace] = {"value": display_name}
+
         self.content(self._server_item)
+
         super().queue()
 
 
@@ -757,8 +778,9 @@ class Item:
         self._name = name
         self._is_vanilla = is_vanilla
         self._server = _ItemServer(name, is_vanilla)
+        self._attachable = None
 
-        self._namespace_format = "minecraft" if self._is_vanilla else ANVIL.NAMESPACE
+        self._namespace_format = "minecraft" if self._is_vanilla else CONFIG.NAMESPACE
 
     @property
     def Server(self):
@@ -772,21 +794,29 @@ class Item:
     def name(self):
         return self._name
 
+    @property
+    def attachable(self):
+        if not self._attachable:
+            self._attachable = Attachable(self.name)
+
+        return self._attachable
+
     def queue(self):
         self.Server.queue()
-        
-        if not "minecraft:display_name" in self.Server._server_item["minecraft:item"]["components"]:
-            display_name = self._name.replace("_", " ").title()
-        elif self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"].startswith("item."):
-            display_name = ANVIL._langs[self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]]
+        if self._attachable:
+            self._attachable.queue
+
+        if self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"].startswith("item."):
+            display_name = ANVIL.definitions._language[
+                self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
+            ]
+
         else:
             display_name = self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
 
-        ANVIL._report.add_report(
-            ReportType.ITEM, 
-            vanilla = self._is_vanilla, 
-            col0 = display_name, 
-            col1 = self.identifier,
+        CONFIG.Report.add_report(
+            ReportType.ITEM,
+            vanilla=self._is_vanilla,
+            col0=display_name,
+            col1=self.identifier,
         )
-        
-

@@ -1,6 +1,7 @@
 from enum import Enum
 
-from anvil.core import ANVIL, Dimension
+from anvil import ANVIL, CONFIG
+from anvil.api.enums import Dimension
 
 ENTITY_LIST = []
 ITEMS_LIST = []
@@ -2120,7 +2121,7 @@ class Entities:
         def __init__(self, name : str, is_vanilla: bool = True, allow_runtime: bool = True) -> None:
             super().__init__()
             ENTITY_LIST.append(self)
-            self._namespace = 'minecraft' if is_vanilla else ANVIL.NAMESPACE
+            self._namespace = 'minecraft' if is_vanilla else CONFIG.NAMESPACE
             self._name = name
             self._allow_runtime = allow_runtime
         

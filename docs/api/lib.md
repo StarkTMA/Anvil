@@ -1,5 +1,2 @@
-# Core
-::: src.anvil.core
-
-# Functions
-::: src.anvil.lib
+# Utilities
+::: src.anvil.lib.lib

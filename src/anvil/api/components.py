@@ -1,14 +1,16 @@
-from anvil.api.features import Particle
-from anvil.api.vanilla import Blocks
-from anvil.core import ANVIL
-from anvil.lib import *
+import math
 
-# __all__ = [
-#    'AddRider', 'AdmireItem', 'Ageable',
-#    'Variant', 'MarkVariant', 'SkinID', 'CollisionBox', 'IsStackable', 'TypeFamily',
-#    'InstantDespawn', 'Health', 'Physics', 'KnockbackResistance', 'Pushable', 'IsIllagerCaptain',
-#    'IsBaby', 'PushThrough', 'Movement', 'TickWorld'
-# ]
+from anvil import ANVIL, CONFIG
+from anvil.api.enums import (Biomes, ControlFlags, DamageCause, Effects,
+                             FilterEquipmentDomain, FilterOperation,
+                             FilterSubject, RawTextConstructor, Selector,
+                             Target, Vibrations)
+from anvil.api.features import Particle
+from anvil.api.types import (Identifier, Molang, Seconds, coordinates, event,
+                             position)
+from anvil.api.vanilla import Blocks
+from anvil.lib.format_versions import ENTITY_SERVER_VERSION
+from anvil.lib.lib import *
 
 
 class EventObject:
@@ -19,15 +21,15 @@ class EventObject:
 class _component:
     component_namespace = "minecraft:component"
 
-    def _require_components(self, *components: str):
-        self._dependencies.extend(components)
+    def _require_components(self, *components: "_component"):
+        self._dependencies.extend([cmp.component_namespace for cmp in components])
 
     def _add_clashes(self, *components: str):
         self._clashes.extend(components)
 
     def _enforce_version(self, current_version, target_version):
         if current_version < target_version:
-            ANVIL.Logger.component_version_error(self.component_namespace, current_version, target_version)
+            CONFIG.Logger.component_version_error(self.component_namespace, current_version, target_version)
 
     def __init__(self, component_name: str) -> None:
         self._component_reset_namespace(component_name)
@@ -70,11 +72,11 @@ class Filter:
     def _construct_filter(filter_name, subject, operator, domain, value):
         filter = {"test": filter_name, "value": value}
         if subject != FilterSubject.Self:
-            filter.update({"subject": subject.value})
+            filter.update({"subject": subject})
         if operator != FilterOperation.Equals:
-            filter.update({"operator": operator.value})
+            filter.update({"operator": operator})
         if domain != None:
-            filter.update({"domain": domain.value if isinstance(domain, Arguments) else domain})
+            filter.update({"domain": domain})
 
         return filter
 
@@ -139,7 +141,7 @@ class Filter:
             if isinstance(value, Blocks._MinecraftBlock)
             else value
             if isinstance(value, str)
-            else ANVIL.Logger.unsupported_block_type(value),
+            else CONFIG.Logger.unsupported_block_type(value),
         )
 
     @classmethod
@@ -368,7 +370,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter("int_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value)
+        return self._construct_filter("int_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value)
 
     @classmethod
     def bool_property(
@@ -379,7 +381,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter("bool_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value)
+        return self._construct_filter("bool_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value)
 
     @classmethod
     def float_property(
@@ -390,7 +392,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter("float_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value)
+        return self._construct_filter("float_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value)
 
     @classmethod
     def enum_property(
@@ -401,7 +403,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter("enum_property", subject, operator, f"{ANVIL.NAMESPACE}:{domain}", value)
+        return self._construct_filter("enum_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value)
 
     @classmethod
     def has_property(
@@ -411,7 +413,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return self._construct_filter("has_property", subject, operator, None, f"{ANVIL.NAMESPACE}:{value}")
+        return self._construct_filter("has_property", subject, operator, None, f"{CONFIG.NAMESPACE}:{value}")
 
     @classmethod
     def is_daytime(
@@ -700,7 +702,7 @@ class SpellEffects(_component):
         display_on_screen_animation: bool = True,
     ):
         effect = {
-            "effect": effect.value,
+            "effect": effect,
             "duration": duration,
             "amplifier": amplifier,
         }
@@ -778,7 +780,7 @@ class Breathable(_component):
                 if isinstance(block, Blocks._MinecraftBlock)
                 else block
                 if isinstance(block, str)
-                else ANVIL.Logger.unsupported_block_type(block)
+                else CONFIG.Logger.unsupported_block_type(block)
                 for block in blocks
             ],
         )
@@ -792,7 +794,7 @@ class Breathable(_component):
                 if isinstance(block, Blocks._MinecraftBlock)
                 else block
                 if isinstance(block, str)
-                else ANVIL.Logger.unsupported_block_type(block)
+                else CONFIG.Logger.unsupported_block_type(block)
                 for block in blocks
             ],
         )
@@ -1186,7 +1188,7 @@ class NavigationType(_component):
                     if isinstance(block, Blocks._MinecraftBlock)
                     else block
                     if isinstance(block, str)
-                    else ANVIL.Logger.unsupported_block_type(block)
+                    else CONFIG.Logger.unsupported_block_type(block)
                     for block in blocks_to_avoid
                 ],
             )
@@ -1830,7 +1832,7 @@ class Rideable(_component):
         if not interact_text == "Mount":
             t = interact_text.lower().replace(" ", "_")
             self._component_add_field("interact_text", f"action.interact.{t}")
-            ANVIL.localize(f"action.interact.{t}={interact_text}")
+            ANVIL.definitions.register_lang(f"action.interact.{t}", interact_text)
         if not controlling_seat == 0:
             self._component_add_field("controlling_seat", controlling_seat)
         if not crouching_skip_interact:
@@ -1891,7 +1893,7 @@ class Projectile(_component):
         lightning: bool = False,
         liquid_inertia: float = 0.6,
         multiple_targets: bool = True,
-        offset: coordinate = (0, 0, 0),
+        offset: coordinates = (0, 0, 0),
         on_fire_timer: float = 0.0,
         # particle: str = 'particle', Not used in game
         power: float = 1.3,
@@ -2230,7 +2232,7 @@ class Projectile(_component):
             "snap_to_block": snap_to_block,
         }
         if shape not in ["sphere", "cube"]:
-            RaiseError("Unknown shape, must be sphere or cube")
+            raise RuntimeError("Unknown shape, must be sphere or cube")
         self[self.component_namespace]["on_hit"]["freeze_on_hit"]["shape"] = shape
 
         return self
@@ -4918,13 +4920,15 @@ class TimerFlag1(_ai_goal):
         if duration_range != (2.0, 2.0):
             self._component_add_field("duration_range", duration_range)
         if not control_flags == []:
-            self._component_add_field("control_flags", [flag.value for flag in control_flags])
+            self._component_add_field("control_flags", control_flags)
 
     def on_end(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+        self._component_add_field("on_end", {"event": on_end, "target": subject})
+        return self
 
     def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+        self._component_add_field("on_end", {"event": on_end, "target": subject})
+        return self
 
 
 class TimerFlag2(_ai_goal):
@@ -4951,16 +4955,18 @@ class TimerFlag2(_ai_goal):
         if duration_range != (2.0, 2.0):
             self._component_add_field("duration_range", duration_range)
         if not control_flags == []:
-            self._component_add_field("control_flags", [flag.value for flag in control_flags])
+            self._component_add_field("control_flags", control_flags)
 
     def on_end(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+        self._component_add_field("on_end", {"event": on_end, "target": subject})
+        return self
 
     def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+        self._component_add_field("on_end", {"event": on_end, "target": subject})
+        return self
 
 
-class TimerFlag1(_ai_goal):
+class TimerFlag3(_ai_goal):
     component_namespace = "minecraft:behavior.timer_flag_3"
 
     def __init__(
@@ -4984,10 +4990,65 @@ class TimerFlag1(_ai_goal):
         if duration_range != (2.0, 2.0):
             self._component_add_field("duration_range", duration_range)
         if not control_flags == []:
-            self._component_add_field("control_flags", [flag.value for flag in control_flags])
+            self._component_add_field("control_flags", control_flags)
 
     def on_end(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+        self._component_add_field("on_end", {"event": on_end, "target": subject})
+        return self
 
     def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._component_add_field("on_end", {"event": on_end, "filters": filter if not filter is None else {}, "target": subject})
+        self._component_add_field("on_end", {"event": on_end, "target": subject})
+        return self
+
+
+class Tameable(_component):
+    component_namespace = "minecraft:tameable"
+
+    def __init__(
+        self,
+        probability: float = 1.0,
+        tame_event: str = None,
+        tame_subject: FilterSubject = FilterSubject.Self,
+        *tame_items: str,
+    ) -> None:
+        """Defines the rules for an entity to be tamed by the player.
+
+        Args:
+            probability (float, optional): The chance of taming the entity with each item use between 0.0 and 1.0, where 1.0 is 100%. Defaults to 1.0.
+            tame_event (dict[str, str], optional): Event to initiate when the entity becomes tamed. Defaults to None.
+            tame_items (str, optional): The list of items that can be used to tame the entity. Defaults to None.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tameable
+        """
+        super().__init__("tameable")
+
+        if probability != 1.0:
+            self._component_add_field("probability", probability)
+        if not tame_event is None:
+            self._component_add_field("tame_event", {
+                "event": tame_event,
+                "target": tame_subject
+            })
+        if len(tame_items)>0:
+            self._component_add_field("tame_items", *tame_items)
+
+
+class RunAroundLikeCrazy(_ai_goal):
+    component_namespace = "minecraft:behavior.run_around_like_crazy"
+
+    def __init__(
+        self,
+        speed_multiplier: float = 1.0,
+    ) -> None:
+        """Compels an entity to run around without a set goal.
+
+        Args:
+            priority (int, optional): The higher the priority, the sooner this behavior will be executed as a goal. Defaults to 0.
+            speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_run_around_like_crazy
+        """
+        super().__init__("behavior.run_around_like_crazy")
+
+        if speed_multiplier != 1.0:
+            self._component_add_field("speed_multiplier", speed_multiplier)

@@ -1,7 +1,8 @@
 import os
 
-from anvil.core import ANVIL, AddonObject
-from anvil.lib import Color, _JsonSchemes, clamp, process_color
+from anvil import CONFIG
+from anvil.lib.lib import Color, clamp, process_color
+from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
 def _optkeyframe(range_min: int | float, range_max: int | float, values):
@@ -46,9 +47,12 @@ class _PBR:
 
 
 class GlobalLighting(AddonObject):
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "lighting")
+
     def __init__(self) -> None:
-        super().__init__("global", os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "lighting"))
-        self.content(_JsonSchemes.directional_lights())
+        super().__init__("global")
+        self.content(JsonSchemes.directional_lights())
         self._directional_lights = _DirectionalLighting()
         self._pbr = _PBR()
 
@@ -86,9 +90,12 @@ class _HorizonBlendStops:
 
 
 class Atmospherics(AddonObject):
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "lighting")
+    
     def __init__(self) -> None:
-        super().__init__("atmospherics", os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "lighting"))
-        self.content(_JsonSchemes.atmospherics())
+        super().__init__("atmospherics")
+        self.content(JsonSchemes.atmospherics())
         self._horizon_blend_stops = _HorizonBlendStops()
 
     @property

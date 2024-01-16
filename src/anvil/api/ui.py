@@ -1,5 +1,8 @@
-from anvil.core import ANVIL, AddonObject
-from anvil.lib import *
+from PIL.Image import Image
+
+from anvil import ANVIL, CONFIG
+from anvil.lib.lib import *
+from anvil.lib.schemas import AddonObject
 
 __all__ = [
     "UIBindingType",
@@ -13,9 +16,7 @@ __all__ = [
     "UI",
 ]
 
-
-# Arguments ============================================================
-class UIBindingType(Arguments):
+class UIBindingType(StrEnum):
     View = "view"
     Global = "global"
     Collection = "collection"
@@ -23,7 +24,7 @@ class UIBindingType(Arguments):
     NONE = "none"
 
 
-class UIElementType(Arguments):
+class UIElementType(StrEnum):
     Image = "image"
     Panel = "panel"
     Label = "label"
@@ -35,7 +36,7 @@ class UIElementType(Arguments):
     Button = "button"
 
 
-class UIAnchor(Arguments):
+class UIAnchor(StrEnum):
     Center = "center"
     TopLeft = "top_left"
     TopMiddle = "top_middle"
@@ -47,13 +48,13 @@ class UIAnchor(Arguments):
     BottomRight = "bottom_right"
 
 
-class UITextAlignment(Arguments):
+class UITextAlignment(StrEnum):
     Center = "center"
     Left = "left"
     Right = "right"
 
 
-class UIAnimType(Arguments):
+class UIAnimType(StrEnum):
     Alpha = "alpha"
     Clip = "clip"
     Color = "color"
@@ -65,7 +66,7 @@ class UIAnimType(Arguments):
     Aseprite_flip_book = "aseprite_flip_book"
 
 
-class UIEasing(Arguments):
+class UIEasing(StrEnum):
     Linear = "linear"
     Spring = "spring"
     InQuad = "in_quad"
@@ -100,13 +101,13 @@ class UIEasing(Arguments):
     InOutElastic = "in_out_elastic"
 
 
-class UIElementTrigger(Arguments):
+class UIElementTrigger(StrEnum):
     Title = "title"
     Actionbar = "actionbar"
     NONE = "None"
 
 
-class UIFontSize(Arguments):
+class UIFontSize(StrEnum):
     Normal = "normal"
     Small = "small"
     Large = "large"
@@ -309,7 +310,7 @@ class _UIElement:
                     "nineslice_size": nineslice_size[0] * scale_factor if len(nineslice_size) == 1 else [i * scale_factor for i in nineslice_size],
                     "base_size": [i * scale_factor for i in Image.open(os.path.join("assets", "textures", "ui", f"{texture}.png")).size],
                 },
-                os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "textures", "ui"),
+                os.path.join(CONFIG.RP_PATH, "textures", "ui"),
                 "w",
             )
         return self
@@ -325,7 +326,7 @@ class _UIElement:
                         "nineslice_size": nineslice_size,
                         "base_size": [i * scale_factor for i in Image.open(os.path.join("assets", "textures", "ui", f"{texture}.png")).size],
                     },
-                    os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "textures", "ui"),
+                    os.path.join(CONFIG.RP_PATH, "textures", "ui"),
                     "w",
                 )
         else:
@@ -337,7 +338,7 @@ class _UIElement:
             self.texture(texture)
             CopyFiles(
                 os.path.join("assets", "textures", "ui"),
-                os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "textures", "ui"),
+                os.path.join(CONFIG.RP_PATH, "textures", "ui"),
                 f"{texture}.json",
             )
         else:
@@ -350,7 +351,7 @@ class _UIElement:
             self._textures.append(texture)
             CopyFiles(
                 os.path.join("assets", "textures", "ui"),
-                os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "textures", "ui"),
+                os.path.join(CONFIG.RP_PATH, "textures", "ui"),
                 f"{texture}.json",
             )
         else:
@@ -358,7 +359,7 @@ class _UIElement:
         return self
 
     def keys(self, key, value):
-        self.element[f"${key}"] = value.value if isinstance(value, Arguments) else value
+        self.element[f"${key}"] = value.value if isinstance(value, StrEnum) else value
         return self
 
     def property_bag(self, **properties):
@@ -553,7 +554,7 @@ class _UIElement:
                 os.path.join("assets", "textures", "ui"),
                 os.path.join(
                     "resource_packs",
-                    f"RP_{ANVIL.PASCAL_PROJECT_NAME}",
+                    f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
                     "textures",
                     "ui",
                 ),
@@ -793,18 +794,22 @@ class _UICreditsConstructor:
 
 # UI files ============================================================
 class _UIVariables(AddonObject):
-    _extensions = {0: ".json", 1: ".json"}
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "ui")
 
     def __init__(self) -> None:
-        super().__init__("_global_variables", os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "ui"))
+        super().__init__("_global_variables")
 
     def add_variable(self, variable, value):
         self._content.update({variable: value})
 
 
 class _UIDefs(AddonObject):
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH)
+    
     def __init__(self) -> None:
-        super().__init__("_ui_defs", os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}"))
+        super().__init__("_ui_defs")
         self.do_not_shorten
         self._files = []
 
@@ -818,10 +823,11 @@ class _UIDefs(AddonObject):
 
 
 class _UIAnimation(AddonObject):
-    _extensions = {0: ".json", 1: ".json"}
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "ui")
 
     def __init__(self, name: str, namespace: str, defs: _UIDefs) -> None:
-        super().__init__(name, os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "ui"))
+        super().__init__(name)
         self.name = name
         self._defs = defs
         self.namespace = namespace
@@ -843,10 +849,11 @@ class _UIAnimation(AddonObject):
 
 
 class _UIScreen(AddonObject):
-    _extensions = {0: ".json", 1: ".json"}
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "ui")
 
     def __init__(self, name: str, namespace: str, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
-        super().__init__(name, os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "ui"))
+        super().__init__(name)
         self._content = {
             "namespace": namespace,
         }
@@ -1365,7 +1372,7 @@ class _AnvilAnimations(_UIAnimation):
 
 
 class UI:
-    _extensions = {0: ".json", 1: ".json"}
+    _extension = {0: ".json", 1: ".json"}
 
     def __init__(self) -> None:
         self._defs = _UIDefs()
