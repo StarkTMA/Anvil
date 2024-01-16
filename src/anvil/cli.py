@@ -1,14 +1,17 @@
 import json
 import os
+import uuid
 from datetime import datetime
-from uuid import uuid4
 
 import click
-from github import Github
+import requests
 
-from .lib import (APPDATA, DESKTOP, MANIFEST_BUILD, CreateDirectory, File,
-                  _Config, _JsonSchemes, _Logger, process_subcommand, requests,
-                  validate_namespace_project_name)
+from anvil.lib.config import Config, ConfigOption, ConfigSection
+from anvil.lib.format_versions import (MANIFEST_BUILD, MODULE_MINECRAFT_SERVER,
+                                       MODULE_MINECRAFT_SERVER_UI)
+from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File,
+                           process_subcommand, validate_namespace_project_name)
+from anvil.lib.logger import Logger
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -45,6 +48,271 @@ def CreateDirectoriesFromTree(tree: dict) -> None:
     for directory in directories:
         CreateDirectory(directory)
 
+class JsonSchemes:
+    
+    @staticmethod
+    def structure(project_name):
+        return {
+            project_name: {
+                "behavior_packs": {},
+                "resource_packs": {},
+                "assets": {
+                    "skins": {},
+                    "animations": {},
+                    "models": {
+                        "entity": {},
+                        "attachables": {},
+                        "blocks": {},
+                    },
+                    "particles": {},
+                    "sounds": {},
+                    "structures": {},
+                    "marketing": {},
+                    "textures": {
+                        "attachables": {},
+                        "environment": {},
+                        "blocks": {},
+                        "items": {},
+                        "entity": {},
+                        "ui": {},
+                        "particle": {},
+                    },
+                    "output": {},
+                    "javascript": {},
+                    "anvilscripts": {},
+                },
+            }
+        }
+
+    @staticmethod
+    def script():
+        return "\n".join(
+            [
+                "from anvil import *",
+                "",
+                'if __name__ == "__main__":',
+                "    ANVIL.compile()",
+                "    #ANVIL.package()",
+            ]
+        )
+
+    @staticmethod
+    def gitignore():
+        return "\n".join(
+            [
+                "#Anvil",
+                "assets/cache/",
+                "# Byte-compiled / optimized / DLL files",
+                "__pycache__/",
+                "*.py[cod]",
+                "*$py.class",
+                "# C extensions",
+                "*.so",
+                "# Distribution / packaging",
+                ".Python",
+                "build/",
+                "develop-eggs/",
+                "dist/",
+                "downloads/",
+                "eggs/",
+                ".eggs/",
+                "lib/",
+                "lib64/",
+                "parts/",
+                "sdist/",
+                "var/",
+                "wheels/",
+                "pip-wheel-metadata/",
+                "share/python-wheels/",
+                "*.egg-info/",
+                ".installed.cfg",
+                "*.egg",
+                "MANIFEST",
+                "# Environments",
+                ".env",
+                ".venv",
+                "env/",
+                "venv/",
+                "ENV/",
+                "env.bak/",
+                "venv.bak/",
+                "# Typescript/Javascript",
+                "node_modules/",
+            ]
+        )
+
+    @staticmethod
+    def pack_name_lang(name, description):
+        return [f"pack.name={name}", f"pack.description={description}"]
+
+    @staticmethod
+    def manifest_bp(version, uuid1, rpuuid, author, has_script: bool, server_ui: bool):
+        m = {
+            "format_version": 2,
+            "header": {
+                "description": "pack.description",
+                "name": "pack.name",
+                "uuid": uuid1,
+                "version": version,
+                "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+            },
+            "modules": [
+                {"type": "data", "uuid": str(uuid.uuid4()), "version": version}
+            ],
+            "dependencies": [
+                {
+                    "uuid": rpuuid,
+                    "version": version
+                }
+            ],
+            "metadata": {"authors": [author]},
+        }
+        if has_script:
+            m["modules"].append(
+                {
+                    "uuid": str(uuid.uuid4()),
+                    "version": version,
+                    "type": "script",
+                    "language": "javascript",
+                    "entry": "scripts/main.js",
+                }
+            )
+            m["dependencies"].append({
+                "module_name": "@minecraft/server",
+                "version": MODULE_MINECRAFT_SERVER,
+            })
+            if server_ui:
+                m["dependencies"].append(
+                    {
+                        "module_name": "@minecraft/server-ui",
+                        "version": MODULE_MINECRAFT_SERVER_UI,
+                    }
+                )
+        return m
+
+    @staticmethod
+    def manifest_rp(version, uuid1, bp_uuid, author, has_pbr, addon):
+        m = {
+            "format_version": 2,
+            "header": {
+                "description": "pack.description",
+                "name": "pack.name",
+                "uuid": uuid1,
+                "version": version,
+                "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+            },
+            "modules": [
+                {
+                    "type": "resources",
+                    "uuid": str(uuid.uuid4()),
+                    "version": version,
+                }
+            ],
+            "dependencies": [
+                {
+                    "uuid": bp_uuid,
+                    "version": version
+                }
+            ],
+            "metadata": {"authors": [author]},
+        }
+        if has_pbr:
+            m.update({"capabilities": ["pbr"]})
+        if addon:
+            m["header"]["pack_scope"] = "world"
+            m["metadata"]["product_type"] = "addon"
+        return m
+
+    @staticmethod
+    def manifest_world(version, uuid1, author, seed):
+        return {
+            "format_version": 2,
+            "header": {
+                "name": "pack.name",
+                "description": "pack.description",
+                "version": version,
+                "uuid": uuid1,
+                # "platform_locked": False,
+                "lock_template_options": True,
+                "base_game_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+                "allow_random_seed": seed,
+            },
+            "modules": [
+                {
+                    "type": "world_template",
+                    "uuid": str(uuid.uuid4()),
+                    "version": version,
+                }
+            ],
+            "metadata": {"authors": [author]},
+        }
+
+    @staticmethod
+    def world_packs(pack_id, version):
+        return [{"pack_id": i, "version": version} for i in pack_id]
+
+    @staticmethod
+    def code_workspace(name, path1, path2):
+        return {
+            "folders": [
+                {"name": name, "path": os.path.join(path1, path2)},
+            ]
+        }
+
+    @staticmethod
+    def packagejson(project_name, version, description, author):
+        return {
+            "name": project_name,
+            "version": version,
+            "description": description,
+            "main": "scripts/main.js",
+            "scripts": {"test": 'echo "Error: no test specified" && exit 1'},
+            "keywords": [],
+            "author": author,
+            "license": "ISC",
+        }
+
+    @staticmethod
+    def tsconfig(pascal_project_name):
+        return {
+            "compilerOptions": {
+                "target": "ESNext",
+                "module": "es2020",
+                "declaration": False,
+                "outDir": f"behavior_packs/BP_{pascal_project_name}/scripts",
+                "strict": True,
+                "pretty": True,
+                "esModuleInterop": True,
+                "moduleResolution": "Node",
+                "resolveJsonModule": True,
+                "noUnusedLocals": True,
+                "noUnusedParameters": True,
+                "forceConsistentCasingInFileNames": True,
+                "lib": [
+                    "ESNext",
+                    "dom",
+                ],
+            },
+            "include": ["assets/javascript/**/*"],
+            "exclude": ["node_modules"],
+        }
+
+    @staticmethod
+    def vscode(pascal_project_name):
+        return {
+            "version": "0.3.0",
+            "configurations": [
+                {
+                    "type": "minecraft-js",
+                    "request": "attach",
+                    "name": "Wait for Minecraft Debug Connections",
+                    "mode": "listen",
+                    "localRoot": f"${{workspaceFolder}}/behavior_packs/BP_{pascal_project_name}/scripts",
+                    "port": 19144,
+                }
+            ],
+        }
+
 
 @click.group()
 def cli() -> None:
@@ -56,6 +324,7 @@ def cli() -> None:
     """
     pass
 
+
 @cli.command(help="Initiate an Anvil project")
 @click.argument("namespace")
 @click.argument("project_name")
@@ -65,13 +334,6 @@ def cli() -> None:
     default=False,
     show_default=True,
     help="Generates the project in Minecraft Preview com.mojang instead of release.",
-)
-@click.option(
-    "--fullns",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Sets the Project namespace to the full namespace.project_name.",
 )
 @click.option(
     "--scriptapi",
@@ -94,14 +356,21 @@ def cli() -> None:
     show_default=True,
     help="Adds support of Random Seed Worlds.",
 )
+@click.option(
+    "--addon",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Sets this package as an addon, comes with many restrictions.",
+)
 def create(
     namespace: str,
     project_name: str,
     preview: bool = False,
-    fullns: bool = False,
     scriptapi: bool = False,
     pbr: bool = False,
     random_seed: bool = False,
+    addon: bool = False,
 ) -> None:
     """
     Create an Anvil project.
@@ -110,72 +379,89 @@ def create(
         namespace (str): The namespace of the project.
         project_name (str): The name of the project.
         preview (bool, optional): Whether to generate the project in Minecraft Preview. Defaults to False.
-        fullns (bool, optional): Whether to set the project namespace to the full namespace.project_name. Defaults to False.
         scriptapi (bool, optional): Whether to add dependencies support of ScriptAPI. Defaults to False.
         pbr (bool, optional): Whether to add capabilities support of Physically based rendering. Defaults to False.
         random_seed (bool, optional): Whether to add support of Random Seed Worlds. Defaults to False.
 
     """
     # Prints header
-    _Logger.header()
+    logger = Logger()
+    logger.header()
 
     validate_namespace_project_name(namespace, project_name)
-    
+
     display_name = project_name.title().replace("-", " ").replace("_", " ")
     # Prints message
-    click.echo(f'Initiating {display_name}')
+    click.echo(f"Initiating {display_name}")
 
     # Setup the directory
     try:
-        latest_build = json.loads(requests.get(f"https://raw.githubusercontent.com/Mojang/bedrock-samples/{'preview' if preview else 'main'}/version.json").text)["latest"]["version"]
+        latest_build = json.loads(
+            requests.get(
+                f"https://raw.githubusercontent.com/Mojang/bedrock-samples/{'preview' if preview else 'main'}/version.json"
+            ).text
+        )["latest"]["version"]
     except:
-        latest_build = ".".join(str(i) for i in MANIFEST_BUILD)
-    base_dir = os.path.join(APPDATA, "Local", "Packages", f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe", "LocalState", "games", "com.mojang", "minecraftWorlds")
+        latest_build = MANIFEST_BUILD
+    base_dir = os.path.join(
+        APPDATA,
+        "Local",
+        "Packages",
+        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+        "LocalState",
+        "games",
+        "com.mojang",
+        "minecraftWorlds",
+    )
     os.chdir(base_dir)
 
-    # Init the config file
-    Config = _Config()
-    Config.add_option("minecraft", "vanilla_version", latest_build)
-    Config.add_option("package", "company", namespace.title())
-    Config.add_option("package", "namespace", namespace)
-    Config.add_option("package", "project_name", project_name)
-    Config.add_option("package", "display_name", display_name)
-    Config.add_option("package", "project_description", f"{display_name} Packs")
-
-    Config.add_option("build", "release", [1, 0, 0])
-    Config.add_option("build", "rp_uuid", [str(uuid4())])
-    Config.add_option("build", "bp_uuid", [str(uuid4())])
-    Config.add_option("build", "pack_uuid", str(uuid4()))
-
-    Config.add_option("anvil", "debug", False)
-    Config.add_option("anvil", "scriptapi", scriptapi)
-    Config.add_option("anvil", "scriptui", False)
-    Config.add_option("anvil", "pbr", pbr)
-    Config.add_option("anvil", "random_seed", random_seed)
-    Config.add_option("anvil", "namespace_format", fullns)
-    Config.add_option("anvil", "pascal_project_name", "".join(x for x in display_name if x.isupper()))
-    Config.add_option("anvil", "last_check", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    Config.add_section(namespace)
-    
-    CreateDirectoriesFromTree(_JsonSchemes.structure(project_name))
+    CreateDirectoriesFromTree(JsonSchemes.structure(project_name))
     os.chdir(project_name)
 
-    File(f"{project_name}.anvil.py", _JsonSchemes.script(), "", "w")
-    File(".gitignore", _JsonSchemes.gitignore(), "", "w")
+    # Init the config file
+    config = Config()
+    
+    config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, latest_build)
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, display_name)
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.EXPERIMENTAL, preview)
+
+    config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
+    config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
+
+    config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, scriptapi)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, pbr)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper())
+    config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    config.add_section(namespace)
+
+    config.save()
+    
+    File(f"{project_name}.anvil.py", JsonSchemes.script(), "", "w")
+    File(".gitignore", JsonSchemes.gitignore(), "", "w")
     File("CHANGELOG.md", "", "", "w")
 
     File(
         "en_US.lang",
         "\n".join(
-            _JsonSchemes.pack_name_lang(
-                Config.get_option("package", "display_name"),
-                Config.get_option("package", "project_description"),
+            JsonSchemes.pack_name_lang(
+                config.get_option("package", "display_name"),
+                config.get_option("package", "project_description"),
             )
         ),
         os.path.join(
             "behavior_packs",
-            "BP_" + Config.get_option("anvil", "pascal_project_name"),
+            "BP_" + config.get_option("anvil", "pascal_project_name"),
             "texts",
         ),
         "w",
@@ -183,41 +469,34 @@ def create(
     File(
         "en_US.lang",
         "\n".join(
-            _JsonSchemes.pack_name_lang(
-                Config.get_option("package", "display_name"),
-                Config.get_option("package", "project_description"),
+            JsonSchemes.pack_name_lang(
+                config.get_option("package", "display_name"),
+                config.get_option("package", "project_description"),
             )
         ),
         os.path.join(
             "resource_packs",
-            "RP_" + Config.get_option("anvil", "pascal_project_name"),
+            "RP_" + config.get_option("anvil", "pascal_project_name"),
             "texts",
         ),
         "w",
     )
     File(
         "manifest.json",
-        _JsonSchemes.manifest_bp([1, 0, 0], Config.get_option("build", "bp_uuid"), scriptapi, False),
-        os.path.join(
-            "behavior_packs", "BP_" + Config.get_option("anvil", "pascal_project_name")
-        ),
+        JsonSchemes.manifest_bp([1, 0, 0], config.get_option(ConfigSection.BUILD, ConfigOption.BP_UUID)[0], config.get_option(ConfigSection.BUILD, ConfigOption.RP_UUID)[0], config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY), scriptapi, False),
+        os.path.join("behavior_packs", "BP_" + config.get_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME)),
         "w",
     )
     File(
         "manifest.json",
-        _JsonSchemes.manifest_rp([1, 0, 0], Config.get_option("build", "rp_uuid"), pbr),
-        os.path.join(
-            "resource_packs", "RP_" + Config.get_option("anvil", "pascal_project_name")
-        ),
+        JsonSchemes.manifest_rp([1, 0, 0], config.get_option(ConfigSection.BUILD, ConfigOption.RP_UUID)[0], config.get_option(ConfigSection.BUILD, ConfigOption.BP_UUID)[0], config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY), pbr, addon),
+        os.path.join("resource_packs", "RP_" + config.get_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME)),
         "w",
     )
     File(
         "manifest.json",
-        _JsonSchemes.manifest_world(
-            [1, 0, 0],
-            Config.get_option("build", "pack_uuid"),
-            Config.get_option("package", "company"),
-            random_seed
+        JsonSchemes.manifest_world(
+            [1, 0, 0], config.get_option(ConfigSection.BUILD, ConfigOption.PACK_UUID), config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY), random_seed
         ),
         "",
         "w",
@@ -225,22 +504,20 @@ def create(
 
     File(
         "world_behavior_packs.json",
-        _JsonSchemes.world_packs(Config.get_option("build", "bp_uuid"), [1, 0, 0]),
+        JsonSchemes.world_packs(config.get_option("build", "bp_uuid"), [1, 0, 0]),
         "",
         "w",
     )
     File(
         "world_resource_packs.json",
-        _JsonSchemes.world_packs(Config.get_option("build", "rp_uuid"), [1, 0, 0]),
+        JsonSchemes.world_packs(config.get_option("build", "rp_uuid"), [1, 0, 0]),
         "",
         "w",
     )
 
     File(
         f"{project_name}.code-workspace",
-        _JsonSchemes.code_workspace(
-            Config.get_option("package", "company"), base_dir, project_name
-        ),
+        JsonSchemes.code_workspace(config.get_option("package", "company"), base_dir, project_name),
         DESKTOP,
         "w",
     )
@@ -249,23 +526,21 @@ def create(
         click.echo("Initiating ScriptingAPI modules")
         File(
             "package.json",
-            _JsonSchemes.packagejson(
+            JsonSchemes.packagejson(
                 project_name,
                 "1.0.0",
-                Config.get_option("package", "display_name") + " Essentials",
-                Config.get_option("package", "company"),
+                config.get_option("package", "display_name") + " Essentials",
+                config.get_option("package", "company"),
             ),
             "",
             "w",
             True,
         )
-        File("tsconfig.json", _JsonSchemes.tsconfig(Config.get_option("anvil", "pascal_project_name")), "", "w", False)
-        File("launch.json", _JsonSchemes.vscode(Config.get_option("anvil", "pascal_project_name")), ".vscode", "w", False)
+        File("tsconfig.json", JsonSchemes.tsconfig(config.get_option("anvil", "pascal_project_name")), "", "w", False)
+        File("launch.json", JsonSchemes.vscode(config.get_option("anvil", "pascal_project_name")), ".vscode", "w", False)
 
-        # os.system('npm install -g typescript')
-        # os.system("npm i @minecraft/server")
-        # os.system("npm i @minecraft/server-ui")
+    config.save()
 
-    Config.save()
-    # os.system(f'start {os.path.join(base_dir,project_name)}')
-    process_subcommand(f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace")
+    process_subcommand(
+        f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace"
+    )

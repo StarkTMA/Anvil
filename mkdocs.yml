@@ -13,7 +13,7 @@ theme:
   palette:
     scheme: slate
     primary: black
-    
+
   features:
     - navigation.tabs
     - navigation.sections
@@ -24,16 +24,16 @@ extra:
   homepage: https://starktma.net
   generator: false
   social:
-    - icon: fontawesome/brands/github 
+    - icon: fontawesome/brands/github
       link: https://github.com/starktma
 
     - icon: fontawesome/brands/discord
       link: https://discord.com/invite/qKsKWbB
-    
-    - icon: fontawesome/brands/linkedin 
+
+    - icon: fontawesome/brands/linkedin
       link: https://linkedin.com/in/yasser-benfoughal
 
-    - icon: fontawesome/brands/twitter 
+    - icon: fontawesome/brands/twitter
       link: https://x.com/@starktma_
 
 plugins:
@@ -46,28 +46,30 @@ plugins:
 
 nav:
   - Home: index.md
-  - Docs: 
-    - Introduction: guide/introduction.md
-    - Config: guide/config.md
-    - Tutorials: 
-        - Adding your first entity: guide/adding_your_first_entity.md
-        - Adding your first block: guide/adding_your_first_block.md
-        - Creating a simple OneBlock skyblock: guide/creating_a_one_block.md
+  - Docs:
+      - Introduction: guide/introduction.md
+      - Config: guide/config.md
+      - Tutorials:
+          - Adding your first entity: guide/adding_your_first_entity.md
+          - Adding your first block: guide/adding_your_first_block.md
+          - Creating a simple OneBlock skyblock: guide/creating_a_one_block.md
 
-  - Api Reference: 
-    - Anvil: api/lib.md
-    - Actors: api/actors.md
-    - Blocks: api/blocks.md
-    - Commands: api/commands.md
-    - Components: api/components.md
-    - Items: api/items.md
-    - Molang: api/molang.md
-    - PBR: api/texture_pack.md
-    - UI: api/ui.md
-    - Vanilla: api/vanilla.md
-    - functions: api/functions.md
+  - Api Reference:
+      - Anvil: api/lib.md
+      - Actors: api/actors.md
+      - Blocks: api/blocks.md
+      - Commands: api/commands.md
+      - Components: api/components.md
+      - Items: api/items.md
+      - Molang: api/molang.md
+      - Enums: "api/enums.md"
+      - Features: "api/features.md"
+      - PBR: api/texture_pack.md
+      - UI: api/ui.md
+      - Vanilla: api/vanilla.md
+      - Functions: api/functions.md
 
-markdown_extensions:
+markdown_extension:
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span

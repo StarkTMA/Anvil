@@ -1,11 +1,13 @@
 import os
 
-from anvil.core import (ANVIL, AddonObject, RawTextConstructor, ReportType,
-                        _MinecraftDescription)
-from anvil.lib import (CameraPresets, CopyFiles, Defaults, File, FileExists,
-                       FogCameraLocation, Identifier, Image, ImageDraw,
-                       ImageFont, LootPoolType, RenderDistanceType,
-                       _JsonSchemes, clamp)
+from PIL import Image, ImageDraw, ImageFont
+
+from anvil import CONFIG
+from anvil.api.enums import CameraPresets, FogCameraLocation, LootPoolType, RawTextConstructor, RenderDistanceType
+from anvil.api.types import Identifier
+from anvil.lib.lib import CopyFiles, Defaults, File, FileExists, clamp
+from anvil.lib.reports import ReportType
+from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 
 
 # Dialogue ------------------------------------------------
@@ -33,7 +35,8 @@ class _DialogueButton:
         Returns:
             dict: The dialogue button.
         """
-        return _JsonSchemes.dialogue_button(self._button_name, self._commands)
+        return JsonSchemes.dialogue_button(self._button_name, self._commands)
+
 
 class _DialogueScene:
     """Handles dialogue scenes.
@@ -53,7 +56,7 @@ class _DialogueScene:
         Args:
             scene_tag (str): The tag of the scene.
         """
-        self._scene_tag = f"{ANVIL.NAMESPACE}:{scene_tag}"
+        self._scene_tag = f"{CONFIG.NAMESPACE}:{scene_tag}"
         self._buttons: list[_DialogueButton] = []
         self._on_open_commands = []
         self._on_close_commands = []
@@ -90,7 +93,7 @@ class _DialogueScene:
             _DialogueScene: The dialogue scene instance.
         """
         if len(self._buttons) >= 6:
-            ANVIL.Logger.dialogue_max_buttons(self._scene_tag, len(self._buttons))
+            CONFIG.Logger.dialogue_max_buttons(self._scene_tag, len(self._buttons))
         # Buttons cannot be translated
         button = _DialogueButton(button_name, *commands)
         self._buttons.append(button)
@@ -126,7 +129,7 @@ class _DialogueScene:
         Returns:
             dict: The dialogue scene.
         """
-        return _JsonSchemes.dialogue_scene(
+        return JsonSchemes.dialogue_scene(
             self._scene_tag,
             self._npc_name.__str__(),
             self._text.__str__(),
@@ -135,15 +138,14 @@ class _DialogueScene:
             [button._export() for button in self._buttons],
         )
 
+
 class Dialogue(AddonObject):
-    _extensions = {0: ".dialogue.json", 1: ".dialogue.json"}
+    _extension = ".dialogue.json"
+    _path = os.path.join(CONFIG.BP_PATH, "dialogue")
 
     def __init__(self, name: str) -> None:
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "dialogue"),
-        )
-        self._dialogues = _JsonSchemes.dialogues()
+        super().__init__(name)
+        self._dialogues = JsonSchemes.dialogues()
         self._scenes = []
 
     def add_scene(self, scene_tag: str):
@@ -156,6 +158,7 @@ class Dialogue(AddonObject):
             self._dialogues["minecraft:npc_dialogue"]["scenes"].append(scene._export())
         self.content(self._dialogues)
         return super().queue(directory)
+
 
 # Fog -----------------------------------------------------
 class _FogDistance:
@@ -206,13 +209,13 @@ class _FogDistance:
             render_distance_type (RenderDistanceType, optional): The type of render distance. Defaults to RenderDistanceType.Render.
 
         Raises:
-            ANVIL.Logger.fog_start_end: If fog_end is less than or equal to fog_start.
+            CONFIG.Logger.fog_start_end: If fog_end is less than or equal to fog_start.
 
         Returns:
             _FogDistance: Returns self for chaining.
         """
         if fog_start >= fog_end:
-            raise ANVIL.Logger.fog_start_end(fog_start, fog_end)
+            raise CONFIG.Logger.fog_start_end(fog_start, fog_end)
 
         self._distance[self._camera_location]["fog_start"] = fog_start
         self._distance[self._camera_location]["fog_end"] = fog_end
@@ -236,13 +239,13 @@ class _FogDistance:
             render_distance_type (RenderDistanceType, optional): The type of render distance. Defaults to RenderDistanceType.Render.
 
         Raises:
-            ANVIL.Logger.fog_start_end: If fog_end is less than or equal to fog_start.
+            CONFIG.Logger.fog_start_end: If fog_end is less than or equal to fog_start.
 
         Returns:
             _FogDistance: Returns self for chaining.
         """
         if fog_start >= fog_end:
-            raise ANVIL.Logger.fog_start_end(fog_start, fog_end)
+            raise CONFIG.Logger.fog_start_end(fog_start, fog_end)
         self._distance[self._camera_location]["color"] = color
         self._distance[self._camera_location]["fog_start"] = fog_start
         self._distance[self._camera_location]["fog_end"] = fog_end
@@ -258,13 +261,12 @@ class _FogDistance:
         """
         return self._distance
 
+
 class Fog(AddonObject):
     """A class representing a Fog."""
 
-    _extensions = {
-        0: ".fog.json",
-        1: ".fog.json",
-    }
+    _extension = ".fog.json"
+    _path = os.path.join(CONFIG.RP_PATH, "fogs")
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Initializes a Fog instance.
@@ -273,13 +275,10 @@ class Fog(AddonObject):
             name (str): The name of the fog.
             is_vanilla (bool, optional): Whether the fog is a vanilla fog. Defaults to False.
         """
-        super().__init__(
-            name,
-            os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "fogs"),
-        )
+        super().__init__(name)
         self._name = name
-        self._description = _MinecraftDescription(self._name, is_vanilla)
-        self._fog = _JsonSchemes.fog()
+        self._description = MinecraftDescription(self._name, is_vanilla)
+        self._fog = JsonSchemes.fog()
         self._locations: list[_FogDistance] = []
         self._volumes = []
 
@@ -304,12 +303,13 @@ class Fog(AddonObject):
         """Queues the fog to be exported."""
         for location in self._locations:
             self._fog["minecraft:fog_settings"]["distance"].update(location._export())
-        self._fog["minecraft:fog_settings"].update(self._description._export)
+        self._fog["minecraft:fog_settings"].update(self._description.to_dict)
         self.content(self._fog)
         return super().queue()
 
     def __str__(self) -> str:
         return self._description.identifier
+
 
 # Loot Table ----------------------------------------------
 # Legacy code, must improve
@@ -451,10 +451,12 @@ class _LootPool:
             self._pool["entries"].append(entry._export())
         return self._pool
 
+
 class LootTable(AddonObject):
     """A class representing a LootTable."""
 
-    _extensions = {0: ".loot_table.json", 1: ".loot_table.json"}
+    _extension = ".loot_table.json"
+    _path = os.path.join(CONFIG.BP_PATH, "loot_tables", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME)
 
     def __init__(self, name: str):
         """Initializes a LootTable instance.
@@ -462,13 +464,9 @@ class LootTable(AddonObject):
         Args:
             name (str): The name of the LootTable.
         """
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "loot_tables", ANVIL.NAMESPACE),
-        )
-        self._content = Defaults("loot_table")
+        super().__init__(name)
+        self._content = JsonSchemes.loot_table()
         self._pools = []
-        self._directory = ""
 
     def pool(
         self,
@@ -481,7 +479,7 @@ class LootTable(AddonObject):
 
     @property
     def path(self):
-        return os.path.join("loot_tables", ANVIL.NAMESPACE, self._directory, self._name + self._extensions[ANVIL.NAMESPACE_FORMAT_BIT])
+        return os.path.join("loot_tables", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, self._directory, self._name + self._extension)
 
     def queue(self, directory: str = ""):
         for pool in self._pools:
@@ -490,10 +488,12 @@ class LootTable(AddonObject):
         self._directory = directory
         return super().queue(directory=directory)
 
+
 # Recipe --------------------------------------------------
 # Legacy code, must improve
 class Recipe(AddonObject):
-    _extensions = {0: ".recipe.json", 1: ".recipe.json"}
+    _extension = ".recipe.json"
+    _path = os.path.join(CONFIG.BP_PATH, "recipes")
 
     class _Crafting:
         class _Shapeless:
@@ -515,13 +515,13 @@ class Recipe(AddonObject):
                     output_item_id,
                     data,
                     count,
-                    ANVIL.NAMESPACE,
+                    CONFIG.NAMESPACE,
                 )
 
             def add_item(self, item_id: str, data: int = 0, count: int = 1):
                 item_id = str(item_id)
                 if self._item_count == 0:
-                    RaiseError(f"The recipe {self._parent._name} has more than 9 items")
+                    raise RuntimeError(f"The recipe {self._parent._name} has more than 9 items")
                 if item_id not in [item["item"] for item in self._ingredients]:
                     self._ingredients.append({"item": item_id, "data": data, "count": count})
                 self._item_count -= 1
@@ -534,7 +534,7 @@ class Recipe(AddonObject):
                 self._parent._export()
 
         class _Shaped:
-            def __init__(self, parent, identifier, output_item_id, data, count, recipe_exactly):
+            def __init__(self, parent: "Recipe", identifier, output_item_id, data, count, recipe_exactly):
                 self._parent = parent
                 self._identifier = identifier
                 self._recipe_exactly = recipe_exactly
@@ -548,7 +548,7 @@ class Recipe(AddonObject):
                     output_item_id,
                     data,
                     count,
-                    ANVIL.NAMESPACE,
+                    CONFIG.NAMESPACE,
                 )
                 self._grid = [[" " for i in range(3)] for j in range(3)]
 
@@ -662,7 +662,6 @@ class Recipe(AddonObject):
                 self._default["minecraft:recipe_shaped"]["pattern"] = self._pattern
                 self._default["minecraft:recipe_shaped"]["key"] = self._key
                 self._parent.content(self._default)
-                self._parent.queue()
                 self._parent._export()
 
         class _Stonecutter:
@@ -684,12 +683,12 @@ class Recipe(AddonObject):
                     output_item_id,
                     data,
                     count,
-                    ANVIL.NAMESPACE,
+                    CONFIG.NAMESPACE,
                 )
 
             def add_item(self, item_id: str, data: int = 0, count: int = 1):
                 if self._item_count == 0:
-                    RaiseError(f"The recipe {self._parent._name} has more than 9 items")
+                    raise RuntimeError(f"The recipe {self._parent._name} has more than 9 items")
                 if item_id not in [item["item"] for item in self._ingredients]:
                     self._ingredients.append({"item": item_id, "data": data, "count": count})
                 self._item_count -= 1
@@ -720,12 +719,12 @@ class Recipe(AddonObject):
                     output_item_id,
                     data,
                     count,
-                    ANVIL.NAMESPACE,
+                    CONFIG.NAMESPACE,
                 )
 
             def add_item(self, item_id: str, data: int = 0, count: int = 1):
                 if self._item_count == 0:
-                    RaiseError(f"The recipe {self._parent._name} can only take 1 item")
+                    raise RuntimeError(f"The recipe {self._parent._name} can only take 1 item")
                 self._ingredients.append({"item": item_id, "data": data, "count": count})
                 self._item_count -= 1
                 return self
@@ -755,12 +754,12 @@ class Recipe(AddonObject):
                     output_item_id,
                     data,
                     count,
-                    ANVIL.NAMESPACE,
+                    CONFIG.NAMESPACE,
                 )
 
             def add_item(self, item_id: str, data: int = 0, count: int = 1):
                 if self._item_count == 0:
-                    RaiseError(f"The recipe {self._parent._name} can only take 1 item")
+                    raise RuntimeError(f"The recipe {self._parent._name} can only take 1 item")
                 self._ingredients.append({"item": item_id, "data": data, "count": count})
                 self._item_count -= 1
                 return self
@@ -771,7 +770,7 @@ class Recipe(AddonObject):
                 self._parent.queue()
                 self._parent._export()
 
-        def __init__(self, parent, identifier):
+        def __init__(self, parent: "Recipe", identifier):
             self._parent = parent
             self._identifier = identifier
 
@@ -839,9 +838,9 @@ class Recipe(AddonObject):
 
         def queue(self):
             if self._output == " ":
-                RaiseError("Recipe missing output item")
+                raise RuntimeError("Recipe missing output item")
             if self._input == " ":
-                RaiseError("Recipe missing input item")
+                raise RuntimeError("Recipe missing input item")
             self._tags = list(set(self._tags))
             self._default = Defaults(
                 "recipe_furnace",
@@ -857,10 +856,7 @@ class Recipe(AddonObject):
     def __init__(self, name: str):
         self._name = name
         self._content = ""
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "recipe"),
-        )
+        super().__init__(name)
 
     def crafting(self, identifier: str):
         return self._Crafting(self, identifier)
@@ -868,9 +864,14 @@ class Recipe(AddonObject):
     def smelting(self, identifier: str):
         return self._Smelting(self, identifier)
 
+    def queue(self, directory: str = ""):
+        return super().queue(directory)
+
+
 # Function ------------------------------------------------
 class Function(AddonObject):
-    _extensions = {0: ".mcfunction", 1: ".mcfunction"}
+    _extension = ".mcfunction"
+    _path = os.path.join(CONFIG.BP_PATH, "functions", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME)
 
     _ticking: list["Function"] = set()
     _setup: list["Function"] = set()
@@ -883,10 +884,7 @@ class Function(AddonObject):
         Args:
             name (str): The name of the function.
         """
-        super().__init__(
-            name,
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "functions"),
-        )
+        super().__init__(name)
         self._function: list[str] = []
         self._sub_functions: list[Function] = [self]
 
@@ -940,6 +938,7 @@ class Function(AddonObject):
         if len(self._function) > 0:
             return super()._export()
 
+
 class _Tick(AddonObject):
     """Handles tick functions for the addon.
 
@@ -947,12 +946,12 @@ class _Tick(AddonObject):
         _functions (list): Stores all the tick functions.
     """
 
+    _extension = ".json"
+    _path = os.path.join(CONFIG.BP_PATH, "functions")
+
     def __init__(self) -> None:
         """Initializes a _Tick instance."""
-        super().__init__(
-            "tick",
-            os.path.join("behavior_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "functions"),
-        )
+        super().__init__("tick")
         self._functions = []
         self.do_not_shorten
 
@@ -975,25 +974,24 @@ class _Tick(AddonObject):
         self.content({"values": self._functions})
         return super().queue()
 
+
 # Particle ------------------------------------------------
 class Particle(AddonObject):
-    _extensions = {0: ".particle.json", 1: ".particle.json"}
+    _extension = ".particle.json"
+    _path = os.path.join(CONFIG.BP_PATH, "particles")
 
     def __init__(self, particle_name, use_vanilla_texture: bool = False):
-        super().__init__(
-            particle_name,
-            os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "particles"),
-        )
+        super().__init__(particle_name)
         self._name = particle_name
         self._content = ""
         self._use_vanilla_texture = use_vanilla_texture
 
     def queue(self):
-        ANVIL._report.add_report(
-            ReportType.PARTICLE, 
-            vanilla = False, 
-            col0 = self._name.replace("_", " ").title(), 
-            col1 = f"{ANVIL.NAMESPACE}:{self._name}",
+        CONFIG.Report.add_report(
+            ReportType.PARTICLE,
+            vanilla=False,
+            col0=self._name.replace("_", " ").title(),
+            col1=f"{CONFIG.NAMESPACE}:{self._name}",
         )
 
         return super().queue("particles")
@@ -1005,29 +1003,28 @@ class Particle(AddonObject):
             if FileExists(os.path.join("assets", "particles", f"{self._name}.png")):
                 CopyFiles(
                     os.path.join("assets", "particles"),
-                    os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "textures", "particle", ANVIL.NAMESPACE),
+                    os.path.join(CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "particle"),
                     f"{self._name}.png",
                 )
             else:
-                ANVIL.Logger.file_exist_error(f"{self._name}.png", os.path.join("assets", "particles"))
+                CONFIG.Logger.file_exist_error(f"{self._name}.png", os.path.join("assets", "particles"))
 
         if FileExists(os.path.join("assets", "particles", f"{self._name}.particle.json")):
             CopyFiles(
-                    os.path.join("assets", "particles"),
-                    os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "particles"),
+                os.path.join("assets", "particles"),
+                os.path.join(CONFIG.RP_PATH, "particles"),
                 f"{self._name}.particle.json",
             )
         else:
-            ANVIL.Logger.file_exist_error(f"{self._name}.particle.json", os.path.join("assets", "particles"))
+            CONFIG.Logger.file_exist_error(f"{self._name}.particle.json", os.path.join("assets", "particles"))
+
 
 # Camera Presets ------------------------------------------
 class CameraPreset(AddonObject):
     """A class representing a CameraPreset."""
 
-    _extensions = {
-        0: ".camera.json",
-        1: ".camera.json",
-    }
+    _extension = ".camera.json"
+    _path = os.path.join(CONFIG.BP_PATH, "cameras", "presets")
 
     def __init__(self, name: str, inherit_from: CameraPresets) -> None:
         """Initializes a CameraPreset instance.
@@ -1036,10 +1033,10 @@ class CameraPreset(AddonObject):
             name (str): The name of the camera preset.
             is_vanilla (bool, optional): Whether the camera preset is a vanilla camera preset. Defaults to False.
         """
-        super().__init__(name, os.path.join("behaviour_packs", f"BP_{ANVIL.PASCAL_PROJECT_NAME}", "cameras", "presets"))
+        super().__init__(name)
         self._name = name
         self._inherit = inherit_from.value if isinstance(inherit_from, CameraPresets) else str(inherit_from)
-        self._camera_preset = _JsonSchemes.camera_preset(ANVIL.NAMESPACE, name, self._inherit)
+        self._camera_preset = JsonSchemes.camera_preset(CONFIG.NAMESPACE, name, self._inherit)
 
     def position(self, x: float = 0, y: float = 0, z: float = 0):
         """Sets the position of the camera preset.
@@ -1056,7 +1053,7 @@ class CameraPreset(AddonObject):
         if z != 0:
             self._camera_preset["minecraft:camera_preset"]["pos_z"] = z
         return self
-    
+
     def rotation(self, x: float = 0, y: float = 0):
         """Sets the rotation of the camera preset.
 
@@ -1069,7 +1066,7 @@ class CameraPreset(AddonObject):
         if y != 0:
             self._camera_preset["minecraft:camera_preset"]["rot_y"] = y
         return self
-    
+
     def player_effects(self, value: bool):
         """Sets whether the player effects are enabled.
 
@@ -1078,7 +1075,7 @@ class CameraPreset(AddonObject):
         """
         self._camera_preset["minecraft:camera_preset"]["player_effects"] = value
         return self
-    
+
     def listener(self, value: bool):
         """Sets whether the listener is enabled.
 
@@ -1087,7 +1084,7 @@ class CameraPreset(AddonObject):
         """
         self._camera_preset["minecraft:camera_preset"]["listener"] = value
         return self
-    
+
     @property
     def queue(self):
         """Queues the camera preset to be exported."""
@@ -1095,7 +1092,8 @@ class CameraPreset(AddonObject):
         return super().queue()
 
     def __str__(self) -> str:
-        return f"{ANVIL.NAMESPACE}:{self._name}"
+        return f"{CONFIG.NAMESPACE}:{self._name}"
+
 
 # Structure -----------------------------------------------
 class Structure:
@@ -1109,33 +1107,33 @@ class Structure:
         """
         self._structure_name = structure_name
         if not FileExists(os.path.join("assets", "structures", f"{self._structure_name}.mcstructure")):
-            ANVIL.Logger.file_exist_error(f"{self._structure_name}.mcstructure", os.path.join("assets", "structures"))
+            CONFIG.Logger.file_exist_error(f"{self._structure_name}.mcstructure", os.path.join("assets", "structures"))
 
     @property
     def queue(self):
         """Queues the structure to be exported."""
-        ANVIL._queue(self)
+        CONFIG._queue(self)
 
     @property
     def identifier(self) -> Identifier:
         """Returns the identifier of the structure."""
-        return f"{ANVIL.NAMESPACE_FORMAT}:{self._structure_name}"
+        return f"{CONFIG.NAMESPACE}:{self._structure_name}"
 
     def _export(self):
         """Exports the structure to the file system."""
         CopyFiles(
             os.path.join("assets", "structures"),
             os.path.join(
-                "behavior_packs",
-                f"BP_{ANVIL.PASCAL_PROJECT_NAME}",
+                CONFIG.BP_PATH,
                 "structures",
-                ANVIL.NAMESPACE,
+                CONFIG.NAMESPACE,
             ),
             f"{self._structure_name}.mcstructure",
         )
 
+
 # Font ----------------------------------------------------
-class Fonts():
+class Fonts:
     """A class representing a Fonts."""
 
     def __init__(self, font_name: str, character_size: int = 32) -> None:
@@ -1146,7 +1144,7 @@ class Fonts():
             character_size (int, optional): The size of the character. Defaults to 32.
         """
         if character_size % 16 != 0:
-            ANVIL.Logger.unsupported_font_size()
+            CONFIG.Logger.unsupported_font_size()
         font_size = round(character_size * 0.8)
 
         try:
@@ -1157,7 +1155,7 @@ class Fonts():
             self.font = ImageFont.truetype(f"{font_name}.ttf", font_size)
 
         self.character_size = character_size
-        self._path = os.path.join("resource_packs", f"RP_{ANVIL.PASCAL_PROJECT_NAME}", "font")
+        self._path = os.path.join(CONFIG.RP_PATH, "font")
 
     def generate_font(self):
         """Generates a default8 font image"""
@@ -1231,7 +1229,7 @@ class Fonts():
         #            "format_version": "1.10.0",
         #            "particle_effect": {
         #                "description": {
-        #                    "identifier": f"{ANVIL.NAMESPACE}:numbers",
+        #                    "identifier": f"{CONFIG.NAMESPACE}:numbers",
         #                    "basic_render_parameters": {"material": "particles_alpha", "texture": "textures/particle/numbers"},
         #                },
         #                "components": {
@@ -1269,12 +1267,18 @@ class Fonts():
             if FileExists(os.path.join("assets", "textures", "ui", file)):
                 CopyFiles(os.path.join("assets", "textures", "ui"), self._path, file)
 
+
 # Skin Packs
 class SkinPack(AddonObject):
+    _extension = ".json"
+    _path = os.path.join("assets", "skins")
+
     def __init__(self) -> None:
         """Initializes a SkinPack instance."""
-        super().__init__("skins", os.path.join("assets", "skins"))
-        self.content(_JsonSchemes.skins_json(ANVIL.PROJECT_NAME))
+        super().__init__("skins")
+        self._languages = []
+        self._skins = []
+        self.content(JsonSchemes.skins_json(CONFIG.PROJECT_NAME))
 
     def add_skin(
         self,
@@ -1292,24 +1296,18 @@ class SkinPack(AddonObject):
             free (bool, optional): Whether the skin is free. Defaults to False.
         """
         if not FileExists(os.path.join(self._path, f"{filename}.png")):
-            ANVIL.Logger.file_exist_error(f"{filename}.png", self._path)
-        self._content["skins"].append(
-            {
-                "localization_name": filename,
-                "geometry": f"geometry.humanoid.{ 'customSlim' if is_slim else 'custom'}",
-                "texture": f"{filename}.png",
-                "type": "free" if free else "paid",
-            }
-        )
-        ANVIL._skins_langs[f"skin.{ANVIL.PROJECT_NAME}.{filename}"] = display_name
+            CONFIG.Logger.file_exist_error(f"{filename}.png", self._path)
+        self._skins.append(JsonSchemes.skin_json(filename, is_slim, free))
+        self._languages[f"skin.{CONFIG.PROJECT_NAME}.{filename}"] = display_name
 
     def _export(self):
         """Exports the SkinPack to the file system."""
-        l = _JsonSchemes.skin_pack_name_lang(ANVIL.PROJECT_NAME, ANVIL.PROJECT_NAME + " Skin Pack")
-        l.extend([f"{k}={v}" for k, v in ANVIL._skins_langs.items()])
+        self._content["skins"] = self._skins
+        l = JsonSchemes.skin_pack_name_lang(CONFIG.PROJECT_NAME, CONFIG.PROJECT_NAME + " Skin Pack")
+        l.extend([f"{k}={v}" for k, v in self._languages.items()])
 
-        File("languages.json", _JsonSchemes.languages(), self._path, "w")
-        File("manifest.json", _JsonSchemes.manifest_skins(ANVIL.RELEASE), self._path, "w")
+        File("languages.json", JsonSchemes.languages(), self._path, "w")
+        File("manifest.json", JsonSchemes.manifest_skins(CONFIG._RELEASE), self._path, "w")
         File("en_US.lang", "\n".join(l), os.path.join(self._path, "texts"), "w")
 
         super()._export()

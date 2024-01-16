@@ -1,10 +1,18 @@
+import json
+from enum import StrEnum
+from math import inf
+
+from anvil import CONFIG
 from anvil.api.blocks import Block
+from anvil.api.enums import Anchor, CameraEasing, CameraPresets, CameraShakeType, CloneMode, DamageCause, Dimension, Effects, FillMode, Gamemodes, InputPermissions, MaskMode, MusicRepeatMode, RawTextConstructor, ScoreboardOperation, ScoreboardOperator, Selector, Slots, Target, TimeSpec
 from anvil.api.vanilla import Blocks
-from anvil.core import ANVIL, RawTextConstructor
-from anvil.lib import *
+from anvil.lib.lib import clamp, normalize_180
+from anvil.api.types import (Color, Identifier, Seconds, coordinate,
+                             coordinates, event, position, rotation, tick)
 
 
-class Command():
+
+class Command:
     def __init__(self, prefix: str, *commands) -> None:
         self._prefix = prefix
         self._components = {}
@@ -102,20 +110,20 @@ class Execute(Command):
             self._parent._append_cmd(self._condition, "entity", target)
             return self._parent
 
-        def Block(self, block_position: coordinates, tile: Blocks._MinecraftBlock | str | Block, **properties):
+        def Block(self, block_position: coordinates, tile: Block | str , **properties):
             name = (
                 tile.identifier
                 if isinstance(tile, (Blocks._MinecraftBlock, Block))
                 else tile
                 if isinstance(tile, str)
-                else ANVIL.Logger.unsupported_block_type(tile)
+                else CONFIG.Logger.unsupported_block_type(tile)
             )
             states = (
                 tile.states
                 if isinstance(tile, Blocks._MinecraftBlock)
                 else ""
                 if isinstance(tile, (str, Block))
-                else ANVIL.Logger.unsupported_block_type(tile)
+                else CONFIG.Logger.unsupported_block_type(tile)
             )
 
             for k, v in properties.items():
@@ -134,7 +142,7 @@ class Execute(Command):
             )
             return self._parent
 
-        def Score(self, target: str, target_objective: str, operator: Operator, source: str, source_objective: str):
+        def Score(self, target: str, target_objective: str, operator: ScoreboardOperator, source: str, source_objective: str):
             self._parent._append_cmd(self._condition, "score", target, target_objective, operator, source, source_objective)
             return self._parent
 
@@ -249,12 +257,17 @@ class Summon(Command):
         return self
 
     def __str__(self):
-        rots = sum([x is not None for x in (self.argument.get("lookAtEntity"), self.argument.get("lookAtPosition"), self.argument.get("rotation"))])
+        rots = sum(
+            [
+                x is not None
+                for x in (self.argument.get("lookAtEntity"), self.argument.get("lookAtPosition"), self.argument.get("rotation"))
+            ]
+        )
         nameTag = self.argument.get("nameTag")
         spawnEvent = self.argument.get("spawnEvent")
 
         if rots > 1:
-            ANVIL.Logger.multiple_rotations()
+            CONFIG.Logger.multiple_rotations()
 
         if rots == 0 and not nameTag is None and spawnEvent is None:
             self._append_cmd(nameTag)
@@ -343,7 +356,9 @@ class Clone(Command):
         maskMode: MaskMode = MaskMode.replace,
     ):
         """Clones a region of blocks."""
-        super().__init__("clone", " ".join(map(str, begin)), " ".join(map(str, end)), " ".join(map(str, destination)), cloneMode, maskMode)
+        super().__init__(
+            "clone", " ".join(map(str, begin)), " ".join(map(str, end)), " ".join(map(str, destination)), cloneMode, maskMode
+        )
 
 
 class Msg(Command):
@@ -445,10 +460,7 @@ class Gamemode(Command):
 
 class Teleport(Command):
     def __init__(self, target, destination: coordinates | Target | Selector, rotation: rotation = ("~", "~")) -> None:
-        super().__init__(
-            "teleport",
-            target
-        )
+        super().__init__("teleport", target)
         if isinstance(destination, tuple):
             self._append_cmd(
                 " ".join(map(str, destination)),
@@ -505,7 +517,13 @@ class Damage(ItemComponents):
 
 class Playsound(Command):
     def __init__(
-        self, sound: str, target: Selector | Target = Target.S, position: position = None, volume: int = 1, pitch: int = 1, minimumVolume: int = 0
+        self,
+        sound: str,
+        target: Selector | Target = Target.S,
+        position: position = None,
+        volume: int = 1,
+        pitch: int = 1,
+        minimumVolume: int = 0,
     ) -> None:
         super().__init__("playsound", sound, target)
 
@@ -588,7 +606,9 @@ class Scoreboard(Command):
             self.parent._append_cmd("list", target)
             return self.parent
 
-        def operation(self, target: Selector | Target | str, objective1: str, operation: ScoreboardOperation, source: str, objective2: str):
+        def operation(
+            self, target: Selector | Target | str, objective1: str, operation: ScoreboardOperation, source: str, objective2: str
+        ):
             self.parent._append_cmd("operation", target, objective1, operation, source, objective2)
             return self.parent
 
@@ -617,7 +637,7 @@ class Scoreboard(Command):
 class Setblock(Command):
     def __init__(
         self,
-        tile: Blocks._MinecraftBlock | str | Block,
+        tile: str | Block,
         position: position = ("~", "~", "~"),
         **properties: str,
     ) -> None:
@@ -628,14 +648,14 @@ class Setblock(Command):
             if isinstance(tile, (Blocks._MinecraftBlock, Block))
             else tile
             if isinstance(tile, str)
-            else ANVIL.Logger.unsupported_block_type(tile)
+            else CONFIG.Logger.unsupported_block_type(tile)
         )
         states = (
             tile.states
             if isinstance(tile, Blocks._MinecraftBlock)
             else ""
             if isinstance(tile, (str, Block))
-            else ANVIL.Logger.unsupported_block_type(tile)
+            else CONFIG.Logger.unsupported_block_type(tile)
         )
 
         for k, v in properties.items():
@@ -647,7 +667,7 @@ class Setblock(Command):
 class Fill(Command):
     def __init__(
         self,
-        tile: Blocks._MinecraftBlock | str | Block,
+        tile: str | Block,
         start: position = ("~", "~", "~"),
         end: position = ("~", "~", "~"),
         old_block_handling: FillMode = FillMode.Replace,
@@ -660,24 +680,26 @@ class Fill(Command):
             if isinstance(tile, (Blocks._MinecraftBlock, Block))
             else tile
             if isinstance(tile, str)
-            else ANVIL.Logger.unsupported_block_type(tile)
+            else CONFIG.Logger.unsupported_block_type(tile)
         )
         states = (
             tile.states
             if isinstance(tile, Blocks._MinecraftBlock)
             else ""
             if isinstance(tile, (str, Block))
-            else ANVIL.Logger.unsupported_block_type(tile)
+            else CONFIG.Logger.unsupported_block_type(tile)
         )
 
         for k, v in properties.items():
             states.append(f'"{k}" = "{v}"')
 
-        self._append_cmd(*start, *end, name, f'[{", ".join(states)}]', old_block_handling if old_block_handling != FillMode.Replace else "")
+        self._append_cmd(
+            *start, *end, name, f'[{", ".join(states)}]', old_block_handling if old_block_handling != FillMode.Replace else ""
+        )
 
     def replace(
         self,
-        tile: Blocks._MinecraftBlock | str | Block,
+        tile: str | Block,
         **properties: str,
     ):
         name = (
@@ -685,14 +707,14 @@ class Fill(Command):
             if isinstance(tile, (Blocks._MinecraftBlock, Block))
             else tile
             if isinstance(tile, str)
-            else ANVIL.Logger.unsupported_block_type(tile)
+            else CONFIG.Logger.unsupported_block_type(tile)
         )
         states = (
             tile.states
             if isinstance(tile, Blocks._MinecraftBlock)
             else ""
             if isinstance(tile, (str, Block))
-            else ANVIL.Logger.unsupported_block_type(tile)
+            else CONFIG.Logger.unsupported_block_type(tile)
         )
 
         for k, v in properties.items():
@@ -705,7 +727,9 @@ class Music(Command):
     def __init__(self) -> None:
         super().__init__("music")
 
-    def _base(self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once):
+    def _base(
+        self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once
+    ):
         self._append_cmd(track_name)
         if volume != 1:
             self._append_cmd(volume)
@@ -718,11 +742,15 @@ class Music(Command):
 
         return self
 
-    def queue(self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once):
+    def queue(
+        self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once
+    ):
         self._append_cmd("queue")
         return self._base(track_name, volume, fade_seconds, repeat_mode)
 
-    def play(self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once):
+    def play(
+        self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once
+    ):
         self._append_cmd("play")
         return self._base(track_name, volume, fade_seconds, repeat_mode)
 
@@ -741,7 +769,7 @@ class Music(Command):
 
 
 class ScriptEvent(Command):
-    def __init__(self, message_id: str, message: str) -> None:
+    def __init__(self, message_id: str, message: str = None) -> None:
         """Causes an event to fire within script with the specified message ID and payload. This can be used to connect scripting with any location where commands are used.
 
         Args:
@@ -750,14 +778,14 @@ class ScriptEvent(Command):
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/scriptevent
         """
-        super().__init__("scriptevent", message_id, message)
+        super().__init__("scriptevent", message_id, message if message != None else "")
 
 
 class Camera(Command):
     class _CameraSet(Command):
         def __init__(self, target, preset) -> None:
             super().__init__("camera", target, "set", preset)
-            
+
             self.argument = {
                 "easing": None,
                 "easing_time": None,
@@ -766,20 +794,20 @@ class Camera(Command):
                 "facing_target": None,
                 "facing_position": None,
             }
-        
+
         def ease(self, easing: CameraEasing, easing_time: float):
             self.argument["easing_time"] = easing_time
             self.argument["easing"] = easing
             return self
-        
+
         def position(self, position: coordinates):
             self.argument["position"] = position
             return self
-        
+
         def rotation(self, xrotation: float, yrotation: float):
             self.argument["rotation"] = (xrotation, yrotation)
             return self
-        
+
         def facing_target(self, target: Selector | Target):
             self.argument["facing_target"] = target
             return self
@@ -794,46 +822,46 @@ class Camera(Command):
             facing_position = self.argument["facing_position"]
 
             if sum([x is not None for x in (facing_target, facing_position, rotation)]) > 1:
-                ANVIL.Logger.multiple_rotations()
+                CONFIG.Logger.multiple_rotations()
 
             if self.argument["easing"] != None:
                 self._append_cmd("ease", self.argument["easing_time"], self.argument["easing"])
-            
+
             if self.argument["position"] != None:
                 self._append_cmd("pos", *self.argument["position"])
-            
+
             if self.argument["rotation"] != None:
                 self._append_cmd("rot", *self.argument["rotation"])
-            
+
             if self.argument["facing_target"] != None:
                 self._append_cmd("facing", self.argument["facing_target"])
-            
+
             if self.argument["facing_position"] != None:
                 self._append_cmd("facing", *self.argument["facing_position"])
-            
+
             return super().__str__()
-        
+
     class _CameraClear(Command):
         def __init__(self, target) -> None:
             super().__init__("camera", target, "clear")
-    
+
     class _CameraFade(Command):
         def __init__(self, target) -> None:
             super().__init__("camera", target, "fade")
-            
+
             self.argument = {
                 "fade_in_time": None,
                 "hold_time": None,
                 "fade_out_time": None,
                 "color": None,
             }
-        
+
         def time(self, fade_in_time: Seconds, hold_time: Seconds, fade_out_time: Seconds):
             self.argument["fade_in_time"] = fade_in_time
             self.argument["hold_time"] = hold_time
             self.argument["fade_out_time"] = fade_out_time
             return self
-        
+
         def color(self, color: Color):
             self.argument["color"] = color
             return self
@@ -841,12 +869,12 @@ class Camera(Command):
         def __str__(self):
             if self.argument["fade_in_time"] != None:
                 self._append_cmd(self.argument["fade_in_time"], self.argument["hold_time"], self.argument["fade_out_time"])
-            
+
             if self.argument["color"] != None:
                 self._append_cmd(self.argument["color"])
-            
+
             return super().__str__()
-        
+
     def __init__(self, target: Target | Selector) -> None:
         """Transforms the camera for the selected player to a different perspective."""
         self._target = target
@@ -870,7 +898,7 @@ class Time(Command):
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/time
         """
         super().__init__("time")
-    
+
     def add(self, amount: int):
         """Add an integer amount of time in-game.
 
@@ -879,7 +907,7 @@ class Time(Command):
         """
         self._append_cmd("add", amount)
         return self
-    
+
     def set(self, amount: TimeSpec | int):
         """Set the time in-game.
 
@@ -897,10 +925,10 @@ class Stopsound(Command):
         Args:
             target (Target): A player name string or Target to identify the player.
             sound (str, optional): A string from the sound enum of the sound to stop. Defaults to "".
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/stopsound
         """
-        super().__init__("stopsound", target)    
+        super().__init__("stopsound", target)
 
         if not sound == "":
             self._append_cmd(f'"{sound}"')

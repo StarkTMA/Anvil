@@ -1,8 +1,13 @@
-
-
+import json
 import os
-from anvil.core import ANVIL, AddonObject
-from anvil.lib import _JsonSchemes, FileExists, Molang, commentjson
+
+import commentjson
+
+from anvil import CONFIG
+from anvil.api.types import Molang
+from anvil.lib.lib import FileExists
+from anvil.lib.schemas import AddonObject, JsonSchemes
+
 
 class _Bone:
     """
@@ -96,7 +101,7 @@ class _Geo:
         self._geo_name = geometry_name
         self._geo = {
             "description": {
-                "identifier": f"geometry.{ANVIL.NAMESPACE}.{geometry_name}",
+                "identifier": f"geometry.{CONFIG.NAMESPACE}.{geometry_name}",
                 "texture_width": texture_size[0],
                 "texture_height": texture_size[1],
             },
@@ -199,7 +204,7 @@ class _Anims:
         self._loop = loop
         self._override_previous_animation = override_previous_animation
         self._anim = {
-            f"animation.{ANVIL.NAMESPACE}.{self._name}.{self._anim_name}": {
+            f"animation.{CONFIG.NAMESPACE}.{self._name}.{self._anim_name}": {
                 "loop": self._loop,
                 "override_previous_animation": self._override_previous_animation,
                 "bones": {},
@@ -214,7 +219,7 @@ class _Anims:
     @property
     def _queue(self):
         for bone in self._bones:
-            self._anim[f"animation.{ANVIL.NAMESPACE}.{self._name}.{self._anim_name}"]["bones"].update(bone._queue)
+            self._anim[f"animation.{CONFIG.NAMESPACE}.{self._name}.{self._anim_name}"]["bones"].update(bone._queue)
         return self._anim
 
 
@@ -226,10 +231,13 @@ class Geometry(AddonObject):
         _geos (list): A list of geometries in the model.
     """
 
-    _extensions = {0: ".geo.json", 1: ".geo.json"}
+    _extension = ".geo.json"
+    _path = os.path.join("assets", "models")
 
     def __init__(self, name: str) -> None:
-        super().__init__(name, os.path.join("assets", "models"))
+        super().__init__(
+            name,
+        )
         self._geos: list[_Geo] = []
 
     def add_geo(self, geometry_name: str, texture_size: tuple[int, int] = (16, 16)):
@@ -238,21 +246,21 @@ class Geometry(AddonObject):
         return geo
 
     def queue(self, type: str):
-        if not type in ["entity", "attachables", "blocks"]:
-            ANVIL.Logger.unsupported_model_type(type)
+        if not type in ["actors", "blocks"]:
+            CONFIG.Logger.unsupported_model_type(type)
 
         if len(self._geos) == 0:
-            ANVIL.Logger.no_geo_found(self._name)
+            CONFIG.Logger.no_geo_found(self._name)
 
         if FileExists(os.path.join("assets", "models", type, f"{self._name}.geo.json")):
             with open(os.path.join("assets", "models", type, f"{self._name}.geo.json"), "r") as file:
                 self.content(commentjson.load(file))
         else:
-            self.content(_JsonSchemes.geometry())
+            self.content(JsonSchemes.geometry())
 
         for g in self._geos:
             for geo in self._content["minecraft:geometry"]:
-                if f"geometry.{ANVIL.NAMESPACE}.{g._geo_name}" == geo["description"]["identifier"]:
+                if f"geometry.{CONFIG.NAMESPACE}.{g._geo_name}" == geo["description"]["identifier"]:
                     self._content["minecraft:geometry"].remove(geo)
 
             self._content["minecraft:geometry"].append(g._queue)
@@ -266,12 +274,13 @@ class Animation(AddonObject):
 
     Attributes
     ----------
-    _extensions(dict) : A dictionary to map the animation extension types.
+    _extension(dict) : A dictionary to map the animation extension types.
     _name (str) : The name of the animation.
     _anims (list) : A list of animation instances.
     """
 
-    _extensions = {0: ".animation.json", 1: ".animation.json"}
+    _extension = ".animation.json"
+    _path = os.path.join("assets", "animations")
 
     def __init__(self, name: str) -> None:
         """
@@ -282,7 +291,7 @@ class Animation(AddonObject):
         name : str
             The name of the animation.
         """
-        super().__init__(name, os.path.join("assets", "animations"))
+        super().__init__(name)
 
         self._name = name
         self._anims: list[_Anims] = []
@@ -326,17 +335,16 @@ class Animation(AddonObject):
             If the specified path does not exist.
         """
         if len(self._anims) == 0:
-            ANVIL.Logger.no_anim_found(self._name)
+            CONFIG.Logger.no_anim_found(self._name)
         path = os.path.join("assets", "animations", f"{self._name}{self._extension}")
         if FileExists(path):
             with open(path, "r") as file:
                 self.content(commentjson.load(file))
         else:
-            self.content(_JsonSchemes.rp_animations())
+            self.content(JsonSchemes.rp_animations())
 
         for a in self._anims:
             self._content["animations"].update(a._queue)
 
         super().queue()
         self._export()
-

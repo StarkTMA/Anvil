@@ -1,6 +1,6 @@
 # Anvil
 ![Python 10](https://img.shields.io/badge/python-3.10%20%20|%20%203.11%20%20|%20%203.12-g.svg)
-![Anvil Version](https://img.shields.io/badge/beta-0.5.5-yellow.svg)
+![Anvil Version](https://img.shields.io/badge/beta-0.7.0-yellow.svg)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -18,13 +18,16 @@ Due to Minecraft bedrock being primarily developed on Windows, Anvil is only sup
 
 ### Features
 - Develop the entire project in python, no need to dive into json files.
+- Reusable modules and scripts to make development easier.
+- Automatic packaging of the project into a `.mcpack`, `.mcaddon` or `.mcworld` and more.
+- Automatic validation for Marketplace content.
 
 
 ### Installing
 
 To install Anvil, run the following command in your terminal:
 
-```bash 
+```bash
 pip install mcanvil
 ```
 
@@ -38,10 +41,10 @@ project_name        The name of the project.
 
 [options]:
     --preview           Generates the project in Minecraft Preview com.mojang instead of release.
-    --fullns            Sets the Project namespace to the full namespace.project_name
     --scriptapi         Adds dependencies support of ScriptAPI
     --pbr               Adds dependencies support of Physically based rendering
     --random_seed       Adds support of Random Seed Worlds.
+    --addon             Sets this package as an addon, comes with many restrictions.
 ```
 
 ### Links & Resources

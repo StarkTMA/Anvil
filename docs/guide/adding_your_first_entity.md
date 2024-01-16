@@ -40,8 +40,8 @@ my_entity.Client.description.render_controller("default").geometry("default").te
 !!!note
     The geometry namespace must follow a specific format. The namespace must be in the format `namespace.geometry_name`, where `namespace` is the namespace of the project, and `geometry_name` is the name of the geometry. This is valid for entities, blocks, attachables...
 !!!tip
-    The geometries must be saved under `assets/models/entity`
-    The textures must be saved under `assets/textures/entity`
+    The geometries must be saved under `assets/models/actors`
+    The textures must be saved under `assets/textures/actors`
 !!!failure
     Exporting an entity without any visuals will raise an error.
 
