@@ -7,7 +7,8 @@ from enum import StrEnum
 import requests
 
 from anvil.lib.format_versions import MANIFEST_BUILD
-from anvil.lib.lib import FileExists, RemoveDirectory, validate_namespace_project_name
+from anvil.lib.lib import (FileExists, RemoveDirectory,
+                           validate_namespace_project_name)
 from anvil.lib.logger import Logger
 from anvil.lib.reports import ReportCollector
 
@@ -162,8 +163,6 @@ class _AnvilConfig:
         self.NAMESPACE = self._handle_config(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, "input")
         self.PROJECT_NAME = self._handle_config(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, "input")
 
-        validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME)
-
         self.COMPANY = self._handle_config(ConfigSection.PACKAGE, ConfigOption.COMPANY, "input")
         self.DISPLAY_NAME = self._handle_config(
             ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, "input"
@@ -184,9 +183,9 @@ class _AnvilConfig:
             ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
 
-        self._RP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.RP_UUID, [uuid.uuid4()])
-        self._BP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.BP_UUID, [uuid.uuid4()])
-        self._PACK_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.PACK_UUID, uuid.uuid4())
+        self._RP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
+        self._BP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
+        self._PACK_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
 
         self._SCRIPT_API = self._handle_config(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, False)
         self._SCRIPT_UI = self._handle_config(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
@@ -196,6 +195,8 @@ class _AnvilConfig:
 
         if self._TARGET not in ["world", "addon"]:
             self.Logger.invalid_target(self._TARGET)
+
+        validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET=="addon")
 
     def _check_new_vanilla_version(self):
         self.Logger.check_update()

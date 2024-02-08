@@ -3,10 +3,10 @@ from enum import StrEnum
 
 from anvil import CONFIG
 from anvil.api.enums import EntitySoundEvent, MusicCategory, SoundCategory
+from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.api.types import Identifier
 
 
 class SoundDescription:
@@ -118,12 +118,11 @@ class SoundDefinition(AddonObject):
         _sounds (list[SoundDescription], optional): A list of sound descriptions. Defaults to empty list.
     """
 
+    _path = os.path.join(CONFIG.RP_PATH, "sounds")
+
     def __init__(self) -> None:
         """Initializes a SoundDefinition instance."""
-        super().__init__(
-            "sound_definitions",
-            os.path.join(CONFIG.RP_PATH, "sounds"),
-        )
+        super().__init__("sound_definitions")
         self.content(JsonSchemes.sound_definitions())
         self._sounds: list[SoundDescription] = []
 
@@ -185,14 +184,12 @@ class MusicDefinition(AddonObject):
         _sounds (list[SoundDescription], optional): A list of sound descriptions. Defaults to empty list.
     """
 
+    _path = os.path.join(CONFIG.RP_PATH, "sounds")
+
     def __init__(self) -> None:
         """Initializes a MusicDefinition instance."""
-        super().__init__(
-            "music_definitions",
-            os.path.join(CONFIG.RP_PATH, "sounds"),
-        )
+        super().__init__("music_definitions")
         self.content(JsonSchemes.music_definitions())
-        self._sounds: list[SoundDescription] = []
 
     def music_definition(self, music_category: MusicCategory, min_delay: int = 60, max_delay: int = 180):
         """Defines a music for the MusicDefinition instance.
@@ -208,15 +205,12 @@ class MusicDefinition(AddonObject):
         self._content.update(
             {
                 music_category.value: {
-                    "event_name": f"music.{music_category}",
+                    "event_name": f"{CONFIG.NAMESPACE}:music.{music_category}",
                     "max_delay": max_delay,
                     "min_delay": min_delay,
                 }
             }
         )
-        sound = CONFIG.sound(f"music.{music_category}", SoundCategory.Music)
-        self._sounds.append(sound)
-        return sound
 
     @property
     def queue(self):
@@ -239,9 +233,11 @@ class MusicDefinition(AddonObject):
 class SoundEvent(AddonObject):
     """Handles sound events."""
 
+    _path = os.path.join(CONFIG.RP_PATH)
+
     def __init__(self) -> None:
         """Initializes a SoundEvent instance."""
-        super().__init__("sounds", os.path.join(CONFIG.RP_PATH))
+        super().__init__("sounds")
         self.content(JsonSchemes.sounds())
 
     def add_entity_event(

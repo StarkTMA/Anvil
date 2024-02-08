@@ -73,7 +73,7 @@ class _RawText(RawTextConstructor):
         return self._command + super().__str__()
 
 
-class TitleRaw(Command):
+class  TitleRaw(Command):
     def __init__(self) -> None:
         super().__init__("titleraw")
 

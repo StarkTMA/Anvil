@@ -3,7 +3,7 @@
 # Anvil
 
 ![Python 10](https://img.shields.io/badge/python-3.10%20%20|%20%203.11%20%20|%20%203.12-g.svg)
-![Anvil Version](https://img.shields.io/badge/beta-0.7.0-yellow.svg)
+![Anvil Version](https://img.shields.io/badge/beta-0.7.1-yellow.svg)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 

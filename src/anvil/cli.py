@@ -57,29 +57,27 @@ class JsonSchemes:
                 "behavior_packs": {},
                 "resource_packs": {},
                 "assets": {
-                    "skins": {},
                     "animations": {},
+                    "javascript": {},
+                    "marketing": {},
                     "models": {
-                        "entity": {},
-                        "attachables": {},
+                        "actors": {},
                         "blocks": {},
                     },
                     "particles": {},
+                    "python": {},
+                    "skins": {},
                     "sounds": {},
                     "structures": {},
-                    "marketing": {},
                     "textures": {
-                        "attachables": {},
+                        "actors": {},
                         "environment": {},
                         "blocks": {},
                         "items": {},
-                        "entity": {},
                         "ui": {},
                         "particle": {},
                     },
                     "output": {},
-                    "javascript": {},
-                    "anvilscripts": {},
                 },
             }
         }
@@ -388,7 +386,7 @@ def create(
     logger = Logger()
     logger.header()
 
-    validate_namespace_project_name(namespace, project_name)
+    validate_namespace_project_name(namespace, project_name, addon)
 
     display_name = project_name.title().replace("-", " ").replace("_", " ")
     # Prints message

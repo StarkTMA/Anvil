@@ -685,9 +685,7 @@ class Block:
         self.Server.queue
 
         if self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace].startswith("tile."):
-            display_name = ANVIL._langs[
-                self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace]
-            ]
+            display_name = ANVIL.definitions._language[self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace]]
         else:
             display_name = self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace]
 

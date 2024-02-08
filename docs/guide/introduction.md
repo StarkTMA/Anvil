@@ -31,7 +31,6 @@ The vscode workspace will be opened automatically, revealing a specific folder s
 my_project
 ├───assets
 │   ├───animations
-│   ├───anvilscripts
 │   ├───javascript
 │   ├───marketing
 │   ├───models
@@ -39,6 +38,7 @@ my_project
 │   │   └───blocks
 │   ├───output
 │   ├───particles
+│   ├───python
 │   ├───skins
 │   ├───sounds
 │   ├───structures
@@ -105,7 +105,7 @@ This file is used by Minecraft to identify your project. It contains information
 
 ### `my_project.py`
 
-This is the main python script for your project. It contains all the code that will be used to generate your project. The main script must remain in the root directory of the project, additional work can be added and imported from scripts in the `assets/anvilscripts` folder.
+This is the main python script for your project. It contains all the code that will be used to generate your project. The main script must remain in the root directory of the project, additional work can be added and imported from scripts in the `assets/python` folder or any folder for that matter.
 
 ### `world_behavior_packs.json`
 

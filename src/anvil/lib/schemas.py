@@ -445,8 +445,6 @@ class JsonSchemes:
                 "esModuleInterop": True,
                 "moduleResolution": "Node",
                 "resolveJsonModule": True,
-                "noUnusedLocals": True,
-                "noUnusedParameters": True,
                 "forceConsistentCasingInFileNames": True,
                 "lib": [
                     "ESNext",
@@ -597,7 +595,7 @@ class AddonObject:
 
         def _replace_backslashes(obj):
             if isinstance(obj, str):
-                return obj.replace("\\", "/").replace('"/n"', '"\\n"')
+                return obj.replace("\\", "/").replace('"/n"', '"\\n"').replace("/n", "\n")
             elif isinstance(obj, list):
                 return [_replace_backslashes(item) for item in obj]
             elif isinstance(obj, dict):

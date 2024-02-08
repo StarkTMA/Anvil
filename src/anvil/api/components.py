@@ -1,4 +1,5 @@
 import math
+from typing import Union
 
 from anvil import ANVIL, CONFIG
 from anvil.api.enums import (Biomes, ControlFlags, DamageCause, Effects,
@@ -137,11 +138,11 @@ class Filter:
             subject,
             operator,
             None,
-            value.identifier
-            if isinstance(value, Blocks._MinecraftBlock)
-            else value
-            if isinstance(value, str)
-            else CONFIG.Logger.unsupported_block_type(value),
+            (
+                value.identifier
+                if isinstance(value, Blocks._MinecraftBlock)
+                else value if isinstance(value, str) else CONFIG.Logger.unsupported_block_type(value)
+            ),
         )
 
     @classmethod
@@ -445,7 +446,26 @@ class Filter:
     ):
         return self._construct_filter("rider_count", subject, operator, None, value)
 
+    @classmethod
+    def is_panicking(
+        self,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("is_panicking", subject, operator, None, value)
 
+    @classmethod
+    def is_sprinting(
+        self,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("is_sprinting", subject, operator, None, value)
+    
 # Components ==========================================================================
 
 
@@ -487,25 +507,6 @@ class AdmireItem(_component):
         self._component_add_field("cooldown_after_being_attacked", cooldown_after_being_attacked)
         if not duration == 10:
             self._component_add_field("duration", duration)
-
-
-class Ageable(_component):
-    component_namespace = "minecraft:ageable"
-
-    def __init__(self, duration: Seconds, event: event) -> None:
-        """Adds a timer for the entity to grow up. It can be accelerated by giving the entity the items it likes.
-
-        Parameters
-        ----------
-        `duration` : `Seconds` `int`.
-            Amount of time before the entity grows up, -1 for always a baby. `Default: 1200`
-        `event` : `event` `str`.
-            Minecraft behavior event.
-
-        """
-        super().__init__("ageable")
-        self._component_add_field("duration", duration)
-        self[self.component_namespace]["grow_up"] = {"event": event, "target": "self"}
 
 
 class CollisionBox(_component):
@@ -776,11 +777,11 @@ class Breathable(_component):
         self._component_add_field(
             "blocks",
             [
-                block.identifier
-                if isinstance(block, Blocks._MinecraftBlock)
-                else block
-                if isinstance(block, str)
-                else CONFIG.Logger.unsupported_block_type(block)
+                (
+                    block.identifier
+                    if isinstance(block, Blocks._MinecraftBlock)
+                    else block if isinstance(block, str) else CONFIG.Logger.unsupported_block_type(block)
+                )
                 for block in blocks
             ],
         )
@@ -790,11 +791,11 @@ class Breathable(_component):
         self._component_add_field(
             "non_breathe_blocks",
             [
-                block.identifier
-                if isinstance(block, Blocks._MinecraftBlock)
-                else block
-                if isinstance(block, str)
-                else CONFIG.Logger.unsupported_block_type(block)
+                (
+                    block.identifier
+                    if isinstance(block, Blocks._MinecraftBlock)
+                    else block if isinstance(block, str) else CONFIG.Logger.unsupported_block_type(block)
+                )
                 for block in blocks
             ],
         )
@@ -1075,7 +1076,7 @@ class MovementType(_component):
         speed_when_turning: float = 0.2,
     ):
         """Is the move control for a flying mob that has a gliding movement."""
-        self._basic("generic", max_turn)
+        self._basic("glide", max_turn)
         if not start_speed == 0.1:
             self._component_add_field("start_speed", start_speed)
         if not speed_when_turning == 0.2:
@@ -1084,7 +1085,7 @@ class MovementType(_component):
 
     def Jump(self, max_turn: float = 30, jump_delay: tuple[float, float] = (0, 0)):
         """Causes the mob to jump as it moves with a specified delay between jumps."""
-        self._basic("hover", max_turn)
+        self._basic("jump", max_turn)
         if not jump_delay == (0, 0):
             self._component_add_field("jump_delay", jump_delay)
         return self
@@ -1101,7 +1102,7 @@ class MovementType(_component):
         sway_frequency: float = 0.5,
     ):
         """Causes the mob to sway side to side giving the impression it is swimming."""
-        self._basic("skip", max_turn)
+        self._basic("sway", max_turn)
         if not sway_amplitude == 0.05:
             self._component_add_field("sway_amplitude", sway_amplitude)
         if not sway_frequency == 0.5:
@@ -1184,11 +1185,11 @@ class NavigationType(_component):
             self._component_add_field(
                 "blocks_to_avoid",
                 [
-                    block.identifier
-                    if isinstance(block, Blocks._MinecraftBlock)
-                    else block
-                    if isinstance(block, str)
-                    else CONFIG.Logger.unsupported_block_type(block)
+                    (
+                        block.identifier
+                        if isinstance(block, Blocks._MinecraftBlock)
+                        else block if isinstance(block, str) else CONFIG.Logger.unsupported_block_type(block)
+                    )
                     for block in blocks_to_avoid
                 ],
             )
@@ -1570,11 +1571,11 @@ class PreferredPath(_component):
             {
                 "cost": cost,
                 "blocks": [
-                    block.identifier
-                    if isinstance(block, Blocks._MinecraftBlock)
-                    else block
-                    if isinstance(block, str)
-                    else ANVIL.Logger.unsupported_block_type(block)
+                    (
+                        block.identifier
+                        if isinstance(block, Blocks._MinecraftBlock)
+                        else block if isinstance(block, str) else ANVIL.Logger.unsupported_block_type(block)
+                    )
                     for block in blocks
                 ],
             }
@@ -3019,11 +3020,11 @@ class MoveToBlock(_ai_goal):
         self._component_add_field(
             "target_blocks",
             [
-                block.identifier
-                if isinstance(block, Blocks._MinecraftBlock)
-                else block
-                if isinstance(block, str)
-                else ANVIL.Logger.unsupported_block_type(block)
+                (
+                    block.identifier
+                    if isinstance(block, Blocks._MinecraftBlock)
+                    else block if isinstance(block, str) else ANVIL.Logger.unsupported_block_type(block)
+                )
                 for block in target_blocks
             ],
         )
@@ -3074,11 +3075,11 @@ class InsideBlockNotifier(_component):
             {
                 "block": {
                     "name": [
-                        block_name.identifier
-                        if isinstance(block_name, Blocks._MinecraftBlock)
-                        else block_name
-                        if isinstance(block_name, str)
-                        else ANVIL.Logger.unsupported_block_type(block_name)
+                        (
+                            block_name.identifier
+                            if isinstance(block_name, Blocks._MinecraftBlock)
+                            else block_name if isinstance(block_name, str) else ANVIL.Logger.unsupported_block_type(block_name)
+                        )
                     ],
                     "states": block_name.states if isinstance(block_name, Blocks._MinecraftBlock) else {},
                 },
@@ -3154,11 +3155,11 @@ class Transformation(_component):
             self[self.component_namespace]["delay"]["value"] = value
         if len(block_type) > 0:
             self[self.component_namespace]["delay"]["block_type"] = [
-                block.identifier
-                if isinstance(block, Blocks._MinecraftBlock)
-                else block
-                if isinstance(block, str)
-                else ANVIL.Logger.unsupported_block_type(block)
+                (
+                    block.identifier
+                    if isinstance(block, Blocks._MinecraftBlock)
+                    else block if isinstance(block, str) else ANVIL.Logger.unsupported_block_type(block)
+                )
                 for block in block_type
             ]
 
@@ -3297,15 +3298,21 @@ class MoveTowardsTarget(_ai_goal):
 class EntitySensor(_component):
     component_namespace = "minecraft:entity_sensor"
 
-    def __init__(
+    def __init__(self, relative_range: bool = True) -> None:
+        super().__init__("entity_sensor")
+        self._component_add_field("subsensors", [])
+        if not relative_range:
+            self._component_add_field("relative_range", relative_range)
+
+    def add_sensor(
         self,
         event: str,
         event_filters: Filter,
         maximum_count: int = -1,
         minimum_count: int = -1,
-        relative_range: bool = True,
         require_all: bool = False,
-        sensor_range: int = 10,
+        range: int = 10,
+        cooldown: int = -1,
     ) -> None:
         """A component that initiates an event when a set of conditions are met by other entities within the defined range.
 
@@ -3317,22 +3324,27 @@ class EntitySensor(_component):
             relative_range (bool, optional): If true, the sensor range is additive on top of the entity's size. Defaults to True.
             require_all (bool, optional): If true, requires all nearby entities to pass the filter conditions for the event to send. Defaults to False.
             sensor_range (int, optional): The maximum distance another entity can be from this and have the filters checked against it. Defaults to 10.
+            cooldown (int, optional): How many seconds should elapse before the subsensor can once again sense for entities. The cooldown is applied on top of the base 1 tick (0.05 seconds) delay. Negative values will result in no cooldown being used. Defaults to -1.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor
         """
-        super().__init__("entity_sensor")
-        self._component_add_field("event", event)
-        self._component_add_field("event_filters", event_filters)
+        sensor = {}
+        sensor["event"] = event
+        sensor["event_filters"] = event_filters
         if maximum_count != -1:
-            self._component_add_field("maximum_count", maximum_count)
+            sensor["maximum_count"] = maximum_count
         if minimum_count != -1:
-            self._component_add_field("minimum_count", minimum_count)
-        if not relative_range:
-            self._component_add_field("relative_range", relative_range)
+            sensor["minimum_count"] = minimum_count
         if require_all:
-            self._component_add_field("require_all", require_all)
-        if sensor_range != 10:
-            self._component_add_field("sensor_range", sensor_range)
+            sensor["require_all"] = require_all
+        if range != 10:
+            sensor["range"] = range
+        if cooldown != -1:
+            sensor["cooldown"] = cooldown
+
+        self[self.component_namespace]["subsensors"].append(sensor)
+
+        return self
 
 
 class AmbientSoundInterval(_component):
@@ -4545,6 +4557,7 @@ class Interact(_component):
         add_items: str = None,
         cooldown: float = 0.0,
         cooldown_after_being_attacked: float = 0.0,
+        drop_item_slot: int = -1,
         equip_item_slot: int = -1,
         health_amount: int = 0,
         hurt_item: int = 0,
@@ -4556,6 +4569,7 @@ class Interact(_component):
         transform_to_item: str = None,
         use_item: bool = False,
         vibration: Vibrations = Vibrations.EntityInteract,
+        # entity_act: str = None,
     ):
         """Adds an interaction to the entity.
 
@@ -4592,6 +4606,8 @@ class Interact(_component):
             interaction["cooldown"] = cooldown
         if not cooldown_after_being_attacked == 0.0:
             interaction["cooldown_after_being_attacked"] = cooldown_after_being_attacked
+        if not drop_item_slot == -1:
+            interaction["drop_item_slot"] = drop_item_slot
         if not equip_item_slot == -1:
             interaction["equip_item_slot"] = equip_item_slot
         if not health_amount == 0:
@@ -5025,11 +5041,8 @@ class Tameable(_component):
         if probability != 1.0:
             self._component_add_field("probability", probability)
         if not tame_event is None:
-            self._component_add_field("tame_event", {
-                "event": tame_event,
-                "target": tame_subject
-            })
-        if len(tame_items)>0:
+            self._component_add_field("tame_event", {"event": tame_event, "target": tame_subject})
+        if len(tame_items) > 0:
             self._component_add_field("tame_items", *tame_items)
 
 
@@ -5052,3 +5065,63 @@ class RunAroundLikeCrazy(_ai_goal):
 
         if speed_multiplier != 1.0:
             self._component_add_field("speed_multiplier", speed_multiplier)
+
+
+class SlimeKeepOnJumping(_ai_goal):
+    component_namespace = "minecraft:behavior.slime_keep_on_jumping"
+
+    def __init__(
+        self,
+        speed_multiplier: float = 1.0,
+    ) -> None:
+        """Compels an entity to continuously jump around like a slime.
+
+        Args:
+            speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_keep_on_jumping
+        """
+        super().__init__("behavior.slime_keep_on_jumping")
+
+        if speed_multiplier != 1.0:
+            self._component_add_field("speed_multiplier", speed_multiplier)
+
+
+class Ageable(_component):
+    component_namespace = "minecraft:ageable"
+
+    def __init__(
+        self,
+        duration: Seconds = 1200.0,
+        drop_items: list[str] = [],
+        feed_items: list[dict[str, Union[str, int]] | str] = [],
+        grow_up: str = None,
+        interact_filters: Filter = None,
+        transform_to_item: str = None,
+    ) -> None:
+        """Adds a timer for the entity to grow up. The timer can be accelerated by giving the entity items it likes as defined by feed_items.
+
+        Args:
+            duration (Seconds, optional): Amount of time before the entity grows up, -1 for always a baby. Defaults to 1200.0.
+            drop_items (list[str], optional): List of items the entity drops when it grows up. Defaults to [].
+            feed_items (list[dict[str, Union[str, int]], optional): List of items that can be fed to the entity. Includes 'item' for the item name and 'growth' to define how much time growth is accelerated. Defaults to [].
+            grow_up (str, optional): Event to run when the entity grows up. Defaults to None.
+            interact_filters (Filter, optional): A list of conditions to meet for the entity to be fed. Defaults to None.
+            transform_to_item (str, optional): The feed item used will transform into this item upon successful interaction. Format: itemName:auxValue. Defaults to None.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ageable
+        """
+        super().__init__("ageable")
+
+        if duration != 1200.0:
+            self._component_add_field("duration", duration)
+        if not drop_items == []:
+            self._component_add_field("drop_items", drop_items)
+        if not feed_items == []:
+            self._component_add_field("feed_items", feed_items)
+        if not grow_up is None:
+            self._component_add_field("grow_up", grow_up)
+        if not interact_filters is None:
+            self._component_add_field("interact_filters", interact_filters)
+        if not transform_to_item is None:
+            self._component_add_field("transform_to_item", transform_to_item)
