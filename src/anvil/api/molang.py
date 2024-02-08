@@ -90,11 +90,12 @@ class _molang(str):
         a = f"{qtype}.{query}"
         if len(arguments):
             args = ", ".join(
-                f"'{arg}'" 
-                if isinstance(arg, (str, StrEnum)) 
-                and not isinstance(arg, _molang)
-                and not arg.startswith(MOLANG_PREFIXES) 
-                else f"{arg}" for arg in arguments
+                (
+                    f"'{arg}'"
+                    if isinstance(arg, (str, StrEnum)) and not isinstance(arg, _molang) and not arg.startswith(MOLANG_PREFIXES)
+                    else f"{arg}"
+                )
+                for arg in arguments
             )
             a += f"({args})"
         return _molang(a)
@@ -2776,13 +2777,113 @@ class Query(_molang):
         """
         return self._query(self, self.handle, "is_spectator")
 
+    @classmethod
+    def IsCooldownType(self, cooldown_name: str, slot: Slots, slot_id: int = 0):
+        """Returns 1.0 if the specified held or worn item has the specified cooldown type name, otherwise returns 0.0. First argument is the cooldown name to check for, second argument is the equipment slot name, and if required third argument is the numerical slot id. For second and third arguments, uses the same name and id tha tthe replaceitem command takes when querying entities.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "is_cooldown_type", cooldown_name, slot, slot_id)
+
+    @classmethod
+    def CooldownTime(self, slot: Slots, slot_id: int = 0):
+        """Returns the total cooldown time in seconds for the item held or worn by the specified equipment slot name (and if required second numerical slot id), otherwise returns 0. Uses the same name and id that the replaceitem command takes when querying entities.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "cooldown_time", slot, slot_id)
+
+    @classmethod
+    def CooldownTimeRemaining(self, slot: Slots, slot_id: int = 0):
+        """Returns the cooldown time remaining in seconds for specified cooldown type or the item held or worn by the specified equipment slot name (and if required second numerical slot id), otherwise returns 0. Uses the same name and id that the replaceitem command takes when querying entities. Returns highest cooldown if no parameters are supplied.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "cooldown_time_remaining", slot, slot_id)
+
+    @classmethod
+    def RelativeBlockHasAnyTags(self, x: int, y: int, z: int, *tags: str):
+        """Takes an entity-relative position and one or more tag names, and returns either 0 or 1 based on if that block at that position has any of the tags provided.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "relative_block_has_any_tags", x, y, z, *tags)
+
+    @classmethod
+    def RelativeBlockHasAllTags(self, x: int, y: int, z: int, *tags: str):
+        """Takes an entity-relative position and one or more tag names, and returns either 0 or 1 based on if that block at that position has all of the tags provided.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "relative_block_has_all_tags", x, y, z, *tags)
+
+    @classmethod
+    def BlockNeighborHasAnyTags(self, x: int, y: int, z: int, *tags: str):
+        """Takes a block-relative position and one or more tag names, and returns either 0 or 1 based on if the block at that position has any of the tags provided.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "block_neighbor_has_any_tags", x, y, z, *tags)
+
+    @classmethod
+    def BlockNeighborHasAllTags(self, x: int, y: int, z: int, *tags: str):
+        """Takes a block-relative position and one or more tag names, and returns either 0 or 1 based on if the block at that position has all of the tags provided.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "block_neighbor_has_all_tags", x, y, z, *tags)
+
+    @classmethod
+    def BlockHasAllTags(self, x: int, y: int, z: int, *tags: str):
+        """Takes a world-origin-relative position and one or more tag names, and returns either 0 or 1 based on if the block at that position has all of the tags provided.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "block_has_all_tags", x, y, z, *tags)
+
+    @classmethod
+    def BlockHasAnyTags(self, x: int, y: int, z: int, *tags: str):
+        """Takes a world-origin-relative position and one or more tag names, and returns either 0 or 1 based on if the block at that position has any of the tags provided.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "block_has_any_tags", x, y, z, *tags)
+
+    @classmethod
+    def BoneOrientationTrs(self, bone_name: str):
+        """TRS stands for 'Translate/Rotate/Scale.' Takes the name of the bone as an argument. Returns the bone orientation matrix decomposed into the component translation/rotation/scale parts of the desired bone provided it exists in the queryable geometry of the entity, else this returns the identity matrix and throws a content error. The returned value is returned as a variable of type struct with members .t, .r, and .s, each with members .x, .y, and .z, and can be accessed as per this example: v.my_variable = q.bone_orientation_trs('rightarm'); return v.my_variable.r.x;
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "bone_orientation_trs", bone_name)
+
+    @classmethod
+    def BoneOrientationMatrix(self, bone_name: str):
+        """Takes the name of the bone as an argument. Returns the bone orientation (as a matrix) of the desired bone provided it exists in the queryable geometry of the entity, else this returns the identity matrix and throws a content error.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "bone_orientation_matrix", bone_name)
+
+
 class Context(Query):
     handle = "c"
 
 
 class Variable(_molang):
     handle = "v"
-    
+
     @classmethod
     def _set_var(self, name):
         @classmethod

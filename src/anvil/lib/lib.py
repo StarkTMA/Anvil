@@ -100,7 +100,6 @@ def process_color(color: Color, add_alpha: bool = False) -> str | list[float]:
         raise TypeError("Color must be either a tuple of 3 or 4 integers or a hexadecimal string.")
 
 
-
 # Legacy code, will be removed in the future.
 def Defaults(type, *args):
     """Creates a file with default content. This is a legacy function and will be removed in the future.
@@ -286,6 +285,7 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
         The file content is converted to the appropriate format based on the file extension.
     """
     from anvil.lib.config import Config, ConfigOption, ConfigSection
+
     CreateDirectory(directory)
     type = name.split(".")[-1]
     out_content = ""
@@ -326,7 +326,7 @@ def process_subcommand(command: str, error_handle: str = "Error"):
         print(f"{error_handle}: {e}")
 
 
-def validate_namespace_project_name(namespace: str, project_name: str):
+def validate_namespace_project_name(namespace: str, project_name: str, is_addon: bool = False):
     pascal_project_name = "".join(x[0] for x in project_name.split("_")).upper()
 
     if namespace == "minecraft":
@@ -335,8 +335,9 @@ def validate_namespace_project_name(namespace: str, project_name: str):
     if len(namespace) > 8:
         Logger.namespace_too_long(namespace)
 
-    if not namespace.endswith(f"_{pascal_project_name.lower()}"):
-        Logger.unique_namespace(f"{namespace}_{pascal_project_name.lower()}")
-
     if len(project_name) > 16:
         Logger.project_name_too_long(namespace)
+
+    if is_addon:
+        if not namespace.endswith(f"_{pascal_project_name.lower()}"):
+            Logger.unique_namespace(f"{namespace}_{pascal_project_name.lower()}")

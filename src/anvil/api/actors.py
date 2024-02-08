@@ -9,7 +9,7 @@ from PIL import Image
 from anvil import ANVIL, CONFIG
 from anvil.api.blockbench import Animation, Geometry
 from anvil.api.components import Filter, InstantDespawn, Rideable, _component
-from anvil.api.enums import Difficulty, Population, Target
+from anvil.api.enums import Difficulty, Population, Target, Vibrations
 from anvil.api.molang import Query, Variable
 from anvil.api.types import Identifier, Molang, event
 from anvil.api.vanilla import ENTITY_LIST, ITEMS_LIST, Entities
@@ -66,7 +66,7 @@ class _ActorDescription(MinecraftDescription):
             {controller_shortname: f"controller.animation.{CONFIG.NAMESPACE}.{self._name}.{controller_shortname}"}
         )
 
-    def _animations(self, animation_shortname: str, animate: bool = False, condition: str = None, reuse_from_entity: str = None):
+    def _animations(self, geometry_name: str, animation_shortname: str, animate: bool = False, condition: str = None):
         """Sets the mapping of internal animation references to actual animations.
 
         Parameters
@@ -88,7 +88,7 @@ class _ActorDescription(MinecraftDescription):
 
         self._description["description"]["animations"].update(
             {
-                animation_shortname: f"animation.{CONFIG.NAMESPACE}.{self._name if reuse_from_entity is None else reuse_from_entity}.{animation_shortname}"
+                animation_shortname: f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}"
             }
         )
 
@@ -199,7 +199,7 @@ class _ActorClientDescription(_ActorDescription):
 
             _ActorClientDescription._queued_animations.add(anim_namespace)
 
-        self._animations(animation_name, animate, condition)
+        self._animations(geometry_name, animation_name, animate, condition)
 
         return self
 
@@ -333,7 +333,7 @@ class _ActorClientDescription(_ActorDescription):
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
 
         """
-        self._description["description"]["sound_effects"].update({sound_name: sound_reference})
+        self._description["description"]["sound_effects"].update({sound_name: f"{CONFIG.NAMESPACE}:{sound_reference}"})
         sound: SoundDescription = ANVIL.definitions.register_sound_definition(
             sound_reference, category, max_distance=max_distance, min_distance=min_distance
         )
@@ -718,7 +718,7 @@ class _EntityServer(AddonObject):
             condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
 
         """
-        self._description._animations(animation_name, animate, condition)
+        self._description._animations(self._name, animation_name, animate, condition)
         return self._animations.add_animation(animation_name, loop)
 
     def init_vars(self, **vars):
@@ -2017,8 +2017,9 @@ class _BaseEvent:
             self._event_name: {
                 "add": {"component_groups": []},
                 "remove": {"component_groups": []},
-                "run_command": {"command": []},
+                "queue_command": {"command": []},
                 "set_property": {},
+                "emit_vibration":{}
             }
         }
 
@@ -2038,14 +2039,14 @@ class _BaseEvent:
         self._event[self._event_name]["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
         return self
 
-    def update(self, components: dict):
-        self._event[self._event_name] = components
-
-    # experimental
-    def _run_command(self, *commands: str):
-        self._event[self._event_name]["run_command"]["command"].extend(cmd for cmd in commands)
+    def queue_command(self, *commands: str):
+        self._event[self._event_name]["queue_command"]["command"].extend(cmd for cmd in commands)
         return self
 
+    def emit_vibration(self, vibration: Vibrations):
+        self._event[self._event_name]["vibration"] = vibration
+        return self
+    
     @property
     def _export(self):
         return self._event
@@ -2075,6 +2076,14 @@ class _Randomize(_BaseEvent):
 
     def set_property(self, property, value):
         self._event["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
+        return self
+
+    def queue_command(self, *commands: str):
+        self._event.update({"queue_command": {"command": commands}})
+        return self
+    
+    def emit_vibration(self, vibration: Vibrations):
+        self._event.update({"vibration": vibration})
         return self
 
     @property
@@ -2122,6 +2131,14 @@ class _Sequence(_BaseEvent):
         self._event["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
         return self
 
+    def queue_command(self, *commands: str):
+        self._event.update({"queue_command": {"command": commands}})
+        return self
+    
+    def emit_vibration(self, vibration: Vibrations):
+        self._event.update({"vibration": vibration})
+        return self
+    
     @property
     def sequence(self):
         return self._parent_class.sequence

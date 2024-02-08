@@ -218,6 +218,7 @@ class Effects(StrEnum):
     Absorption = "absorption"
     Invisibility = "invisibility"
     SlowFalling = "slow_falling"
+    Nausea = "nausea"
 
 
 class ScoreboardOperation(StrEnum):
@@ -803,6 +804,7 @@ class Biomes(StrEnum):
 
 class Vibrations(StrEnum):
     EntityInteract = "entity_interact"
+    EntityAct = "entity_act"
     Shear = "shear"
     none = "none"
 

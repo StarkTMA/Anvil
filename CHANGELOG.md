@@ -1,5 +1,29 @@
 # Changelog
 
+# Version 0.7.1
+
+### [ANVIL]
+
+- Updated `MODULE_MINECRAFT_SERVER` to `1.8.0`.
+- Updated `MANIFEST_BUILD` to `1.20.60`
+- Music now references the correct sound definitions.
+
+### [Actors]
+
+- Added `queue_command` and `emit_vibration` to Actor events.
+- Actors can now reference the same animations, same as geometries and textures.
+
+### [Components]
+
+- Added `is_panicking` and `is_sprinting` filters.
+- Updated `Ageable()` component.
+- `EntitySensor()` now support multiple sensors.
+- Added `SlimeKeepOnJumping()` component.
+
+### [Molang]
+
+- Added `IsCooldownType`, `CooldownTime`, `CooldownTimeRemaining`, `RelativeBlockHasAnyTags`, `RelativeBlockHasAllTags`, `BlockNeighborHasAnyTags`, `BlockNeighborHasAllTags`, `BlockHasAllTags`, `BlockHasAnyTags`, `BoneOrientationTrs` and `BoneOrientationMatrix` queries.
+
 # Version 0.7.0
 
 ### [Guidelines]
@@ -57,7 +81,7 @@
     - For instance, if you have an entity named `starktma:vehicle` that references a texture called `truck`, you must add a texture file named `truck.png` to the `assets/textures/actors` folder.
   - Entities and attachables textures and models are now placed in the same `actors` folder.
   - Entities and attachables no longer exports their models and texture into queued folders, instead everything is exported under the `actors` folder.
-- Adopting blockbench files will facilitate working with assets, additional the folder structure can no longer be supported wth the new enforced guidelines due to the file path limit.
+- Adopting blockbench files will facilitate working with assets, additionally the folder structure can no longer be supported with the new enforced guidelines due to the file path limit.
 
 ### [Components]
 
@@ -137,7 +161,7 @@
 - Scripting API files are now hosted in the `assets/javascript` directory, a quality of life improvement towards full support of js scripting.
 - Anvil CLI will install both `@minecraft/server` and `@minecraft/serve-ui` modules if the `scriptapi` flag is set.
 - Anvil will automatically run `tsc <filename>` on every `.ts` file in `assets/javascript` and copies every `.js` files preserving the relative paths in `BP/scripts`.
-- Moved the scripts folder to host all Python files to `assets/anvilscripts`, you can place your files anywhere you wish to but this is done to keep inline with javascript files.
+- Moved the scripts folder to host all Python files to `assets/python`, you can place your files anywhere you wish to but this is done to keep inline with javascript files.
 - Anvil now support multiple packs, generation will still take place in a single pack but if you wish to include other packs, add the uuid to `config.ini` separating by a `,` and copy your pack to their respective locations.
 
 ### [Blocks]

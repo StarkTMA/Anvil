@@ -1,8 +1,7 @@
-from PIL.Image import Image
-
 from anvil import ANVIL, CONFIG
 from anvil.lib.lib import *
 from anvil.lib.schemas import AddonObject
+from PIL import Image
 
 __all__ = [
     "UIBindingType",
@@ -299,7 +298,7 @@ class _UIElement:
                 self.element["texture"] = os.path.join("textures", "ui", texture)
                 self._textures.append(texture)
             else:
-                ANVIL.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
+                ANVIL.config.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
         else:
             self.element["texture"] = texture
 
@@ -330,7 +329,7 @@ class _UIElement:
                     "w",
                 )
         else:
-            ANVIL.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
+            ANVIL.config.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
         return self
 
     def aseprite_texture(self, texture: str):
@@ -342,7 +341,7 @@ class _UIElement:
                 f"{texture}.json",
             )
         else:
-            ANVIL.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
+            ANVIL.config.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
         return self
 
     def aseprite_key(self, key: str, texture: str):
@@ -355,7 +354,7 @@ class _UIElement:
                 f"{texture}.json",
             )
         else:
-            ANVIL.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
+            ANVIL.config.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
         return self
 
     def keys(self, key, value):
@@ -881,7 +880,7 @@ class _UIScreen(AddonObject):
         match trigger:
             case UIElementTrigger.Title:
                 if not keyword is None:
-                    self._variables.add_variable(f"$anvil.{element_name}.text", f"{ANVIL.NAMESPACE}:{keyword}")
+                    self._variables.add_variable(f"$anvil.{element_name}.text", f"{CONFIG.NAMESPACE}:{keyword}")
                     self._variables.add_variable(f"$anvil.{element_name}.bool", f"(not ((#title_text - $anvil.{element_name}.text) = #title_text))")
                     self._ignored_title_texts.append(f"$anvil.{element_name}.text")
                     if hides_hud:
@@ -897,7 +896,7 @@ class _UIScreen(AddonObject):
 
             case UIElementTrigger.Actionbar:
                 if not keyword is None:
-                    self._variables.add_variable(f"$anvil.{element_name}.text", f"{ANVIL.NAMESPACE}:{keyword}")
+                    self._variables.add_variable(f"$anvil.{element_name}.text", f"{CONFIG.NAMESPACE}:{keyword}")
                     self._variables.add_variable(f"$anvil.{element_name}.bool", f"(not(($text - $anvil.{element_name}.text) = $text))")
                     self._ignored_actionbar_texts.append(f"$anvil.{element_name}.text")
 
@@ -939,8 +938,8 @@ class _HUDScreen(_UIScreen):
         self.hud_actionbar_text = self.add_element("hud_actionbar_text")
         self.hud_actionbar_text.keys("text", "$actionbar_text")
 
-        variables.add_variable("$anvil.show.text", f"{ANVIL.NAMESPACE}:show")
-        variables.add_variable("$anvil.hide.text", f"{ANVIL.NAMESPACE}:hide")
+        variables.add_variable("$anvil.show.text", f"{CONFIG.NAMESPACE}:show")
+        variables.add_variable("$anvil.hide.text", f"{CONFIG.NAMESPACE}:hide")
         self._ignored_title_texts = ["$anvil.show.text"]
         self._ignored_actionbar_texts = ["$anvil.hide.text"]
         self._hides_hud = ["$anvil.hide.text"]
@@ -1011,7 +1010,7 @@ class _AnvilHUDScreen(_UIScreen):
     def add_image_panel(
         self,
         name: str,
-        background: bool | str = False,
+        background: str = "transparent",
         direction_out: bool = True,
         zoom_in: float = 1,
         zoom_wait: float = 6,
@@ -1024,7 +1023,7 @@ class _AnvilHUDScreen(_UIScreen):
         image_element.layer(100)
         image_element.anchor(UIAnchor.Center, UIAnchor.Center)
 
-        if not background is False:
+        if not background == "transparent":
             background_image = image_element.controls(f"{name}_background")
             background_image.type(UIElementType.Image)
             background_image.texture(background)
@@ -1035,12 +1034,13 @@ class _AnvilHUDScreen(_UIScreen):
         image.type(UIElementType.Image)
         image.texture(name)
         image.anchor(UIAnchor.Center, UIAnchor.Center)
+        image.offset((0, "-20px"))
 
         tip = image_element.controls(f"{name}_tip")
         tip.type(UIElementType.Label)
         tip.text_alignment(UITextAlignment.Center)
         tip.size(("80%", "default"))
-        tip.offset((0, "60px"))
+        tip.offset((0, "100px"))
         tip.text("#text").shadow(True).font_size(UIFontSize.Large)
         tip.binding.binding_name("#hud_subtitle_text_string").binding_name_override("#text")
 
@@ -1176,9 +1176,9 @@ class _AnvilHUDScreen(_UIScreen):
         )
         black_bars.size("$anim_size")
 
-        self._variables.add_variable(f"$anvil.black_bars_in.text", f"{ANVIL.NAMESPACE}:bars_in")
+        self._variables.add_variable(f"$anvil.black_bars_in.text", f"{CONFIG.NAMESPACE}:bars_in")
         self._variables.add_variable(f"$anvil.black_bars_in.bool", f"($text = $anvil.black_bars_in.text)")
-        self._variables.add_variable(f"$anvil.black_bars_out.text", f"{ANVIL.NAMESPACE}:bars_out")
+        self._variables.add_variable(f"$anvil.black_bars_out.text", f"{CONFIG.NAMESPACE}:bars_out")
         self._variables.add_variable(f"$anvil.black_bars_out.bool", f"($text = $anvil.black_bars_out.text)")
 
         self._ignored_actionbar_texts.extend(

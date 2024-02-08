@@ -110,7 +110,10 @@ class _AnvilDefinitions:
         """
         if self._music_definition_object is None:
             self._music_definition_object = MusicDefinition()
-        return self._music_definition_object.music_definition(music_category, min_delay, max_delay)
+        if self._sound_definition_object is None:
+            self._sound_definition_object = SoundDefinition()
+        self._music_definition_object.music_definition(music_category, min_delay, max_delay)
+        return self._sound_definition_object.sound_reference(f"music.{music_category}", SoundCategory.Music)
 
     def register_scores(self, **score_id_value: dict[str, int]):
         """
