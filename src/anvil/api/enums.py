@@ -1,6 +1,7 @@
 import json
 from enum import StrEnum
 
+from anvil import ANVIL
 from anvil.api.types import Identifier, coordinate, coordinates
 from anvil.lib.lib import clamp, normalize_180
 
@@ -172,28 +173,28 @@ class DamageCause(StrEnum):
     All = "all"
     Anvil = "anvil"
     EntityAttack = "entity_attack"
-    Block_explosion = "block_explosion"
+    BlockExplosion = "block_explosion"
     Contact = "contact"
     Drowning = "drowning"
-    Entity_explosion = "entity_explosion"
+    EntityExplosion = "entity_explosion"
     Fall = "fall"
-    Falling_block = "falling_block"
+    FallingBlock = "falling_block"
     Fatal = "fatal"
     Fire = "fire"
     Firetick = "firetick"
-    Fly_into_wall = "fly_into_wall"
+    FlyIntoWall = "fly_into_wall"
     Lava = "lava"
     Magic = "magic"
     Nothing = "none"
     Override = "override"
     Piston = "piston"
     Projectile = "projectile"
-    Sonic_boom = "sonic_boom"
+    SonicBoom = "sonic_boom"
     Stalactite = "stalactite"
     Stalagmite = "stalagmite"
     Starve = "starve"
     Suffocation = "suffocation"
-    Suicide = "suicide"
+    SelfDestruct = "self_destruct"
     Thorns = "thorns"
     Void = "void"
     Wither = "wither"
@@ -204,13 +205,17 @@ class Effects(StrEnum):
     Enumeration for the different types of effects in the game.
     """
 
-    Hunger = "hunger"
+    Speed = "speed"
+    Slowness = "slowness"
+    Haste = "haste"
+    MiningFatigue = "mining_fatigue"
+    Strength = "strength"
+    InstantHealth = "instant_health"
+    InstantDamage = "instant_damage"
     JumpBoost = "jump"
+    Hunger = "hunger"
     Saturation = "saturation"
     Regeneration = "regeneration"
-    Speed = "speed"
-    Strength = "strength"
-    Slowness = "slowness"
     Weakness = "weakness"
     Levitation = "levitation"
     Wither = "wither"
@@ -219,6 +224,9 @@ class Effects(StrEnum):
     Invisibility = "invisibility"
     SlowFalling = "slow_falling"
     Nausea = "nausea"
+    NightVision = "night_vision"
+    WaterBreathing = "water_breathing"
+    ConduitPower = "conduit_power"
 
 
 class ScoreboardOperation(StrEnum):
@@ -530,6 +538,20 @@ class Selector:
         self._args(m=gamemode)
         return self
 
+    def has_property(self, **properties):
+        """Selects targets that have the specified property.
+
+        Args:
+            property (str): The property to check for.
+            value (str): The value of the property.
+
+        """
+        property_values = {}
+        for property, value in properties.items():
+            property_values.update({f"{ANVIL.config.NAMESPACE}:{property}": value})
+        self._args(has_property=property_values)
+        return self
+    
     def __str__(self) -> str:
         """Returns the target selector as a string."""
         if len(self.arguments) > 0:
@@ -594,6 +616,7 @@ class RawTextConstructor:
             self: The instance of the current RawTextConstructor.
         """
         from anvil import ANVIL
+
         self.id = ANVIL.definitions.get_new_lang
         ANVIL.definitions.register_lang(self.id, text)
         self._raw_text.append({"translate": self.id, "with": ["\n"]})
@@ -715,6 +738,7 @@ class BlockMaterial(StrEnum):
     DoubleSided = "double_sided"
     Blend = "blend"
     AlphaTest = "alpha_test"
+    AlphaTestSingleSided = "alpha_test_single_sided"
 
 
 class BlockCategory(StrEnum):
@@ -723,10 +747,93 @@ class BlockCategory(StrEnum):
     """
 
     Construction = "construction"
-    Nature = "nature"
     Equipment = "equipment"
     Items = "items"
+    Nature = "nature"
     none = "none"
+
+
+class BlockGroups(StrEnum):
+    Anvil = "itemGroup.name.anvil"
+    Arrow = "itemGroup.name.arrow"
+    Axe = "itemGroup.name.axe"
+    Banner = "itemGroup.name.banner"
+    BannerPattern = "itemGroup.name.banner_pattern"
+    Bed = "itemGroup.name.bed"
+    Boat = "itemGroup.name.boat"
+    Boots = "itemGroup.name.boots"
+    Buttons = "itemGroup.name.buttons"
+    Candles = "itemGroup.name.candles"
+    Chalkboard = "itemGroup.name.chalkboard"
+    Chest = "itemGroup.name.chest"
+    ChestBoat = "itemGroup.name.chestboat"
+    Chestplate = "itemGroup.name.chestplate"
+    Concrete = "itemGroup.name.concrete"
+    ConcretePowder = "itemGroup.name.concretePowder"
+    CookedFood = "itemGroup.name.cookedFood"
+    Copper = "itemGroup.name.copper"
+    Coral = "itemGroup.name.coral"
+    CoralDecorations = "itemGroup.name.coral_decorations"
+    Crop = "itemGroup.name.crop"
+    Door = "itemGroup.name.door"
+    Dye = "itemGroup.name.dye"
+    EnchantedBook = "itemGroup.name.enchantedBook"
+    Fence = "itemGroup.name.fence"
+    FenceGate = "itemGroup.name.fenceGate"
+    Firework = "itemGroup.name.firework"
+    FireworkStars = "itemGroup.name.fireworkStars"
+    Flower = "itemGroup.name.flower"
+    Glass = "itemGroup.name.glass"
+    GlassPane = "itemGroup.name.glassPane"
+    GlazedTerracotta = "itemGroup.name.glazedTerracotta"
+    GoatHorn = "itemGroup.name.goatHorn"
+    Grass = "itemGroup.name.grass"
+    HangingSign = "itemGroup.name.hanging_sign"
+    Helmet = "itemGroup.name.helmet"
+    Hoe = "itemGroup.name.hoe"
+    HorseArmor = "itemGroup.name.horseArmor"
+    Leaves = "itemGroup.name.leaves"
+    Leggings = "itemGroup.name.leggings"
+    LingeringPotion = "itemGroup.name.lingeringPotion"
+    Log = "itemGroup.name.log"
+    Minecart = "itemGroup.name.minecart"
+    MiscFood = "itemGroup.name.miscFood"
+    MobEgg = "itemGroup.name.mobEgg"
+    MonsterStoneEgg = "itemGroup.name.monsterStoneEgg"
+    Mushroom = "itemGroup.name.mushroom"
+    NetherWartBlock = "itemGroup.name.netherWartBlock"
+    Ore = "itemGroup.name.ore"
+    Permission = "itemGroup.name.permission"
+    Pickaxe = "itemGroup.name.pickaxe"
+    Planks = "itemGroup.name.planks"
+    Potion = "itemGroup.name.potion"
+    PotterySherds = "itemGroup.name.potterySherds"
+    PressurePlate = "itemGroup.name.pressurePlate"
+    Rail = "itemGroup.name.rail"
+    RawFood = "itemGroup.name.rawFood"
+    Record = "itemGroup.name.record"
+    Sandstone = "itemGroup.name.sandstone"
+    Sapling = "itemGroup.name.sapling"
+    Sculk = "itemGroup.name.sculk"
+    Seed = "itemGroup.name.seed"
+    Shovel = "itemGroup.name.shovel"
+    ShulkerBox = "itemGroup.name.shulkerBox"
+    Sign = "itemGroup.name.sign"
+    Skull = "itemGroup.name.skull"
+    Slab = "itemGroup.name.slab"
+    SmithingTemplates = "itemGroup.name.smithing_templates"
+    SplashPotion = "itemGroup.name.splashPotion"
+    StainedClay = "itemGroup.name.stainedClay"
+    Stairs = "itemGroup.name.stairs"
+    Stone = "itemGroup.name.stone"
+    StoneBrick = "itemGroup.name.stoneBrick"
+    Sword = "itemGroup.name.sword"
+    Trapdoor = "itemGroup.name.trapdoor"
+    Walls = "itemGroup.name.walls"
+    Wood = "itemGroup.name.wood"
+    Wool = "itemGroup.name.wool"
+    WoolCarpet = "itemGroup.name.woolCarpet"
+    none = "None"
 
 
 class WeatherSet(StrEnum):
@@ -1024,3 +1131,11 @@ class MusicCategory(StrEnum):
     Soulsand_valley = "soulsand_valley"
     Stony_peaks = "stony_peaks"
     Water = "water"
+
+
+class SmeltingTags(StrEnum):
+    FURNACE = "furnace"
+    BLAST_FURNACE = "blast_furnace"
+    SMOKER = "smoker"
+    CAMPFIRE = "campfire"
+    SOUL_CAMPFIRE = "soul_campfire"

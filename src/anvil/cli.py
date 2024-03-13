@@ -48,8 +48,9 @@ def CreateDirectoriesFromTree(tree: dict) -> None:
     for directory in directories:
         CreateDirectory(directory)
 
+
 class JsonSchemes:
-    
+
     @staticmethod
     def structure(project_name):
         return {
@@ -154,15 +155,8 @@ class JsonSchemes:
                 "version": version,
                 "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
             },
-            "modules": [
-                {"type": "data", "uuid": str(uuid.uuid4()), "version": version}
-            ],
-            "dependencies": [
-                {
-                    "uuid": rpuuid,
-                    "version": version
-                }
-            ],
+            "modules": [{"type": "data", "uuid": str(uuid.uuid4()), "version": version}],
+            "dependencies": [{"uuid": rpuuid, "version": version}],
             "metadata": {"authors": [author]},
         }
         if has_script:
@@ -175,10 +169,12 @@ class JsonSchemes:
                     "entry": "scripts/main.js",
                 }
             )
-            m["dependencies"].append({
-                "module_name": "@minecraft/server",
-                "version": MODULE_MINECRAFT_SERVER,
-            })
+            m["dependencies"].append(
+                {
+                    "module_name": "@minecraft/server",
+                    "version": MODULE_MINECRAFT_SERVER,
+                }
+            )
             if server_ui:
                 m["dependencies"].append(
                     {
@@ -206,12 +202,7 @@ class JsonSchemes:
                     "version": version,
                 }
             ],
-            "dependencies": [
-                {
-                    "uuid": bp_uuid,
-                    "version": version
-                }
-            ],
+            "dependencies": [{"uuid": bp_uuid, "version": version}],
             "metadata": {"authors": [author]},
         }
         if has_pbr:
@@ -283,8 +274,6 @@ class JsonSchemes:
                 "esModuleInterop": True,
                 "moduleResolution": "Node",
                 "resolveJsonModule": True,
-                "noUnusedLocals": True,
-                "noUnusedParameters": True,
                 "forceConsistentCasingInFileNames": True,
                 "lib": [
                     "ESNext",
@@ -310,6 +299,14 @@ class JsonSchemes:
                 }
             ],
         }
+
+    @staticmethod
+    def tsconstants(namespace: str, project_name: str):
+        file = []
+        file.append(f'export const NAMESPACE = "{namespace}"')
+        file.append(f'export const PROJECT_NAME = "{project_name}"')
+
+        return "\n".join(file)
 
 
 @click.group()
@@ -418,7 +415,7 @@ def create(
 
     # Init the config file
     config = Config()
-    
+
     config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, latest_build)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
     config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
@@ -438,13 +435,15 @@ def create(
     config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, pbr)
     config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper())
+    config.add_option(
+        ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper()
+    )
     config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     config.add_section(namespace)
 
     config.save()
-    
+
     File(f"{project_name}.anvil.py", JsonSchemes.script(), "", "w")
     File(".gitignore", JsonSchemes.gitignore(), "", "w")
     File("CHANGELOG.md", "", "", "w")
@@ -481,20 +480,37 @@ def create(
     )
     File(
         "manifest.json",
-        JsonSchemes.manifest_bp([1, 0, 0], config.get_option(ConfigSection.BUILD, ConfigOption.BP_UUID)[0], config.get_option(ConfigSection.BUILD, ConfigOption.RP_UUID)[0], config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY), scriptapi, False),
+        JsonSchemes.manifest_bp(
+            [1, 0, 0],
+            config.get_option(ConfigSection.BUILD, ConfigOption.BP_UUID)[0],
+            config.get_option(ConfigSection.BUILD, ConfigOption.RP_UUID)[0],
+            config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
+            scriptapi,
+            False,
+        ),
         os.path.join("behavior_packs", "BP_" + config.get_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME)),
         "w",
     )
     File(
         "manifest.json",
-        JsonSchemes.manifest_rp([1, 0, 0], config.get_option(ConfigSection.BUILD, ConfigOption.RP_UUID)[0], config.get_option(ConfigSection.BUILD, ConfigOption.BP_UUID)[0], config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY), pbr, addon),
+        JsonSchemes.manifest_rp(
+            [1, 0, 0],
+            config.get_option(ConfigSection.BUILD, ConfigOption.RP_UUID)[0],
+            config.get_option(ConfigSection.BUILD, ConfigOption.BP_UUID)[0],
+            config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
+            pbr,
+            addon,
+        ),
         os.path.join("resource_packs", "RP_" + config.get_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME)),
         "w",
     )
     File(
         "manifest.json",
         JsonSchemes.manifest_world(
-            [1, 0, 0], config.get_option(ConfigSection.BUILD, ConfigOption.PACK_UUID), config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY), random_seed
+            [1, 0, 0],
+            config.get_option(ConfigSection.BUILD, ConfigOption.PACK_UUID),
+            config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
+            random_seed,
         ),
         "",
         "w",
@@ -536,6 +552,14 @@ def create(
         )
         File("tsconfig.json", JsonSchemes.tsconfig(config.get_option("anvil", "pascal_project_name")), "", "w", False)
         File("launch.json", JsonSchemes.vscode(config.get_option("anvil", "pascal_project_name")), ".vscode", "w", False)
+        File(
+            "anvilConstants.ts",
+            JsonSchemes.tsconstants(namespace, project_name),
+            os.path.join("assets", "javascript"),
+            "w",
+            False,
+        )
+        File("main.ts", 'import * as mc from "@minecraft/server";\n', os.path.join("assets", "javascript"), "w", False)
 
     config.save()
 

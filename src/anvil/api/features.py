@@ -1,13 +1,15 @@
 import os
-
-from PIL import Image, ImageDraw, ImageFont
+from enum import StrEnum
 
 from anvil import CONFIG
-from anvil.api.enums import CameraPresets, FogCameraLocation, LootPoolType, RawTextConstructor, RenderDistanceType
+from anvil.api.enums import (CameraPresets, FogCameraLocation, LootPoolType,
+                             RawTextConstructor, RenderDistanceType,
+                             SmeltingTags)
 from anvil.api.types import Identifier
-from anvil.lib.lib import CopyFiles, Defaults, File, FileExists, clamp
+from anvil.lib.lib import CopyFiles, File, FileExists, clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+from PIL import Image, ImageDraw, ImageFont
 
 
 # Dialogue ------------------------------------------------
@@ -489,383 +491,161 @@ class LootTable(AddonObject):
         return super().queue(directory=directory)
 
 
-# Recipe --------------------------------------------------
-# Legacy code, must improve
-class Recipe(AddonObject):
+# Recipes -------------------------------------------------
+class SmeltingRecipe(AddonObject):
     _extension = ".recipe.json"
     _path = os.path.join(CONFIG.BP_PATH, "recipes")
 
-    class _Crafting:
-        class _Shapeless:
-            def __init__(
-                self,
-                parent,
-                identifier,
-                output_item_id: str,
-                data: int = 0,
-                count: int = 1,
-            ):
-                self._parent = parent
-                self._identifier = identifier
-                self._item_count = 9
-                self._ingredients = []
-                self._default = Defaults(
-                    "recipe_shapeless",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    CONFIG.NAMESPACE,
-                )
+    def __init__(self, name: str, *tags: SmeltingTags):
+        self._name = name
+        self._tags = tags
+        self.content(JsonSchemes.smelting_recipe(CONFIG.NAMESPACE, name, tags))
+        super().__init__(name)
 
-            def add_item(self, item_id: str, data: int = 0, count: int = 1):
-                item_id = str(item_id)
-                if self._item_count == 0:
-                    raise RuntimeError(f"The recipe {self._parent._name} has more than 9 items")
-                if item_id not in [item["item"] for item in self._ingredients]:
-                    self._ingredients.append({"item": item_id, "data": data, "count": count})
-                self._item_count -= 1
-                return self
+    def input(self, identifier: Identifier):
+        self._content["minecraft:recipe_furnace"]["input"] = {"item": identifier}
+        return self
 
-            def queue(self):
-                self._default["minecraft:recipe_shapeless"]["ingredients"] = self._ingredients
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
+    def output(self, identifier: Identifier):
+        self._content["minecraft:recipe_furnace"]["output"] = identifier
+        return self
 
-        class _Shaped:
-            def __init__(self, parent: "Recipe", identifier, output_item_id, data, count, recipe_exactly):
-                self._parent = parent
-                self._identifier = identifier
-                self._recipe_exactly = recipe_exactly
-                self._keys = "abcdefghijklmnopqrstuvwxyz"
-                self._items = {}
-                self._pattern = ["   ", "   ", "   "]
-                self._key = {}
-                self._default = Defaults(
-                    "recipe_shaped",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    CONFIG.NAMESPACE,
-                )
-                self._grid = [[" " for i in range(3)] for j in range(3)]
+    def priority(self, priority: int):
+        self._content["minecraft:recipe_furnace"]["priority"] = priority
+        return self
 
-            def item_0_0(self, item_identifier: str = " ", data: int = 0):
-                self._grid[0][0] = {"item": item_identifier, "data": data}
-                return self
+    def queue(self):
+        return super().queue()
 
-            def item_0_1(self, item_identifier: str = " ", data: int = 0):
-                self._grid[0][1] = {"item": item_identifier, "data": data}
-                return self
 
-            def item_0_2(self, item_identifier: str = " ", data: int = 0):
-                self._grid[0][2] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_1_0(self, item_identifier: str = " ", data: int = 0):
-                self._grid[1][0] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_1_1(self, item_identifier: str = " ", data: int = 0):
-                self._grid[1][1] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_1_2(self, item_identifier: str = " ", data: int = 0):
-                self._grid[1][2] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_2_0(self, item_identifier: str = " ", data: int = 0):
-                self._grid[2][0] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_2_1(self, item_identifier: str = " ", data: int = 0):
-                self._grid[2][1] = {"item": item_identifier, "data": data}
-                return self
-
-            def item_2_2(self, item_identifier: str = " ", data: int = 0):
-                self._grid[2][2] = {"item": item_identifier, "data": data}
-                return self
-
-            def queue(self):
-                for i in range(0, 3):  # Row
-                    for j in range(0, 3):  # Column
-                        current_item = str(self._grid[i][j]["item"]) if type(self._grid[i][j]) is dict else " "
-                        current_data = self._grid[i][j]["data"] if type(self._grid[i][j]) is dict else 0
-                        current_key = self._keys[0]
-                        if current_item != " ":
-                            if current_item not in self._items:
-                                self._items.update(
-                                    {
-                                        current_item: {
-                                            "key": current_key,
-                                            "data": current_data,
-                                        }
-                                    }
-                                )
-                                self._pattern[i] = self._pattern[i][:j] + current_key + self._pattern[i][j + 1 : :]
-                                self._keys = self._keys[1::]
-                                self._key.update(
-                                    {
-                                        current_key: {
-                                            "item": current_item,
-                                            "data": current_data,
-                                        }
-                                    }
-                                )
-                            elif current_data != self._items[current_item]["data"]:
-                                self._items.update(
-                                    {
-                                        current_item: {
-                                            "key": current_key,
-                                            "data": current_data,
-                                        }
-                                    }
-                                )
-                                self._pattern[i] = self._pattern[i][:j] + current_key + self._pattern[i][j + 1 : :]
-                                self._keys = self._keys[1::]
-                                self._key.update(
-                                    {
-                                        current_key: {
-                                            "item": current_item,
-                                            "data": current_data,
-                                        }
-                                    }
-                                )
-                            else:
-                                self._pattern[i] = (
-                                    self._pattern[i][:j] + self._items[current_item]["key"] + self._pattern[i][j + 1 : :]
-                                )
-                if not self._recipe_exactly:
-                    for i in range(len(self._pattern[0])):
-                        if self._pattern[0].endswith(" ") and self._pattern[1].endswith(" ") and self._pattern[2].endswith(" "):
-                            for j in range(len(self._pattern)):
-                                self._pattern[j] = self._pattern[j].removesuffix(" ")
-
-                        if (
-                            self._pattern[0].startswith(" ")
-                            and self._pattern[1].startswith(" ")
-                            and self._pattern[2].startswith(" ")
-                        ):
-                            for j in range(len(self._pattern)):
-                                self._pattern[j] = self._pattern[j].removeprefix(" ")
-
-                    for i in range(len(self._pattern)):
-                        if len(self._pattern) > 0:
-                            if self._pattern[-1] == (" " * len(self._pattern[-1])):
-                                self._pattern.pop(-1)
-                        if len(self._pattern) > 0:
-                            if self._pattern[0] == (" " * len(self._pattern[0])):
-                                self._pattern.pop(0)
-
-                self._default["minecraft:recipe_shaped"]["pattern"] = self._pattern
-                self._default["minecraft:recipe_shaped"]["key"] = self._key
-                self._parent.content(self._default)
-                self._parent._export()
-
-        class _Stonecutter:
-            def __init__(
-                self,
-                parent,
-                identifier,
-                output_item_id: str,
-                data: int = 0,
-                count: int = 1,
-            ):
-                self._parent = parent
-                self._identifier = identifier
-                self._item_count = 1
-                self._ingredients = []
-                self._default = Defaults(
-                    "recipe_stonecutter",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    CONFIG.NAMESPACE,
-                )
-
-            def add_item(self, item_id: str, data: int = 0, count: int = 1):
-                if self._item_count == 0:
-                    raise RuntimeError(f"The recipe {self._parent._name} has more than 9 items")
-                if item_id not in [item["item"] for item in self._ingredients]:
-                    self._ingredients.append({"item": item_id, "data": data, "count": count})
-                self._item_count -= 1
-                return self
-
-            def queue(self):
-                self._default["minecraft:recipe_shapeless"]["ingredients"] = self._ingredients
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
-
-        class _Stonecutter:
-            def __init__(
-                self,
-                parent,
-                identifier,
-                output_item_id: str,
-                data: int = 0,
-                count: int = 1,
-            ):
-                self._parent = parent
-                self._identifier = identifier
-                self._item_count = 1
-                self._ingredients = []
-                self._default = Defaults(
-                    "recipe_stonecutter",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    CONFIG.NAMESPACE,
-                )
-
-            def add_item(self, item_id: str, data: int = 0, count: int = 1):
-                if self._item_count == 0:
-                    raise RuntimeError(f"The recipe {self._parent._name} can only take 1 item")
-                self._ingredients.append({"item": item_id, "data": data, "count": count})
-                self._item_count -= 1
-                return self
-
-            def queue(self):
-                self._default["minecraft:recipe_shapeless"]["ingredients"] = self._ingredients
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
-
-        class _SmithingTable:
-            def __init__(
-                self,
-                parent,
-                identifier,
-                output_item_id: str,
-                data: int = 0,
-                count: int = 1,
-            ):
-                self._parent = parent
-                self._identifier = identifier
-                self._item_count = 1
-                self._ingredients = []
-                self._default = Defaults(
-                    "recipe_smithing_table",
-                    self._identifier,
-                    output_item_id,
-                    data,
-                    count,
-                    CONFIG.NAMESPACE,
-                )
-
-            def add_item(self, item_id: str, data: int = 0, count: int = 1):
-                if self._item_count == 0:
-                    raise RuntimeError(f"The recipe {self._parent._name} can only take 1 item")
-                self._ingredients.append({"item": item_id, "data": data, "count": count})
-                self._item_count -= 1
-                return self
-
-            def queue(self):
-                self._default["minecraft:recipe_shapeless"]["ingredients"].extend(self._ingredients)
-                self._parent.content(self._default)
-                self._parent.queue()
-                self._parent._export()
-
-        def __init__(self, parent: "Recipe", identifier):
-            self._parent = parent
-            self._identifier = identifier
-
-        def shapeless(self, output_item_id: str, data: int = 0, count: int = 1):
-            return self._Shapeless(self._parent, self._identifier, output_item_id, data, count)
-
-        def shaped(
-            self,
-            output_item_id: str,
-            data: int = 0,
-            count: int = 1,
-            recipe_exactly: bool = False,
-        ):
-            return self._Shaped(
-                self._parent,
-                self._identifier,
-                output_item_id,
-                data,
-                count,
-                recipe_exactly,
-            )
-
-        def stonecutter(self, output_item_id: str, data: int = 0, count: int = 1):
-            return self._Stonecutter(self._parent, self._identifier, output_item_id, data, count)
-
-        def smithing_table(self, output_item_id: str, data: int = 0, count: int = 1):
-            return self._SmithingTable(self._parent, self._identifier, output_item_id, data, count)
-
-    class _Smelting:
-        def __init__(self, parent, identifier):
-            self._parent = parent
-            self._identifier = identifier
-            self._tags = []
-            self._output = " "
-            self._input = " "
-
-        def output(self, output_item_id: str, data: int = 0, count: int = 1):
-            self._output = f"{output_item_id}:{data}"
-            return self
-
-        def input(self, input_item_id: str, data: int = 0, count: int = 1):
-            self._input = f"{input_item_id}:{data}"
-            return self
-
-        @property
-        def furnace(self):
-            self._tags.append("furnace")
-            return self
-
-        @property
-        def blast_furnace(self):
-            self._tags.append("blast_furnace")
-            return self
-
-        @property
-        def smoker(self):
-            self._tags.append("smoker")
-            return self
-
-        @property
-        def campfire(self):
-            self._tags.append("campfire")
-            self._tags.append("soul_campfire")
-            return self
-
-        def queue(self):
-            if self._output == " ":
-                raise RuntimeError("Recipe missing output item")
-            if self._input == " ":
-                raise RuntimeError("Recipe missing input item")
-            self._tags = list(set(self._tags))
-            self._default = Defaults(
-                "recipe_furnace",
-                self._identifier,
-                self._output,
-                self._input,
-                self._tags,
-            )
-            self._parent.content(self._default)
-            self._parent.queue()
-            self._parent._export()
+class SmithingRecipe(AddonObject):
+    _extension = ".recipe.json"
+    _path = os.path.join(CONFIG.BP_PATH, "recipes")
 
     def __init__(self, name: str):
         self._name = name
-        self._content = ""
+        self.content(JsonSchemes.smithing_table_recipe(CONFIG.NAMESPACE, name))
         super().__init__(name)
 
-    def crafting(self, identifier: str):
-        return self._Crafting(self, identifier)
+    def base(self, identifier: Identifier):
+        self._content["minecraft:recipe_smithing_transform"]["base"] = identifier
+        return self
 
-    def smelting(self, identifier: str):
-        return self._Smelting(self, identifier)
+    def addition(self, identifier: Identifier):
+        self._content["minecraft:recipe_smithing_transform"]["addition"] = identifier
+        return self
 
-    def queue(self, directory: str = ""):
-        return super().queue(directory)
+    def result(self, identifier: Identifier):
+        self._content["minecraft:recipe_smithing_transform"]["result"] = identifier
+        return self
+
+    def priority(self, priority: int):
+        self._content["minecraft:recipe_smithing_transform"]["priority"] = priority
+        return self
+
+    def queue(self):
+        return super().queue()
+
+
+class ShapelessRecipe(AddonObject):
+    _extension = ".recipe.json"
+    _path = os.path.join(CONFIG.BP_PATH, "recipes")
+
+    def __init__(self, name: str):
+        self._name = name
+        self.content(JsonSchemes.shapeless_crafting_recipe(CONFIG.NAMESPACE, name, ["crafting_table"]))
+        super().__init__(name)
+
+    def ingredients(self, items: list[tuple[Identifier, int]]):
+        if len(items) > 9:
+            CONFIG.Logger.recipe_max_items(self._name)
+        self._content["minecraft:recipe_shapeless"]["ingredients"] = [{"item": item[0], "data": item[1] if len(item) > 1 else {}} for item in items]
+        return self
+
+    def result(self, identifier: Identifier, count: int = 1, data: int = 0):
+        self._content["minecraft:recipe_shapeless"]["result"] = {"item": identifier, "count": count, "data": data if data != 0 else {}}
+        return self
+
+    def priority(self, priority: int):
+        self._content["minecraft:recipe_shapeless"]["priority"] = priority
+        return self
+
+    def queue(self):
+        return super().queue()
+
+
+class StoneCutterRecipe(ShapelessRecipe):
+    def __init__(self, name: str):
+        super().__init__(name)
+        self.content(JsonSchemes.shapeless_crafting_recipe(CONFIG.NAMESPACE, name, ["stonecutter"]))
+
+    def ingredient(self, identifier: Identifier, data: int = 0):
+        return super().ingredient([(identifier, data)])
+
+    def queue(self):
+        return super().queue()
+
+
+class ShapedCraftingRecipe(AddonObject):
+    _extension = ".recipe.json"
+    _path = os.path.join(CONFIG.BP_PATH, "recipes")
+
+    def __init__(self, name: str):
+        self._name = name
+        self._recipe_exactly = False
+        super().__init__(name)
+        self.content(JsonSchemes.shaped_crafting_recipe(CONFIG.NAMESPACE, name, ["crafting_table"]))
+
+    def ingredients(self, items: list[list[tuple[str, int]]], keep_empty_slots: bool = False) -> None:
+        max_items = 9
+        if len(items) > max_items:
+            CONFIG.Logger.recipe_max_items(self._name)
+
+        keys = "abcdefghijklmnopqrstuvwxyz"
+        pattern = ["   ", "   ", "   "]
+        added_items = {}
+
+        for i, row in enumerate(items):
+            for j, item in enumerate(row):
+                if not item is None:
+                    if not isinstance(item, tuple):
+                        data = {"item": str(item)}
+                    else:
+                        data = {"item": str(item[0]), "data": item[1]}
+
+                    key = next((k for k, v in added_items.items() if v == data), None)
+                    if key is None:
+                        key = keys[len(added_items)]
+                        added_items[key] = data
+
+                    pattern[i] = pattern[i][:j] + key + pattern[i][j + 1 :]
+
+        self._content["minecraft:recipe_shaped"]["key"] = added_items
+
+        if not keep_empty_slots:
+            while pattern and pattern[0] == "   ":
+                pattern.pop(0)
+            while pattern and pattern[-1] == "   ":
+                pattern.pop(-1)
+
+            while all(row[0] == " " for row in pattern):
+                pattern = [row[1:] for row in pattern]
+            while all(row[-1] == " " for row in pattern):
+                pattern = [row[:-1] for row in pattern]
+
+        self._content["minecraft:recipe_shaped"]["pattern"] = pattern
+        return self
+
+    def result(self, identifier: Identifier, count: int = 1, data: int = 0):
+        self._content["minecraft:recipe_shaped"]["result"] = {"item": identifier, "count": count, "data": data if data != 0 else {}}
+        return self
+
+    def priority(self, priority: int):
+        self._content["minecraft:recipe_shaped"]["priority"] = priority
+        return self
+
+    def queue(self):
+        return super().queue()
 
 
 # Function ------------------------------------------------

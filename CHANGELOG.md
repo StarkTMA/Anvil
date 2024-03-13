@@ -1,5 +1,51 @@
 # Changelog
 
+# Version 0.7.2
+
+### [Anvil]
+
+- Added an `anvilConstans.ts` to the `assets/javascript` directory. This file will be regenerated on every run of the script and is means to sync the project configuration with ScriptingAPI.
+- Updated `MANIFEST_BUILD` to `1.20.70`.
+- Updated `ENTITY_SERVER_VERSION` to `1.20.70`.
+- Updated `MODULE_MINECRAFT_SERVER` to `1.9.0`.
+
+
+### [Blocks]
+
+- Added a menu category and group Enums to block description.
+- Added `is_hidden_in_commands` property to block description.
+- Added `AlphaTestSingleSided` variable to the `BlockMaterial` enum.
+
+### [Features]
+
+- Rewrote the Recipe class.
+- Added `SmeltingRecipe()`, `SmithingRecipe()`, `ShapelessRecipe()`, `StoneCutterRecipe()`, `z"éé"éShapedCraftingRecipe()` classes.
+
+### [Vanilla]
+
+- Remove the `LEGACYItems()` class and added the rest of the items to the `Items()` class.
+- Renamed `Grass()` block class to `GrassBlock()`.
+- Split `Leaves()` and `Leaves2()` block classes to `AcaciaLeaves()`, `BirchLeaves()`, `DarkOakLeaves()`, `JungleLeaves()`, `OakLeaves()`, `SpruceLeaves()`.
+- Split `DoubleWoodenSlab()` block class to `AcaciaDoubleSlab()`, `BirchDoubleSlab()`, `DarkOakDoubleSlab()`, `JungleDoubleSlab()`, `OakDoubleSlab()`, `SpruceDoubleSlab()`.
+- Split `WoodenSlab()` block class to `AcaciaSlab()`, `BirchSlab()`, `DarkOakSlab()`, `JungleSlab()`, `OakSlab()`, `SpruceSlab()`.
+- Split `Wood()` block class to `AcaciaWood()`, `BirchWood()`, `DarkOakWood()`, `JungleWood()`, `OakWood()`, `SpruceWood()`, `StrippedOakWood()`, `StrippedSpruceWood()`, `StrippedBirchWood()`, `StrippedJungleWood()`, `StrippedAcaciaWood()`, `StrippedDarkOakWood()`.
+
+
+### [Commands]
+
+- Added `has_property()` method to the `TargetSelector()` class.
+- Replace the `Suicide` DamageCause enum variable with `SelfDestruct`.
+
+### [Components]
+
+- `EntitySensor()` range parameter now accepts a tuple for horizontal and vertical range.
+- Added `was_last_hurt_by()` filter.
+
+### [Molang]
+
+- Due to the deprecation of class properties in Python 3.13, all class properties are now converted to methods.
+- Added `IsAttached()`, `HasPlayerRider()`, `Scoreboard()`, `RideBodyXRotation()`,  `RideBodyYRotation()`,  `RideHeadXRotation()`,  `RideHeadYRotation()`,  `RiderBodyXRotation()`,  `RiderBodyYRotation()`,  `RiderHeadXRotation()` and `RiderHeadYRotation()` queries.
+
 # Version 0.7.1
 
 ### [ANVIL]

@@ -4,8 +4,9 @@ from enum import StrEnum
 from anvil import ANVIL, CONFIG
 from anvil.api.actors import _Components
 from anvil.api.components import _component
-from anvil.api.enums import (BlockCategory, BlockFaces, BlockMaterial,
-                             PlacementDirectionTrait, PlacementPositionTrait)
+from anvil.api.enums import (BlockCategory, BlockFaces, BlockGroups,
+                             BlockMaterial, PlacementDirectionTrait,
+                             PlacementPositionTrait)
 from anvil.api.types import Molang, coordinates, position
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.reports import ReportType
@@ -511,7 +512,7 @@ class _BlockServerDescription(MinecraftDescription):
         self._description["description"]["states"][f"{CONFIG.NAMESPACE}:{name}"] = range
         return self
 
-    def menu_category(self, category: BlockCategory = BlockCategory.none, group: str = None):
+    def menu_category(self, category: BlockCategory = BlockCategory.none, group: BlockGroups | str = BlockGroups.none, ):
         """Sets the menu category for the block.
 
         Args:
@@ -521,10 +522,15 @@ class _BlockServerDescription(MinecraftDescription):
         """
         self._description["description"]["menu_category"] = {
             "category": category.value if not category == BlockCategory.none else {},
-            "group": group if not group is None else {},
+            "group": group if not group == BlockGroups.none else {},
         }
         return self
 
+    @property
+    def is_hidden_in_commands(self):
+        self._description["description"]["is_hidden_in_commands"] = True
+        return self
+    
     @property
     def traits(self):
         """Sets the traits for the block.

@@ -1,3 +1,4 @@
+from anvil.api.commands import Scoreboard
 from deprecated import deprecated
 
 from anvil import CONFIG
@@ -118,7 +119,6 @@ class Query(_molang):
         return self._query(self, self.handle, "above_top_solid", x, z)
 
     @classmethod
-    @property
     def ActorCount(self):
         """Returns the number of actors rendered in the last frame.
 
@@ -141,7 +141,6 @@ class Query(_molang):
         return self._query(self, self.handle, "all", query, *args)
 
     @classmethod
-    @property
     def AllAnimationsFinished(self):
         """Only valid in an animation controller. Returns 1.0 if all animations in the current animation controller state have played through at least once, else it returns 0.0.
 
@@ -163,7 +162,6 @@ class Query(_molang):
         return self._query(self, self.handle, "all_tags", *tags)
 
     @classmethod
-    @property
     def AngerLevel(self):
         """If available, returns the anger level of the actor as an integer value from 0 to 1 less than the 'max_anger' defined on the actor, otherwise returns 0. Only returns a non-zero value in behavior packs.
 
@@ -173,7 +171,6 @@ class Query(_molang):
         return self._query(self, self.handle, "anger_level")
 
     @classmethod
-    @property
     def AnimTime(self):
         """Returns the time in seconds since the current animation started, else 0.0 if not called within an animation.
 
@@ -196,7 +193,6 @@ class Query(_molang):
         return self._query(self, self.handle, "any", query, *args)
 
     @classmethod
-    @property
     def AnyAnimationFinished(self):
         """Only valid in an animation controller. Returns 1.0 if any animation in the current animation controller state has played through at least once, else it returns 0.0.
 
@@ -285,7 +281,6 @@ class Query(_molang):
         return self._query(self, self.handle, "average_frame_time", clamp(frame, 0, 30))
 
     @classmethod
-    @property
     def BlockFace(self):
         """Returns the block face for this (only valid for certain triggers such as placing blocks, or interacting with block) (Down=0.0, Up=1.0, North=2.0, South=3.0, West=4.0, East=5.0, Undefined=6.0).
 
@@ -333,7 +328,6 @@ class Query(_molang):
         return self._query(self, self.handle, "has_property", f"{CONFIG.NAMESPACE}:{property}")
 
     @classmethod
-    @property
     def Blocking(self):
         """Returns 1.0 if the entity is blocking, else it returns 0.0.
 
@@ -343,7 +337,6 @@ class Query(_molang):
         return self._query(self, self.handle, "blocking")
 
     @classmethod
-    @property
     def BodyXRotation(self):
         """Returns the body pitch rotation if called on an actor, else it returns 0.0.
 
@@ -353,7 +346,6 @@ class Query(_molang):
         return self._query(self, self.handle, "body_x_rotation")
 
     @classmethod
-    @property
     def BodyYRotation(self):
         """Returns the body yaw rotation if called on an actor, else it returns 0.0.
 
@@ -364,7 +356,6 @@ class Query(_molang):
 
     # More info needed
     @classmethod
-    @property
     def BoneAabb(self):
         """Returns the axis aligned bounding box of a bone as a struct with members '.min', '.max', along with '.x', '.y', and '.z' values for each.
 
@@ -375,7 +366,6 @@ class Query(_molang):
 
     # More info needed
     @classmethod
-    @property
     def BoneOrigin(self):
         """Returns the initial (from the .geo) pivot of a bone as a struct with members '.x', '.y', and '.z'.
 
@@ -386,7 +376,6 @@ class Query(_molang):
 
     # More info needed
     @classmethod
-    @property
     def BoneRotation(self):
         """Returns the initial (from the .geo) rotation of a bone as a struct with members '.x', '.y', and '.z' in degrees.
 
@@ -420,7 +409,6 @@ class Query(_molang):
         return self._query(self, self.handle, "camera_rotation", clamp(axis, 0, 1))
 
     @classmethod
-    @property
     def CanClimb(self):
         """Returns 1.0 if the entity can climb, else it returns 0.0.
 
@@ -430,7 +418,6 @@ class Query(_molang):
         return self._query(self, self.handle, "can_climb")
 
     @classmethod
-    @property
     def CanDamageNearbyMobs(self):
         """Returns 1.0 if the entity can damage nearby mobs, else it returns 0.0.
 
@@ -440,7 +427,6 @@ class Query(_molang):
         return self._query(self, self.handle, "can_damage_nearby_mobs")
 
     @classmethod
-    @property
     def CanFly(self):
         """Returns 1.0 if the entity can fly, else it returns 0.0.
 
@@ -450,7 +436,6 @@ class Query(_molang):
         return self._query(self, self.handle, "can_fly")
 
     @classmethod
-    @property
     def CanPowerJump(self):
         """Returns 1.0 if the entity can power jump, else it returns 0.0.
 
@@ -460,7 +445,6 @@ class Query(_molang):
         return self._query(self, self.handle, "can_power_jump")
 
     @classmethod
-    @property
     def CanSwim(self):
         """Returns 1.0 if the entity can swim, else it returns 0.0.
 
@@ -470,7 +454,6 @@ class Query(_molang):
         return self._query(self, self.handle, "can_swim")
 
     @classmethod
-    @property
     def CanWalk(self):
         """Returns 1.0 if the entity can walk, else it returns 0.0.
 
@@ -480,7 +463,6 @@ class Query(_molang):
         return self._query(self, self.handle, "can_walk")
 
     @classmethod
-    @property
     def CapeFlapAmount(self):
         """Returns value between 0.0 and 1.0 with 0.0 meaning "cape is fully down" and 1.0 means "cape is fully up."
 
@@ -490,7 +472,6 @@ class Query(_molang):
         return self._query(self, self.handle, "cape_flap_amount")
 
     @classmethod
-    @property
     @deprecated
     def CardinalBlockFacePlacedOn(self):
         """DEPRECATED (please use query.block_face instead) Returns the block face for this (only valid for on_placed_by_player trigger) (Down=0.0, Up=1.0, North=2.0, South=3.0, West=4.0, East=5.0, Undefined=6.0).
@@ -501,7 +482,6 @@ class Query(_molang):
         return self._query(self, self.handle, "cardinal_block_face_placed_on")
 
     @classmethod
-    @property
     def CardinalFacing(self):
         """Returns the current facing of the player
 
@@ -519,7 +499,6 @@ class Query(_molang):
         return self._query(self, self.handle, "cardinal_facing")
 
     @classmethod
-    @property
     def CardinalFacing2D(self):
         """Returns the current facing of the player ignoring up/down part of the direction
 
@@ -535,7 +514,6 @@ class Query(_molang):
         return self._query(self, self.handle, "cardinal_facing_2d")
 
     @classmethod
-    @property
     def CardinalPlayerFacing(self):
         """Returns the current facing of the player
 
@@ -554,7 +532,6 @@ class Query(_molang):
 
     # More info needed
     @classmethod
-    @property
     def CombineEntities(self):
         """Combines any valid entity references from all arguments into a single array.  Note that order is not preserved, and duplicates and invalid values are removed.
 
@@ -573,7 +550,6 @@ class Query(_molang):
         return self._query(self, self.handle, "count", *element)
 
     @classmethod
-    @property
     def CurrentSquishValue(self):
         """Returns the squish value for the current entity, or 0.0 if this doesn't make sense.
 
@@ -583,7 +559,6 @@ class Query(_molang):
         return self._query(self, self.handle, "current_squish_value")
 
     @classmethod
-    @property
     def Day(self):
         """Returns the day of the current level.
 
@@ -593,7 +568,6 @@ class Query(_molang):
         return self._query(self, self.handle, "day")
 
     @classmethod
-    @property
     def DeathTicks(self):
         """Returns the elapsed ticks since the mob started dying.
 
@@ -603,7 +577,6 @@ class Query(_molang):
         return self._query(self, self.handle, "death_ticks")
 
     @classmethod
-    @property
     def DebugOutput(self):
         """### Server Client
 
@@ -615,7 +588,6 @@ class Query(_molang):
         return self._query(self, self.handle, "debug_output")
 
     @classmethod
-    @property
     def DeltaTime(self):
         """Returns the time in seconds since the previous frame.
 
@@ -625,7 +597,6 @@ class Query(_molang):
         return self._query(self, self.handle, "delta_time")
 
     @classmethod
-    @property
     def DistanceFromCamera(self):
         """Returns the distance of the root of this actor or particle emitter from the camera.
 
@@ -635,7 +606,6 @@ class Query(_molang):
         return self._query(self, self.handle, "distance_from_camera")
 
     @classmethod
-    @property
     def EffectEmitterCount(self):
         """Returns the total number of active emitters of the callee's particle effect type.
 
@@ -645,7 +615,6 @@ class Query(_molang):
         return self._query(self, self.handle, "effect_emitter_count")
 
     @classmethod
-    @property
     def EffectParticleCount(self):
         """Returns the total number of active particles of the callee's particle effect type.
 
@@ -655,7 +624,6 @@ class Query(_molang):
         return self._query(self, self.handle, "effect_particle_count")
 
     @classmethod
-    @property
     def EquipmentCount(self):
         """Returns the number of equipped armor pieces for an actor from 0 to 4, not counting items held in hands. (To query for hand slots, use query.is_item_equipped or query.is_item_name_any).
 
@@ -695,7 +663,6 @@ class Query(_molang):
         return self._query(self, self.handle, "equipped_item_is_attachable", clamp(hand, 0, 1))
 
     @classmethod
-    @property
     def EyeTargetXRotation(self):
         """Returns the X eye rotation of the entity if it makes sense, else it returns 0.0.
 
@@ -705,7 +672,6 @@ class Query(_molang):
         return self._query(self, self.handle, "eye_target_x_rotation")
 
     @classmethod
-    @property
     def EyeTargetYRotation(self):
         """Returns the Y eye rotation of the entity if it makes sense, else it returns 0.0.
 
@@ -715,7 +681,6 @@ class Query(_molang):
         return self._query(self, self.handle, "eye_target_y_rotation")
 
     @classmethod
-    @property
     def FacingTargetToRangeAttack(self):
         """Returns 1.0 if the entity is attacking from range (minecraft:behavior.ranged_attack), else it returns 0.0.
 
@@ -725,7 +690,6 @@ class Query(_molang):
         return self._query(self, self.handle, "facing_target_to_range_attack")
 
     @classmethod
-    @property
     def FrameAlpha(self):
         """Returns the ratio (from 0 to 1) of how much between AI ticks this frame is being rendered.
 
@@ -735,7 +699,6 @@ class Query(_molang):
         return self._query(self, self.handle, "frame_alpha")
 
     @classmethod
-    @property
     def GetActorInfoId(self):
         """Returns the integer ID of an actor by its string name.
 
@@ -745,7 +708,6 @@ class Query(_molang):
         return self._query(self, self.handle, "get_actor_info_id")
 
     @classmethod
-    @property
     def GetAnimationFrame(self):
         """Returns the current texture of the item.
 
@@ -756,7 +718,6 @@ class Query(_molang):
 
     # More info needed
     @classmethod
-    @property
     def GetDefaultBonePivot(self):
         """Gets the specified axis of the specified bone orientation pivot.
 
@@ -777,7 +738,6 @@ class Query(_molang):
 
     # More info needed
     @classmethod
-    @property
     def GetLocatorOffset(self):
         """Gets specified axis of the specified locator offset.
 
@@ -787,7 +747,6 @@ class Query(_molang):
         return self._query(self, self.handle, "get_locator_offset")
 
     @classmethod
-    @property
     @deprecated
     def GetName(self):
         """DEPRECATED (Use query.is_name_any instead if possible so names can be changed later without breaking content.) Get the name of the mob if there is one, otherwise return ''.
@@ -799,7 +758,6 @@ class Query(_molang):
 
     # More info needed
     @classmethod
-    @property
     def GetRootLocatorOffset(self):
         """Gets specified axis of the specified locator offset of the root model.
 
@@ -809,7 +767,6 @@ class Query(_molang):
         return self._query(self, self.handle, "get_root_locator_offset")
 
     @classmethod
-    @property
     def GroundSpeed(self):
         """Returns the ground speed of the entity in meters/second.
 
@@ -869,7 +826,6 @@ class Query(_molang):
         return self._query(self, self.handle, "has_block_state", f"{CONFIG.NAMESPACE}:{state}")
 
     @classmethod
-    @property
     def HasCape(self):
         """Returns 1.0 if the player has a cape, else it returns 0.0.
 
@@ -879,7 +835,6 @@ class Query(_molang):
         return self._query(self, self.handle, "has_cape")
 
     @classmethod
-    @property
     def HasCollision(self):
         """Returns 1.0 if the entity has collisions enabled, else it returns 0.0.
 
@@ -889,7 +844,6 @@ class Query(_molang):
         return self._query(self, self.handle, "has_collision")
 
     @classmethod
-    @property
     def HasGravity(self):
         """Returns 1.0 if the entity is affected by gravity, else it returns 0.0.
 
@@ -899,7 +853,6 @@ class Query(_molang):
         return self._query(self, self.handle, "has_gravity")
 
     @classmethod
-    @property
     def HasOwner(self):
         """Returns true if the entity has an owner ID, else it returns false.
 
@@ -909,7 +862,6 @@ class Query(_molang):
         return self._query(self, self.handle, "has_owner")
 
     @classmethod
-    @property
     def HasRider(self):
         """Returns 1.0 if the entity has a rider, else it returns 0.0.
 
@@ -919,7 +871,6 @@ class Query(_molang):
         return self._query(self, self.handle, "has_rider")
 
     @classmethod
-    @property
     def HasTarget(self):
         """Returns 1.0 if the entity has a target, else it returns 0.0.
 
@@ -929,7 +880,6 @@ class Query(_molang):
         return self._query(self, self.handle, "has_target")
 
     @classmethod
-    @property
     def HeadRollAngle(self):
         """Returns the roll angle of the head of the entity if it makes sense, else it returns 0.0.
 
@@ -957,7 +907,6 @@ class Query(_molang):
         return self._query(self, self.handle, "head_y_rotation", head_number)
 
     @classmethod
-    @property
     def Health(self):
         """Returns the health of the entity, or 0.0 if it doesn't make sense to call on this entity.
 
@@ -967,7 +916,6 @@ class Query(_molang):
         return self._query(self, self.handle, "health")
 
     @classmethod
-    @property
     def HeartbeatInterval(self):
         """Returns the heartbeat interval of the actor in seconds. Returns 0 when the actor has no heartbeat.
 
@@ -977,7 +925,6 @@ class Query(_molang):
         return self._query(self, self.handle, "heartbeat_interval")
 
     @classmethod
-    @property
     def HeartbeatPhase(self):
         """### Client Only
 
@@ -998,7 +945,6 @@ class Query(_molang):
         return self._query(self, self.handle, "heightmap", x, z)
 
     @classmethod
-    @property
     def HurtDirection(self):
         """Returns the hurt direction for the actor, otherwise returns 0.
 
@@ -1008,7 +954,6 @@ class Query(_molang):
         return self._query(self, self.handle, "hurt_direction")
 
     @classmethod
-    @property
     def HurtTime(self):
         """Returns the hurt time for the actor, otherwise returns 0.
 
@@ -1027,7 +972,6 @@ class Query(_molang):
         return self._query(self, self.handle, "in_range", value, min, max)
 
     @classmethod
-    @property
     def InvulnerableTicks(self):
         """Returns the number of ticks of invulnerability the entity has left if it makes sense, else it returns 0.0.
 
@@ -1037,7 +981,6 @@ class Query(_molang):
         return self._query(self, self.handle, "invulnerable_ticks")
 
     @classmethod
-    @property
     def IsAdmiring(self):
         """Returns 1.0 if the entity is admiring, else it returns 0.0.
 
@@ -1047,7 +990,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_admiring")
 
     @classmethod
-    @property
     def IsAlive(self):
         """Returns 1.0 if the entity is alive, and 0.0 if it's dead.
 
@@ -1057,7 +999,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_alive")
 
     @classmethod
-    @property
     def IsAngry(self):
         """Returns 1.0 if the entity is angry, else it returns 0.0.
 
@@ -1067,7 +1008,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_angry")
 
     @classmethod
-    @property
     def IsAttachedToEntity(self):
         """Returns 1.0 if the actor is attached to an entity, else it will return 0.0.
 
@@ -1077,7 +1017,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_attached_to_entity")
 
     @classmethod
-    @property
     def IsAvoidingBlock(self):
         """Returns 1.0 if the entity is fleeing from a block, else it returns 0.0.
 
@@ -1087,7 +1026,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_avoiding_block")
 
     @classmethod
-    @property
     def IsAvoidingMobs(self):
         """Returns 1.0 if the entity is fleeing from mobs, else it returns 0.0.
 
@@ -1097,7 +1035,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_avoiding_mobs")
 
     @classmethod
-    @property
     def IsBaby(self):
         """Returns 1.0 if the entity is a baby, else it returns 0.0.
 
@@ -1107,7 +1044,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_baby")
 
     @classmethod
-    @property
     def IsBreathing(self):
         """Returns 1.0 if the entity is breathing, else it returns 0.0.
 
@@ -1117,7 +1053,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_breathing")
 
     @classmethod
-    @property
     def IsBribed(self):
         """Returns 1.0 if the entity has been bribed, else it returns 0.0.
 
@@ -1127,7 +1062,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_bribed")
 
     @classmethod
-    @property
     def IsCarryingBlock(self):
         """Returns 1.0 if the entity is carrying a block, else it returns 0.0.
 
@@ -1137,7 +1071,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_carrying_block")
 
     @classmethod
-    @property
     def IsCasting(self):
         """Returns 1.0 if the entity is casting, else it returns 0.0.
 
@@ -1147,7 +1080,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_casting")
 
     @classmethod
-    @property
     def IsCelebrating(self):
         """Returns 1.0 if the entity is celebrating, else it returns 0.0.
 
@@ -1157,7 +1089,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_celebrating")
 
     @classmethod
-    @property
     def IsCelebratingSpecial(self):
         """Returns 1.0 if the entity is doing a special celebration, else it returns 0.0.
 
@@ -1167,7 +1098,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_celebrating_special")
 
     @classmethod
-    @property
     def IsCharged(self):
         """Returns 1.0 if the entity is charged, else it returns 0.0.
 
@@ -1177,7 +1107,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_charged")
 
     @classmethod
-    @property
     def IsCharging(self):
         """Returns 1.0 if the entity is charging, else it returns 0.0.
 
@@ -1187,7 +1116,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_charging")
 
     @classmethod
-    @property
     def IsChested(self):
         """Returns 1.0 if the entity has chests attached to it, else it returns 0.0.
 
@@ -1197,7 +1125,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_chested")
 
     @classmethod
-    @property
     def IsCritical(self):
         """Returns 1.0 if the entity is critical, else it returns 0.0.
 
@@ -1207,7 +1134,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_critical")
 
     @classmethod
-    @property
     def IsCroaking(self):
         """Returns 1.0 if the entity is croaking, else it returns 0.0.
 
@@ -1217,7 +1143,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_croaking")
 
     @classmethod
-    @property
     def IsDancing(self):
         """Returns 1.0 if the entity is dancing, else it returns 0.0.
 
@@ -1227,7 +1152,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_dancing")
 
     @classmethod
-    @property
     def IsDelayedAttacking(self):
         """Returns 1.0 if the entity is attacking using the delayed attack, else it returns 0.0.
 
@@ -1237,7 +1161,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_delayed_attacking")
 
     @classmethod
-    @property
     def IsDigging(self):
         """Returns 1.0 if the entity is digging, else it returns 0.0.
 
@@ -1247,7 +1170,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_digging")
 
     @classmethod
-    @property
     def IsEating(self):
         """Returns 1.0 if the entity is eating, else it returns 0.0.
 
@@ -1257,7 +1179,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_eating")
 
     @classmethod
-    @property
     def IsEatingMob(self):
         """Returns 1.0 if the entity is eating a mob, else it returns 0.0.
 
@@ -1267,7 +1188,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_eating_mob")
 
     @classmethod
-    @property
     def IsElder(self):
         """Returns 1.0 if the entity is an elder version of it, else it returns 0.0.
 
@@ -1277,7 +1197,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_elder")
 
     @classmethod
-    @property
     def IsEmerging(self):
         """Returns 1.0 if the entity is emerging, else it returns 0.0.
 
@@ -1287,7 +1206,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_emerging")
 
     @classmethod
-    @property
     def IsEmoting(self):
         """Returns 1.0 if the entity is emoting, else it returns 0.0.
 
@@ -1297,7 +1215,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_emoting")
 
     @classmethod
-    @property
     def IsEnchanted(self):
         """Returns 1.0 if the entity is enchanted, else it returns 0.0.
 
@@ -1307,7 +1224,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_enchanted")
 
     @classmethod
-    @property
     def IsFireImmune(self):
         """Returns 1.0 if the entity is immune to fire, else it returns 0.0.
 
@@ -1317,7 +1233,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_fire_immune")
 
     @classmethod
-    @property
     def IsFirstPerson(self):
         """Returns 1.0 if the entity is being rendered in first person mode, else it returns 0.0.
 
@@ -1327,7 +1242,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_first_person")
 
     @classmethod
-    @property
     def IsGhost(self):
         """Returns 1.0 if an entity is a ghost, else it returns 0.0.
 
@@ -1337,7 +1251,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_ghost")
 
     @classmethod
-    @property
     def IsGliding(self):
         """Returns 1.0 if the entity is gliding, else it returns 0.0.
 
@@ -1347,7 +1260,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_gliding")
 
     @classmethod
-    @property
     def IsGrazing(self):
         """Returns 1.0 if the entity is grazing, or 0.0 if not.
 
@@ -1357,7 +1269,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_grazing")
 
     @classmethod
-    @property
     def IsIdling(self):
         """Returns 1.0 if the entity is idling, else it returns 0.0.
 
@@ -1367,7 +1278,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_idling")
 
     @classmethod
-    @property
     def IsIgnited(self):
         """Returns 1.0 if the entity is ignited, else it returns 0.0.
 
@@ -1377,7 +1287,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_ignited")
 
     @classmethod
-    @property
     def IsIllagerCaptain(self):
         """Returns 1.0 if the entity is an illager captain, else it returns 0.0.
 
@@ -1387,7 +1296,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_illager_captain")
 
     @classmethod
-    @property
     def IsInContactWithWater(self):
         """Returns 1.0 if the entity is in contact with any water (water, rain, splash water bottle), else it returns 0.0.
 
@@ -1397,7 +1305,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_in_contact_with_water")
 
     @classmethod
-    @property
     def IsInLove(self):
         """Returns 1.0 if the entity is in love, else it returns 0.0.
 
@@ -1407,7 +1314,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_in_love")
 
     @classmethod
-    @property
     def IsInUI(self):
         """Returns 1.0 if the entity is rendered as part of the UI, else it returns 0.0.
 
@@ -1417,7 +1323,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_in_ui")
 
     @classmethod
-    @property
     def IsInWater(self):
         """Returns 1.0 if the entity is in water, else it returns 0.0.
 
@@ -1427,7 +1332,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_in_water")
 
     @classmethod
-    @property
     def IsInWaterOrRain(self):
         """Returns 1.0 if the entity is in water or rain, else it returns 0.0.
 
@@ -1437,7 +1341,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_in_water_or_rain")
 
     @classmethod
-    @property
     def IsInterested(self):
         """Returns 1.0 if the entity is interested, else it returns 0.0.
 
@@ -1447,7 +1350,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_interested")
 
     @classmethod
-    @property
     def IsInvisible(self):
         """Returns 1.0 if the entity is invisible, else it returns 0.0.
 
@@ -1478,7 +1380,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_item_name_any", slot, index, *item_identifiers)
 
     @classmethod
-    @property
     def IsJumping(self):
         """Returns 1.0 if the entity is jumping, else it returns 0.0.
 
@@ -1488,7 +1389,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_jumping")
 
     @classmethod
-    @property
     def IsLayingDown(self):
         """Returns 1.0 if the entity is laying down, else it returns 0.0.
 
@@ -1498,7 +1398,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_laying_down")
 
     @classmethod
-    @property
     def IsLayingEgg(self):
         """Returns 1.0 if the entity is laying an egg, else it returns 0.0.
 
@@ -1508,7 +1407,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_laying_egg")
 
     @classmethod
-    @property
     def IsLeashed(self):
         """Returns 1.0 if the entity is leashed to something, else it returns 0.0.
 
@@ -1518,7 +1416,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_leashed")
 
     @classmethod
-    @property
     def IsLevitating(self):
         """Returns 1.0 if the entity is levitating, else it returns 0.0.
 
@@ -1528,7 +1425,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_levitating")
 
     @classmethod
-    @property
     def IsLingering(self):
         """Returns 1.0 if the entity is lingering, else it returns 0.0.
 
@@ -1538,7 +1434,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_lingering")
 
     @classmethod
-    @property
     def IsLocalPlayer(self):
         """### Client Only
         Takes no arguments. Returns 1.0 if the entity is the local player for the current game window, else it returns 0.0. In splitscreen returns 0.0 for the other local players for other views. Always returns 0.0 if used in a behavior pack.
@@ -1549,7 +1444,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_local_player")
 
     @classmethod
-    @property
     def IsMoving(self):
         """Returns 1.0 if the entity is moving, else it returns 0.0.
 
@@ -1570,7 +1464,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_name_any", *names)
 
     @classmethod
-    @property
     def IsOnFire(self):
         """Returns 1.0 if the entity is on fire, else it returns 0.0.
 
@@ -1580,7 +1473,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_on_fire")
 
     @classmethod
-    @property
     def IsOnGround(self):
         """Returns 1.0 if the entity is on the ground, else it returns 0.0.
 
@@ -1590,7 +1482,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_on_ground")
 
     @classmethod
-    @property
     def IsOnScreen(self):
         """Returns 1.0 if this is called on an entity at a time when it is known if it is on screen, else it returns 0.0.
 
@@ -1600,7 +1491,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_on_screen")
 
     @classmethod
-    @property
     def IsOnfire(self):
         """Returns 1.0 if the entity is on fire, else it returns 0.0.
 
@@ -1610,7 +1500,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_onfire")
 
     @classmethod
-    @property
     def IsOrphaned(self):
         """Returns 1.0 if the entity is orphaned, else it returns 0.0.
 
@@ -1620,7 +1509,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_orphaned")
 
     @classmethod
-    @property
     def IsOwnerIdentifierAny(self):
         """Takes one or more arguments. Returns whether the root actor identifier is any of the specified strings. A preferred query to query.owner_identifier, as it can be adjusted by Mojang to avoid breaking content if names are changed.
 
@@ -1630,7 +1518,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_owner_identifier_any")
 
     @classmethod
-    @property
     def IsPersonaOrPremiumSkin(self):
         """Returns 1.0 if the player has a persona or premium skin, else it returns 0.0.
 
@@ -1640,7 +1527,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_persona_or_premium_skin")
 
     @classmethod
-    @property
     def IsPlayingDead(self):
         """Returns 1.0 if the entity is playing dead, else it returns 0.0.
 
@@ -1650,7 +1536,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_playing_dead")
 
     @classmethod
-    @property
     def IsPowered(self):
         """Returns 1.0 if the entity is powered, else it returns 0.0.
 
@@ -1660,7 +1545,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_powered")
 
     @classmethod
-    @property
     def IsPregnant(self):
         """Returns 1.0 if the entity is pregnant, else it returns 0.0.
 
@@ -1670,7 +1554,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_pregnant")
 
     @classmethod
-    @property
     def IsRamAttacking(self):
         """Returns 1.0 if the entity is using a ram attack, else it returns 0.0.
 
@@ -1680,7 +1563,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_ram_attacking")
 
     @classmethod
-    @property
     def IsResting(self):
         """Returns 1.0 if the entity is resting, else it returns 0.0.
 
@@ -1690,7 +1572,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_resting")
 
     @classmethod
-    @property
     def IsRiding(self):
         """Returns 1.0 if the entity is riding, else it returns 0.0.
 
@@ -1700,7 +1581,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_riding")
 
     @classmethod
-    @property
     def IsRoaring(self):
         """Returns 1.0 if the entity is currently roaring, else it returns 0.0.
 
@@ -1710,7 +1590,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_roaring")
 
     @classmethod
-    @property
     def IsRolling(self):
         """Returns 1.0 if the entity is rolling, else it returns 0.0.
 
@@ -1720,7 +1599,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_rolling")
 
     @classmethod
-    @property
     def IsSaddled(self):
         """Returns 1.0 if the entity has a saddle, else it returns 0.0.
 
@@ -1730,7 +1608,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_saddled")
 
     @classmethod
-    @property
     def IsScared(self):
         """Returns 1.0 if the entity is scared, else it returns 0.0.
 
@@ -1740,7 +1617,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_scared")
 
     @classmethod
-    @property
     def IsSelectedItem(self):
         """Returns true if the player has selected an item in the inventory, else it returns 0.0.
 
@@ -1750,7 +1626,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_selected_item")
 
     @classmethod
-    @property
     def IsShaking(self):
         """Returns 1.0 if the entity is casting, else it returns 0.0.
 
@@ -1760,7 +1635,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_shaking")
 
     @classmethod
-    @property
     def IsShakingWetness(self):
         """Returns 1.0 if the entity is shaking water off, else it returns 0.0.
 
@@ -1770,7 +1644,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_shaking_wetness")
 
     @classmethod
-    @property
     def IsSheared(self):
         """Returns 1.0 if the entity is able to be sheared and is sheared, else it returns 0.0.
 
@@ -1780,7 +1653,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_sheared")
 
     @classmethod
-    @property
     def IsShieldPowered(self):
         """Returns 1.0f if the entity has an active powered shield if it makes sense, else it returns 0.0.
 
@@ -1790,7 +1662,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_shield_powered")
 
     @classmethod
-    @property
     def IsSilent(self):
         """Returns 1.0 if the entity is silent, else it returns 0.0.
 
@@ -1800,7 +1671,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_silent")
 
     @classmethod
-    @property
     def IsSitting(self):
         """Returns 1.0 if the entity is sitting, else it returns 0.0.
 
@@ -1810,7 +1680,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_sitting")
 
     @classmethod
-    @property
     def IsSleeping(self):
         """Returns 1.0 if the entity is sleeping, else it returns 0.0.
 
@@ -1820,7 +1689,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_sleeping")
 
     @classmethod
-    @property
     def IsSneaking(self):
         """Returns 1.0 if the entity is sneaking, else it returns 0.0.
 
@@ -1830,7 +1698,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_sneaking")
 
     @classmethod
-    @property
     def IsSneezing(self):
         """Returns 1.0 if the entity is sneezing, else it returns 0.0.
 
@@ -1840,7 +1707,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_sneezing")
 
     @classmethod
-    @property
     def IsSniffing(self):
         """Returns 1.0 if the entity is sniffing, else it returns 0.0.
 
@@ -1850,7 +1716,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_sniffing")
 
     @classmethod
-    @property
     def IsSonicBoom(self):
         """Returns 1.0 if the entity is using sonic boom, else it returns 0.0.
 
@@ -1860,7 +1725,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_sonic_boom")
 
     @classmethod
-    @property
     def IsSprinting(self):
         """Returns 1.0 if the entity is sprinting, else it returns 0.0.
 
@@ -1870,7 +1734,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_sprinting")
 
     @classmethod
-    @property
     def IsStackable(self):
         """Returns 1.0 if the entity is stackable, else it returns 0.0.
 
@@ -1880,7 +1743,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_stackable")
 
     @classmethod
-    @property
     def IsStalking(self):
         """Returns 1.0 if the entity is stalking, else it returns 0.0.
 
@@ -1890,7 +1752,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_stalking")
 
     @classmethod
-    @property
     def IsStanding(self):
         """Returns 1.0 if the entity is standing, else it returns 0.0.
 
@@ -1900,7 +1761,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_standing")
 
     @classmethod
-    @property
     def IsStunned(self):
         """Returns 1.0 if the entity is currently stunned, else it returns 0.0.
 
@@ -1910,7 +1770,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_stunned")
 
     @classmethod
-    @property
     def IsSwimming(self):
         """Returns 1.0 if the entity is swimming, else it returns 0.0.
 
@@ -1920,7 +1779,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_swimming")
 
     @classmethod
-    @property
     def IsTamed(self):
         """Returns 1.0 if the entity is tamed, else it returns 0.0.
 
@@ -1930,7 +1788,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_tamed")
 
     @classmethod
-    @property
     def IsTransforming(self):
         """Returns 1.0 if the entity is transforming, else it returns 0.0.
 
@@ -1940,7 +1797,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_transforming")
 
     @classmethod
-    @property
     def IsUsingItem(self):
         """Returns 1.0 if the entity is using an item, else it returns 0.0.
 
@@ -1950,7 +1806,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_using_item")
 
     @classmethod
-    @property
     def IsWallClimbing(self):
         """Returns 1.0 if the entity is climbing a wall, else it returns 0.0.
 
@@ -1960,7 +1815,6 @@ class Query(_molang):
         return self._query(self, self.handle, "is_wall_climbing")
 
     @classmethod
-    @property
     def ItemInUseDuration(self):
         """Returns the amount of time an item has been in use in seconds up to the maximum duration, else 0.0 if it doesn't make sense.
 
@@ -1982,7 +1836,6 @@ class Query(_molang):
         return self._query(self, self.handle, "item_is_charged", clamp(hand, 0, 1))
 
     @classmethod
-    @property
     def ItemMaxUseDuration(self):
         """Returns the maximum amount of time the item can be used, else 0.0 if it doesn't make sense.
 
@@ -2013,7 +1866,6 @@ class Query(_molang):
         return self._query(self, self.handle, "item_slot_to_bone_name", slot)
 
     @classmethod
-    @property
     def KeyFrameLerpTime(self):
         """Returns the ratio between the previous and next key frames
 
@@ -2040,7 +1892,6 @@ class Query(_molang):
         return self._query(self, self.handle, "last_frame_time", clamp(frame, 0, 30))
 
     @classmethod
-    @property
     def LastHitByPlayer(self):
         """### Server Only
 
@@ -2052,7 +1903,6 @@ class Query(_molang):
         return self._query(self, self.handle, "last_hit_by_player")
 
     @classmethod
-    @property
     def LieAmount(self):
         """Returns the lie down amount for the entity.
 
@@ -2062,7 +1912,6 @@ class Query(_molang):
         return self._query(self, self.handle, "lie_amount")
 
     @classmethod
-    @property
     def LifeSpan(self):
         """Returns the limited life span of an entity, or 0.0 if it lives forever
 
@@ -2072,7 +1921,6 @@ class Query(_molang):
         return self._query(self, self.handle, "life_span")
 
     @classmethod
-    @property
     def LifeTime(self):
         """Returns the time in seconds since the current animation started, else 0.0 if not called within an animation.
 
@@ -2102,7 +1950,6 @@ class Query(_molang):
         return self._query(self, self.handle, "log", query)
 
     @classmethod
-    @property
     def MainHandItemMaxDuration(self):
         """Returns the use time maximum duration for the main hand item if it makes sense, else it returns 0.0.
 
@@ -2112,7 +1959,6 @@ class Query(_molang):
         return self._query(self, self.handle, "main_hand_item_max_duration")
 
     @classmethod
-    @property
     def MainHandItemUseDuration(self):
         """Returns the use time for the main hand item.
 
@@ -2122,7 +1968,6 @@ class Query(_molang):
         return self._query(self, self.handle, "main_hand_item_use_duration")
 
     @classmethod
-    @property
     def MarkVariant(self):
         """Returns the entity's mark variant.
 
@@ -2132,7 +1977,6 @@ class Query(_molang):
         return self._query(self, self.handle, "mark_variant")
 
     @classmethod
-    @property
     def MaxDurability(self):
         """Returns the max durability an item can take.
 
@@ -2142,7 +1986,6 @@ class Query(_molang):
         return self._query(self, self.handle, "max_durability")
 
     @classmethod
-    @property
     def MaxHealth(self):
         """Returns the maximum health of the entity, or 0.0 if it doesn't make sense to call on this entity.
 
@@ -2152,7 +1995,6 @@ class Query(_molang):
         return self._query(self, self.handle, "max_health")
 
     @classmethod
-    @property
     def MaxTradeTier(self):
         """Returns the maximum trade tier of the entity if it makes sense, else it returns 0.0.
 
@@ -2194,7 +2036,6 @@ class Query(_molang):
         return self._query(self, self.handle, "minimum_frame_time", clamp(frame, 0, 30))
 
     @classmethod
-    @property
     def ModelScale(self):
         """Returns the scale of the current entity.
 
@@ -2204,7 +2045,6 @@ class Query(_molang):
         return self._query(self, self.handle, "model_scale")
 
     @classmethod
-    @property
     def ModifiedDistanceMoved(self):
         """Returns the total distance the entity has moved horizontally in meters (since the entity was last loaded, not necessarily since it was originally created) modified along the way by status flags such as is_baby or on_fire.
 
@@ -2214,7 +2054,6 @@ class Query(_molang):
         return self._query(self, self.handle, "modified_distance_moved")
 
     @classmethod
-    @property
     def ModifiedMoveSpeed(self):
         """Returns the current walk speed of the entity modified by status flags such as is_baby or on_fire.
 
@@ -2224,7 +2063,6 @@ class Query(_molang):
         return self._query(self, self.handle, "modified_move_speed")
 
     @classmethod
-    @property
     def MoonBrightness(self):
         """Returns the brightness of the moon
 
@@ -2243,7 +2081,6 @@ class Query(_molang):
         return self._query(self, self.handle, "moon_brightness")
 
     @classmethod
-    @property
     def MoonPhase(self):
         """Returns the phase of the moon
 
@@ -2271,7 +2108,6 @@ class Query(_molang):
         return self._query(self, self.handle, "movement_direction", axis)
 
     @classmethod
-    @property
     def Noise(self):
         """Queries Perlin Noise Map.
 
@@ -2281,7 +2117,6 @@ class Query(_molang):
         return self._query(self, self.handle, "noise")
 
     @classmethod
-    @property
     def OnFireTime(self):
         """Returns the time that the entity is on fire, else it returns 0.0.
 
@@ -2291,7 +2126,6 @@ class Query(_molang):
         return self._query(self, self.handle, "on_fire_time")
 
     @classmethod
-    @property
     def OutOfControl(self):
         """Returns 1.0 if the entity is out of control, else it returns 0.0.
 
@@ -2301,7 +2135,6 @@ class Query(_molang):
         return self._query(self, self.handle, "out_of_control")
 
     @classmethod
-    @property
     @deprecated
     def OverlayAlpha(self):
         """DEPRECATED (Do not use - this function is deprecated and will be removed).
@@ -2312,7 +2145,6 @@ class Query(_molang):
         return self._query(self, self.handle, "overlay_alpha")
 
     @classmethod
-    @property
     @deprecated
     def OwnerIdentifier(self):
         """DEPRECATED (Use query.is_owner_identifier_any instead if possible so names can be changed later without breaking content.) Returns the root actor identifier.
@@ -2323,7 +2155,6 @@ class Query(_molang):
         return self._query(self, self.handle, "owner_identifier")
 
     @classmethod
-    @property
     def PlayerLevel(self):
         """Returns the players level if the actor is a player, otherwise returns 0
 
@@ -2351,7 +2182,6 @@ class Query(_molang):
         return self._query(self, self.handle, "position_delta", clamp(axis, 0, 2))
 
     @classmethod
-    @property
     def PreviousSquishValue(self):
         """Returns the previous squish value for the current entity, or 0.0 if this doesn't make sense.
 
@@ -2361,7 +2191,6 @@ class Query(_molang):
         return self._query(self, self.handle, "previous_squish_value")
 
     @classmethod
-    @property
     def RemainingDurability(self):
         """Returns the how much durability an item has remaining.
 
@@ -2371,7 +2200,6 @@ class Query(_molang):
         return self._query(self, self.handle, "remaining_durability")
 
     @classmethod
-    @property
     def RollCounter(self):
         """Returns the roll counter of the entity.
 
@@ -2390,7 +2218,6 @@ class Query(_molang):
         return self._query(self, self.handle, "rotation_to_camera", clamp(axis, 0, 1))
 
     @classmethod
-    @property
     def ShakeAngle(self):
         """Returns the shaking angle of the entity if it makes sense, else it returns 0.0.
 
@@ -2400,7 +2227,6 @@ class Query(_molang):
         return self._query(self, self.handle, "shake_angle")
 
     @classmethod
-    @property
     def ShakeTime(self):
         """Returns the shake time of the entity.
 
@@ -2410,7 +2236,6 @@ class Query(_molang):
         return self._query(self, self.handle, "shake_time")
 
     @classmethod
-    @property
     def ShieldBlockingBob(self):
         """Returns the how much the offhand shield should translate down when blocking and being hit.
 
@@ -2420,7 +2245,6 @@ class Query(_molang):
         return self._query(self, self.handle, "shield_blocking_bob")
 
     @classmethod
-    @property
     def ShowBottom(self):
         """Returns 1.0 if we render the entity's bottom, else it returns 0.0.
 
@@ -2430,7 +2254,6 @@ class Query(_molang):
         return self._query(self, self.handle, "show_bottom")
 
     @classmethod
-    @property
     def SitAmount(self):
         """Returns the current sit amount of the entity.
 
@@ -2440,7 +2263,6 @@ class Query(_molang):
         return self._query(self, self.handle, "sit_amount")
 
     @classmethod
-    @property
     def SkinId(self):
         """Returns the entity's skin ID
 
@@ -2450,7 +2272,6 @@ class Query(_molang):
         return self._query(self, self.handle, "skin_id")
 
     @classmethod
-    @property
     def SleepRotation(self):
         """Returns the rotation of the bed the player is sleeping on.
 
@@ -2460,7 +2281,6 @@ class Query(_molang):
         return self._query(self, self.handle, "sleep_rotation")
 
     @classmethod
-    @property
     def SneezeCounter(self):
         """Returns the sneeze counter of the entity.
 
@@ -2470,7 +2290,6 @@ class Query(_molang):
         return self._query(self, self.handle, "sneeze_counter")
 
     @classmethod
-    @property
     def Spellcolor(self):
         """Returns a struct representing the entity spell color for the specified entity. The struct contains '.r' '.g' '.b' and '.a' members, each 0.0 to 1.0. If no actor is specified, each member value will be 0.0.
 
@@ -2480,7 +2299,6 @@ class Query(_molang):
         return self._query(self, self.handle, "spellcolor")
 
     @classmethod
-    @property
     def StandingScale(self):
         """Returns the scale of how standing up the entity is.
 
@@ -2490,7 +2308,6 @@ class Query(_molang):
         return self._query(self, self.handle, "standing_scale")
 
     @classmethod
-    @property
     def StructuralIntegrity(self):
         """Returns the structural integrity for the actor, otherwise returns 0.
 
@@ -2500,7 +2317,6 @@ class Query(_molang):
         return self._query(self, self.handle, "structural_integrity")
 
     @classmethod
-    @property
     def SurfaceParticleColor(self):
         """### Client Only
 
@@ -2512,7 +2328,6 @@ class Query(_molang):
         return self._query(self, self.handle, "surface_particle_color")
 
     @classmethod
-    @property
     def SurfaceParticleTextureCoordinate(self):
         """### Client Only
 
@@ -2524,7 +2339,6 @@ class Query(_molang):
         return self._query(self, self.handle, "surface_particle_texture_coordinate")
 
     @classmethod
-    @property
     def SurfaceParticleTextureSize(self):
         """### Client Only
 
@@ -2536,7 +2350,6 @@ class Query(_molang):
         return self._query(self, self.handle, "surface_particle_texture_size")
 
     @classmethod
-    @property
     def SwellAmount(self):
         """Returns how swollen the entity is.
 
@@ -2546,7 +2359,6 @@ class Query(_molang):
         return self._query(self, self.handle, "swell_amount")
 
     @classmethod
-    @property
     def SwellingDir(self):
         """Returns the swelling direction of the entity if it makes sense, else it returns 0.0.
 
@@ -2556,7 +2368,6 @@ class Query(_molang):
         return self._query(self, self.handle, "swelling_dir")
 
     @classmethod
-    @property
     def SwimAmount(self):
         """Returns the amount the current entity is swimming.
 
@@ -2566,7 +2377,6 @@ class Query(_molang):
         return self._query(self, self.handle, "swim_amount")
 
     @classmethod
-    @property
     def TailAngle(self):
         """Returns the angle of the tail of the entity if it makes sense, else it returns 0.0.
 
@@ -2576,7 +2386,6 @@ class Query(_molang):
         return self._query(self, self.handle, "tail_angle")
 
     @classmethod
-    @property
     def TargetXRotation(self):
         """Returns the x rotation required to aim at the entity's current target if it has one, else it returns 0.0.
 
@@ -2586,7 +2395,6 @@ class Query(_molang):
         return self._query(self, self.handle, "target_x_rotation")
 
     @classmethod
-    @property
     def TargetYRotation(self):
         """Returns the y rotation required to aim at the entity's current target if it has one, else it returns 0.0.
 
@@ -2596,7 +2404,6 @@ class Query(_molang):
         return self._query(self, self.handle, "target_y_rotation")
 
     @classmethod
-    @property
     def TextureFrameIndex(self):
         """Returns the icon index of the experience orb
 
@@ -2606,7 +2413,6 @@ class Query(_molang):
         return self._query(self, self.handle, "texture_frame_index")
 
     @classmethod
-    @property
     def TimeOfDay(self):
         """Returns the time of day (midnight=0.0, sunrise=0.25, noon=0.5, sunset=0.75) of the dimension the entity is in.
 
@@ -2616,7 +2422,6 @@ class Query(_molang):
         return self._query(self, self.handle, "time_of_day")
 
     @classmethod
-    @property
     def TimeSinceLastVibrationDetection(self):
         """### Client Only
 
@@ -2628,7 +2433,6 @@ class Query(_molang):
         return self._query(self, self.handle, "time_since_last_vibration_detection")
 
     @classmethod
-    @property
     def TimeStamp(self):
         """Returns the current time stamp of the level.
 
@@ -2638,7 +2442,6 @@ class Query(_molang):
         return self._query(self, self.handle, "time_stamp")
 
     @classmethod
-    @property
     def TotalEmitterCount(self):
         """Returns the total number of active emitters in the world.
 
@@ -2648,7 +2451,6 @@ class Query(_molang):
         return self._query(self, self.handle, "total_emitter_count")
 
     @classmethod
-    @property
     def TotalParticleCount(self):
         """Returns the total number of active particles in the world.
 
@@ -2658,7 +2460,6 @@ class Query(_molang):
         return self._query(self, self.handle, "total_particle_count")
 
     @classmethod
-    @property
     def TradeTier(self):
         """Returns the trade tier of the entity if it makes sense, else it returns 0.0.
 
@@ -2668,7 +2469,6 @@ class Query(_molang):
         return self._query(self, self.handle, "trade_tier")
 
     @classmethod
-    @property
     def UnhappyCounter(self):
         """Returns how unhappy the entity is.
 
@@ -2678,7 +2478,6 @@ class Query(_molang):
         return self._query(self, self.handle, "unhappy_counter")
 
     @classmethod
-    @property
     def Variant(self):
         """Returns the entity's variant index.
 
@@ -2688,7 +2487,6 @@ class Query(_molang):
         return self._query(self, self.handle, "variant")
 
     @classmethod
-    @property
     def VerticalSpeed(self):
         """Returns the speed of the entity up or down in meters/second, where positive is up.
 
@@ -2698,7 +2496,6 @@ class Query(_molang):
         return self._query(self, self.handle, "vertical_speed")
 
     @classmethod
-    @property
     def WalkDistance(self):
         """Returns the walk distance of the entity.
 
@@ -2708,7 +2505,6 @@ class Query(_molang):
         return self._query(self, self.handle, "walk_distance")
 
     @classmethod
-    @property
     def WingFlapPosition(self):
         """Returns the wing flap position of the entity, or 0.0 if this doesn't make sense.
 
@@ -2718,7 +2514,6 @@ class Query(_molang):
         return self._query(self, self.handle, "wing_flap_position")
 
     @classmethod
-    @property
     def WingFlapSpeed(self):
         """Returns the wing flap speed of the entity, or 0.0 if this doesn't make sense.
 
@@ -2728,7 +2523,6 @@ class Query(_molang):
         return self._query(self, self.handle, "wing_flap_speed")
 
     @classmethod
-    @property
     def YawSpeed(self):
         """Returns the entity's yaw speed.
 
@@ -2738,7 +2532,6 @@ class Query(_molang):
         return self._query(self, self.handle, "yaw_speed")
 
     @classmethod
-    @property
     def TimerFlag1(self):
         """Returns the value of timer_flag_1 set by behavior.timer_flag_1
 
@@ -2748,7 +2541,6 @@ class Query(_molang):
         return self._query(self, self.handle, "timer_flag_1")
 
     @classmethod
-    @property
     def TimerFlag2(self):
         """Returns the value of timer_flag_2 set by behavior.timer_flag_2
 
@@ -2758,7 +2550,6 @@ class Query(_molang):
         return self._query(self, self.handle, "timer_flag_2")
 
     @classmethod
-    @property
     def TimerFlag3(self):
         """Returns the value of timer_flag_3 set by behavior.timer_flag_3
 
@@ -2768,7 +2559,6 @@ class Query(_molang):
         return self._query(self, self.handle, "timer_flag_3")
 
     @classmethod
-    @property
     def IsSpectator(self):
         """Returns 1.0 if the entity is a spectator, else it returns 0.0.
 
@@ -2876,7 +2666,111 @@ class Query(_molang):
         """
         return self._query(self, self.handle, "bone_orientation_matrix", bone_name)
 
+    @classmethod
+    def IsAttached(self):
+        """### Client Only
+        
+        Returns 1.0 if the entity is attached to another entity (such as being held or worn), else it will return 0.0.
 
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "is_attached")
+
+    @classmethod
+    def HasPlayerRider(self):
+        """Returns 1.0 if the entity has a player rider, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "has_player_rider")
+    
+    @classmethod
+    def Scoreboard(self, score):
+        """### Server Only
+        Returns the specified scoreboard value for this entity.
+
+        Args:
+            score (str): The name of the scoreboard to query.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "scoreboard", score)
+
+    @classmethod
+    def RideBodyXRotation(self):
+        """Returns the body pitch world-rotation of the ride an entity, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "ride_body_x_rotation")
+    
+    @classmethod
+    def RideBodyYRotation(self):
+        """Returns the body pitch world-rotation of a valid rider at the provided index if called on an entity, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "ride_body_y_rotation")
+    
+    @classmethod
+    def RideHeadXRotation(self):
+        """Returns the head x world-rotation of the ride of an entity, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "ride_head_x_rotation")
+    
+    @classmethod
+    def RideHeadYRotation(self, clamp: int = 0):
+        """Takes one optional argument as a parameter. Returns the head y world-rotation of the ride of an entity, else it returns 0.0. First parameter only for horses, zombie horses, skeleton horses, donkeys and mules that clamps rotation in degrees.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "ride_head_y_rotation", clamp)
+
+    @classmethod
+    def RiderBodyXRotation(self):
+        """Returns the body pitch world-rotation of a valid rider at the provided index if called on an entity, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "rider_body_x_rotation")
+    
+    @classmethod
+    def RiderBodyYRotation(self):
+        """Returns the body yaw world-rotation of a valid rider at the provided index if called on an entity, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "rider_body_y_rotation")
+
+    @classmethod
+    def RiderHeadXRotation(self, head: int = 0):
+        """Takes one argument as a parameter. Returns the head x world-rotation of the rider entity at the provided index, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "rider_head_x_rotation", head)
+
+    @classmethod
+    def RiderHeadYRotation(self, head: int = 0, clamp: int = 0):
+        """Takes one or two arguments as parameters. Returns the head y world-rotation of the rider entity at the provided index, else it returns 0.0. Horses, zombie horses, skeleton horses, donkeys and mules require a second parameter that clamps rotation in degrees.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "rider_head_y_rotation", head, clamp)
+    
 class Context(Query):
     handle = "c"
 
@@ -2894,17 +2788,14 @@ class Variable(_molang):
         setattr(self, name, method)
 
     @classmethod
-    @property
     def IsFirstPerson(self):
         return self._query(self, "v", "is_first_person")
 
     @classmethod
-    @property
     def IsPaperdoll(self):
         return self._query(self, "v", "is_paperdoll")
 
     @classmethod
-    @property
     def AttackTime(self):
         return self._query(self, "v", "attack_time")
 
@@ -2993,7 +2884,6 @@ class Math(_molang):
         return self._query(self, self.handle, "mod", value, denominator)
 
     @classmethod
-    @property
     def pi(self):
         return self._query(self, self.handle, "pi")
 

@@ -428,6 +428,8 @@ class _AnvilCore:
                 self.config.Logger.too_many_permutations_warn(_PermutationComponents._count)
 
         if self.config._SCRIPT_API:
+            File("anvilConstants.ts", JsonSchemes.tsconstants(self.config.NAMESPACE, self.config.PROJECT_NAME), os.path.join("assets", "javascript"), "w", False)
+
             source = os.path.join("assets", "javascript")
             target = os.path.join(self.config.BP_PATH, "scripts")
 

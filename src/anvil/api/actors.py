@@ -3,9 +3,6 @@ import os
 from enum import StrEnum
 
 import requests
-from halo import Halo
-from PIL import Image
-
 from anvil import ANVIL, CONFIG
 from anvil.api.blockbench import Animation, Geometry
 from anvil.api.components import Filter, InstantDespawn, Rideable, _component
@@ -17,6 +14,8 @@ from anvil.lib.lib import MOLANG_PREFIXES, CopyFiles, File, FileExists
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
+from halo import Halo
+from PIL import Image
 
 __all__ = ["Entity", "Attachable"]
 
@@ -381,9 +380,7 @@ class _ActorClientDescription(_ActorDescription):
                     f"https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/entity/{self.name}.entity.json"
                 )
                 data = json.loads(retrieve.text)
-            self._description["description"] = data["minecraft:client_entity"]["description"]
-            if "particle_effects" not in self._description["description"]:
-                self._description["description"]["particle_effects"] = {}
+            self._description["description"].update(data["minecraft:client_entity"]["description"])
             File(f"{self.name}.entity.json", data, os.path.join("assets", "cache"), "w", True)
 
     def to_dict(self, directory: str = None):
@@ -1382,7 +1379,7 @@ class _BPAnimation:
         if is_vanilla:
             self._namespace_format = "minecraft"
         self._animation_short_name = animation_short_name
-        self._animation_length = 0.01
+        self._animation_length = 0.05
         self._animation = JsonSchemes.bp_animation(CONFIG.NAMESPACE, self._identifier, self._animation_short_name, loop)
 
     def timeline(self, timestamp: float, *commands: str):
@@ -1400,8 +1397,8 @@ class _BPAnimation:
             This animation.
 
         """
-        if self._animation_length < timestamp:
-            self._animation_length = timestamp + 0.1
+        if self._animation_length <= timestamp:
+            self._animation_length = timestamp + 0.05
         self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"][
             "animation_length"
         ] = self._animation_length
@@ -2040,7 +2037,7 @@ class _BaseEvent:
         return self
 
     def queue_command(self, *commands: str):
-        self._event[self._event_name]["queue_command"]["command"].extend(cmd for cmd in commands)
+        self._event[self._event_name]["queue_command"]["command"].extend(str(cmd) for cmd in commands)
         return self
 
     def emit_vibration(self, vibration: Vibrations):
@@ -2079,7 +2076,7 @@ class _Randomize(_BaseEvent):
         return self
 
     def queue_command(self, *commands: str):
-        self._event.update({"queue_command": {"command": commands}})
+        self._event.update({"queue_command": {"command": [str(cmd) for cmd in commands]}})
         return self
     
     def emit_vibration(self, vibration: Vibrations):
@@ -2132,7 +2129,7 @@ class _Sequence(_BaseEvent):
         return self
 
     def queue_command(self, *commands: str):
-        self._event.update({"queue_command": {"command": commands}})
+        self._event.update({"queue_command": {"command": [str(cmd) for cmd in commands]}})
         return self
     
     def emit_vibration(self, vibration: Vibrations):

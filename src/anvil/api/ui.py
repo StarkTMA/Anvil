@@ -813,7 +813,7 @@ class _UIDefs(AddonObject):
         self._files = []
 
     def add_file(self, path: str):
-        self._files.append(path.replace("\\", "/"))
+        self._files.append(path)
 
     @property
     def queue(self):
@@ -1215,6 +1215,7 @@ class _AnvilNPCScreen(_UIScreen):
         self._npc_screen_chooser = self.add_element("npc_screen_chooser").type(UIElementType.Panel)
         vanilla = self._npc_screen_chooser.controls("vanilla@npc_interact.npc_screen_contents").layer(500)
         vanilla.binding.binding_type(UIBindingType.Global).binding_name("#title_text").binding_name_override("#title_text")
+        vanilla.binding.binding_type(UIBindingType.Global).binding_name("#dialogtext").binding_name_override("#dialogtext")
         vanilla.binding.binding_type(UIBindingType.View).source_property_name("$anvil.npc_screen.vanilla").target_property_name("#visible")
 
     def add_element(self, element_name: str, trigger: UIElementTrigger = UIElementTrigger.NONE, keyword: str = None):

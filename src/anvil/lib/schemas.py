@@ -2,6 +2,7 @@ import os
 import uuid
 
 from anvil import CONFIG
+from anvil.lib.config import _AnvilConfig
 from anvil.lib.format_versions import *
 from anvil.lib.lib import File
 
@@ -477,7 +478,6 @@ class JsonSchemes:
             "format_version": [int(i) for i in BLOCK_JSON_FORMAT_VERSION.split(".")],
         }
 
-    # ---------------------------
     @staticmethod
     def sounds():
         return {
@@ -505,18 +505,63 @@ class JsonSchemes:
     def loot_table():
         return {"pools": []}
 
+    @staticmethod
+    def smelting_recipe(namespace: str, name: str, tags: list[str]):
+        return {
+            "format_version": "1.16.0",
+            "minecraft:recipe_furnace": {
+                "tags": tags,
+                "description": {"identifier": f"{namespace}:{name}"},
+            },
+        }
+
+    @staticmethod
+    def smithing_table_recipe(namespace: str, name: str):
+        return {
+            "format_version": "1.17.0",
+            "minecraft:recipe_smithing_transform": {
+                "description": {"identifier": f"{namespace}:{name}"},
+            },
+        }
+
+    @staticmethod
+    def shapeless_crafting_recipe(namespace: str, name: str, tags: list[str]):
+        return {
+            "format_version": "1.12",
+            "minecraft:recipe_shapeless": {
+                "description": {"identifier": f"{namespace}:{name}"},
+                "tags": tags,
+                "ingredients": [],
+            },
+        }
+
+    @staticmethod
+    def shaped_crafting_recipe(namespace: str, name: str, tags: list[str]):
+        return {
+            "format_version": "1.12",
+            "minecraft:recipe_shaped": {
+                "description": {"identifier": f"{namespace}:{name}"},
+                "tags": tags,
+                "pattern": [],
+                "key": {},
+            },
+        }
+
+    @staticmethod
+    def tsconstants(namespace: str, project_name: str):
+        file = []
+        file.append(f'export const NAMESPACE = "{namespace}"')
+        file.append(f'export const PROJECT_NAME = "{project_name}"')
+
+        return "\n".join(file)
+
 
 class AddonObject:
     """
     An object representing an addon with functionality to modify its content, queue it for processing, and export it.
 
     Attributes:
-        _extension (dict): A mapping of file extension types with the different namespace formats.
-        _name (str): The name of the addon object.
-        _path (str): The path of the addon object.
-        _content (dict): The content of the addon object.
-        _directory (str): The directory where the addon object is located.
-        _shorten (bool): A flag indicating whether the content should be shortened.
+        name (str): The name of the addon object.
     """
 
     _extension = ".json"
@@ -595,7 +640,7 @@ class AddonObject:
 
         def _replace_backslashes(obj):
             if isinstance(obj, str):
-                return obj.replace("\\", "/").replace('"/n"', '"\\n"').replace("/n", "\n")
+                return obj.replace('"/n"', '"\\n"').replace("/n", "\n").replace("\\", "/")
             elif isinstance(obj, list):
                 return [_replace_backslashes(item) for item in obj]
             elif isinstance(obj, dict):

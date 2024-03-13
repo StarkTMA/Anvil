@@ -465,7 +465,17 @@ class Filter:
         operator: FilterOperation = FilterOperation.Equals,
     ):
         return self._construct_filter("is_sprinting", subject, operator, None, value)
-    
+
+    @classmethod
+    def was_last_hurt_by(
+        self,
+        value: str,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("was_last_hurt_by", subject, operator, None, value)
+
 # Components ==========================================================================
 
 
@@ -991,7 +1001,7 @@ class DamageSensor(_component):
         self,
         cause: DamageCause,
         deals_damage: bool = True,
-        on_damage_event: event = None,
+        on_damage_event: str = None,
         on_damage_filter: Filter = None,
         damage_multiplier: int = 1,
         damage_modifier: float = 0,
@@ -2840,7 +2850,7 @@ class SummonEntity(_ai_goal):
                 "min_activation_range": min_activation_range if min_activation_range != 1 else {},
                 "particle_color": particle_color if particle_color != 0 else {},
                 "start_sound_event": start_sound_event if not start_sound_event is None else {},
-                "weight": weight if weight != 1 else {},
+                "weight": weight,
                 "sequence": [],
             }
         )
@@ -2863,16 +2873,16 @@ class SummonEntity(_ai_goal):
         self[self.component_namespace]["summon_choices"][-1]["sequence"].append(
             {
                 "entity_type": entity_type,
-                "base_delay": base_delay if base_delay != 0.0 else {},
-                "delay_per_summon": delay_per_summon if delay_per_summon != 0.0 else {},
-                "entity_lifespan": entity_lifespan if entity_lifespan != -1 else {},
-                "num_entities_spawned": num_entities_spawned if num_entities_spawned != 1 else {},
-                "shape": shape if shape != "line" else {},
-                "size": size if size != 1 else {},
+                "base_delay": base_delay,
+                "delay_per_summon": delay_per_summon,
+                "entity_lifespan": entity_lifespan,
+                "num_entities_spawned": num_entities_spawned,
+                "shape": shape,
+                "size": size,
                 "sound_event": sound_event if not sound_event is None else {},
                 "summon_cap": summon_cap if summon_cap != 0 else {},
                 "summon_cap_radius": summon_cap_radius if summon_cap_radius != 0 else {},
-                "target": target.value if target != FilterSubject.Self else {},
+                "target": target,
             }
         )
         return self
@@ -3068,25 +3078,31 @@ class InsideBlockNotifier(_component):
     def blocks(
         self,
         block_name: Blocks._MinecraftBlock | str,
-        entered_block_event: str,
-        exited_block_event: str,
+        entered_block_event: str = None,
+        exited_block_event: str = None,
     ):
         self[self.component_namespace]["block_list"].append(
             {
                 "block": {
-                    "name": [
-                        (
-                            block_name.identifier
-                            if isinstance(block_name, Blocks._MinecraftBlock)
-                            else block_name if isinstance(block_name, str) else ANVIL.Logger.unsupported_block_type(block_name)
-                        )
-                    ],
+                    "name": (
+                        block_name.identifier
+                        if isinstance(block_name, Blocks._MinecraftBlock)
+                        else block_name if isinstance(block_name, str) else ANVIL.config.Logger.unsupported_block_type(block_name)
+                    ),
                     "states": block_name.states if isinstance(block_name, Blocks._MinecraftBlock) else {},
-                },
-                "entered_block_event": entered_block_event,
-                "exited_block_event": exited_block_event,
+                }
             }
         )
+        if not entered_block_event is None:
+            self[self.component_namespace]["block_list"][-1]["entered_block_event"] = {
+                "event": entered_block_event,
+                "target": FilterSubject.Self,
+            }
+        if not exited_block_event is None:
+            self[self.component_namespace]["block_list"][-1]["exited_block_event"] = {
+                "event": exited_block_event,
+                "target": FilterSubject.Self,
+            }
         return self
 
 
@@ -3311,7 +3327,7 @@ class EntitySensor(_component):
         maximum_count: int = -1,
         minimum_count: int = -1,
         require_all: bool = False,
-        range: int = 10,
+        range: tuple[float, float] = [10, 10],
         cooldown: int = -1,
     ) -> None:
         """A component that initiates an event when a set of conditions are met by other entities within the defined range.
@@ -3323,7 +3339,7 @@ class EntitySensor(_component):
             minimum_count (int, optional): The minimum number of entities that must pass the filter conditions for the event to send. Defaults to -1.
             relative_range (bool, optional): If true, the sensor range is additive on top of the entity's size. Defaults to True.
             require_all (bool, optional): If true, requires all nearby entities to pass the filter conditions for the event to send. Defaults to False.
-            sensor_range (int, optional): The maximum distance another entity can be from this and have the filters checked against it. Defaults to 10.
+            range (tuple[float, float], optional): The maximum horizontal and vertical distance another entity can be from this and have the filters checked against it. Defaults to (10, 10).
             cooldown (int, optional): How many seconds should elapse before the subsensor can once again sense for entities. The cooldown is applied on top of the base 1 tick (0.05 seconds) delay. Negative values will result in no cooldown being used. Defaults to -1.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor
@@ -3337,7 +3353,7 @@ class EntitySensor(_component):
             sensor["minimum_count"] = minimum_count
         if require_all:
             sensor["require_all"] = require_all
-        if range != 10:
+        if range != (10, 10):
             sensor["range"] = range
         if cooldown != -1:
             sensor["cooldown"] = cooldown
@@ -4943,7 +4959,7 @@ class TimerFlag1(_ai_goal):
         return self
 
     def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._component_add_field("on_end", {"event": on_end, "target": subject})
+        self._component_add_field("on_start", {"event": on_end, "target": subject})
         return self
 
 

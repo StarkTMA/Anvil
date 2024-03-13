@@ -413,3 +413,9 @@ class Logger:
         m = f"The component {requirer} requires the component {required} to be added to {identifier}."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
+    
+    # Error
+    def recipe_max_items(self, name):
+        m = f"Recipes cannot have more than 9 items. Error at {name}."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))

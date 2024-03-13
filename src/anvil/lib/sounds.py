@@ -28,6 +28,7 @@ class SoundDescription:
             min_distance (int, optional): The minimum distance for the sound. Defaults to 9999.
         """
         self._category = category.value
+        self._sound_reference = sound_reference
         self._sound_definition = f"{CONFIG.NAMESPACE}:{sound_reference}"
         self._sound = JsonSchemes.sound(self._sound_definition, self._category)
 
@@ -60,8 +61,9 @@ class SoundDescription:
             stream (bool, optional): If the sound is streamed. Defaults to None.
             load_on_low_memory (bool, optional): If the sound is loaded on low memory. Defaults to False.
         """
-        if not FileExists(os.path.join("assets", "sounds", f"{sound_name}.ogg")):
-            CONFIG.Logger.file_exist_error(f"{sound_name}.ogg", os.path.join("assets", "sounds"))
+        parent_dir = self._sound_reference.split(".")[0]
+        if not FileExists(os.path.join("assets", "sounds", parent_dir, f"{sound_name}.ogg")):
+            CONFIG.Logger.file_exist_error(f"{sound_name}.ogg", os.path.join("assets", "sounds", parent_dir))
 
         self._sound_name = sound_name
         splits = self._sound_definition.removeprefix(f"{CONFIG.NAMESPACE}:").split(".")
@@ -95,10 +97,11 @@ class SoundDescription:
         Returns:
             dict: The sound description
         """
+        parent_dir = self._sound_reference.split(".")[0]
         for sound in self._sounds:
             s = sound["name"].split("\\")[-1]
             CopyFiles(
-                os.path.join("assets", "sounds"),
+                os.path.join("assets", "sounds", parent_dir),
                 os.path.join(
                     "resource_packs",
                     f"RP_{CONFIG._PASCAL_PROJECT_NAME}",

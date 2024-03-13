@@ -146,7 +146,7 @@ class ItemFood(_component):
         return self
 
 
-class ItemsInteractButton(_component):
+class ItemInteractButton(_component):
     component_namespace = "minecraft:interact_button"
 
     def __init__(self, value: bool | str = True) -> None:
