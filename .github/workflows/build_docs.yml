@@ -25,4 +25,5 @@ jobs:
             mkdocs-material-
       - run: pip install mkdocs-material 
       - run: pip install "mkdocstrings[python]"
+      - run: echo 'anvil.starktma.net' > site/CNAME
       - run: mkdocs gh-deploy --force
