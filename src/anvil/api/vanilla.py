@@ -1,11 +1,177 @@
+import os
 from enum import Enum
+
+import commentjson as json
+import requests
 
 from anvil import ANVIL, CONFIG
 from anvil.api.enums import Dimension
+from anvil.lib.lib import File, FileExists
 
-ENTITY_LIST = []
+ENTITY_LIST: dict[str, "Entities.VanillaEntity"] = {}
 ITEMS_LIST = []
 BLOCK_LIST = []
+
+
+class Entities:
+    class VanillaEntity():
+        def __init__(self, name : str, is_mob: bool = True, is_vanilla: bool = True, allow_runtime: bool = True) -> None:
+            super().__init__()
+            ENTITY_LIST[name] = self
+            self.is_mob = is_mob
+            self.namespace = 'minecraft' if is_vanilla else CONFIG.NAMESPACE
+            self.name = name
+            self.allow_runtime = allow_runtime
+            self._github_name = name
+
+        def _set_github_name(self, name):
+            self._github_name = name
+
+        def get_vanilla_resource(self):
+            cache_path = os.path.join("assets", "cache", f"{self.name}.entity.json")
+            data = {}
+            if FileExists(cache_path):
+                with open(cache_path, "r") as file:
+                    data = json.loads(file.read())
+            else:
+                retrieve = requests.get(
+                    f"https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/entity/{self._github_name}.entity.json"
+                )
+                data = json.loads(retrieve.text)
+                File(f"{self.name}.entity.json", data, os.path.join("assets", "cache"), "w", True)
+                
+            return data
+
+        @property
+        def identifier(self):
+            return self.namespace + ':' + self.name
+        
+        def __str__(self) -> str:
+            return self.name
+        
+        def __eq__(self, __value: object) -> bool:
+            return __value == (self.namespace + ':' + self.name)
+
+        def __iter__(self):
+            yield self.name
+    
+    Agent = VanillaEntity("agent", False)
+    Allay = VanillaEntity("allay")
+    ArmorStand = VanillaEntity("armor_stand", False)._set_github_name("armor_stand.v1.0")
+    Arrow = VanillaEntity("arrow", False)
+    Axolotl = VanillaEntity("axolotl")
+    Bat = VanillaEntity("bat")
+    Bed = VanillaEntity("bed", False)
+    Bee = VanillaEntity("bee")
+    Blaze = VanillaEntity("blaze")._set_github_name("blaze.v1.0")
+    Boat = VanillaEntity("boat", False)
+    Camel = VanillaEntity("camel")
+    Cat = VanillaEntity("cat")
+    CaveSpider = VanillaEntity("cave_spider")._set_github_name("cave_spider.v1.0")
+    ChestBoat = VanillaEntity("chest_boat", False)
+    ChestMinecart = VanillaEntity("chest_minecart", False)._set_github_name("chest_minecart.v1.0")
+    Chicken = VanillaEntity("chicken")._set_github_name("chicken.v1.0")
+    Cod = VanillaEntity("cod")
+    CommandBlockMinecart = VanillaEntity("command_block_minecart", False)._set_github_name("command_block_minecart.v1.0")
+    Cow = VanillaEntity("cow")._set_github_name("cow.v1.0")
+    Creeper = VanillaEntity("creeper")._set_github_name("creeper.v1.0")
+    DecoratedPot = VanillaEntity("decorated_pot", False)
+    Dolphin = VanillaEntity("dolphin")
+    Donkey = VanillaEntity("donkey")._set_github_name("donkey_v3")
+    DragonFireball = VanillaEntity("dragon_fireball", False)
+    Drowned = VanillaEntity("drowned")._set_github_name("drowned.v1.0")
+    Egg = VanillaEntity("egg", False)
+    ElderGuardian = VanillaEntity("elder_guardian")
+    EnderCrystal = VanillaEntity("ender_crystal", False)
+    EnderDragon = VanillaEntity("ender_dragon")
+    EnderEye = VanillaEntity("ender_eye", False)
+    EnderPearl = VanillaEntity("ender_pearl", False)
+    Enderman = VanillaEntity("enderman")._set_github_name("enderman.v1.0")
+    Endermite = VanillaEntity("endermite")
+    EvocationFangs = VanillaEntity("evocation_fangs", False)
+    EvocationIllager = VanillaEntity("evocation_illager")._set_github_name("evocation_illager.v1.0")
+    ExperienceBottle = VanillaEntity("experience_bottle", False)
+    ExperienceOrb = VanillaEntity("experience_orb", False)
+    Fireball = VanillaEntity("fireball")
+    FireworkRocket = VanillaEntity("firework_rocket", False)
+    FishingHook = VanillaEntity("fishing_hook")
+    Fox = VanillaEntity("fox")
+    Frog = VanillaEntity("frog")
+    Ghast = VanillaEntity("ghast")
+    GlowSquid = VanillaEntity("glow_squid")
+    Goat = VanillaEntity("goat")
+    Guardian = VanillaEntity("guardian")
+    Hoglin = VanillaEntity("hoglin")
+    HopperMinecart = VanillaEntity("hopper_minecart", False)._set_github_name("hopper_minecart.v1.0")
+    Horse = VanillaEntity("horse")._set_github_name("horse_v3")
+    Husk = VanillaEntity("husk")._set_github_name("husk.v1.0")
+    IronGolem = VanillaEntity("iron_golem")
+    LeashKnot = VanillaEntity("leash_knot", False)
+    LingeringPotion = VanillaEntity("lingering_potion", False)
+    Llama = VanillaEntity("llama")._set_github_name("llama.v1.0")
+    LlamaSpit = VanillaEntity("llama_spit")
+    MagmaCube = VanillaEntity("magma_cube")
+    Minecart = VanillaEntity("minecart", False)._set_github_name("minecart.v1.0")
+    Mooshroom = VanillaEntity("mooshroom")._set_github_name("mooshroom.v1.0")
+    Mule = VanillaEntity("mule")._set_github_name("mule_v3")
+    Npc = VanillaEntity("npc")
+    Ocelot = VanillaEntity("ocelot")._set_github_name("ocelot.v1.0")
+    Panda = VanillaEntity("panda")
+    Parrot = VanillaEntity("parrot")
+    Phantom = VanillaEntity("phantom")
+    Pig = VanillaEntity("pig")._set_github_name("pig.v1.0")
+    Piglin = VanillaEntity("piglin")
+    PiglinBrute = VanillaEntity("piglin_brute")
+    Pillager = VanillaEntity("pillager")
+    Player = VanillaEntity("player")
+    PolarBear = VanillaEntity("polar_bear")
+    Pufferfish = VanillaEntity("pufferfish")._set_github_name("pufferfish.v1.0")
+    Rabbit = VanillaEntity("rabbit")._set_github_name("rabbit.v1.0")
+    Ravager = VanillaEntity("ravager")
+    Salmon = VanillaEntity("salmon")
+    Sheep = VanillaEntity("sheep")._set_github_name("sheep.v1.0")
+    Shulker = VanillaEntity("shulker")._set_github_name("shulker.v1.0")
+    ShulkerBullet = VanillaEntity("shulker_bullet")
+    Silverfish = VanillaEntity("silverfish")
+    Skeleton = VanillaEntity("skeleton")._set_github_name("skeleton.v1.0")
+    SkeletonHorse = VanillaEntity("skeleton_horse")._set_github_name("skeleton_horse_v3")
+    Skull = VanillaEntity("skull", False)
+    Slime = VanillaEntity("slime")
+    SmallFireball = VanillaEntity("small_fireball")
+    Sniffer = VanillaEntity("sniffer")
+    Snowball = VanillaEntity("snowball", False)
+    SnowGolem = VanillaEntity("snow_golem")._set_github_name("snow_golem.v1.0")
+    Spider = VanillaEntity("spider")._set_github_name("spider.v1.0")
+    SplashPotion = VanillaEntity("splash_potion", False)
+    Squid = VanillaEntity("squid")
+    Stray = VanillaEntity("stray")._set_github_name("stray.v1.0")
+    Strider = VanillaEntity("strider")
+    Tadpole = VanillaEntity("tadpole")
+    ThrownTrident = VanillaEntity("thrown_trident")
+    TntMinecart = VanillaEntity("tnt_minecart", False)._set_github_name("tnt_minecart.v1.0")
+    TraderLlama = VanillaEntity("trader_llama")
+    TripodCamera = VanillaEntity("tripod_camera", False)
+    Tropicalfish = VanillaEntity("tropicalfish")
+    Turtle = VanillaEntity("turtle")
+    Vex = VanillaEntity("vex")._set_github_name("vex.v1.0")
+    Villager = VanillaEntity("villager_v2")
+    Vindicator = VanillaEntity("vindicator")._set_github_name("vindicator.v1.0")
+    WanderingTrader = VanillaEntity("wandering_trader")
+    Warden = VanillaEntity("warden")
+    Witch = VanillaEntity("witch")._set_github_name("witch.v1.0")
+    Wither = VanillaEntity("wither")._set_github_name("wither.v1.0")
+    WitherSkeleton = VanillaEntity("wither_skeleton")._set_github_name("wither_skeleton.v1.0")
+    WitherSkull = VanillaEntity("wither_skull")
+    WitherSkullDangeroud = VanillaEntity("wither_skull_dangerous")
+    Wolf = VanillaEntity("wolf")
+    Zoglin = VanillaEntity("zoglin")
+    Zombie = VanillaEntity("zombie")._set_github_name("zombie.v1.0")
+    ZombieHorse = VanillaEntity("zombie_horse")._set_github_name("zombie_horse_v3")
+    ZombieVillager = VanillaEntity("zombie_villager_v2")
+
+    # Added in 1.20.80
+    Armadillo = VanillaEntity("armadillo")
+
 
 # Updated on 05-04-2023
 # Latest Updated release: 1.19.81.01
@@ -1504,126 +1670,8 @@ class Items:
     ZombieVillagerSpawnEgg = _basic_item('zombie_villager_spawn_egg')
     Redstone = _basic_item('redstone')
 
-
-class Entities:
-    class vanilla_entity():
-        def __init__(self, name : str, is_vanilla: bool = True, allow_runtime: bool = True) -> None:
-            super().__init__()
-            ENTITY_LIST.append(self)
-            self._namespace = 'minecraft' if is_vanilla else CONFIG.NAMESPACE
-            self._name = name
-            self._allow_runtime = allow_runtime
-        
-        @property
-        def namespace(self):
-            return self._namespace
-        
-        @property
-        def identifier(self):
-            return self._namespace + ':' + self._name
-        
-        def __str__(self) -> str:
-            return self._name
-        
-        def __eq__(self, __value: object) -> bool:
-            return __value == (self._namespace + ':' + self._name)
-
-        def __iter__(self):
-            yield self._name
-
-    ArmorStand = vanilla_entity("armor_stand")
-    Arrow = vanilla_entity("arrow")
-    Axolotl = vanilla_entity("axolotl")
-    Bat = vanilla_entity("bat")
-    Bee = vanilla_entity("bee")
-    Blaze = vanilla_entity("blaze")
-    Cat = vanilla_entity("cat")
-    CaveSpider = vanilla_entity("cave_spider")
-    Chicken = vanilla_entity("chicken")
-    Cow = vanilla_entity("cow")
-    Creeper = vanilla_entity("creeper")
-    Dolphin = vanilla_entity("dolphin")
-    Donkey = vanilla_entity("donkey")
-    Drowned = vanilla_entity("drowned")
-    ElderGuardian = vanilla_entity("elder_guardian")
-    EnderDragon = vanilla_entity("ender_dragon")
-    Enderman = vanilla_entity("enderman")
-    Endermite = vanilla_entity("endermite")
-    EvocationIllager = vanilla_entity("evocation_illager")
-    Fish = vanilla_entity("fish")
-    FishingHook = vanilla_entity("fishing_hook")
-    Fireball = vanilla_entity("fireball")
-    Fox = vanilla_entity("fox")
-    Ghast = vanilla_entity("ghast")
-    GlowSquid = vanilla_entity("glow_squid")
-    Goat = vanilla_entity("goat")
-    Guardian = vanilla_entity("guardian")
-    Hoglin = vanilla_entity("hoglin")
-    Horse = vanilla_entity("horse")
-    Husk = vanilla_entity("husk")
-    IronGolem = vanilla_entity("iron_golem")
-    Llama = vanilla_entity("llama")
-    LlamaSpit = vanilla_entity("llama_spit")
-    MagmaCube = vanilla_entity("magma_cube")
-    Mooshroom = vanilla_entity("mooshroom")
-    Mule = vanilla_entity("mule")
-    Npc = vanilla_entity("npc")
-    Ocelot = vanilla_entity("ocelot")
-    Panda = vanilla_entity("panda")
-    Parrot = vanilla_entity("parrot")
-    Phantom = vanilla_entity("phantom")
-    Pig = vanilla_entity("pig")
-    PiglinBrute = vanilla_entity("piglin_brute")
-    Piglin = vanilla_entity("piglin")
-    Pillager = vanilla_entity("pillager")
-    Player = vanilla_entity("player")
-    PolarBear = vanilla_entity("polar_bear")
-    Pufferfish = vanilla_entity("pufferfish")
-    Rabbit = vanilla_entity("rabbit")
-    Ravager = vanilla_entity("ravager")
-    Salmon = vanilla_entity("salmon")
-    Sheep = vanilla_entity("sheep")
-    Shulker = vanilla_entity("shulker")
-    ShulkerBullet = vanilla_entity("shulker_bullet")
-    Silverfish = vanilla_entity("silverfish")
-    SkeletonHorse = vanilla_entity("skeleton_horse")
-    Skeleton = vanilla_entity("skeleton")
-    Slime = vanilla_entity("slime")
-    SnowGolem = vanilla_entity("snow_golem")
-    Spider = vanilla_entity("spider")
-    Squid = vanilla_entity("squid")
-    Stray = vanilla_entity("stray")
-    Strider = vanilla_entity("strider")
-    Tropicalfish = vanilla_entity("tropicalfish")
-    ThrownTrident = vanilla_entity("thrown_trident")
-    Turtle = vanilla_entity("turtle")
-    Vex = vanilla_entity("vex")
-    Villager = vanilla_entity("villager_v2")
-    Vindicator = vanilla_entity("vindicator")
-    WanderingTrader = vanilla_entity("wandering_trader")
-    Witch = vanilla_entity("witch")
-    WitherSkull = vanilla_entity("wither_skull")
-    WitherSkullDangeroud = vanilla_entity("wither_skull_dangerous")
-    WitherSkeleton = vanilla_entity("wither_skeleton")
-    Wither = vanilla_entity("wither")
-    Wolf = vanilla_entity("wolf")
-    Zoglin = vanilla_entity("zoglin")
-    ZombieHorse = vanilla_entity("zombie_horse")
-    ZombiePigman = vanilla_entity("zombie_pigman")
-    ZombieVillager = vanilla_entity("zombie_villager_v2")
-    Zombie = vanilla_entity("zombie")
-    Boat = vanilla_entity("boat")
-    Snowball = vanilla_entity("snowball")
-    LightningBolt = vanilla_entity('lightning_bolt')
-    # 1.19.0
-    # Updated on 11-07-2022
-    Warden = vanilla_entity("warden")
-    # 1.19.50.21
-    # Updated on 21-10-2022
-    Camel = vanilla_entity("camel")
-    # 1.19.70.23
-    # Updated on 28-02-2023
-    Sniffer = vanilla_entity("sniffer")
+    ArmadilloScute = _basic_item('armadillo_scute')
+    WolfArmor = _basic_item('wolf_armor')
 
 
 class Blocks:
@@ -2533,18 +2581,6 @@ class Blocks:
             self._coral_color = coral_color
             self._dead_bit = dead_bit
             super().__init__("coral_block", True)
-
-    class CoralFan(_MinecraftBlock):
-        def __init__(self, coral_color:'BlockStates.CoralColor'=None, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
-            self._coral_color = coral_color
-            self._coral_fan_direction = coral_fan_direction
-            super().__init__("coral_fan", True)
-
-    class CoralFanDead(_MinecraftBlock):
-        def __init__(self, coral_color:'BlockStates.CoralColor'=None, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
-            self._coral_color = coral_color
-            self._coral_fan_direction = coral_fan_direction
-            super().__init__("coral_fan_dead", True)
 
     class CoralFanHang(_MinecraftBlock):
         def __init__(self, coral_direction:'BlockStates.CoralDirection'=None, coral_hang_type_bit:'BlockStates.CoralHangTypeBit'=None, dead_bit:'BlockStates.DeadBit'=None):
@@ -4899,11 +4935,6 @@ class Blocks:
         def __init__(self, ):
             super().__init__("red_carpet", True)
 
-    class RedFlower(_MinecraftBlock):
-        def __init__(self, flower_type:'BlockStates.FlowerType'=None):
-            self._flower_type = flower_type
-            super().__init__("red_flower", True)
-
     class RedGlazedTerracotta(_MinecraftBlock):
         def __init__(self, facing_direction:'BlockStates.FacingDirection'=None):
             self._facing_direction = facing_direction
@@ -4982,12 +5013,6 @@ class Blocks:
             self._upside_down_bit = upside_down_bit
             self._weirdo_direction = weirdo_direction
             super().__init__("sandstone_stairs", True)
-
-    class Sapling(_MinecraftBlock):
-        def __init__(self, age_bit:'BlockStates.AgeBit'=None, sapling_type:'BlockStates.SaplingType'=None):
-            self._age_bit = age_bit
-            self._sapling_type = sapling_type
-            super().__init__("sapling", True)
 
     class Scaffolding(_MinecraftBlock):
         def __init__(self, stability:'BlockStates.Stability'=None, stability_check:'BlockStates.StabilityCheck'=None):
@@ -6222,7 +6247,7 @@ class Blocks:
 
     # Added in 1.20.50
     # Planks
-    class OakPlans(_MinecraftBlock):
+    class OakPlanks(_MinecraftBlock):
         def __init__(self, ):
             super().__init__("oak_planks", True)
 
@@ -6274,6 +6299,135 @@ class Blocks:
     class PolishedAndesite(_MinecraftBlock):
         def __init__(self, ):
             super().__init__("polished_andesite", True)
+
+    # Added in 1.20.80
+    #Saplings
+    class OakSapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None):
+            self._age_bit = age_bit
+            super().__init__("oak_sapling", True)
+
+    class SpruceSapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None):
+            self._age_bit = age_bit
+            super().__init__("spruce_sapling", True)
+
+    class BirchSapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None):
+            self._age_bit = age_bit
+            super().__init__("birch_sapling", True)
+
+    class JungleSapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None):
+            self._age_bit = age_bit
+            super().__init__("jungle_sapling", True)
+
+    class AcaciaSapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None):
+            self._age_bit = age_bit
+            super().__init__("acacia_sapling", True)
+
+    class DarkOakSapling(_MinecraftBlock):
+        def __init__(self, age_bit:'BlockStates.AgeBit'=None):
+            self._age_bit = age_bit
+            super().__init__("dark_oak_sapling", True)
+
+    #Coral
+    class TubeCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("tube_coral_fan", True)
+
+    class BrainCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("brain_coral_fan", True)
+    
+    class BubbleCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("bubble_coral_fan", True)
+
+    class FireCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("fire_coral_fan", True)
+
+    class HornCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("horn_coral_fan", True)
+
+    class DeadTubeCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("dead_tube_coral_fan", True)
+    
+    class DeadBrainCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("dead_brain_coral_fan", True)
+
+    class DeadBubbleCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("dead_bubble_coral_fan", True)
+
+    class DeadFireCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("dead_fire_coral_fan", True)
+
+    class DeadHornCoralFan(_MinecraftBlock):
+        def __init__(self, coral_fan_direction:'BlockStates.CoralFanDirection'=None):
+            self._coral_fan_direction = coral_fan_direction
+            super().__init__("dead_horn_coral_fan", True)
+
+    class Poppy(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("poppy", True)
+
+    class BlueOrchid(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("blue_orchid", True)
+
+    class Allium(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("allium", True)
+
+    class AzureBluet(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("azure_bluet", True)
+            
+    class RedTulip(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("red_tulip", True)
+
+    class OrangeTulip(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("orange_tulip", True)
+
+    class WhiteTulip(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("white_tulip", True)
+
+    class PinkTulip(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("pink_tulip", True)
+
+    class OxeyeDaisy(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("oxeye_daisy", True)
+
+    class Cornflower(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("cornflower", True)
+
+    class LilyOfTheValley(_MinecraftBlock):
+        def __init__(self):
+            super().__init__("lily_of_the_valley", True)
+
+
 
 # Take all the subclasses of Blocks and add them to BLOCK_LIST
 for block in Blocks.__dict__.values():

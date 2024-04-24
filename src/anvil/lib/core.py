@@ -1,4 +1,5 @@
 """Provides the core functionality of the Anvil library."""
+
 import os
 from atexit import register
 from datetime import datetime
@@ -82,7 +83,7 @@ class _AnvilDefinitions:
             min_distance,
         )
 
-    def register_sound_event(
+    def register_entity_sound_event(
         self,
         entity_identifier: Identifier,
         sound_identifier,
@@ -93,6 +94,11 @@ class _AnvilDefinitions:
         if self._sound_event_object is None:
             self._sound_event_object = SoundEvent()
         return self._sound_event_object.add_entity_event(entity_identifier, sound_identifier, sound_event, volume, pitch)
+
+    def register_block_sound_event(self):
+        """# TO IMPLEMENT
+        Registers a block sound event."""
+        pass
 
     def register_item_textures(self, item_name: str, directory: str, *item_sprites: str):
         if self._item_textures_object is None:
@@ -197,21 +203,16 @@ class _AnvilDefinitions:
 
     def _export_manifest(self):
         release_list = [int(i) for i in self.config._RELEASE.split(".")]
-        manifest_rp = JsonSchemes.manifest_rp(release_list, self.config._RP_UUID[0], self.config._BP_UUID[0], self.config.COMPANY, self.config._PBR, self.config._TARGET == "addon")
-        manifest_bp = JsonSchemes.manifest_bp(release_list, self.config._BP_UUID[0], self.config._RP_UUID[0], self.config.COMPANY, self.config._SCRIPT_API, self.config._SCRIPT_UI)
-        manifest_world = JsonSchemes.manifest_world(release_list, self.config._PACK_UUID, self.config.COMPANY, self.config._RANDOM_SEED)
-        world_rp_pack = JsonSchemes.world_packs(self.config._RP_UUID, release_list)
-        world_bp_pack = JsonSchemes.world_packs(self.config._BP_UUID, release_list)
 
-        File("manifest.json", manifest_rp, self.config.RP_PATH, "w")
-        File("manifest.json", manifest_bp, self.config.BP_PATH, "w")
-        File("manifest.json", manifest_world, "", "w")
+        File("manifest.json", JsonSchemes.manifest_rp(version=release_list), self.config.RP_PATH, "w")
+        File("manifest.json", JsonSchemes.manifest_bp(version=release_list), self.config.BP_PATH, "w")
+        File("manifest.json", JsonSchemes.manifest_world(version=release_list), "", "w")
 
-        File("world_resource_packs.json", world_rp_pack, "", "w")
-        File("world_behavior_packs.json", world_bp_pack, "", "w")
+        File("world_resource_packs.json", JsonSchemes.world_packs(release_list, self.config._RP_UUID), "", "w")
+        File("world_behavior_packs.json", JsonSchemes.world_packs(release_list, self.config._BP_UUID), "", "w")
 
     def _export_language(self):
-        default_langs = JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)
+        default_langs = JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.RESOURCE_DESCRIPTION)
         langs = default_langs.copy()
         langs.extend([f"{k}={v}" for k, v in self._language.items()])
         langs.sort(reverse=True)
@@ -221,8 +222,18 @@ class _AnvilDefinitions:
         File("languages.json", JsonSchemes.languages(), "texts", "w")
 
         File("en_US.lang", "\n".join(langs), os.path.join(self.config.RP_PATH, "texts"), "w")
-        File("en_US.lang", "\n".join(default_langs), os.path.join(self.config.BP_PATH, "texts"), "w")
-        File("en_US.lang", "\n".join(default_langs), "texts", "w")
+        File(
+            "en_US.lang",
+            "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.BEHAVIOR_DESCRIPTION)),
+            os.path.join(self.config.BP_PATH, "texts"),
+            "w",
+        )
+        File(
+            "en_US.lang",
+            "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
+            "texts",
+            "w",
+        )
 
     def _export_scripts(self):
         File(
@@ -301,7 +312,7 @@ class _AnvilDefinitions:
         self._export_manifest()
         self._export_language()
         self._export_helper_functions()
-        
+
         if any([self.config._SCRIPT_API, self.config._SCRIPT_UI]):
             self._export_scripts()
 
@@ -370,7 +381,7 @@ class _AnvilCore:
         from deep_translator import GoogleTranslator
 
         def _to_lang(translator: GoogleTranslator, langs: dict):
-            lang = JsonSchemes.pack_name_lang(self.config.PROJECT_NAME, self.config.PROJECT_NAME)
+            lang = JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)
             translated = translator.translate_batch(langs.values())
             for k, v in zip(langs.keys(), translated):
                 lang.append(f"{k}={v}")
@@ -416,11 +427,13 @@ class _AnvilCore:
 
         for object in self._objects_list:
             object._export()
-            
+
         from anvil.api.actors import _ActorClientDescription
+
         _ActorClientDescription._export()
 
         from anvil.api.blocks import _PermutationComponents
+
         if _PermutationComponents._count > 10000:
             if self.config._TARGET == "addon":
                 self.config.Logger.too_many_permutations(_PermutationComponents._count)
@@ -428,7 +441,13 @@ class _AnvilCore:
                 self.config.Logger.too_many_permutations_warn(_PermutationComponents._count)
 
         if self.config._SCRIPT_API:
-            File("anvilConstants.ts", JsonSchemes.tsconstants(self.config.NAMESPACE, self.config.PROJECT_NAME), os.path.join("assets", "javascript"), "w", False)
+            File(
+                "anvilConstants.ts",
+                JsonSchemes.tsconstants(self.config.NAMESPACE, self.config.PROJECT_NAME),
+                os.path.join("assets", "javascript"),
+                "w",
+                False,
+            )
 
             source = os.path.join("assets", "javascript")
             target = os.path.join(self.config.BP_PATH, "scripts")
@@ -537,9 +556,9 @@ class _Anvil(_AnvilCore):
             )
 
         else:
-            self.config.Logger.file_exist_warning("panorama.png")
+            self.config.Logger.file_exist_info("panorama.png")
 
-        for i in range(5):
+        for i in range(999):
             if not FileExists(os.path.join(source, f"{i}.png")):
                 if i < 5:
                     self.config.Logger.file_exist_warning(f"{i}.png")
@@ -590,41 +609,47 @@ class _Anvil(_AnvilCore):
             self.config.Logger.not_compiled()
         self.config.Logger.packaging_zip()
 
-        content_structure = {}
-
         if not skip_translation:
             self.translate()
 
         self._process_art(apply_overlay)
 
-        content_structure.update(
-            {
-                os.path.join("assets", "output", "Store Art"): os.path.join("Store Art"),
-                os.path.join("assets", "output", "Marketing Art"): os.path.join("Marketing Art"),
-                "resource_packs": os.path.join("Content", "world_template", "resource_packs"),
-                "behavior_packs": os.path.join("Content", "world_template", "behavior_packs"),
-                "texts": os.path.join("Content", "world_template", "texts"),
-                "level.dat": os.path.join("Content", "world_template"),
-                "levelname.txt": os.path.join("Content", "world_template"),
-                "manifest.json": os.path.join("Content", "world_template"),
-                "world_icon.jpeg": os.path.join("Content", "world_template"),
-                "world_behavior_packs.json": os.path.join("Content", "world_template"),
-                "world_resource_packs.json": os.path.join("Content", "world_template"),
-            }
-        )
-
-        if not self.config._RANDOM_SEED:
-            content_structure.update(
-                {
-                    "db": os.path.join("Content", "world_template", "db"),
-                }
-            )
+        content_structure = {
+            os.path.join("assets", "output", "Store Art"): os.path.join("Store Art"),
+            os.path.join("assets", "output", "Marketing Art"): os.path.join("Marketing Art"),
+        }
 
         if self.config._TARGET == "addon":
             if len(self.config._RP_UUID) > 1:
                 self.config.Logger.multiple_rp_uuids()
             if len(self.config._BP_UUID) > 1:
                 self.config.Logger.multiple_bp_uuids()
+            
+            content_structure.update({
+                    "resource_packs": os.path.join("Content", "resource_packs"),
+                    "behavior_packs": os.path.join("Content", "behavior_packs"),
+                })
+
+        else:
+            content_structure.update(
+                {
+                    "resource_packs": os.path.join("Content", "world_template", "resource_packs"),
+                    "behavior_packs": os.path.join("Content", "world_template", "behavior_packs"),
+                    "texts": os.path.join("Content", "world_template", "texts"),
+                    "level.dat": os.path.join("Content", "world_template"),
+                    "levelname.txt": os.path.join("Content", "world_template"), 
+                    "manifest.json": os.path.join("Content", "world_template"),
+                    "world_icon.jpeg": os.path.join("Content", "world_template"),
+                    "world_behavior_packs.json": os.path.join("Content", "world_template"),
+                    "world_resource_packs.json": os.path.join("Content", "world_template"),
+                }
+            )
+            if not self.config._RANDOM_SEED:
+                content_structure.update(
+                    {
+                        "db": os.path.join("Content", "world_template", "db"),
+                    }
+                )
 
         zipit(
             os.path.join("assets", "output", f"{self.config.PROJECT_NAME}.zip"),
@@ -763,8 +788,6 @@ class _Anvil(_AnvilCore):
         title_style = styles["Heading1"]
         body_style = styles["BodyText"]
         bullet_style = styles["Bullet"]
-        
-
 
         elements = [
             Paragraph(f"{self.config.DISPLAY_NAME}:", title_style),

@@ -1,5 +1,47 @@
 # Changelog
 
+# Version 0.7.3
+
+### [Anvil]
+
+- Added `behaviour_description` and `resource_description` to `anvilconfig.json`.
+- Fixed addons packaging issue.
+- Updated `MANIFEST_BUILD` to `1.20.80`.
+- Updated `ENTITY_SERVER_VERSION` to `1.20.80`.
+- Updated `MODULE_MINECRAFT_SERVER` to `1.10.0`.
+- Updated `ITEM_SERVER_VERSION` to `1.20.70`.
+- Updated `CAMERA_PRESET_VERSION` to `1.20.80`.
+
+### [Actors]
+
+- Added a `reuse_assets` property to the `EntityClient` description, this property will allow you to manually enter animation, geometry and controller IDs without Anvil checking for a match in the `assets` directory.
+- Added `queryable_geometry` property to the `EntityClient` description.
+- Added `should_update_bones_and_effects_offscreen` and `should_update_effects_offscreen` properties to the `EntityClient` description.
+- Updated the `get_vanilla()` `EntityClient` function, the change will fixes some issues with retrieving the proper vanilla entity from the public repository.
+- Added a placeholder `spawn_category()` function to the `EntityServer` description. This is not functional in Minecraft at the moment therefore it has no effect.
+- `EntityClient` `spawn_egg()` function now supports an index number.
+- Added `spawn_egg_color()` function to the `EntityClient` description.
+
+### [Commands]
+
+- Added the `Hud` command.
+- Added a `remove()` function to the `Effect()` class, this function will remove specific effects from the target.
+
+### [Components]
+
+- Added `has_tag()`, `is_difficulty()`, `is_sitting()` and `has_damaged_equipment()` filters.
+- Updated the `Interact()` component.
+- Added `Inventory()`, `Dash()`, `VariableMaxAutoStep()`, `RiseToLiquidLevel()`, `Buoyant()`, `LavaMovement()`, `ExperienceReward()`, `Equippable()`, `Color()`, `Color2()`, `BurnsInDaylight()`, `Boss()`, `Sittable()`, `FlyingSpeedMeters()`, `ConditionalBandwidthOptimization()`, `ItemHopper()`, and `BodyRotationBlocked()` components.
+
+### [Features]
+
+- Added `extend_player_rendering()` to the `CameraPreset()` class.
+
+### [Molang]
+
+- Added `ArmorSlotDamage()` query.
+- `BoneOrientationTrs()` and `BoneOrientationMatrix()` queries now return an object with `position`, `rotation` and `scale` properties.
+
 # Version 0.7.2
 
 ### [Anvil]
@@ -8,7 +50,6 @@
 - Updated `MANIFEST_BUILD` to `1.20.70`.
 - Updated `ENTITY_SERVER_VERSION` to `1.20.70`.
 - Updated `MODULE_MINECRAFT_SERVER` to `1.9.0`.
-
 
 ### [Blocks]
 
@@ -30,7 +71,6 @@
 - Split `WoodenSlab()` block class to `AcaciaSlab()`, `BirchSlab()`, `DarkOakSlab()`, `JungleSlab()`, `OakSlab()`, `SpruceSlab()`.
 - Split `Wood()` block class to `AcaciaWood()`, `BirchWood()`, `DarkOakWood()`, `JungleWood()`, `OakWood()`, `SpruceWood()`, `StrippedOakWood()`, `StrippedSpruceWood()`, `StrippedBirchWood()`, `StrippedJungleWood()`, `StrippedAcaciaWood()`, `StrippedDarkOakWood()`.
 
-
 ### [Commands]
 
 - Added `has_property()` method to the `TargetSelector()` class.
@@ -44,7 +84,7 @@
 ### [Molang]
 
 - Due to the deprecation of class properties in Python 3.13, all class properties are now converted to methods.
-- Added `IsAttached()`, `HasPlayerRider()`, `Scoreboard()`, `RideBodyXRotation()`,  `RideBodyYRotation()`,  `RideHeadXRotation()`,  `RideHeadYRotation()`,  `RiderBodyXRotation()`,  `RiderBodyYRotation()`,  `RiderHeadXRotation()` and `RiderHeadYRotation()` queries.
+- Added `IsAttached()`, `HasPlayerRider()`, `Scoreboard()`, `RideBodyXRotation()`, `RideBodyYRotation()`, `RideHeadXRotation()`, `RideHeadYRotation()`, `RiderBodyXRotation()`, `RiderBodyYRotation()`, `RiderHeadXRotation()` and `RiderHeadYRotation()` queries.
 
 # Version 0.7.1
 

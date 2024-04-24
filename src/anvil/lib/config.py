@@ -27,6 +27,9 @@ class ConfigOption(StrEnum):
     PROJECT_NAME = "project_name"
     DISPLAY_NAME = "display_name"
     PROJECT_DESCRIPTION = "project_description"
+    RESOURCE_DESCRIPTION = "resource_description"
+    BEHAVIOR_DESCRIPTION = "behavior_description"
+
     TARGET = "target"
 
     RELEASE = "release"
@@ -51,7 +54,7 @@ class Config:
         """Initializes a Config object."""
         self._config = {}
         if FileExists("anvilconfig.json"):
-            with open("anvilconfig.json", "r") as f:
+            with open("anvilconfig.json", "r", encoding='utf-8') as f:
                 self._config = json.loads(f.read())
 
     def save(self):
@@ -123,6 +126,8 @@ class _AnvilConfig:
     PROJECT_NAME: str
     DISPLAY_NAME: str
     PROJECT_DESCRIPTION: str
+    RESOURCE_DESCRIPTION: str
+    BEHAVIOR_DESCRIPTION: str
 
     RP_PATH: str
     BP_PATH: str
@@ -169,6 +174,12 @@ class _AnvilConfig:
         )
         self.PROJECT_DESCRIPTION = self._handle_config(
             ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, "input"
+        )
+        self.BEHAVIOR_DESCRIPTION = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.BEHAVIOR_DESCRIPTION, "input"
+        )
+        self.RESOURCE_DESCRIPTION = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, "input"
         )
         self._DEBUG = self._handle_config(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
         self._PASCAL_PROJECT_NAME = self._handle_config(

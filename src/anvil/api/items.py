@@ -4,6 +4,7 @@ from anvil import ANVIL, CONFIG
 from anvil.api.actors import Attachable, _Components
 from anvil.api.commands import Effects, Slots
 from anvil.api.components import _component
+from anvil.api.enums import EnchantsSlots, ItemCategory, ItemGroups
 from anvil.api.types import Identifier, Seconds, inf
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import clamp
@@ -77,7 +78,7 @@ class ItemUseModifiers(_component):
 class ItemEnchantable(_component):
     component_namespace = "minecraft:enchantable"
 
-    def __init__(self, type: str, value: int) -> None:
+    def __init__(self, slot: EnchantsSlots, value: int) -> None:
         """Determines what enchantments can be applied to the item. Not all enchantments will have an effect on all item components.
 
         Args:
@@ -89,7 +90,7 @@ class ItemEnchantable(_component):
         super().__init__("enchantable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
 
-        self._component_add_field("type", type)
+        self._component_add_field("slot", slot)
         self._component_add_field("value", clamp(value, 0, inf))
 
 
@@ -114,20 +115,15 @@ class ItemFood(_component):
         self._require_components(ItemUseModifiers)
 
         self._component_add_field("effects", [])
-        if can_always_eat:
-            self._component_add_field("can_always_eat", True)
-
-        if nutrition > 0:
-            self._component_add_field("nutrition", max(1, nutrition))
-
-        if saturation_modifier > 0:
-            self._component_add_field("saturation_modifier", max(0, saturation_modifier))
-
-        if not using_converts_to is None:
+        self._component_add_field("can_always_eat", can_always_eat)
+        self._component_add_field("nutrition", max(0, nutrition))
+        self._component_add_field("saturation_modifier", max(0, saturation_modifier))
+        if using_converts_to:
             self._component_add_field("using_converts_to", using_converts_to)
 
     def effects(self, effect: Effects, chance: float, duration: Seconds, amplifier: int):
-        """Sets the effects of the food item.
+        """# DEPRECATED
+        Sets the effects of the food item.
 
         Args:
             effect (Effects): The effect to apply.
@@ -137,9 +133,9 @@ class ItemFood(_component):
         """
         self[self.component_namespace]["effects"].append(
             {
-                "name": effect.value,
+                "name": str(effect),
                 "chance": clamp(chance, 0, 1),
-                "duration": duration,
+                "duration": max(0, duration * 20),
                 "amplifier": clamp(amplifier, 0, 255),
             }
         )
@@ -219,7 +215,7 @@ class ItemLiquidClipped(_component):
 class ItemWearable(_component):
     component_namespace = "minecraft:wearable"
 
-    def __init__(self, slot: Slots, protection: int = 0, dispensable: bool = True) -> None:
+    def __init__(self, slot: Slots, protection: int = 0) -> None:
         """Sets the wearable item component.
 
         Args:
@@ -230,11 +226,11 @@ class ItemWearable(_component):
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_wearable
         """
         super().__init__("wearable")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.20.70")
 
         self._component_add_field("slot", slot)
         self._component_add_field("protection", protection)
-        self._component_add_field("dispensable", dispensable)
+        #self._component_add_field("dispensable", dispensable)
 
 
 class ItemHandEquipped(_component):
@@ -251,7 +247,7 @@ class ItemHandEquipped(_component):
         super().__init__("hand_equipped")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
 
-        self._component_set_value(value)
+        self._component_add_field("value", value)
 
 
 class ItemGlint(_component):
@@ -439,7 +435,7 @@ class ItemRepairable(_component):
             repair_amount (int): How much durability is repaired.
             repair_items (str): List of repair item entries.
         """
-        self[self.component_namespace]["repair_items"].append({"items": repair_items, "repair_amount": repair_amount})
+        self[self.component_namespace]["repair_items"].append({"items": [str(i) for i in repair_items], "repair_amount": repair_amount})
         return self
 
 
@@ -463,7 +459,7 @@ class ItemMaxStackSize(_component):
 class ItemBlockPlacer(_component):
     component_namespace = "minecraft:block_placer"
 
-    def __init__(self, block: str, *use_on: str) -> None:
+    def __init__(self, block: str) -> None:
         """Sets the item as a Planter item component for blocks. Planter items are items that can be planted into another block.
 
         Args:
@@ -476,7 +472,11 @@ class ItemBlockPlacer(_component):
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
 
         self._component_add_field("block", block)
-        self._component_add_field("use_on", use_on)
+
+    def use_on(self, *blocks: str):
+        """List of block descriptors that contain blocks that this item can be used on."""
+        self._component_add_field("use_on", blocks)
+        return self
 
 
 class ItemRecord(_component):
@@ -710,7 +710,9 @@ class ItemIcon(_component):
         super().__init__("icon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
         ANVIL.definitions.register_item_textures(texture, "", texture)
-        self._component_add_field("texture", f"{CONFIG.NAMESPACE}:{texture}")
+        self[self.component_namespace]["textures"] = {
+            "default": f"{CONFIG.NAMESPACE}:{texture}",
+        }
 
 
 # Items
@@ -718,18 +720,20 @@ class _ItemServerDescription(MinecraftDescription):
     def __init__(self, name, is_vanilla) -> None:
         super().__init__(name, is_vanilla)
         self._description["description"]["properties"] = {}
+        self._description["description"]["menu_category"] = {}
+        
 
-    def group(self, group: str):
-        self._description["description"]["group"] = group
+    def group(self, group: ItemGroups):
+        self._description["description"]["menu_category"]["group"] = str(group)
         return self
 
-    def category(self, category: str):
-        self._description["description"]["category"] = category
+    def category(self, category: ItemCategory):
+        self._description["description"]["menu_category"]["category"] = str(category)
         return self
 
     @property
     def is_hidden_in_commands(self):
-        self._description["description"]["is_hidden_in_commands"] = True
+        self._description["description"]["menu_category"]["is_hidden_in_commands"] = True
         return self
 
     @property

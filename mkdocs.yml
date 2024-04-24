@@ -4,7 +4,7 @@ site_author: StarkTMA
 site_url: https://anvil.starktma.net
 repo_url: https://github.com/StarkTMA/Anvil
 remote_branch: generated
-copyright: Copyright © 2023 StarkTMA
+copyright: Copyright © 2024 StarkTMA
 
 theme:
   name: material

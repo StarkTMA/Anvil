@@ -1,7 +1,6 @@
 import json
 from enum import StrEnum
 
-from anvil import ANVIL
 from anvil.api.types import Identifier, coordinate, coordinates
 from anvil.lib.lib import clamp, normalize_180
 
@@ -163,6 +162,7 @@ class Difficulty(StrEnum):
     Easy = "easy"
     Normal = "normal"
     Hard = "hard"
+    Hardcore = "hardcore"
 
 
 class DamageCause(StrEnum):
@@ -227,6 +227,7 @@ class Effects(StrEnum):
     NightVision = "night_vision"
     WaterBreathing = "water_breathing"
     ConduitPower = "conduit_power"
+    Resistance = "resistance"
 
 
 class ScoreboardOperation(StrEnum):
@@ -546,6 +547,7 @@ class Selector:
             value (str): The value of the property.
 
         """
+        from anvil import ANVIL
         property_values = {}
         for property, value in properties.items():
             property_values.update({f"{ANVIL.config.NAMESPACE}:{property}": value})
@@ -741,9 +743,9 @@ class BlockMaterial(StrEnum):
     AlphaTestSingleSided = "alpha_test_single_sided"
 
 
-class BlockCategory(StrEnum):
+class ItemCategory(StrEnum):
     """
-    Enumeration representing the categories of blocks that can be used in Minecraft.
+    Enumeration representing the categories of blocks and items that can be used in Minecraft.
     """
 
     Construction = "construction"
@@ -753,7 +755,7 @@ class BlockCategory(StrEnum):
     none = "none"
 
 
-class BlockGroups(StrEnum):
+class ItemGroups(StrEnum):
     Anvil = "itemGroup.name.anvil"
     Arrow = "itemGroup.name.arrow"
     Axe = "itemGroup.name.axe"
@@ -1139,3 +1141,42 @@ class SmeltingTags(StrEnum):
     SMOKER = "smoker"
     CAMPFIRE = "campfire"
     SOUL_CAMPFIRE = "soul_campfire"
+
+
+class ContainerType(StrEnum):
+    Horse = "horse"
+    MinecartChest = "minecart_chest"
+    ChestBoat = "chest_boat"
+    MinecartHopper = "minecart_hopper"
+    Inventory = "inventory"
+    Container = "container"
+    Hopper = "hopper"
+
+
+class EnchantsSlots(StrEnum):
+    ArmorHead = "armor_head"
+    ArmorTorse = "armor_torso"
+    ArmorLegs = "armor_legs"
+    ArmorFeet = "armor_feet"
+
+
+class HudElement(StrEnum):
+    Hunger = "hunger"
+    All = "all"
+    Paperdoll = "paperdoll"
+    Armor = "armor"
+    Tooltips = "tooltips"
+    TouchControls = "touch_controls"
+    Crosshair = "crosshair"
+    Hotbar = "hotbar"
+    Health = "health"
+    ProgressBar = "progress_bar"
+    AirBubbles = "air_bubbles"
+    HorseHealth = "horse_health"
+    StatusEffects = "status_effects"
+    ItemText = "item_text"
+
+
+class HudVisibility(StrEnum):
+    Hide = "hide"
+    Reset = "reset"

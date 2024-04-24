@@ -2,16 +2,17 @@ import math
 from typing import Union
 
 from anvil import ANVIL, CONFIG
-from anvil.api.enums import (Biomes, ControlFlags, DamageCause, Effects,
-                             FilterEquipmentDomain, FilterOperation,
-                             FilterSubject, RawTextConstructor, Selector,
-                             Target, Vibrations)
+from anvil.api.enums import (Biomes, ContainerType, ControlFlags, DamageCause,
+                             Difficulty, Effects, FilterEquipmentDomain,
+                             FilterOperation, FilterSubject,
+                             RawTextConstructor, Selector, Slots, Target,
+                             Vibrations)
 from anvil.api.features import Particle
 from anvil.api.types import (Identifier, Molang, Seconds, coordinates, event,
                              position)
 from anvil.api.vanilla import Blocks
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
-from anvil.lib.lib import *
+from anvil.lib.lib import clamp
 
 
 class EventObject:
@@ -476,6 +477,47 @@ class Filter:
     ):
         return self._construct_filter("was_last_hurt_by", subject, operator, None, value)
 
+    @classmethod
+    def has_tag(
+        self,
+        value: str,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("has_tag", subject, operator, None, value)
+
+    @classmethod
+    def is_difficulty(
+        self,
+        value: Difficulty,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("is_difficulty", subject, operator, None, str(value))
+
+    @classmethod
+    def is_sitting(
+        self,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("is_sitting", subject, operator, None, value)
+   
+    @classmethod
+    def has_damaged_equipment(
+        self,
+        value: str,
+        domain: FilterEquipmentDomain,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("has_damaged_equipment", subject, operator, domain, value)
+
 # Components ==========================================================================
 
 
@@ -652,6 +694,7 @@ class CustomHitTest(_component):
 
     def add_hitbox(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]):
         self[self.component_namespace]["hitboxes"].append({"width": width, "height": height, "pivot": pivot})
+        return self
 
 
 class CanClimb(_component):
@@ -678,11 +721,10 @@ class Attack(_component):
 class JumpStatic(_component):
     component_namespace = "minecraft:jump.static"
 
-    def __init__(self, jump_power: float = 0.6) -> None:
+    def __init__(self, jump_power: float = 0.42) -> None:
         """Gives the entity the ability to jump."""
         super().__init__("jump.static")
-        if not jump_power == 0.6:
-            self._component_add_field("jump_power", jump_power)
+        self._component_add_field("jump_power", jump_power)
 
 
 class HorseJumpStrength(_component):
@@ -739,77 +781,6 @@ class FrictionModifier(_component):
         """Defines how much friction affects this entity."""
         super().__init__("friction_modifier")
         self._component_add_field("value", value)
-
-
-class Breathable(_component):
-    component_namespace = "minecraft:breathable"
-
-    def __init__(
-        self,
-        breathes_air: bool = True,
-        breathes_water: bool = False,
-        total_supply: int = 15,
-        suffocate_time: int = -20,
-        inhale_time: int = 0,
-        generates_bubbles: bool = True,
-    ) -> None:
-        """Defines what blocks this entity can breathe in and gives them the ability to suffocate."""
-        super().__init__("breathable")
-        if not breathes_air:
-            self._component_add_field("breathes_air", breathes_air)
-        if breathes_water:
-            self._component_add_field("breathes_water", breathes_water)
-        if total_supply != 15:
-            self._component_add_field("total_supply", total_supply)
-        if suffocate_time != -20:
-            self._component_add_field("suffocate_time", suffocate_time)
-        if inhale_time != 0:
-            self._component_add_field("inhale_time", inhale_time)
-        if not generates_bubbles:
-            self._component_add_field("generates_bubbles", generates_bubbles)
-
-    @property
-    def breathes_lava(self):
-        self._component_add_field("breathes_lava", True)
-        return self
-
-    @property
-    def breathes_solids(self):
-        self._component_add_field("breathes_solids", True)
-        return self
-
-    @property
-    def breathes_solids(self):
-        self._component_add_field("breathes_solids", True)
-        return self
-
-    def breathe_blocks(self, *blocks: Blocks._MinecraftBlock | str):
-        self._component_add_field(
-            "blocks",
-            [
-                (
-                    block.identifier
-                    if isinstance(block, Blocks._MinecraftBlock)
-                    else block if isinstance(block, str) else CONFIG.Logger.unsupported_block_type(block)
-                )
-                for block in blocks
-            ],
-        )
-        return self
-
-    def non_breathe_blocks(self, *blocks: Blocks._MinecraftBlock | str):
-        self._component_add_field(
-            "non_breathe_blocks",
-            [
-                (
-                    block.identifier
-                    if isinstance(block, Blocks._MinecraftBlock)
-                    else block if isinstance(block, str) else CONFIG.Logger.unsupported_block_type(block)
-                )
-                for block in blocks
-            ],
-        )
-        return self
 
 
 class Variant(_component):
@@ -2522,7 +2493,7 @@ class Loot(_component):
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__("loot")
-        self._component_add_field("table", os.path.join("loot_tables", path + ".loot_table.json"))
+        self._component_add_field("table", path)
 
 
 class Float(_ai_goal):
@@ -2888,19 +2859,6 @@ class SummonEntity(_ai_goal):
         return self
 
 
-class Boss(_component):
-    component_namespace = "minecraft:boss"
-
-    def __init__(self, name: str, hud_range: int = 55, should_darken_sky: bool = False) -> None:
-        """Defines the current state of the boss for updating the boss HUD."""
-        super().__init__("boss")
-        self._component_add_field("name", name)
-        if hud_range != 55:
-            self._component_add_field("power", hud_range)
-        if should_darken_sky:
-            self._component_add_field("should_darken_sky", should_darken_sky)
-
-
 class DelayedAttack(_ai_goal):
     component_namespace = "minecraft:behavior.delayed_attack"
 
@@ -3211,7 +3169,7 @@ class Equipment(_component):
     def __init__(self, path) -> None:
         """Sets the loot table for what items this entity drops upon death."""
         super().__init__("equipment")
-        self._component_add_field("table", os.path.join("loot_tables", path))
+        self._component_add_field("table", path)
 
 
 class _EquipItem(_component):
@@ -3329,7 +3287,7 @@ class EntitySensor(_component):
         require_all: bool = False,
         range: tuple[float, float] = [10, 10],
         cooldown: int = -1,
-    ) -> None:
+    ):
         """A component that initiates an event when a set of conditions are met by other entities within the defined range.
 
         Args:
@@ -3354,7 +3312,7 @@ class EntitySensor(_component):
         if require_all:
             sensor["require_all"] = require_all
         if range != (10, 10):
-            sensor["range"] = range
+            sensor["range"] = range if type(range) is list else [range, range]
         if cooldown != -1:
             sensor["cooldown"] = cooldown
 
@@ -4134,7 +4092,7 @@ class OwnerHurtByTarget(_ai_goal):
             self._component_add_field("entity_types", {"filters": entity_types})
         if cooldown != 0:
             self._component_add_field("cooldown", cooldown)
-        if not filters != None:
+        if filters != None:
             self._component_add_field("filters", filters)
         if max_dist != 16:
             self._component_add_field("max_dist", max_dist)
@@ -4186,7 +4144,7 @@ class OwnerHurtTarget(_ai_goal):
             self._component_add_field("entity_types", {"filters": entity_types})
         if cooldown != 0:
             self._component_add_field("cooldown", cooldown)
-        if not filters != None:
+        if filters != None:
             self._component_add_field("filters", filters)
         if max_dist != 16:
             self._component_add_field("max_dist", max_dist)
@@ -4421,15 +4379,6 @@ class FollowMob(_ai_goal):
             self._component_add_field("stop_distance", stop_distance)
 
 
-# Unfinished
-class ConditionalBandwidthOptimization(_component):
-    component_namespace = "minecraft:conditional_bandwidth_optimization"
-
-    def __init__(self) -> None:
-        """Defines the Conditional Spatial Update Bandwidth Optimizations of this entity."""
-        super().__init__("conditional_bandwidth_optimization")
-
-
 class RandomSwim(_ai_goal):
     component_namespace = "minecraft:behavior.random_swim"
 
@@ -4573,8 +4522,8 @@ class Interact(_component):
         add_items: str = None,
         cooldown: float = 0.0,
         cooldown_after_being_attacked: float = 0.0,
-        drop_item_slot: int = -1,
-        equip_item_slot: int = -1,
+        drop_item_slot: int | Slots = -1,
+        equip_item_slot: int | Slots = -1,
         health_amount: int = 0,
         hurt_item: int = 0,
         interact_text: str = None,
@@ -4585,6 +4534,7 @@ class Interact(_component):
         transform_to_item: str = None,
         use_item: bool = False,
         vibration: Vibrations = Vibrations.EntityInteract,
+        repair_entity_item: tuple[Slots, int] = None,
         # entity_act: str = None,
     ):
         """Adds an interaction to the entity.
@@ -4595,7 +4545,8 @@ class Interact(_component):
             add_items (str, optional): File path, relative to the Behavior Pack's path, to the loot table file. Defaults to None.
             cooldown (float, optional): Time in seconds before this entity can be interacted with again. Defaults to 0.0.
             cooldown_after_being_attacked (float, optional): Time in seconds before this entity can be interacted with after being attacked. Defaults to 0.0.
-            equip_item_slot (int, optional): The entity's equipment slot to equip the item to, if any, upon successful interaction. Defaults to -1.
+            drop_item_slot (int | Slots, optional): Slot from which the item will be dropped when interacting with this entity. Defaults to -1.
+            equip_item_slot (int | Slots, optional): Slot from which the item will be equipped when interacting with this entity. Defaults to -1.
             health_amount (int, optional): The amount of health this entity will recover or hurt when interacting with this item. Negative values will harm the entity. Defaults to 0.
             hurt_item (int, optional): The amount of damage the item will take when used to interact with this entity. A value of 0 means the item won't lose durability. Defaults to 0.
             interact_text (str, optional): Text to show while playing with touch-screen controls when the player is able to interact in this way with this entity. Defaults to None.
@@ -4606,6 +4557,7 @@ class Interact(_component):
             transform_to_item (str, optional): The item used will transform to this item upon successful interaction. Format: itemName:auxValue. Defaults to None.
             use_item (bool, optional): If true, the interaction will use an item. Defaults to False.
             vibration (str, optional): Vibration to emit when the interaction occurs. Admitted values are entity_interact (used by default), shear, and none (no vibration emitted). Defaults to None.
+            repair_entity_item (tuple[Slots, int], optional): Slot and amount to repair the item used to interact with this entity. Defaults to None.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#parameter
         """
@@ -4646,6 +4598,11 @@ class Interact(_component):
             interaction["use_item"] = use_item
         if not vibration is Vibrations.EntityInteract:
             interaction["vibration"] = vibration.value
+        if not repair_entity_item is None:
+            interaction["repair_entity_item"] = {
+                "slot": repair_entity_item[0],
+                "repair_amount": repair_entity_item[1],
+            }
 
         self[self.component_namespace]["interactions"].append(interaction)
         return self
@@ -5059,7 +5016,7 @@ class Tameable(_component):
         if not tame_event is None:
             self._component_add_field("tame_event", {"event": tame_event, "target": tame_subject})
         if len(tame_items) > 0:
-            self._component_add_field("tame_items", *tame_items)
+            self._component_add_field("tame_items", [str(i) for i in tame_items])
 
 
 class RunAroundLikeCrazy(_ai_goal):
@@ -5109,9 +5066,8 @@ class Ageable(_component):
     def __init__(
         self,
         duration: Seconds = 1200.0,
-        drop_items: list[str] = [],
-        feed_items: list[dict[str, Union[str, int]] | str] = [],
-        grow_up: str = None,
+        grow_up_event: str = None,
+        grow_up_target: FilterSubject = FilterSubject.Self,
         interact_filters: Filter = None,
         transform_to_item: str = None,
     ) -> None:
@@ -5119,25 +5075,547 @@ class Ageable(_component):
 
         Args:
             duration (Seconds, optional): Amount of time before the entity grows up, -1 for always a baby. Defaults to 1200.0.
-            drop_items (list[str], optional): List of items the entity drops when it grows up. Defaults to [].
-            feed_items (list[dict[str, Union[str, int]], optional): List of items that can be fed to the entity. Includes 'item' for the item name and 'growth' to define how much time growth is accelerated. Defaults to [].
-            grow_up (str, optional): Event to run when the entity grows up. Defaults to None.
+            grow_up_event (str, optional): Event to initiate when the entity grows up. Defaults to None.
             interact_filters (Filter, optional): A list of conditions to meet for the entity to be fed. Defaults to None.
             transform_to_item (str, optional): The feed item used will transform into this item upon successful interaction. Format: itemName:auxValue. Defaults to None.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ageable
         """
         super().__init__("ageable")
+        self[self.component_namespace]["feed_items"] = []
 
         if duration != 1200.0:
             self._component_add_field("duration", duration)
-        if not drop_items == []:
-            self._component_add_field("drop_items", drop_items)
-        if not feed_items == []:
-            self._component_add_field("feed_items", feed_items)
-        if not grow_up is None:
-            self._component_add_field("grow_up", grow_up)
+        if not grow_up_event is None:
+            self._component_add_field("grow_up", {"event": grow_up_event, "target": grow_up_target})
         if not interact_filters is None:
             self._component_add_field("interact_filters", interact_filters)
         if not transform_to_item is None:
             self._component_add_field("transform_to_item", transform_to_item)
+
+    def drop_item(self, *items: str):
+        """Adds an item to the list of items the entity drops when it grows up.
+
+        Args:
+            item (str): The item to add to the list of items the entity drops when it grows up.
+
+            Returns:
+                Ageable: Returns the Ageable component to allow for method chaining.
+        """
+        self._component_add_field("drop_items", items)
+        return self
+
+    def feed_items(self, *items: str):
+        """Adds an item to the list of items the entity can be fed.
+
+        Args:
+            item (str): The item to add to the list of items the entity can be fed.
+
+            Returns:
+                Ageable: Returns the Ageable component to allow for method chaining.
+        """
+        self[self.component_namespace]["feed_items"].extend([str(i) for i in items])
+        return self
+
+    def feed_item_growth(self, item: str, growth: float):
+        """Adds an item to the list of items the entity can be fed.
+
+        Args:
+            item (str): The item to add to the list of items the entity can be fed.
+            growth (float): The amount of growth to add to the entity when fed this item.
+
+            Returns:
+                Ageable: Returns the Ageable component to allow for method chaining.
+        """
+        self[self.component_namespace]["feed_items"].append({"item": str(item), "growth": clamp(growth, 0, 1)})
+        return self
+
+
+class Inventory(_component):
+    component_namespace = "minecraft:inventory"
+
+    def __init__(
+        self,
+        additional_slots_per_strength: int = 0,
+        can_be_siphoned_from: bool = False,
+        container_type: ContainerType = ContainerType.Inventory,
+        inventory_size: int = 5,
+        private: bool = False,
+        restrict_to_owner: bool = False,
+    ) -> None:
+        """Defines how an entity's inventory is managed.
+
+        Args:
+            additional_slots_per_strength (int, optional): Number of slots that this entity can gain per extra strength. Defaults to 0.
+            can_be_siphoned_from (bool, optional): If true, the contents of this inventory can be removed by a hopper. Defaults to False.
+            container_type (str, optional): Type of container the entity has. Can be horse, minecart_chest, chest_boat, minecart_hopper, inventory, container or hopper. Defaults to inventory.
+            inventory_size (int, optional): Number of slots the container has. Defaults to 5.
+            private (bool, optional): If true, the entity will not drop its inventory on death. Defaults to False.
+            restrict_to_owner (bool, optional): If true, the entity's inventory can only be accessed by its owner or itself. Defaults to False.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_inventory
+        """
+        super().__init__("inventory")
+
+        self._component_add_field("container_type", container_type)
+        if additional_slots_per_strength != 0:
+            self._component_add_field("additional_slots_per_strength", additional_slots_per_strength)
+        if can_be_siphoned_from:
+            self._component_add_field("can_be_siphoned_from", can_be_siphoned_from)
+        if inventory_size != 5:
+            self._component_add_field("inventory_size", inventory_size)
+        if private:
+            self._component_add_field("private", private)
+        if restrict_to_owner:
+            self._component_add_field("restrict_to_owner", restrict_to_owner)
+
+
+class Dash(_component):
+    component_namespace = "minecraft:dash"
+
+    def __init__(
+        self,
+        cooldown_time: Seconds = 1.0,
+        horizontal_momentum: float = 1.0,
+        vertical_momentum: float = 1.0,
+    ) -> None:
+        """Determines a rideable entity's ability to dash.
+
+        Args:
+            cooldown_time (Seconds, optional): The dash cooldown time, in seconds. Defaults to 1.0.
+            horizontal_momentum (float, optional): Horizontal momentum of the dash. Defaults to 1.0.
+            vertical_momentum (float, optional): Vertical momentum of the dash. Defaults to 1.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash
+        """
+        super().__init__("dash")
+
+        if cooldown_time != 1.0:
+            self._component_add_field("cooldown_time", cooldown_time)
+        if horizontal_momentum != 1.0:
+            self._component_add_field("horizontal_momentum", horizontal_momentum)
+        if vertical_momentum != 1.0:
+            self._component_add_field("vertical_momentum", vertical_momentum)
+
+
+class Breathable(_component):
+    component_namespace = "minecraft:breathable"
+
+    def __init__(
+        self,
+        breathes_air: bool = True,
+        breathes_lava: bool = True,
+        breathes_solids: bool = False,
+        breathes_water: bool = False,
+        generates_bubbles: bool = True,
+        inhale_time: Seconds = 0.0,
+        suffocate_time: int = -20,
+        total_supply: int = 15,
+        breathe_blocks: list[str] = [],
+        non_breathe_blocks: list[str] = [],
+    ) -> None:
+        """Defines which blocks an entity can breathe in and defines the ability to suffocate in those blocks.
+
+        Args:
+            breathe_blocks (list[str], optional): List of blocks the entity can breathe in. Defaults to [].
+            breathes_air (bool, optional): If true, the entity can breathe in air. Defaults to True.
+            breathes_lava (bool, optional): If true, the entity can breathe in lava. Defaults to True.
+            breathes_solids (bool, optional): If true, the entity can breathe in solid blocks. Defaults to False.
+            breathes_water (bool, optional): If true, the entity can breathe in water. Defaults to False.
+            generates_bubbles (bool, optional): If true, the entity will have visible bubbles while in water. Defaults to True.
+            inhale_time (Seconds, optional): Time in seconds to recover breath to maximum. Defaults to 0.0.
+            non_breathe_blocks (list[str], optional): List of blocks the entity can't breathe in, in addition to the other "breathes" parameters. Defaults to [].
+            suffocate_time (int, optional): Time in seconds between suffocation damage. Defaults to -20.
+            total_supply (int, optional): Time in seconds the entity can hold its breath. Defaults to 15.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breathable
+        """
+        super().__init__("breathable")
+
+        if not breathes_air:
+            self._component_add_field("breathes_air", breathes_air)
+        if not breathes_lava:
+            self._component_add_field("breathes_lava", breathes_lava)
+        if breathes_solids:
+            self._component_add_field("breathes_solids", breathes_solids)
+        if breathes_water:
+            self._component_add_field("breathes_water", breathes_water)
+        if not generates_bubbles:
+            self._component_add_field("generates_bubbles", generates_bubbles)
+        if inhale_time != 0.0:
+            self._component_add_field("inhale_time", inhale_time)
+        if suffocate_time != -20:
+            self._component_add_field("suffocate_time", suffocate_time)
+        if total_supply != 15:
+            self._component_add_field("total_supply", total_supply)
+        if not breathe_blocks == []:
+            self._component_add_field("breathe_blocks", breathe_blocks)
+        if not non_breathe_blocks == []:
+            self._component_add_field("non_breathe_blocks", non_breathe_blocks)
+
+
+class VariableMaxAutoStep(_component):
+    component_namespace = "minecraft:variable_max_auto_step"
+
+    def __init__(
+        self,
+        base_value: float = 0.5625,
+        controlled_value: float = 0.5625,
+        jump_prevented_value: float = 0.5625,
+    ) -> None:
+        """Allows entities have a maximum auto step height that is different depending on whether they are on a block that prevents jumping.
+
+        Args:
+            base_value (float, optional): The maximum auto step height when on any other block. Defaults to 0.5625.
+            controlled_value (float, optional): The maximum auto step height when on any other block and controlled by the player. Defaults to 0.5625.
+            jump_prevented_value (float, optional): The maximum auto step height when on a block that prevents jumping. Defaults to 0.5625.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_variable_max_auto_step
+        """
+        super().__init__("variable_max_auto_step")
+
+        if base_value != 0.5625:
+            self._component_add_field("base_value", base_value)
+        if controlled_value != 0.5625:
+            self._component_add_field("controlled_value", controlled_value)
+        if jump_prevented_value != 0.5625:
+            self._component_add_field("jump_prevented_value", jump_prevented_value)
+
+
+class RiseToLiquidLevel(_ai_goal):
+    component_namespace = "minecraft:behavior.rise_to_liquid_level"
+
+    def __init__(
+        self,
+        liquid_y_offset: float = 0.0,
+        rise_delta: float = 0.0,
+        sink_delta: float = 0.0,
+    ) -> None:
+        """Compels an entity to rise to the top of a liquid block if they are located in one or have spawned under a liquid block.
+
+        Args:
+            liquid_y_offset (float, optional): Vertical offset from the liquid. Defaults to 0.0.
+            priority (int, optional): The higher the priority, the sooner this behavior will be executed as a goal. Defaults to 0.
+            rise_delta (float, optional): Displacement for how much the entity will move up in the vertical axis. Defaults to 0.0.
+            sink_delta (float, optional): Displacement for how much the entity will move down in the vertical axis. Defaults to 0.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_rise_to_liquid_level
+        """
+        super().__init__("behavior.rise_to_liquid_level")
+
+        if liquid_y_offset != 0.0:
+            self._component_add_field("liquid_y_offset", liquid_y_offset)
+        if rise_delta != 0.0:
+            self._component_add_field("rise_delta", rise_delta)
+        if sink_delta != 0.0:
+            self._component_add_field("sink_delta", sink_delta)
+
+
+class Buoyant(_component):
+    component_namespace = "minecraft:buoyant"
+
+    def __init__(
+        self,
+        liquid_blocks: list[str],
+        apply_gravity: bool = True,
+        base_buoyancy: float = 1.0,
+        big_wave_probability: float = 0.03,
+        big_wave_speed: float = 10.0,
+        drag_down_on_buoyancy_removed: float = 0.0,
+        simulate_waves: bool = True,
+    ) -> None:
+        """Allows an entity to float on the specified liquid blocks.
+
+        Args:
+            liquid_blocks (list[str], optional): List of blocks this entity can float on. Must be a liquid block.
+            apply_gravity (bool, optional): Applies gravity each tick. Causes more of a wave simulation, but will cause more gravity to be applied outside liquids. Defaults to True.
+            base_buoyancy (float, optional): Base buoyancy used to calculate how much the entity will float. Defaults to 1.0.
+            big_wave_probability (float, optional): Probability of a big wave hitting the entity. Only used if simulate_waves is true. Defaults to 0.03.
+            big_wave_speed (float, optional): Multiplier for the speed to make a big wave. Triggered depending on big_wave_probability. Defaults to 10.0.
+            drag_down_on_buoyancy_removed (float, optional): How much an entity will be dragged down when the buoyancy component is removed. Defaults to 0.0.
+            simulate_waves (bool, optional): If true, the movement simulates waves going through. Defaults to True.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_buoyant
+        """
+        super().__init__("buoyant")
+
+        self._component_add_field("liquid_blocks", liquid_blocks)
+        if not apply_gravity:
+            self._component_add_field("apply_gravity", apply_gravity)
+        if base_buoyancy != 1.0:
+            self._component_add_field("base_buoyancy", clamp(base_buoyancy, 0, 1))
+        if big_wave_probability != 0.03:
+            self._component_add_field("big_wave_probability", big_wave_probability)
+        if big_wave_speed != 10.0:
+            self._component_add_field("big_wave_speed", big_wave_speed)
+        if drag_down_on_buoyancy_removed != 0.0:
+            self._component_add_field("drag_down_on_buoyancy_removed", drag_down_on_buoyancy_removed)
+        if not simulate_waves:
+            self._component_add_field("simulate_waves", simulate_waves)
+
+
+class LavaMovement(_component):
+    component_namespace = "minecraft:lava_movement"
+
+    def __init__(self, value: float) -> None:
+        """Defines the speed with which an entity can move through lava."""
+        super().__init__("lava_movement")
+        self._component_add_field("value", value)
+
+
+class ExperienceReward(_component):
+    component_namespace = "minecraft:experience_reward"
+
+    def __init__(
+        self,
+    ) -> None:
+        """Defines the amount of experience rewarded when the entity dies or is successfully bred.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_experience_reward
+        """
+        super().__init__("experience_reward")
+
+    def on_bred(self, on_bred: str | int | Molang):
+        self._component_add_field("on_bred", on_bred)
+        return self
+
+    def on_death(self, on_death: str | int | Molang):
+        self._component_add_field("on_death", on_death)
+        return self
+
+
+class Equippable(_component):
+    component_namespace = "minecraft:equippable"
+
+    def __init__(self) -> None:
+        """Defines an entity's behavior for having items equipped to it."""
+        super().__init__("equippable")
+        self[self.component_namespace]["slots"] = []
+
+    def slot(
+        self,
+        slot: int,
+        item: str,
+        accepted_items: list[str],
+        interact_text: str = None,
+        on_equip: str = None,
+        on_unequip: str = None,
+    ):
+        """Adds a slot to the entity's equippable slots.
+
+        Args:
+            slot (int): The slot number of this slot.
+            item (str): Identifier of the item that can be equipped for the slot.
+            accepted_items (list[str]): The list of items that can fill this slot.
+            interact_text (str, optional): Text to be displayed while playing with touch-screen controls when the entity can be equipped with this item. Defaults to None.
+            on_equip (str, optional): Event to trigger when the entity is equipped with the item. Defaults to None.
+            on_unequip (str, optional): Event to trigger when the item is removed from the entity. Defaults to None.
+
+        Returns:
+            Equippable: Returns the Equippable component to allow for method chaining.
+        """
+        slot_data = {
+            "slot": slot,
+            "item": item,
+            "accepted_items": accepted_items,
+        }
+        if not interact_text is None:
+            t = interact_text.lower().replace(" ", "_")
+            slot_data["interact_text"] = f"action.interact.{t}"
+            ANVIL.definitions.register_lang(f"action.interact.{t}", interact_text)
+        if not on_equip is None:
+            slot_data["on_equip"] = {"event": on_equip}
+        if not on_unequip is None:
+            slot_data["on_unequip"] = {"event": on_unequip}
+
+        self[self.component_namespace]["slots"].append(slot_data)
+        return self
+
+
+class Color(_component):
+    component_namespace = "minecraft:color"
+
+    def __init__(self, value: int) -> None:
+        """Defines the entity's main color.
+
+        Args:
+            value (int): The Palette Color value of the entity.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color
+        """
+        super().__init__("color")
+        self._component_add_field("value", value)
+
+
+class Color2(_component):
+    component_namespace = "minecraft:color2"
+
+    def __init__(self, value: int) -> None:
+        """Defines the entity's second texture color.
+
+        Args:
+            value (int): The Palette Color value of the entity.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color2
+        """
+        super().__init__("color2")
+        self._component_add_field("value", value)
+
+
+class BurnsInDaylight(_component):
+    component_namespace = "minecraft:burns_in_daylight"
+
+    def __init__(self) -> None:
+        """Compels an entity to burn when it's daylight.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_burns_in_daylight
+        """
+        super().__init__("burns_in_daylight")
+
+
+class Boss(_component):
+    component_namespace = "minecraft:boss"
+
+    def __init__(
+        self,
+        name: str,
+        hud_range: int = 55,
+        should_darken_sky: bool = False,
+    ) -> None:
+        """Defines the current state of the boss for updating the boss HUD.
+
+        Args:
+            name (str, optional): The name that displays above the boss's health bar.
+            hud_range (int, optional): The max distance from the boss at which the boss's health bar appears on the screen. Defaults to 55.
+            should_darken_sky (bool, optional): Whether the sky should darken in the presence of the boss. Defaults to False.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_boss
+        """
+        super().__init__("boss")
+
+        self._component_add_field("name", name)
+        if hud_range != 55:
+            self._component_add_field("hud_range", hud_range)
+        if should_darken_sky:
+            self._component_add_field("should_darken_sky", should_darken_sky)
+
+
+class Sittable(_component):
+    component_namespace = "minecraft:sittable"
+
+    def __init__(
+        self,
+        sit_event: str = None,
+        stand_event: str = None,
+    ) -> None:
+        """Defines the entity's 'sit' state.
+
+        Args:
+            sit_event (str, optional): Event to run when the entity enters the 'sit' state. Defaults to None.
+            stand_event (str, optional): Event to run when the entity exits the 'sit' state. Defaults to None.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_sittable
+        """
+        super().__init__("sittable")
+
+        if not sit_event is None:
+            self._component_add_field("sit_event", {"event": sit_event})
+        if not stand_event is None:
+            self._component_add_field("stand_event", {"event": stand_event})
+
+
+class FlyingSpeedMeters(_component):
+    component_namespace = "minecraft:flying_speed"
+
+    def __init__(self, value: float, max: float = None) -> None:
+        """A component that defines the entity's flying movement speed in meters per second.
+
+        Args:
+            value (float): Flying movement speed of the entity in meters per second.
+            max (float, optional): Maximum flying movement speed of the entity in meters per second. Defaults to None.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flying_speed
+        """
+        super().__init__("flying_speed")
+        self._component_add_field("value", round(0.152 * math.sqrt(value), 2))
+        if not max is None:
+            self._component_add_field("max", round(0.152 * math.sqrt(max), 2))
+
+
+class ConditionalBandwidthOptimization(_component):
+    component_namespace = "minecraft:conditional_bandwidth_optimization"
+
+    def __init__(
+        self,
+        max_dropped_ticks: int = 0,
+        max_optimized_distance: int = 0,
+        use_motion_prediction_hints: bool = False,
+    ) -> None:
+        """Defines the Conditional Spatial Update Bandwidth Optimizations of the entity.
+
+        Args:
+            max_dropped_ticks (int): In relation to the optimization value, determines the maximum ticks spatial update packets can be not sent.
+            max_optimized_distance (int): The maximum distance considered during bandwidth optimizations. Any value below the max is interpolated to find optimization, and any value greater than or equal to the max results in max optimization.
+            use_motion_prediction_hints (bool): When set to true, smaller motion packets will be sent during drop packet intervals, resulting in the same amount of packets being sent as without optimizations but with less data being sent. This should be used to prevent visual oddities when entities are traveling quickly or teleporting.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_conditional_bandwidth_optimization
+        """
+        super().__init__("conditional_bandwidth_optimization")
+        a = {}
+        if max_dropped_ticks != 0:
+            a["max_dropped_ticks"] = max_dropped_ticks
+        if max_optimized_distance != 0:
+            a["max_optimized_distance"] = max_optimized_distance
+        if use_motion_prediction_hints:
+            a["use_motion_prediction_hints"] = use_motion_prediction_hints
+
+        self._component_add_field(
+            "default_values",
+            a,
+        )
+
+    def conditional_values(
+        self,
+        max_dropped_ticks: int = 0,
+        max_optimized_distance: int = 0,
+        use_motion_prediction_hints: bool = False,
+    ):
+        a = {}
+        if max_dropped_ticks != 0:
+            a["max_dropped_ticks"] = max_dropped_ticks
+        if max_optimized_distance != 0:
+            a["max_optimized_distance"] = max_optimized_distance
+        if use_motion_prediction_hints:
+            a["use_motion_prediction_hints"] = use_motion_prediction_hints
+
+        self._component_add_field(
+            "conditional_values",
+            a,
+        )
+        return self
+
+
+class ItemHopper(_component):
+    component_namespace = "minecraft:item_hopper"
+
+    def __init__(
+        self,
+    ) -> None:
+        """Allows an entity to function like a hopper block.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_hopper
+        """
+        super().__init__("item_hopper")
+
+
+class BodyRotationBlocked(_component):
+    component_namespace = "minecraft:body_rotation_blocked"
+
+    def __init__(
+        self,
+    ) -> None:
+        """When set, the entity will no longer visually rotate their body to match their facing direction.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_blocked
+        """
+        super().__init__("body_rotation_blocked")

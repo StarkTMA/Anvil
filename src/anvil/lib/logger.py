@@ -117,6 +117,12 @@ class Logger:
         self.logger.error(m)
         raise FileNotFoundError(self.Red("[ERROR]: " + m))
 
+    # Info
+    def file_exist_info(self, filename):
+        m = f"{filename} does not exist. It is optional but might have been left out unintentionally."
+        self.logger.info(m)
+        click.echo(self.Cyan("[INFO]: " + m))
+
     # Error
     def path_length_error(self, path):
         m = f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters."
@@ -289,17 +295,17 @@ class Logger:
         m = f"[{entity}] is missing a render_controller"
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
-    
+
     def missing_geometry(self, entity):
         m = f"[{entity}] is missing a geometry"
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
-    
+
     def missing_texture(self, entity):
         m = f"[{entity}] is missing a texture"
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
-    
+
     def lang_error(self, text):
         m = f"Invalid localized string at {text}"
         self.logger.error(m)
@@ -359,19 +365,19 @@ class Logger:
         m = f"Experimental features are not allowed for packages of type : 'addon'. Error at {identifier}."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
-    
+
     # Warn
     def entity_marked_as_experimental(self, identifier):
         m = f"Entity {identifier} is marked as experimental. This may be unintentional."
         self.logger.warn(m)
         click.echo(self.Yellow("[WARNING]: " + m))
-    
+
     # Error
     def too_many_permutations(self, count):
         m = f"Total Block permutations exceeded 10000 ({count}). For minimal performance impact, reduce the number of permutations."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
-    
+
     # Warn
     def too_many_permutations_warn(self, count):
         m = f"Total Block permutations exceeded 10000 ({count}). For minimal performance impact, consider reducing the number of permutations."
@@ -383,7 +389,7 @@ class Logger:
         m = f"Multiple resource pack uuids found. Error at {identifier}."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
-    
+
     # Error
     def multiple_bp_uuids(self, identifier):
         m = f"Multiple behavior pack uuids found. Error at {identifier}."
@@ -413,9 +419,25 @@ class Logger:
         m = f"The component {requirer} requires the component {required} to be added to {identifier}."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
-    
+
     # Error
     def recipe_max_items(self, name):
         m = f"Recipes cannot have more than 9 items. Error at {name}."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))
+
+    # Error
+    def entity_not_valid_vanilla(self, name):
+        m = f"{name} is not a valid vanilla entity."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))
+
+    def namespace_not_valid(self, namespace):
+        m = f"{namespace} is not a valid namespace."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))
+
+    def extend_player_rendering_not_free(self, camera_preset: str):
+        m = f"Extending player component is only supported with the Free preset. Error at {camera_preset}."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))

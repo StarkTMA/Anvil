@@ -3,7 +3,11 @@ import os
 from enum import StrEnum
 
 import requests
+from halo import Halo
+from PIL import Image
+
 from anvil import ANVIL, CONFIG
+from anvil.api import vanilla
 from anvil.api.blockbench import Animation, Geometry
 from anvil.api.components import Filter, InstantDespawn, Rideable, _component
 from anvil.api.enums import Difficulty, Population, Target, Vibrations
@@ -14,8 +18,6 @@ from anvil.lib.lib import MOLANG_PREFIXES, CopyFiles, File, FileExists
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
-from halo import Halo
-from PIL import Image
 
 __all__ = ["Entity", "Attachable"]
 
@@ -92,6 +94,66 @@ class _ActorDescription(MinecraftDescription):
         )
 
 
+class _ActorReuseAssets:
+    def __init__(self, client: "_ActorClientDescription") -> None:
+        self.client = client
+
+    def animation(self, shortname: str, animation_name: str, animate: bool = False, condition: str | Molang = None):
+        if animate is True:
+            if condition is None:
+                self.client._animate_append(shortname)
+            else:
+                self.client._animate_append({shortname: condition})
+
+        self.client._description["description"]["animations"].update(
+            {
+                shortname: animation_name
+            }
+        )
+    
+    def animation_controller(self, shortname: str, animation_controller_name: str, animate: bool = False, condition: str | Molang = None):
+        if animate is True:
+            if condition is None:
+                self.client._animate_append(shortname)
+            else:
+                self.client._animate_append({shortname: condition})
+
+        self.client._description["description"]["animations"].update(
+            {
+                shortname: animation_controller_name
+            }
+        )
+
+    def texture(self, shortname: str, texture_name: str):
+        self.client._description["description"]["textures"].update(
+            {shortname: texture_name}
+        )
+    
+    def geometry(self, shortname: str, geometry_name: str):
+        self.client._description["description"]["geometry"].update(
+            {shortname: geometry_name}
+        )
+    
+    def particle_effect(self, shortname: str, particle_name: str):
+        self.client._description["description"]["particle_effects"].update(
+            {shortname: particle_name}
+        )
+
+    def sound_effect(self, shortname: str, sound_name: str):
+        self.client._description["description"]["sound_effects"].update(
+            {shortname: sound_name}
+        )
+    
+    def spawn_egg(self, item_sprite: str, texture_index: int = 0):
+        self.client._description["description"]["spawn_egg"] = {"texture": item_sprite, "texture_index": texture_index}
+
+    def render_controller(self, controller_name: str, condition: str = None):
+        if condition is None:
+            self.client._description["description"]["render_controllers"].append(controller_name)
+        else:
+            self.client._description["description"]["render_controllers"].append({controller_name: condition})
+
+
 class _ActorClientDescription(_ActorDescription):
     _queued_models = set()
     _queued_textures = set()
@@ -114,6 +176,10 @@ class _ActorClientDescription(_ActorDescription):
         super().__init__(name, is_vanilla)
         if self._type not in ["entity", "attachables"]:
             CONFIG.Logger.client_type_unsupported(self._type, self.identifier)
+        
+        if is_vanilla and ENTITY_LIST.get(self.name) is None:
+            CONFIG.Logger.entity_not_valid_vanilla(self.name)
+
         self._is_vanilla = is_vanilla
         self._animation_controllers = _RP_AnimationControllers(self._name, self._is_vanilla)
         self._render_controllers = _RenderControllers(self._name, self._is_vanilla)
@@ -243,6 +309,16 @@ class _ActorClientDescription(_ActorDescription):
 
         return self
 
+    def queryable_geometry(self, geometry_shortname: str):
+        """This method manages the queryable geometry for an entity.
+
+        Args:
+            geometry_shortname (str): The shortname of the geometry.
+
+        """
+        self._description["description"]["queryable_geometry"] = f"geometry.{CONFIG.NAMESPACE}.{geometry_shortname}"
+        return self
+    
     def texture(self, texture_id: str, texture_name: str):
         """This method manages the textures for an entity.
 
@@ -265,7 +341,7 @@ class _ActorClientDescription(_ActorDescription):
 
     def script(self, variable: Variable | str, script: Molang | str):
         """This method manages the scripts for an entity."""
-        self._description["description"]["scripts"]["pre_animation"].append(f"{variable}={script};")
+        self._description["description"]["scripts"]["pre_animation"].append(f"{variable}={script};".replace(";;", ";"))
         return self
 
     def init_vars(self, **vars):
@@ -287,6 +363,36 @@ class _ActorClientDescription(_ActorDescription):
         """
         if not scale == "1":
             self._description["description"]["scripts"].update({"scale": str(scale)})
+
+    def should_update_bones_and_effects_offscreen(self, bool: bool = False):
+        """Sets whether or not the entity should update bones and effects offscreen.
+
+        Args:
+            bool (bool, optional): Whether or not the entity should update bones and effects offscreen. Defaults to False.
+        """
+        self._description["description"]["scripts"]["update_bones_and_effects_offscreen"] = str(int(bool))
+
+    def should_update_effects_offscreen(self, bool: bool = False):
+        """Sets whether or not the entity should update effects offscreen.
+
+        Args:
+            bool (bool, optional): Whether or not the entity should update effects offscreen. Defaults to False.
+        """
+        self._description["description"]["scripts"]["update_effects_offscreen"] = str(int(bool))
+
+
+    def scaleXYZ(self, x: Molang | str = "1", y: Molang | str = "1", z: Molang | str = "1"):
+        """Sets the scale of the entity.
+
+        Args:
+            x (str | Molang, optional): The x scale of the entity. Defaults to "1".
+            y (str | Molang, optional): The y scale of the entity. Defaults to "1".
+            z (str | Molang, optional): The z scale of the entity. Defaults to "1".
+        """
+        if not x == "1" or not y == "1" or not z == "1":
+            self._description["description"]["scripts"]["scalex"] = str(x)
+            self._description["description"]["scripts"]["scaley"] = str(y)
+            self._description["description"]["scripts"]["scalez"] = str(z)
 
     def render_controller(self, controller_name: str, condition: str = None):
         """This method manages the render controllers for an entity.
@@ -310,10 +416,12 @@ class _ActorClientDescription(_ActorDescription):
             particle_name (str): The name of the particle effect.
 
         """
+        from anvil.api.features import Particle
         self._particle_name = particle_name
         self._description["description"]["particle_effects"].update(
             {self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"}
         )
+        Particle(self._particle_name).queue()
         return self
 
     def sound_effect(
@@ -328,7 +436,7 @@ class _ActorClientDescription(_ActorDescription):
 
         Args:
             sound_shortname (str): The shortname of the sound effect.
-            sound_identifier (str): The identifier of the sound effect.
+            sound_reference (str): The identifier of the sound effect.
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
 
         """
@@ -341,7 +449,7 @@ class _ActorClientDescription(_ActorDescription):
 
     def sound_event(
         self,
-        sound_identifier,
+        sound_reference,
         sound_event: EntitySoundEvent,
         category: SoundCategory = SoundCategory.Neutral,
         volume: float = 1.0,
@@ -352,17 +460,17 @@ class _ActorClientDescription(_ActorDescription):
         """This method manages the sound events for an entity.
 
         Args:
-            sound_identifier (_type_): The identifier of the sound effect.
+            sound_reference (_type_): The identifier of the sound effect.
             sound_event (EntitySoundEvent): The sound event.
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
             volume (float, optional): The volume of the sound effect. Defaults to 1.0.
             pitch (tuple[float, float], optional): The pitch of the sound effect. Defaults to (0.8, 1.2).
 
         """
-        ANVIL.definitions.register_sound_event(self.identifier, sound_identifier, sound_event, volume, pitch)
+        ANVIL.definitions.register_entity_sound_event(self.identifier, sound_reference, sound_event, volume, pitch)
 
         sound: SoundDescription = ANVIL.definitions.register_sound_definition(
-            sound_identifier, category, max_distance=max_distance, min_distance=min_distance
+            sound_reference, category, max_distance=max_distance, min_distance=min_distance
         )
         self._sounds.append(sound)
         return sound
@@ -370,18 +478,8 @@ class _ActorClientDescription(_ActorDescription):
     @Halo("Retrieving vanilla entity description")
     def get_vanilla(self):
         if self.is_vanilla:
-            cache_path = os.path.join("assets", "cache", f"{self.name}.entity.json")
-            data = {}
-            if FileExists(cache_path):
-                with open(cache_path, "r") as file:
-                    data = json.loads(file.read())
-            else:
-                retrieve = requests.get(
-                    f"https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/entity/{self.name}.entity.json"
-                )
-                data = json.loads(retrieve.text)
+            data = ENTITY_LIST.get(self.name).get_vanilla_resource()
             self._description["description"].update(data["minecraft:client_entity"]["description"])
-            File(f"{self.name}.entity.json", data, os.path.join("assets", "cache"), "w", True)
 
     def to_dict(self, directory: str = None):
         """Queues the entity for export.
@@ -394,7 +492,6 @@ class _ActorClientDescription(_ActorDescription):
             Exception: If a geometry is reused but the entity it is reused from has not been queued yet.
 
         """
-        from anvil.api.features import Particle
 
         if len(self._description["description"]["geometry"]) == 0:
             CONFIG.Logger.missing_geometry(self.identifier)
@@ -404,11 +501,6 @@ class _ActorClientDescription(_ActorDescription):
 
         if len(self._description["description"]["render_controllers"]) == 0:
             CONFIG.Logger.missing_render_controller(self.identifier)
-
-        # TODO: Replace once a proper particle integration is added.
-        if "particle_effects" in self._description["description"]:
-            for particle in self._description["description"]["particle_effects"]:
-                Particle(particle).queue()
 
         for sound in self._sounds:
             sound._export
@@ -520,17 +612,17 @@ class _EntityServerDescription(_ActorDescription):
         self._description["description"]["is_experimental"] = True
         return self
 
-    def RuntimeIdentifier(self, entity: Entities.vanilla_entity):
+    def RuntimeIdentifier(self, entity: Entities.VanillaEntity):
         """Sets the runtime identifier of the entity.
 
         Args:
-            entity (Entities.vanilla_entity): The vanilla entity to get the runtime identifier from.
+            entity (Entities.VanillaEntity): The vanilla entity to get the runtime identifier from.
         """
         if CONFIG._TARGET != "addon":
-            if not type(entity) is Entities.vanilla_entity:
+            if not type(entity) is Entities.VanillaEntity:
                 CONFIG.Logger.runtime_entity_error(entity)
             else:
-                if entity._allow_runtime:
+                if entity.allow_runtime:
                     self._description["description"]["runtime_identifier"] = entity.identifier
                 else:
                     CONFIG.Logger.runtime_entity_not_allowed(entity)
@@ -541,6 +633,10 @@ class _EntityServerDescription(_ActorDescription):
     def add_property(self):
         """Adds a property to the entity."""
         return self._properties
+
+    def spawn_category(self):
+        """Sets the spawn category of the entity."""
+        self._description["description"]["spawn_category"] = "none"
 
     @property
     def _export(self):
@@ -580,15 +676,24 @@ class _EntityClientDescription(_ActorClientDescription):
         self._description["description"]["hide_armor"] = True
         return self
 
-    def spawn_egg(self, item_sprite: str):
+    def spawn_egg(self, item_sprite: str, texture_index: int = 0):
         """This method adds a spawn egg texture to the entity.
 
         Args:
             item_sprite (str): The name of the item sprite.
         """
         ANVIL.definitions.register_item_textures(item_sprite, "spawn_eggs", item_sprite)
-        self._description["description"]["spawn_egg"] = {"texture": f"{CONFIG.NAMESPACE}:{item_sprite}"}
+        self._description["description"]["spawn_egg"] = {"texture": f"{CONFIG.NAMESPACE}:{item_sprite}", "texture_index": texture_index if texture_index == 0 else {}}
 
+    def spawn_egg_color(self, base_color: str, overlay_color: str):
+        """This method adds a spawn egg color to the entity.
+
+        Args:
+            base_color (str): The base color of the spawn egg.
+            overlay_color (str): The overlay color of the spawn egg.
+        """
+        self._description["description"]["spawn_egg"] = {"base_color": base_color, "overlay_color": overlay_color}
+        
     def to_dict(self, directory: str):
         """Queues the entity for export.
 
@@ -644,6 +749,11 @@ class _AttachableClientDescription(_ActorClientDescription):
             is_vanilla (bool, optional): Whether or not the attachable is a vanilla attachable. Defaults to False.
         """
         super().__init__(name, is_vanilla)
+
+    @property
+    def reuse_assets(self):
+        """Whether or not the actor should reuse assets from another actor."""
+        return _ActorReuseAssets(self._description)
 
 
 class _EntityServer(AddonObject):
@@ -788,7 +898,7 @@ class _EntityServer(AddonObject):
             self._description._description["description"]["animations"].pop(item)
             
         if Rideable.component_namespace in json.dumps(self._server_entity):
-            ANVIL.definitions.register_lang(f"action.hint.exit.{self.identifier}", "Hold shift to exit")
+            ANVIL.definitions.register_lang(f"action.hint.exit.{self.identifier}", "Sneak to exit")
 
         super().queue(directory=directory)
 
@@ -816,6 +926,11 @@ class _EntityClient(AddonObject):
         """Returns the entity description."""
         return self._description
 
+    @property
+    def reuse_assets(self):
+        """Whether or not the actor should reuse assets from another actor."""
+        return _ActorReuseAssets(self._description)
+    
     @property
     def identifier(self) -> str:
         return self.description.identifier
@@ -1170,7 +1285,7 @@ class _RP_ControllerState:
         """
         particle = {"effect": effect, "locator": locator}
         if pre_anim_script is not None:
-            particle.update({"pre_effect_script": pre_anim_script})
+            particle.update({"pre_effect_script": f"{pre_anim_script};".replace(";;", ";")})
         if bind_to_actor is False:
             particle.update({"bind_to_actor": False})
         self._controller_state[self._state_name]["particle_effects"].append(particle)
@@ -2198,7 +2313,8 @@ class _Components:
         self._components[key] = value
 
     def _remove(self, key: str):
-        self._components.pop(key)
+        if key in self._components.keys():
+            self._components.pop(key)
 
     def _has(self, key: str):
         return key in self._components
@@ -2299,13 +2415,13 @@ class Entity:
         if not name[0].isalpha():
             CONFIG.Logger.digits_not_allowed(name)
 
-    def __init__(self, name: str) -> None:
-        self._is_vanilla = name in ENTITY_LIST
-        self._name = name if not self._is_vanilla else str(name)
-        self._namespace_format = "minecraft" if self._is_vanilla else CONFIG.NAMESPACE
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        self._is_vanilla = is_vanilla
+        self._name = name if not is_vanilla else str(name)
+        self._namespace_format = "minecraft" if is_vanilla else CONFIG.NAMESPACE
         self._validate_name(self._name)
 
-        if CONFIG._TARGET == "addon" and self._is_vanilla:
+        if CONFIG._TARGET == "addon" and is_vanilla:
             CONFIG.Logger.vanilla_override_error(self._name)
 
         self._server = _EntityServer(self._name, self._is_vanilla)

@@ -1,4 +1,3 @@
-from anvil.api.commands import Scoreboard
 from deprecated import deprecated
 
 from anvil import CONFIG
@@ -87,6 +86,9 @@ class _molang(str):
     def __round__(self):
         return Math.round(self)
 
+    def _struct(self, *args):
+        return _molang(f"{self}.{'.'.join(args)}")
+
     def _query(self, qtype, query, *arguments):
         a = f"{qtype}.{query}"
         if len(arguments):
@@ -100,6 +102,46 @@ class _molang(str):
             )
             a += f"({args})"
         return _molang(a)
+
+
+class vec3:
+    def __init__(self, molang: _molang) -> None:
+        self.m = molang
+
+    @property
+    def x(self):
+        return self.m._struct("x")
+
+    @property
+    def y(self):
+        return self.m._struct("y")
+
+    @property
+    def z(self):
+        return self.m._struct("z")
+
+    def __str__(self) -> str:
+        return self.m
+
+
+class _TRS:
+    def __init__(self, molang: _molang) -> None:
+        self.m = molang
+
+    @property
+    def translation(self):
+        return vec3(self.m._struct("t"))
+
+    @property
+    def rotation(self):
+        return vec3(self.m._struct("r"))
+
+    @property
+    def scale(self):
+        return vec3(self.m._struct("s"))
+
+    def __str__(self) -> str:
+        return self.m
 
 
 class Query(_molang):
@@ -2655,7 +2697,7 @@ class Query(_molang):
         Returns:
             Molang(_molang): A Molang Instance
         """
-        return self._query(self, self.handle, "bone_orientation_trs", bone_name)
+        return _TRS(self._query(self, self.handle, "bone_orientation_trs", bone_name))
 
     @classmethod
     def BoneOrientationMatrix(self, bone_name: str):
@@ -2669,7 +2711,7 @@ class Query(_molang):
     @classmethod
     def IsAttached(self):
         """### Client Only
-        
+
         Returns 1.0 if the entity is attached to another entity (such as being held or worn), else it will return 0.0.
 
         Returns:
@@ -2685,7 +2727,7 @@ class Query(_molang):
             Molang(_molang): A Molang Instance
         """
         return self._query(self, self.handle, "has_player_rider")
-    
+
     @classmethod
     def Scoreboard(self, score):
         """### Server Only
@@ -2707,7 +2749,7 @@ class Query(_molang):
             Molang(_molang): A Molang Instance
         """
         return self._query(self, self.handle, "ride_body_x_rotation")
-    
+
     @classmethod
     def RideBodyYRotation(self):
         """Returns the body pitch world-rotation of a valid rider at the provided index if called on an entity, else it returns 0.0.
@@ -2716,7 +2758,7 @@ class Query(_molang):
             Molang(_molang): A Molang Instance
         """
         return self._query(self, self.handle, "ride_body_y_rotation")
-    
+
     @classmethod
     def RideHeadXRotation(self):
         """Returns the head x world-rotation of the ride of an entity, else it returns 0.0.
@@ -2725,7 +2767,7 @@ class Query(_molang):
             Molang(_molang): A Molang Instance
         """
         return self._query(self, self.handle, "ride_head_x_rotation")
-    
+
     @classmethod
     def RideHeadYRotation(self, clamp: int = 0):
         """Takes one optional argument as a parameter. Returns the head y world-rotation of the ride of an entity, else it returns 0.0. First parameter only for horses, zombie horses, skeleton horses, donkeys and mules that clamps rotation in degrees.
@@ -2743,7 +2785,7 @@ class Query(_molang):
             Molang(_molang): A Molang Instance
         """
         return self._query(self, self.handle, "rider_body_x_rotation")
-    
+
     @classmethod
     def RiderBodyYRotation(self):
         """Returns the body yaw world-rotation of a valid rider at the provided index if called on an entity, else it returns 0.0.
@@ -2770,7 +2812,17 @@ class Query(_molang):
             Molang(_molang): A Molang Instance
         """
         return self._query(self, self.handle, "rider_head_y_rotation", head, clamp)
-    
+
+    @classmethod
+    def ArmorSlotDamage(self, slot: Slots, slot_id: int = 0):
+        """Returns the damage of the item in the specified armor slot name and slot id, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "armor_slot_damage", slot, slot_id)
+
+
 class Context(Query):
     handle = "c"
 

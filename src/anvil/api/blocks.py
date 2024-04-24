@@ -4,8 +4,8 @@ from enum import StrEnum
 from anvil import ANVIL, CONFIG
 from anvil.api.actors import _Components
 from anvil.api.components import _component
-from anvil.api.enums import (BlockCategory, BlockFaces, BlockGroups,
-                             BlockMaterial, PlacementDirectionTrait,
+from anvil.api.enums import (BlockFaces, BlockMaterial, ItemCategory,
+                             ItemGroups, PlacementDirectionTrait,
                              PlacementPositionTrait)
 from anvil.api.types import Molang, coordinates, position
 from anvil.lib.lib import CopyFiles, FileExists, clamp
@@ -512,17 +512,17 @@ class _BlockServerDescription(MinecraftDescription):
         self._description["description"]["states"][f"{CONFIG.NAMESPACE}:{name}"] = range
         return self
 
-    def menu_category(self, category: BlockCategory = BlockCategory.none, group: BlockGroups | str = BlockGroups.none, ):
+    def menu_category(self, category: ItemCategory = ItemCategory.none, group: ItemGroups | str = ItemGroups.none, ):
         """Sets the menu category for the block.
 
         Args:
-            category (BlockCategory, optional): The category of the block. Defaults to BlockCategory.none.
+            category (ItemCategory, optional): The category of the block. Defaults to ItemCategory.none.
             group (str, optional): The group of the block. Defaults to None.
 
         """
         self._description["description"]["menu_category"] = {
-            "category": category.value if not category == BlockCategory.none else {},
-            "group": group if not group == BlockGroups.none else {},
+            "category": category.value if not category == ItemCategory.none else {},
+            "group": group if not group == ItemGroups.none else {},
         }
         return self
 

@@ -2,7 +2,6 @@ import os
 import uuid
 
 from anvil import CONFIG
-from anvil.lib.config import _AnvilConfig
 from anvil.lib.format_versions import *
 from anvil.lib.lib import File
 
@@ -19,21 +18,21 @@ class JsonSchemes:
         return [f"skinpack.{name}={display_name}"]
 
     @staticmethod
-    def manifest_bp(version, uuid1, rpuuid, author, has_script: bool, server_ui: bool):
+    def manifest_bp(version):
         m = {
             "format_version": 2,
             "header": {
                 "description": "pack.description",
                 "name": "pack.name",
-                "uuid": uuid1,
+                "uuid": CONFIG._BP_UUID[0],
                 "version": version,
                 "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
             },
             "modules": [{"type": "data", "uuid": str(uuid.uuid4()), "version": version}],
-            "dependencies": [{"uuid": rpuuid, "version": version}],
-            "metadata": {"authors": [author]},
+            "dependencies": [{"uuid": CONFIG._RP_UUID[0], "version": version}],
+            "metadata": {"authors": [CONFIG.COMPANY]},
         }
-        if has_script:
+        if CONFIG._SCRIPT_API:
             m["modules"].append(
                 {
                     "uuid": str(uuid.uuid4()),
@@ -49,23 +48,26 @@ class JsonSchemes:
                     "version": MODULE_MINECRAFT_SERVER,
                 }
             )
-            if server_ui:
+            if CONFIG._SCRIPT_UI:
                 m["dependencies"].append(
                     {
                         "module_name": "@minecraft/server-ui",
                         "version": MODULE_MINECRAFT_SERVER_UI,
                     }
                 )
+        if CONFIG._TARGET == "addon":
+            m["header"]["pack_scope"] = "world"
+            m["metadata"]["product_type"] = "addon"
         return m
 
     @staticmethod
-    def manifest_rp(version, uuid1, bp_uuid, author, has_pbr, addon):
+    def manifest_rp(version):
         m = {
             "format_version": 2,
             "header": {
                 "description": "pack.description",
                 "name": "pack.name",
-                "uuid": uuid1,
+                "uuid": CONFIG._RP_UUID[0],
                 "version": version,
                 "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
             },
@@ -76,29 +78,28 @@ class JsonSchemes:
                     "version": version,
                 }
             ],
-            "dependencies": [{"uuid": bp_uuid, "version": version}],
-            "metadata": {"authors": [author]},
+            "dependencies": [{"uuid": CONFIG._BP_UUID[0], "version": version}],
+            "metadata": {"authors": [CONFIG.COMPANY]},
         }
-        if has_pbr:
+        if CONFIG._PBR:
             m.update({"capabilities": ["pbr"]})
-        if addon:
+        if CONFIG._TARGET == "addon":
             m["header"]["pack_scope"] = "world"
             m["metadata"]["product_type"] = "addon"
         return m
 
     @staticmethod
-    def manifest_world(version, uuid1, author, seed):
-        return {
+    def manifest_world(version):
+        m = {
             "format_version": 2,
             "header": {
                 "name": "pack.name",
                 "description": "pack.description",
                 "version": version,
-                "uuid": uuid1,
+                "uuid": CONFIG._PACK_UUID,
                 # "platform_locked": False,
                 "lock_template_options": True,
                 "base_game_version": [int(i) for i in MANIFEST_BUILD.split(".")],
-                "allow_random_seed": seed,
             },
             "modules": [
                 {
@@ -107,11 +108,16 @@ class JsonSchemes:
                     "version": version,
                 }
             ],
-            "metadata": {"authors": [author]},
+            "metadata": {"authors": [CONFIG.COMPANY]},
         }
 
+        if CONFIG._RANDOM_SEED:
+            m["header"]["allow_random_seed"] = True
+
+        return m
+
     @staticmethod
-    def world_packs(pack_id, version):
+    def world_packs(version, pack_id):
         return [{"pack_id": i, "version": version} for i in pack_id]
 
     @staticmethod
@@ -536,12 +542,13 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def shaped_crafting_recipe(namespace: str, name: str, tags: list[str]):
+    def shaped_crafting_recipe(namespace: str, name: str, assume_symmetry: bool, tags: list[str]):
         return {
             "format_version": "1.12",
             "minecraft:recipe_shaped": {
                 "description": {"identifier": f"{namespace}:{name}"},
                 "tags": tags,
+                "assume_symmetry": assume_symmetry,
                 "pattern": [],
                 "key": {},
             },

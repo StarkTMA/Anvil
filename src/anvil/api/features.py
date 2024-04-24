@@ -1,5 +1,8 @@
+import json
 import os
 from enum import StrEnum
+
+from PIL import Image, ImageDraw, ImageFont
 
 from anvil import CONFIG
 from anvil.api.enums import (CameraPresets, FogCameraLocation, LootPoolType,
@@ -9,7 +12,6 @@ from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, File, FileExists, clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
-from PIL import Image, ImageDraw, ImageFont
 
 
 # Dialogue ------------------------------------------------
@@ -499,8 +501,8 @@ class SmeltingRecipe(AddonObject):
     def __init__(self, name: str, *tags: SmeltingTags):
         self._name = name
         self._tags = tags
-        self.content(JsonSchemes.smelting_recipe(CONFIG.NAMESPACE, name, tags))
         super().__init__(name)
+        self.content(JsonSchemes.smelting_recipe(CONFIG.NAMESPACE, name, tags))
 
     def input(self, identifier: Identifier):
         self._content["minecraft:recipe_furnace"]["input"] = {"item": identifier}
@@ -552,18 +554,28 @@ class ShapelessRecipe(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "recipes")
 
     def __init__(self, name: str):
-        self._name = name
-        self.content(JsonSchemes.shapeless_crafting_recipe(CONFIG.NAMESPACE, name, ["crafting_table"]))
         super().__init__(name)
+        self.content(JsonSchemes.shapeless_crafting_recipe(CONFIG.NAMESPACE, name, ["crafting_table"]))
 
     def ingredients(self, items: list[tuple[Identifier, int]]):
         if len(items) > 9:
             CONFIG.Logger.recipe_max_items(self._name)
-        self._content["minecraft:recipe_shapeless"]["ingredients"] = [{"item": item[0], "data": item[1] if len(item) > 1 else {}} for item in items]
+
+        for i, item in enumerate(items):
+            if not item is None:
+                if not isinstance(item, tuple):
+                    data = {"item": str(item)}
+                else:
+                    data = {"item": str(item[0]), "data": item[1]}
+                self._content["minecraft:recipe_shapeless"]["ingredients"].append(data)
         return self
 
     def result(self, identifier: Identifier, count: int = 1, data: int = 0):
-        self._content["minecraft:recipe_shapeless"]["result"] = {"item": identifier, "count": count, "data": data if data != 0 else {}}
+        self._content["minecraft:recipe_shapeless"]["result"] = {
+            "item": identifier,
+            "count": count,
+            "data": data if data != 0 else {},
+        }
         return self
 
     def priority(self, priority: int):
@@ -590,11 +602,11 @@ class ShapedCraftingRecipe(AddonObject):
     _extension = ".recipe.json"
     _path = os.path.join(CONFIG.BP_PATH, "recipes")
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, assume_symmetry: bool = True):
         self._name = name
         self._recipe_exactly = False
         super().__init__(name)
-        self.content(JsonSchemes.shaped_crafting_recipe(CONFIG.NAMESPACE, name, ["crafting_table"]))
+        self.content(JsonSchemes.shaped_crafting_recipe(CONFIG.NAMESPACE, name, assume_symmetry, ["crafting_table"]))
 
     def ingredients(self, items: list[list[tuple[str, int]]], keep_empty_slots: bool = False) -> None:
         max_items = 9
@@ -637,7 +649,11 @@ class ShapedCraftingRecipe(AddonObject):
         return self
 
     def result(self, identifier: Identifier, count: int = 1, data: int = 0):
-        self._content["minecraft:recipe_shaped"]["result"] = {"item": identifier, "count": count, "data": data if data != 0 else {}}
+        self._content["minecraft:recipe_shaped"]["result"] = {
+            "item": str(identifier),
+            "count": count,
+            "data": data if data != 0 else {},
+        }
         return self
 
     def priority(self, priority: int):
@@ -763,8 +779,15 @@ class Particle(AddonObject):
     def __init__(self, particle_name, use_vanilla_texture: bool = False):
         super().__init__(particle_name)
         self._name = particle_name
-        self._content = ""
         self._use_vanilla_texture = use_vanilla_texture
+
+        if not FileExists(os.path.join("assets", "particles", f"{self._name}.particle.json")):
+            CONFIG.Logger.file_exist_error(f"{self._name}.particle.json", os.path.join("assets", "particles"))
+
+        with open(os.path.join("assets", "particles", f"{self._name}.particle.json"), "r") as file:
+            self._content = json.loads(file.read())
+            if self._content["particle_effect"]["description"]["identifier"] != f"{CONFIG.NAMESPACE}:{self._name}":
+                CONFIG.Logger.namespace_not_valid(self._content["particle_effect"]["description"]["identifier"])
 
     def queue(self):
         CONFIG.Report.add_report(
@@ -777,26 +800,27 @@ class Particle(AddonObject):
         return super().queue("particles")
 
     def _export(self):
-        if self._content != "":
-            super()._export()
         if not self._use_vanilla_texture:
-            if FileExists(os.path.join("assets", "particles", f"{self._name}.png")):
-                CopyFiles(
-                    os.path.join("assets", "particles"),
-                    os.path.join(CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "particle"),
-                    f"{self._name}.png",
-                )
-            else:
-                CONFIG.Logger.file_exist_error(f"{self._name}.png", os.path.join("assets", "particles"))
+            texture_path = self._content["particle_effect"]["description"]["basic_render_parameters"]["texture"]
+            texture_name = texture_path.split("/")[-1]
+            self._content["particle_effect"]["description"]["basic_render_parameters"]["texture"] = os.path.join(
+                CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "particle", texture_name
+            )
 
-        if FileExists(os.path.join("assets", "particles", f"{self._name}.particle.json")):
+            if not FileExists(os.path.join("assets", "particles", f"{texture_name}.png")):
+                CONFIG.Logger.file_exist_error(f"{texture_name}.png", os.path.join("assets", "particles"))
+
             CopyFiles(
                 os.path.join("assets", "particles"),
-                os.path.join(CONFIG.RP_PATH, "particles"),
-                f"{self._name}.particle.json",
+                os.path.join(CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "particle"),
+                f"{texture_name}.png",
             )
-        else:
-            CONFIG.Logger.file_exist_error(f"{self._name}.particle.json", os.path.join("assets", "particles"))
+
+        CopyFiles(
+            os.path.join("assets", "particles"),
+            os.path.join(CONFIG.RP_PATH, "particles"),
+            f"{self._name}.particle.json",
+        )
 
 
 # Camera Presets ------------------------------------------
@@ -865,6 +889,19 @@ class CameraPreset(AddonObject):
         self._camera_preset["minecraft:camera_preset"]["listener"] = value
         return self
 
+    def extend_player_rendering(self, value: bool = True):
+        """Sets whether the player rendering is extended.
+
+        Args:
+            value (bool): Whether the player rendering is extended.
+        """
+        if self._inherit == CameraPresets.Free:
+            if value == False:
+                self._camera_preset["minecraft:camera_preset"]["extend_player_rendering"] = False
+        else:
+            CONFIG.Logger.extend_player_rendering_not_free(self._name)
+        return self
+    
     @property
     def queue(self):
         """Queues the camera preset to be exported."""

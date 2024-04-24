@@ -4,12 +4,17 @@ from math import inf
 
 from anvil import CONFIG
 from anvil.api.blocks import Block
-from anvil.api.enums import Anchor, CameraEasing, CameraPresets, CameraShakeType, CloneMode, DamageCause, Dimension, Effects, FillMode, Gamemodes, InputPermissions, MaskMode, MusicRepeatMode, RawTextConstructor, ScoreboardOperation, ScoreboardOperator, Selector, Slots, Target, TimeSpec
-from anvil.api.vanilla import Blocks
-from anvil.lib.lib import clamp, normalize_180
+from anvil.api.enums import (Anchor, CameraEasing, CameraPresets,
+                             CameraShakeType, CloneMode, DamageCause,
+                             Dimension, Effects, FillMode, Gamemodes,
+                             HudElement, HudVisibility, InputPermissions,
+                             MaskMode, MusicRepeatMode, RawTextConstructor,
+                             ScoreboardOperation, ScoreboardOperator, Selector,
+                             Slots, Target, TimeSpec)
 from anvil.api.types import (Color, Identifier, Seconds, coordinate,
                              coordinates, event, position, rotation, tick)
-
+from anvil.api.vanilla import Blocks
+from anvil.lib.lib import clamp, normalize_180
 
 
 class Command:
@@ -441,7 +446,6 @@ class Effect(Command):
     def __init__(self, target: Selector) -> None:
         super().__init__("effect", target)
 
-    @property
     def clear(self):
         self._append_cmd("clear")
         return self
@@ -452,6 +456,9 @@ class Effect(Command):
             self._append_cmd("true")
         return self
 
+    def remove(self, effect: Effects):
+        self._append_cmd(effect, 0)
+        return self
 
 class Gamemode(Command):
     def __init__(self, target: str, gamemode: Gamemodes):
@@ -932,3 +939,20 @@ class Stopsound(Command):
 
         if not sound == "":
             self._append_cmd(f'"{sound}"')
+
+
+class Hud(Command):
+    def __init__(self, target: Selector | Target, visible: HudVisibility = HudVisibility.Reset, hud_element: HudElement = HudElement.All):
+        """Changes the visibility of HUD elements for a player.
+
+        Args:
+            target (Selector | Target): The player to change the HUD visibility for.
+            visible (HudVisibility, optional): The visibility state to set. Defaults to HudVisibility.Reset.
+            hud_element (HudElement, optional): The HUD element to change the visibility of. Defaults to HudElement.All.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/hud
+        """
+
+        super().__init__("hud", target, visible, hud_element)
+        return self
+

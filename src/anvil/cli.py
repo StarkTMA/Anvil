@@ -422,6 +422,8 @@ def create(
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, display_name)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, f"{display_name} Resource Pack")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.BEHAVIOR_DESCRIPTION, f"{display_name} Behaviour Pack")
     config.add_option(ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world")
     config.add_option(ConfigSection.PACKAGE, ConfigOption.EXPERIMENTAL, preview)
 
