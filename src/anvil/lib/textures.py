@@ -1,21 +1,20 @@
 import os
 
 from anvil import CONFIG
+from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.api.types import Identifier
 
 
 class ItemTexturesObject(AddonObject):
     """Handles item textures for the addon."""
+
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "textures")
 
     def __init__(self) -> None:
         """Initializes a ItemTexturesObject instance."""
-        super().__init__(
-            "item_texture"
-        )
+        super().__init__("item_texture")
 
         self.content(JsonSchemes.item_texture(CONFIG.PROJECT_NAME))
 
@@ -34,7 +33,9 @@ class ItemTexturesObject(AddonObject):
         self._content["texture_data"][f"{CONFIG.NAMESPACE}:{item_name}"] = {
             "textures": [
                 *[
-                    os.path.join("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "items", directory, sprite).replace("\\", "/")
+                    os.path.join(
+                        "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "items", directory, sprite
+                    ).replace("\\", "/")
                     for sprite in item_sprites
                 ]
             ]
@@ -61,8 +62,7 @@ class ItemTexturesObject(AddonObject):
                     CopyFiles(
                         os.path.join("assets", "textures", "items"),
                         os.path.join(
-                            "resource_packs",
-                            f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
+                            CONFIG.RP_PATH,
                             sprite.rstrip(sprite.split("/")[-1]),
                         ),
                         sprite.split("/")[-1] + ".png",
@@ -72,14 +72,13 @@ class ItemTexturesObject(AddonObject):
 
 class TerrainTexturesObject(AddonObject):
     """Handles terrain textures for the addon."""
+
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "textures")
 
     def __init__(self) -> None:
         """Initializes a TerrainTexturesObject instance."""
-        super().__init__(
-            "terrain_texture"
-        )
+        super().__init__("terrain_texture")
         self.content(JsonSchemes.terrain_texture(CONFIG.PROJECT_NAME))
 
     def add_block(self, block_name: str, directory: str, *block_textures: str):
@@ -115,16 +114,16 @@ class TerrainTexturesObject(AddonObject):
             object: The parent's export method result.
         """
         if len(self._content["texture_data"]) > 0:
-            for items in self._content["texture_data"].values():
-                for sprite in items["textures"]:
-                    CopyFiles(
-                        os.path.join("assets", "textures", "blocks"),
-                        os.path.join(
-                            CONFIG.RP_PATH,
-                            sprite.rstrip(sprite.split("/")[-1]),
-                        ),
-                        sprite.split("/")[-1] + ".png",
-                    )
+            #for items in self._content["texture_data"].values():
+            #    for sprite in items["textures"]:
+            #        CopyFiles(
+            #            os.path.join("assets", "textures", "blocks"),
+            #            os.path.join(
+            #                CONFIG.RP_PATH,
+            #                sprite.rstrip(sprite.split("/")[-1]),
+            #            ),
+            #            sprite.split("/")[-1] + ".png",
+            #        )
             return super()._export()
 
 

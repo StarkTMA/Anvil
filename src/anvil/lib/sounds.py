@@ -103,8 +103,7 @@ class SoundDescription:
             CopyFiles(
                 os.path.join("assets", "sounds", parent_dir),
                 os.path.join(
-                    "resource_packs",
-                    f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
+                    CONFIG.RP_PATH,
                     "sounds",
                     self._path,
                 ),

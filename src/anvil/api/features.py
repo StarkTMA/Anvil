@@ -2,8 +2,6 @@ import json
 import os
 from enum import StrEnum
 
-from PIL import Image, ImageDraw, ImageFont
-
 from anvil import CONFIG
 from anvil.api.enums import (CameraPresets, FogCameraLocation, LootPoolType,
                              RawTextConstructor, RenderDistanceType,
@@ -12,6 +10,7 @@ from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, File, FileExists, clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+from PIL import Image, ImageDraw, ImageFont
 
 
 # Dialogue ------------------------------------------------
@@ -460,7 +459,7 @@ class LootTable(AddonObject):
     """A class representing a LootTable."""
 
     _extension = ".loot_table.json"
-    _path = os.path.join(CONFIG.BP_PATH, "loot_tables", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME)
+    _path = os.path.join(CONFIG.BP_PATH, "loot_tables", CONFIG.NAMESPACE)
 
     def __init__(self, name: str):
         """Initializes a LootTable instance.
@@ -483,7 +482,7 @@ class LootTable(AddonObject):
 
     @property
     def path(self):
-        return os.path.join("loot_tables", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, self._directory, self._name + self._extension)
+        return os.path.join("loot_tables", CONFIG.NAMESPACE, self._directory, self._name + self._extension)
 
     def queue(self, directory: str = ""):
         for pool in self._pools:
@@ -526,7 +525,7 @@ class SmithingRecipe(AddonObject):
 
     def __init__(self, name: str):
         self._name = name
-        self.content(JsonSchemes.smithing_table_recipe(CONFIG.NAMESPACE, name))
+        self.content(JsonSchemes.smithing_table_recipe(CONFIG.NAMESPACE, name, ["smithing_table"]))
         super().__init__(name)
 
     def base(self, identifier: Identifier):
@@ -658,6 +657,31 @@ class ShapedCraftingRecipe(AddonObject):
 
     def priority(self, priority: int):
         self._content["minecraft:recipe_shaped"]["priority"] = priority
+        return self
+
+    def queue(self):
+        return super().queue()
+
+
+class SmithingTrimRecipe(AddonObject):
+    _extension = ".recipe.json"
+    _path = os.path.join(CONFIG.BP_PATH, "recipes")
+
+    def __init__(self, name: str):
+        self._name = name
+        self.content(JsonSchemes.smithing_table_trim_recipe(CONFIG.NAMESPACE, name, ["smithing_table"]))
+        super().__init__(name)
+
+    def base(self, identifier: Identifier):
+        self._content["minecraft:recipe_smithing_transform"]["base"] = identifier
+        return self
+
+    def addition(self, identifier: Identifier):
+        self._content["minecraft:recipe_smithing_transform"]["addition"] = identifier
+        return self
+
+    def priority(self, priority: int):
+        self._content["minecraft:recipe_smithing_transform"]["priority"] = priority
         return self
 
     def queue(self):
@@ -886,7 +910,8 @@ class CameraPreset(AddonObject):
         Args:
             value (bool): Whether the listener is enabled.
         """
-        self._camera_preset["minecraft:camera_preset"]["listener"] = value
+        if value:
+            self._camera_preset["minecraft:camera_preset"]["listener"] = "player"
         return self
 
     def extend_player_rendering(self, value: bool = True):
@@ -902,7 +927,6 @@ class CameraPreset(AddonObject):
             CONFIG.Logger.extend_player_rendering_not_free(self._name)
         return self
     
-    @property
     def queue(self):
         """Queues the camera preset to be exported."""
         self.content(self._camera_preset)

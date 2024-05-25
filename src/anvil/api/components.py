@@ -1,5 +1,5 @@
 import math
-from typing import Union
+from typing import List, Tuple, Union
 
 from anvil import ANVIL, CONFIG
 from anvil.api.enums import (Biomes, ContainerType, ControlFlags, DamageCause,
@@ -470,7 +470,7 @@ class Filter:
     @classmethod
     def was_last_hurt_by(
         self,
-        value: str,
+        value: bool,
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
@@ -3312,7 +3312,7 @@ class EntitySensor(_component):
         if require_all:
             sensor["require_all"] = require_all
         if range != (10, 10):
-            sensor["range"] = range if type(range) is list else [range, range]
+            sensor["range"] = range if isinstance(range, (tuple, list)) else (range, range)
         if cooldown != -1:
             sensor["cooldown"] = cooldown
 

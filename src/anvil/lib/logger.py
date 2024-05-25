@@ -441,3 +441,51 @@ class Logger:
         m = f"Extending player component is only supported with the Free preset. Error at {camera_preset}."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
+
+    # Error
+    def rc_referenced_texture_not_in_entity(self, texture, entity):
+        m = f"Referenced texture [{texture}] is not in the entity {entity}."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))
+    
+    # Error
+    def rc_referenced_geometry_not_in_entity(self, geometry, entity):
+        m = f"Referenced geometry [{geometry}] is not in the entity {entity}."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))
+    
+    # Error
+    def rc_referenced_material_not_in_entity(self, material, entity):
+        m = f"Referenced material [{material}] is not in the entity {entity}."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))
+    
+    # Error
+    def queryable_missing_geometry(self, geometry, entity):
+        m = f"Queryable geometry {geometry} is missing from the entity {entity}."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))
+    
+    # Error
+    def blockbench_identifier_mismatch(self, identifier: str, expected: str):
+        m = f"Identifier {identifier} is not formatted correctly, expected {expected}."
+        self.logger.error(m)
+        raise ValueError(self.Red("[ERROR]: " + m))
+
+    # Error
+    def blockbench_animation_not_found(self, animation: str, filename:str):
+        m = f"Could not find the animation [{animation}] in {filename}.bbmodel"
+        self.logger.error(m)
+        raise FileNotFoundError(self.Red("[ERROR]: " + m))
+    
+    # Error
+    def blockbench_texture_not_found(self, texture: str, filename: str):
+        m = f"Could not find the texture [{texture}] in {filename}.bbmodel"
+        self.logger.error(m)
+        raise FileNotFoundError(self.Red("[ERROR]: " + m))
+    
+    # Error
+    def object_export_error(self, name: str, error: Exception):
+        m = f"Error exporting {name}: {error}"
+        self.logger.error(m)
+        raise error

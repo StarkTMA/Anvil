@@ -8,7 +8,7 @@ from PIL import Image
 
 from anvil import ANVIL, CONFIG
 from anvil.api import vanilla
-from anvil.api.blockbench import Animation, Geometry
+from anvil.api.blockbench import _Blockbench
 from anvil.api.components import Filter, InstantDespawn, Rideable, _component
 from anvil.api.enums import Difficulty, Population, Target, Vibrations
 from anvil.api.molang import Query, Variable
@@ -20,6 +20,52 @@ from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
 
 __all__ = ["Entity", "Attachable"]
+
+
+class _ActorReuseAssets:
+    def __init__(self, client: "_ActorClientDescription") -> None:
+        self.client = client
+
+    def animation(self, shortname: str, animation_name: str, animate: bool = False, condition: str | Molang = None):
+        if animate is True:
+            if condition is None:
+                self.client._animate_append(shortname)
+            else:
+                self.client._animate_append({shortname: condition})
+
+        self.client._description["description"]["animations"].update({shortname: animation_name})
+
+    def animation_controller(
+        self, shortname: str, animation_controller_name: str, animate: bool = False, condition: str | Molang = None
+    ):
+        if animate is True:
+            if condition is None:
+                self.client._animate_append(shortname)
+            else:
+                self.client._animate_append({shortname: condition})
+
+        self.client._description["description"]["animations"].update({shortname: animation_controller_name})
+
+    def texture(self, shortname: str, texture_name: str):
+        self.client._description["description"]["textures"].update({shortname: texture_name})
+
+    def geometry(self, shortname: str, geometry_name: str):
+        self.client._description["description"]["geometry"].update({shortname: geometry_name})
+
+    def particle_effect(self, shortname: str, particle_name: str):
+        self.client["description"]["particle_effects"].update({shortname: particle_name})
+
+    def sound_effect(self, shortname: str, sound_name: str):
+        self.client._description["description"]["sound_effects"].update({shortname: sound_name})
+
+    def spawn_egg(self, item_sprite: str, texture_index: int = 0):
+        self.client._description["description"]["spawn_egg"] = {"texture": item_sprite, "texture_index": texture_index}
+
+    def render_controller(self, controller_name: str, condition: str = None):
+        if condition is None:
+            self.client._description["description"]["render_controllers"].append(controller_name)
+        else:
+            self.client._description["description"]["render_controllers"].append({controller_name: condition})
 
 
 class _ActorDescription(MinecraftDescription):
@@ -88,76 +134,11 @@ class _ActorDescription(MinecraftDescription):
                 self._animate_append({animation_shortname: condition})
 
         self._description["description"]["animations"].update(
-            {
-                animation_shortname: f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}"
-            }
+            {animation_shortname: f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}"}
         )
-
-
-class _ActorReuseAssets:
-    def __init__(self, client: "_ActorClientDescription") -> None:
-        self.client = client
-
-    def animation(self, shortname: str, animation_name: str, animate: bool = False, condition: str | Molang = None):
-        if animate is True:
-            if condition is None:
-                self.client._animate_append(shortname)
-            else:
-                self.client._animate_append({shortname: condition})
-
-        self.client._description["description"]["animations"].update(
-            {
-                shortname: animation_name
-            }
-        )
-    
-    def animation_controller(self, shortname: str, animation_controller_name: str, animate: bool = False, condition: str | Molang = None):
-        if animate is True:
-            if condition is None:
-                self.client._animate_append(shortname)
-            else:
-                self.client._animate_append({shortname: condition})
-
-        self.client._description["description"]["animations"].update(
-            {
-                shortname: animation_controller_name
-            }
-        )
-
-    def texture(self, shortname: str, texture_name: str):
-        self.client._description["description"]["textures"].update(
-            {shortname: texture_name}
-        )
-    
-    def geometry(self, shortname: str, geometry_name: str):
-        self.client._description["description"]["geometry"].update(
-            {shortname: geometry_name}
-        )
-    
-    def particle_effect(self, shortname: str, particle_name: str):
-        self.client._description["description"]["particle_effects"].update(
-            {shortname: particle_name}
-        )
-
-    def sound_effect(self, shortname: str, sound_name: str):
-        self.client._description["description"]["sound_effects"].update(
-            {shortname: sound_name}
-        )
-    
-    def spawn_egg(self, item_sprite: str, texture_index: int = 0):
-        self.client._description["description"]["spawn_egg"] = {"texture": item_sprite, "texture_index": texture_index}
-
-    def render_controller(self, controller_name: str, condition: str = None):
-        if condition is None:
-            self.client._description["description"]["render_controllers"].append(controller_name)
-        else:
-            self.client._description["description"]["render_controllers"].append({controller_name: condition})
 
 
 class _ActorClientDescription(_ActorDescription):
-    _queued_models = set()
-    _queued_textures = set()
-    _queued_animations = set()
     _queued_animation_controllers = set()
     _type = "entity"
 
@@ -176,57 +157,17 @@ class _ActorClientDescription(_ActorDescription):
         super().__init__(name, is_vanilla)
         if self._type not in ["entity", "attachables"]:
             CONFIG.Logger.client_type_unsupported(self._type, self.identifier)
-        
+
         if is_vanilla and ENTITY_LIST.get(self.name) is None:
             CONFIG.Logger.entity_not_valid_vanilla(self.name)
 
         self._is_vanilla = is_vanilla
+        self._is_dummy = False
         self._animation_controllers = _RP_AnimationControllers(self._name, self._is_vanilla)
         self._render_controllers = _RenderControllers(self._name, self._is_vanilla)
-        self._description["description"].update(JsonSchemes.client_description())
-
         self._sounds: list[SoundDescription] = []
 
-    @property
-    def dummy(self):
-        """Whether or not the actor is a dummy actor. If True, Anvil will create a dummy geometry and texture for the actor."""
-        dummy = Geometry("dummy")
-        dummy.add_geo("dummy", (8, 8)).set_visible_bounds((2, 1.5), (0, 0.25, 0)).add_bone("root", (0, 0, 0)).add_cube(
-            (0, 0, 0), (0, 0, 0), (0, 0)
-        )
-        dummy.queue("actors")
-        CopyFiles(
-            os.path.join("assets", "models", "actors"),
-            os.path.join(
-                "resource_packs",
-                f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
-                "models",
-                "entity",
-                "actors",
-            ),
-            "dummy.geo.json",
-        )
-
-        self._description["description"]["geometry"].update({"dummy": f"geometry.{CONFIG.NAMESPACE}.dummy"})
-
-        img = Image.new("RGBA", (8, 8), color=(0, 0, 0, 0))
-        img.save(os.path.join("assets", "textures", "actors", "dummy.png"))
-        CopyFiles(
-            os.path.join("assets", "textures", "actors"),
-            os.path.join(
-                CONFIG.RP_PATH,
-                "textures",
-                CONFIG.NAMESPACE,
-                CONFIG.PROJECT_NAME,
-                "actors",
-            ),
-            "dummy.png",
-        )
-        self._description["description"]["textures"].update(
-            {"dummy": os.path.join("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "actors", "dummy")}
-        )
-
-        self.render_controller("dummy").geometry("dummy").textures("dummy")
+        self._description["description"].update(JsonSchemes.client_description())
 
     def animation_controller(self, controller_shortname: str, animate: bool = False, condition: str | Molang = None):
         """Sets the mapping of internal animation controller references to actual animations.
@@ -240,7 +181,7 @@ class _ActorClientDescription(_ActorDescription):
         self._animation_controller(controller_shortname, animate, condition)
         return self._animation_controllers.add_controller(controller_shortname)
 
-    def animation(self, geometry_name: str, animation_name: str, animate: bool = False, condition: str | Molang = None):
+    def animation(self, blockbench_name: str, animation_name: str, animate: bool = False, condition: str | Molang = None):
         """Sets the mapping of internal animation references to actual animations.
 
         Args:
@@ -249,22 +190,13 @@ class _ActorClientDescription(_ActorDescription):
             condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
 
         """
-        
-        anim_namespace = f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_name}"
 
-        if not anim_namespace in _ActorClientDescription._queued_animations:
-            try: 
-                with open(os.path.join("assets", "animations", f"{geometry_name}{Animation._extension}")) as file:
-                    if anim_namespace not in file.read():
-                        CONFIG.Logger.missing_animation(
-                            os.path.join("assets", "animations", f"{geometry_name}{Animation._extension}"), anim_namespace
-                        )
-            except:
-                CONFIG.Logger.file_exist_error(f"{geometry_name}{Animation._extension}", os.path.join("assets", "animations"))
+        anim_namespace = f"animation.{CONFIG.NAMESPACE}.{blockbench_name}.{animation_name}"
 
-            _ActorClientDescription._queued_animations.add(anim_namespace)
+        bb = _Blockbench(blockbench_name, "actors")
+        bb.animations.queue_animation(animation_name)
 
-        self._animations(geometry_name, animation_name, animate, condition)
+        self._animations(blockbench_name, animation_name, animate, condition)
 
         return self
 
@@ -279,34 +211,27 @@ class _ActorClientDescription(_ActorDescription):
         self._description["description"]["materials"].update({material_id: material_name})
         return self
 
-    def geometry(self, geometry_shortname: str, geometry_name: str):
+    def geometry(self, geometry_name: str):
         """
         This method manages the geometry for an entity.
 
         Args:
-            geometry_shortname (str): The shortname of the geometry.
             geometry_name (str): The name of the geometry.
 
         Returns:
             self: Returns an instance of the class.
         """
 
-        geo_namespace = f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"
-        if not geo_namespace in _ActorClientDescription._queued_models:
-            try:
-                with open(os.path.join("assets", "models", "actors", f"{geometry_name}.geo.json")) as file:
-                    data = file.read()
-                    if geo_namespace not in data:
-                        CONFIG.Logger.namespace_not_in_geo(
-                            os.path.join("assets", "models", "actors", f"{geometry_name}.geo.json"), geo_namespace
-                        )
-            except:
-                CONFIG.Logger.file_exist_error(f"{geometry_name}.geo.json", os.path.join("assets", "models", "actors"))
+        bb = _Blockbench(geometry_name, "actors")
+        bb.model.queue_model()
 
-            _ActorClientDescription._queued_models.add(geometry_name)
+        self._description["description"]["geometry"].update({geometry_name: f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"})
 
-        self._description["description"]["geometry"].update({geometry_shortname: geo_namespace})
+        return self
 
+    def dummy(self):
+        """This method manages the dummy for an entity."""
+        self._is_dummy = True
         return self
 
     def queryable_geometry(self, geometry_shortname: str):
@@ -316,25 +241,24 @@ class _ActorClientDescription(_ActorDescription):
             geometry_shortname (str): The shortname of the geometry.
 
         """
-        self._description["description"]["queryable_geometry"] = f"geometry.{CONFIG.NAMESPACE}.{geometry_shortname}"
+        if not geometry_shortname in self._description["description"]["geometry"]:
+            CONFIG.Logger.queryable_missing_geometry(geometry_shortname, self.identifier)
+        self._description["description"]["queryable_geometry"] = geometry_shortname
         return self
-    
-    def texture(self, texture_id: str, texture_name: str):
+
+    def texture(self, blockbench_name: str, texture_name: str):
         """This method manages the textures for an entity.
 
         Args:
-            texture_id (str): The id of the texture.
+            blockbench_name (str): The name of the texture.
             texture_name (str): The name of the texture.
 
         """
-        if not texture_name in _ActorClientDescription._queued_textures:
-            if not FileExists(os.path.join("assets", "textures", "actors", f"{texture_name}.png")):
-                CONFIG.Logger.file_exist_error(f"{texture_name}.png", os.path.join("assets", "textures", "actors"))
-
-            self._queued_textures.add(texture_name)
+        bb = _Blockbench(blockbench_name, "actors")
+        bb.textures.queue_texture(texture_name)
 
         self._description["description"]["textures"].update(
-            {texture_id: os.path.join("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "actors", texture_name)}
+            {texture_name: os.path.join("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "actors", blockbench_name, texture_name)}
         )
 
         return self
@@ -370,7 +294,7 @@ class _ActorClientDescription(_ActorDescription):
         Args:
             bool (bool, optional): Whether or not the entity should update bones and effects offscreen. Defaults to False.
         """
-        self._description["description"]["scripts"]["update_bones_and_effects_offscreen"] = str(int(bool))
+        self._description["description"]["scripts"]["should_update_bones_and_effects_offscreen"] = str(int(bool))
 
     def should_update_effects_offscreen(self, bool: bool = False):
         """Sets whether or not the entity should update effects offscreen.
@@ -378,8 +302,7 @@ class _ActorClientDescription(_ActorDescription):
         Args:
             bool (bool, optional): Whether or not the entity should update effects offscreen. Defaults to False.
         """
-        self._description["description"]["scripts"]["update_effects_offscreen"] = str(int(bool))
-
+        self._description["description"]["scripts"]["should_update_effects_offscreen"] = str(int(bool))
 
     def scaleXYZ(self, x: Molang | str = "1", y: Molang | str = "1", z: Molang | str = "1"):
         """Sets the scale of the entity.
@@ -417,6 +340,7 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         from anvil.api.features import Particle
+
         self._particle_name = particle_name
         self._description["description"]["particle_effects"].update(
             {self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"}
@@ -492,68 +416,34 @@ class _ActorClientDescription(_ActorDescription):
             Exception: If a geometry is reused but the entity it is reused from has not been queued yet.
 
         """
+        if not self._is_dummy:
+            if len(self._description["description"]["geometry"]) == 0:
+                CONFIG.Logger.missing_geometry(self.identifier)
 
-        if len(self._description["description"]["geometry"]) == 0:
-            CONFIG.Logger.missing_geometry(self.identifier)
+            if len(self._description["description"]["textures"]) == 0:
+                CONFIG.Logger.missing_texture(self.identifier)
 
-        if len(self._description["description"]["textures"]) == 0:
-            CONFIG.Logger.missing_texture(self.identifier)
+            if len(self._description["description"]["render_controllers"]) == 0:
+                CONFIG.Logger.missing_render_controller(self.identifier)
 
-        if len(self._description["description"]["render_controllers"]) == 0:
-            CONFIG.Logger.missing_render_controller(self.identifier)
+            for controller in self._render_controllers._controllers:
+                controller._validate(
+                    self._description["description"]["textures"].keys(),
+                    self._description["description"]["geometry"].keys(),
+                    self._description["description"]["materials"].keys(),
+                )
+
+            self._render_controllers.queue(directory)
+            self._animation_controllers.queue(directory)
 
         for sound in self._sounds:
             sound._export
 
-        self._render_controllers.queue(directory)
-        self._animation_controllers.queue(directory)
-
         return super().to_dict
-
-    @staticmethod
-    def _export():
-        for model in _ActorClientDescription._queued_models:
-            CopyFiles(
-                os.path.join("assets", "models", "actors"),
-                os.path.join(
-                    CONFIG.RP_PATH,
-                    "models",
-                    "entity",
-                    "actors"
-                ),
-                f"{model}.geo.json",
-            )
-        
-        for texture in _ActorClientDescription._queued_textures:
-            CopyFiles(
-                os.path.join("assets", "textures", "actors"),
-                os.path.join(
-                    CONFIG.RP_PATH,
-                    "textures",
-                    CONFIG.NAMESPACE,
-                    CONFIG.PROJECT_NAME,
-                    "actors"
-                ),
-                f"{texture}.png",
-            )
-        
-        for animation in _ActorClientDescription._queued_animations:
-            CopyFiles(
-                os.path.join("assets", "animations"),
-                os.path.join(
-                    CONFIG.RP_PATH,
-                    "animations",
-                    #CONFIG.NAMESPACE,
-                    #CONFIG.PROJECT_NAME,
-                    "actors"
-                ),
-                f"{animation.split(".")[2]}.animation.json",
-            )
 
 
 class _EntityServerDescription(_ActorDescription):
     """Base class for all server entity descriptions."""
-
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Base class for all server entity descriptions.
@@ -683,7 +573,10 @@ class _EntityClientDescription(_ActorClientDescription):
             item_sprite (str): The name of the item sprite.
         """
         ANVIL.definitions.register_item_textures(item_sprite, "spawn_eggs", item_sprite)
-        self._description["description"]["spawn_egg"] = {"texture": f"{CONFIG.NAMESPACE}:{item_sprite}", "texture_index": texture_index if texture_index == 0 else {}}
+        self._description["description"]["spawn_egg"] = {
+            "texture": f"{CONFIG.NAMESPACE}:{item_sprite}",
+            "texture_index": texture_index if texture_index == 0 else {},
+        }
 
     def spawn_egg_color(self, base_color: str, overlay_color: str):
         """This method adds a spawn egg color to the entity.
@@ -693,7 +586,7 @@ class _EntityClientDescription(_ActorClientDescription):
             overlay_color (str): The overlay color of the spawn egg.
         """
         self._description["description"]["spawn_egg"] = {"base_color": base_color, "overlay_color": overlay_color}
-        
+
     def to_dict(self, directory: str):
         """Queues the entity for export.
 
@@ -703,42 +596,17 @@ class _EntityClientDescription(_ActorClientDescription):
         """
         super().to_dict(directory)
         if "spawn_egg" not in self._description["description"] and not self._is_vanilla:
-            self._spawn_egg_texture = list(self._description["description"]["textures"].values())[0].split("\\")[-1]
-            reduced_image = Image.open(
-                os.path.join(
-                    "assets",
-                    "textures",
-                    "actors",
-                    f'{self._spawn_egg_texture}.png',
-                )
-            ).convert("P", palette=Image.WEB)
-            palette = reduced_image.getpalette()
-            color_counts = (
-                (
-                    count,
-                    "#{0:02x}{1:02x}{2:02x}".format(*palette[3 * index : 3 * index + 3]),
-                )
-                for count, index in reduced_image.getcolors()
-            )
-            most_dominant = max(color_counts, key=lambda x: x[0])[1]
-            color_counts = (
-                (
-                    count,
-                    "#{0:02x}{1:02x}{2:02x}".format(*palette[3 * index : 3 * index + 3]),
-                )
-                for count, index in reduced_image.getcolors()
-            )
-            least_dominant = min(color_counts, key=lambda x: x[0])[1]
-
             self._description["description"]["spawn_egg"] = {
-                "base_color": most_dominant,
-                "overlay_color": least_dominant,
+                "base_color": "#FFFFFF",
+                "overlay_color": "#000000",
             }
+
         return self._description
 
 
 class _AttachableClientDescription(_ActorClientDescription):
     """Base class for all client attachable descriptions."""
+
     _type = "attachables"
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
@@ -893,10 +761,10 @@ class _EntityServer(AddonObject):
         for key, controller in self._description._description["description"]["animations"].items():
             if controller.startswith("controller.") and controller not in controllers:
                 cleared_items.append(key)
-        
+
         for item in cleared_items:
             self._description._description["description"]["animations"].pop(item)
-            
+
         if Rideable.component_namespace in json.dumps(self._server_entity):
             ANVIL.definitions.register_lang(f"action.hint.exit.{self.identifier}", "Sneak to exit")
 
@@ -930,7 +798,7 @@ class _EntityClient(AddonObject):
     def reuse_assets(self):
         """Whether or not the actor should reuse assets from another actor."""
         return _ActorReuseAssets(self._description)
-    
+
     @property
     def identifier(self) -> str:
         return self.description.identifier
@@ -949,6 +817,37 @@ class _EntityClient(AddonObject):
 
 # Render Controllers
 class _RenderController:
+    def _validate(self, textures: list[str], geometries: list[str], materials: list[str]):
+        controller = self._controller[self.controller_identifier]
+        controller_textures = controller.get("textures", [])
+        controller_arrays = controller.get("arrays", {}).get("textures", {})
+
+        def log_invalid_texture(texture):
+            texture_ext = texture.split(".")[-1]
+            if texture_ext not in textures:
+                CONFIG.Logger.rc_referenced_texture_not_in_entity(texture_ext, self._identifier)
+
+        for texture in controller_textures:
+            if texture.startswith("Texture."):
+                log_invalid_texture(texture)
+
+        for array in controller_arrays:
+            for texture in controller_arrays.get(array.split("[")[0], []):
+                log_invalid_texture(texture)
+
+        for geometry in self._controller[self.controller_identifier]["geometry"]:
+            if geometry.startswith("Geometry.") and geometry.split(".")[-1] not in geometries:
+                CONFIG.Logger.rc_referenced_geometry_not_in_entity(geometry.split(".")[-1], self._identifier)
+            elif (
+                geometry.startswith("Array.")
+                and geometry.split(".")[-1] not in self._controller[self.controller_identifier]["arrays"]["geometries"][geometry]
+            ):
+                CONFIG.Logger.rc_referenced_geometry_not_in_entity(geometry.split(".")[-1], self._identifier)
+
+        for material in self._controller[self.controller_identifier]["materials"]:
+            if list(material.values())[0].split(".")[-1] not in materials:
+                CONFIG.Logger.rc_referenced_material_not_in_entity(material, self._identifier)
+
     def __init__(self, identifier, controller_name, is_vanilla):
         self._identifier = identifier
         self._is_vanilla = is_vanilla
@@ -977,7 +876,7 @@ class _RenderController:
         )
         return self
 
-    def geometry(self, short_name: str = "default"):
+    def geometry(self, short_name):
         if "Array" not in short_name:
             name = f"Geometry.{short_name}"
         else:
@@ -985,7 +884,7 @@ class _RenderController:
         self._controller[self.controller_identifier]["geometry"] = name
         return self
 
-    def textures(self, short_name: str = "default"):
+    def textures(self, short_name):
         if "Array" not in short_name:
             name = f"Texture.{short_name}"
         else:
@@ -1390,7 +1289,7 @@ class _BP_Controller:
         for state in set(collected_states):
             if state not in self._states_names:
                 CONFIG.Logger.missing_state(self._side, self._controller_namespace, state)
-        
+
         if len(self._controllers[self._controller_namespace]["states"].items()) > 0:
             return self._controllers
         return {}
@@ -2131,7 +2030,7 @@ class _BaseEvent:
                 "remove": {"component_groups": []},
                 "queue_command": {"command": []},
                 "set_property": {},
-                "emit_vibration":{}
+                "emit_vibration": {},
             }
         }
 
@@ -2158,7 +2057,7 @@ class _BaseEvent:
     def emit_vibration(self, vibration: Vibrations):
         self._event[self._event_name]["vibration"] = vibration
         return self
-    
+
     @property
     def _export(self):
         return self._event
@@ -2193,7 +2092,7 @@ class _Randomize(_BaseEvent):
     def queue_command(self, *commands: str):
         self._event.update({"queue_command": {"command": [str(cmd) for cmd in commands]}})
         return self
-    
+
     def emit_vibration(self, vibration: Vibrations):
         self._event.update({"vibration": vibration})
         return self
@@ -2246,11 +2145,11 @@ class _Sequence(_BaseEvent):
     def queue_command(self, *commands: str):
         self._event.update({"queue_command": {"command": [str(cmd) for cmd in commands]}})
         return self
-    
+
     def emit_vibration(self, vibration: Vibrations):
         self._event.update({"vibration": vibration})
         return self
-    
+
     @property
     def sequence(self):
         return self._parent_class.sequence
@@ -2412,12 +2311,12 @@ class Entity:
     def _validate_name(self, name: str):
         if ":" in name:
             CONFIG.Logger.namespaces_not_allowed(name)
-        if not name[0].isalpha():
+        if not str(name)[0].isalpha():
             CONFIG.Logger.digits_not_allowed(name)
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         self._is_vanilla = is_vanilla
-        self._name = name if not is_vanilla else str(name)
+        self._name = str(name)
         self._namespace_format = "minecraft" if is_vanilla else CONFIG.NAMESPACE
         self._validate_name(self._name)
 

@@ -50,33 +50,23 @@ def CreateDirectoriesFromTree(tree: dict) -> None:
 
 
 class JsonSchemes:
-
     @staticmethod
     def structure(project_name):
         return {
             project_name: {
-                "behavior_packs": {},
-                "resource_packs": {},
                 "assets": {
-                    "animations": {},
+                    "bbmodels": {},
                     "javascript": {},
                     "marketing": {},
-                    "models": {
-                        "actors": {},
-                        "blocks": {},
-                    },
                     "particles": {},
                     "python": {},
                     "skins": {},
                     "sounds": {},
                     "structures": {},
                     "textures": {
-                        "actors": {},
                         "environment": {},
-                        "blocks": {},
                         "items": {},
                         "ui": {},
-                        "particle": {},
                     },
                     "output": {},
                 },
@@ -241,10 +231,36 @@ class JsonSchemes:
         return [{"pack_id": i, "version": version} for i in pack_id]
 
     @staticmethod
-    def code_workspace(name, path1, path2):
+    def code_workspace(name, path1, path2, preview=False):
         return {
             "folders": [
                 {"name": name, "path": os.path.join(path1, path2)},
+                {
+                    "name": "Dev Resource Packs",
+                    "path": os.path.join(
+                        APPDATA,
+                        "Local",
+                        "Packages",
+                        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+                        "LocalState",
+                        "games",
+                        "com.mojang",
+                        "development_resource_packs",
+                    ),
+                },
+                {
+                    "name": "Dev Behaviour Packs",
+                    "path": os.path.join(
+                        APPDATA,
+                        "Local",
+                        "Packages",
+                        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+                        "LocalState",
+                        "games",
+                        "com.mojang",
+                        "development_behavior_packs",
+                    ),
+                },
             ]
         }
 
@@ -285,7 +301,7 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def vscode(pascal_project_name):
+    def vscode(path):
         return {
             "version": "0.3.0",
             "configurations": [
@@ -294,7 +310,7 @@ class JsonSchemes:
                     "request": "attach",
                     "name": "Wait for Minecraft Debug Connections",
                     "mode": "listen",
-                    "localRoot": f"${{workspaceFolder}}/behavior_packs/BP_{pascal_project_name}/scripts",
+                    "localRoot": path,
                     "port": 19144,
                 }
             ],
@@ -398,6 +414,7 @@ def create(
         )["latest"]["version"]
     except:
         latest_build = MANIFEST_BUILD
+
     base_dir = os.path.join(
         APPDATA,
         "Local",
@@ -408,6 +425,27 @@ def create(
         "com.mojang",
         "minecraftWorlds",
     )
+    dev_res = os.path.join(
+        APPDATA,
+        "Local",
+        "Packages",
+        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+        "LocalState",
+        "games",
+        "com.mojang",
+        "development_resource_packs",
+    )
+    dev_beh = os.path.join(
+        APPDATA,
+        "Local",
+        "Packages",
+        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+        "LocalState",
+        "games",
+        "com.mojang",
+        "development_behavior_packs",
+    )
+
     os.chdir(base_dir)
 
     CreateDirectoriesFromTree(JsonSchemes.structure(project_name))
@@ -437,9 +475,7 @@ def create(
     config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, pbr)
     config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
-    config.add_option(
-        ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper()
-    )
+    config.add_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper())
     config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     config.add_section(namespace)
@@ -450,117 +486,19 @@ def create(
     File(".gitignore", JsonSchemes.gitignore(), "", "w")
     File("CHANGELOG.md", "", "", "w")
 
-    File(
-        "en_US.lang",
-        "\n".join(
-            JsonSchemes.pack_name_lang(
-                config.get_option("package", "display_name"),
-                config.get_option("package", "project_description"),
-            )
-        ),
-        os.path.join(
-            "behavior_packs",
-            "BP_" + config.get_option("anvil", "pascal_project_name"),
-            "texts",
-        ),
-        "w",
-    )
-    File(
-        "en_US.lang",
-        "\n".join(
-            JsonSchemes.pack_name_lang(
-                config.get_option("package", "display_name"),
-                config.get_option("package", "project_description"),
-            )
-        ),
-        os.path.join(
-            "resource_packs",
-            "RP_" + config.get_option("anvil", "pascal_project_name"),
-            "texts",
-        ),
-        "w",
-    )
-    File(
-        "manifest.json",
-        JsonSchemes.manifest_bp(
-            [1, 0, 0],
-            config.get_option(ConfigSection.BUILD, ConfigOption.BP_UUID)[0],
-            config.get_option(ConfigSection.BUILD, ConfigOption.RP_UUID)[0],
-            config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
-            scriptapi,
-            False,
-        ),
-        os.path.join("behavior_packs", "BP_" + config.get_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME)),
-        "w",
-    )
-    File(
-        "manifest.json",
-        JsonSchemes.manifest_rp(
-            [1, 0, 0],
-            config.get_option(ConfigSection.BUILD, ConfigOption.RP_UUID)[0],
-            config.get_option(ConfigSection.BUILD, ConfigOption.BP_UUID)[0],
-            config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
-            pbr,
-            addon,
-        ),
-        os.path.join("resource_packs", "RP_" + config.get_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME)),
-        "w",
-    )
-    File(
-        "manifest.json",
-        JsonSchemes.manifest_world(
-            [1, 0, 0],
-            config.get_option(ConfigSection.BUILD, ConfigOption.PACK_UUID),
-            config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
-            random_seed,
-        ),
-        "",
-        "w",
-    )
+    File("manifest.json",JsonSchemes.manifest_world([1, 0, 0], config.get_option(ConfigSection.BUILD, ConfigOption.PACK_UUID), config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY), random_seed), "", "w")
 
-    File(
-        "world_behavior_packs.json",
-        JsonSchemes.world_packs(config.get_option("build", "bp_uuid"), [1, 0, 0]),
-        "",
-        "w",
-    )
-    File(
-        "world_resource_packs.json",
-        JsonSchemes.world_packs(config.get_option("build", "rp_uuid"), [1, 0, 0]),
-        "",
-        "w",
-    )
+    File("world_behavior_packs.json", JsonSchemes.world_packs(config.get_option("build", "bp_uuid"), [1, 0, 0]), "", "w")
+    File("world_resource_packs.json", JsonSchemes.world_packs(config.get_option("build", "rp_uuid"), [1, 0, 0]), "", "w")
 
-    File(
-        f"{project_name}.code-workspace",
-        JsonSchemes.code_workspace(config.get_option("package", "company"), base_dir, project_name),
-        DESKTOP,
-        "w",
-    )
+    File(f"{project_name}.code-workspace", JsonSchemes.code_workspace(config.get_option("package", "company"), base_dir, project_name, preview), DESKTOP, "w")
 
     if scriptapi:
         click.echo("Initiating ScriptingAPI modules")
-        File(
-            "package.json",
-            JsonSchemes.packagejson(
-                project_name,
-                "1.0.0",
-                config.get_option("package", "display_name") + " Essentials",
-                config.get_option("package", "company"),
-            ),
-            "",
-            "w",
-            True,
-        )
+        File("package.json", JsonSchemes.packagejson(project_name, "1.0.0", config.get_option("package", "display_name") + " Essentials", config.get_option("package", "company")), "", "w", True)
         File("tsconfig.json", JsonSchemes.tsconfig(config.get_option("anvil", "pascal_project_name")), "", "w", False)
-        File("launch.json", JsonSchemes.vscode(config.get_option("anvil", "pascal_project_name")), ".vscode", "w", False)
-        File(
-            "anvilConstants.ts",
-            JsonSchemes.tsconstants(namespace, project_name),
-            os.path.join("assets", "javascript"),
-            "w",
-            False,
-        )
+        File("launch.json", JsonSchemes.vscode(os.path.join(dev_res, f"BP_{config.get_option("anvil", "pascal_project_name")}", "scripts")), ".vscode", "w", False)
+        File("anvilConstants.ts", JsonSchemes.tsconstants(namespace, project_name), os.path.join("assets", "javascript"), "w", False)
         File("main.ts", 'import * as mc from "@minecraft/server";\n', os.path.join("assets", "javascript"), "w", False)
 
     config.save()

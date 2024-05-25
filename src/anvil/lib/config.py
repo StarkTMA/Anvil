@@ -7,7 +7,7 @@ from enum import StrEnum
 import requests
 
 from anvil.lib.format_versions import MANIFEST_BUILD
-from anvil.lib.lib import (FileExists, RemoveDirectory,
+from anvil.lib.lib import (APPDATA, FileExists, RemoveDirectory,
                            validate_namespace_project_name)
 from anvil.lib.logger import Logger
 from anvil.lib.reports import ReportCollector
@@ -54,7 +54,7 @@ class Config:
         """Initializes a Config object."""
         self._config = {}
         if FileExists("anvilconfig.json"):
-            with open("anvilconfig.json", "r", encoding='utf-8') as f:
+            with open("anvilconfig.json", "r", encoding="utf-8") as f:
                 self._config = json.loads(f.read())
 
     def save(self):
@@ -169,18 +169,10 @@ class _AnvilConfig:
         self.PROJECT_NAME = self._handle_config(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, "input")
 
         self.COMPANY = self._handle_config(ConfigSection.PACKAGE, ConfigOption.COMPANY, "input")
-        self.DISPLAY_NAME = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, "input"
-        )
-        self.PROJECT_DESCRIPTION = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, "input"
-        )
-        self.BEHAVIOR_DESCRIPTION = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.BEHAVIOR_DESCRIPTION, "input"
-        )
-        self.RESOURCE_DESCRIPTION = self._handle_config(
-            ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, "input"
-        )
+        self.DISPLAY_NAME = self._handle_config(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, "input")
+        self.PROJECT_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, "input")
+        self.BEHAVIOR_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.BEHAVIOR_DESCRIPTION, "input")
+        self.RESOURCE_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, "input")
         self._DEBUG = self._handle_config(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
         self._PASCAL_PROJECT_NAME = self._handle_config(
             ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in self.PROJECT_NAME.split("_")).upper()
@@ -207,7 +199,7 @@ class _AnvilConfig:
         if self._TARGET not in ["world", "addon"]:
             self.Logger.invalid_target(self._TARGET)
 
-        validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET=="addon")
+        validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon")
 
     def _check_new_vanilla_version(self):
         self.Logger.check_update()
@@ -237,8 +229,18 @@ class _AnvilConfig:
 
         self._load_configs()
 
-        self.RP_PATH = os.path.join("resource_packs", f"RP_{self._PASCAL_PROJECT_NAME}")
-        self.BP_PATH = os.path.join("behavior_packs", f"BP_{self._PASCAL_PROJECT_NAME}")
+        self._COM_MOJANG = os.path.join(
+            APPDATA,
+            "Local",
+            "Packages",
+            f"Microsoft.Minecraft{'WindowsBeta' if self._EXPERIMENTAL else 'UWP'}_8wekyb3d8bbwe",
+            "LocalState",
+            "games",
+            "com.mojang",
+        )
+
+        self.RP_PATH = os.path.join(self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}")
+        self.BP_PATH = os.path.join(self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}")
 
         if int((datetime.now() - datetime.strptime(self._LAST_CHECK, "%Y-%m-%d %H:%M:%S")).total_seconds()) > 12 * 3600:
             self._check_new_vanilla_version()

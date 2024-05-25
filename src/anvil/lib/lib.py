@@ -107,6 +107,8 @@ def RemoveDirectory(path: str) -> None:
     Args:
         path (str): The path to the directory to be removed.
     """
+    
+    shutil.rmtree(path)
 
 
 def RemoveFile(path: str) -> None:
@@ -166,16 +168,10 @@ def zipit(zip_name, dir_list: dict) -> None:
                 for file in files:
                     ziph.write(
                         os.path.join(root, file),
-                        os.path.join(
-                            target,
-                            os.path.relpath(os.path.join(root, file), os.path.join(source, ".")),
-                        ),
+                        os.path.join(target, os.path.relpath(os.path.join(root, file), os.path.join(source, "."))),
                     )
         else:
-            ziph.write(
-                source,
-                os.path.relpath(os.path.join(target, source), os.path.join(source, "..")),
-            )
+            ziph.write(source, os.path.relpath(os.path.join(target, source), os.path.join(source, "..")))
 
     zipf = zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED)
     for source, target in dir_list.items():

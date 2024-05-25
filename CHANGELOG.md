@@ -1,5 +1,41 @@
 # Changelog
 
+# Version 0.8.0 - The Blockbench Update
+
+### [Blockbench]
+
+- Added support for Blockbench files. Entities attachables and blocks no longer require a dedicated model, animation and texture files, instead a single bbmodel must be added to the `assets/bbmodels` folder.
+  - A blockbench file can store a model and all of its relative textures and animations.
+  - For instance, if you have an entity named `starktma:vehicle` that references a model called `truck`, you must add a model file named `truck.bbmodel` to the `assets/bbmodels` folder. For example:
+    - `player.Client.description.geometry("energy_beam")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the model from it.
+    - `player.Client.description.texture("energy_beam", "energy_beam_blue")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the texture `energy_beam_blue` from it.
+    - `player.Client.description.animation("energy_beam", "energy_beam_charging")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the animation `energy_beam_charging` from it.
+- Blockbench file identifiers should use a namespace prefix, for example `starktma:truck.bbmodel`. Anvil will automatically add the namespace to the identifier.
+- Blockbench animations should contain their name. For example, `energy_beam_charging` instead of `animation.stark_ap.player.energy_beam`. Anvil will automatically format them properly.
+- Blockbench textures should contain their name. For example, `energy_beam_blue` instead of `texture.stark_ap.player.energy_beam`. Anvil will automatically format them properly.
+- Blockbench animation controllers are not currently supported. the animation controllers must be added manually through Anvil.
+- Blockbench `Bézier` keyframes are not supported. Anvil will treat them as `linear` keyframes.
+
+### [Actors]
+
+- Actors will no longer support a texture and geometry shortnames instead the full name will be used. `Breaking`
+- Actors will now require a `blockbench_filename` property to reference the blockbench file, in addition to the target texture and animation. `Breaking`
+-
+
+### [ANVIL]
+
+- Resource and Behaviour packs are now generated in the `development_behavior_packs` and `development_resource_packs` directories instead of the project root folder, this improves the development experience and reduces the commit changes as the packs can be regenerated at any point.
+- Added a new enumerator `ItemVanillaTags` for item tags.
+- Added a new enumerator `BlockVanillaTags` for block tags.
+
+### [Features]
+
+- Added `SmithingTrimRecipe()` class.
+
+### [Blocks]
+
+- Added Block tag to Components and Permutations. `block.server.components.tag()` or `block.server.permutation("permutation_name").tag()`.
+
 # Version 0.7.3
 
 ### [Anvil]

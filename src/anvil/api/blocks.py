@@ -3,9 +3,10 @@ from enum import StrEnum
 
 from anvil import ANVIL, CONFIG
 from anvil.api.actors import _Components
+from anvil.api.blockbench import _Blockbench
 from anvil.api.components import _component
-from anvil.api.enums import (BlockFaces, BlockMaterial, ItemCategory,
-                             ItemGroups, PlacementDirectionTrait,
+from anvil.api.enums import (BlockFaces, BlockMaterial, BlockVanillaTags,
+                             ItemCategory, ItemGroups, PlacementDirectionTrait,
                              PlacementPositionTrait)
 from anvil.api.types import Molang, coordinates, position
 from anvil.lib.lib import CopyFiles, FileExists, clamp
@@ -38,6 +39,7 @@ __all__ = [
     "BlockFacesTrait",
     "VerticalHalfTrait",
 ]
+
 
 class BlockDescriptor(dict):
     """
@@ -89,10 +91,22 @@ class BlockDefault(_component):
             if not FileExists(os.path.join("assets", "textures", "blocks", f"{k}.png")):
                 CONFIG.Logger.file_exist_error(f"{k}.png", os.path.join("assets", "textures", "blocks"))
 
+            CopyFiles(
+                os.path.join("assets", "textures", "blocks"),
+                os.path.join(CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "blocks").replace("\\", "/"),
+                f"{k}.png",
+            )
+            ANVIL.definitions.register_terrain_texture(k, "", k)
+
         if BlockFaces.All in kwargs.values():
-            self._component_add_field("textures", [f"{CONFIG.NAMESPACE}:{k}" for k, v in kwargs.items() if v == BlockFaces.All][0])
+            self._component_add_field(
+                "textures", [f"{CONFIG.NAMESPACE}:{k}" for k, v in kwargs.items() if v == BlockFaces.All][0]
+            )
         else:
             self._component_add_field("textures", {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwargs.items()})
+            
+
+
         return self
 
     def carried_textures(self, **kwargs: dict[str, BlockFaces]):
@@ -221,6 +235,7 @@ class BlockMaterialInstance(_component):
 
     def add_instance(
         self,
+        blockbench_name: str,
         texture_name: str,
         block_face: BlockFaces = BlockFaces.All,
         render_method: BlockMaterial = BlockMaterial.Opaque,
@@ -237,21 +252,22 @@ class BlockMaterialInstance(_component):
             face_dimming (bool, optional): Whether or not to use face dimming for this block. Defaults to True.
 
         """
-        if FileExists(os.path.join("assets", "textures", "blocks", f"{texture_name}.png")):
-            self[self.component_namespace].update(
-                {
-                    "*"
-                    if block_face == BlockFaces.All
-                    else block_face: {
-                        "texture": f"{CONFIG.NAMESPACE}:{texture_name}",
-                        "render_method": render_method if not render_method == BlockMaterial.Opaque else {},
-                        "ambient_occlusion": ambient_occlusion if ambient_occlusion is False else {},
-                        "face_dimming": face_dimming if face_dimming is False else {},
-                    }
+        bb = _Blockbench(blockbench_name, "blocks")
+        bb.textures.queue_texture(texture_name)
+
+        ANVIL.definitions.register_terrain_texture(texture_name, blockbench_name, texture_name)
+
+        self[self.component_namespace].update(
+            {
+                "*" if block_face == BlockFaces.All else block_face: {
+                    "texture": f"{CONFIG.NAMESPACE}:{texture_name}",
+                    "render_method": render_method if not render_method == BlockMaterial.Opaque else {},
+                    "ambient_occlusion": ambient_occlusion if ambient_occlusion is False else {},
+                    "face_dimming": face_dimming if face_dimming is False else {},
                 }
-            )
-        else:
-            CONFIG.Logger.file_exist_error(f"{texture_name}.png", os.path.join("assets", "textures", "blocks"))
+            }
+        )
+
         return self
 
 
@@ -266,6 +282,9 @@ class BlockGeometry(_component):
         """
         super().__init__("geometry")
         self._component_set_value(f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
+
+        bb = _Blockbench(geometry_name, "blocks")
+        bb.model.queue_model()
 
     def bone_visibility(self, **bone: dict[str, bool | str | Molang]):
         """Specifies the visibility of bones in the geometry file.
@@ -430,8 +449,8 @@ class BlockCraftingTable(_component):
 # Core
 class _PermutationComponents(_Components):
     _count = 0
-    
-    def __init__(self, condition: str | Molang):
+
+    def __init__(self, condition: str | Molang = None):
         """The permutation components.
 
         Args:
@@ -442,9 +461,23 @@ class _PermutationComponents(_Components):
         self._component_group_name = "components"
         self._condition = condition
 
+    def tag(self, *tags: BlockVanillaTags):
+        """The tags for the block.
+
+        Args:
+            tags (BlockVanillaTags): The tags for the block.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
+        """
+        for tag in tags:
+            self._set(f"tag:{tag}", {f"tag:{tag}": {"do_not_shorten": True}})
+
+        return self
+
     def _export(self):
         cmp = super()._export()
-        cmp["condition"] = self._condition
+        if self._condition:
+            cmp["condition"] = self._condition
         return cmp
 
 
@@ -512,7 +545,11 @@ class _BlockServerDescription(MinecraftDescription):
         self._description["description"]["states"][f"{CONFIG.NAMESPACE}:{name}"] = range
         return self
 
-    def menu_category(self, category: ItemCategory = ItemCategory.none, group: ItemGroups | str = ItemGroups.none, ):
+    def menu_category(
+        self,
+        category: ItemCategory = ItemCategory.none,
+        group: ItemGroups | str = ItemGroups.none,
+    ):
         """Sets the menu category for the block.
 
         Args:
@@ -530,7 +567,7 @@ class _BlockServerDescription(MinecraftDescription):
     def is_hidden_in_commands(self):
         self._description["description"]["is_hidden_in_commands"] = True
         return self
-    
+
     @property
     def traits(self):
         """Sets the traits for the block.
@@ -551,17 +588,6 @@ class _BlockServer(AddonObject):
     _extension = ".block.json"
     _path = os.path.join(CONFIG.BP_PATH, "blocks")
 
-    def _check_model(self, block_name):
-        if FileExists(os.path.join("assets", "models", "blocks", f"{block_name}.geo.json")):
-            geo_namespace = f"geometry.{CONFIG.NAMESPACE}.{block_name}"
-            with open(os.path.join("assets", "models", "blocks", f"{block_name}.geo.json")) as file:
-                data = file.read()
-                if geo_namespace not in data:
-                    CONFIG.Logger.namespace_not_in_geo(block_name, geo_namespace)
-
-        else:
-            CONFIG.Logger.file_exist_error(f"{block_name}.geo.json", os.path.join("assets", "models", "blocks"))
-
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """The block server object.
 
@@ -572,7 +598,7 @@ class _BlockServer(AddonObject):
         super().__init__(name)
         self._server_block = JsonSchemes.server_block()
         self._description = _BlockServerDescription(name, is_vanilla)
-        self._components = _Components()
+        self._components = _PermutationComponents(None)
         self._permutations: list[_PermutationComponents] = []
 
     @property
@@ -603,49 +629,14 @@ class _BlockServer(AddonObject):
         comps: dict = self._server_block["minecraft:block"]["components"]
         self._server_block["minecraft:block"]["permutations"] = [permutation._export() for permutation in self._permutations]
 
-        target_models = set()
-        target_textures = set()
-
         if not BlockDefault.component_namespace in comps:
             if not BlockMaterialInstance.component_namespace in comps:
                 CONFIG.Logger.block_missing_texture(self._name)
-            else:
-                for i, m in comps[BlockMaterialInstance.component_namespace].items():
-                    target_textures.add(m["texture"].removeprefix(f"{CONFIG.NAMESPACE}:"))
-
             if not BlockGeometry.component_namespace in comps:
                 CONFIG.Logger.block_missing_geometry(self._name)
-            else:
-                target_models.add(
-                    self._server_block["minecraft:block"]["components"][BlockGeometry.component_namespace].split(".")[-1]
-                )
         else:
-            if type(comps[BlockDefault.component_namespace]["textures"]) is str:
-                target_textures.add(comps[BlockDefault.component_namespace]["textures"].removeprefix(f"{CONFIG.NAMESPACE}:"))
-            elif type(comps[BlockDefault.component_namespace]["textures"]) is dict:
-                for j in comps[BlockDefault.component_namespace]["textures"].values():
-                    target_textures.add(j.removeprefix(f"{CONFIG.NAMESPACE}:"))
-
             ANVIL.definitions.register_block(self.description.identifier, comps[BlockDefault.component_namespace])
             comps.pop(BlockDefault.component_namespace)
-
-        for p in self._server_block["minecraft:block"]["permutations"]:
-            if BlockGeometry.component_namespace in p["components"]:
-                target_models.append(p["components"][BlockGeometry.component_namespace].split(".")[-1])
-            if BlockMaterialInstance.component_namespace in p["components"]:
-                for i, m in p["components"][BlockMaterialInstance.component_namespace].items():
-                    target_textures.add(m["texture"].removeprefix(f"{CONFIG.NAMESPACE}:"))
-
-        for model in target_models:
-            self._check_model(model)
-            CopyFiles(
-                os.path.join("assets", "models", "blocks"),
-                os.path.join(CONFIG.RP_PATH, "models", "blocks"),
-                f"{model}.geo.json",
-            )
-
-        for texture in target_textures:
-            ANVIL.definitions.register_terrain_texture(texture, "", texture)
 
         if not BlockDisplayName.component_namespace in self._server_block["minecraft:block"]["components"]:
             display_name = self._name.replace("_", " ").title()
@@ -685,13 +676,14 @@ class Block:
     def name(self):
         return self._name
 
-    @property
     def queue(self):
         """Queues the block to be exported."""
         self.Server.queue
 
         if self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace].startswith("tile."):
-            display_name = ANVIL.definitions._language[self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace]]
+            display_name = ANVIL.definitions._language[
+                self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace]
+            ]
         else:
             display_name = self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace]
 

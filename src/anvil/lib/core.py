@@ -1,18 +1,17 @@
 """Provides the core functionality of the Anvil library."""
 
 import os
-from atexit import register
 from datetime import datetime
 
 import commentjson
-from bs4 import Stylesheet
 from halo import Halo
 from PIL import Image
 
+from anvil.api.blockbench import _Blockbench
 from anvil.api.types import Identifier
 from anvil.lib.config import _AnvilConfig
 from anvil.lib.lib import (CopyFiles, CreateDirectory, File, FileExists,
-                           RemoveDirectory, RemoveFile, process_subcommand,
+                           RemoveDirectory, process_subcommand,
                            validate_namespace_project_name, zipit)
 from anvil.lib.materials import MaterialsObject
 from anvil.lib.reports import ReportType
@@ -217,9 +216,9 @@ class _AnvilDefinitions:
         langs.extend([f"{k}={v}" for k, v in self._language.items()])
         langs.sort(reverse=True)
 
-        File("languages.json", JsonSchemes.languages(), os.path.join(self.config.BP_PATH, "texts"), "w")
-        File("languages.json", JsonSchemes.languages(), os.path.join(self.config.RP_PATH, "texts"), "w")
-        File("languages.json", JsonSchemes.languages(), "texts", "w")
+        File("languages.json", ["en_US"], os.path.join(self.config.BP_PATH, "texts"), "w")
+        File("languages.json", ["en_US"], os.path.join(self.config.RP_PATH, "texts"), "w")
+
 
         File("en_US.lang", "\n".join(langs), os.path.join(self.config.RP_PATH, "texts"), "w")
         File(
@@ -228,12 +227,15 @@ class _AnvilDefinitions:
             os.path.join(self.config.BP_PATH, "texts"),
             "w",
         )
-        File(
-            "en_US.lang",
-            "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
-            "texts",
-            "w",
-        )
+
+        if self.config._TARGET == "world":
+            File("languages.json", ["en_US"], "texts", "w")
+            File(
+                "en_US.lang",
+                "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
+                "texts",
+                "w",
+            )
 
     def _export_scripts(self):
         File(
@@ -387,6 +389,12 @@ class _AnvilCore:
                 lang.append(f"{k}={v}")
             return lang
 
+        File("languages.json", JsonSchemes.languages(), os.path.join(self.config.BP_PATH, "texts"), "w")
+        File("languages.json", JsonSchemes.languages(), os.path.join(self.config.RP_PATH, "texts"), "w")
+
+        if self.config._TARGET == "world":
+            File("languages.json", JsonSchemes.languages(), "texts", "w")
+
         for language in JsonSchemes.languages():
             destination_language = (
                 language.replace("zh_CN", "zh-CN").replace("zh_TW", "zh-TW").replace("nb_NO", "no").split("_")[0]
@@ -412,25 +420,26 @@ class _AnvilCore:
                     os.path.join(self.config.BP_PATH, "texts"),
                     "w",
                 )
-                File(
-                    f"{language}.lang",
-                    "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
-                    os.path.join("texts"),
-                    "w",
-                )
+                if self.config._TARGET == "world":
+                    File(
+                        f"{language}.lang",
+                        "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
+                        os.path.join("texts"),
+                        "w",
+                    )
 
     @Halo(text="Compiling", spinner="dots")
     def compile(self) -> None:
         """Compiles the project."""
 
         self._definitions.queue
+        _Blockbench._export()
 
         for object in self._objects_list:
-            object._export()
-
-        from anvil.api.actors import _ActorClientDescription
-
-        _ActorClientDescription._export()
+            try:
+                object._export()
+            except Exception as e:
+                self.config.Logger.object_export_error(object._name, e)
 
         from anvil.api.blocks import _PermutationComponents
 
@@ -487,18 +496,7 @@ class _Anvil(_AnvilCore):
     def __init__(self, config: _AnvilConfig):
         super().__init__(config)
 
-    def _process_art(self, apply_overlay: bool = False):
-        pack_icon_size = (256, 256)
-        store_screenshot_size = (800, 450)
-        marketing_screenshot_size = (1920, 1080)
-
-        source = os.path.join("assets", "marketing")
-        output_store = os.path.join("assets", "output", "Store Art")
-        output_marketing = os.path.join("assets", "output", "Marketing Art")
-
-        CreateDirectory(output_store)
-        CreateDirectory(output_marketing)
-
+    def _process_art(self, apply_overlay: bool = False, zip: bool = True):
         def resize(image: Image.Image, name: str, output: str, size, quality=95, dpi=72, overlay: Image.Image = None):
             resized = image.resize(size)
 
@@ -512,71 +510,40 @@ class _Anvil(_AnvilCore):
                 quality=quality,
             )
 
+        pack_icon_size = (256, 256)
+        store_screenshot_size = (800, 450)
+        marketing_screenshot_size = (1920, 1080)
+
+        source = os.path.join("assets", "marketing")
+        output_store = os.path.join("assets", "output", "Store Art")
+        output_marketing = os.path.join("assets", "output", "Marketing Art")
+
         if FileExists(os.path.join(source, "pack_icon.png")):
             original = Image.open(os.path.join(source, "pack_icon.png"))
             resize(original, "pack_icon.png", self.config.BP_PATH, pack_icon_size)
             resize(original, "pack_icon.png", self.config.RP_PATH, pack_icon_size)
-            resize(original, f"{self.config.PROJECT_NAME}_packicon_0.jpg", output_store, pack_icon_size)
+
         else:
             self.config.Logger.file_exist_warning("pack_icon.png")
 
-        if FileExists(os.path.join(source, "keyart.png")):
-            original = Image.open(os.path.join(source, "keyart.png")).convert("RGB")
-            overlay = None
+        if zip:
+            CreateDirectory(output_store)
+            CreateDirectory(output_marketing)
 
-            if apply_overlay:
-                overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
+            if FileExists(os.path.join(source, "keyart.png")):
+                original = Image.open(os.path.join(source, "keyart.png")).convert("RGB")
+                overlay = None
 
-            resize(original, "world_icon.jpeg", "", store_screenshot_size, 95, 72, overlay)
-            resize(original, f"{self.config.PROJECT_NAME}_Thumbnail_0.jpg", output_store, store_screenshot_size, 95, 72, overlay)
-            resize(
-                original,
-                f"{self.config.PROJECT_NAME}_MarketingKeyArt.jpg",
-                output_marketing,
-                marketing_screenshot_size,
-                100,
-                300,
-                overlay,
-            )
+                if apply_overlay:
+                    overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
 
-        else:
-            self.config.Logger.file_exist_warning("keyart.png")
-
-        if FileExists(os.path.join(source, "panorama.png")):
-            original = Image.open(os.path.join(source, "panorama.png"))
-            scale_factor = 450 / original.size[1]
-
-            resize(
-                original,
-                f"{self.config.PROJECT_NAME}_panorama_0.jpg",
-                output_store,
-                (round(original.size[0] * scale_factor), 450),
-                95,
-                72,
-            )
-
-        else:
-            self.config.Logger.file_exist_info("panorama.png")
-
-        for i in range(999):
-            if not FileExists(os.path.join(source, f"{i}.png")):
-                if i < 5:
-                    self.config.Logger.file_exist_warning(f"{i}.png")
-                break
-            else:
-                original = Image.open(os.path.join(source, f"{i}.png"))
+                resize(original, "world_icon.jpeg", "", store_screenshot_size, 95, 72, overlay)
                 resize(
-                    original,
-                    f"{self.config.PROJECT_NAME}_screenshot_{i}.jpg",
-                    output_store,
-                    store_screenshot_size,
-                    95,
-                    72,
-                    overlay,
+                    original, f"{self.config.PROJECT_NAME}_Thumbnail_0.jpg", output_store, store_screenshot_size, 95, 72, overlay
                 )
                 resize(
                     original,
-                    f"{self.config.PROJECT_NAME}_MarketingScreenshot_{i}.jpg",
+                    f"{self.config.PROJECT_NAME}_MarketingKeyArt.jpg",
                     output_marketing,
                     marketing_screenshot_size,
                     100,
@@ -584,21 +551,69 @@ class _Anvil(_AnvilCore):
                     overlay,
                 )
 
-        if FileExists(os.path.join(source, "partner_art.png")):
-            original = Image.open(os.path.join(source, "partner_art.png"))
+            else:
+                self.config.Logger.file_exist_warning("keyart.png")
 
-            resize(
-                original,
-                f"{self.config.PROJECT_NAME}_PartnerArt.jpg",
-                output_marketing,
-                marketing_screenshot_size,
-                100,
-                300,
-                overlay,
-            )
+            if FileExists(os.path.join(source, "panorama.png")):
+                original = Image.open(os.path.join(source, "panorama.png"))
+                scale_factor = 450 / original.size[1]
 
-        else:
-            self.config.Logger.file_exist_warning("partner_art.png")
+                resize(
+                    original,
+                    f"{self.config.PROJECT_NAME}_panorama_0.jpg",
+                    output_store,
+                    (round(original.size[0] * scale_factor), 450),
+                    95,
+                    72,
+                )
+
+            else:
+                self.config.Logger.file_exist_info("panorama.png")
+
+            for i in range(999):
+                if not FileExists(os.path.join(source, f"{i}.png")):
+                    if i < 5:
+                        self.config.Logger.file_exist_warning(f"{i}.png")
+                    break
+                else:
+                    original = Image.open(os.path.join(source, f"{i}.png"))
+                    resize(
+                        original,
+                        f"{self.config.PROJECT_NAME}_screenshot_{i}.jpg",
+                        output_store,
+                        store_screenshot_size,
+                        95,
+                        72,
+                    )
+                    resize(
+                        original,
+                        f"{self.config.PROJECT_NAME}_MarketingScreenshot_{i}.jpg",
+                        output_marketing,
+                        marketing_screenshot_size,
+                        100,
+                        300,
+                    )
+
+            if FileExists(os.path.join(source, "partner_art.png")):
+                original = Image.open(os.path.join(source, "partner_art.png"))
+
+                resize(
+                    original,
+                    f"{self.config.PROJECT_NAME}_PartnerArt.jpg",
+                    output_marketing,
+                    marketing_screenshot_size,
+                    100,
+                    300,
+                )
+
+            else:
+                self.config.Logger.file_exist_warning("partner_art.png")
+
+            if FileExists(os.path.join(source, "pack_icon.png")):
+                original = Image.open(os.path.join(source, "pack_icon.png"))
+                resize(original, f"{self.config.PROJECT_NAME}_packicon_0.jpg", output_store, pack_icon_size)
+            else:
+                self.config.Logger.file_exist_warning("pack_icon.png")
 
     def package_zip(
         self,
@@ -624,20 +639,26 @@ class _Anvil(_AnvilCore):
                 self.config.Logger.multiple_rp_uuids()
             if len(self.config._BP_UUID) > 1:
                 self.config.Logger.multiple_bp_uuids()
-            
-            content_structure.update({
-                    "resource_packs": os.path.join("Content", "resource_packs"),
-                    "behavior_packs": os.path.join("Content", "behavior_packs"),
-                })
+
+            content_structure.update(
+                {
+                    self.config.RP_PATH: os.path.join("Content", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
+                    self.config.BP_PATH: os.path.join("Content", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
+                }
+            )
 
         else:
             content_structure.update(
                 {
-                    "resource_packs": os.path.join("Content", "world_template", "resource_packs"),
-                    "behavior_packs": os.path.join("Content", "world_template", "behavior_packs"),
+                    self.config.RP_PATH: os.path.join(
+                        "Content", "world_template", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"
+                    ),
+                    self.config.BP_PATH: os.path.join(
+                        "Content", "world_template", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"
+                    ),
                     "texts": os.path.join("Content", "world_template", "texts"),
                     "level.dat": os.path.join("Content", "world_template"),
-                    "levelname.txt": os.path.join("Content", "world_template"), 
+                    "levelname.txt": os.path.join("Content", "world_template"),
                     "manifest.json": os.path.join("Content", "world_template"),
                     "world_icon.jpeg": os.path.join("Content", "world_template"),
                     "world_behavior_packs.json": os.path.join("Content", "world_template"),
@@ -665,42 +686,14 @@ class _Anvil(_AnvilCore):
             self.config.Logger.not_compiled()
         self.config.Logger.packaging_mcaddon()
 
-        source = os.path.join("assets", "marketing")
-        output = os.path.join("assets", "output")
-        if FileExists(os.path.join(source, "pack_icon.png")):
-            CopyFiles(
-                source,
-                os.path.join("behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
-                "pack_icon.png",
-            )
-            CopyFiles(
-                source,
-                os.path.join("resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
-                "pack_icon.png",
-            )
+        self._process_art(False, False)
 
-        resource_packs_structure = {
-            os.path.join("resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"): "",
-        }
-        behavior_packs_structure = {
-            os.path.join("behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"): "",
-        }
         content_structure = {
-            os.path.join(output, f"{self.config.PROJECT_NAME}_RP.mcpack"): "",
-            os.path.join(output, f"{self.config.PROJECT_NAME}_BP.mcpack"): "",
+            self.config.RP_PATH: f"RP_{self.config.PROJECT_NAME}",
+            self.config.BP_PATH: f"BP_{self.config.PROJECT_NAME}",
         }
 
-        zipit(
-            os.path.join(output, f"{self.config.PROJECT_NAME}_RP.mcpack"),
-            resource_packs_structure,
-        )
-        zipit(
-            os.path.join(output, f"{self.config.PROJECT_NAME}_BP.mcpack"),
-            behavior_packs_structure,
-        )
-        zipit(os.path.join(output, f"{self.config.PROJECT_NAME}.mcaddon"), content_structure)
-        RemoveFile(os.path.join(output, f"{self.config.PROJECT_NAME}_RP.mcpack"))
-        RemoveFile(os.path.join(output, f"{self.config.PROJECT_NAME}_BP.mcpack"))
+        zipit(os.path.join("assets", "output", f"{self.config.PROJECT_NAME}.mcaddon"), content_structure)
 
     def mcworld(self):
         """Packages the project into a .mcworld file."""
@@ -708,17 +701,18 @@ class _Anvil(_AnvilCore):
             self.config.Logger.not_compiled()
         self.config.Logger.packaging_mcworld()
 
+        self._process_art(False, False)
+
         content_structure = {
-            "resource_packs": os.path.join("resource_packs"),
-            "behavior_packs": os.path.join("behavior_packs"),
-            "texts": os.path.join("texts"),
-            "db": os.path.join("db"),
-            "level.dat": os.path.join(""),
-            "levelname.txt": os.path.join(""),
-            "manifest.json": os.path.join(""),
-            "world_icon.jpeg": os.path.join(""),
-            "world_behavior_packs.json": os.path.join(""),
-            "world_resource_packs.json": os.path.join(""),
+            self.config.RP_PATH: os.path.join("resource_packs", f"RP_{self.config.PROJECT_NAME}"),
+            self.config.BP_PATH: os.path.join("behavior_packs", f"BP_{self.config.PROJECT_NAME}"),
+            "texts": "texts",
+            "level.dat": "",
+            "levelname.txt": "",
+            "manifest.json": "",
+            "world_icon.jpeg": "",
+            "world_behavior_packs.json": "",
+            "world_resource_packs.json": "",
         }
 
         zipit(

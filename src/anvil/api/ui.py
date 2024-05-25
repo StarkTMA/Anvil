@@ -552,8 +552,7 @@ class _UIElement:
             CopyFiles(
                 os.path.join("assets", "textures", "ui"),
                 os.path.join(
-                    "resource_packs",
-                    f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
+                    CONFIG.RP_PATH,
                     "textures",
                     "ui",
                 ),

@@ -4,7 +4,8 @@ from anvil import ANVIL, CONFIG
 from anvil.api.actors import Attachable, _Components
 from anvil.api.commands import Effects, Slots
 from anvil.api.components import _component
-from anvil.api.enums import EnchantsSlots, ItemCategory, ItemGroups
+from anvil.api.enums import (EnchantsSlots, ItemCategory, ItemGroups,
+                             ItemVanillaTags)
 from anvil.api.types import Identifier, Seconds, inf
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import clamp
@@ -48,7 +49,7 @@ __all__ = [
 class ItemTags(_component):
     component_namespace = "minecraft:tags"
 
-    def __init__(self, *tags: str) -> None:
+    def __init__(self, *tags: ItemVanillaTags | str) -> None:
         super().__init__("tags")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
         self._component_add_field("tags", tags)

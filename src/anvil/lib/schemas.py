@@ -314,10 +314,22 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def geometry():
+    def geometry(model_name: str, texture_size: list[int], visible_box: list[int], visible_offset: list[int]):
         return {
             "format_version": GEOMETRY_VERSION,
-            "minecraft:geometry": [],
+            "minecraft:geometry": [
+                {
+                    "description": {
+                        "identifier": f"geometry.{CONFIG.NAMESPACE}.{model_name}",
+                        "texture_width": texture_size[0],
+                        "texture_height": texture_size[1],
+                        "visible_bounds_width": visible_box[0],
+                        "visible_bounds_height": visible_box[1],
+                        "visible_bounds_offset": visible_offset,
+                    },
+                    "bones": [],
+                }
+            ],
         }
 
     @staticmethod
@@ -522,11 +534,22 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def smithing_table_recipe(namespace: str, name: str):
+    def smithing_table_recipe(namespace: str, name: str, tags: list[str]):
         return {
             "format_version": "1.17.0",
             "minecraft:recipe_smithing_transform": {
                 "description": {"identifier": f"{namespace}:{name}"},
+                "tags": tags,
+            },
+        }
+
+    @staticmethod
+    def smithing_table_trim_recipe(namespace: str, name: str, tags: list[str]):
+        return {
+            "format_version": "1.17.0",
+            "minecraft:recipe_smithing_trim": {
+                "description": {"identifier": f"{namespace}:{name}"},
+                "tags": tags,
             },
         }
 
@@ -635,9 +658,9 @@ class AddonObject:
         def _shorten_dict(d):
             if isinstance(d, dict):
                 return {
-                    k: v
+                    k: (v if v != {"do_not_shorten": True} else {})
                     for k, v in ((k, _shorten_dict(v)) for k, v in d.items())
-                    if v != {} and v != [] or str(k).startswith("minecraft:")
+                    if (v != {} and v != []) or str(k).startswith("minecraft:") or v == {"do_not_shorten": True}
                 }
 
             elif isinstance(d, list):
