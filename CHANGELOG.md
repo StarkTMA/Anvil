@@ -1,5 +1,38 @@
 # Changelog
 
+# Version 0.8.1
+
+### [ANVIL]
+
+- Updated `GEOMETRY_VERSION` to `[1.21.0]`.
+- Updated `MODULE_MINECRAFT_SERVER` to `[1.13.0]`.
+- Updated `MODULE_MINECRAFT_SERVER_UI` to `[1.2.0]`.
+
+### [Vanilla]
+
+- Added 2 new mobs, Bogged and Breeze
+- Added new items: `Mace`, `OminousBottle`, `WindCharge`, `TrialKey`, `OminousTrialKey`, `BreezeRod`, `TrialSpawner`, `FlowPotteryShard`, `GusterPotteryShard`, `ScrapePotteryShard`, `FlowBannerPattern`, `GlobeBannerPattern`, `GusterBannerPattern`, `BoltArmorTrim`, `FlowArmorTrim`, `MusicDiscCreator`, `MusicDiscCreatorMusicBox`, `MusicDiscPrecipice`.
+- Added new blocks: `Crafter()`, `TrialSpawner()`, `Vault()`, `HeavyCore()`.
+- Expanded the copper family with all the Oxidized and waxed variants of the following blocks: `ChiseledCopper()`, `CopperGrate()`, `CopperBulb()`, `CopperDoor()`, `CopperTrapdoor()`
+
+### [Commands]
+
+- Added new effects to the `Effects` enum: `Infested`, `Oozing`, `Weaving`, `WindCharged`, `RaidOmen`, `TrailOmen`.
+
+### [Blockbench]
+
+- Added support for UV rotations.
+- Added support for Item Display Transformation.
+
+### [Blocks]
+
+- Added `scale_pivot` and `rotation_pivot` to `BlockTransformation()`.
+- Added `BlockCustomComponents()`.
+
+### [Items]
+
+- Added `ItemCustomComponents()`, `ItemRarity()` components.
+
 # Version 0.8.0 - The Blockbench Update
 
 ### [Blockbench]

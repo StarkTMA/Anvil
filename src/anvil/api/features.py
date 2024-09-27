@@ -2,15 +2,16 @@ import json
 import os
 from enum import StrEnum
 
+from PIL import Image, ImageDraw, ImageFont
+
 from anvil import CONFIG
 from anvil.api.enums import (CameraPresets, FogCameraLocation, LootPoolType,
-                             RawTextConstructor, RenderDistanceType,
+                             PotionId, RawTextConstructor, RenderDistanceType,
                              SmeltingTags)
 from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, File, FileExists, clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
-from PIL import Image, ImageDraw, ImageFont
 
 
 # Dialogue ------------------------------------------------
@@ -301,7 +302,6 @@ class Fog(AddonObject):
     def identifier(self):
         return self._description.identifier
 
-    @property
     def queue(self):
         """Queues the fog to be exported."""
         for location in self._locations:
@@ -378,6 +378,10 @@ class _LootPool:
 
             def EnchantRandomly(self):
                 self._func = {"function": "enchant_randomly"}
+                return self
+
+            def SetPotion(self, id: PotionId):
+                self._func = {"function": "set_potion", "id": id}
                 return self
 
             def _export(self):
@@ -926,7 +930,7 @@ class CameraPreset(AddonObject):
         else:
             CONFIG.Logger.extend_player_rendering_not_free(self._name)
         return self
-    
+
     def queue(self):
         """Queues the camera preset to be exported."""
         self.content(self._camera_preset)

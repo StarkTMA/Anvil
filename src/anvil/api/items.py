@@ -5,46 +5,49 @@ from anvil.api.actors import Attachable, _Components
 from anvil.api.commands import Effects, Slots
 from anvil.api.components import _component
 from anvil.api.enums import (EnchantsSlots, ItemCategory, ItemGroups,
-                             ItemVanillaTags)
+                             ItemRarity, ItemVanillaTags)
 from anvil.api.types import Identifier, Seconds, inf
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 
-__all__ = [
-    "Item",
-    "ItemIcon",
-    "ItemFuel",
-    "ItemEntityPlacer",
-    "ItemDurability",
-    "ItemDisplayName",
-    "ItemCooldown",
-    "ItemRepairable",
-    "ItemBlockPlacer",
-    "ItemMaxStackSize",
-    "ItemRecord",
-    "ItemShooter",
-    "ItemProjectile",
-    "ItemThrowable",
-    "ItemWearable",
-    "ItemHandEquipped",
-    "ItemGlint",
-    "ItemUseModifiers",
-    "ItemStackedByData",
-    "ItemUseAnimation",
-    "ItemAllowOffHand",
-    "ItemShouldDespawn",
-    "ItemLiquidClipped",
-    "ItemDamage",
-    "ItemDigger",
-    "ItemEnchantable",
-    "ItemFood",
-    "ItemsInteractButton",
-]
-
-
 # Components
+# Require ITEM_SERVER_VERSION >= 1.21.30
+class ItemRarity(_component):
+    component_namespace = "minecraft:rarity"
+
+    def __init__(self, value: ItemRarity) -> None:
+        """Specifies the base rarity of the item, affecting the color of its name unless overridden by
+        'minecraft:hover_text_color'.
+
+        Args:
+            value (ItemRarity): The base rarity of the item.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_rarity
+        """
+        super().__init__("rarity")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
+        self._component_set_value("value", value)
+
+
+# Require ITEM_SERVER_VERSION >= 1.21.20
+class ItemCustomComponents(_component):
+    component_namespace = "minecraft:custom_components"
+
+    def __init__(self, *components: str) -> None:
+        """Registers custom components for this item.
+
+        Args:
+            components (str): The components to register, if the namespace is not provided, the project namespace will be used.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_custom_components
+        """
+        super().__init__("custom_components")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.20")
+        self._component_set_value(components)
+
+
 # Require ITEM_SERVER_VERSION >= 1.20.50
 class ItemTags(_component):
     component_namespace = "minecraft:tags"
@@ -231,7 +234,7 @@ class ItemWearable(_component):
 
         self._component_add_field("slot", slot)
         self._component_add_field("protection", protection)
-        #self._component_add_field("dispensable", dispensable)
+        # self._component_add_field("dispensable", dispensable)
 
 
 class ItemHandEquipped(_component):
@@ -436,7 +439,9 @@ class ItemRepairable(_component):
             repair_amount (int): How much durability is repaired.
             repair_items (str): List of repair item entries.
         """
-        self[self.component_namespace]["repair_items"].append({"items": [str(i) for i in repair_items], "repair_amount": repair_amount})
+        self[self.component_namespace]["repair_items"].append(
+            {"items": [str(i) for i in repair_items], "repair_amount": repair_amount}
+        )
         return self
 
 
@@ -722,7 +727,6 @@ class _ItemServerDescription(MinecraftDescription):
         super().__init__(name, is_vanilla)
         self._description["description"]["properties"] = {}
         self._description["description"]["menu_category"] = {}
-        
 
     def group(self, group: ItemGroups):
         self._description["description"]["menu_category"]["group"] = str(group)

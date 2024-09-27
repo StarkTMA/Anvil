@@ -223,6 +223,7 @@ class _Cube:
             self.uv = {}
             for face, face_data in self.cube.get("faces", {}).items():
                 uv_map = face_data["uv"]
+                rotation = face_data.get("rotation", 0)
                 if face in ["up", "down"]:
                     uv_map = [uv_map[2], uv_map[3], uv_map[0], uv_map[1]]
 
@@ -232,6 +233,8 @@ class _Cube:
                         "uv": [uv_map[0], uv_map[1]],
                         "uv_size": uv_size,
                     }
+                    if rotation != 0:
+                        self.uv[face]["uv_rotation"] = rotation
 
     def compile(self) -> dict:
         cube = {
@@ -335,6 +338,8 @@ class _ModelManager:
                 [0, self._bbmodel["visible_box"][2], 0],
             )
             self._content["minecraft:geometry"][0]["bones"] = [bone.compile() for bone in self._bones.values()]
+            if self._source == "block":
+                self._content["minecraft:geometry"][0]["item_display_transforms"] = self._bbmodel["display"]
             self._queued = True
 
     def _export(self) -> None:

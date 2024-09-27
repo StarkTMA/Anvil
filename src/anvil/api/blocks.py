@@ -60,6 +60,21 @@ class BlockDescriptor(dict):
 
 
 # Components
+class BlockCustomComponents(_component):
+    component_namespace = "minecraft:custom_components"
+
+    def __init__(self, *components: str) -> None:
+        """Sets the color of the block when rendered to a map.
+
+        Args:
+            components (str): The components to register, if the namespace is not provided, the project namespace will be used.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_custom_components
+        """
+        super().__init__("custom_components")
+        self._component_set_value(components)
+
+
 class BlockDefault(_component):
     component_namespace = "minecraft:block_default"
 
@@ -104,8 +119,6 @@ class BlockDefault(_component):
             )
         else:
             self._component_add_field("textures", {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwargs.items()})
-            
-
 
         return self
 
@@ -371,7 +384,7 @@ class BlockTransformation(_component):
         """The block's transfomration."""
         super().__init__("transformation")
 
-    def translation(self, translation: position):
+    def translation(self, translation: tuple[float, float, float]):
         """The block's translation.
 
         Args:
@@ -380,23 +393,30 @@ class BlockTransformation(_component):
         self._component_add_field("translation", translation)
         return self
 
-    def scale(self, x: int, y: int, z: int):
+    def scale(self, scale: tuple[float, float, float], scale_pivot: tuple[float, float, float] = (0, 0, 0)):
         """The block's scale.
 
         Args:
             scale (position): The block's scale.
         """
-        self._component_add_field("scale", (x, y, z))
+        self._component_add_field("scale", scale)
+
+        if scale_pivot != (0, 0, 0):
+            self._component_add_field("scale_pivot", scale_pivot)
+
         return self
 
-    def rotation(self, x: int, y: int, z: int):
+    def rotation(self, rotation: tuple[float, float, float], rotation_pivot: tuple[float, float, float] = (0, 0, 0)):
         """The block's rotation.
 
         Args:
             rotation (position): The block's rotation.
 
         """
-        self._component_add_field("rotation", (x, y, z))
+        self._component_add_field("rotation", rotation)
+
+        if rotation_pivot != (0, 0, 0):
+            self._component_add_field("rotation_pivot", rotation_pivot)
         return self
 
 

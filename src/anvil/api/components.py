@@ -506,7 +506,7 @@ class Filter:
         operator: FilterOperation = FilterOperation.Equals,
     ):
         return self._construct_filter("is_sitting", subject, operator, None, value)
-   
+
     @classmethod
     def has_damaged_equipment(
         self,
@@ -517,6 +517,17 @@ class Filter:
         operator: FilterOperation = FilterOperation.Equals,
     ):
         return self._construct_filter("has_damaged_equipment", subject, operator, domain, value)
+
+    @classmethod
+    def owner_distance(
+        self,
+        value: int,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("owner_distance", subject, operator, None, value)
+
 
 # Components ==========================================================================
 
@@ -606,11 +617,15 @@ class Health(_component):
 class Physics(_component):
     component_namespace = "minecraft:physics"
 
-    def __init__(self, has_collision: bool = True, has_gravity: bool = True) -> None:
+    def __init__(self, has_collision: bool = True, has_gravity: bool = True, push_towards_closest_space: bool = False) -> None:
         """Defines physics properties of an actor, including if it is affected by gravity or if it collides with objects."""
         super().__init__("physics")
-        self._component_add_field("has_collision", has_collision)
-        self._component_add_field("has_gravity", has_gravity)
+        if not has_collision:
+            self._component_add_field("has_collision", has_collision)
+        if not has_gravity:
+            self._component_add_field("has_gravity", has_gravity)
+        if push_towards_closest_space:
+            self._component_add_field("push_towards_closest_space", push_towards_closest_space)
 
 
 class KnockbackResistance(_component):
@@ -3661,9 +3676,12 @@ class FollowOwner(_ai_goal):
         speed_multiplier: float = 1.0,
         start_distance: float = 10.0,
         stop_distance: float = 2.0,
+        post_teleport_distance: int = 1,
     ) -> None:
         """Compels an entity to follow a player marked as an owner."""
         super().__init__("behavior.follow_owner")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.20")
+
         if not can_teleport:
             self._component_add_field("can_teleport", can_teleport)
         if not ignore_vibration:
@@ -3676,6 +3694,8 @@ class FollowOwner(_ai_goal):
             self._component_add_field("start_distance", start_distance)
         if stop_distance != 2.0:
             self._component_add_field("stop_distance", stop_distance)
+        if post_teleport_distance > 1:
+            self._component_add_field("post_teleport_distance", post_teleport_distance)
 
 
 class WaterMovement(_component):
@@ -5619,3 +5639,21 @@ class BodyRotationBlocked(_component):
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_blocked
         """
         super().__init__("body_rotation_blocked")
+
+
+class DamageAbsorption(_component):
+    component_namespace = "minecraft:damage_absorption"
+
+    def __init__(self, absorbable_causes: list[DamageCause] = DamageCause.Nothing) -> None:
+        """Allows an item to absorb damage that would otherwise be dealt to its wearer. The item must be equipped in an armor slot for this to happen. The absorbed damage reduces the item's durability, with any excess damage being ignored. The item must also have a minecraft:durability component.
+
+        Args:
+            absorbable_causes (list[str], optional): A list of damage causes that can be absorbed by the item. By default, no damage cause is absorbed.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_absorption
+        """
+        super().__init__("damage_absorption")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.20")
+
+        if absorbable_causes != DamageCause.Nothing:
+            self._component_set_value("absorbable_causes", absorbable_causes)

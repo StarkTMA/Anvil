@@ -99,6 +99,7 @@ class Slots(StrEnum):
     EquippedChest = "slot.chest"
     Equippable = "slot.equippable"
     Container = "slots.container"
+    Body = "slot.armor.body"
 
 
 class Gamemodes(StrEnum):
@@ -228,6 +229,13 @@ class Effects(StrEnum):
     WaterBreathing = "water_breathing"
     ConduitPower = "conduit_power"
     Resistance = "resistance"
+    # Added in 1.21
+    Infested = "infested"
+    Oozing = "oozing"
+    Weaving = "weaving"
+    WindCharged = "wind_charged"
+    RaidOmen = "raid_omen"
+    TrailOmen = "trail_omen"
 
 
 class ScoreboardOperation(StrEnum):
@@ -548,12 +556,13 @@ class Selector:
 
         """
         from anvil import ANVIL
+
         property_values = {}
         for property, value in properties.items():
             property_values.update({f"{ANVIL.config.NAMESPACE}:{property}": value})
         self._args(has_property=property_values)
         return self
-    
+
     def __str__(self) -> str:
         """Returns the target selector as a string."""
         if len(self.arguments) > 0:
@@ -1266,3 +1275,60 @@ class BlockVanillaTags(StrEnum):
     TextSign = "text_sign"
     Crop = "minecraft:crop"
     FertilizeArea = "fertilize_area"
+
+
+class ItemRarity(StrEnum):
+    Common = "common"
+    Uncommon = "uncommon"
+    Rare = "rare"
+    Epic = "epic"
+
+
+class PotionId(StrEnum):
+    Water = "water"
+    Mundane = "mundane"
+    LongMundane = "long_mundane"
+    Thick = "thick"
+    Awkward = "awkward"
+    NightVision = "nightvision"
+    LongNightVision = "long_nightvision"
+    Invisibility = "invisibility"
+    LongInvisibility = "long_invisibility"
+    Leaping = "leaping"
+    LongLeaping = "long_leaping"
+    StrongLeaping = "strong_leaping"
+    FireResistance = "fire_resistance"
+    LongFireResistance = "long_fire_resistance"
+    Swiftness = "swiftness"
+    LongSwiftness = "long_swiftness"
+    StrongSwiftness = "strong_swiftness"
+    Slowness = "slowness"
+    LongSlowness = "long_slowness"
+    StrongSlowness = "strong_slowness"
+    WaterBreathing = "water_breathing"
+    LongWaterBreathing = "long_water_breathing"
+    Healing = "healing"
+    StrongHealing = "strong_healing"
+    Harming = "harming"
+    StrongHarming = "strong_harming"
+    Poison = "poison"
+    LongPoison = "long_poison"
+    StrongPoison = "strong_poison"
+    Regeneration = "regeneration"
+    LongRegeneration = "long_regeneration"
+    StrongRegeneration = "strong_regeneration"
+    Strength = "strength"
+    LongStrength = "long_strength"
+    StrongStrength = "strong_strength"
+    Weakness = "weakness"
+    LongWeakness = "long_weakness"
+    Wither = "wither"
+    TurtleMaster = "turtle_master"
+    LongTurtleMaster = "long_turtle_master"
+    StrongTurtleMaster = "strong_turtle_master"
+    SlowFalling = "slow_falling"
+    LongSlowFalling = "long_slow_falling"
+    WindCharged = "wind_charged"
+    Weaving = "weaving"
+    Oozing = "oozing"
+    Infested = "infested"
