@@ -3,10 +3,12 @@ from typing import List, Tuple, Union
 
 from anvil import ANVIL, CONFIG
 from anvil.api.enums import (Biomes, ContainerType, ControlFlags, DamageCause,
-                             Difficulty, Effects, FilterEquipmentDomain,
+                             DamageSensorDamage, Difficulty, Effects,
+                             ExplosionParticleEffect, FilterEquipmentDomain,
                              FilterOperation, FilterSubject,
-                             RawTextConstructor, Selector, Slots, Target,
-                             Vibrations)
+                             LineOfSightObstructionType, LookAtLocation,
+                             LootedAtSetTarget, RawTextConstructor, Selector,
+                             Slots, Target, Vibrations)
 from anvil.api.features import Particle
 from anvil.api.types import (Identifier, Molang, Seconds, coordinates, event,
                              position)
@@ -986,7 +988,7 @@ class DamageSensor(_component):
     def add_trigger(
         self,
         cause: DamageCause,
-        deals_damage: bool = True,
+        deals_damage: DamageSensorDamage = DamageSensorDamage.Yes,
         on_damage_event: str = None,
         on_damage_filter: Filter = None,
         damage_multiplier: int = 1,
@@ -2318,6 +2320,13 @@ class Explode(_component):
         fuse_lit: bool = False,
         max_resistance: int = 3.40282e38,
         power: int = 3,
+        damage_scaling: float = 1.0,
+        toggles_blocks: bool = False,
+        knockback_scaling: float = 1.0,
+        particle_effect: ExplosionParticleEffect = ExplosionParticleEffect.Explosion,
+        sound_effect: str = "explode",
+        negates_fall_damage: bool = False,
+        allow_underwater: bool = True,
     ) -> None:
         """Defines how the entity explodes."""
         super().__init__("explode")
@@ -2338,6 +2347,20 @@ class Explode(_component):
             self._component_add_field("max_resistance", max_resistance)
         if power != 3:
             self._component_add_field("power", power)
+        if damage_scaling != 1.0:
+            self._component_add_field("damage_scaling", damage_scaling)
+        if toggles_blocks != False:
+            self._component_add_field("toggles_blocks", toggles_blocks)
+        if knockback_scaling != 1.0:
+            self._component_add_field("knockback_scaling", knockback_scaling)
+        if particle_effect is not ExplosionParticleEffect.Explosion:
+            self._component_add_field("particle_effect", particle_effect)
+        if sound_effect != "explode":
+            self._component_add_field("sound_effect", sound_effect)
+        if negates_fall_damage != False:
+            self._component_add_field("negates_fall_damage", negates_fall_damage)
+        if allow_underwater != True:
+            self._component_add_field("allow_underwater", allow_underwater)
 
 
 class KnockbackRoar(_ai_goal):
@@ -2855,6 +2878,7 @@ class SummonEntity(_ai_goal):
         summon_cap: int = 0,
         summon_cap_radius: float = 0.0,
         target: FilterSubject = FilterSubject.Self,
+        summon_event: str = "minecraft:entity_spawned",
     ):
         self[self.component_namespace]["summon_choices"][-1]["sequence"].append(
             {
@@ -2869,6 +2893,7 @@ class SummonEntity(_ai_goal):
                 "summon_cap": summon_cap if summon_cap != 0 else {},
                 "summon_cap_radius": summon_cap_radius if summon_cap_radius != 0 else {},
                 "target": target,
+                "summon_event": summon_event if summon_event != "minecraft:entity_spawned" else {},
             }
         )
         return self
@@ -5657,3 +5682,123 @@ class DamageAbsorption(_component):
 
         if absorbable_causes != DamageCause.Nothing:
             self._component_set_value("absorbable_causes", absorbable_causes)
+
+
+class DimensionBound(_component):
+    component_namespace = "minecraft:dimension_bound"
+
+    def __init__(
+        self,
+    ) -> None:
+        """Prevents the entity from changing dimension through portals.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dimension_bound
+        """
+        super().__init__("dimension_bound")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.40")
+
+
+class Transient(_component):
+    component_namespace = "minecraft:transient"
+
+    def __init__(
+        self,
+    ) -> None:
+        """An entity with this component will NEVER persist, and will forever disappear when unloaded.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_transient
+        """
+        super().__init__("transient")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.40")
+
+
+class CannotBeAttacked(_component):
+    component_namespace = "minecraft:cannot_be_attacked"
+
+    def __init__(
+        self,
+    ) -> None:
+        """An entity with this component will NEVER be attacked by other entities.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_cannot_be_attacked
+        """
+        super().__init__("cannot_be_attacked")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.51")
+
+
+class IgnoreCannotBeAttacked(_component):
+    component_namespace = "minecraft:ignore_cannot_be_attacked"
+
+    def __init__(self, filters: Filter = None) -> None:
+        """When set, blocks entities from attacking the owner entity unless they have the minecraft:ignore_cannot_be_attacked component.
+
+        Args:
+            filters (Filter, optional): Defines which entities are exceptions and are allowed to be attacked by the owner entity, potentially attacked entity is subject "other". If this is not specified then all attacks by the owner are allowed.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ignore_cannot_be_attacked
+        """
+        super().__init__("ignore_cannot_be_attacked")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.51")
+
+        if not filters is None:
+            self._component_add_field("filters", filters)
+
+
+class LookedAt(_component):
+    component_namespace = "minecraft:looked_at"
+
+    def __init__(
+        self,
+        field_of_view: float = 26,
+        filters: Filter = None,
+        find_players_only: bool = False,
+        line_of_sight_obstruction_type: LineOfSightObstructionType = LineOfSightObstructionType.Collision,
+        look_at_locations: list[LookAtLocation] = None,
+        looked_at_cooldown: tuple[float, float] = (0, 0),
+        looked_at_event: str = None,
+        not_looked_at_event: str = None,
+        scale_fov_by_distance: bool = True,
+        search_radius: float = 10,
+        set_target: LootedAtSetTarget = LootedAtSetTarget.OnceAndStopScanning,
+    ) -> None:
+        """Defines the behavior when another entity looks at the owner entity.
+        
+        Args:
+            field_of_view (float, optional): The field of view in degrees. Defaults to 26.
+            filters (Filter, optional): Defines which entities can trigger the looked_at_event. Defaults to None.
+            find_players_only (bool, optional): If true, only players will trigger the looked_at_event. Defaults to False.
+            line_of_sight_obstruction_type (LineOfSightObstructionType, optional): The type of obstruction to consider when checking line of sight. Defaults to LineOfSightObstructionType.Collision.
+            look_at_locations (list[LookAtLocation], optional): List of locations to look at. Defaults to None.
+            looked_at_cooldown (tuple[float, float], optional): The cooldown range in seconds. Defaults to (0, 0).
+            looked_at_event (str, optional): Event to trigger when the entity is looked at. Defaults to None.
+            not_looked_at_event (str, optional): Event to trigger when the entity is no longer looked at. Defaults to None.
+            scale_fov_by_distance (bool, optional): If true, the field of view will be scaled based on the distance between the entities. Defaults to True.
+            search_radius (float, optional): The radius in blocks to search for entities. Defaults to 10.
+            set_target (LootedAtSetTarget, optional): The target selection strategy. Defaults to LootedAtSetTarget.OnceAndStopScanning.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_looked_at
+        """
+        super().__init__("looked_at")
+
+        if field_of_view != 26:
+            self._component_add_field("field_of_view", field_of_view)
+        if filters is not None:
+            self._component_add_field("filters", filters)
+        if find_players_only:
+            self._component_add_field("find_players_only", find_players_only)
+        if line_of_sight_obstruction_type != LineOfSightObstructionType.Collision:
+            self._component_add_field("line_of_sight_obstruction_type", line_of_sight_obstruction_type)
+        if look_at_locations is not None:
+            self._component_add_field("look_at_locations", look_at_locations)
+        if looked_at_cooldown != (0, 0):
+            self._component_add_field("looked_at_cooldown", looked_at_cooldown)
+        if looked_at_event is not None:
+            self._component_add_field("looked_at_event", looked_at_event)
+        if not_looked_at_event is not None:
+            self._component_add_field("not_looked_at_event", not_looked_at_event)
+        if not scale_fov_by_distance:
+            self._component_add_field("scale_fov_by_distance", scale_fov_by_distance)
+        if search_radius != 10:
+            self._component_add_field("search_radius", search_radius)
+        if set_target != LootedAtSetTarget.OnceAndStopScanning:
+            self._component_add_field("set_target", set_target)

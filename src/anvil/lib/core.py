@@ -1,5 +1,3 @@
-"""Provides the core functionality of the Anvil library."""
-
 import os
 from datetime import datetime
 
@@ -13,7 +11,7 @@ from anvil.lib.config import _AnvilConfig
 from anvil.lib.lib import (CopyFiles, CreateDirectory, File, FileExists,
                            RemoveDirectory, process_subcommand,
                            validate_namespace_project_name, zipit)
-from anvil.lib.materials import MaterialsObject
+from anvil.api.materials import MaterialsObject
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.sounds import (EntitySoundEvent, MusicCategory, MusicDefinition,
@@ -320,8 +318,6 @@ class _AnvilDefinitions:
 
 
 class _AnvilCore:
-    """A class representing an Anvil instance."""
-
     _instance = None
     _objects_list: list[AddonObject] = []
     _definitions: _AnvilDefinitions
@@ -374,12 +370,8 @@ class _AnvilCore:
         """
         Translates en_US to all supported Minecraft languages.
         This is a time consuming function, it will be executed with anvil.package(), so it's better to avoid it unless you really want to use it.
-
-
-        Usage:
-        ---------
-        >>> ANVIL.translate
         """
+
         from deep_translator import GoogleTranslator
 
         def _to_lang(translator: GoogleTranslator, langs: dict):
@@ -493,6 +485,7 @@ class _AnvilCore:
 
 
 class _Anvil(_AnvilCore):
+    """A class representing an Anvil instance."""
     def __init__(self, config: _AnvilConfig):
         super().__init__(config)
 
@@ -620,6 +613,7 @@ class _Anvil(_AnvilCore):
         skip_translation: bool = False,
         apply_overlay: bool = False,
     ) -> None:
+        """Packages the project into a zip file for Marketplace."""
         if not self._compiled:
             self.config.Logger.not_compiled()
         self.config.Logger.packaging_zip()
@@ -721,6 +715,7 @@ class _Anvil(_AnvilCore):
         )
 
     def generate_technical_notes(self):
+        """Generates a technical notes PDF that contains information about included entities, blocks, items, sounds and more."""
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet

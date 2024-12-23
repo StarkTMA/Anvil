@@ -78,7 +78,7 @@ class _RawText(RawTextConstructor):
         return self._command + super().__str__()
 
 
-class  TitleRaw(Command):
+class TitleRaw(Command):
     def __init__(self) -> None:
         super().__init__("titleraw")
 
@@ -115,20 +115,16 @@ class Execute(Command):
             self._parent._append_cmd(self._condition, "entity", target)
             return self._parent
 
-        def Block(self, block_position: coordinates, tile: Block | str , **properties):
+        def Block(self, block_position: coordinates, tile: Block | str, **properties):
             name = (
                 tile.identifier
                 if isinstance(tile, (Blocks._MinecraftBlock, Block))
-                else tile
-                if isinstance(tile, str)
-                else CONFIG.Logger.unsupported_block_type(tile)
+                else tile if isinstance(tile, str) else CONFIG.Logger.unsupported_block_type(tile)
             )
             states = (
                 tile.states
                 if isinstance(tile, Blocks._MinecraftBlock)
-                else ""
-                if isinstance(tile, (str, Block))
-                else CONFIG.Logger.unsupported_block_type(tile)
+                else "" if isinstance(tile, (str, Block)) else CONFIG.Logger.unsupported_block_type(tile)
             )
 
             for k, v in properties.items():
@@ -446,19 +442,20 @@ class Effect(Command):
     def __init__(self, target: Selector) -> None:
         super().__init__("effect", target)
 
-    def clear(self):
+    def clear(self, effect: Effects = None):
         self._append_cmd("clear")
+        if effect:
+            self._append_cmd(effect)
         return self
 
-    def give(self, effect: Effects, seconds: int, amplifier: int, hide_particles: bool = False):
+    def give(self, effect: Effects, seconds: int = "infinite", amplifier: int = 1, hide_particles: bool = False):
         self._append_cmd(effect, seconds, amplifier)
+        if amplifier != 1:
+            self._append_cmd(amplifier)
         if hide_particles:
             self._append_cmd("true")
         return self
 
-    def remove(self, effect: Effects):
-        self._append_cmd(effect, 0)
-        return self
 
 class Gamemode(Command):
     def __init__(self, target: str, gamemode: Gamemodes):
@@ -653,16 +650,12 @@ class Setblock(Command):
         name = (
             tile.identifier
             if isinstance(tile, (Blocks._MinecraftBlock, Block))
-            else tile
-            if isinstance(tile, str)
-            else CONFIG.Logger.unsupported_block_type(tile)
+            else tile if isinstance(tile, str) else CONFIG.Logger.unsupported_block_type(tile)
         )
         states = (
             tile.states
             if isinstance(tile, Blocks._MinecraftBlock)
-            else ""
-            if isinstance(tile, (str, Block))
-            else CONFIG.Logger.unsupported_block_type(tile)
+            else "" if isinstance(tile, (str, Block)) else CONFIG.Logger.unsupported_block_type(tile)
         )
 
         for k, v in properties.items():
@@ -685,16 +678,12 @@ class Fill(Command):
         name = (
             tile.identifier
             if isinstance(tile, (Blocks._MinecraftBlock, Block))
-            else tile
-            if isinstance(tile, str)
-            else CONFIG.Logger.unsupported_block_type(tile)
+            else tile if isinstance(tile, str) else CONFIG.Logger.unsupported_block_type(tile)
         )
         states = (
             tile.states
             if isinstance(tile, Blocks._MinecraftBlock)
-            else ""
-            if isinstance(tile, (str, Block))
-            else CONFIG.Logger.unsupported_block_type(tile)
+            else "" if isinstance(tile, (str, Block)) else CONFIG.Logger.unsupported_block_type(tile)
         )
 
         for k, v in properties.items():
@@ -712,16 +701,12 @@ class Fill(Command):
         name = (
             tile.identifier
             if isinstance(tile, (Blocks._MinecraftBlock, Block))
-            else tile
-            if isinstance(tile, str)
-            else CONFIG.Logger.unsupported_block_type(tile)
+            else tile if isinstance(tile, str) else CONFIG.Logger.unsupported_block_type(tile)
         )
         states = (
             tile.states
             if isinstance(tile, Blocks._MinecraftBlock)
-            else ""
-            if isinstance(tile, (str, Block))
-            else CONFIG.Logger.unsupported_block_type(tile)
+            else "" if isinstance(tile, (str, Block)) else CONFIG.Logger.unsupported_block_type(tile)
         )
 
         for k, v in properties.items():
@@ -942,7 +927,9 @@ class Stopsound(Command):
 
 
 class Hud(Command):
-    def __init__(self, target: Selector | Target, visible: HudVisibility = HudVisibility.Reset, hud_element: HudElement = HudElement.All):
+    def __init__(
+        self, target: Selector | Target, visible: HudVisibility = HudVisibility.Reset, hud_element: HudElement = HudElement.All
+    ):
         """Changes the visibility of HUD elements for a player.
 
         Args:
@@ -955,4 +942,3 @@ class Hud(Command):
 
         super().__init__("hud", target, visible, hud_element)
         return self
-

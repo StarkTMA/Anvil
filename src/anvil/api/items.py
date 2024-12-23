@@ -1,4 +1,5 @@
 import os
+from math import inf
 
 from anvil import ANVIL, CONFIG
 from anvil.api.actors import Attachable, _Components
@@ -6,11 +7,12 @@ from anvil.api.commands import Effects, Slots
 from anvil.api.components import _component
 from anvil.api.enums import (EnchantsSlots, ItemCategory, ItemGroups,
                              ItemRarity, ItemVanillaTags)
-from anvil.api.types import Identifier, Seconds, inf
+from anvil.api.types import Identifier, Seconds
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+
 
 # Components
 # Require ITEM_SERVER_VERSION >= 1.21.30
@@ -465,7 +467,7 @@ class ItemMaxStackSize(_component):
 class ItemBlockPlacer(_component):
     component_namespace = "minecraft:block_placer"
 
-    def __init__(self, block: str) -> None:
+    def __init__(self, block: str, replace_block_item: bool = False) -> None:
         """Sets the item as a Planter item component for blocks. Planter items are items that can be planted into another block.
 
         Args:
@@ -474,10 +476,12 @@ class ItemBlockPlacer(_component):
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer
         """
-        super().__init__("block_placer")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
+        super().__init__("block_placer", )
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.50")
 
         self._component_add_field("block", block)
+        if replace_block_item:
+            self._component_add_field("replace_block_item", replace_block_item)
 
     def use_on(self, *blocks: str):
         """List of block descriptors that contain blocks that this item can be used on."""

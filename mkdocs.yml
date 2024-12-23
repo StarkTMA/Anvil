@@ -15,6 +15,7 @@ theme:
     primary: black
 
   features:
+    - search.suggest
     - navigation.tabs
     - navigation.sections
     - navigation.footer
@@ -38,45 +39,49 @@ extra:
 
 plugins:
   - search
+  - autorefs
   - mkdocstrings:
+      default_handler: python
       handlers:
         python:
           options:
+            show_symbol_type_toc: true
+            show_symbol_type_heading: true
             show_source: false
+            show_root_heading: true
+            inherited_members: true
 
-nav:
-  - Home: index.md
-  - Docs:
-      - Introduction: guide/introduction.md
-      - Config: guide/config.md
-      - Tutorials:
-          - Adding your first entity: guide/adding_your_first_entity.md
-          - Adding your first block: guide/adding_your_first_block.md
-          - Creating a simple OneBlock skyblock: guide/creating_a_one_block.md
-
-  - Api Reference:
-      - Anvil: api/lib.md
-      - Actors: api/actors.md
-      - Blocks: api/blocks.md
-      - Commands: api/commands.md
-      - Components: api/components.md
-      - Items: api/items.md
-      - Molang: api/molang.md
-      - Enums: "api/enums.md"
-      - Features: "api/features.md"
-      - PBR: api/texture_pack.md
-      - UI: api/ui.md
-      - Vanilla: api/vanilla.md
-      - Functions: api/functions.md
-
-markdown_extension:
+markdown_extensions:
+  - admonition
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-      use_pygments: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
-  - admonition
   - pymdownx.details
+
+nav:
+  - Home: index.md
+  - API:
+    - Core:
+      - api/core.md
+      - api/lib.md
+    - Features:
+      - api/actors.md
+      - api/blockbench.md
+      - api/blocks.md
+      - api/commands.md
+      - api/components.md
+      - api/enums.md
+      - api/features.md
+      - api/items.md
+      - api/molang.md
+      - api/texture_pack.md
+      - api/types.md
+      - api/ui.md
+      - api/vanilla.md
+  - Docs:
+      - Config: guide/config.md
+      - Adding Entity: guide/adding_entity.md

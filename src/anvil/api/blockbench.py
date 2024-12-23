@@ -224,11 +224,11 @@ class _Cube:
             for face, face_data in self.cube.get("faces", {}).items():
                 uv_map = face_data["uv"]
                 rotation = face_data.get("rotation", 0)
-                if face in ["up", "down"]:
+                if face == "up" or face == "down":
                     uv_map = [uv_map[2], uv_map[3], uv_map[0], uv_map[1]]
 
                 uv_size = [round(uv_map[2] - uv_map[0], 2), round(uv_map[3] - uv_map[1], 2)]
-                if sum(uv_size) != 0:
+                if uv_size[0] != 0 and uv_size[1] != 0:
                     self.uv[face] = {
                         "uv": [uv_map[0], uv_map[1]],
                         "uv_size": uv_size,

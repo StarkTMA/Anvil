@@ -1,16 +1,14 @@
-[//]: <> (https://squidfunk.github.io/mkdocs-material/reference/)
-
 ## Introduction
 
-In this tutorial, we will be creating a new entity called `cube` in the `my_project` project.
+In this tutorial, we will be creating a new entity called `skin_humanoid` in the `awesome_project` project.
 
 ## First steps
 
-Open the `my_project.py` file in your project folder. This is the main file of your project, and is where you will be writing your code.
+Open the `awesome_project.py` file in your project folder. This is the main file of your project, and is where you will be writing your code.
 
 The first thing we need to do is import the `Entity` class from the `api.actors` module.
 
-```py  title="my_project.py" 
+```python title="awesome_project.py"
 from anvil.api.actors import Entity
 ```
 
@@ -18,33 +16,35 @@ from anvil.api.actors import Entity
 
 Now that we have imported the `Entity` class, we can create our entity.
 
-```py  title="my_project.py"
-my_entity = Entity("cube")
+```python title="awesome_project.py"
+my_entity = Entity("skin_humanoid")
 ```
 
-!!! success 
-    This will create a new entity called `cube` in the `my_project` project.
+!!! success
+    This will create a new entity called `skin_humanoid` in the `awesome_project` project.
 
 ## Adding visuals
 
-Each entity require a geometry and texture to be displayed in-game. We will be using a simple cube geometry and texture for this tutorial.
+Each entity require a geometry and texture to be displayed in-game. We will be using a simple skin_humanoid geometry and texture for this tutorial.
 
-```py  title="my_project.py"
-my_entity.Client.description.geometry("default", "cube")
-my_entity.Client.description.texture("default", "cube")
-my_entity.Client.description.render_controller("default").geometry("default").texture("default")
+Anvil integrates blockbench into the development workflow, all of your entity assets, the geometry with it's textures and animations should be saved in a bbmodel file in the `assets/bbmodels` folder.
+
+```python title="awesome_project.py"
+my_entity.Client.description.geometry("skin_humanoid")
+my_entity.Client.description.texture("skin_humanoid", "skin_ace")
+my_entity.Client.description.render_controller("default").geometry("skin_humanoid").textures("skin_ace")
 ```
 
-![Alt text](\\assets\geomtery_format.jpg)
+![Alt text](\assets\bbmodel_setup.png)
 
 !!!note
-    The geometry namespace must follow a specific format. The namespace must be in the format `namespace.geometry_name`, where `namespace` is the namespace of the project, and `geometry_name` is the name of the geometry. This is valid for entities, blocks, attachables...
-!!!tip
-    The geometries must be saved under `assets/models/actors`
-    The textures must be saved under `assets/textures/actors`
+    We referenced `skin_humanoid` as the blockbench name, Anvil will expect a file named `skin_humanoid.bbmodel` in the `assets/bbmodels` folder with the model identifier of the same name.
+
+!!!note
+    We referenced `skin_humanoid` as the blockbench name and `skin_ace` as the texture name, Anvil will expect a file named `skin_humanoid.bbmodel` in the `assets/bbmodels` folder with the model identifier of the same name and a texture named `skin_ace`.
+
 !!!failure
     Exporting an entity without any visuals will raise an error.
-
 
 ## Adding Behaviors
 
@@ -52,7 +52,7 @@ Behaviors are used to define the way an entity behaves in the world. In this tut
 
 Firstly we need to import the necessary components from the `api.components` module.
 
-```py title="my_project.py"
+```python title="awesome_project.py"
 from anvil.api.components import (
     JumpStatic,
     MovementType,
@@ -69,7 +69,7 @@ from anvil.api.components import (
 )
 ```
 
-```py title="my_project.py"
+```python title="awesome_project.py"
 my_entity.Server.components.add(
     JumpStatic(0),
     MovementType().Basic(),
@@ -86,7 +86,7 @@ my_entity.Server.components.add(
 )
 ```
 
-!!! success 
+!!! success
     The entity will now move around randomly.
 
 ## Exporting the entity
@@ -95,19 +95,18 @@ Now that we have created our entity, we can export it to our project. Anvil foll
 
 It is done by calling the `queue` method on the entity, and optionally passing a folder name to export to.
 
-```python
-my_entity.queue("cubes")
+```python title="awesome_project.py"
+my_entity.queue("humanoids")
 ```
 
-!!! success 
-    The entity will be exported to the `cubes` folder.
-
+!!! success
+    The entity will be exported to the `humanoids` folder.
 
 ## Compiling the project
 
-Now that we have created our entity, we can compile the project. this is the complete code for the `my_project.py` file.
+Now that we have created our entity, we can compile the project. this is the complete code for the `awesome_project.py` file.
 
-```py title="my_project.py" linenums="1"
+```python title="awesome_project.py" linenums="1"
 from anvil import *
 from anvil.api.actors import Entity
 from anvil.api.components import (
@@ -126,10 +125,10 @@ from anvil.api.components import (
 )
 
 def create_entity():
-    my_entity = Entity("my_entity")
-    my_entity.Client.description.geometry("default", "cube")
-    my_entity.Client.description.texture("default", "cube")
-    my_entity.Client.description.render_controller("default").geometry("default").texture("default")
+    my_entity = Entity("skin_humanoid")
+    my_entity.Client.description.geometry("skin_humanoid")
+    my_entity.Client.description.texture("skin_humanoid", "skin_ace")
+    my_entity.Client.description.render_controller("default").geometry("skin_humanoid").textures("skin_ace")
     my_entity.Server.components.add(
         JumpStatic(0),
         MovementType().Basic(),
@@ -144,7 +143,7 @@ def create_entity():
         Pushable(False, False),
         PushThrough(1),
     )
-    my_entity.queue("cubes")
+    my_entity.queue("humanoids")
 
 
 if __name__ == "__main__":
@@ -152,5 +151,6 @@ if __name__ == "__main__":
 
     ANVIL.compile()
 ```
+
 !!! note
-    Note the use of ANVIL.compile at the end of the file. This is required to compile the project, anything added after this line will not be compiled.
+    Note the use of ANVIL.compile() at the end of the file. This is required to compile the project, anything added after this line will not be compiled.

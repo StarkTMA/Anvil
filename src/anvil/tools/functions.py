@@ -2,6 +2,7 @@ from anvil import *
 from anvil.api.commands import Clear, Execute, Scoreboard, Tag, Tellraw
 from anvil.api.features import Function
 
+# Legacy code, will be removed soon
 
 class StateMachine:
     """Class for creating a state machine for managing game levels and logic.

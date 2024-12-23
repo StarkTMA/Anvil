@@ -305,6 +305,7 @@ class CameraPresets(StrEnum):
     ThirdPerson = "minecraft:third_person"
     ThirdPersonFront = "minecraft:third_person_front"
     Free = "minecraft:free"
+    FollowOrbit = "minecraft:follow_orbit"
 
 
 class CameraEasing(StrEnum):
@@ -559,7 +560,7 @@ class Selector:
 
         property_values = {}
         for property, value in properties.items():
-            property_values.update({f"{ANVIL.config.NAMESPACE}:{property}": value})
+            property_values.update({f"{ANVIL.config.NAMESPACE}:{property}": json.dumps(value)})
         self._args(has_property=property_values)
         return self
 
@@ -1276,6 +1277,18 @@ class BlockVanillaTags(StrEnum):
     Crop = "minecraft:crop"
     FertilizeArea = "fertilize_area"
 
+    DiamondTierDestructible = "minecraft:diamond_tier_destructible"
+    IronTierDestructible = "minecraft:iron_tier_destructible"
+    IsAxeItemDestructible = "minecraft:is_axe_item_destructible"
+    IsHoeItemDestructible = "minecraft:is_hoe_item_destructible"
+    IsMaceItemDestructible = "minecraft:is_mace_item_destructible"
+    IsPickaxeItemDestructible = "minecraft:is_pickaxe_item_destructible"
+    IsShearsItemDestructible = "minecraft:is_shears_item_destructible"
+    IsShovelItemDestructible = "minecraft:is_shovel_item_destructible"
+    IsSwordItemDestructible = "minecraft:is_sword_item_destructible"
+    NetheriteTierDestructible = "minecraft:netherite_tier_destructible"
+    StoneTierDestructible = "minecraft:stone_tier_destructible"
+
 
 class ItemRarity(StrEnum):
     Common = "common"
@@ -1332,3 +1345,30 @@ class PotionId(StrEnum):
     Weaving = "weaving"
     Oozing = "oozing"
     Infested = "infested"
+
+
+class ExplosionParticleEffect(StrEnum):
+    Explosion = "explosion"
+    WindBurst = "wind_burst"
+    BreezeWindBurst = "breeze_wind_burst"
+
+
+class DamageSensorDamage(StrEnum):
+    Yes = "yes"
+    No = "no"
+    NoButSideEffectsApply = "no_but_side_effects_apply"
+
+class LineOfSightObstructionType(StrEnum):
+    Outline = "outline"
+    Collision = "collision"
+    CollisionForCamera = "collision_for_camera"
+
+class LookAtLocation(StrEnum):
+    Head = "head"
+    Body = "body"
+    Feet = "feet"
+
+class LootedAtSetTarget(StrEnum):
+    Never = "never"
+    OnceAndStopScanning = "once_and_stop_scanning"
+    OnceAndKeepScanning = "once_and_keep_scanning"

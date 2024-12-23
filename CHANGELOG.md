@@ -1,5 +1,34 @@
 # Changelog
 
+# Version 0.8.2
+
+### [ANVIL]
+
+- Updated `MODULE_MINECRAFT_SERVER` to `[1.16.0]`.
+- Updated `MODULE_MINECRAFT_SERVER_UI` to `[1.3.0]`.
+
+### [BLOCKS]
+
+- Added `BlockRedstoneConductivity()` components.
+
+### [Components]
+
+- Added `DimensionBound()`, `Transient()`, `CannotBeAttacked()`, `IgnoreCannotBeAttacked()`, `LookedAt()` components.
+
+### [Vanilla]
+
+- Added new blocks: `CreakingHeart()`, `ClosedEyeBlossom()`, `OpenEyeBlossom()`, `PaleHangingMoss()`, `PaleMossBlock()`.
+- Added new entities: `Creaking`.
+
+### [Actors]
+
+- Added `play_sound` and `emit_particle` to Entity Events.
+
+### [Molang]
+
+- Added `ClientMemoryTier`, `ServerMemoryTier` and `ClientMaxRenderDistance` queries.
+
+
 # Version 0.8.1
 
 ### [ANVIL]

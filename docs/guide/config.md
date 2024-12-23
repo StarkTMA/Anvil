@@ -1,67 +1,67 @@
-# Understanding your anvilconfig.json file
+# Understanding Your anvilconfig.json File
 
-The `anvilconfig.json` file is the configuration file for your project. It contains all the information about your project, such as the project name, the namespace, the version, etc.
+The `anvilconfig.json` file is the main configuration file for your project. It defines key details about your project, including the project name, namespace, version, and more.
 
-This is a very important file, as it is used to generate almost all the files in your project.
-
-The `anvilconfig.json` file is divided into sections, each section containing different information about your project which you can modify.
+This file is crucial for your project's setup as it is used to generate most of the files in your project. The `anvilconfig.json` is divided into sections, each providing specific configuration options you can modify to suit your project's requirements.
 
 ## Sections
 
-### `[MINCRAFT]`
+### `[MINECRAFT]`
 
-This section contains information about the Minecraft version that the project is compiled for.
+This section defines the Minecraft version that your project targets.
 
-| Key | Type | Description | Default | Restriction | Can be changed |
+| Key | Type | Description | Default | Restriction | Can be Changed |
 | --- | ---- | ----------- | ------- | ----------- | -------------- |
-| `vanilla_version` | `str` | The version of Minecraft that the project is compiled for. | `1.20.12` | Automatically pulled from `@Mojang/bedrock-sample` | Unnecessary |
+| `vanilla_version` | `str` | The Minecraft version for which the project is compiled. | `1.20.12` | Automatically pulled from `@Mojang/bedrock-sample`. | No |
 
 ### `[PACKAGE]`
 
-This section contains information about your project.
+This section contains metadata about your project.
 
-| Key | Type | Description | Default | Restriction | Can be changed |
+| Key | Type | Description | Default | Restriction | Can be Changed |
 | --- | ---- | ----------- | ------- | ----------- | -------------- |
-| `company` | `str` | The company name of the project, used in the `manifest.json` authors section | `Namespace` | None | Yes |
-| `namespace` | `str`| The namespace of the project. | `namespace` | The namespace cannot exceed 8 characters. | Not advised |
-| `project_name` | `str` | The name of the project. | `my_project` | The project name cannot exceed 16 characters. Changing this might have unexpected results. | Not advised |
-| `display_name` | `str` | The display name of the project. | `My Project` | None | Yes |
-| `project_description` | `str` | The description of the project. Used in localized text | `My Project Essentials` | None | Yes |
-| `target` | `str` | The packaging target, can either be `world` or `addon` | `My Project Essentials` | None | Yes |
+| `company` | `str` | Company name used in the `manifest.json` authors section. | `Namespace` | None | Yes |
+| `namespace` | `str` | Namespace for the project. | `namespace` | Must not exceed 8 characters. | Not Advised |
+| `project_name` | `str` | Name of the project. | `my_project` | Must not exceed 16 characters. Changing might cause unexpected results. | Not Advised |
+| `display_name` | `str` | Display name of the project. | `My Project` | None | Yes |
+| `project_description` | `str` | Description used in localized text. | `My Project Essentials` | None | Yes |
+| `target` | `str` | Packaging target; can be `world` or `addon`. | `My Project Packs` | None | Yes |
+| `behavior_description` | `str` | Description of the behavior pack. | `My Project Behaviour Pack` | None | Yes |
+| `resource_description` | `str` | Description of the resource pack. | `My Project Resource Pack` | None | Yes |
 
 ### `[BUILD]`
 
-This section contains information about the build process of the project.
+This section defines information related to the build process.
 
-| Key | Type | Description | Default | Restriction | Can be changed |
+| Key | Type | Description | Default | Restriction | Can be Changed |
 | --- | ---- | ----------- | ------- | ----------- | -------------- |
-| `release` | `UUIDv4` | The version number of the project, used in all manifest files. | `1.0.0` | None | Yes |
-| `rp_uuid` | `list[UUIDv4]` | The uuid of the resource pack. | `Randomly generated` | None | Yes |
-| `bp_uuid` | `list[UUIDv4]` | The uuid of the behavior pack. | `Randomly generated` | None | Yes |
-| `pack_uuid` | `UUIDv4` | The uuid of the world template. | `Randomly generated` | None | Yes |
+| `release` | `UUIDv4` | Version number of the project, used in manifest files. | `1.0.0` | None | Yes |
+| `rp_uuid` | `list[UUIDv4]` | UUIDs of the resource packs. | Randomly generated | None | Yes |
+| `bp_uuid` | `list[UUIDv4]` | UUIDs of the behavior packs. | Randomly generated | None | Yes |
+| `pack_uuid` | `UUIDv4` | UUID of the world template. | Randomly generated | None | Yes |
 
 ### `[ANVIL]`
 
-This section contains information about Anvil.
+This section contains settings related to the Anvil tool.
 
-| Key | Type | Description | Default | Restriction | Can be changed |
+| Key | Type | Description | Default | Restriction | Can be Changed |
 | --- | ---- | ----------- | ------- | ----------- | -------------- |
-| `debug` | `bool` | Enables or disables generation of additional debugging features. | `false` | None | Yes |
-| `scriptapi` | `bool` | Enables or disables ScriptAPI support. | `false` | None | Yes |
-| `scriptui` | `bool` | Enables or disables ScriptAPI/UI support. | `false` | None | Yes |
-| `pbr` | `bool` | Enables or disables Physically based rendering support. | `false` | None | Yes |
-| `random_seed` | `bool` | Enables or disables random_seed support. | `false` | None | Yes |
-| `pascal_project_name` | `str` | Used in generation of Resource and Behavior packs. | `MP` | None | Yes |
-| `last_check` | `str` | The last time Anvil checked `@Mojang/bedrock-sample` for updates. | `datetime` | None | Not advised |
+| `debug` | `bool` | Enable/disable additional debugging features. | `false` | None | Yes |
+| `scriptapi` | `bool` | Enable/disable ScriptAPI support. | `false` | None | Yes |
+| `scriptui` | `bool` | Enable/disable ScriptAPI/UI support. | `false` | None | Yes |
+| `pbr` | `bool` | Enable/disable physically based rendering (PBR) support. | `false` | None | Yes |
+| `random_seed` | `bool` | Enable/disable random seed support. | `false` | None | Yes |
+| `pascal_project_name` | `str` | Name used for generating Resource and Behavior packs. | `MP` | None | Yes |
+| `last_check` | `str` | Last time Anvil checked `@Mojang/bedrock-sample` for updates. | `datetime` | None | Not Advised |
+| `experimental` | `bool` | Indicates if the project uses experimental features. | `false` | None | Yes |
 
 ### `[NAMESPACE]`
 
-Addition configuration options you can add. 
-
+Additional configuration options you can add.
 
 ## Example
 
-```json 
+```json
 {
     "minecraft": {
         "vanilla_version": "1.20.50.3"
@@ -72,7 +72,9 @@ Addition configuration options you can add.
         "project_name": "my_project",
         "display_name": "My Project",
         "project_description": "My Project Packs",
-        "target": "world"
+        "target": "world",
+        "behavior_description": "My Project Behaviour Pack",
+        "resource_description": "My Project Resource Pack"
     },
     "build": {
         "release": "1.0.0",
@@ -98,10 +100,8 @@ Addition configuration options you can add.
 }
 ```
 
-
-## Note
-> The `anvilconfig.json` file is automatically generated when you run the `anvil create` command. You can modify the `anvilconfig.json` file at any time, but be aware that some changes might have unexpected results.
-> Missing keys in the `anvilconfig.json` file will be handled by Anvil when you run the main script.
-> Additional information can be added to the `anvilconfig.json` file through the Anvil API at runtime. This is useful for storing information that is not used in the generation of the project.
-
+## Notes
+- The `anvilconfig.json` file is automatically generated when you run the `anvil create` command. You can modify the file at any time, but be cautious—some changes might have unexpected results.
+- Missing keys in the `anvilconfig.json` file will be automatically handled by Anvil during runtime.
+- You can add additional information to the `anvilconfig.json` file through the Anvil API. This is particularly useful for storing metadata not required during the project generation.
 

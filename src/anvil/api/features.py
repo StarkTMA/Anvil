@@ -2,9 +2,7 @@ import json
 import os
 from enum import StrEnum
 
-from PIL import Image, ImageDraw, ImageFont
-
-from anvil import CONFIG
+from anvil import ANVIL, CONFIG
 from anvil.api.enums import (CameraPresets, FogCameraLocation, LootPoolType,
                              PotionId, RawTextConstructor, RenderDistanceType,
                              SmeltingTags)
@@ -12,6 +10,7 @@ from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, File, FileExists, clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+from PIL import Image, ImageDraw, ImageFont
 
 
 # Dialogue ------------------------------------------------
@@ -931,6 +930,18 @@ class CameraPreset(AddonObject):
             CONFIG.Logger.extend_player_rendering_not_free(self._name)
         return self
 
+    def view_offset(self, x_offset: float, y_offset: float):
+        self._camera_preset["minecraft:camera_preset"]["view_offset"] = [x_offset, y_offset]
+        return self
+    
+    def entity_offset(self, x_offset: float, y_offset: float, z_offset: float):
+        self._camera_preset["minecraft:camera_preset"]["entity_offset"] = [x_offset, y_offset, z_offset]
+        return self
+    
+    def radius(self, radius: float):
+        self._camera_preset["minecraft:camera_preset"]["radius"] = clamp(radius, 0.1, 100)
+        return self
+
     def queue(self):
         """Queues the camera preset to be exported."""
         self.content(self._camera_preset)
@@ -957,7 +968,7 @@ class Structure:
     @property
     def queue(self):
         """Queues the structure to be exported."""
-        CONFIG._queue(self)
+        ANVIL._queue(self)
 
     @property
     def identifier(self) -> Identifier:

@@ -9,6 +9,7 @@ from anvil.api.enums import (BlockFaces, BlockMaterial, BlockVanillaTags,
                              ItemCategory, ItemGroups, PlacementDirectionTrait,
                              PlacementPositionTrait)
 from anvil.api.types import Molang, coordinates, position
+from anvil.lib.format_versions import BLOCK_SERVER_VERSION, ITEM_SERVER_VERSION
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
@@ -60,6 +61,24 @@ class BlockDescriptor(dict):
 
 
 # Components
+class BlockRedstoneConductivity(_component):
+    component_namespace = "minecraft:redstone_conductivity"
+
+    def __init__(self, allows_wire_to_step_down: bool = True, redstone_conductor: bool = False) -> None:
+        """Specifies whether a block has redstone properties. If the component is not provided, the default values are used.
+
+        Args:
+            allows_wire_to_step_down (bool, optional): Specifies if redstone wire can stair-step downward on the block, Defaults to True.
+            redstone_conductor (bool, optional): Specifies if the block can be powered by redstone, Defaults to False.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_redstone_conductivity
+        """
+        super().__init__("redstone_conductivity")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.30")
+        self._component_add_field("allows_wire_to_step_down", allows_wire_to_step_down)
+        self._component_add_field("redstone_conductor", redstone_conductor)
+
+
 class BlockCustomComponents(_component):
     component_namespace = "minecraft:custom_components"
 
@@ -156,7 +175,17 @@ class BlockDestructibleByMining(_component):
             seconds_to_destroy (int): The amount of time it takes to destroy the block in seconds.
         """
         super().__init__("destructible_by_mining")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.50")
         self._component_add_field("seconds_to_destroy", seconds_to_destroy)
+        self._component_add_field("item_specific_speeds", [])
+
+    def item_specific_speeds_name(self, destroy_speed: float, item_name: str):
+        self[self.component_namespace]["item_specific_speeds"].append({"item": item_name, "destroy_speed": destroy_speed})
+
+    def item_specific_speeds_tag(self, destroy_speed: float, item_tag: str | Molang):
+        self[self.component_namespace]["item_specific_speeds"].append(
+            {"item": {"tags": item_tag}, "destroy_speed": destroy_speed}
+        )
 
 
 class BlockFlammable(_component):

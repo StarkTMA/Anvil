@@ -56,6 +56,8 @@ class Entities:
         def __iter__(self):
             yield self.name
     
+    # Added in 1.21.51
+    Creaking = VanillaEntity("creaking")
     # Added in 1.21.30
     WindChargeParticle = VanillaEntity("wind_charge_particle")
     # Added in 1.21
@@ -7204,7 +7206,36 @@ class Blocks:
         def __init__(self):
             super().__init__("lily_of_the_valley", True)
 
+    # Added in 1.21.50
+    class CreakingHeart(_MinecraftBlock):
+        def __init__(self, active: bool = False, natural: bool = False, pillar_axis: BlockStates.PillarAxis = BlockStates.PillarAxis.Y):
+            self._active = active
+            self._natural = natural
+            self._pillar_axis = pillar_axis
+            super().__init__('creaking_hear', True)
 
+    class ClosedEyeBlossom(_MinecraftBlock):
+        def __init__(self):
+            super().__init__('closed_eyeblossom', True)
+
+    class OpenEyeBlossom(_MinecraftBlock):
+        def __init__(self):
+            super().__init__('open_eyeblossom', True)
+
+    class PaleHangingMoss(_MinecraftBlock):
+        def __init__(self, tip: bool = False):
+            self._tip = tip
+            super().__init__('pale_hanging_moss', True)
+
+    class PaleMossBlock(_MinecraftBlock):
+        def __init__(self):
+            super().__init__('pale_moss_block', True)
+
+    class PaleMossCarpet(_MinecraftBlock):
+        def __init__(self):
+            super().__init__('pale_moss_carpet', True)
+
+    #To add Door, Fence, Fence Gate, Plank, Sign, Hanging Sign, Slab, Stairs, Trapdoor, Wood, Stripped Log, Stripped Wood, Button, Pressure Plate, Boat, Boat with Chest, Resin
 
 # Take all the subclasses of Blocks and add them to BLOCK_LIST
 for block in Blocks.__dict__.values():

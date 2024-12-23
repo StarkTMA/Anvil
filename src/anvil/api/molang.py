@@ -2822,6 +2822,32 @@ class Query(_molang):
         """
         return self._query(self, self.handle, "armor_slot_damage", slot, slot_id)
 
+    @classmethod
+    def ClientMemoryTier(self):
+        """Returns a number representing the client RAM memory tier, 0 = 'Undetermined', 1 = 'SuperLow', 2 = 'Low', 3 = 'Mid', 4 = 'High', or 5 = 'SuperHigh'. Available on the Client (Resource Packs) only.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "client_memory_tier")
+    
+    @classmethod
+    def ServerMemoryTier(self):
+        """Returns a number representing the server RAM memory tier, 0 = 'SuperLow', 1 = 'Low', 2 = 'Mid', 3 = 'High', or 4 = 'SuperHigh'. Available on the server side (Behavior Packs) only.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "server_memory_tier")
+    
+    @classmethod
+    def ClientMaxRenderDistance(self):
+        """Returns the max render distance in chunks of the current client. Available on the Client (Resource Packs) only.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "client_max_render_distance")
 
 class Context(Query):
     handle = "c"

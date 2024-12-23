@@ -1,6 +1,6 @@
 MANIFEST_BUILD: str = "1.20.80"  # The build version of the manifest.
 BLOCK_SERVER_VERSION: str = "1.21.20"  # The version of the block server.
-ENTITY_SERVER_VERSION: str = "1.20.80"  # The version of the entity server.
+ENTITY_SERVER_VERSION: str = "1.21.51"  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = "1.10.0"  # The version of the entity client.
 BP_ANIMATION_VERSION: str = "1.10.0"  # The version of the behavior pack animation.
 RP_ANIMATION_VERSION: str = "1.8.0"  # The version of the resource pack animation.
@@ -14,10 +14,10 @@ FOG_VERSION: str = "1.16.100"  # The version of the fog.
 MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
 ITEM_SERVER_VERSION: str = "1.21.30"  # The version of the item server.
 GLOBAL_LIGHTING = "1.0.0"
-CAMERA_PRESET_VERSION = "1.20.80"  # The version of the camera presets.
+CAMERA_PRESET_VERSION = "1.21.0"  # The version of the camera presets.
 BLOCK_JSON_FORMAT_VERSION = "1.1.0"  # The version of the block json format.
 
-MODULE_MINECRAFT_SERVER: str = "1.13.0"  # The version of the Minecraft server module.
-MODULE_MINECRAFT_SERVER_UI: str = "1.2.0"  # The version of the Minecraft UI module.
+MODULE_MINECRAFT_SERVER: str = "1.16.0"  # The version of the Minecraft server module.
+MODULE_MINECRAFT_SERVER_UI: str = "1.3.0"  # The version of the Minecraft UI module.
 MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"  # The version of the Minecraft UI module.
 MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"  # The version of the Minecraft UI module.

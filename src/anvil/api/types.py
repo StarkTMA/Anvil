@@ -1,6 +1,5 @@
 from typing import NewType
 
-
 Color = NewType("Color", [tuple[int, int, int] | tuple[int, int, int, int] | str])
 Seconds = NewType("Seconds", float)
 Molang = NewType("Molang", str)
@@ -14,4 +13,3 @@ Identifier = NewType("Identifier", str)
 event = NewType("Event", str)
 tick = NewType("Tick", int)
 _range = NewType("[range]", str)
-inf = 99999999999

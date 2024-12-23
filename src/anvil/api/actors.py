@@ -10,7 +10,8 @@ from anvil import ANVIL, CONFIG
 from anvil.api import vanilla
 from anvil.api.blockbench import _Blockbench
 from anvil.api.components import Filter, InstantDespawn, Rideable, _component
-from anvil.api.enums import Difficulty, Population, Target, Vibrations
+from anvil.api.enums import (DamageSensorDamage, Difficulty, Population,
+                             Target, Vibrations)
 from anvil.api.molang import Query, Variable
 from anvil.api.types import Identifier, Molang, event
 from anvil.api.vanilla import ENTITY_LIST, ITEMS_LIST, Entities
@@ -2057,7 +2058,15 @@ class _BaseEvent:
     def emit_vibration(self, vibration: Vibrations):
         self._event[self._event_name]["vibration"] = vibration
         return self
+    
+    def play_sound(self, sound: str):
+        self._event[self._event_name]["play_sound"] = {"sound": sound}
+        return self
 
+    def emit_particle(self, particle: str):
+        self._event[self._event_name]["emit_particle"] = { "particle": particle }
+        return self
+    
     @property
     def _export(self):
         return self._event
@@ -2097,6 +2106,14 @@ class _Randomize(_BaseEvent):
         self._event.update({"vibration": vibration})
         return self
 
+    def play_sound(self, sound: str):
+        self._event[self._event_name]["play_sound"] = {"sound": sound}
+        return self
+
+    def emit_particle(self, particle: str):
+        self._event[self._event_name]["emit_particle"] = { "particle": particle }
+        return self
+    
     @property
     def randomize(self):
         return self._parent_class.randomize
@@ -2149,7 +2166,15 @@ class _Sequence(_BaseEvent):
     def emit_vibration(self, vibration: Vibrations):
         self._event.update({"vibration": vibration})
         return self
+    
+    def play_sound(self, sound: str):
+        self._event[self._event_name]["play_sound"] = {"sound": sound}
+        return self
 
+    def emit_particle(self, particle: str):
+        self._event[self._event_name]["emit_particle"] = { "particle": particle }
+        return self
+    
     @property
     def sequence(self):
         return self._parent_class.sequence
@@ -2337,7 +2362,7 @@ class Entity:
         return self._server
 
     @property
-    def Client(self):
+    def Client(self)-> _EntityClient:
         """Client-side.
 
         Returns
@@ -2390,7 +2415,7 @@ class Entity:
             Health(6),
             CollisionBox(1, 1),
             Breathable(),
-            DamageSensor().add_trigger(DamageCause.All, False),
+            DamageSensor().add_trigger(DamageCause.All, DamageSensorDamage.No),
             Pushable(False, False),
             PushThrough(1),
         )

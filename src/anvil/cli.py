@@ -9,9 +9,10 @@ import requests
 from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.format_versions import (MANIFEST_BUILD, MODULE_MINECRAFT_SERVER,
                                        MODULE_MINECRAFT_SERVER_UI)
-from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File,
+from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File, FileExists,
                            process_subcommand, validate_namespace_project_name)
-from anvil.lib.logger import Logger
+
+from .__version__ import __version__
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -395,9 +396,19 @@ def create(
         random_seed (bool, optional): Whether to add support of Random Seed Worlds. Defaults to False.
 
     """
-    # Prints header
-    logger = Logger()
-    logger.header()
+    click.clear()
+    click.echo(
+        "\n".join(
+            [
+                f"{click.style("Anvil", "cyan")} - by Yasser A. Benfoughal.",
+                f"Version {click.style(__version__, "cyan")}.",
+                f"Copyright © {datetime.now().year} {click.style("StarkTMA", "red")}.",
+                "All rights reserved.",
+                "",
+                "",
+            ]
+        )
+    )
 
     validate_namespace_project_name(namespace, project_name, addon)
 
@@ -463,7 +474,6 @@ def create(
     config.add_option(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, f"{display_name} Resource Pack")
     config.add_option(ConfigSection.PACKAGE, ConfigOption.BEHAVIOR_DESCRIPTION, f"{display_name} Behaviour Pack")
     config.add_option(ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world")
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.EXPERIMENTAL, preview)
 
     config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
     config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
@@ -475,7 +485,10 @@ def create(
     config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, pbr)
     config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper())
+    config.add_option(
+        ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper()
+    )
+    config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, preview)
     config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     config.add_section(namespace)
@@ -486,19 +499,57 @@ def create(
     File(".gitignore", JsonSchemes.gitignore(), "", "w")
     File("CHANGELOG.md", "", "", "w")
 
-    File("manifest.json",JsonSchemes.manifest_world([1, 0, 0], config.get_option(ConfigSection.BUILD, ConfigOption.PACK_UUID), config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY), random_seed), "", "w")
+    File(
+        "manifest.json",
+        JsonSchemes.manifest_world(
+            [1, 0, 0],
+            config.get_option(ConfigSection.BUILD, ConfigOption.PACK_UUID),
+            config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
+            random_seed,
+        ),
+        "",
+        "w",
+    )
 
     File("world_behavior_packs.json", JsonSchemes.world_packs(config.get_option("build", "bp_uuid"), [1, 0, 0]), "", "w")
     File("world_resource_packs.json", JsonSchemes.world_packs(config.get_option("build", "rp_uuid"), [1, 0, 0]), "", "w")
 
-    File(f"{project_name}.code-workspace", JsonSchemes.code_workspace(config.get_option("package", "company"), base_dir, project_name, preview), DESKTOP, "w")
+    File(
+        f"{project_name}.code-workspace",
+        JsonSchemes.code_workspace(config.get_option("package", "company"), base_dir, project_name, preview),
+        DESKTOP,
+        "w",
+    )
 
     if scriptapi:
         click.echo("Initiating ScriptingAPI modules")
-        File("package.json", JsonSchemes.packagejson(project_name, "1.0.0", config.get_option("package", "display_name") + " Essentials", config.get_option("package", "company")), "", "w", True)
+        File(
+            "package.json",
+            JsonSchemes.packagejson(
+                project_name,
+                "1.0.0",
+                config.get_option("package", "display_name") + " Essentials",
+                config.get_option("package", "company"),
+            ),
+            "",
+            "w",
+            True,
+        )
         File("tsconfig.json", JsonSchemes.tsconfig(config.get_option("anvil", "pascal_project_name")), "", "w", False)
-        File("launch.json", JsonSchemes.vscode(os.path.join(dev_res, f"BP_{config.get_option("anvil", "pascal_project_name")}", "scripts")), ".vscode", "w", False)
-        File("anvilConstants.ts", JsonSchemes.tsconstants(namespace, project_name), os.path.join("assets", "javascript"), "w", False)
+        File(
+            "launch.json",
+            JsonSchemes.vscode(os.path.join(dev_res, f"BP_{config.get_option("anvil", "pascal_project_name")}", "scripts")),
+            ".vscode",
+            "w",
+            False,
+        )
+        File(
+            "anvilConstants.ts",
+            JsonSchemes.tsconstants(namespace, project_name),
+            os.path.join("assets", "javascript"),
+            "w",
+            False,
+        )
         File("main.ts", 'import * as mc from "@minecraft/server";\n', os.path.join("assets", "javascript"), "w", False)
 
     config.save()
@@ -506,3 +557,18 @@ def create(
     process_subcommand(
         f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace"
     )
+
+
+@cli.command(help="Run an Anvil project")
+def run() -> None:
+    """
+    Runs an Anvil Project
+    """
+    if not FileExists("anvilconfig.json"):
+        click.echo("No valid Anvil project found, to create a new project run: `anvil create --help`")
+    else:
+        with open("./anvilconfig.json", "r") as file:
+            data: dict = json.loads(file.read())
+            project_name = data.get("package").get("project_name")
+
+        process_subcommand(f"py {project_name}.py", "Unable to run the anvil project.")
