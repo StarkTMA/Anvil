@@ -5,11 +5,14 @@ from anvil import ANVIL, CONFIG
 from anvil.api.actors import _Components
 from anvil.api.blockbench import _Blockbench
 from anvil.api.components import _component
-from anvil.api.enums import (BlockFaces, BlockMaterial, BlockVanillaTags,
-                             ItemCategory, ItemGroups, PlacementDirectionTrait,
-                             PlacementPositionTrait)
+from anvil.api.enums import (BlockFaces, BlockLiquidDetectionTouching,
+                             BlockMaterial, BlockVanillaTags, ItemCategory,
+                             ItemGroups, PlacementDirectionTrait,
+                             PlacementPositionTrait, TintMethod)
 from anvil.api.types import Molang, coordinates, position
-from anvil.lib.format_versions import BLOCK_SERVER_VERSION, ITEM_SERVER_VERSION
+from anvil.lib.format_versions import (BLOCK_JSON_FORMAT_VERSION,
+                                       BLOCK_SERVER_VERSION,
+                                       ITEM_SERVER_VERSION)
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
@@ -101,9 +104,9 @@ class BlockDefault(_component):
         """The default block component."""
         super().__init__("block_default")
 
-    def brightness_gamma(self, gamma: int):
-        """The gamma of the block's brightness."""
-        self._component_add_field("brightness_gamma", max(0, gamma))
+    def ambient_occlusion_exponent(self, exponent: int):
+        """The exponent for ambient occlusion of the block."""
+        self._component_add_field("ambient_occlusion_exponent", max(0, exponent))
         return self
 
     def sound(self, sound: str):
@@ -258,14 +261,20 @@ class BlockLootTable(_component):
 class BlockMapColor(_component):
     component_namespace = "minecraft:map_color"
 
-    def __init__(self, map_color: str) -> None:
-        """Sets the color of the block when rendered to a map.
+    def __init__(self, color: str, tint_method: TintMethod = TintMethod.None_) -> None:
+        """Sets the color of the block when rendered to a map. If this component is omitted, the block will not show up on the map.
 
         Args:
-            map_color (str): The color of the block when rendered to a map, must be a hexadecimal color value.
+            color (str): The color is represented as a hex value in the format "#RRGGBB". May also be expressed as an array of [R, G, B] from 0 to 255.
+            tint_method (str, optional): Optional, tint multiplied to the color. Tint method logic varies, but often refers to the "rain" and "temperature" of the biome the block is placed in to compute the tint. Defaults to None.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_map_color
         """
+        self._enforce_version(BLOCK_JSON_FORMAT_VERSION, "1.21.70")
         super().__init__("map_color")
-        self._component_set_value(map_color)
+        self._component_add_field("color", color)
+        if tint_method is not TintMethod.None_:
+            self._component_add_field("tint_method", tint_method)
 
 
 class BlockMaterialInstance(_component):
@@ -281,8 +290,9 @@ class BlockMaterialInstance(_component):
         texture_name: str,
         block_face: BlockFaces = BlockFaces.All,
         render_method: BlockMaterial = BlockMaterial.Opaque,
-        ambient_occlusion: bool = True,
+        ambient_occlusion: float = 0,
         face_dimming: bool = True,
+        tint_method: TintMethod = TintMethod.None_,
     ):
         """Maps face or material_instance names in a geometry file to an actual material instance.
 
@@ -290,8 +300,9 @@ class BlockMaterialInstance(_component):
             texture_name (str): The name of the texture to use for this block.
             block_face (BlockFaces, optional): The face of the block to apply the texture to. Defaults to BlockFaces.All.
             render_method (BlockMaterial, optional): The render method to use for this block. Defaults to BlockMaterial.Opaque.
-            ambient_occlusion (bool, optional): Whether or not to use ambient occlusion for this block. Defaults to True.
+            ambient_occlusion (float, optional): The amount of ambient occlusion for this block. Defaults to 0.
             face_dimming (bool, optional): Whether or not to use face dimming for this block. Defaults to True.
+            tint_method (TintMethod, optional): The tint method to use for this block. Defaults to TintMethod.None_.
 
         """
         bb = _Blockbench(blockbench_name, "blocks")
@@ -306,6 +317,7 @@ class BlockMaterialInstance(_component):
                     "render_method": render_method if not render_method == BlockMaterial.Opaque else {},
                     "ambient_occlusion": ambient_occlusion if ambient_occlusion is False else {},
                     "face_dimming": face_dimming if face_dimming is False else {},
+                    "tint_method": tint_method if not tint_method == TintMethod.None_ else {},
                 }
             }
         )
@@ -323,7 +335,7 @@ class BlockGeometry(_component):
             geometry_name (str): The name of the geometry to use to render this block.
         """
         super().__init__("geometry")
-        self._component_set_value(f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
+        self._component_add_field("identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
 
         bb = _Blockbench(geometry_name, "blocks")
         bb.model.queue_model()
@@ -335,7 +347,7 @@ class BlockGeometry(_component):
             >>> BlockGeometry('block').bone_visibility(bone0=True, bone1=False)
 
         """
-        self._component_add_field("bone_visibility", [{b: v for b, v in bone.items()}])
+        self._component_add_field("bone_visibility", {b: v for b, v in bone.items()})
         return self
 
 
@@ -495,6 +507,91 @@ class BlockCraftingTable(_component):
         self._component_add_field("crafting_tags", crafting_tags)
 
 
+class BlockItemVisual(_component):
+    component_namespace = "minecraft:item_visual"
+
+    def __init__(self, geometry_name: str, texture: str, render_method: BlockMaterial = BlockMaterial.Opaque) -> None:
+        """The description identifier of the geometry and material used to render the item of this block.
+
+        Args:
+            geometry (str): The geometry of the item.
+            texture (str): The texture of the item.
+            render_method (BlockMaterial): The method used to render the item.
+
+        """
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.60")
+        super().__init__("item_visual")
+
+        bb = _Blockbench(geometry_name, "blocks")
+        bb.model.queue_model()
+
+        self._component_add_field("geometry", {"identifier": geometry_name})
+        self._component_add_field("material_instances", {"*": {"texture": texture, "render_method": render_method}})
+
+
+class BlockLiquidDetection(_component):
+    component_namespace = "minecraft:liquid_detection"
+
+    def __init__(self) -> None:
+        """The block's liquid detection."""
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.60")
+        super().__init__("liquid_detection")
+        self._component_add_field("detection_rules", [])
+
+    def add_rule(
+        self,
+        liquid_type: str = "minecraft:water",
+        on_liquid_touches: BlockLiquidDetectionTouching = BlockLiquidDetectionTouching.Blocking,
+        can_contain_liquid: bool = False,
+        stops_liquid_flowing_from_direction: list[BlockFaces] = [],
+    ):
+        """Adds a rule to the liquid detection.
+
+        Args:
+            liquid_type (str): The type of liquid, defaults to "minecraft:water".
+            on_liquid_touches (BlockLiquidDetectionTouching): The action to take when the liquid touches the block.
+            can_contain_liquid (bool, optional): Whether the block can contain the liquid. Defaults to False.
+
+        """
+        self[self.component_namespace]["detection_rules"].append(
+            {
+                "liquid_type": "minecraft:water",
+                "on_liquid_touches": on_liquid_touches.value,
+                "can_contain_liquid": can_contain_liquid,
+                "stops_liquid_flowing_from_direction": (
+                    [BlockFaces.North, BlockFaces.South, BlockFaces.East, BlockFaces.West]
+                    if BlockFaces.Side in stops_liquid_flowing_from_direction
+                    else (
+                        [BlockFaces.North, BlockFaces.South, BlockFaces.East, BlockFaces.West, BlockFaces.Up, BlockFaces.Down]
+                        if BlockFaces.All in stops_liquid_flowing_from_direction
+                        else stops_liquid_flowing_from_direction
+                    )
+                ),
+            }
+        )
+        return self
+
+
+class BlockDestructionParticles(_component):
+    component_namespace = "minecraft:destruction_particles"
+
+    def __init__(self, blockbench_name: str, texture: str = None, tint_method: TintMethod = TintMethod.None_) -> None:
+        """Sets the particles that will be used when the block is destroyed.
+
+        Args:
+            blockbench_name (str): The name of the blockbench model.
+            texture (str, optional): The texture name used for the particle.
+            tint_method (TintMethod, optional): Tint multiplied to the color. Defaults to TintMethod.None_.
+        """
+        super().__init__("destruction_particles")
+        if texture is not None:
+            bb = _Blockbench(blockbench_name, "blocks")
+            bb.textures.queue_texture(texture)
+            self._component_add_field("texture", texture)
+        if tint_method is not TintMethod.None_:
+            self._component_add_field("tint_method", tint_method)
+
+
 # Core
 class _PermutationComponents(_Components):
     _count = 0
@@ -608,7 +705,7 @@ class _BlockServerDescription(MinecraftDescription):
         """
         self._description["description"]["menu_category"] = {
             "category": category.value if not category == ItemCategory.none else {},
-            "group": group if not group == ItemGroups.none else {},
+            "group": f"{CONFIG.NAMESPACE}:{group}" if not group == ItemGroups.none else {},
         }
         return self
 
@@ -706,6 +803,7 @@ class Block:
         self._name = name
         self._is_vanilla = is_vanilla
         self._server = _BlockServer(name, is_vanilla)
+        self._item = None
 
         self._namespace_format = CONFIG.NAMESPACE
         if self._is_vanilla:
@@ -725,9 +823,21 @@ class Block:
     def name(self):
         return self._name
 
+    @property
+    def item(self):
+        if not self._item:
+            from anvil.api.items import Item
+
+            self._item = Item(self.name)
+
+        return self._item
+
     def queue(self):
         """Queues the block to be exported."""
         self.Server.queue
+
+        if self._item:
+            self._item.queue()
 
         if self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace].startswith("tile."):
             display_name = ANVIL.definitions._language[

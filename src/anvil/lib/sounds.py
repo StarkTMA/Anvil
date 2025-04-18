@@ -3,6 +3,7 @@ from enum import StrEnum
 
 from anvil import CONFIG
 from anvil.api.enums import EntitySoundEvent, MusicCategory, SoundCategory
+from anvil.api.molang import _molang
 from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.reports import ReportType
@@ -249,6 +250,8 @@ class SoundEvent(AddonObject):
         sound_event: EntitySoundEvent,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
+        variant_query: _molang = None,
+        variant_map: str = None,
     ):
         """Adds an entity event to the SoundEvent instance.
 
@@ -258,17 +261,26 @@ class SoundEvent(AddonObject):
             sound_identifier (str): The identifier of the sound.
             volume (float, optional): The volume of the event. Defaults to 1.0.
             pitch (tuple[float, float], optional): The pitch of the event. Defaults to (0.8, 1.2).
+            variant_query (_molang, optional): The variant query for the event. Defaults to None.
+            variant_map (str, optional): The variant map for the event. Defaults to None.
         """
 
-        if not entity_identifier in self._content["entity_sounds"]["entities"]:
-            self._content["entity_sounds"]["entities"][entity_identifier] = {"volume": volume, "pitch": (0.8, 1.2), "events": {}}
-
-        self._content["entity_sounds"]["entities"][entity_identifier]["events"][sound_event.value] = {
-            "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}"
-        }
-
-        if pitch != (0.8, 1.2):
-            self._content["entity_sounds"]["entities"][entity_identifier]["events"][sound_event.value]["pitch"] = pitch
+        self._content["entity_sounds"]["entities"].setdefault(
+            entity_identifier, {entity_identifier: {"events": {}}, "variants": {"key": "", "map": {}}}
+        )
+        if variant_query is not None:
+            self._content["entity_sounds"]["entities"][entity_identifier]["variants"]["key"] = variant_query
+            self._content["entity_sounds"]["entities"][entity_identifier]["variants"]["map"][variant_map] = {
+                "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}",
+                "pitch": pitch if pitch != (0.8, 1.2) else {},
+                "volume": volume,
+            }
+        else:
+            self._content["entity_sounds"]["entities"][entity_identifier]["events"][sound_event.value] = {
+                "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}",
+                "pitch": pitch if pitch != (0.8, 1.2) else {},
+                "volume": volume,
+            }
 
     @property
     def queue(self):

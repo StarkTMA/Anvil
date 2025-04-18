@@ -476,7 +476,9 @@ class ItemBlockPlacer(_component):
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer
         """
-        super().__init__("block_placer", )
+        super().__init__(
+            "block_placer",
+        )
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.50")
 
         self._component_add_field("block", block)
@@ -733,7 +735,7 @@ class _ItemServerDescription(MinecraftDescription):
         self._description["description"]["menu_category"] = {}
 
     def group(self, group: ItemGroups):
-        self._description["description"]["menu_category"]["group"] = str(group)
+        self._description["description"]["menu_category"]["group"] = f"{CONFIG.NAMESPACE}:{group}"
         return self
 
     def category(self, category: ItemCategory):
@@ -833,3 +835,89 @@ class Item:
             col0=display_name,
             col1=self.identifier,
         )
+
+
+class CraftingItemCatalog(AddonObject):
+    _instance = None
+    _extension = ".json"
+    _path = os.path.join(CONFIG.BP_PATH, "item_catalog")
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        if getattr(self, "_initialized", False):
+            return
+        super().__init__("crafting_item_catalog")
+        self.content(JsonSchemes.crafting_items_catalog())
+        self._initialized = True
+
+    def add_group(
+        self, category_name: ItemCategory, group_name: str, group_icon: Item, items_list: list[Item] = []
+    ) -> "CraftingItemCatalog":
+        """
+        Adds a group to an existing category.
+
+        Args:
+            category_name (str): The category name to update.
+            group_name (str): The group name to add.
+            group_icon (Item): The item to use as the icon for the group.
+            items_list (list[Item], optional): List of items to add to the group. Defaults to an empty list.
+        """
+        group_id = f"{CONFIG.NAMESPACE}:{group_name.replace(" ", "_").lower()}"
+        ANVIL.definitions.register_lang(group_id, group_name)
+
+        group = {
+            "group_identifier": {
+                "icon": group_icon.identifier,
+                "name": group_id,
+            },
+            "items": [item.identifier for item in items_list],
+        }
+
+        for cat in self._content["minecraft:crafting_items_catalog"]["categories"]:
+            if cat.get("category_name") == str(category_name):
+                groups = cat.setdefault("groups", [])
+                for existing_group in groups:
+                    if existing_group["group_identifier"]["name"] == group_id:
+                        existing_group.setdefault("items", []).extend([item.identifier for item in items_list])
+                    break
+                else:
+                    groups.append(group)
+                break
+        else:
+            self._content["minecraft:crafting_items_catalog"]["categories"].append(
+                {
+                    "category_name": str(category_name),
+                    "groups": [group],
+                }
+            )
+        return self
+
+    def add_loose_items(self, category_name: str, items: list) -> "CraftingItemCatalog":
+        """Adds loose items to a category.
+
+        Args:
+            category_name (str): The category name to update.
+            items (list): List of items to add to the category.
+
+        Returns:
+            CraftingItemCatalog: The current instance of CraftingItemCatalog.
+        """
+        for cat in self._content["minecraft:crafting_items_catalog"]["categories"]:
+            if cat.get("category_name") == str(category_name):
+                cat.setdefault("loose_items", []).extend(items)
+                break
+        else:
+            self._content["minecraft:crafting_items_catalog"]["categories"].append(
+                {
+                    "category_name": str(category_name),
+                    "loose_items": items,
+                }
+            )
+        return self
+
+    def queue(self):
+        return super().queue()

@@ -1,5 +1,33 @@
 # Changelog
 
+# Version 0.8.3
+
+### [ANVIL]
+
+- Updated `MODULE_MINECRAFT_SERVER` to `[1.17.0]`.
+- Added Aim Assist and Focus Target to the `CameraPreset()` class.
+- Added `Glyph()` enum.
+- Entity Sound Events now support variants.
+- Animation controller sound effects now support locators.
+
+### [BLOCKS]
+
+- Block groups are now namespaced, for example `starktma:group_name`.
+- Added `BlockItemVisual()`, `BlockLiquidDetection()`, `BlockDestructionParticles()` component.
+
+### [Items]
+
+- Item groups are now namespaced, for example `starktma:group_name`.
+
+### [Components]
+
+- Added `MovementSoundDistanceOffset()`, `RendersWhenInvisible()`, `Breedable()`, `IsCollidable()`, `BodyRotationAxisAligned()`, `InputAirControlled()` components.
+- Added `home_distance`, `is_bound_to_creaking_heart` Filters.
+
+### [Molang]
+
+- Added `LastInputModeIsAny()` and `TouchOnlyAffectsHotbar()` queries.
+
 # Version 0.8.2
 
 ### [ANVIL]
@@ -27,7 +55,6 @@
 ### [Molang]
 
 - Added `ClientMemoryTier`, `ServerMemoryTier` and `ClientMaxRenderDistance` queries.
-
 
 # Version 0.8.1
 

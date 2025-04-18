@@ -2,16 +2,31 @@ import math
 from typing import List, Tuple, Union
 
 from anvil import ANVIL, CONFIG
-from anvil.api.enums import (Biomes, ContainerType, ControlFlags, DamageCause,
-                             DamageSensorDamage, Difficulty, Effects,
-                             ExplosionParticleEffect, FilterEquipmentDomain,
-                             FilterOperation, FilterSubject,
-                             LineOfSightObstructionType, LookAtLocation,
-                             LootedAtSetTarget, RawTextConstructor, Selector,
-                             Slots, Target, Vibrations)
+from anvil.api.enums import (
+    Biomes,
+    BreedingMutationStrategy,
+    ContainerType,
+    ControlFlags,
+    DamageCause,
+    DamageSensorDamage,
+    Difficulty,
+    Effects,
+    ExplosionParticleEffect,
+    FilterEquipmentDomain,
+    FilterOperation,
+    FilterSubject,
+    LineOfSightObstructionType,
+    LookAtLocation,
+    LootedAtSetTarget,
+    RawTextConstructor,
+    Selector,
+    Slots,
+    Target,
+    TintMethod,
+    Vibrations,
+)
 from anvil.api.features import Particle
-from anvil.api.types import (Identifier, Molang, Seconds, coordinates, event,
-                             position)
+from anvil.api.types import Identifier, Molang, Seconds, coordinates, event, position
 from anvil.api.vanilla import Blocks
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
@@ -39,6 +54,10 @@ class _component:
         self._component_reset_namespace(component_name)
         self._dependencies = []
         self._clashes = []
+
+    @property
+    def identifier(self) -> str:
+        return self.component_namespace
 
     def _component_reset_namespace(self, component_name: str):
         self.component_namespace = f"minecraft:{component_name}"
@@ -529,6 +548,26 @@ class Filter:
         operator: FilterOperation = FilterOperation.Equals,
     ):
         return self._construct_filter("owner_distance", subject, operator, None, value)
+
+    @classmethod
+    def home_distance(
+        self,
+        value: float,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("home_distance", subject, operator, None, value)
+
+    @classmethod
+    def is_bound_to_creaking_heart(
+        self,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("is_bound_to_creaking_heart", subject, operator, None, value)
 
 
 # Components ==========================================================================
@@ -3312,11 +3351,13 @@ class MoveTowardsTarget(_ai_goal):
 class EntitySensor(_component):
     component_namespace = "minecraft:entity_sensor"
 
-    def __init__(self, relative_range: bool = True) -> None:
+    def __init__(self, relative_range: bool = True, find_players_only: bool = False) -> None:
         super().__init__("entity_sensor")
         self._component_add_field("subsensors", [])
         if not relative_range:
             self._component_add_field("relative_range", relative_range)
+        if find_players_only:
+            self._component_add_field("find_players_only", find_players_only)
 
     def add_sensor(
         self,
@@ -3327,6 +3368,7 @@ class EntitySensor(_component):
         require_all: bool = False,
         range: tuple[float, float] = [10, 10],
         cooldown: int = -1,
+        y_offset: float = 0.0,
     ):
         """A component that initiates an event when a set of conditions are met by other entities within the defined range.
 
@@ -3339,6 +3381,7 @@ class EntitySensor(_component):
             require_all (bool, optional): If true, requires all nearby entities to pass the filter conditions for the event to send. Defaults to False.
             range (tuple[float, float], optional): The maximum horizontal and vertical distance another entity can be from this and have the filters checked against it. Defaults to (10, 10).
             cooldown (int, optional): How many seconds should elapse before the subsensor can once again sense for entities. The cooldown is applied on top of the base 1 tick (0.05 seconds) delay. Negative values will result in no cooldown being used. Defaults to -1.
+            y_offset (float, optional): Vertical offset applied to the entity's position when computing the distance from other entities.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor
         """
@@ -3355,7 +3398,8 @@ class EntitySensor(_component):
             sensor["range"] = range if isinstance(range, (tuple, list)) else (range, range)
         if cooldown != -1:
             sensor["cooldown"] = cooldown
-
+        if y_offset != 0.0:
+            sensor["y_offset"] = y_offset
         self[self.component_namespace]["subsensors"].append(sensor)
 
         return self
@@ -5762,7 +5806,7 @@ class LookedAt(_component):
         set_target: LootedAtSetTarget = LootedAtSetTarget.OnceAndStopScanning,
     ) -> None:
         """Defines the behavior when another entity looks at the owner entity.
-        
+
         Args:
             field_of_view (float, optional): The field of view in degrees. Defaults to 26.
             filters (Filter, optional): Defines which entities can trigger the looked_at_event. Defaults to None.
@@ -5802,3 +5846,250 @@ class LookedAt(_component):
             self._component_add_field("search_radius", search_radius)
         if set_target != LootedAtSetTarget.OnceAndStopScanning:
             self._component_add_field("set_target", set_target)
+
+
+class MovementSoundDistanceOffset(_component):
+    component_namespace = "minecraft:movement_sound_distance_offset"
+
+    def __init__(self, value: float) -> None:
+        """Sets the offset used to determine the next step distance for playing a movement sound.
+
+        Args:
+            value (float): The higher the number, the less often the movement sound will be played.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement.sound_distance_offset
+        """
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.60")
+        super().__init__("movement_sound_distance_offset")
+        self._component_add_field("value", value)
+
+
+class RendersWhenInvisible(_component):
+    component_namespace = "minecraft:renders_when_invisible"
+
+    def __init__(self) -> None:
+        """When set, the entity will render even when invisible. Appropriate rendering behavior can then be specified in the corresponding "minecraft:client_entity".
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_renders_when_invisible
+        """
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.60")
+        super().__init__("renders_when_invisible")
+
+
+class Breedable(_component):
+    component_namespace = "minecraft:breedable"
+
+    def __init__(
+        self,
+        allow_sitting: bool = False,
+        blend_attributes: bool = True,
+        breed_cooldown: float = 60,
+        breed_items: list[str] = None,
+        causes_pregnancy: bool = False,
+        combine_parent_colors: bool = None,
+        extra_baby_chance: float = 0,
+        inherit_tamed: bool = True,
+        love_filters: Filter = None,
+        mutation_strategy: BreedingMutationStrategy = BreedingMutationStrategy.None_,
+        parent_centric_attribute_blending: list[_component] = None,
+        property_inheritance: list[str] = None,
+        random_extra_variant_mutation_interval: tuple[int, int] = (0, 0),
+        random_variant_mutation_interval: tuple[int, int] = (0, 0),
+        require_full_health: bool = False,
+        require_tame: bool = True,
+        transform_to_item: str = None,
+    ) -> None:
+        """Allows an entity to get into the 'love' state used for breeding.
+
+        Commonly used in conjunction with the 'minecraft:behavior.breed' component.
+
+        Breedable Properties:
+            - allow_sitting: If true, entities can breed while sitting.
+            - blend_attributes: If true, parent attributes will be blended for the offspring.
+            - breed_cooldown: Time in seconds before the entity can breed again.
+            - breed_items: The list of items that can trigger the 'love' state.
+            - causes_pregnancy: If true, the entity becomes pregnant instead of spawning a baby.
+            - combine_parent_colors: If true, parent's colors blend in the offspring.
+            - extra_baby_chance: Chance that up to 16 babies will spawn.
+            - inherit_tamed: If true, babies will inherit the tamed state.
+            - love_filters: Filters to run when attempting to enter the love state.
+            - mutation_strategy: Strategy used for mutating variants ('random' or 'none').
+            - parent_centric_attribute_blending: List of attributes to blend from parents.
+            - property_inheritance: List of entity properties inherited from parents.
+            - random_extra_variant_mutation_interval: Interval for extra variant mutation.
+            - random_variant_mutation_interval: Interval for variant mutation.
+            - require_full_health: If true, entity must be at full health to breed.
+            - require_tame: If true, entity must be tamed to breed.
+            - transform_to_item: Breed item used will transform to this item on use.
+        """
+        super().__init__("breedable")
+
+        if allow_sitting:
+            self._component_add_field("allow_sitting", allow_sitting)
+        if blend_attributes is not True:
+            self._component_add_field("blend_attributes", blend_attributes)
+        if breed_cooldown != 60:
+            self._component_add_field("breed_cooldown", breed_cooldown)
+        if breed_items is not None:
+            self._component_add_field("breed_items", breed_items)
+        if causes_pregnancy:
+            self._component_add_field("causes_pregnancy", causes_pregnancy)
+        if combine_parent_colors is not None:
+            self._component_add_field("combine_parent_colors", combine_parent_colors)
+        if extra_baby_chance != 0:
+            self._component_add_field("extra_baby_chance", extra_baby_chance)
+        if inherit_tamed is not True:
+            self._component_add_field("inherit_tamed", inherit_tamed)
+        if love_filters is not None:
+            self._component_add_field("love_filters", love_filters)
+        if mutation_strategy != BreedingMutationStrategy.None_:
+            self._component_add_field("mutation_strategy", mutation_strategy.value)
+        if parent_centric_attribute_blending is not None:
+            self._component_add_field(
+                "parent_centric_attribute_blending", [c.identifier for c in parent_centric_attribute_blending]
+            )
+        if property_inheritance is not None:
+            self._component_add_field(
+                "property_inheritance", [f"{CONFIG.NAMESPACE}:{property}" for property in property_inheritance]
+            )
+        if random_extra_variant_mutation_interval != (0, 0):
+            self._component_add_field("random_extra_variant_mutation_interval", random_extra_variant_mutation_interval)
+        if random_variant_mutation_interval != (0, 0):
+            self._component_add_field("random_variant_mutation_interval", random_variant_mutation_interval)
+        if require_full_health:
+            self._component_add_field("require_full_health", require_full_health)
+        if require_tame is not True:
+            self._component_add_field("require_tame", require_tame)
+        if transform_to_item is not None:
+            self._component_add_field("transform_to_item", transform_to_item)
+
+    def breeds_with(self, mate_type: str, baby_type: str, breed_event: str) -> dict:
+        """Defines the breeding partner for the entity.
+
+        Args:
+            mate_type (str): The entity type of the breeding partner.
+            baby_type (str): The entity type of the offspring.
+            breed_event (str): The event to trigger when breeding occurs.
+
+        Returns:
+            dict: A dictionary containing the breeding information.
+        """
+
+        self._component_add_field(
+            "breeds_with",
+            {
+                "mate_type": mate_type,
+                "baby_type": baby_type,
+                "breed_event": breed_event,
+            },
+        )
+        return self
+
+    def deny_parents_variant(self, chance: float, min_variant: str, max_variant: str) -> dict:
+        """Defines the chance of denying the parents' variant.
+
+        Args:
+            chance (float): The percentage chance of denying the parents' variant.
+            min_variant (str): The inclusive minimum of the variant range.
+            max_variant (str): The inclusive maximum of the variant range.
+
+        Returns:
+            dict: A dictionary containing the deny parents variant information.
+        """
+        self._component_add_field(
+            "deny_parents_variant",
+            {
+                "chance": chance,
+                "min_variant": min_variant,
+                "max_variant": max_variant,
+            },
+        )
+        return self
+
+    def environment_requirements(self, block_types: list[str], count: int, radius: float) -> dict:
+        """Defines the nearby block requirements for breeding.
+
+        Args:
+            block_types (list[str]): The block types required nearby for breeding.
+            count (int): The number of required block types nearby for breeding.
+            radius (float): The radius in blocks to search for the required blocks.
+
+        Returns:
+            dict: A dictionary containing the environment requirements information.
+        """
+        self._component_add_field(
+            "environment_requirements",
+            {
+                "block_types": block_types,
+                "count": count,
+                "radius": clamp(radius, 0, 16),
+            },
+        )
+        return self
+
+    def mutation_factor(self, color: float, extra_variant: float, variant: float) -> dict:
+        """Defines the mutation factor for the entity.
+
+        Args:
+            color (float): The percentage chance of denying the parents' variant.
+            extra_variant (float): The percentage chance of a mutation on the entity's extra variant type.
+            variant (float): The percentage chance of a mutation on the entity's variant type.
+
+        Returns:
+            dict: A dictionary containing the mutation factor information.
+        """
+        self._component_add_field(
+            "mutation_factor",
+            {
+                "color": clamp(color, 0, 1),
+                "extra_variant": clamp(extra_variant, 0, 1),
+                "variant": clamp(variant, 0, 1),
+            },
+        )
+        return self
+
+
+class IsCollidable(_component):
+    component_namespace = "minecraft:is_collidable"
+
+    def __init__(self) -> None:
+        """Allows other mobs to have vertical and horizontal collisions with this mob.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_collidable
+        """
+        super().__init__("is_collidable")
+
+
+class BodyRotationAxisAligned(_component):
+    component_namespace = "minecraft:body_rotation_axis_aligned"
+
+    def __init__(self) -> None:
+        """Causes the entity's body to automatically rotate to align with the nearest cardinal direction based on its current facing direction.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_axis_aligned
+        """
+        super().__init__("body_rotation_axis_aligned")
+
+
+class InputAirControlled(_component):
+    component_namespace = "minecraft:input_air_controlled"
+
+    def __init__(
+        self,
+        backwards_movement_modifier: float = 0.5,
+        strafe_speed_modifier: float = 0.4,
+    ) -> None:
+        """Allows a rideable entity to be controlled in the air using WASD and mouse controls.
+
+        Only available with "use_beta_features": true and may be drastically changed or removed.
+
+        Args:
+            backwards_movement_modifier (float, optional): Modifies speed when moving backwards. Defaults to 0.5.
+            strafe_speed_modifier (float, optional): Modifies the strafe speed. Defaults to 0.4.
+        """
+        super().__init__("input_air_controlled")
+        if backwards_movement_modifier != 0.5:
+            self._component_add_field("backwards_movement_modifier", backwards_movement_modifier)
+        if strafe_speed_modifier != 0.4:
+            self._component_add_field("strafe_speed_modifier", strafe_speed_modifier)
+

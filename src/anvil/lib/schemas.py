@@ -526,7 +526,7 @@ class JsonSchemes:
     @staticmethod
     def smelting_recipe(namespace: str, name: str, tags: list[str]):
         return {
-            "format_version": "1.16.0",
+            "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_furnace": {
                 "tags": tags,
                 "description": {"identifier": f"{namespace}:{name}"},
@@ -536,7 +536,7 @@ class JsonSchemes:
     @staticmethod
     def smithing_table_recipe(namespace: str, name: str, tags: list[str]):
         return {
-            "format_version": "1.17.0",
+            "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_smithing_transform": {
                 "description": {"identifier": f"{namespace}:{name}"},
                 "tags": tags,
@@ -546,7 +546,7 @@ class JsonSchemes:
     @staticmethod
     def smithing_table_trim_recipe(namespace: str, name: str, tags: list[str]):
         return {
-            "format_version": "1.17.0",
+            "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_smithing_trim": {
                 "description": {"identifier": f"{namespace}:{name}"},
                 "tags": tags,
@@ -556,7 +556,7 @@ class JsonSchemes:
     @staticmethod
     def shapeless_crafting_recipe(namespace: str, name: str, tags: list[str]):
         return {
-            "format_version": "1.12",
+            "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_shapeless": {
                 "description": {"identifier": f"{namespace}:{name}"},
                 "tags": tags,
@@ -567,13 +567,14 @@ class JsonSchemes:
     @staticmethod
     def shaped_crafting_recipe(namespace: str, name: str, assume_symmetry: bool, tags: list[str]):
         return {
-            "format_version": "1.12",
+            "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_shaped": {
                 "description": {"identifier": f"{namespace}:{name}"},
                 "tags": tags,
                 "assume_symmetry": assume_symmetry,
                 "pattern": [],
                 "key": {},
+                "unlock": {"context": "AlwaysUnlocked"},
             },
         }
 
@@ -584,6 +585,30 @@ class JsonSchemes:
         file.append(f'export const PROJECT_NAME = "{project_name}"')
 
         return "\n".join(file)
+
+    @staticmethod
+    def crafting_items_catalog():
+        return {
+            "format_version": CRAFTING_ITEMS_CATALOG,
+            "minecraft:crafting_items_catalog": {"categories": []},
+        }
+
+    @staticmethod
+    def aim_assist_preset(identifier: str):
+        return {
+            "minecraft:aim_assist_preset": {
+                "identifier": f"{CONFIG.NAMESPACE}:{identifier}",
+                "item_settings": {},
+                "default_item_settings": "default",
+                "hand_settings": "default",
+                "exclusion_list": {},
+                "liquid_targeting_list": {},
+            }
+        }
+    
+    @staticmethod
+    def aim_assist_categories():
+        return {"minecraft:aim_assist_categories": {"categories": []}}
 
 
 class AddonObject:

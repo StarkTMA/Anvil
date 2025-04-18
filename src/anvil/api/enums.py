@@ -1,5 +1,6 @@
 import json
 from enum import StrEnum
+from random import Random
 
 from anvil.api.types import Identifier, coordinate, coordinates
 from anvil.lib.lib import clamp, normalize_180
@@ -1358,17 +1359,64 @@ class DamageSensorDamage(StrEnum):
     No = "no"
     NoButSideEffectsApply = "no_but_side_effects_apply"
 
+
 class LineOfSightObstructionType(StrEnum):
     Outline = "outline"
     Collision = "collision"
     CollisionForCamera = "collision_for_camera"
+
 
 class LookAtLocation(StrEnum):
     Head = "head"
     Body = "body"
     Feet = "feet"
 
+
 class LootedAtSetTarget(StrEnum):
     Never = "never"
     OnceAndStopScanning = "once_and_stop_scanning"
     OnceAndKeepScanning = "once_and_keep_scanning"
+
+
+class AimAssistTargetMode(StrEnum):
+    Distance = "distance"
+    Angle = "angle"
+
+
+class Glyph(StrEnum):
+    Forward = ":_input_key.forward:"
+    Back = ":_input_key.back:"
+    Left = ":_input_key.left:"
+    Right = ":_input_key.right:"
+    Inventory = ":_input_key.inventory:"
+    Use = ":_input_key.use:"
+    Chat = ":_input_key.chat:"
+    Attack = ":_input_key.attack:"
+    Sprint = ":_input_key.sprint:"
+    Jump = ":_input_key.jump:"
+    Sneak = ":_input_key.sneak:"
+
+class BlockLiquidDetectionTouching(StrEnum):
+    Blocking = "blocking"
+    Broken = "broken"
+    Popped = "popped"
+    NoReaction = "no_reaction"
+
+class BreedingMutationStrategy(StrEnum):
+    None_ = "none"
+    Random = "random"
+
+class InputModes(StrEnum):
+    KeyboardAndMouse = "keyboard_and_mouse"
+    Touch = "touch"
+    Gamepad = "gamepad"
+    MotionController = "motion_controller"
+
+class TintMethod(StrEnum):
+    None_ = "none"
+    DefaultFoliage = "default_foliage"
+    BirchFoliage = "birch_foliage"
+    EvergreenFoliage = "evergreen_foliage"
+    DryFoliage = "dry_foliage"
+    Grass = "grass"
+    Water = "water"

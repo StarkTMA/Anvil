@@ -1,7 +1,7 @@
 from deprecated import deprecated
 
 from anvil import CONFIG
-from anvil.api.enums import Slots
+from anvil.api.enums import InputModes, Slots
 from anvil.lib.lib import *
 
 
@@ -2849,6 +2849,24 @@ class Query(_molang):
         """
         return self._query(self, self.handle, "client_max_render_distance")
 
+    @classmethod
+    def LastInputModeIsAny(self, input:InputModes):
+        """Returns 1.0 if the last input mode is any of the specified input modes, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "last_input_mode_is_any", input)
+    
+    @classmethod
+    def TouchOnlyAffectsHotbar(self):
+        """Returns 1.0 if the touch only affects hotbar, else it returns 0.0.
+
+        Returns:
+            Molang(_molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "touch_only_affects_hotbar")
+    
 class Context(Query):
     handle = "c"
 
@@ -2858,12 +2876,7 @@ class Variable(_molang):
 
     @classmethod
     def _set_var(self, name):
-        @classmethod
-        @property
-        def method(self):
-            return self._query(self, "v", name)
-
-        setattr(self, name, method)
+        setattr(self, name, self._query(self, "v", name))
 
     @classmethod
     def IsFirstPerson(self):

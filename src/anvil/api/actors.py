@@ -3,22 +3,21 @@ import os
 from enum import StrEnum
 
 import requests
-from halo import Halo
-from PIL import Image
-
 from anvil import ANVIL, CONFIG
 from anvil.api import vanilla
 from anvil.api.blockbench import _Blockbench
 from anvil.api.components import Filter, InstantDespawn, Rideable, _component
 from anvil.api.enums import (DamageSensorDamage, Difficulty, Population,
                              Target, Vibrations)
-from anvil.api.molang import Query, Variable
+from anvil.api.molang import Query, Variable, _molang
 from anvil.api.types import Identifier, Molang, event
 from anvil.api.vanilla import ENTITY_LIST, ITEMS_LIST, Entities
 from anvil.lib.lib import MOLANG_PREFIXES, CopyFiles, File, FileExists
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
+from halo import Halo
+from PIL import Image
 
 __all__ = ["Entity", "Attachable"]
 
@@ -333,7 +332,7 @@ class _ActorClientDescription(_ActorDescription):
 
         return self._render_controllers.add_controller(controller_name)
 
-    def particle_effect(self, particle_name: str):
+    def particle_effect(self, particle_name: str, use_vanilla_texture: bool = False):
         """This method manages the particle effects for an entity.
 
         Args:
@@ -346,7 +345,7 @@ class _ActorClientDescription(_ActorDescription):
         self._description["description"]["particle_effects"].update(
             {self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"}
         )
-        Particle(self._particle_name).queue()
+        Particle(self._particle_name, use_vanilla_texture).queue()
         return self
 
     def sound_effect(
@@ -374,25 +373,30 @@ class _ActorClientDescription(_ActorDescription):
 
     def sound_event(
         self,
-        sound_reference,
+        sound_reference: str,
         sound_event: EntitySoundEvent,
         category: SoundCategory = SoundCategory.Neutral,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: int = 0,
         min_distance: int = 9999,
+        variant_query: _molang = None,
+        variant_map: str = None,
     ):
         """This method manages the sound events for an entity.
 
         Args:
-            sound_reference (_type_): The identifier of the sound effect.
+            sound_reference (str): The identifier of the sound effect.
             sound_event (EntitySoundEvent): The sound event.
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
             volume (float, optional): The volume of the sound effect. Defaults to 1.0.
             pitch (tuple[float, float], optional): The pitch of the sound effect. Defaults to (0.8, 1.2).
-
+            max_distance (int, optional): The maximum distance of the sound effect. Defaults to 0.
+            min_distance (int, optional): The minimum distance of the sound effect. Defaults to 9999.
+            variant_query (_molang, optional): The variant query of the sound effect. Defaults to None.
+            variant_map (str, optional): The variant map of the sound effect. Defaults to None.
         """
-        ANVIL.definitions.register_entity_sound_event(self.identifier, sound_reference, sound_event, volume, pitch)
+        ANVIL.definitions.register_entity_sound_event(self.identifier, sound_reference, sound_event, volume, pitch, variant_query, variant_map)
 
         sound: SoundDescription = ANVIL.definitions.register_sound_definition(
             sound_reference, category, max_distance=max_distance, min_distance=min_distance
@@ -1192,7 +1196,7 @@ class _RP_ControllerState:
         self._default = False
         return self
 
-    def sound_effect(self, effect: str):
+    def sound_effect(self, effect: str, locator: str = "root",):
         """Collection of sounds to trigger on entry to this animation state.
 
         Parameters
@@ -1205,7 +1209,7 @@ class _RP_ControllerState:
             This state.
 
         """
-        self._controller_state[self._state_name]["sound_effects"].append({"effect": effect})
+        self._controller_state[self._state_name]["sound_effects"].append({"effect": effect, "locator": locator})
         self._default = False
         return self
 

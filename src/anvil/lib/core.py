@@ -6,6 +6,7 @@ from halo import Halo
 from PIL import Image
 
 from anvil.api.blockbench import _Blockbench
+from anvil.api.molang import _molang
 from anvil.api.types import Identifier
 from anvil.lib.config import _AnvilConfig
 from anvil.lib.lib import (CopyFiles, CreateDirectory, File, FileExists,
@@ -87,10 +88,12 @@ class _AnvilDefinitions:
         sound_event: EntitySoundEvent,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
+        variant_query: _molang = None,
+        variant_map: str = None,
     ):
         if self._sound_event_object is None:
             self._sound_event_object = SoundEvent()
-        return self._sound_event_object.add_entity_event(entity_identifier, sound_identifier, sound_event, volume, pitch)
+        return self._sound_event_object.add_entity_event(entity_identifier, sound_identifier, sound_event, volume, pitch, variant_query, variant_map)
 
     def register_block_sound_event(self):
         """# TO IMPLEMENT
