@@ -12,7 +12,7 @@ from anvil.lib.config import _AnvilConfig
 from anvil.lib.lib import (CopyFiles, CreateDirectory, File, FileExists,
                            RemoveDirectory, process_subcommand,
                            validate_namespace_project_name, zipit)
-from anvil.api.materials import MaterialsObject
+from anvil.api.materials import _MaterialsObject
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.sounds import (EntitySoundEvent, MusicCategory, MusicDefinition,
@@ -24,7 +24,7 @@ from ..__version__ import __version__
 
 
 class _AnvilDefinitions:
-    _materials_object: MaterialsObject = None
+    _materials_object: _MaterialsObject = None
     _sound_definition_object: SoundDefinition = None
     _music_definition_object: MusicDefinition = None
     _sound_event_object: SoundEvent = None
@@ -40,19 +40,7 @@ class _AnvilDefinitions:
 
     def __init__(self, config: _AnvilConfig):
         self.config = config
-
-    def add_material(self, material_name: str, base_material: str = None):
-        """Adds a material to the materials.json file.
-
-        Args:
-            material_name (str): The name of the material.
-            base_material (str, optional): The name of the base material. Defaults to None.
-
-        """
-        if self._materials_object is None:
-            self._materials_object = MaterialsObject()
-
-        return self._materials_object.add_material(material_name, base_material)
+        self._materials_object = _MaterialsObject()
 
     def register_sound_definition(
         self,
@@ -297,8 +285,8 @@ class _AnvilDefinitions:
 
     @property
     def queue(self):
-        if not self._materials_object == None:
-            self._materials_object.queue
+        if self._materials_object.size > 0:
+            self._materials_object.queue()
         if not self._sound_definition_object == None:
             self._sound_definition_object.queue
         if not self._music_definition_object == None:

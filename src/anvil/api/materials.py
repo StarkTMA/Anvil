@@ -199,20 +199,22 @@ class Material():
         self._material[self._material_name]["+defines"] = defines
         return self
 
-    @property
-    def _queue(self):
-        """
-        Provides the dictionary representing the material's states and properties.
+    def queue(self):
+        from anvil import ANVIL
+        ANVIL.definitions._materials_object.add_material(self)
+
+    def _export(self) -> dict:
+        """Exports the material as a dictionary.
 
         Returns:
-            dict: The material dictionary.
+            dict: The material as a dictionary.
         """
         return self._material
-
+    
     def __str__(self) -> str:
         return self.identifier
 
-class MaterialsObject(AddonObject):
+class _MaterialsObject(AddonObject):
     """Handles materials.
 
     Attributes:
@@ -228,21 +230,19 @@ class MaterialsObject(AddonObject):
         self._materials: list[Material] = []
         self._content = JsonSchemes.materials()
 
-    def add_material(self, material_name, base_material):
-        """Adds a material to the Materials instance.
-
-        Args:
-            material_name (str): The name of the material.
-            base_material (str): The base material.
-
-        Returns:
-            Material: The created material instance.
-        """
-        material = Material(material_name, base_material)
+    def add_material(self, material: Material):
         self._materials.append(material)
         return material
 
     @property
+    def size(self) -> int:
+        """Returns the size of the materials.
+
+        Returns:
+            int: The size of the materials.
+        """
+        return len(self._materials)
+    
     def queue(self):
         """Returns the queue for the materials.
 
@@ -250,5 +250,5 @@ class MaterialsObject(AddonObject):
             queue: The queue for the materials.
         """
         for m in self._materials:
-            self._content["materials"].update(m._queue)
+            self._content["materials"].update(m._export())
         super().queue()

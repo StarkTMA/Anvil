@@ -1,4 +1,4 @@
-import json
+import commentjson as json
 import os
 import uuid
 from datetime import datetime

@@ -1,5 +1,16 @@
 # Changelog
 
+# Version 0.8.4
+
+[ANVIL]
+
+- Added Recipe unlocking context to the `Recipe()` class.
+
+[BLOCKS]
+
+- Added `BlockTick()` component.
+
+
 # Version 0.8.3
 
 ### [ANVIL]

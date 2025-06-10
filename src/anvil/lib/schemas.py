@@ -28,14 +28,14 @@ class JsonSchemes:
                 "version": version,
                 "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
             },
-            "modules": [{"type": "data", "uuid": str(uuid.uuid4()), "version": version}],
+            "modules": [{"type": "data", "uuid": CONFIG._DATA_MODULE_UUID, "version": version}],
             "dependencies": [{"uuid": CONFIG._RP_UUID[0], "version": version}],
             "metadata": {"authors": [CONFIG.COMPANY]},
         }
         if CONFIG._SCRIPT_API:
             m["modules"].append(
                 {
-                    "uuid": str(uuid.uuid4()),
+                    "uuid": CONFIG._SCRIPT_MODULE_UUID,
                     "version": version,
                     "type": "script",
                     "language": "javascript",
@@ -574,7 +574,6 @@ class JsonSchemes:
                 "assume_symmetry": assume_symmetry,
                 "pattern": [],
                 "key": {},
-                "unlock": {"context": "AlwaysUnlocked"},
             },
         }
 
@@ -605,7 +604,7 @@ class JsonSchemes:
                 "liquid_targeting_list": {},
             }
         }
-    
+
     @staticmethod
     def aim_assist_categories():
         return {"minecraft:aim_assist_categories": {"categories": []}}

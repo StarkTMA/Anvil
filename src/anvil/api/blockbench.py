@@ -12,7 +12,7 @@ def _keyframes_mapper(keyframes: List[dict]) -> dict:
     keyframes_dict = {}
     for keyframe in keyframes:
         time = float(keyframe.get("time"))
-        data_points = keyframe.get("data_points")[0].values()
+        data_points = keyframe.get("data_points")
         interpolation = keyframe.get("interpolation", "linear")
         channel = keyframe.get("channel")
 
@@ -77,12 +77,20 @@ class _AnimationsManager:
                         for keyframe_index, (time, value) in enumerate(list(channel.items())):
                             interpolation = value["interpolation"]
                             points = value["data_points"]
+                            if len(points) == 1:
+                                points = list(points[0].values())
 
                             if interpolation == "linear" or interpolation == "bezier":
                                 if is_step:
                                     bones[bone_name][channel_name][time] = {
-                                        "pre": list(channel.values())[keyframe_index - 1]["data_points"],
+                                        "pre": list(list(channel.values())[keyframe_index - 1]["data_points"][0].values()),
                                         "post": points,
+                                    }
+                                    is_step = False
+                                elif len(points) == 2:
+                                    bones[bone_name][channel_name][time] = {
+                                        "pre": [float(x) for x in list(points[0].values())],
+                                        "post": [float(x) for x in list(points[1].values())],
                                     }
                                     is_step = False
                                 else:
@@ -97,7 +105,7 @@ class _AnimationsManager:
                             elif interpolation == "step":
                                 if is_step:
                                     bones[bone_name][channel_name][time] = {
-                                        "pre": list(channel.values())[keyframe_index - 1]["data_points"],
+                                        "pre": list(list(channel.values())[keyframe_index - 1]["data_points"][0].values()),
                                         "post": points,
                                     }
                                 else:

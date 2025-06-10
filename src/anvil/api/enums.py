@@ -752,6 +752,9 @@ class BlockMaterial(StrEnum):
     Blend = "blend"
     AlphaTest = "alpha_test"
     AlphaTestSingleSided = "alpha_test_single_sided"
+    BlendToOpaque = "blend_to_opaque"
+    AlphaTestToOpaque = "alpha_test_to_opaque"
+    AlphaTestSingleSidedToOpaque = "alpha_test_single_sided_to_opaque"
 
 
 class ItemCategory(StrEnum):
@@ -1396,21 +1399,25 @@ class Glyph(StrEnum):
     Jump = ":_input_key.jump:"
     Sneak = ":_input_key.sneak:"
 
+
 class BlockLiquidDetectionTouching(StrEnum):
     Blocking = "blocking"
     Broken = "broken"
     Popped = "popped"
     NoReaction = "no_reaction"
 
+
 class BreedingMutationStrategy(StrEnum):
     None_ = "none"
     Random = "random"
+
 
 class InputModes(StrEnum):
     KeyboardAndMouse = "keyboard_and_mouse"
     Touch = "touch"
     Gamepad = "gamepad"
     MotionController = "motion_controller"
+
 
 class TintMethod(StrEnum):
     None_ = "none"
@@ -1420,3 +1427,46 @@ class TintMethod(StrEnum):
     DryFoliage = "dry_foliage"
     Grass = "grass"
     Water = "water"
+
+
+class RecipeUnlockContext(StrEnum):
+    AlwaysUnlocked = "AlwaysUnlocked"
+    PlayerInWater = "PlayerInWater"
+    PlayerHasManyItems = "PlayerHasManyItems"
+
+
+class RideableDismountMode(StrEnum):
+    """
+    Enumeration for the different modes of dismounting a rideable entity in Minecraft.
+    """
+
+    Default = "default"
+    OnTopCenter = "on_top_center"
+
+
+class LeashSpringType(StrEnum):
+    """
+    Enumeration for the different types of leash springs in Minecraft.
+
+    Bouncy: Simulates a highly elastic spring that never reaches an equilibrium if the leashed entity is suspended mid-air.
+    Dampened: Simulates a dampened spring attached to the front of the leashed entity's collision. It reaches an equilibrium if the entity is suspended mid-air and aligns with the movement direction.
+    QuadDampened: Simulates four dampened springs connected to the center of each side of the entities' collisions. It reaches an equilibrium if the entity is suspended mid-air and gradually aligns with the leash holder over time.	
+    """
+
+    Bouncy = "bouncy"
+    Dampened = "dampened"
+    QuadDampened = "quad_dampened"
+
+
+
+
+
+
+
+
+
+
+
+
+
+

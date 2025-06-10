@@ -292,6 +292,7 @@ class BlockMaterialInstance(_component):
         render_method: BlockMaterial = BlockMaterial.Opaque,
         ambient_occlusion: float = 0,
         face_dimming: bool = True,
+        isotropic: bool = False,
         tint_method: TintMethod = TintMethod.None_,
     ):
         """Maps face or material_instance names in a geometry file to an actual material instance.
@@ -318,6 +319,7 @@ class BlockMaterialInstance(_component):
                     "ambient_occlusion": ambient_occlusion if ambient_occlusion is False else {},
                     "face_dimming": face_dimming if face_dimming is False else {},
                     "tint_method": tint_method if not tint_method == TintMethod.None_ else {},
+                    "isotropic": isotropic if isotropic is True else {},
                 }
             }
         )
@@ -590,6 +592,31 @@ class BlockDestructionParticles(_component):
             self._component_add_field("texture", texture)
         if tint_method is not TintMethod.None_:
             self._component_add_field("tint_method", tint_method)
+
+
+class BlockTick(_component):
+    component_namespace = "minecraft:tick"
+
+    def __init__(
+        self,
+        interval_range: tuple[int, int] = (0, 0),
+        looping: bool = True,
+    ) -> None:
+        """Causes the block to tick at intervals randomly chosen from interval_range.
+
+        Args:
+            interval_range (tuple[int, int], optional): [min, max] ticks before next tick. Defaults to (0, 0).
+            looping (bool, optional): If True, block will continue ticking; otherwise it ticks only once. Defaults to True.
+        
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_tick
+        """
+        super().__init__("tick")
+        # ensure first value <= second value
+        low, high = interval_range
+        if low > high:
+            low, high = high, low
+        self._component_add_field("interval_range", [low, high])
+        self._component_add_field("looping", looping)
 
 
 # Core

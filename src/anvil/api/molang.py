@@ -2870,6 +2870,10 @@ class Query(_molang):
 class Context(Query):
     handle = "c"
 
+    @classmethod
+    def _set_var(self, name):
+        setattr(self, name, self._query(self, "v", name))
+
 
 class Variable(_molang):
     handle = "v"
@@ -2877,6 +2881,7 @@ class Variable(_molang):
     @classmethod
     def _set_var(self, name):
         setattr(self, name, self._query(self, "v", name))
+        Context._set_var(name)
 
     @classmethod
     def IsFirstPerson(self):

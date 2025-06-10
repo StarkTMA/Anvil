@@ -385,14 +385,14 @@ class Logger:
         click.echo(self.Yellow("[WARNING]: " + m))
 
     # Error
-    def multiple_rp_uuids(self, identifier):
-        m = f"Multiple resource pack uuids found. Error at {identifier}."
+    def multiple_rp_uuids(self):
+        m = f"Multiple resource pack uuids found."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
 
     # Error
-    def multiple_bp_uuids(self, identifier):
-        m = f"Multiple behavior pack uuids found. Error at {identifier}."
+    def multiple_bp_uuids(self):
+        m = f"Multiple behavior pack uuids found."
         self.logger.error(m)
         raise RuntimeError(self.Red("[ERROR]: " + m))
 

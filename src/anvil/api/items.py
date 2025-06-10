@@ -659,7 +659,7 @@ class ItemDisplayName(_component):
         super().__init__("display_name")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
         if localize:
-            key = f'item.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_")}.name'
+            key = f'item.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_").replace("\\n", "_")}.name'
             ANVIL.definitions.register_lang(key, display_name)
             self._component_add_field("value", key)
         else:

@@ -1,4 +1,4 @@
-import json
+import commentjson as json
 import os
 import uuid
 from datetime import datetime
@@ -45,6 +45,8 @@ class ConfigOption(StrEnum):
     PASCAL_PROJECT_NAME = "pascal_project_name"
     LAST_CHECK = "last_check"
     EXPERIMENTAL = "experimental"
+    SCRIPT_MODULE_UUID = "script_module_uuid"
+    DATA_MODULE_UUID = "data_module_uuid"
 
 
 class Config:
@@ -146,6 +148,8 @@ class _AnvilConfig:
     _PBR: bool
     _RANDOM_SEED: bool
     _EXPERIMENTAL: bool
+    _DATA_MODULE_UUID: str
+    _SCRIPT_MODULE_UUID: str
 
     def _handle_config(self, section: ConfigSection, option: ConfigOption, prompt) -> None:
         """Handles the config of the Anvil instance.
@@ -186,15 +190,18 @@ class _AnvilConfig:
             ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
 
-        self._RP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
-        self._BP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
-        self._PACK_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
-
         self._SCRIPT_API = self._handle_config(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, False)
         self._SCRIPT_UI = self._handle_config(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
         self._PBR = self._handle_config(ConfigSection.ANVIL, ConfigOption.PBR, False)
         self._RANDOM_SEED = self._handle_config(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False)
         self._EXPERIMENTAL = self._handle_config(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
+
+        self._RP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
+        self._BP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
+        self._PACK_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
+        self._DATA_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
+        if self._SCRIPT_API:
+            self._SCRIPT_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4()))
 
         if self._TARGET not in ["world", "addon"]:
             self.Logger.invalid_target(self._TARGET)

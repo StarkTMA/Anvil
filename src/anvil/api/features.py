@@ -8,8 +8,8 @@ from PIL import Image, ImageDraw, ImageFont
 from anvil import ANVIL, CONFIG
 from anvil.api.enums import (AimAssistTargetMode, CameraPresets,
                              FogCameraLocation, LootPoolType, PotionId,
-                             RawTextConstructor, RenderDistanceType,
-                             SmeltingTags)
+                             RawTextConstructor, RecipeUnlockContext,
+                             RenderDistanceType, SmeltingTags)
 from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, File, FileExists, clamp
 from anvil.lib.reports import ReportType
@@ -521,6 +521,14 @@ class SmeltingRecipe(AddonObject):
         self._content["minecraft:recipe_furnace"]["priority"] = priority
         return self
 
+    def unlock_context(self, unlock_context: RecipeUnlockContext):
+        self._content["minecraft:recipe_furnace"]["unlock"] = {"context": unlock_context.value}
+        return self
+
+    def unlock_items(self, unlock_items: list[Identifier]):
+        self._content["minecraft:recipe_furnace"]["unlock"] = [{"item": [str(item)]} for item in unlock_items]
+        return self
+    
     def queue(self):
         return super().queue()
 
@@ -550,6 +558,14 @@ class SmithingRecipe(AddonObject):
         self._content["minecraft:recipe_smithing_transform"]["priority"] = priority
         return self
 
+    def unlock_context(self, unlock_context: RecipeUnlockContext):
+        self._content["minecraft:recipe_smithing_transform"]["unlock"] = {"context": unlock_context.value}
+        return self
+
+    def unlock_items(self, unlock_items: list[Identifier]):
+        self._content["minecraft:recipe_smithing_transform"]["unlock"] = [{"item": [str(item)]} for item in unlock_items]
+        return self
+    
     def queue(self):
         return super().queue()
 
@@ -587,6 +603,14 @@ class ShapelessRecipe(AddonObject):
         self._content["minecraft:recipe_shapeless"]["priority"] = priority
         return self
 
+    def unlock_context(self, unlock_context: RecipeUnlockContext):
+        self._content["minecraft:recipe_shapeless"]["unlock"] = {"context": unlock_context.value}
+        return self
+
+    def unlock_items(self, unlock_items: list[Identifier]):
+        self._content["minecraft:recipe_shapeless"]["unlock"] = [{"item": [str(item)]} for item in unlock_items]
+        return self
+
     def queue(self):
         return super().queue()
 
@@ -599,6 +623,14 @@ class StoneCutterRecipe(ShapelessRecipe):
     def ingredient(self, identifier: Identifier, data: int = 0):
         return super().ingredient([(identifier, data)])
 
+    def unlock_context(self, unlock_context: RecipeUnlockContext):
+        self._content["minecraft:recipe_shapeless"]["unlock"] = {"context": unlock_context.value}
+        return self
+
+    def unlock_items(self, unlock_items: list[Identifier]):
+        self._content["minecraft:recipe_shapeless"]["unlock"] = [{"item": [str(item)]} for item in unlock_items]
+        return self
+    
     def queue(self):
         return super().queue()
 
@@ -665,6 +697,14 @@ class ShapedCraftingRecipe(AddonObject):
         self._content["minecraft:recipe_shaped"]["priority"] = priority
         return self
 
+    def unlock_context(self, unlock_context: RecipeUnlockContext):
+        self._content["minecraft:recipe_shaped"]["unlock"] = {"context": unlock_context.value}
+        return self
+
+    def unlock_items(self, unlock_items: list[Identifier]):
+        self._content["minecraft:recipe_shaped"]["unlock"] = [{"item": str(item)} for item in unlock_items]
+        return self
+    
     def queue(self):
         return super().queue()
 
@@ -690,6 +730,14 @@ class SmithingTrimRecipe(AddonObject):
         self._content["minecraft:recipe_smithing_transform"]["priority"] = priority
         return self
 
+    def unlock_context(self, unlock_context: RecipeUnlockContext):
+        self._content["minecraft:recipe_smithing_trim"]["unlock"] = {"context": unlock_context.value}
+        return self
+
+    def unlock_items(self, unlock_items: list[Identifier]):
+        self._content["minecraft:recipe_smithing_trim"]["unlock"] = [{"item": [str(item)]} for item in unlock_items]
+        return self
+    
     def queue(self):
         return super().queue()
 

@@ -15,10 +15,12 @@ from anvil.api.enums import (
     FilterEquipmentDomain,
     FilterOperation,
     FilterSubject,
+    LeashSpringType,
     LineOfSightObstructionType,
     LookAtLocation,
     LootedAtSetTarget,
     RawTextConstructor,
+    RideableDismountMode,
     Selector,
     Slots,
     Target,
@@ -568,6 +570,18 @@ class Filter:
         operator: FilterOperation = FilterOperation.Equals,
     ):
         return self._construct_filter("is_bound_to_creaking_heart", subject, operator, None, value)
+
+    
+    @classmethod
+    def has_equipment_tag(
+        self,
+        value: str,
+        domain: FilterEquipmentDomain = FilterEquipmentDomain.Any,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("has_equipment", subject, operator, domain, value)
 
 
 # Components ==========================================================================
@@ -1862,6 +1876,9 @@ class Rideable(_component):
         crouching_skip_interact: bool = True,
         pull_in_entities: bool = False,
         rider_can_interact: bool = False,
+        dismount_mode: RideableDismountMode = RideableDismountMode.Default,
+        on_rider_enter_event: str = None,
+        on_rider_exit_event: str = None,
     ) -> None:
         """Determines whether this entity can be ridden. Allows specifying the different seat positions and quantity."""
         super().__init__("rideable")
@@ -1879,6 +1896,12 @@ class Rideable(_component):
             self._component_add_field("pull_in_entities", pull_in_entities)
         if rider_can_interact:
             self._component_add_field("rider_can_interact", rider_can_interact)
+        if not dismount_mode == RideableDismountMode.Default:
+            self._component_add_field("dismount_mode", dismount_mode.value)
+        if on_rider_enter_event:
+            self._component_add_field("on_rider_enter_event", on_rider_enter_event)
+        if on_rider_exit_event:
+            self._component_add_field("on_rider_exit_event", on_rider_exit_event)
 
         self._component_add_field("seats", [])
 
@@ -1889,10 +1912,13 @@ class Rideable(_component):
         min_rider_count: int = 0,
         lock_rider_rotation: int = 181,
         rotate_rider_by: int = 0,
+        third_person_camera_radius: float = 1.0,
+        camera_relax_distance_smoothing: float = 1.0,
     ):
         self._seat_count += 1
         self._component_add_field("seat_count", self._seat_count)
-
+        third_person_camera_radius = clamp(third_person_camera_radius, 1, 64)
+        camera_relax_distance_smoothing = clamp(camera_relax_distance_smoothing, 1, 32)
         self[self.component_namespace]["seats"].append(
             {
                 "max_rider_count": max_rider_count,
@@ -1900,6 +1926,10 @@ class Rideable(_component):
                 "lock_rider_rotation": lock_rider_rotation if not lock_rider_rotation == 181 else {},
                 "min_rider_count": min_rider_count if not min_rider_count == 0 else {},
                 "rotate_rider_by": rotate_rider_by if not rotate_rider_by == 0 else {},
+                "third_person_camera_radius": third_person_camera_radius if not third_person_camera_radius == 1.0 else {},
+                "camera_relax_distance_smoothing": (
+                    camera_relax_distance_smoothing if not camera_relax_distance_smoothing == 1.0 else {}
+                ),
             }
         )
 
@@ -6092,4 +6122,96 @@ class InputAirControlled(_component):
             self._component_add_field("backwards_movement_modifier", backwards_movement_modifier)
         if strafe_speed_modifier != 0.4:
             self._component_add_field("strafe_speed_modifier", strafe_speed_modifier)
+
+
+class Leashable(_component):
+    component_namespace = "minecraft:leashable"
+
+    def __init__(
+        self,
+        can_be_cut: bool = True,
+        can_be_stolen: bool = True,
+        hard_distance: int = 6,
+        max_distance: int = None,
+        soft_distance: int = 4,
+    ) -> None:
+        """Defines how this mob can be leashed to other items.
+
+        Args:
+            can_be_cut (bool, optional): If true, players can cut both incoming and outgoing leashes by using shears on the entity. Defaults to True.
+            can_be_stolen (bool, optional): If true, players can leash this entity even if it is already leashed to another entity. Defaults to True.
+            hard_distance (int, optional): Distance in blocks at which the leash stiffens, restricting movement. Defaults to 6.
+            max_distance (int, optional): Distance in blocks at which the leash breaks. Defaults to None.
+            soft_distance (int, optional): Distance in blocks at which the 'spring' effect starts acting to keep this entity close to the entity that leashed it. Defaults to 4.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable
+        """
+        super().__init__("leashable")
+
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.70")
+
+        if not can_be_cut:
+            self._component_add_field("can_be_cut", can_be_cut)
+        if not can_be_stolen:
+            self._component_add_field("can_be_stolen", can_be_stolen)
+        if hard_distance != 6:
+            self._component_add_field("hard_distance", hard_distance)
+        if max_distance is not None:
+            self._component_add_field("max_distance", max_distance)
+        if soft_distance != 4:
+            self._component_add_field("soft_distance", soft_distance)
+
+    def on_leash(self, event: str, target: FilterSubject = FilterSubject.Self) -> dict:
+        self._component_add_field("on_leash", {"event": event, "target": target})
+        return self
+
+    def on_unleash(self, event: str, interact_only: bool = False, target: FilterSubject = FilterSubject.Self) -> dict:
+        """Defines the event to trigger when the entity is unleashed.
+
+        Args:
+            event (str): The event to trigger when the entity is unleashed.
+            interact_only (bool, optional): If true, the event will only trigger when the player directly interacts with the entity. Defaults to False.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        Returns:
+            dict: A dictionary containing the unleash information.
+        """
+
+        self._component_add_field("on_unleash", {"event": event, "target": target})
+        if interact_only:
+            self._component_add_field("on_unleash_interact_only", interact_only)
+        return self
+
+    def preset(self, filter: Filter = None, hard_distance: int = 7, max_distance: int = 12, rotation_adjustment: float = 0, soft_distance: float = 4, spring_type: LeashSpringType = LeashSpringType.Dampened) -> dict:
+        """Defines a preset for the leashable component.
+
+        Args:
+            filter (Filter, optional): Conditions that must be met for this preset to be applied. Defaults to None.
+            hard_distance (int, optional): Distance (in blocks) over which the entity starts being pulled toward the leash holder with a spring-like force. Defaults to 7.
+            max_distance (int, optional): Distance in blocks at which the leash breaks. Defaults to 12.
+            rotation_adjustment (float, optional): Adjusts the rotation at which the entity reaches equilibrium. Defaults to 0.
+            soft_distance (float, optional): Distance (in blocks) over which the entity begins pathfinding toward the leash holder. Defaults to 4.
+            spring_type (LeashSpringType, optional): Defines the type of spring-like force that pulls the entity towards its leash holder. Defaults to LeashSpringType.Dampened.
+
+        Returns:
+            dict: A dictionary containing the preset information.
+        """
+        a = {}
+        if not filter is None:
+            a["filter"] = filter
+        if hard_distance != 7:
+            a["hard_distance"] = hard_distance
+        if max_distance != 12:
+            a["max_distance"] = max_distance
+        if rotation_adjustment != 0:
+            a["rotation_adjustment"] = rotation_adjustment
+        if soft_distance != 4:
+            a["soft_distance"] = soft_distance
+        if spring_type != LeashSpringType.Dampened:
+            a["spring_type"] = spring_type.value
+
+        self._component_add_field("presets", [a])
+        return self
+
+
 
