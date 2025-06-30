@@ -3,7 +3,7 @@ from datetime import datetime
 
 import click
 
-from ..__version__ import __version__
+from anvil import __version__
 
 
 class Logger:
@@ -66,14 +66,14 @@ class Logger:
         self.logger.info(f"Object exported: {name}.")
 
     # Info
-    def new_minecraft_build(self, old, new):
-        m = f"A newer vanilla packages were found. Updating from {old} to {new}"
+    def new_anvil_build(self, new):
+        m = f"A newer anvil build were found: [{new}]."
         self.logger.info(m)
         click.echo(m)
 
     # Info
-    def minecraft_build_up_to_date(self):
-        m = "Packages up to date"
+    def anvil_up_to_date(self):
+        m = "Anvil is up to date"
         self.logger.info(m)
         click.echo(m)
 
@@ -137,7 +137,7 @@ class Logger:
 
     # Error
     def runtime_entity_error(self, entity):
-        m = f"Runtime Identifier type must be a [Vanilla.Entities] type. Error at {entity}."
+        m = f"Runtime identifier type must be a [Vanilla.Entities] type. Error at {entity}."
         self.logger.error(m)
         raise TypeError(self.Red("[ERROR]: " + m))
 
@@ -328,7 +328,7 @@ class Logger:
 
     # General
     def check_update(self):
-        m = f"Checking for updates..."
+        m = f"Checking for package updates..."
         self.logger.info(m)
 
     def anvil_type_error(self, type):
@@ -468,7 +468,7 @@ class Logger:
     
     # Error
     def blockbench_identifier_mismatch(self, identifier: str, expected: str):
-        m = f"Identifier {identifier} is not formatted correctly, expected {expected}."
+        m = f"identifier {identifier} is not formatted correctly, expected {expected}."
         self.logger.error(m)
         raise ValueError(self.Red("[ERROR]: " + m))
 
@@ -489,3 +489,9 @@ class Logger:
         m = f"Error exporting {name}: {error}"
         self.logger.error(m)
         raise error
+    
+    # Error
+    def skin_pack_not_supported(self):
+        m = f"Skin packs are not supported in addon packs."
+        self.logger.error(m)
+        raise RuntimeError(self.Red("[ERROR]: " + m))

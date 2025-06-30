@@ -1,7 +1,7 @@
 # Anvil Documentation
 
-![Python 10](https://img.shields.io/badge/python-3.10%20%20|%20%203.11%20%20|%20%203.12-g.svg)
-![Anvil Version](https://img.shields.io/badge/beta-0.8.4-yellow.svg)
+![Python 10](https://img.shields.io/badge/python-+3.10%20%20-g.svg)
+![Anvil Version](https://img.shields.io/github/v/release/StarkTMA/Anvil?label=version)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
@@ -65,9 +65,8 @@ anvil create my_ns awesome_project --scriptapi --pbr
 
 This command will:
 
-- Create a folder named `awesome_project` in your Minecraft worlds directory.
+- Create a folder named `awesome_project` in your working directory.
 - Set up the initial project structure, including JSON and Python files.
-- Automatically create a VS Code workspace and place it on your desktop for easy access.
 
 ### Project Structure
 
@@ -84,7 +83,7 @@ awesome_project/
 │   ├───python
 │   ├───skins
 │   ├───sounds
-│   ├───structures
+│   ├───world
 │   ├───textures
 │   │   ├───environment
 │   │   ├───items
@@ -92,10 +91,7 @@ awesome_project/
 ├───.gitignore
 ├───anvilconfig.json
 ├───awesome_project.py
-├───CHANGELOG.md
-├───manifest.json
-├───world_behavior_packs.json
-└───world_resource_packs.json
+└───CHANGELOG.md
 ```
 
 ### Running Your Project
@@ -106,7 +102,7 @@ To test your project in Minecraft, navigate to your project folder and run the `
 anvil run
 ```
 
-This command will run your python script.
+This command will run your python script and generates the necessary files for your project.
 
 ---
 

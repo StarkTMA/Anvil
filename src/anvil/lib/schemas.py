@@ -1,5 +1,7 @@
 import os
+import random
 import uuid
+from typing import Any
 
 from anvil import CONFIG
 from anvil.lib.format_versions import *
@@ -506,17 +508,67 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def directional_lights():
+    def atmosphere_settings(identifier: str):
         return {
-            "format_version": GLOBAL_LIGHTING.split("."),
-            "directional_lights": {},
-            "pbr": {},
+            "format_version": PBR_SETTINGS_VERSION,
+            "minecraft:atmosphere_settings": {
+                "identifier": identifier,
+            },
         }
 
     @staticmethod
-    def atmospherics():
+    def fog_settings(identifier: str):
         return {
-            "horizon_blend_stops": {},
+            "format_version": FOG_VERSION,
+            "minecraft:fog_settings": {
+                "identifier": identifier,
+                "volumetric": {},
+            },
+        }
+
+    @staticmethod
+    def shadow_settings():
+        return {"format_version": PBR_SETTINGS_VERSION, "minecraft:shadow_settings": {}}
+
+    @staticmethod
+    def water_settings(identifier: str):
+        return {
+            "format_version": PBR_SETTINGS_VERSION,
+            "minecraft:water_settings": {
+                "description": {"identifier": identifier},
+            },
+        }
+
+    @staticmethod
+    def color_grading_settings(identifier: str):
+        return {
+            "format_version": PBR_SETTINGS_VERSION,
+            "minecraft:color_grading_settings": {"description": {"identifier": identifier}, "color_grading": {}},
+        }
+
+    @staticmethod
+    def client_biome(biome_identifier: str):
+        return {
+            "format_version": PBR_SETTINGS_VERSION,
+            "minecraft:client_biome": {"description": {"identifier": biome_identifier}, "components": {}},
+        }
+
+    @staticmethod
+    def lighting_settings(identifier: str):
+        return {
+            "format_version": PBR_SETTINGS_VERSION,
+            "minecraft:lighting_settings": {"description": {"identifier": identifier}, "directional_lights": {}},
+        }
+
+    @staticmethod
+    def point_lights():
+        return {"format_version": PBR_SETTINGS_VERSION, "minecraft:point_light_settings": {"colors": {}}}
+
+    @staticmethod
+    def pbr_fallback_settings():
+        return {
+            "format_version": PBR_SETTINGS_VERSION,
+            "minecraft:pbr_fallback_settings": {},
         }
 
     @staticmethod
@@ -609,6 +661,73 @@ class JsonSchemes:
     def aim_assist_categories():
         return {"minecraft:aim_assist_categories": {"categories": []}}
 
+    @staticmethod
+    def jigsaw_structure_process(identifier: str):
+        return {
+            "format_version": JIGSAW_VERSION,
+            "minecraft:processor_list": {
+                "description": {"identifier": identifier},
+                "processors": [],
+            },
+        }
+
+    @staticmethod
+    def jigsaw_structures(
+        identifier: str,
+        placement_step: str,
+        start_pool_identifier: str,
+        start_jigsaw_name: str | None,
+        max_depth: int,
+        start_height,
+        liquid_settings,
+    ):
+        return {
+            "format_version": JIGSAW_VERSION,
+            "minecraft:jigsaw": {
+                "description": {"identifier": identifier},
+                "biome_filters": [],
+                "step": placement_step,
+                "start_pool": start_pool_identifier,
+                "start_jigsaw_name": start_jigsaw_name if start_jigsaw_name is not None else {},
+                "max_depth": max_depth,
+                "start_height": start_height,
+                "pool_aliases": [],
+                "liquid_settings": liquid_settings,
+            },
+        }
+
+    @staticmethod
+    def jigsaw_template_pools(identifier: str, fallback_identifier: str):
+        return {
+            "format_version": "1.21.20",
+            "minecraft:template_pool": {
+                "description": {"identifier": identifier},
+                "elements": [],
+                "fallback": fallback_identifier,
+            },
+        }
+
+    @staticmethod
+    def jigsaw_structure_set(identifier: str, separation: int, spacing: int):
+        return {
+            "format_version": JIGSAW_VERSION,
+            "minecraft:structure_set": {
+                "description": {"identifier": identifier},
+                "placement": {
+                    "type": "minecraft:random_spread",
+                    "salt": random.randint(0, 1000000),
+                    "separation": separation,
+                    "spacing": spacing,
+                    "spread_type": "linear",
+                },
+                "structures": [],
+            },
+        }
+
+    @staticmethod
+    def texture_set():
+        return {"format_version": PBR_SETTINGS_VERSION, "minecraft:texture_set": {}}
+
 
 class AddonObject:
     """
@@ -625,7 +744,7 @@ class AddonObject:
         """
         Constructs all the necessary attributes for the AddonObject object.
 
-        Args:
+        Parameters:
             name (str): The name of the addon object.
             path (str): The path of the addon object.
         """
@@ -633,7 +752,18 @@ class AddonObject:
         self._name = name
         self._content = {}
         self._directory = ""
+        self._is_vanilla = False
         CONFIG.Logger.object_initiated(self._name)
+
+    @property
+    def identifier(self) -> str:
+        """
+        Returns the identifier of the addon object in the format 'namespace:name'.
+
+        Returns:
+            str: The identifier of the addon object.
+        """
+        return f"{'minecraft' if  self._is_vanilla else CONFIG.NAMESPACE}:{self._name}"
 
     @property
     def do_not_shorten(self):
@@ -646,7 +776,7 @@ class AddonObject:
         """
         Sets the content of the addon object and returns the object.
 
-        Args:
+        Parameters:
             content (any): The content to be set for the addon object.
 
         Returns:
@@ -659,7 +789,7 @@ class AddonObject:
         """
         Queues the addon object for processing and logs the event.
 
-        Args:
+        Parameters:
             directory (str, optional): The directory of the addon object.
 
         Returns:
@@ -726,7 +856,7 @@ class MinecraftDescription:
     def _validate_name(self, name: str):
         """Validates the name of the Minecraft object.
 
-        Args:
+        Parameters:
             name (str): The name of the Minecraft object.
         """
         if ":" in name:
@@ -735,7 +865,7 @@ class MinecraftDescription:
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Initializes a MinecraftDescription instance.
 
-        Args:
+        Parameters:
             name (str): The name of the Minecraft object.
             is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
         """
@@ -772,8 +902,7 @@ class MinecraftDescription:
         """
         return self._is_vanilla
 
-    @property
-    def to_dict(self) -> dict:
+    def _export(self) -> dict:
         """Returns the description of the Minecraft object.
 
         Returns:

@@ -64,24 +64,5 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - API:
-    - Core:
-      - api/core.md
-      - api/lib.md
-    - Features:
-      - api/actors.md
-      - api/blockbench.md
-      - api/blocks.md
-      - api/commands.md
-      - api/components.md
-      - api/enums.md
-      - api/features.md
-      - api/items.md
-      - api/molang.md
-      - api/texture_pack.md
-      - api/types.md
-      - api/ui.md
-      - api/vanilla.md
   - Docs:
       - Config: guide/config.md
-      - Adding Entity: guide/adding_entity.md

@@ -1,16 +1,17 @@
-import commentjson as json
 import os
 import uuid
 from datetime import datetime
 
 import click
+import commentjson as json
 import requests
 
 from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.format_versions import (MANIFEST_BUILD, MODULE_MINECRAFT_SERVER,
                                        MODULE_MINECRAFT_SERVER_UI)
 from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File, FileExists,
-                           process_subcommand, validate_namespace_project_name)
+                           MoveFolder, process_subcommand,
+                           validate_namespace_project_name)
 
 from .__version__ import __version__
 
@@ -19,7 +20,7 @@ def CreateDirectoriesFromTree(tree: dict) -> None:
     """
     Recursively creates directories based on the structure of a tree.
 
-    Args:
+    Parameters:
         tree (dict): The tree structure representing the directories.
 
     Returns:
@@ -30,7 +31,7 @@ def CreateDirectoriesFromTree(tree: dict) -> None:
         """
         Recursively finds keys in the tree structure.
 
-        Args:
+        Parameters:
             tree (dict): The tree structure.
             path (str): The current path.
             a (list): The list to store the found keys.
@@ -63,7 +64,7 @@ class JsonSchemes:
                     "python": {},
                     "skins": {},
                     "sounds": {},
-                    "structures": {},
+                    "world": {},
                     "textures": {
                         "environment": {},
                         "items": {},
@@ -387,7 +388,7 @@ def create(
     """
     Create an Anvil project.
 
-    Args:
+    Parameters:
         namespace (str): The namespace of the project.
         project_name (str): The name of the project.
         preview (bool, optional): Whether to generate the project in Minecraft Preview. Defaults to False.
@@ -418,24 +419,14 @@ def create(
 
     # Setup the directory
     try:
-        latest_build = json.loads(
-            requests.get(
-                f"https://raw.githubusercontent.com/Mojang/bedrock-samples/{'preview' if preview else 'main'}/version.json"
-            ).text
-        )["latest"]["version"]
+        latest_build: str = (
+            requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py").split("=")[-1].strip()
+        )
     except:
-        latest_build = MANIFEST_BUILD
+        latest_build = __version__
 
-    base_dir = os.path.join(
-        APPDATA,
-        "Local",
-        "Packages",
-        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
-        "LocalState",
-        "games",
-        "com.mojang",
-        "minecraftWorlds",
-    )
+    base_dir = os.getcwd()
+
     dev_res = os.path.join(
         APPDATA,
         "Local",
@@ -457,39 +448,43 @@ def create(
         "development_behavior_packs",
     )
 
-    os.chdir(base_dir)
-
     CreateDirectoriesFromTree(JsonSchemes.structure(project_name))
     os.chdir(project_name)
 
     # Init the config file
     config = Config()
 
-    config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, latest_build)
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
     config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
+
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
     config.add_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, display_name)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs")
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, f"{display_name} Resource Pack")
     config.add_option(ConfigSection.PACKAGE, ConfigOption.BEHAVIOR_DESCRIPTION, f"{display_name} Behaviour Pack")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, f"{display_name} Resource Pack")
+    config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
+    config.add_option(
+        ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper()
+    )
+
+    config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world")
 
     config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
-    config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
-    config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
-    config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
+    config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-    config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, scriptapi)
     config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, pbr)
     config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
-    config.add_option(
-        ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper()
-    )
-    config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, preview)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.PREVIEW, preview)
+
+    config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
+    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
+
 
     config.add_section(namespace)
 
@@ -500,21 +495,6 @@ def create(
     File("CHANGELOG.md", "", "", "w")
 
     File(
-        "manifest.json",
-        JsonSchemes.manifest_world(
-            [1, 0, 0],
-            config.get_option(ConfigSection.BUILD, ConfigOption.PACK_UUID),
-            config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
-            random_seed,
-        ),
-        "",
-        "w",
-    )
-
-    File("world_behavior_packs.json", JsonSchemes.world_packs(config.get_option("build", "bp_uuid"), [1, 0, 0]), "", "w")
-    File("world_resource_packs.json", JsonSchemes.world_packs(config.get_option("build", "rp_uuid"), [1, 0, 0]), "", "w")
-
-    File(
         f"{project_name}.code-workspace",
         JsonSchemes.code_workspace(config.get_option("package", "company"), base_dir, project_name, preview),
         DESKTOP,
@@ -523,6 +503,7 @@ def create(
 
     if scriptapi:
         click.echo("Initiating ScriptingAPI modules")
+        config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
         File(
             "package.json",
             JsonSchemes.packagejson(
@@ -552,11 +533,26 @@ def create(
         )
         File("main.ts", 'import * as mc from "@minecraft/server";\n', os.path.join("assets", "javascript"), "w", False)
 
+        process_subcommand(
+            "npm init -y && npm install @minecraft/server @minecraft/server-ui typescript", "Unable to initiate npm packages."
+        )
+
     config.save()
 
     process_subcommand(
         f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace"
     )
+
+    p1 = list(map(int, __version__.split(".")))
+    p2 = list(map(int, latest_build.split(".")))
+
+    if (p1 > p2) - (p1 < p2) < 0:
+        click.echo(
+            click.style(
+                f"Anvil has been updated to version {latest_build}, please run `pip install --upgrade mcanvil` to update your project.",
+                "yellow",
+            )
+        )
 
 
 @cli.command(help="Run an Anvil project")

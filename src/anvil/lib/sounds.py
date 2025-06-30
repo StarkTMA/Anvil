@@ -2,12 +2,12 @@ import os
 from enum import StrEnum
 
 from anvil import CONFIG
-from anvil.api.enums import EntitySoundEvent, MusicCategory, SoundCategory
-from anvil.api.molang import _molang
-from anvil.api.types import Identifier
+from anvil.api.logic.molang import _molang
+from anvil.lib.enums import EntitySoundEvent, MusicCategory, SoundCategory
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.types import Identifier
 
 
 class SoundDescription:
@@ -21,7 +21,7 @@ class SoundDescription:
     ) -> None:
         """Initializes a SoundDescription instance.
 
-        Args:
+        Parameters:
             sound_reference (str): The definition of the sound.
             category (SoundCategory): The category of the sound.
             use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
@@ -53,7 +53,7 @@ class SoundDescription:
     ):
         """Adds a sound to the SoundDescription instance.
 
-        Args:
+        Parameters:
             sound_name (str): The name of the sound.
             volume (int, optional): The volume of the sound. Defaults to 1.
             weight (int, optional): The weight of the sound. Defaults to 1.
@@ -139,7 +139,7 @@ class SoundDefinition(AddonObject):
     ):
         """Defines a sound for the SoundDefinition instance.
 
-        Args:
+        Parameters:
             sound_reference (str): The sound_reference of the sound.
             category (SoundCategory): The category of the sound.
             use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
@@ -194,10 +194,10 @@ class MusicDefinition(AddonObject):
         super().__init__("music_definitions")
         self.content(JsonSchemes.music_definitions())
 
-    def music_definition(self, music_category: MusicCategory, min_delay: int = 60, max_delay: int = 180):
+    def music_definition(self, music_reference: MusicCategory | str, min_delay: int = 60, max_delay: int = 180):
         """Defines a music for the MusicDefinition instance.
 
-        Args:
+        Parameters:
             music_category (MusicCategory): The category of the music.
             min_delay (int, optional): The minimum delay for the music. Defaults to 60.
             max_delay (int, optional): The maximum delay for the music. Defaults to 180.
@@ -207,8 +207,8 @@ class MusicDefinition(AddonObject):
         """
         self._content.update(
             {
-                music_category.value: {
-                    "event_name": f"{CONFIG.NAMESPACE}:music.{music_category}",
+                music_reference: {
+                    "event_name": music_reference,
                     "max_delay": max_delay,
                     "min_delay": min_delay,
                 }
@@ -255,7 +255,7 @@ class SoundEvent(AddonObject):
     ):
         """Adds an entity event to the SoundEvent instance.
 
-        Args:
+        Parameters:
             entity_identifier (Identifier): The identifier of the entity.
             sound_event (EntitySoundEvent): The sound event for the entity.
             sound_identifier (str): The identifier of the sound.
@@ -281,6 +281,26 @@ class SoundEvent(AddonObject):
                 "pitch": pitch if pitch != (0.8, 1.2) else {},
                 "volume": volume,
             }
+
+
+    def add_individual_event(
+        self,
+        sound_identifier: str,
+        volume: float = 1.0,
+        pitch: tuple[float, float] = (0.8, 1.2),
+    ):
+        """Adds an individual event to the SoundEvent instance.
+
+        Parameters:
+            sound_identifier (str): The identifier of the sound.
+            volume (float, optional): The volume of the event. Defaults to 1.0.
+            pitch (tuple[float, float], optional): The pitch of the event. Defaults to (0.8, 1.2).
+        """
+        self._content["individual_event_sounds"]["events"][sound_identifier] = {
+            "sound": sound_identifier,
+            "pitch": pitch if pitch != (0.8, 1.2) else {},
+            "volume": volume,
+        }
 
     @property
     def queue(self):

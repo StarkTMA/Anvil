@@ -1,4 +1,5 @@
 """A collection of useful functions and classes used throughout the program."""
+
 import json as json
 import os
 import shutil
@@ -9,8 +10,8 @@ from enum import StrEnum
 
 import commentjson as commentjson
 
-from anvil.api.types import Color
 from anvil.lib.logger import Logger
+from anvil.lib.types import Color
 
 from ..__version__ import __version__
 
@@ -25,7 +26,7 @@ MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "t
 def FileExists(path) -> bool:
     """Checks if a file exists.
 
-    Args:
+    Parameters:
         path (_type_): The path to the file.
 
     Returns:
@@ -37,7 +38,7 @@ def FileExists(path) -> bool:
 def normalize_180(angle: float | str) -> float:
     """Normalizes an angle between -180 and 180.
 
-    Args:
+    Parameters:
         angle (float): The angle to be normalized.
 
     Returns:
@@ -53,7 +54,7 @@ def clamp(value: float, _min: float, _max: float) -> float:
     """
     Clamps a value between a minimum and maximum limit.
 
-    Args:
+    Parameters:
         value (float): The value to be clamped.
         _min (float): The lower limit.
         _max (float): The upper limit.
@@ -68,7 +69,7 @@ def frange(start: int, stop: int, num: float = 1):
     """
     Generate a list of interpolated float values between start and stop.
 
-    Args:
+    Parameters:
         start (int): The starting value.
         stop (int): The ending value.
         num (float, optional): The number of values to generate. Defaults to 1.
@@ -81,21 +82,21 @@ def frange(start: int, stop: int, num: float = 1):
     return values
 
 
-def process_color(color: Color, add_alpha: bool = False) -> str | list[float]:
-    if isinstance(color, tuple):
-        if len(color) not in [3, 4]:
+def process_color(Color: Color, add_alpha: bool = False) -> str | list[float]:
+    if isinstance(Color, tuple):
+        if len(Color) not in [3, 4]:
             raise ValueError("Color tuple must have 3 or 4 elements.")
-        if len(color) == 3 and add_alpha:
-            color = (*color, 255)
-        return (clamp(c, 0.0, 255.0) for c in color)
-    elif isinstance(color, str):
-        if color[0] != "#" or len(color) not in [7, 9]:
+        if len(Color) == 3 and add_alpha:
+            Color = (*Color, 255)
+        return (clamp(c, 0.0, 255.0) for c in Color)
+    elif isinstance(Color, str):
+        if Color[0] != "#" or len(Color) not in [7, 9]:
             raise ValueError(
-                "Invalid color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'."
+                "Invalid Color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'."
             )
-        if len(color) == 7 and add_alpha:
-            color += "ff"
-        return color
+        if len(Color) == 7 and add_alpha:
+            Color += "ff"
+        return Color
     else:
         raise TypeError("Color must be either a tuple of 3 or 4 integers or a hexadecimal string.")
 
@@ -104,10 +105,10 @@ def RemoveDirectory(path: str) -> None:
     """
     Removes a directory and all its contents.
 
-    Args:
+    Parameters:
         path (str): The path to the directory to be removed.
     """
-    
+
     shutil.rmtree(path)
 
 
@@ -115,7 +116,7 @@ def RemoveFile(path: str) -> None:
     """
     Removes a file.
 
-    Args:
+    Parameters:
         path (str): The path to the file to be removed.
     """
     os.remove(path)
@@ -125,7 +126,7 @@ def CopyFiles(old_dir: str, new_dir: str, target_file: str, rename: str = None) 
     """
     Copies a file from one directory to another.
 
-    Args:
+    Parameters:
         old_dir (str): The path to the source directory.
         new_dir (str): The path to the destination directory.
         target_file (str): The name of the file to be copied.
@@ -142,7 +143,7 @@ def CopyFolder(old_dir: str, new_dir: str) -> None:
     """
     Copies a folder and all its contents to a new location.
 
-    Args:
+    Parameters:
         old_dir (str): The path to the source directory.
         new_dir (str): The path to the destination directory.
     """
@@ -150,11 +151,23 @@ def CopyFolder(old_dir: str, new_dir: str) -> None:
     shutil.copytree(os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True)
 
 
+def MoveFolder(old_dir: str, new_dir: str) -> None:
+    """
+    Moves a folder and all its contents to a new location.
+
+    Parameters:
+        old_dir (str): The path to the source directory.
+        new_dir (str): The path to the destination directory.
+    """
+    CreateDirectory(new_dir)
+    shutil.move(os.path.realpath(old_dir), os.path.realpath(new_dir))
+
+
 def zipit(zip_name, dir_list: dict) -> None:
     """
     Create a ZIP archive containing multiple directories and files.
 
-    Args:
+    Parameters:
         zip_name: The name of the ZIP archive.
         dir_list (dict): A dictionary where the keys are source directories and the values are target directories.
 
@@ -183,24 +196,24 @@ def CreateDirectory(path: str) -> None:
     """
     Creates a new directory.
 
-    Args:
+    Parameters:
         path (str): The path to the new directory.
     """
     this_path = os.path.join("./", path.lstrip("/"))
     os.makedirs(this_path, exist_ok=True)
 
 
-def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bool = False, *args) -> None:
+def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bool = False, *Parameters) -> None:
     """
     Create or modify a file with the given content.
 
-    Args:
+    Parameters:
         name (str): The name of the file.
         content: The content of the file.
         directory (str): The directory path where the file should be created or modified.
         mode (str): The file mode, either "w" (write) or "a" (append).
         skip_tag (bool, optional): Whether to skip adding the file metadata tag. Defaults to False.
-        *args: Additional StrEnum.
+        *Parameters: Additional StrEnum.
 
     Note:
         The file content is converted to the appropriate format based on the file extension.

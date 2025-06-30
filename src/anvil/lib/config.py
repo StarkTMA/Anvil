@@ -1,11 +1,12 @@
-import commentjson as json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 
+import commentjson as json
 import requests
 
+from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (APPDATA, FileExists, RemoveDirectory,
                            validate_namespace_project_name)
@@ -47,6 +48,8 @@ class ConfigOption(StrEnum):
     EXPERIMENTAL = "experimental"
     SCRIPT_MODULE_UUID = "script_module_uuid"
     DATA_MODULE_UUID = "data_module_uuid"
+    PREVIEW = "preview"
+
 
 
 class Config:
@@ -67,7 +70,7 @@ class Config:
     def add_section(self, section: str) -> None:
         """Adds a section to the anvilconfig.json file.
 
-        Args:
+        Parameters:
             section (str): The section to add.
         """
         self._config[section] = {}
@@ -75,7 +78,7 @@ class Config:
     def has_section(self, section: str) -> bool:
         """Checks if a section exists in the anvilconfig.json file.
 
-        Args:
+        Parameters:
             section (str): The section to check.
 
         Returns:
@@ -86,7 +89,7 @@ class Config:
     def add_option(self, section: str, option: str, value):
         """Sets a value in the anvilconfig.json file.
 
-        Args:
+        Parameters:
             section (str): The section to set the value in.
             option (str): The option to set the value in.
             value (Any): The value to set.
@@ -100,7 +103,7 @@ class Config:
     def has_option(self, section: str, option: str) -> bool:
         """Checks if an option exists in the anvilconfig.json file.
 
-        Args:
+        Parameters:
             section (str): The section to check the option in.
             option (str): The option to check.
 
@@ -112,7 +115,7 @@ class Config:
     def get_option(self, section, option) -> str:
         """Gets a value from the anvilconfig.json file.
 
-        Args:
+        Parameters:
             section (str): The section to get the value from.
             option (str): The option to get the value from.
 
@@ -154,7 +157,7 @@ class _AnvilConfig:
     def _handle_config(self, section: ConfigSection, option: ConfigOption, prompt) -> None:
         """Handles the config of the Anvil instance.
 
-        Args:
+        Parameters:
             section (str): The section of the config.
             option (str): The option of the config.
         """
@@ -195,32 +198,40 @@ class _AnvilConfig:
         self._PBR = self._handle_config(ConfigSection.ANVIL, ConfigOption.PBR, False)
         self._RANDOM_SEED = self._handle_config(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False)
         self._EXPERIMENTAL = self._handle_config(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
+        self._PREVIEW = self._handle_config(ConfigSection.ANVIL, ConfigOption.PREVIEW, False)
 
         self._RP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
         self._BP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
         self._PACK_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
         self._DATA_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
         if self._SCRIPT_API:
-            self._SCRIPT_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4()))
+            self._SCRIPT_MODULE_UUID = self._handle_config(
+                ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4())
+            )
 
         if self._TARGET not in ["world", "addon"]:
             self.Logger.invalid_target(self._TARGET)
 
         validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon")
 
-    def _check_new_vanilla_version(self):
+    def _check_new_versions(self):
         self.Logger.check_update()
         try:
-            j = requests.get("https://raw.githubusercontent.com/Mojang/bedrock-samples/main/version.json")
-            latest_build = json.loads(j.text)["latest"]["version"]
-            RemoveDirectory(os.path.join("assets", "cache"))
+            latest_build: str = (
+                requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py")
+                .split("=")[-1]
+                .strip()
+            )
         except:
-            latest_build = self._VANILLA_VERSION
+            latest_build = __version__
 
-        if self._VANILLA_VERSION < latest_build:
-            self.Logger.new_minecraft_build(self._VANILLA_VERSION, latest_build)
+        p1 = list(map(int, __version__.split(".")))
+        p2 = list(map(int, latest_build.split(".")))
+
+        if (p1 > p2) - (p1 < p2) < 0:
+            self.Logger.new_anvil_build(latest_build)
         else:
-            self.Logger.minecraft_build_up_to_date()
+            self.Logger.anvil_up_to_date()
 
         self.Config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, latest_build)
         self.Config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -240,14 +251,19 @@ class _AnvilConfig:
             APPDATA,
             "Local",
             "Packages",
-            f"Microsoft.Minecraft{'WindowsBeta' if self._EXPERIMENTAL else 'UWP'}_8wekyb3d8bbwe",
+            f"Microsoft.Minecraft{'WindowsBeta' if self._PREVIEW else 'UWP'}_8wekyb3d8bbwe",
             "LocalState",
             "games",
             "com.mojang",
+        )
+        self._WORLD_PATH = os.path.join(
+            self._COM_MOJANG,
+            "minecraftWorlds",
+            self.PROJECT_NAME
         )
 
         self.RP_PATH = os.path.join(self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}")
         self.BP_PATH = os.path.join(self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}")
 
-        if int((datetime.now() - datetime.strptime(self._LAST_CHECK, "%Y-%m-%d %H:%M:%S")).total_seconds()) > 12 * 3600:
-            self._check_new_vanilla_version()
+        if datetime.now() - datetime.strptime(self._LAST_CHECK, "%Y-%m-%d %H:%M:%S") > timedelta(hours=24):
+            self._check_new_versions()

@@ -1,26 +1,72 @@
 import os
+import zipfile
 from datetime import datetime
 
 import commentjson
 from halo import Halo
 from PIL import Image
 
-from anvil.api.blockbench import _Blockbench
-from anvil.api.molang import _molang
-from anvil.api.types import Identifier
+from anvil.api.actors.materials import _MaterialsObject
+from anvil.api.logic.molang import _molang
+from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import _AnvilConfig
 from anvil.lib.lib import (CopyFiles, CreateDirectory, File, FileExists,
                            RemoveDirectory, process_subcommand,
                            validate_namespace_project_name, zipit)
-from anvil.api.materials import _MaterialsObject
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.sounds import (EntitySoundEvent, MusicCategory, MusicDefinition,
                               SoundCategory, SoundDefinition, SoundEvent)
 from anvil.lib.textures import (BlocksJSONObject, ItemTexturesObject,
                                 TerrainTexturesObject)
+from anvil.lib.types import Identifier
 
 from ..__version__ import __version__
+
+
+class _AnvilSkinPack(AddonObject):
+    _extension = ".json"
+    _path = os.path.join("assets", "skins")
+
+    def __init__(self, config) -> None:
+        """Initializes a SkinPack instance."""
+        super().__init__("skins")
+        self._config = config
+        self._languages = []
+        self._skins = []
+        self.content(JsonSchemes.skins_json(self._config.PROJECT_NAME))
+
+    def add_skin(
+        self,
+        filename: str,
+        display_name: str,
+        is_slim: bool = False,
+        free: bool = False,
+    ):
+        """Adds a skin to the SkinPack.
+
+        Parameters:
+            filename (str): The filename of the skin.
+            display_name (str): The display name of the skin.
+            is_slim (bool, optional): Whether the skin is slim. Defaults to False.
+            free (bool, optional): Whether the skin is free. Defaults to False.
+        """
+        if not FileExists(os.path.join(self._path, f"{filename}.png")):
+            self._config.Logger.file_exist_error(f"{filename}.png", self._path)
+        self._skins.append(JsonSchemes.skin_json(filename, is_slim, free))
+        self._languages[f"skin.{self._config.PROJECT_NAME}.{filename}"] = display_name
+
+    def _export(self):
+        """Exports the SkinPack to the file system."""
+        self._content["skins"] = self._skins
+        l = JsonSchemes.skin_pack_name_lang(self._config.PROJECT_NAME, self._config.PROJECT_NAME + " Skin Pack")
+        l.extend([f"{k}={v}" for k, v in self._languages.items()])
+
+        File("languages.json", JsonSchemes.languages(), self._path, "w")
+        File("manifest.json", JsonSchemes.manifest_skins(self._config._RELEASE), self._path, "w")
+        File("en_US.lang", "\n".join(l), os.path.join(self._path, "texts"), "w")
+
+        super()._export()
 
 
 class _AnvilDefinitions:
@@ -52,7 +98,7 @@ class _AnvilDefinitions:
     ):
         """Adds a sound to the sound definition.
 
-        Args:
+        Parameters:
             sound_reference (str): The name of the sound definition.
             category (SoundCategory): The category of the sound.
             use_legacy_max_distance (bool, optional): Whether to use legacy max distance. Defaults to False.
@@ -72,16 +118,40 @@ class _AnvilDefinitions:
     def register_entity_sound_event(
         self,
         entity_identifier: Identifier,
-        sound_identifier,
+        sound_reference,
         sound_event: EntitySoundEvent,
+        category: SoundCategory = SoundCategory.Neutral,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
         variant_query: _molang = None,
         variant_map: str = None,
+        max_distance: int = 0,
+        min_distance: int = 9999,
     ):
         if self._sound_event_object is None:
             self._sound_event_object = SoundEvent()
-        return self._sound_event_object.add_entity_event(entity_identifier, sound_identifier, sound_event, volume, pitch, variant_query, variant_map)
+        if self._sound_definition_object is None:
+            self._sound_definition_object = SoundDefinition()
+
+        self._sound_event_object.add_entity_event(
+            entity_identifier, sound_reference, sound_event, volume, pitch, variant_query, variant_map
+        )
+        return self._sound_definition_object.sound_reference(
+            sound_reference, category, max_distance=max_distance, min_distance=min_distance
+        )
+
+    def register_individual_named_sounds(
+        self,
+        sound_reference,
+        category: SoundCategory = SoundCategory.Ambient,
+        volume: float = 1.0,
+        pitch: tuple[float, float] = (0.8, 1.2),
+    ):
+        if self._sound_event_object is None:
+            self._sound_event_object = SoundEvent()
+
+        self._sound_event_object.add_individual_event(sound_reference, volume, pitch)
+        return self._sound_definition_object.sound_reference(sound_reference, category)
 
     def register_block_sound_event(self):
         """# TO IMPLEMENT
@@ -93,10 +163,10 @@ class _AnvilDefinitions:
             self._item_textures_object = ItemTexturesObject()
         return self._item_textures_object.add_item(item_name, directory, *item_sprites)
 
-    def register_music(self, music_category: MusicCategory, min_delay: int = 60, max_delay: int = 180):
+    def register_music(self, music_reference: MusicCategory|str, min_delay: int = 60, max_delay: int = 180):
         """Adds a music to the music definition.
 
-        Args:
+        Parameters:
             music_category (MusicCategory): The category of the music.
             min_delay (int, optional): The min delay of the music. Defaults to 60.
             max_delay (int, optional): The max delay of the music. Defaults to 180.
@@ -106,8 +176,8 @@ class _AnvilDefinitions:
             self._music_definition_object = MusicDefinition()
         if self._sound_definition_object is None:
             self._sound_definition_object = SoundDefinition()
-        self._music_definition_object.music_definition(music_category, min_delay, max_delay)
-        return self._sound_definition_object.sound_reference(f"music.{music_category}", SoundCategory.Music)
+        self._music_definition_object.music_definition(music_reference, min_delay, max_delay)
+        return self._sound_definition_object.sound_reference(f"music.{music_reference}", SoundCategory.Music)
 
     def register_scores(self, **score_id_value: dict[str, int]):
         """
@@ -116,7 +186,7 @@ class _AnvilDefinitions:
 
         Parameters:
         ---------
-        `score_id_value` : `kwargs`
+        `score_id_value` : `kwParameters`
             The score and it's initial value.
 
         Examples:
@@ -143,7 +213,7 @@ class _AnvilDefinitions:
     def register_tag(self, *tags: str):
         """Registers tags.
 
-        Args:
+        Parameters:
             tags (str): The tags to register.
         """
         for tag in tags:
@@ -158,7 +228,7 @@ class _AnvilDefinitions:
     def register_block(self, block_identifier: Identifier, block_data: dict):
         """Registers blocks.
 
-        Args:
+        Parameters:
             blocks (dict): The blocks to register.
         """
         if self._blocks_object is None:
@@ -169,13 +239,20 @@ class _AnvilDefinitions:
     def register_terrain_texture(self, texture_name: str, texture_path: str, *block_textures):
         """Registers a terrain texture.
 
-        Args:
+        Parameters:
             texture_name (str): The name of the texture.
             texture_path (str): The path to the texture.
         """
         if self._terrain_texture_object is None:
             self._terrain_texture_object = TerrainTexturesObject()
         self._terrain_texture_object.add_block(texture_name, texture_path, *block_textures)
+
+    def register_skin_pack(self):
+        """Registers a skin pack."""
+        if self.config._TARGET == "addon":
+            self.config.Logger.skin_pack_not_supported()
+        else:
+            return _AnvilSkinPack()
 
     @property
     def get_new_score(self):
@@ -194,10 +271,14 @@ class _AnvilDefinitions:
 
         File("manifest.json", JsonSchemes.manifest_rp(version=release_list), self.config.RP_PATH, "w")
         File("manifest.json", JsonSchemes.manifest_bp(version=release_list), self.config.BP_PATH, "w")
-        File("manifest.json", JsonSchemes.manifest_world(version=release_list), "", "w")
+        File("manifest.json", JsonSchemes.manifest_world(version=release_list), self.config._WORLD_PATH, "w")
 
-        File("world_resource_packs.json", JsonSchemes.world_packs(release_list, self.config._RP_UUID), "", "w")
-        File("world_behavior_packs.json", JsonSchemes.world_packs(release_list, self.config._BP_UUID), "", "w")
+        File(
+            "world_resource_packs.json", JsonSchemes.world_packs(release_list, self.config._RP_UUID), self.config._WORLD_PATH, "w"
+        )
+        File(
+            "world_behavior_packs.json", JsonSchemes.world_packs(release_list, self.config._BP_UUID), self.config._WORLD_PATH, "w"
+        )
 
     def _export_language(self):
         default_langs = JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.RESOURCE_DESCRIPTION)
@@ -208,7 +289,6 @@ class _AnvilDefinitions:
         File("languages.json", ["en_US"], os.path.join(self.config.BP_PATH, "texts"), "w")
         File("languages.json", ["en_US"], os.path.join(self.config.RP_PATH, "texts"), "w")
 
-
         File("en_US.lang", "\n".join(langs), os.path.join(self.config.RP_PATH, "texts"), "w")
         File(
             "en_US.lang",
@@ -218,11 +298,11 @@ class _AnvilDefinitions:
         )
 
         if self.config._TARGET == "world":
-            File("languages.json", ["en_US"], "texts", "w")
+            File("languages.json", ["en_US"], os.path.join(self.config._WORLD_PATH, "texts"), "w")
             File(
                 "en_US.lang",
                 "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
-                "texts",
+                os.path.join(self.config._WORLD_PATH, "texts"),
                 "w",
             )
 
@@ -238,16 +318,16 @@ class _AnvilDefinitions:
         )
 
     def _export_helper_functions(self):
-        from anvil.api.commands import (Scoreboard, ScriptEvent, Tag, Target,
-                                        Tellraw)
-        from anvil.api.features import Function, _Tick
+        from anvil.api.logic.commands import (Scoreboard, ScriptEvent, Tag,
+                                              Target, Tellraw)
+        from anvil.api.logic.functions import Function, Tick
 
         self._setup_function = Function("setup")
         for f in Function._setup:
             self._setup_function.add(f.execute)
         self._setup_function.queue()
 
-        _Tick().add_function(*Function._ticking).queue
+        Tick().add_function(*Function._ticking).queue
 
         self._setup_scores = Function("setup_scores")
         self._remove_scores = Function("remove_scores")
@@ -302,7 +382,7 @@ class _AnvilDefinitions:
 
         self._export_manifest()
         self._export_language()
-        self._export_helper_functions()
+        # self._export_helper_functions()
 
         if any([self.config._SCRIPT_API, self.config._SCRIPT_UI]):
             self._export_scripts()
@@ -317,7 +397,7 @@ class _AnvilCore:
     def __init__(self, config: _AnvilConfig):
         """Initializes an Anvil instance.
 
-        Args:
+        Parameters:
             config (_Config): The config of the Anvil instance.
             logger (Logger): The logger of the Anvil instance.
         """
@@ -343,7 +423,7 @@ class _AnvilCore:
     def require_config(self, *options):
         """Checks if the config has the required options.
 
-        Args:
+        Parameters:
             options (str): The options to check.
         """
         if not self.config.Config.has_section(self.config.PROJECT_NAME):
@@ -376,7 +456,7 @@ class _AnvilCore:
         File("languages.json", JsonSchemes.languages(), os.path.join(self.config.RP_PATH, "texts"), "w")
 
         if self.config._TARGET == "world":
-            File("languages.json", JsonSchemes.languages(), "texts", "w")
+            File("languages.json", JsonSchemes.languages(), os.path.join(self.config._WORLD_PATH, "texts"), "w")
 
         for language in JsonSchemes.languages():
             destination_language = (
@@ -399,7 +479,7 @@ class _AnvilCore:
                 )
                 File(
                     f"{language}.lang",
-                    "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
+                    "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.BEHAVIOR_DESCRIPTION)),
                     os.path.join(self.config.BP_PATH, "texts"),
                     "w",
                 )
@@ -407,13 +487,16 @@ class _AnvilCore:
                     File(
                         f"{language}.lang",
                         "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
-                        os.path.join("texts"),
+                        os.path.join(self.config._WORLD_PATH, "texts"),
                         "w",
                     )
 
-    @Halo(text="Compiling", spinner="dots")
-    def compile(self) -> None:
+    def compile(self, extract_world: bool = False) -> None:
         """Compiles the project."""
+
+        if extract_world:
+            with zipfile.ZipFile(os.path.join("assets", "world", f"{self.config.PROJECT_NAME}.mcworld"), "r") as zip_ref:
+                zip_ref.extractall(self.config._WORLD_PATH)
 
         self._definitions.queue
         _Blockbench._export()
@@ -424,7 +507,7 @@ class _AnvilCore:
             except Exception as e:
                 self.config.Logger.object_export_error(object._name, e)
 
-        from anvil.api.blocks import _PermutationComponents
+        from anvil.api.blocks.blocks import _PermutationComponents
 
         if _PermutationComponents._count > 10000:
             if self.config._TARGET == "addon":
@@ -433,14 +516,6 @@ class _AnvilCore:
                 self.config.Logger.too_many_permutations_warn(_PermutationComponents._count)
 
         if self.config._SCRIPT_API:
-            File(
-                "anvilConstants.ts",
-                JsonSchemes.tsconstants(self.config.NAMESPACE, self.config.PROJECT_NAME),
-                os.path.join("assets", "javascript"),
-                "w",
-                False,
-            )
-
             source = os.path.join("assets", "javascript")
             target = os.path.join(self.config.BP_PATH, "scripts")
 
@@ -477,6 +552,7 @@ class _AnvilCore:
 
 class _Anvil(_AnvilCore):
     """A class representing an Anvil instance."""
+
     def __init__(self, config: _AnvilConfig):
         super().__init__(config)
 
@@ -521,7 +597,7 @@ class _Anvil(_AnvilCore):
                 if apply_overlay:
                     overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
 
-                resize(original, "world_icon.jpeg", "", store_screenshot_size, 95, 72, overlay)
+                resize(original, "world_icon.jpeg", self.config._WORLD_PATH, store_screenshot_size, 95, 72, overlay)
                 resize(
                     original, f"{self.config.PROJECT_NAME}_Thumbnail_0.jpg", output_store, store_screenshot_size, 95, 72, overlay
                 )
@@ -641,19 +717,19 @@ class _Anvil(_AnvilCore):
                     self.config.BP_PATH: os.path.join(
                         "Content", "world_template", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"
                     ),
-                    "texts": os.path.join("Content", "world_template", "texts"),
-                    "level.dat": os.path.join("Content", "world_template"),
-                    "levelname.txt": os.path.join("Content", "world_template"),
-                    "manifest.json": os.path.join("Content", "world_template"),
-                    "world_icon.jpeg": os.path.join("Content", "world_template"),
-                    "world_behavior_packs.json": os.path.join("Content", "world_template"),
-                    "world_resource_packs.json": os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "texts"): os.path.join("Content", "world_template", "texts"),
+                    os.path.join(self.config._WORLD_PATH, "level.dat"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "levelname.txt"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "manifest.json"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "world_icon.jpeg"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "world_behavior_packs.json"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "world_resource_packs.json"): os.path.join("Content", "world_template"),
                 }
             )
             if not self.config._RANDOM_SEED:
                 content_structure.update(
                     {
-                        "db": os.path.join("Content", "world_template", "db"),
+                        os.path.join(self.config._WORLD_PATH, "db"): os.path.join("Content", "world_template", "db"),
                     }
                 )
 
@@ -691,13 +767,13 @@ class _Anvil(_AnvilCore):
         content_structure = {
             self.config.RP_PATH: os.path.join("resource_packs", f"RP_{self.config.PROJECT_NAME}"),
             self.config.BP_PATH: os.path.join("behavior_packs", f"BP_{self.config.PROJECT_NAME}"),
-            "texts": "texts",
-            "level.dat": "",
-            "levelname.txt": "",
-            "manifest.json": "",
-            "world_icon.jpeg": "",
-            "world_behavior_packs.json": "",
-            "world_resource_packs.json": "",
+            os.path.join(self.config._WORLD_PATH, "texts"): "texts",
+            os.path.join(self.config._WORLD_PATH, "level.dat"): "",
+            os.path.join(self.config._WORLD_PATH, "levelname.txt"): "",
+            os.path.join(self.config._WORLD_PATH, "manifest.json"): "",
+            os.path.join(self.config._WORLD_PATH, "world_icon.jpeg"): "",
+            os.path.join(self.config._WORLD_PATH, "world_behavior_packs.json"): "",
+            os.path.join(self.config._WORLD_PATH, "world_resource_packs.json"): "",
         }
 
         zipit(

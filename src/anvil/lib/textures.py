@@ -1,9 +1,9 @@
 import os
 
 from anvil import CONFIG
-from anvil.api.types import Identifier
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.types import Identifier
 
 
 class ItemTexturesObject(AddonObject):
@@ -21,7 +21,7 @@ class ItemTexturesObject(AddonObject):
     def add_item(self, item_name: str, directory, *item_sprites: str):
         """Adds item textures to the content.
 
-        Args:
+        Parameters:
             item_name (str): The name of the item.
             directory (str): The directory path for the textures.
             item_sprites (str): The names of the item sprites.
@@ -84,7 +84,7 @@ class TerrainTexturesObject(AddonObject):
     def add_block(self, block_name: str, directory: str, *block_textures: str):
         """Adds block textures to the content.
 
-        Args:
+        Parameters:
             block_name (str): The name of the block.
             directory (str): The directory path for the textures.
             block_textures (str): The names of the block textures.

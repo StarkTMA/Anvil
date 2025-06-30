@@ -1,5 +1,27 @@
 # Changelog
 
+# Version 0.9.0
+
+[ANVIL]
+
+- Updated to release `1.21.90`.
+- Refactored and rearranged the Anvil codebase to use a more modular approach.
+- Creating a new project will no longer generate the folder in "com.mojang/minecraftWorlds", instead the working directory will be used.
+- Added a new "assets/world" to host and ".mcworld file" with the same name as the project.
+- "assets/world" will now be used to host ".mcstructures" files instead of "assets/structures".
+- Added a new argument "extract_world" to Anvil.compile() method, this will extract the world from the ".mcworld" file and place it in the world directory.
+- Added a new `JigsawStructureSet()` and `JigsawStructureTemplatePool()` classes to the `anvil.api.structures` module, `JigsawStructure` and `JigsawStructureProcess` can be initialized from within `JigsawStructureSet` and `JigsawStructureTemplatePool`.
+- Started moving away from `Enums` to new `types` and `Literals` to better support type checking and IDE autocompletion.
+
+[PBR]
+
+- Added `AtmosphericSettings()`, `FogSettings()`, `ShadowSettings()`, `WaterSettings()`, `ColorGradingSettings()`, `BiomeCustomization()`, `LightingSettings()`, `PointLights()`, `PBRFallback()`.
+- Integrated Texture Sets with Entities and BlockMaterialInstances.
+
+[Blockbench]
+
+- Blockbench no longer exports cube faces that have texture disabled.
+
 # Version 0.8.4
 
 [ANVIL]
@@ -9,7 +31,6 @@
 [BLOCKS]
 
 - Added `BlockTick()` component.
-
 
 # Version 0.8.3
 
