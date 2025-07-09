@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 import os
-import random
 import uuid
-from typing import Any
+from typing import Any, Dict, List, Mapping
 
 from anvil import CONFIG
+from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.format_versions import *
-from anvil.lib.lib import File
+from anvil.lib.lib import File, salt_from_str
+from anvil.lib.types import Identifier
+from packaging.version import Version
 
 
 class JsonSchemes:
@@ -276,9 +280,9 @@ class JsonSchemes:
         return {"format_version": BP_ANIMATION_VERSION, "animations": {}}
 
     @staticmethod
-    def bp_animation(animation_name, part, animation_type, loop):
+    def bp_animation(identifier, animation_short_name, loop):
         return {
-            f"animation.{animation_name}.{part}.{animation_type}": {
+            f"animation.{identifier.replace(':', '.')}.{animation_short_name}": {
                 "loop": loop,
                 "timeline": {},
             }
@@ -300,9 +304,9 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def animation_controller(controller_name, part, animation_type):
+    def animation_controller(identifier, controller_shortname):
         return {
-            f"controller.animation.{controller_name}.{part}.{animation_type}": {
+            f"controller.animation.{identifier.replace(':', '.')}.{controller_shortname}": {
                 "initial_state": "default",
                 "states": {},
             }
@@ -335,9 +339,9 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def render_controller(controller_name, part, controller_type):
+    def render_controller(identifier, controller_name):
         return {
-            f"controller.render.{controller_name}.{part}.{controller_type}": {
+            f"controller.render.{identifier.replace(':', '.')}.{controller_name}": {
                 "arrays": {"textures": {}, "geometries": {}},
                 "materials": [],
                 "geometry": {},
@@ -444,11 +448,11 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def camera_preset(namespace, name, inherit_from):
+    def camera_preset(identifier, inherit_from):
         return {
             "format_version": CAMERA_PRESET_VERSION,
             "minecraft:camera_preset": {
-                "identifier": f"{namespace}:{name}",
+                "identifier": identifier,
                 "inherit_from": inherit_from,
             },
         }
@@ -576,52 +580,52 @@ class JsonSchemes:
         return {"pools": []}
 
     @staticmethod
-    def smelting_recipe(namespace: str, name: str, tags: list[str]):
+    def smelting_recipe(identifier: str, tags: list[str]):
         return {
             "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_furnace": {
                 "tags": tags,
-                "description": {"identifier": f"{namespace}:{name}"},
+                "description": {"identifier": identifier},
             },
         }
 
     @staticmethod
-    def smithing_table_recipe(namespace: str, name: str, tags: list[str]):
+    def smithing_table_recipe(identifier: str, tags: list[str]):
         return {
             "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_smithing_transform": {
-                "description": {"identifier": f"{namespace}:{name}"},
+                "description": {"identifier": identifier},
                 "tags": tags,
             },
         }
 
     @staticmethod
-    def smithing_table_trim_recipe(namespace: str, name: str, tags: list[str]):
+    def smithing_table_trim_recipe(identifier: str, tags: list[str]):
         return {
             "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_smithing_trim": {
-                "description": {"identifier": f"{namespace}:{name}"},
+                "description": {"identifier": identifier},
                 "tags": tags,
             },
         }
 
     @staticmethod
-    def shapeless_crafting_recipe(namespace: str, name: str, tags: list[str]):
+    def shapeless_crafting_recipe(identifier: str, tags: list[str]):
         return {
             "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_shapeless": {
-                "description": {"identifier": f"{namespace}:{name}"},
+                "description": {"identifier": identifier},
                 "tags": tags,
                 "ingredients": [],
             },
         }
 
     @staticmethod
-    def shaped_crafting_recipe(namespace: str, name: str, assume_symmetry: bool, tags: list[str]):
+    def shaped_crafting_recipe(identifier: str, assume_symmetry: bool, tags: list[str]):
         return {
             "format_version": RECIPE_JSON_FORMAT_VERSION,
             "minecraft:recipe_shaped": {
-                "description": {"identifier": f"{namespace}:{name}"},
+                "description": {"identifier": identifier},
                 "tags": tags,
                 "assume_symmetry": assume_symmetry,
                 "pattern": [],
@@ -648,7 +652,7 @@ class JsonSchemes:
     def aim_assist_preset(identifier: str):
         return {
             "minecraft:aim_assist_preset": {
-                "identifier": f"{CONFIG.NAMESPACE}:{identifier}",
+                "identifier": identifier,
                 "item_settings": {},
                 "default_item_settings": "default",
                 "hand_settings": "default",
@@ -697,28 +701,28 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def jigsaw_template_pools(identifier: str, fallback_identifier: str):
+    def jigsaw_template_pools(identifier: str, fallback_identifier: str | None):
         return {
             "format_version": "1.21.20",
             "minecraft:template_pool": {
                 "description": {"identifier": identifier},
                 "elements": [],
-                "fallback": fallback_identifier,
+                "fallback": fallback_identifier if fallback_identifier else {},
             },
         }
 
     @staticmethod
-    def jigsaw_structure_set(identifier: str, separation: int, spacing: int):
+    def jigsaw_structure_set(identifier: str, separation: int, spacing: int, spread_type, placement_type):
         return {
             "format_version": JIGSAW_VERSION,
             "minecraft:structure_set": {
                 "description": {"identifier": identifier},
                 "placement": {
-                    "type": "minecraft:random_spread",
-                    "salt": random.randint(0, 1000000),
+                    "type": "minecraft:random_spread",  # placement_type
+                    "salt": salt_from_str(identifier),
                     "separation": separation,
                     "spacing": spacing,
-                    "spread_type": "linear",
+                    "spread_type": spread_type,
                 },
                 "structures": [],
             },
@@ -729,43 +733,127 @@ class JsonSchemes:
         return {"format_version": PBR_SETTINGS_VERSION, "minecraft:texture_set": {}}
 
 
-class AddonObject:
-    """
-    An object representing an addon with functionality to modify its content, queue it for processing, and export it.
+class AddonDescriptor:
+    """An object representing an addon descriptor with validation for names and namespaces."""
 
-    Attributes:
-        name (str): The name of the addon object.
-    """
+    _object_type = "addon_descriptor"
 
-    _extension = ".json"
-    _path = ""
+    def _validate_name(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False) -> tuple[str, str]:
+        """Validates the name of the Minecraft object.
 
-    def __init__(self, name: str) -> None:
+        Parameters:
+            name (str): The name of the Minecraft object.
+        """
+        object_name: str
+        object_namespace: str
+
+        if ":" in name:
+            object_namespace, object_name = name.split(":", 1)
+        else:
+            object_namespace = "minecraft" if is_vanilla else CONFIG.NAMESPACE
+            object_name = name
+
+        if not str(object_name)[0].isalpha():
+            raise ValueError(f"Names cannot start with a digit. {self._object_type}[{name}]")
+
+        if not str(object_namespace)[0].isalpha():
+            raise ValueError(f"Namespaces cannot start with a digit. {self._object_type}[{name}]")
+
+        if CONFIG._TARGET == ConfigPackageTarget.ADDON and is_vanilla and not is_vanilla_allowed:
+            raise RuntimeError(
+                f"Overriding vanilla features is not allowed for packages of type '{CONFIG._TARGET}'. {self._object_type}[{name}]"
+            )
+
+        if is_vanilla and object_namespace != "minecraft":
+            raise ValueError(f"Invalid namespace '{object_namespace}' overriding Vanilla for. {self._object_type}[{name}]")
+
+        return object_name, object_namespace
+
+    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False) -> None:
         """
         Constructs all the necessary attributes for the AddonObject object.
 
         Parameters:
             name (str): The name of the addon object.
-            path (str): The path of the addon object.
         """
-        self._shorten = True
-        self._name = name
-        self._content = {}
-        self._directory = ""
-        self._is_vanilla = False
-        CONFIG.Logger.object_initiated(self._name)
+
+        self._is_vanilla = is_vanilla
+        self._name, self._namespace = self._validate_name(name, is_vanilla, is_vanilla_allowed)
+        self._display_name = self._name.replace("_", " ").title()
 
     @property
-    def identifier(self) -> str:
+    def identifier(self) -> Identifier:
         """
         Returns the identifier of the addon object in the format 'namespace:name'.
 
         Returns:
             str: The identifier of the addon object.
         """
-        return f"{'minecraft' if  self._is_vanilla else CONFIG.NAMESPACE}:{self._name}"
+        return f"{self._namespace}:{self._name}"
 
     @property
+    def name(self) -> str:
+        """
+        Returns the name of the addon object.
+
+        Returns:
+            str: The name of the addon object.
+        """
+        return self._name
+
+    def __str__(self):
+        return self.identifier
+
+
+# For the description property of json files
+class MinecraftDescription(AddonDescriptor):
+    """Handles Minecraft descriptions.
+
+    Attributes:
+        name (str): The name of the Minecraft object.
+        is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
+    """
+
+    def __init__(self, name, is_vanilla=False):
+        super().__init__(name, is_vanilla)
+        self._description: dict = JsonSchemes.description(self._namespace, self._name)
+
+    def _export(self) -> dict:
+        """Returns the description of the Minecraft object.
+
+        Returns:
+            dict: The description
+        """
+        return self._description
+
+
+class AddonObject(AddonDescriptor):
+    """
+    An object representing an addon with functionality to modify its content, queue it for processing, and export it.
+
+    Attributes:
+        name (str): The name of the addon object.
+        is_vanilla (bool): Indicates if the object is from vanilla Minecraft.
+        object_type (str, optional): The type of the addon object.
+    """
+
+    _extension = ".json"
+    _path = ""
+    _object_type = "addon_object"
+
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        """
+        Constructs all the necessary attributes for the AddonObject object.
+
+        Parameters:
+            name (str): The name of the addon object.
+        """
+        super().__init__(name, is_vanilla)
+
+        self._directory = ""
+        self._content = {}
+        self._shorten = True
+
     def do_not_shorten(self):
         """
         Setter property that disables shortening of `dict` when exporting.
@@ -799,7 +887,6 @@ class AddonObject:
 
         self._directory = directory if not directory is None else ""
         self._path = os.path.join(self._path, self._directory)
-        CONFIG.Logger.object_queued(self._name)
         ANVIL._queue(self)
         return self
 
@@ -835,77 +922,138 @@ class AddonObject:
         path = self._path.removeprefix(CONFIG.RP_PATH).removeprefix(CONFIG.BP_PATH)
         path = os.path.join(path, f"{self._name}{self._extension}")
         if len(path) > 80:
-            CONFIG.Logger.path_length_error(path)
+            raise ValueError(
+                f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters."
+            )
 
         if self._shorten and type(self._content) is dict:
             self._content = _shorten_dict(self._content)
 
         self._content = _replace_backslashes(self._content)
-        CONFIG.Logger.object_exported(self._name)
         File(f"{self._name}{self._extension}", self._content, self._path, "w")
 
 
-class MinecraftDescription:
-    """Handles Minecraft descriptions.
+class MinecraftAddonObject(AddonDescriptor):
+    def __init__(self, name, is_vanilla=False, is_vanilla_allowed=False):
+        super().__init__(name, is_vanilla, is_vanilla_allowed)
+
+
+class MinecraftEntityDescriptor(MinecraftAddonObject):
+    _object_type = "Entity Descriptor"
+
+    def __init__(self, name, is_vanilla=False, allow_runtime: bool = True, is_vanilla_allowed=True):
+        super().__init__(name, is_vanilla, is_vanilla_allowed)
+        self._allow_runtime = allow_runtime
+
+
+class MinecraftBlockDescriptor(AddonDescriptor):
+    _object_type = "Block Descriptor"
+
+    def __init__(
+        self,
+        name,
+        is_vanilla=False,
+        states: Mapping[str, str | int | float | bool] = None,
+        tags: set[str] = None,
+        is_vanilla_allowed=True,
+    ) -> None:
+        super().__init__(name, is_vanilla, is_vanilla_allowed)
+        self._states = states if states is not None else {}
+        self._tags = tags if tags is not None else set()
+
+    @property
+    def tags(self) -> set[str]:
+        """Returns the tags associated with the block."""
+        return self._tags
+
+    @property
+    def states(self) -> str:
+        """Returns a string representation of the block states."""
+        if len(self._states.keys()) > 0:
+            return "{" + ", ".join(f"{k}={v}" for k, v in self._states.items()) + "}"
+        return ""
+
+    def __str__(self) -> Identifier:
+        if self.states != "":
+            return f"{self.identifier} [{self.states}]"
+        return self.identifier
+
+
+class MinecraftItemDescriptor(AddonDescriptor):
+    _object_type = "Item Descriptor"
+
+    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True) -> None:
+        super().__init__(name, is_vanilla, is_vanilla_allowed)
+
+    def __str__(self) -> Identifier:
+        return self.identifier
+
+
+class EntityDescriptor(MinecraftEntityDescriptor):
+    def __init__(self, name: str, is_vanilla: bool = False, allow_runtime: bool = True) -> None:
+        super().__init__(name, is_vanilla, allow_runtime, False)
+
+
+class BlockDescriptor(MinecraftBlockDescriptor):
+    def __init__(
+        self, name: str, is_vanilla: bool = False, states: Mapping[str, str | int | float | bool] = None, tags: set[str] = None
+    ) -> None:
+        super().__init__(name, is_vanilla, states, tags, False)
+
+
+class ItemDescriptor(MinecraftItemDescriptor):
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        super().__init__(name, is_vanilla, False)
+
+
+class _BaseComponent(AddonDescriptor):
+    _object_type = "Base Component"
+
+    def _require_components(self, *components: "_BaseComponent") -> None:
+        self._dependencies.extend(components)
+
+    def _add_clashes(self, *components: "_BaseComponent") -> None:
+        self._clashes.extend(components)
+
+    def _enforce_version(self, current: str, minimum: str) -> None:
+        if Version(current) < Version(minimum):
+            raise ValueError(f"{self.identifier} requires ≥ {minimum} (got {current}).")
+
+    def _add_field(self, key: str, value: Any) -> None:
+        self._component[key] = value
+
+    def _set_value(self, value: Dict[str, Any]) -> None:
+        self._component = value
+
+    def _get_field(self, key: str, default: Any) -> Any:
+        return self._component.get(key, default)
+
+    def _add_dict(self, value: Dict[str, Any]) -> None:
+        self._component.update(value)
+
+    def __init__(self, component_name, is_vanilla: bool = True) -> None:
+        super().__init__(component_name, is_vanilla, True)
+        self._dependencies: List["_BaseComponent"] = []
+        self._clashes: List["_BaseComponent"] = []
+        self._component: Dict[str, Any] = {}
+
+    def __iter__(self):
+        """Iterates over the component's fields."""
+        return iter({self.identifier: self._component}.items())
+
+
+class CustomComponent(_BaseComponent):
+    """A custom component that can be used to extend the functionality of Minecraft objects.
 
     Attributes:
-        name (str): The name of the Minecraft object.
-        is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
+        component_name (str): The name of the component.
     """
 
-    def _validate_name(self, name: str):
-        """Validates the name of the Minecraft object.
+    def __init__(self, component_name: str) -> None:
+        """
+        Constructs all the necessary attributes for the CustomComponent object.
 
         Parameters:
-            name (str): The name of the Minecraft object.
+            component_name (str): The name of the custom component.
         """
-        if ":" in name:
-            CONFIG.Logger.namespaces_not_allowed(name)
-
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """Initializes a MinecraftDescription instance.
-
-        Parameters:
-            name (str): The name of the Minecraft object.
-            is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
-        """
-        self._validate_name(name)
-        self._name = name
-        self._is_vanilla = is_vanilla
-        self._namespace = "minecraft" if is_vanilla else CONFIG.NAMESPACE
-        self._description: dict = JsonSchemes.description(self._namespace, self._name)
-
-    @property
-    def identifier(self) -> str:
-        """Formulates the identifier for the Minecraft object.
-
-        Returns:
-            str: The identifier in the format 'namespace_format:name'
-        """
-        return f"{self._namespace}:{self._name}"
-
-    @property
-    def name(self) -> str:
-        """Returns the name of the Minecraft object.
-
-        Returns:
-            str: The name
-        """
-        return self._name
-
-    @property
-    def is_vanilla(self) -> bool:
-        """Returns if the Minecraft object is from vanilla Minecraft.
-
-        Returns:
-            bool: If the object is from vanilla Minecraft
-        """
-        return self._is_vanilla
-
-    def _export(self) -> dict:
-        """Returns the description of the Minecraft object.
-
-        Returns:
-            dict: The description
-        """
-        return self._description
+        super().__init__(component_name, False)

@@ -2,7 +2,7 @@ import os
 from enum import StrEnum
 
 from anvil import CONFIG
-from anvil.api.logic.molang import _molang
+from anvil.api.logic.molang import Molang
 from anvil.lib.enums import EntitySoundEvent, MusicCategory, SoundCategory
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.reports import ReportType
@@ -64,7 +64,7 @@ class SoundDescription:
         """
         parent_dir = self._sound_reference.split(".")[0]
         if not FileExists(os.path.join("assets", "sounds", parent_dir, f"{sound_name}.ogg")):
-            CONFIG.Logger.file_exist_error(f"{sound_name}.ogg", os.path.join("assets", "sounds", parent_dir))
+            raise FileNotFoundError(f"{sound_name}.ogg not found in {os.path.join('assets', 'sounds', parent_dir)}. Please ensure the file exists.")
 
         self._sound_name = sound_name
         splits = self._sound_definition.removeprefix(f"{CONFIG.NAMESPACE}:").split(".")
@@ -250,7 +250,7 @@ class SoundEvent(AddonObject):
         sound_event: EntitySoundEvent,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
-        variant_query: _molang = None,
+        variant_query: Molang = None,
         variant_map: str = None,
     ):
         """Adds an entity event to the SoundEvent instance.
@@ -261,7 +261,7 @@ class SoundEvent(AddonObject):
             sound_identifier (str): The identifier of the sound.
             volume (float, optional): The volume of the event. Defaults to 1.0.
             pitch (tuple[float, float], optional): The pitch of the event. Defaults to (0.8, 1.2).
-            variant_query (_molang, optional): The variant query for the event. Defaults to None.
+            variant_query (Molang, optional): The variant query for the event. Defaults to None.
             variant_map (str, optional): The variant map for the event. Defaults to None.
         """
 

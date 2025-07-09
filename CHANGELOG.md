@@ -1,5 +1,16 @@
 # Changelog
 
+# Version 0.9.1
+
+[ANVIL]
+
+- Improved Type Hints and IDE autocompletion. Although much more work is needed.
+- Improved error handling and raised errors.
+- Improved class inheritance and modularity for AddonObjects and Descriptors.
+- Exposed the `CustomComponent` from the `anvil.lib.schemas` module, enabling users to define custom components with support for inheritance.
+- Relocated many classes for better organization and modularity, your code should be minimally affected by this change.
+- Component Groups now validates component dependencies and clashes within the same group or permutation.
+
 # Version 0.9.0
 
 [ANVIL]
@@ -145,7 +156,7 @@
 
 ### [ANVIL]
 
-- Resource and Behaviour packs are now generated in the `development_behavior_packs` and `development_resource_packs` directories instead of the project root folder, this improves the development experience and reduces the commit changes as the packs can be regenerated at any point.
+- Resource and behavior packs are now generated in the `development_behavior_packs` and `development_resource_packs` directories instead of the project root folder, this improves the development experience and reduces the commit changes as the packs can be regenerated at any point.
 - Added a new enumerator `ItemVanillaTags` for item tags.
 - Added a new enumerator `BlockVanillaTags` for block tags.
 
@@ -161,7 +172,7 @@
 
 ### [Anvil]
 
-- Added `behaviour_description` and `resource_description` to `anvilconfig.json`.
+- Added `behavior_description` and `resource_description` to `anvilconfig.json`.
 - Fixed addons packaging issue.
 - Updated `MANIFEST_BUILD` to `1.20.80`.
 - Updated `ENTITY_SERVER_VERSION` to `1.20.80`.
@@ -294,7 +305,7 @@
 - Refactored a lot of code, split a lot classes into smaller modules.
 - Most of the functionalities are now required to manually import from their respective modules.
 - Anvil now flags experimental entities on non experimental environments.
-- Resource packs and Behavior Packs always have dependencies on each other
+- Resource packs and behavior Packs always have dependencies on each other
 - Reimplemented the `get_vanilla` method in Entity clients, work with vanilla entities only. The method retrieves the latest version of the `client_entity` from the official `bedrock_samples` github repository.
 - Implemented a basic caching system to store retrieved vanilla data, the cached data will be updated in case there is newer release.
 - Added a new `identifier` property to the `Materials()` class.
@@ -649,7 +660,7 @@
 - Formatted some Logger error messages.
 - Updated `ITEM_SERVER_VERSION` to `1.20.0`
 
-> <span style="color:red">**Breaking behaviour**</span>
+> <span style="color:red">**Breaking behavior**</span>
 >
 > - Config file is no longer automatically initialized, instead it's an `ANVIL` property.
 > - The gloabl variables such as `NAMESPACE` and `PROJECTNAME` are now accessible through the `ANVIL` instance.
@@ -733,7 +744,7 @@
 - `&`, `|` and `~` binary operators wrap the expression in parentheses `()`.
 - Added `RotationToCamera()`, `Health`, `MaxHealth`
 
-> <span style="color:red">**Breaking behaviour**</span>
+> <span style="color:red">**Breaking behavior**</span>
 >
 > To ensure the interpreter functions as intended, it is recommended to wrap expressions in your own parentheses to insure a proper order of operations, as Anvil wraps expressions left to right, it may result in several bugs.
 >
@@ -821,7 +832,7 @@
 
 - Added `HeadXRotation`, `HeadYRotation`, `IsLocalPlayer`, `IsItemNameAny` queries.
 - Values negation is now supported, `-Query.HeadXRotation`.
-- Arithmitic operations now return a str wrapped in brackets, this is to avoid unintended behaviour that may arise because of expressions like this:
+- Arithmitic operations now return a str wrapped in brackets, this is to avoid unintended behavior that may arise because of expressions like this:
   `q.life_time >= v.timer + 2` => `q.life_time >= (v.timer + 2)`
 
 ### [Commands]

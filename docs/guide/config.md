@@ -25,7 +25,7 @@ This section contains metadata about your project.
 | `project_name`         | `str` | Name of the project.                                      | `my_project`                | Must not exceed 16 characters. Changing might cause unexpected results. | Not Advised    |
 | `display_name`         | `str` | Display name of the project.                              | `My Project`                | None                                                                    | Yes            |
 | `project_description`  | `str` | Description used in localized text.                       | `My Project Essentials`     | None                                                                    | Yes            |
-| `behavior_description` | `str` | Description of the behavior pack.                         | `My Project Behaviour Pack` | None                                                                    | Yes            |
+| `behavior_description` | `str` | Description of the behavior pack.                         | `My Project behavior Pack` | None                                                                    | Yes            |
 | `resource_description` | `str` | Description of the resource pack.                         | `My Project Resource Pack`  | None                                                                    | Yes            |
 | `target`               | `str` | Packaging target; can be `world` or `addon`.              | `My Project Packs`          | None                                                                    | Yes            |
 
@@ -53,7 +53,7 @@ This section contains settings related to the Anvil tool.
 | `scriptui`            | `bool` | Enable/disable ScriptAPI/UI support.                                       | `false`    | None        | Yes            |
 | `pbr`                 | `bool` | Enable/disable physically based rendering (PBR) support.                   | `false`    | None        | Yes            |
 | `random_seed`         | `bool` | Enable/disable random seed support.                                        | `false`    | None        | Yes            |
-| `pascal_project_name` | `str`  | Name used for generating Resource and Behavior packs.                      | `MP`       | None        | Yes            |
+| `pascal_project_name` | `str`  | Name used for generating Resource and behavior packs.                      | `MP`       | None        | Yes            |
 | `last_check`          | `str`  | Last time Anvil checked `@Mojang/bedrock-sample` for updates.              | `datetime` | None        | Not Advised    |
 | `experimental`        | `bool` | Indicates if the project uses experimental features.                       | `false`    | None        | Yes            |
 | `preview`             | `bool` | Whether to generate the project for Minecraft release or preview versions. | `false`    | None        | Yes            |
@@ -76,7 +76,7 @@ Additional configuration options you can add.
 		"display_name": "My Project",
 		"project_description": "My Project Packs",
 		"target": "world",
-		"behavior_description": "My Project Behaviour Pack",
+		"behavior_description": "My Project behavior Pack",
 		"resource_description": "My Project Resource Pack"
 	},
 	"build": {

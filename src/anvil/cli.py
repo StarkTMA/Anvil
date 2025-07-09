@@ -5,13 +5,13 @@ from datetime import datetime
 import click
 import commentjson as json
 import requests
+from packaging.version import Version
 
 from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.format_versions import (MANIFEST_BUILD, MODULE_MINECRAFT_SERVER,
                                        MODULE_MINECRAFT_SERVER_UI)
 from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File, FileExists,
-                           MoveFolder, process_subcommand,
-                           validate_namespace_project_name)
+                           process_subcommand, validate_namespace_project_name)
 
 from .__version__ import __version__
 
@@ -251,7 +251,7 @@ class JsonSchemes:
                     ),
                 },
                 {
-                    "name": "Dev Behaviour Packs",
+                    "name": "Dev behavior Packs",
                     "path": os.path.join(
                         APPDATA,
                         "Local",
@@ -401,7 +401,7 @@ def create(
     click.echo(
         "\n".join(
             [
-                f"{click.style("Anvil", "cyan")} - by Yasser A. Benfoughal.",
+                f"{click.style("Anvil", "cyan")} - by StarkTMA.",
                 f"Version {click.style(__version__, "cyan")}.",
                 f"Copyright © {datetime.now().year} {click.style("StarkTMA", "red")}.",
                 "All rights reserved.",
@@ -460,7 +460,7 @@ def create(
     config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
     config.add_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, display_name)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs")
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.BEHAVIOR_DESCRIPTION, f"{display_name} Behaviour Pack")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION, f"{display_name} behavior Pack")
     config.add_option(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, f"{display_name} Resource Pack")
     config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
     config.add_option(
@@ -542,11 +542,8 @@ def create(
     process_subcommand(
         f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace"
     )
-
-    p1 = list(map(int, __version__.split(".")))
-    p2 = list(map(int, latest_build.split(".")))
-
-    if (p1 > p2) - (p1 < p2) < 0:
+    
+    if Version(__version__) < Version(latest_build):
         click.echo(
             click.style(
                 f"Anvil has been updated to version {latest_build}, please run `pip install --upgrade mcanvil` to update your project.",

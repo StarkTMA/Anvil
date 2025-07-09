@@ -28,7 +28,9 @@ class ItemTexturesObject(AddonObject):
         """
         for item in item_sprites:
             if not FileExists(os.path.join("assets", "textures", "items", f"{item}.png")):
-                CONFIG.Logger.file_exist_error(f"{item}.png", os.path.join("assets", "textures", "items"))
+                raise FileNotFoundError(
+                    f"Item texture '{item}.png' does not exist in '{os.path.join("assets", "textures", "items")}'. {self._object_type}[{item_name}]"
+                )
 
         self._content["texture_data"][f"{CONFIG.NAMESPACE}:{item_name}"] = {
             "textures": [

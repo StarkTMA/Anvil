@@ -299,7 +299,7 @@ class _UIElement:
                 self.element["texture"] = os.path.join("textures", "ui", texture)
                 self._textures.append(texture)
             else:
-                ANVIL.config.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
+                raise FileNotFoundError(f"{texture}.png not found in {os.path.join('assets', 'textures', 'ui')}. Please ensure the file exists.")
         else:
             self.element["texture"] = texture
 
@@ -330,7 +330,7 @@ class _UIElement:
                     "w",
                 )
         else:
-            ANVIL.config.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
+            raise FileNotFoundError(f"{texture}.png not found in {os.path.join('assets', 'textures', 'ui')}. Please ensure the file exists.")
         return self
 
     def aseprite_texture(self, texture: str):
@@ -342,7 +342,7 @@ class _UIElement:
                 f"{texture}.json",
             )
         else:
-            ANVIL.config.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
+            raise FileNotFoundError(f"{texture}.png not found in {os.path.join('assets', 'textures', 'ui')}. Please ensure the file exists.")
         return self
 
     def aseprite_key(self, key: str, texture: str):
@@ -355,7 +355,7 @@ class _UIElement:
                 f"{texture}.json",
             )
         else:
-            ANVIL.config.Logger.file_exist_error(f"{texture}.png", os.path.join("assets", "textures", "ui"))
+            raise FileNotFoundError(f"{texture}.png not found in {os.path.join('assets', 'textures', 'ui')}. Please ensure the file exists.")
         return self
 
     def keys(self, key, value):
@@ -795,6 +795,7 @@ class _UICreditsConstructor:
 class _UIVariables(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "ui")
+    _object_type = "UI Variables"
 
     def __init__(self) -> None:
         super().__init__("_global_variables")
@@ -806,6 +807,7 @@ class _UIVariables(AddonObject):
 class _UIDefs(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH)
+    _object_type = "UI Definitions"
     
     def __init__(self) -> None:
         super().__init__("_ui_defs")
@@ -824,6 +826,7 @@ class _UIDefs(AddonObject):
 class _UIAnimation(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "ui")
+    _object_type = "UI Animation"
 
     def __init__(self, name: str, namespace: str, defs: _UIDefs) -> None:
         super().__init__(name)
@@ -850,6 +853,7 @@ class _UIAnimation(AddonObject):
 class _UIScreen(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "ui")
+    _object_type = "UI Screen"
 
     def __init__(self, name: str, namespace: str, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
         super().__init__(name)
@@ -1373,8 +1377,6 @@ class _AnvilAnimations(_UIAnimation):
 
 
 class UI:
-    _extension = {0: ".json", 1: ".json"}
-
     def __init__(self) -> None:
         self._defs = _UIDefs()
         self.variables = _UIVariables()

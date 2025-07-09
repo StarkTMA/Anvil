@@ -66,12 +66,12 @@ class CraftingItemCatalog(AddonObject):
             )
         return self
 
-    def add_loose_items(self, category_name: ItemCategory, items: list) -> "CraftingItemCatalog":
+    def add_loose_items(self, category_name: ItemCategory, items: list[Item]) -> "CraftingItemCatalog":
         """Adds loose items to a category.
 
         Parameters:
             category_name (ItemCategory): The category name to update.
-            items (list): List of items to add to the category.
+            items (list[Item]): List of items to add to the category.
 
         Returns:
             CraftingItemCatalog: The current instance of CraftingItemCatalog.
@@ -96,12 +96,12 @@ class CraftingItemCatalog(AddonObject):
 class SmeltingRecipe(AddonObject):
     _extension = ".recipe.json"
     _path = os.path.join(CONFIG.BP_PATH, "recipes")
+    _object_type = "Smelting Recipe"
 
     def __init__(self, name: str, *tags: SmeltingTags):
-        self._name = name
-        self._tags = tags
         super().__init__(name)
-        self.content(JsonSchemes.smelting_recipe(CONFIG.NAMESPACE, name, tags))
+        self._tags = tags
+        self.content(JsonSchemes.smelting_recipe(self.identifier, tags))
 
     def input(self, identifier: Identifier):
         self._content["minecraft:recipe_furnace"]["input"] = {"item": identifier}
@@ -130,10 +130,11 @@ class SmeltingRecipe(AddonObject):
 class SmithingRecipe(AddonObject):
     _extension = ".recipe.json"
     _path = os.path.join(CONFIG.BP_PATH, "recipes")
+    _object_type = "Smithing Recipe"
 
     def __init__(self, name: str):
         self._name = name
-        self.content(JsonSchemes.smithing_table_recipe(CONFIG.NAMESPACE, name, ["smithing_table"]))
+        self.content(JsonSchemes.smithing_table_recipe(self.identifier, ["smithing_table"]))
         super().__init__(name)
 
     def base(self, identifier: Identifier):
@@ -167,14 +168,15 @@ class SmithingRecipe(AddonObject):
 class ShapelessRecipe(AddonObject):
     _extension = ".recipe.json"
     _path = os.path.join(CONFIG.BP_PATH, "recipes")
+    _object_type = "Shapeless Recipe"
 
     def __init__(self, name: str):
         super().__init__(name)
-        self.content(JsonSchemes.shapeless_crafting_recipe(CONFIG.NAMESPACE, name, ["crafting_table"]))
+        self.content(JsonSchemes.shapeless_crafting_recipe(self.identifier, ["crafting_table"]))
 
     def ingredients(self, items: list[tuple[Identifier, int]]):
         if len(items) > 9:
-            CONFIG.Logger.recipe_max_items(self._name)
+            raise ValueError(f"Too many items in shapeless recipe, maximum is 9. {self._object_type}[{self._name}]")
 
         for i, item in enumerate(items):
             if not item is None:
@@ -185,9 +187,9 @@ class ShapelessRecipe(AddonObject):
                 self._content["minecraft:recipe_shapeless"]["ingredients"].append(data)
         return self
 
-    def result(self, identifier: Identifier, count: int = 1, data: int = 0):
+    def result(self, item: Item | Identifier, count: int = 1, data: int = 0):
         self._content["minecraft:recipe_shapeless"]["result"] = {
-            "item": identifier,
+            "item": str(item),
             "count": count,
             "data": data if data != 0 else {},
         }
@@ -210,18 +212,20 @@ class ShapelessRecipe(AddonObject):
 
 
 class StoneCutterRecipe(ShapelessRecipe):
+    _object_type = "Stone Cutter Recipe"
+
     def __init__(self, name: str):
         super().__init__(name)
-        self.content(JsonSchemes.shapeless_crafting_recipe(CONFIG.NAMESPACE, name, ["stonecutter"]))
+        self.content(JsonSchemes.shapeless_crafting_recipe(self.identifier, ["stonecutter"]))
 
-    def ingredient(self, identifier: Identifier, data: int = 0):
-        return super().ingredient([(identifier, data)])
+    def ingredient(self, item: Item | Identifier, data: int = 0):
+        return super().ingredient([(item, data)])
 
     def unlock_context(self, unlock_context: RecipeUnlockContext):
         self._content["minecraft:recipe_shapeless"]["unlock"] = {"context": unlock_context.value}
         return self
 
-    def unlock_items(self, unlock_items: list[Identifier]):
+    def unlock_items(self, unlock_items: list[Item]):
         self._content["minecraft:recipe_shapeless"]["unlock"] = [{"item": [str(item)]} for item in unlock_items]
         return self
 
@@ -232,17 +236,19 @@ class StoneCutterRecipe(ShapelessRecipe):
 class ShapedCraftingRecipe(AddonObject):
     _extension = ".recipe.json"
     _path = os.path.join(CONFIG.BP_PATH, "recipes")
+    _object_type = "Shaped Crafting Recipe"
 
     def __init__(self, name: str, assume_symmetry: bool = True):
-        self._name = name
         self._recipe_exactly = False
         super().__init__(name)
-        self.content(JsonSchemes.shaped_crafting_recipe(CONFIG.NAMESPACE, name, assume_symmetry, ["crafting_table"]))
+        self.content(JsonSchemes.shaped_crafting_recipe(self.identifier, assume_symmetry, ["crafting_table"]))
 
-    def ingredients(self, items: list[list[tuple[str, int]]], keep_empty_slots: bool = False) -> None:
+    def ingredients(self, items: list[list[tuple[Item | Identifier, int]]], keep_empty_slots: bool = False) -> None:
         max_items = 9
         if len(items) > max_items:
-            CONFIG.Logger.recipe_max_items(self._name)
+            raise ValueError(
+                f"Too many items in shaped recipe, maximum is {max_items}. {self._object_type}[{self.identifier}]"
+            )
 
         keys = "abcdefghijklmnopqrstuvwxyz"
         pattern = ["   ", "   ", "   "]
@@ -279,9 +285,9 @@ class ShapedCraftingRecipe(AddonObject):
         self._content["minecraft:recipe_shaped"]["pattern"] = pattern
         return self
 
-    def result(self, identifier: Identifier, count: int = 1, data: int = 0):
+    def result(self, item: Item | Identifier, count: int = 1, data: int = 0):
         self._content["minecraft:recipe_shaped"]["result"] = {
-            "item": str(identifier),
+            "item": str(item),
             "count": count,
             "data": data if data != 0 else {},
         }
@@ -295,7 +301,7 @@ class ShapedCraftingRecipe(AddonObject):
         self._content["minecraft:recipe_shaped"]["unlock"] = {"context": unlock_context.value}
         return self
 
-    def unlock_items(self, unlock_items: list[Identifier]):
+    def unlock_items(self, unlock_items: list[Item | Identifier]):
         self._content["minecraft:recipe_shaped"]["unlock"] = [{"item": str(item)} for item in unlock_items]
         return self
 
@@ -306,18 +312,19 @@ class ShapedCraftingRecipe(AddonObject):
 class SmithingTrimRecipe(AddonObject):
     _extension = ".recipe.json"
     _path = os.path.join(CONFIG.BP_PATH, "recipes")
+    _object_type = "Smithing Trim Recipe"
 
     def __init__(self, name: str):
         self._name = name
-        self.content(JsonSchemes.smithing_table_trim_recipe(CONFIG.NAMESPACE, name, ["smithing_table"]))
+        self.content(JsonSchemes.smithing_table_trim_recipe(self.identifier, ["smithing_table"]))
         super().__init__(name)
 
-    def base(self, identifier: Identifier):
-        self._content["minecraft:recipe_smithing_transform"]["base"] = identifier
+    def base(self, item: Item | Identifier):
+        self._content["minecraft:recipe_smithing_transform"]["base"] = item
         return self
 
-    def addition(self, identifier: Identifier):
-        self._content["minecraft:recipe_smithing_transform"]["addition"] = identifier
+    def addition(self, item: Item | Identifier):
+        self._content["minecraft:recipe_smithing_transform"]["addition"] = item
         return self
 
     def priority(self, priority: int):
@@ -328,7 +335,7 @@ class SmithingTrimRecipe(AddonObject):
         self._content["minecraft:recipe_smithing_trim"]["unlock"] = {"context": unlock_context.value}
         return self
 
-    def unlock_items(self, unlock_items: list[Identifier]):
+    def unlock_items(self, unlock_items: list[Item | Identifier]):
         self._content["minecraft:recipe_smithing_trim"]["unlock"] = [{"item": [str(item)]} for item in unlock_items]
         return self
 

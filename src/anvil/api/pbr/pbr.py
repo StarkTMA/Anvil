@@ -1,7 +1,6 @@
 import os
 from typing import Literal
-
-from numpy import block
+from xml.dom.minidom import Identified
 
 from anvil import ANVIL, CONFIG
 from anvil.api.world.fog import Fog
@@ -10,16 +9,17 @@ from anvil.lib.enums import MusicCategory, SoundCategory
 from anvil.lib.lib import Color, clamp, process_color
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.sounds import SoundDescription
-from anvil.lib.types import RGB, RGBA, BlockDescriptor, ColorHex, Vector3D
+from anvil.lib.types import RGB, RGBA, Block, ColorHex, Identifier, Vector3D
 
 
 class __TextureSet(AddonObject):
     _extension = ".texture_set.json"
     _path = os.path.join(CONFIG.RP_PATH, "textures")
+    _object_type = "Texture Set"
 
-    def __init__(self, identifier: str, target: str) -> None:
-        super().__init__(identifier)
-        self.content(JsonSchemes.texture_set(f"{CONFIG.NAMESPACE}:{identifier}"))
+    def __init__(self, name: str, target: str) -> None:
+        super().__init__(name)
+        self.content(JsonSchemes.texture_set(f"{CONFIG.NAMESPACE}:{name}"))
         self._path = os.path.join(self._path, target)
 
     def set_textures(
@@ -71,6 +71,7 @@ class __TextureSet(AddonObject):
 class AtmosphericSettings(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "atmospherics")
+    _object_type = "Atmospheric Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
@@ -130,6 +131,7 @@ class AtmosphericSettings(AddonObject):
 class FogSettings(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "fog")
+    _object_type = "Fog Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
@@ -172,6 +174,7 @@ class FogSettings(AddonObject):
 class ShadowSettings(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "shadows")
+    _object_type = "Shadow Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
@@ -187,6 +190,7 @@ class ShadowSettings(AddonObject):
 class WaterSettings(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "water")
+    _object_type = "Water Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
@@ -311,6 +315,7 @@ class WaterSettings(AddonObject):
 class ColorGradingSettings(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "color_grading")
+    _object_type = "Color Grading Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
@@ -414,6 +419,7 @@ class ColorGradingSettings(AddonObject):
 class BiomeCustomization(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "biomes")
+    _object_type = "Biome Customization"
 
     def __init__(self, biome_identifier: str) -> None:
         super().__init__(biome_identifier)
@@ -535,6 +541,7 @@ class BiomeCustomization(AddonObject):
 class LightingSettings(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "lighting")
+    _object_type = "Lighting Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
@@ -592,6 +599,7 @@ class LightingSettings(AddonObject):
 class PointLights(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "point_lights")
+    _object_type = "Point Lights Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
@@ -599,23 +607,22 @@ class PointLights(AddonObject):
         super().__init__("global")
         self.content(JsonSchemes.point_lights())
 
-    def add_point_light(self, block_identifier: BlockDescriptor | str, color: ColorHex) -> None:
+    def add_point_light(self, block_identifier: Block | Identifier, color: ColorHex) -> None:
         """
         Adds a point light to the point lights configuration.
 
         Parameters:
-            block_identifier (BlockDescriptor | str): The identifier of the block that emits the light.
+            block_identifier (Block | Identifier): The identifier of the block that emits the light.
             color (ColorHex): The color of the light in hexadecimal format (e.g., "#RRGGBB").
         """
-        if isinstance(block_identifier, BlockDescriptor):
-            block_identifier = block_identifier.identifier
 
-        self._content["minecraft:point_light_settings"]["colors"][block_identifier] = process_color(color, add_alpha=False)
+        self._content["minecraft:point_light_settings"]["colors"][str(block_identifier)] = process_color(color, add_alpha=False)
 
 
 class PBRFallback(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "pbr")
+    _object_type = "PBR Fallback Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:

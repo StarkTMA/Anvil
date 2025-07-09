@@ -5,6 +5,7 @@ from anvil import CONFIG
 from anvil.lib.enums import (MaterialDefinitions, MaterialFunc,
                              MaterialOperation, MaterialStates)
 from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.types import Identifier
 
 
 class _MaterialsObject(AddonObject):
@@ -16,6 +17,7 @@ class _MaterialsObject(AddonObject):
 
     _extension = ".material"
     _path = os.path.join(CONFIG.RP_PATH, "materials")
+    _object_type = "Materials"
 
     def __init__(self) -> None:
         """Initializes a Materials instance."""
@@ -251,5 +253,5 @@ class Material:
         """
         return self._material
 
-    def __str__(self) -> str:
+    def __str__(self) -> Identifier:
         return self.identifier

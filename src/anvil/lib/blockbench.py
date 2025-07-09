@@ -166,7 +166,7 @@ class _AnimationsManager:
                 self._content["animations"].update(self._process_animation(animation_dict))
                 self._queued = True
         else:
-            CONFIG.Logger.blockbench_animation_not_found(animation_name, self._name)
+            raise ValueError(f"Animation '{animation_name}' not found in blockbench model '{self._name}'.")
 
     def _export(self) -> None:
         if self._queued:
@@ -185,7 +185,7 @@ class _TexturesManager:
         if texture in self._textures:
             self._queued_textures.add(texture)
         else:
-            CONFIG.Logger.blockbench_texture_not_found(texture, self._bbmodel["model_identifier"])
+            raise ValueError(f"Texture '{texture}' not found in blockbench model '{self._bbmodel['model_identifier']}'.")
 
     def _export(self) -> None:
         os.makedirs(self._path, exist_ok=True)
@@ -376,7 +376,7 @@ class _Blockbench:
                 if self.bbmodel["model_identifier"] != filename:
                     CONFIG.Logger.blockbench_identifier_mismatch(self.bbmodel["model_identifier"], filename)
         else:
-            CONFIG.Logger.file_exist_error(f"{filename}.bbmodel", os.path.join("assets", "bbmodels"))
+            raise FileNotFoundError(f"{filename}.bbmodel not found in {os.path.join('assets', 'bbmodels')}. Please ensure the file exists.")
 
         self.model = _ModelManager(filename, source, self.bbmodel)
         self.animations = _AnimationsManager(filename, source, self.bbmodel)

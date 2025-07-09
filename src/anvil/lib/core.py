@@ -7,9 +7,9 @@ from halo import Halo
 from PIL import Image
 
 from anvil.api.actors.materials import _MaterialsObject
-from anvil.api.logic.molang import _molang
+from anvil.api.logic.molang import Molang
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.config import _AnvilConfig
+from anvil.lib.config import _AnvilConfig, ConfigPackageTarget
 from anvil.lib.lib import (CopyFiles, CreateDirectory, File, FileExists,
                            RemoveDirectory, process_subcommand,
                            validate_namespace_project_name, zipit)
@@ -52,7 +52,7 @@ class _AnvilSkinPack(AddonObject):
             free (bool, optional): Whether the skin is free. Defaults to False.
         """
         if not FileExists(os.path.join(self._path, f"{filename}.png")):
-            self._config.Logger.file_exist_error(f"{filename}.png", self._path)
+            raise FileNotFoundError(f"{filename}.png not found in {self._path}. Please ensure the file exists.")
         self._skins.append(JsonSchemes.skin_json(filename, is_slim, free))
         self._languages[f"skin.{self._config.PROJECT_NAME}.{filename}"] = display_name
 
@@ -123,7 +123,7 @@ class _AnvilDefinitions:
         category: SoundCategory = SoundCategory.Neutral,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
-        variant_query: _molang = None,
+        variant_query: Molang = None,
         variant_map: str = None,
         max_distance: int = 0,
         min_distance: int = 9999,
@@ -163,7 +163,7 @@ class _AnvilDefinitions:
             self._item_textures_object = ItemTexturesObject()
         return self._item_textures_object.add_item(item_name, directory, *item_sprites)
 
-    def register_music(self, music_reference: MusicCategory|str, min_delay: int = 60, max_delay: int = 180):
+    def register_music(self, music_reference: MusicCategory | str, min_delay: int = 60, max_delay: int = 180):
         """Adds a music to the music definition.
 
         Parameters:
@@ -196,11 +196,15 @@ class _AnvilDefinitions:
         """
         for score_id, score_value in score_id_value.items():
             if len(score_id) > 16:
-                self.config.Logger.score_error(score_id)
+                raise ValueError(
+                    f"Score objective must be 16 characters or less. Error at {score_id}."
+                )
 
             start = f"{self.config.NAMESPACE}."
-            if not score_id.startswith(start) and self.config._TARGET == "addon":
-                self.config.Logger.invalid_score_format(start, score_id)
+            if not score_id.startswith(start) and self.config._TARGET == ConfigPackageTarget.ADDON:
+                raise ValueError(
+                    f"Scores must start with the namespace [{start}]. Error at {score_id}."
+                )
 
             if not score_id in self._scores.keys():
                 self._scores[score_id] = score_value
@@ -219,8 +223,11 @@ class _AnvilDefinitions:
         for tag in tags:
 
             start = f"{self.config.NAMESPACE}."
-            if not tag.startswith(start) and self.config._TARGET == "addon":
+            if not tag.startswith(start) and self.config._TARGET == ConfigPackageTarget.ADDON:
                 self.config.Logger.invalid_tag_format(start, tag)
+                raise ValueError(
+                    f"Tags must start with the namespace [{start}]. Error at {tag}."
+                )
 
             if not tag in self._tags:
                 self._tags.add(tags)
@@ -249,8 +256,9 @@ class _AnvilDefinitions:
 
     def register_skin_pack(self):
         """Registers a skin pack."""
-        if self.config._TARGET == "addon":
-            self.config.Logger.skin_pack_not_supported()
+        if self.config._TARGET == ConfigPackageTarget.ADDON:
+            raise ValueError("Skin packs are only supported for world templates.")
+        
         else:
             return _AnvilSkinPack()
 
@@ -266,19 +274,26 @@ class _AnvilDefinitions:
         self._raw_text += 1
         return id
 
-    def _export_manifest(self):
+    def _export_manifest(self, extract_world: bool = False):
         release_list = [int(i) for i in self.config._RELEASE.split(".")]
 
         File("manifest.json", JsonSchemes.manifest_rp(version=release_list), self.config.RP_PATH, "w")
         File("manifest.json", JsonSchemes.manifest_bp(version=release_list), self.config.BP_PATH, "w")
-        File("manifest.json", JsonSchemes.manifest_world(version=release_list), self.config._WORLD_PATH, "w")
+        if extract_world:
+            File("manifest.json", JsonSchemes.manifest_world(version=release_list), self.config._WORLD_PATH, "w")
 
-        File(
-            "world_resource_packs.json", JsonSchemes.world_packs(release_list, self.config._RP_UUID), self.config._WORLD_PATH, "w"
-        )
-        File(
-            "world_behavior_packs.json", JsonSchemes.world_packs(release_list, self.config._BP_UUID), self.config._WORLD_PATH, "w"
-        )
+            File(
+                "world_resource_packs.json",
+                JsonSchemes.world_packs(release_list, self.config._RP_UUID),
+                self.config._WORLD_PATH,
+                "w",
+            )
+            File(
+                "world_behavior_packs.json",
+                JsonSchemes.world_packs(release_list, self.config._BP_UUID),
+                self.config._WORLD_PATH,
+                "w",
+            )
 
     def _export_language(self):
         default_langs = JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.RESOURCE_DESCRIPTION)
@@ -292,7 +307,7 @@ class _AnvilDefinitions:
         File("en_US.lang", "\n".join(langs), os.path.join(self.config.RP_PATH, "texts"), "w")
         File(
             "en_US.lang",
-            "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.BEHAVIOR_DESCRIPTION)),
+            "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.BEHAVIOUR_DESCRIPTION)),
             os.path.join(self.config.BP_PATH, "texts"),
             "w",
         )
@@ -363,8 +378,7 @@ class _AnvilDefinitions:
         )
         self._setup_function.queue()
 
-    @property
-    def queue(self):
+    def queue(self, extract_world: bool = False):
         if self._materials_object.size > 0:
             self._materials_object.queue()
         if not self._sound_definition_object == None:
@@ -380,7 +394,7 @@ class _AnvilDefinitions:
         if not self._blocks_object == None:
             self._blocks_object.queue
 
-        self._export_manifest()
+        self._export_manifest(extract_world)
         self._export_language()
         # self._export_helper_functions()
 
@@ -479,7 +493,7 @@ class _AnvilCore:
                 )
                 File(
                     f"{language}.lang",
-                    "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.BEHAVIOR_DESCRIPTION)),
+                    "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.BEHAVIOUR_DESCRIPTION)),
                     os.path.join(self.config.BP_PATH, "texts"),
                     "w",
                 )
@@ -491,14 +505,15 @@ class _AnvilCore:
                         "w",
                     )
 
-    def compile(self, extract_world: bool = False) -> None:
+    def compile(self, extract_world: str = None) -> None:
         """Compiles the project."""
 
-        if extract_world:
-            with zipfile.ZipFile(os.path.join("assets", "world", f"{self.config.PROJECT_NAME}.mcworld"), "r") as zip_ref:
+        if extract_world != None and type(extract_world) is str:
+            RemoveDirectory(self.config._WORLD_PATH)
+            with zipfile.ZipFile(os.path.join("assets", "world", f"{extract_world}.mcworld"), "r") as zip_ref:
                 zip_ref.extractall(self.config._WORLD_PATH)
 
-        self._definitions.queue
+        self._definitions.queue(extract_world != None)
         _Blockbench._export()
 
         for object in self._objects_list:
@@ -510,10 +525,14 @@ class _AnvilCore:
         from anvil.api.blocks.blocks import _PermutationComponents
 
         if _PermutationComponents._count > 10000:
-            if self.config._TARGET == "addon":
-                self.config.Logger.too_many_permutations(_PermutationComponents._count)
+            if self.config._TARGET == ConfigPackageTarget.ADDON:
+                raise RuntimeError(
+                    f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons cannot exceed this limit."
+                )
             else:
-                self.config.Logger.too_many_permutations_warn(_PermutationComponents._count)
+                raise RuntimeError(
+                    f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). For minimal performance impact, consider reducing the number of permutations."
+                )
 
         if self.config._SCRIPT_API:
             source = os.path.join("assets", "javascript")
@@ -682,7 +701,7 @@ class _Anvil(_AnvilCore):
     ) -> None:
         """Packages the project into a zip file for Marketplace."""
         if not self._compiled:
-            self.config.Logger.not_compiled()
+            raise RuntimeError("Project must be compiled before packaging.")
         self.config.Logger.packaging_zip()
 
         if not skip_translation:
@@ -695,11 +714,15 @@ class _Anvil(_AnvilCore):
             os.path.join("assets", "output", "Marketing Art"): os.path.join("Marketing Art"),
         }
 
-        if self.config._TARGET == "addon":
+        if self.config._TARGET == ConfigPackageTarget.ADDON:
             if len(self.config._RP_UUID) > 1:
-                self.config.Logger.multiple_rp_uuids()
+                raise RuntimeError(
+                    "Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack."
+                )
             if len(self.config._BP_UUID) > 1:
-                self.config.Logger.multiple_bp_uuids()
+                raise RuntimeError(
+                    "Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack."
+                )
 
             content_structure.update(
                 {
@@ -744,7 +767,7 @@ class _Anvil(_AnvilCore):
     def mcaddon(self):
         """Packages the project into a .mcaddon file."""
         if not self._compiled:
-            self.config.Logger.not_compiled()
+            raise RuntimeError("Project must be compiled before packaging.")
         self.config.Logger.packaging_mcaddon()
 
         self._process_art(False, False)
@@ -759,7 +782,7 @@ class _Anvil(_AnvilCore):
     def mcworld(self):
         """Packages the project into a .mcworld file."""
         if not self._compiled:
-            self.config.Logger.not_compiled()
+            raise RuntimeError("Project must be compiled before packaging.")
         self.config.Logger.packaging_mcworld()
 
         self._process_art(False, False)

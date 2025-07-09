@@ -10,19 +10,23 @@ from anvil.lib.schemas import AddonObject
 class Particle(AddonObject):
     _extension = ".particle.json"
     _path = os.path.join(CONFIG.BP_PATH, "particles")
+    _object_type = "Particle"
 
     def __init__(self, particle_name, use_vanilla_texture: bool = False):
         super().__init__(particle_name)
-        self._name = particle_name
         self._use_vanilla_texture = use_vanilla_texture
 
         if not FileExists(os.path.join("assets", "particles", f"{self._name}.particle.json")):
-            CONFIG.Logger.file_exist_error(f"{self._name}.particle.json", os.path.join("assets", "particles"))
+            raise FileNotFoundError(
+                f"Particle file '{self._name}.particle.json' does not exist in 'assets/particles'. {self._object_type}[{self._name}]"
+            )
 
         with open(os.path.join("assets", "particles", f"{self._name}.particle.json"), "r") as file:
             self._content = json.loads(file.read())
             if self._content["particle_effect"]["description"]["identifier"] != f"{CONFIG.NAMESPACE}:{self._name}":
-                CONFIG.Logger.namespace_not_valid(self._content["particle_effect"]["description"]["identifier"])
+                raise ValueError(
+                    f"Particle identifier mismatch: expected '{CONFIG.NAMESPACE}:{self._name}', got '{self._content['particle_effect']['description']['identifier']}'"
+                )
 
     def queue(self):
         CONFIG.Report.add_report(
@@ -43,7 +47,9 @@ class Particle(AddonObject):
             )
 
             if not FileExists(os.path.join("assets", "particles", f"{texture_name}.png")):
-                CONFIG.Logger.file_exist_error(f"{texture_name}.png", os.path.join("assets", "particles"))
+                raise FileNotFoundError(
+                    f"Texture file '{texture_name}.png' does not exist in 'assets/particles'. {self._object_type}[{self._name}]"
+                )
 
             CopyFiles(
                 os.path.join("assets", "particles"),

@@ -1,17 +1,21 @@
 import os
 
 from anvil import ANVIL, CONFIG
-from anvil.api.actors.components import _component
-from anvil.lib.blockbench import _Blockbench
-from anvil.lib.enums import BlockFaces, BlockLiquidDetectionTouching, BlockMaterial, TintMethod
-from anvil.lib.format_versions import BLOCK_JSON_FORMAT_VERSION, BLOCK_SERVER_VERSION, ITEM_SERVER_VERSION
-from anvil.lib.lib import CopyFiles, FileExists, clamp
-from anvil.lib.types import RGB, RGBA, Molang
+from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import __TextureSet
+from anvil.lib.blockbench import _Blockbench
+from anvil.lib.enums import (BlockFaces, BlockLiquidDetectionTouching,
+                             BlockMaterial, TintMethod)
+from anvil.lib.format_versions import (BLOCK_JSON_FORMAT_VERSION,
+                                       BLOCK_SERVER_VERSION,
+                                       ITEM_SERVER_VERSION)
+from anvil.lib.lib import CopyFiles, FileExists, clamp
+from anvil.lib.schemas import _BaseComponent
+from anvil.lib.types import RGB, RGBA
 
 
-class BlockRedstoneConductivity(_component):
-    component_namespace = "minecraft:redstone_conductivity"
+class BlockRedstoneConductivity(_BaseComponent):
+    _identifier = "minecraft:redstone_conductivity"
 
     def __init__(self, allows_wire_to_step_down: bool = True, redstone_conductor: bool = False) -> None:
         """Specifies whether a block has redstone properties. If the component is not provided, the default values are used.
@@ -24,12 +28,12 @@ class BlockRedstoneConductivity(_component):
         """
         super().__init__("redstone_conductivity")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.30")
-        self._component_add_field("allows_wire_to_step_down", allows_wire_to_step_down)
-        self._component_add_field("redstone_conductor", redstone_conductor)
+        self._add_field("allows_wire_to_step_down", allows_wire_to_step_down)
+        self._add_field("redstone_conductor", redstone_conductor)
 
 
-class BlockCustomComponents(_component):
-    component_namespace = "minecraft:custom_components"
+class BlockCustomComponents(_BaseComponent):
+    _identifier = "minecraft:custom_components"
 
     def __init__(self, *components: str) -> None:
         """Sets the color of the block when rendered to a map.
@@ -40,11 +44,11 @@ class BlockCustomComponents(_component):
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_custom_components
         """
         super().__init__("custom_components")
-        self._component_set_value(components)
+        self._set_value(components)
 
 
-class BlockDefault(_component):
-    component_namespace = "minecraft:block_default"
+class BlockDefault(_BaseComponent):
+    _identifier = "minecraft:block_default"
 
     def __init__(self) -> None:
         """The default block component."""
@@ -52,27 +56,29 @@ class BlockDefault(_component):
 
     def ambient_occlusion_exponent(self, exponent: int):
         """The exponent for ambient occlusion of the block."""
-        self._component_add_field("ambient_occlusion_exponent", max(0, exponent))
+        self._add_field("ambient_occlusion_exponent", max(0, exponent))
         return self
 
     def sound(self, sound: str):
         """The sound of the block."""
-        self._component_add_field("sound", sound)
+        self._add_field("sound", sound)
         return self
 
     def isotropic(self, **kwParameters: dict[str, BlockFaces]):
         """The isotropic of the block."""
         if BlockFaces.All in kwParameters.values():
-            self._component_set_value("isotropic", True)
+            self._set_value("isotropic", True)
         else:
-            self._component_add_field("isotropic", {v: k for k, v in kwParameters.items()})
+            self._add_field("isotropic", {v: k for k, v in kwParameters.items()})
         return self
 
     def textures(self, **kwParameters: dict[str, BlockFaces]):
         """The textures of the block."""
         for k in kwParameters.keys():
             if not FileExists(os.path.join("assets", "textures", "blocks", f"{k}.png")):
-                CONFIG.Logger.file_exist_error(f"{k}.png", os.path.join("assets", "textures", "blocks"))
+                raise FileNotFoundError(
+                    f"{k}.png not found in {os.path.join("assets", "textures", "blocks")}. Please ensure the file exists."
+                )
 
             CopyFiles(
                 os.path.join("assets", "textures", "blocks"),
@@ -82,27 +88,25 @@ class BlockDefault(_component):
             ANVIL.definitions.register_terrain_texture(k, "", k)
 
         if BlockFaces.All in kwParameters.values():
-            self._component_add_field(
-                "textures", [f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items() if v == BlockFaces.All][0]
-            )
+            self._add_field("textures", [f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items() if v == BlockFaces.All][0])
         else:
-            self._component_add_field("textures", {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items()})
+            self._add_field("textures", {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items()})
 
         return self
 
     def carried_textures(self, **kwParameters: dict[str, BlockFaces]):
         """The carried textures of the block."""
         if BlockFaces.All in kwParameters.values():
-            self._component_set_value(
+            self._set_value(
                 "carried_textures", [f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items() if v == BlockFaces.All][0]
             )
         else:
-            self._component_add_field("carried_textures", {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items()})
+            self._add_field("carried_textures", {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items()})
         return self
 
 
-class BlockDestructibleByExplosion(_component):
-    component_namespace = "minecraft:destructible_by_explosion"
+class BlockDestructibleByExplosion(_BaseComponent):
+    _identifier = "minecraft:destructible_by_explosion"
 
     def __init__(self, explosion_resistance: int) -> None:
         """Describes the destructible by explosion properties for this block.
@@ -111,11 +115,11 @@ class BlockDestructibleByExplosion(_component):
             explosion_resistance (int): The amount of resistance to explosions in a range of 0 to 100.
         """
         super().__init__("destructible_by_explosion")
-        self._component_add_field("explosion_resistance", explosion_resistance)
+        self._add_field("explosion_resistance", explosion_resistance)
 
 
-class BlockDestructibleByMining(_component):
-    component_namespace = "minecraft:destructible_by_mining"
+class BlockDestructibleByMining(_BaseComponent):
+    _identifier = "minecraft:destructible_by_mining"
 
     def __init__(self, seconds_to_destroy: int) -> None:
         """Describes the destructible by mining properties for this block.
@@ -125,20 +129,18 @@ class BlockDestructibleByMining(_component):
         """
         super().__init__("destructible_by_mining")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.50")
-        self._component_add_field("seconds_to_destroy", seconds_to_destroy)
-        self._component_add_field("item_specific_speeds", [])
+        self._add_field("seconds_to_destroy", seconds_to_destroy)
+        self._add_field("item_specific_speeds", [])
 
     def item_specific_speeds_name(self, destroy_speed: float, item_name: str):
-        self[self.component_namespace]["item_specific_speeds"].append({"item": item_name, "destroy_speed": destroy_speed})
+        self._component["item_specific_speeds"].append({"item": item_name, "destroy_speed": destroy_speed})
 
     def item_specific_speeds_tag(self, destroy_speed: float, item_tag: str | Molang):
-        self[self.component_namespace]["item_specific_speeds"].append(
-            {"item": {"tags": item_tag}, "destroy_speed": destroy_speed}
-        )
+        self._component["item_specific_speeds"].append({"item": {"tags": item_tag}, "destroy_speed": destroy_speed})
 
 
-class BlockFlammable(_component):
-    component_namespace = "minecraft:flammable"
+class BlockFlammable(_BaseComponent):
+    _identifier = "minecraft:flammable"
 
     def __init__(self, catch_chance_modifier: int, destroy_chance_modifier: int) -> None:
         """Describes the flammable properties for this block.
@@ -148,12 +150,12 @@ class BlockFlammable(_component):
             destroy_chance_modifier (int): The chance that this block will be destroyed when on fire in a range of 0 to 100.
         """
         super().__init__("flammable")
-        self._component_add_field("catch_chance_modifier", catch_chance_modifier)
-        self._component_add_field("destroy_chance_modifier", destroy_chance_modifier)
+        self._add_field("catch_chance_modifier", catch_chance_modifier)
+        self._add_field("destroy_chance_modifier", destroy_chance_modifier)
 
 
-class BlockFriction(_component):
-    component_namespace = "minecraft:friction"
+class BlockFriction(_BaseComponent):
+    _identifier = "minecraft:friction"
 
     def __init__(self, friction: float = 0.4) -> None:
         """Describes the friction for this block in a range of 0.0 to 0.9.
@@ -162,11 +164,11 @@ class BlockFriction(_component):
             friction (float, optional): The friction of the block. Defaults to 0.4.
         """
         super().__init__("flammable")
-        self._component_set_value(clamp(friction, 0, 0.9))
+        self._set_value(clamp(friction, 0, 0.9))
 
 
-class BlockLightDampening(_component):
-    component_namespace = "minecraft:light_dampening"
+class BlockLightDampening(_BaseComponent):
+    _identifier = "minecraft:light_dampening"
 
     def __init__(self, light_dampening: int = 15) -> None:
         """The amount that light will be dampened when it passes through the block in a range of 0 to 15.
@@ -175,11 +177,11 @@ class BlockLightDampening(_component):
             light_dampening (int, optional): The amount of light dampening. Defaults to 15.
         """
         super().__init__("light_dampening")
-        self._component_set_value(clamp(light_dampening, 0, 15))
+        self._set_value(clamp(light_dampening, 0, 15))
 
 
-class BlockLightEmission(_component):
-    component_namespace = "minecraft:light_emission"
+class BlockLightEmission(_BaseComponent):
+    _identifier = "minecraft:light_emission"
 
     def __init__(self, light_emission: int = 0) -> None:
         """The amount of light this block will emit in a range of 0 to 15.
@@ -188,11 +190,11 @@ class BlockLightEmission(_component):
             light_emission (int, optional): The amount of light emission. Defaults to 0.
         """
         super().__init__("light_emission")
-        self._component_set_value(clamp(light_emission, 0, 15))
+        self._set_value(clamp(light_emission, 0, 15))
 
 
-class BlockLootTable(_component):
-    component_namespace = "minecraft:loot"
+class BlockLootTable(_BaseComponent):
+    _identifier = "minecraft:loot"
 
     def __init__(self, loot: str) -> None:
         """Specifies the path to the loot table.
@@ -201,11 +203,11 @@ class BlockLootTable(_component):
             loot (str): The path to the loot table.
         """
         super().__init__("loot")
-        self._component_set_value(loot)
+        self._set_value(loot)
 
 
-class BlockMapColor(_component):
-    component_namespace = "minecraft:map_color"
+class BlockMapColor(_BaseComponent):
+    _identifier = "minecraft:map_color"
 
     def __init__(self, color: str, tint_method: TintMethod = TintMethod.None_) -> None:
         """Sets the color of the block when rendered to a map. If this component is omitted, the block will not show up on the map.
@@ -218,13 +220,13 @@ class BlockMapColor(_component):
         """
         self._enforce_version(BLOCK_JSON_FORMAT_VERSION, "1.21.70")
         super().__init__("map_color")
-        self._component_add_field("color", color)
+        self._add_field("color", color)
         if tint_method is not TintMethod.None_:
-            self._component_add_field("tint_method", tint_method)
+            self._add_field("tint_method", tint_method)
 
 
-class BlockMaterialInstance(_component):
-    component_namespace = "minecraft:material_instances"
+class BlockMaterialInstance(_BaseComponent):
+    _identifier = "minecraft:material_instances"
 
     def __init__(self) -> None:
         """Maps face or material_instance names in a geometry file to an actual material instance."""
@@ -263,7 +265,7 @@ class BlockMaterialInstance(_component):
 
         ANVIL.definitions.register_terrain_texture(color_texture, blockbench_name, color_texture)
 
-        self[self.component_namespace].update(
+        self._add_dict(
             {
                 "*" if block_face == BlockFaces.All else block_face: {
                     "texture": f"{CONFIG.NAMESPACE}:{color_texture}",
@@ -302,8 +304,8 @@ class BlockMaterialInstance(_component):
         return super().__getitem__(key)
 
 
-class BlockGeometry(_component):
-    component_namespace = "minecraft:geometry"
+class BlockGeometry(_BaseComponent):
+    _identifier = "minecraft:geometry"
 
     def __init__(self, geometry_name: str) -> None:
         """The description identifier of the geometry file to use to render this block.
@@ -312,7 +314,7 @@ class BlockGeometry(_component):
             geometry_name (str): The name of the geometry to use to render this block.
         """
         super().__init__("geometry")
-        self._component_add_field("identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
+        self._add_field("identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
 
         bb = _Blockbench(geometry_name, "blocks")
         bb.model.queue_model()
@@ -324,12 +326,12 @@ class BlockGeometry(_component):
             >>> BlockGeometry('block').bone_visibility(bone0=True, bone1=False)
 
         """
-        self._component_add_field("bone_visibility", {b: v for b, v in bone.items()})
+        self._add_field("bone_visibility", {b: v for b, v in bone.items()})
         return self
 
 
-class BlockCollisionBox(_component):
-    component_namespace = "minecraft:collision_box"
+class BlockCollisionBox(_BaseComponent):
+    _identifier = "minecraft:collision_box"
 
     def __init__(self, size: list[float], origin: list[float]) -> None:
         """Defines the area of the block that collides with entities.
@@ -340,14 +342,14 @@ class BlockCollisionBox(_component):
         """
         super().__init__("collision_box")
         if size == (0, 0, 0):
-            self._component_set_value(False)
+            self._set_value(False)
         else:
-            self._component_add_field("size", size)
-            self._component_add_field("origin", origin)
+            self._add_field("size", size)
+            self._add_field("origin", origin)
 
 
-class BlockSelectionBox(_component):
-    component_namespace = "minecraft:selection_box"
+class BlockSelectionBox(_BaseComponent):
+    _identifier = "minecraft:selection_box"
 
     def __init__(self, size: list[float], origin: list[float]) -> None:
         """Defines the area of the block that is selected by the player's cursor.
@@ -358,19 +360,19 @@ class BlockSelectionBox(_component):
         """
         super().__init__("selection_box")
         if size == (0, 0, 0):
-            self._component_set_value(False)
+            self._set_value(False)
         else:
-            self._component_add_field("size", size)
-            self._component_add_field("origin", origin)
+            self._add_field("size", size)
+            self._add_field("origin", origin)
 
 
-class BlockPlacementFilter(_component):
-    component_namespace = "minecraft:placement_filter"
+class BlockPlacementFilter(_BaseComponent):
+    _identifier = "minecraft:placement_filter"
 
     def __init__(self) -> None:
         """By default, custom blocks can be placed anywhere and do not have placement restrictions unless you specify them in this component."""
         super().__init__("placement_filter")
-        self._component_add_field("conditions", [])
+        self._add_field("conditions", [])
 
     def add_condition(self, allowed_faces: list[BlockFaces], block_filter: list[str]):
         """Adds a condition to the placement filter.
@@ -386,7 +388,7 @@ class BlockPlacementFilter(_component):
             allowed_faces.remove(BlockFaces.West)
         if BlockFaces.All in allowed_faces:
             allowed_faces = [BlockFaces.All]
-        self[self.component_namespace]["conditions"].append(
+        self._component["conditions"].append(
             {
                 "allowed_faces": allowed_faces,
                 "block_filter": block_filter,
@@ -395,8 +397,8 @@ class BlockPlacementFilter(_component):
         return self
 
 
-class BlockTransformation(_component):
-    component_namespace = "minecraft:transformation"
+class BlockTransformation(_BaseComponent):
+    _identifier = "minecraft:transformation"
 
     def __init__(self) -> None:
         """The block's transfomration."""
@@ -408,7 +410,7 @@ class BlockTransformation(_component):
         Parameters:
             translation (position): The block's translation.
         """
-        self._component_add_field("translation", translation)
+        self._add_field("translation", translation)
         return self
 
     def scale(self, scale: tuple[float, float, float], scale_pivot: tuple[float, float, float] = (0, 0, 0)):
@@ -417,10 +419,10 @@ class BlockTransformation(_component):
         Parameters:
             scale (position): The block's scale.
         """
-        self._component_add_field("scale", scale)
+        self._add_field("scale", scale)
 
         if scale_pivot != (0, 0, 0):
-            self._component_add_field("scale_pivot", scale_pivot)
+            self._add_field("scale_pivot", scale_pivot)
 
         return self
 
@@ -431,15 +433,15 @@ class BlockTransformation(_component):
             rotation (position): The block's rotation.
 
         """
-        self._component_add_field("rotation", rotation)
+        self._add_field("rotation", rotation)
 
         if rotation_pivot != (0, 0, 0):
-            self._component_add_field("rotation_pivot", rotation_pivot)
+            self._add_field("rotation_pivot", rotation_pivot)
         return self
 
 
-class BlockDisplayName(_component):
-    component_namespace = "minecraft:display_name"
+class BlockDisplayName(_BaseComponent):
+    _identifier = "minecraft:display_name"
 
     def __init__(self, display_name: str, localize: bool = True) -> None:
         """Sets the block display name within Minecraft: Bedrock Edition. This component may also be used to pull from the localization file by referencing a key from it.
@@ -453,13 +455,13 @@ class BlockDisplayName(_component):
         if localize:
             key = f'tile.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_")}.name'
             ANVIL.definitions.register_lang(key, display_name)
-            self._component_set_value(key)
+            self._set_value(key)
         else:
-            self._component_set_value(display_name)
+            self._set_value(display_name)
 
 
-class BlockCraftingTable(_component):
-    component_namespace = "minecraft:crafting_table"
+class BlockCraftingTable(_BaseComponent):
+    _identifier = "minecraft:crafting_table"
 
     def __init__(self, table_name: str, *crafting_tags: str) -> None:
         """Makes your block into a custom crafting table which enables the crafting table UI and the ability to craft recipes.
@@ -472,7 +474,7 @@ class BlockCraftingTable(_component):
             ValueError: The crafting table tags are limited to 64 characters.
         """
         super().__init__("crafting_table")
-        self._component_add_field("table_name", table_name)
+        self._add_field("table_name", table_name)
 
         if len(crafting_tags) > 64:
             raise IndexError("Crafting Table tags cannot exceed 64 tags.")
@@ -481,11 +483,11 @@ class BlockCraftingTable(_component):
             if len(tag) > 64:
                 raise ValueError("Crafting Table tags are limited to 64 characters.")
 
-        self._component_add_field("crafting_tags", crafting_tags)
+        self._add_field("crafting_tags", crafting_tags)
 
 
-class BlockItemVisual(_component):
-    component_namespace = "minecraft:item_visual"
+class BlockItemVisual(_BaseComponent):
+    _identifier = "minecraft:item_visual"
 
     def __init__(self, geometry_name: str, texture: str, render_method: BlockMaterial = BlockMaterial.Opaque) -> None:
         """The description identifier of the geometry and material used to render the item of this block.
@@ -502,18 +504,18 @@ class BlockItemVisual(_component):
         bb = _Blockbench(geometry_name, "blocks")
         bb.model.queue_model()
 
-        self._component_add_field("geometry", {"identifier": geometry_name})
-        self._component_add_field("material_instances", {"*": {"texture": texture, "render_method": render_method}})
+        self._add_field("geometry", {"identifier": geometry_name})
+        self._add_field("material_instances", {"*": {"texture": texture, "render_method": render_method}})
 
 
-class BlockLiquidDetection(_component):
-    component_namespace = "minecraft:liquid_detection"
+class BlockLiquidDetection(_BaseComponent):
+    _identifier = "minecraft:liquid_detection"
 
     def __init__(self) -> None:
         """The block's liquid detection."""
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.60")
         super().__init__("liquid_detection")
-        self._component_add_field("detection_rules", [])
+        self._add_field("detection_rules", [])
 
     def add_rule(
         self,
@@ -530,7 +532,7 @@ class BlockLiquidDetection(_component):
             can_contain_liquid (bool, optional): Whether the block can contain the liquid. Defaults to False.
 
         """
-        self[self.component_namespace]["detection_rules"].append(
+        self._component["detection_rules"].append(
             {
                 "liquid_type": "minecraft:water",
                 "on_liquid_touches": on_liquid_touches.value,
@@ -549,8 +551,8 @@ class BlockLiquidDetection(_component):
         return self
 
 
-class BlockDestructionParticles(_component):
-    component_namespace = "minecraft:destruction_particles"
+class BlockDestructionParticles(_BaseComponent):
+    _identifier = "minecraft:destruction_particles"
 
     def __init__(self, blockbench_name: str, texture: str = None, tint_method: TintMethod = TintMethod.None_) -> None:
         """Sets the particles that will be used when the block is destroyed.
@@ -564,13 +566,13 @@ class BlockDestructionParticles(_component):
         if texture is not None:
             bb = _Blockbench(blockbench_name, "blocks")
             bb.textures.queue_texture(texture)
-            self._component_add_field("texture", texture)
+            self._add_field("texture", texture)
         if tint_method is not TintMethod.None_:
-            self._component_add_field("tint_method", tint_method)
+            self._add_field("tint_method", tint_method)
 
 
-class BlockTick(_component):
-    component_namespace = "minecraft:tick"
+class BlockTick(_BaseComponent):
+    _identifier = "minecraft:tick"
 
     def __init__(
         self,
@@ -590,5 +592,5 @@ class BlockTick(_component):
         low, high = interval_range
         if low > high:
             low, high = high, low
-        self._component_add_field("interval_range", [low, high])
-        self._component_add_field("looping", looping)
+        self._add_field("interval_range", [low, high])
+        self._add_field("looping", looping)

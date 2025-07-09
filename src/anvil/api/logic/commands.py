@@ -1,11 +1,8 @@
 import json
-import re
-from enum import StrEnum
 from math import inf
 
 from anvil import CONFIG
 from anvil.api.blocks.blocks import Block
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.lib.enums import (Anchor, CameraEasing, CameraPresets,
                              CameraShakeType, CloneMode, DamageCause,
                              Dimension, Effects, FillMode, Gamemodes,
@@ -14,10 +11,9 @@ from anvil.lib.enums import (Anchor, CameraEasing, CameraPresets,
                              ScoreboardOperation, ScoreboardOperator, Selector,
                              Slots, Target, TimeSpec)
 from anvil.lib.lib import clamp, normalize_180
-from anvil.lib.types import (BlockDescriptor, Color, Coordinate, Coordinates,
-                             Event, Identifier, RelativePosition,
-                             RelativeRotation, Rotation, Seconds, Tick)
-
+from anvil.lib.types import (Color, Coordinates, Event, Identifier,
+                             RelativePosition, RelativeRotation, Seconds, Tick)
+from anvil.lib.schemas import BlockDescriptor, MinecraftBlockDescriptor, MinecraftItemDescriptor
 
 class Command:
     def __init__(self, prefix: str, *commands) -> None:
@@ -117,17 +113,17 @@ class Execute(Command):
             self._parent._append_cmd(self._condition, "entity", target)
             return self._parent
 
-        def Block(self, block_position: Coordinates, tile: Block | str, **properties):
-            name = (
-                tile.identifier
-                if isinstance(tile, (BlockDescriptor, Block))
-                else tile if isinstance(tile, str) else CONFIG.Logger.unsupported_block_type(tile)
-            )
-            states = (
-                tile.states
-                if isinstance(tile, BlockDescriptor)
-                else "" if isinstance(tile, (str, Block)) else CONFIG.Logger.unsupported_block_type(tile)
-            )
+        def Block(self, block_position: Coordinates, tile: Block | Identifier, **properties):
+            
+            if isinstance(tile, Block):
+                name = tile.identifier
+                states = tile.states
+            elif isinstance(tile, str):
+                name = tile
+                states = ""
+            else:
+                raise TypeError(f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}].")
+
 
             for k, v in properties.items():
                 states.append(f'"{k}" : "{v}"')
@@ -270,7 +266,9 @@ class Summon(Command):
         spawnEvent = self.argument.get("spawnEvent")
 
         if rots > 1:
-            CONFIG.Logger.multiple_rotations()
+            raise ValueError(
+                f"Only one of 'lookAtEntity', 'lookAtPosition', or 'rotation' can be set at a time. Found {rots} set."
+            )
 
         if rots == 0 and not nameTag is None and spawnEvent is None:
             self._append_cmd(nameTag)
@@ -643,22 +641,20 @@ class Scoreboard(Command):
 class Setblock(Command):
     def __init__(
         self,
-        tile: str | BlockDescriptor | Block,
+        tile: Block | Identifier,
         position: RelativePosition = ("~", "~", "~"),
         **properties: str,
     ) -> None:
         super().__init__("setblock")
 
-        name = (
-            tile.identifier
-            if isinstance(tile, (BlockDescriptor, Block))
-            else tile if isinstance(tile, str) else CONFIG.Logger.unsupported_block_type(tile)
-        )
-        states = (
-            tile.states
-            if isinstance(tile, BlockDescriptor)
-            else "" if isinstance(tile, (str, Block)) else CONFIG.Logger.unsupported_block_type(tile)
-        )
+        if isinstance(tile, (BlockDescriptor, MinecraftBlockDescriptor)):
+            name = tile.identifier
+            states = tile.states
+        elif isinstance(tile, str):
+            name = tile
+            states = ""
+        else:
+            raise TypeError(f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}].")
 
         for k, v in properties.items():
             states.append(f'"{k}" = "{v}"')
@@ -678,16 +674,14 @@ class Fill(Command):
     ) -> None:
         super().__init__("fill")
 
-        name = (
-            tile.identifier
-            if isinstance(tile, (BlockDescriptor, Block))
-            else tile if isinstance(tile, str) else CONFIG.Logger.unsupported_block_type(tile)
-        )
-        states = (
-            tile.states
-            if isinstance(tile, BlockDescriptor)
-            else "" if isinstance(tile, (str, Block)) else CONFIG.Logger.unsupported_block_type(tile)
-        )
+        if isinstance(tile, Block):
+            name = tile.identifier
+            states = tile.states
+        elif isinstance(tile, str):
+            name = tile
+            states = ""
+        else:
+            raise TypeError(f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}].")
 
         for k, v in properties.items():
             states.append(f'"{k}" = "{v}"')
@@ -701,16 +695,14 @@ class Fill(Command):
         tile: str | Block,
         **properties: str,
     ):
-        name = (
-            tile.identifier
-            if isinstance(tile, (BlockDescriptor, Block))
-            else tile if isinstance(tile, str) else CONFIG.Logger.unsupported_block_type(tile)
-        )
-        states = (
-            tile.states
-            if isinstance(tile, BlockDescriptor)
-            else "" if isinstance(tile, (str, Block)) else CONFIG.Logger.unsupported_block_type(tile)
-        )
+        if isinstance(tile, Block):
+            name = tile.identifier
+            states = tile.states
+        elif isinstance(tile, str):
+            name = tile
+            states = ""
+        else:
+            raise TypeError(f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}].")
 
         for k, v in properties.items():
             states.append(f'"{k}" = "{v}"')
@@ -817,7 +809,9 @@ class Camera(Command):
             facing_position = self.argument["facing_position"]
 
             if sum([x is not None for x in (facing_target, facing_position, rotation)]) > 1:
-                CONFIG.Logger.multiple_rotations()
+                raise ValueError(
+                    f"Only one of 'facing_target', 'facing_position', or 'rotation' can be set at a time. Found {sum([x is not None for x in (facing_target, facing_position, rotation)])} set."
+                )
 
             if self.argument["easing"] != None:
                 self._append_cmd("ease", self.argument["easing_time"], self.argument["easing"])

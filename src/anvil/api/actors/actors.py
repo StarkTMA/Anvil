@@ -1,23 +1,26 @@
 import json
 import os
+from typing import List, Mapping
 
 from halo import Halo
 
 from anvil import ANVIL, CONFIG
 from anvil.api.actors.components import (EntityInstantDespawn, EntityRideable,
-                                         Filter, _component)
-from anvil.api.logic.molang import Query, Variable, _molang
+                                         Filter, _BaseComponent)
+from anvil.api.logic.molang import Molang, Query, Variable
 from anvil.api.pbr.pbr import __TextureSet
+from anvil.api.vanilla.entities import MinecraftEntityTypes
+from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.enums import (DamageSensorDamage, Difficulty, Population,
-                             Target, Vibrations)
+from anvil.lib.config import ConfigPackageTarget
+from anvil.lib.enums import (DamageSensor, Difficulty, Population, Target,
+                             Vibrations)
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+from anvil.lib.schemas import (AddonObject, EntityDescriptor, JsonSchemes,
+                               MinecraftDescription)
 from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
-from anvil.lib.types import (RGB, RGBA, EntityDescriptor, Event, Identifier,
-                             Molang)
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.lib.types import RGB, RGBA, Event
 
 __all__ = ["Entity", "Attachable"]
 
@@ -110,7 +113,7 @@ class _ActorDescription(MinecraftDescription):
                 self._animate_append({controller_shortname: condition})
 
         self._description["description"]["animations"].update(
-            {controller_shortname: f"controller.animation.{CONFIG.NAMESPACE}.{self._name}.{controller_shortname}"}
+            {controller_shortname: f"controller.animation.{self.identifier.replace(':', '.')}.{controller_shortname}"}
         )
 
     def _animations(self, geometry_name: str, animation_shortname: str, animate: bool = False, condition: str = None):
@@ -134,7 +137,7 @@ class _ActorDescription(MinecraftDescription):
                 self._animate_append({animation_shortname: condition})
 
         self._description["description"]["animations"].update(
-            {animation_shortname: f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}"}
+            {animation_shortname: f"animation.{self.identifier.replace(':', '.')}.{animation_shortname}"}
         )
 
 
@@ -156,15 +159,18 @@ class _ActorClientDescription(_ActorDescription):
         """
         super().__init__(name, is_vanilla)
         if self._type not in ["entity", "attachables"]:
-            CONFIG.Logger.client_type_unsupported(self._type, self.identifier)
+            raise RuntimeError(
+                f"Invalid type '{self._type}' for actor description. Expected 'entity' or 'attachables'. Actor [{self.identifier}]"
+            )
 
-        if is_vanilla and ENTITY_LIST.get(self.name) is None:
-            CONFIG.Logger.entity_not_valid_vanilla(self.name)
+        if is_vanilla and self.identifier not in MinecraftEntityTypes:
+            raise RuntimeError(
+                f"Invalid vanilla entity '{self.identifier}'. Please use a valid vanilla entity from MinecraftEntityTypes. Actor [{self.identifier}]"
+            )
 
-        self._is_vanilla = is_vanilla
         self._is_dummy = False
-        self._animation_controllers = _RP_AnimationControllers(self._name, self._is_vanilla)
-        self._render_controllers = _RenderControllers(self._name, self._is_vanilla)
+        self._animation_controllers = _RP_AnimationControllers(self._name)
+        self._render_controllers = _RenderControllers(self._name)
         self._sounds: list[SoundDescription] = []
         self._texture_set: __TextureSet = None
 
@@ -192,7 +198,7 @@ class _ActorClientDescription(_ActorDescription):
 
         """
 
-        anim_namespace = f"animation.{CONFIG.NAMESPACE}.{blockbench_name}.{animation_name}"
+        anim_namespace = f"animation.{self._namespace}.{blockbench_name}.{animation_name}"
 
         bb = _Blockbench(blockbench_name, "actors")
         bb.animations.queue_animation(animation_name)
@@ -226,7 +232,7 @@ class _ActorClientDescription(_ActorDescription):
         bb = _Blockbench(geometry_name, "actors")
         bb.model.queue_model()
 
-        self._description["description"]["geometry"].update({geometry_name: f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"})
+        self._description["description"]["geometry"].update({geometry_name: f"geometry.{self._namespace}.{geometry_name}"})
 
         return self
 
@@ -243,7 +249,9 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         if not geometry_shortname in self._description["description"]["geometry"]:
-            CONFIG.Logger.queryable_missing_geometry(geometry_shortname, self.identifier)
+            raise RuntimeError(
+                f"Queryable geometry '{geometry_shortname}' not found in entity {self.identifier}. Entity [{self.identifier}]"
+            )
         self._description["description"]["queryable_geometry"] = geometry_shortname
         return self
 
@@ -273,9 +281,23 @@ class _ActorClientDescription(_ActorDescription):
             }
         )
 
-        if any([normal_texture, heightmap_texture, metalness_emissive_roughness_texture, metalness_emissive_roughness_subsurface_texture]):
+        if any(
+            [
+                normal_texture,
+                heightmap_texture,
+                metalness_emissive_roughness_texture,
+                metalness_emissive_roughness_subsurface_texture,
+            ]
+        ):
             self._texture_set = __TextureSet(self.identifier, "entities")
-            self._texture_set.set_textures(blockbench_name, color_texture, normal_texture, heightmap_texture, metalness_emissive_roughness_texture, metalness_emissive_roughness_subsurface_texture)
+            self._texture_set.set_textures(
+                blockbench_name,
+                color_texture,
+                normal_texture,
+                heightmap_texture,
+                metalness_emissive_roughness_texture,
+                metalness_emissive_roughness_subsurface_texture,
+            )
         return self
 
     def script(self, variable: Variable | str, script: Molang | str):
@@ -341,9 +363,9 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         if condition is None:
-            self._render_append(f"controller.render.{CONFIG.NAMESPACE}.{self._name}.{controller_name}")
+            self._render_append(f"controller.render.{self.identifier.replace(':', '.')}.{controller_name}")
         else:
-            self._render_append({f"controller.render.{CONFIG.NAMESPACE}.{self._name}.{controller_name}": condition})
+            self._render_append({f"controller.render.{self.identifier.replace(':', '.')}.{controller_name}": condition})
 
         return self._render_controllers.add_controller(controller_name)
 
@@ -395,7 +417,7 @@ class _ActorClientDescription(_ActorDescription):
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: int = 0,
         min_distance: int = 9999,
-        variant_query: _molang = None,
+        variant_query: Molang = None,
         variant_map: str = None,
     ):
         """This method manages the sound events for an entity.
@@ -408,7 +430,7 @@ class _ActorClientDescription(_ActorDescription):
             pitch (tuple[float, float], optional): The pitch of the sound effect. Defaults to (0.8, 1.2).
             max_distance (int, optional): The maximum distance of the sound effect. Defaults to 0.
             min_distance (int, optional): The minimum distance of the sound effect. Defaults to 9999.
-            variant_query (_molang, optional): The variant query of the sound effect. Defaults to None.
+            variant_query (Molang, optional): The variant query of the sound effect. Defaults to None.
             variant_map (str, optional): The variant map of the sound effect. Defaults to None.
         """
         ANVIL.definitions.register_entity_sound_event(
@@ -424,11 +446,11 @@ class _ActorClientDescription(_ActorDescription):
             min_distance,
         )
 
-    @Halo("Retrieving vanilla entity description")
-    def get_vanilla(self):
-        if self.is_vanilla:
-            data = ENTITY_LIST.get(self.name).get_vanilla_resource()
-            self._description["description"].update(data["minecraft:client_entity"]["description"])
+    # @Halo("Retrieving vanilla entity description")
+    # def get_vanilla(self):
+    #    if self.is_vanilla:
+    #        data = ENTITY_LIST.get(self.name).get_vanilla_resource()
+    #        self._description["description"].update(data["minecraft:client_entity"]["description"])
 
     def _export(self, directory: str = None):
         """Queues the entity for export.
@@ -443,13 +465,13 @@ class _ActorClientDescription(_ActorDescription):
         """
         if not self._is_dummy:
             if len(self._description["description"]["geometry"]) == 0:
-                CONFIG.Logger.missing_geometry(self.identifier)
+                raise RuntimeError(f"Entity {self.identifier} missing at least one geometry. Entity [{self.identifier}]")
 
             if len(self._description["description"]["textures"]) == 0:
-                CONFIG.Logger.missing_texture(self.identifier)
+                raise RuntimeError(f"Entity {self.identifier} missing at least one texture. Entity [{self.identifier}]")
 
             if len(self._description["description"]["render_controllers"]) == 0:
-                CONFIG.Logger.missing_render_controller(self.identifier)
+                raise RuntimeError(f"Entity {self.identifier} missing at least one render controller. Entity [{self.identifier}]")
 
             for controller in self._render_controllers._controllers:
                 controller._validate(
@@ -523,29 +545,33 @@ class _EntityServerDescription(_ActorDescription):
         """
         if CONFIG._EXPERIMENTAL:
             if CONFIG._TARGET == "addon":
-                CONFIG.Logger.experimental_not_allowed(self.identifier)
-        else:
-            CONFIG.Logger.entity_marked_as_experimental(self.identifier)
+                raise RuntimeError(
+                    f"Experimental entities are not allowed for packages of type 'addon'. Entity [{self.identifier}]."
+                )
 
         self._description["description"]["is_experimental"] = True
         return self
 
-    def RuntimeIdentifier(self, entity: EntityDescriptor):
+    def RuntimeIdentifier(self, entity: "Entity"):
         """Sets the runtime identifier of the entity.
 
         Parameters:
-            entity (EntityDescriptor): The vanilla entity to get the runtime identifier from.
+            entity (Entity): The vanilla entity to get the runtime identifier from.
         """
-        if CONFIG._TARGET != "addon":
-            if type(entity) is EntityDescriptor:
-                if entity.allow_runtime:
+        if CONFIG._TARGET != ConfigPackageTarget.ADDON:
+            if type(entity) is Entity:
+                if entity._allow_runtime:
                     self._description["description"]["runtime_identifier"] = entity.identifier
                 else:
-                    CONFIG.Logger.runtime_entity_not_allowed(entity)
+                    raise RuntimeError(
+                        f"Entity {entity.identifier} does not allow runtime identifier usage. Entity [{self.identifier}]."
+                    )
             else:
-                CONFIG.Logger.runtime_entity_error(entity)
+                raise TypeError(f"Expected Entity, got {type(entity).__name__}. Entity [{self.identifier}]")
         else:
-            CONFIG.Logger.runtime_not_allowed(self.identifier)
+            raise RuntimeError(
+                f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]"
+            )
 
     @property
     def add_property(self):
@@ -652,197 +678,6 @@ class _AttachableClientDescription(_ActorClientDescription):
         return _ActorReuseAssets(self._description)
 
 
-class _EntityServer(AddonObject):
-    """Base class for all server entities."""
-
-    _extension = ".behavior.json"
-    _path = os.path.join(CONFIG.BP_PATH, "entities")
-
-    def _add_despawn_function(self):
-        """Adds a despawn function to the entity."""
-        self.component_group("despawn").add(EntityInstantDespawn())
-        self.event("despawn").add("despawn")
-
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """Base class for all server entities.
-
-        Parameters:
-            name (str): The name of the entity.
-            is_vanilla (bool, optional): Whether or not the entity is a vanilla entity. Defaults to False.
-        """
-        super().__init__(name)
-        self._is_vanilla = is_vanilla
-        self._server_entity = JsonSchemes.server_entity()
-        self._description = _EntityServerDescription(self._name, self._is_vanilla)
-        self._animation_controllers = _BP_AnimationControllers(self._name, self._is_vanilla)
-        self._animations = _BPAnimations(self._name, self._is_vanilla)
-        self._spawn_rule = _SpawnRule(self._name, self._is_vanilla)
-        self._components = _Components()
-        self._events: list[_Event] = []
-        self._component_groups: list[_ComponentGroup] = []
-        self._vars = []
-        self._add_despawn_function()
-
-    @property
-    def description(self):
-        """Returns the entity description."""
-        return self._description
-
-    @property
-    def spawn_rule(self):
-        """Returns the spawn rule of the entity."""
-        return self._spawn_rule
-
-    def animation_controller(self, controller_shortname: str, animate: bool = False, condition: str | Molang = None):
-        """Sets the mapping of internal animation controller references to actual animations.
-
-        Parameters:
-            controller_shortname (str): The name of the animation controller.
-            animate (bool, optional): Whether or not to animate the animation controller. Defaults to False.
-            condition (str | Molang, optional): The condition to animate the animation controller. Defaults to None.
-
-        """
-        self._description._animation_controller(controller_shortname, animate, condition)
-        return self._animation_controllers.add_controller(controller_shortname)
-
-    def animation(
-        self,
-        animation_name: str,
-        loop: bool = False,
-        animate: bool = False,
-        condition: str | Molang = None,
-    ):
-        """Sets the mapping of internal animation references to actual animations.
-
-        Parameters:
-            animation_name (str): The name of the animation.
-            loop (bool, optional): Whether or not the animation should loop. Defaults to False.
-            animate (bool, optional): Whether or not to animate the animation. Defaults to False.
-            condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
-
-        """
-        self._description._animations(self._name, animation_name, animate, condition)
-        return self._animations.add_animation(animation_name, loop)
-
-    def init_vars(self, **vars):
-        """Initializes variables for an entity."""
-        for k, v in vars.items():
-            Variable._set_var(k)
-            self._vars.extend([f"v.{k}={v}"])
-
-        return self
-
-    def event(self, event_name: str):
-        """Adds an event to the entity.
-
-        Parameters:
-            event_name (str): The name of the event.
-        """
-        self._event = _Event(event_name)
-        self._events.append(self._event)
-        return self._event
-
-    @property
-    def components(self):
-        """Returns the components of the entity."""
-        return self._components
-
-    @property
-    def identifier(self) -> str:
-        return self.description.identifier
-
-    def component_group(self, component_group_name: str):
-        """Adds a component group to the entity.
-
-        Parameters:
-            component_group_name (str): The name of the component group.
-
-        """
-        self._component_group = _ComponentGroup(component_group_name)
-        self._component_groups.append(self._component_group)
-        return self._component_group
-
-    def queue(self, directory: str = None):
-        """Queues the entity for export.
-
-        Parameters:
-            directory (str, optional): The directory to export the entity to. Defaults to None.
-        """
-        if len(self._vars) > 0:
-            self.animation_controller("variables", True).add_state("default").on_entry(*self._vars)
-        self._animations.queue(directory=directory)
-        self._animation_controllers.queue(directory=directory)
-        self._spawn_rule.queue(directory=directory)
-
-        self._server_entity["minecraft:entity"].update(self.description._export)
-        self._server_entity["minecraft:entity"]["components"].update(self._components._export()["components"])
-
-        for event in self._events:
-            self._server_entity["minecraft:entity"]["events"].update(event._export)
-        for component_group in self._component_groups:
-            self._server_entity["minecraft:entity"]["component_groups"].update(component_group._export())
-
-        self.content(self._server_entity)
-
-        controllers = list(self._animation_controllers._animation_controllers["animation_controllers"].keys())
-        cleared_items = []
-        for key, controller in self._description._description["description"]["animations"].items():
-            if controller.startswith("controller.") and controller not in controllers:
-                cleared_items.append(key)
-
-        for item in cleared_items:
-            self._description._description["description"]["animations"].pop(item)
-
-        if EntityRideable.component_namespace in json.dumps(self._server_entity):
-            ANVIL.definitions.register_lang(f"action.hint.exit.{self.identifier}", "Sneak to exit")
-
-        super().queue(directory=directory)
-
-
-class _EntityClient(AddonObject):
-    """Base class for all client entities."""
-
-    _extension = ".entity.json"
-    _path = os.path.join(CONFIG.RP_PATH, "entity")
-
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """Base class for all client entities.
-
-        Parameters:
-            name (str): The name of the entity.
-            is_vanilla (bool, optional): Whether or not the entity is a vanilla entity. Defaults to False.
-        """
-        super().__init__(name)
-        self._is_vanilla = is_vanilla
-        self._client_entity = JsonSchemes.client_entity()
-        self._description = _EntityClientDescription(self._name, self._is_vanilla)
-
-    @property
-    def description(self):
-        """Returns the entity description."""
-        return self._description
-
-    @property
-    def reuse_assets(self):
-        """Whether or not the actor should reuse assets from another actor."""
-        return _ActorReuseAssets(self._description)
-
-    @property
-    def identifier(self) -> str:
-        return self.description.identifier
-
-    def queue(self, directory: str = None):
-        """Queues the entity for export.
-
-        Parameters:
-            directory (str, optional): The directory to export the entity to. Defaults to None.
-        """
-        self._client_entity["minecraft:client_entity"].update(self._description._export(directory))
-
-        self.content(self._client_entity)
-        super().queue(directory=directory)
-
-
 # Render Controllers
 class _RenderController:
     def _validate(self, textures: list[str], geometries: list[str], materials: list[str]):
@@ -853,7 +688,9 @@ class _RenderController:
         def log_invalid_texture(texture):
             texture_ext = texture.split(".")[-1]
             if texture_ext not in textures:
-                CONFIG.Logger.rc_referenced_texture_not_in_entity(texture_ext, self._identifier)
+                raise RuntimeError(
+                    f"Texture {texture} not found in entity {self._identifier}. Render controller [{self._identifier}]"
+                )
 
         for texture in controller_textures:
             if texture.startswith("Texture."):
@@ -865,26 +702,26 @@ class _RenderController:
 
         for geometry in self._controller[self.controller_identifier]["geometry"]:
             if geometry.startswith("Geometry.") and geometry.split(".")[-1] not in geometries:
-                CONFIG.Logger.rc_referenced_geometry_not_in_entity(geometry.split(".")[-1], self._identifier)
+                raise RuntimeError(
+                    f"Geometry {geometry} not found in entity {self._identifier}. Render controller [{self._identifier}]"
+                )
             elif (
                 geometry.startswith("Array.")
                 and geometry.split(".")[-1] not in self._controller[self.controller_identifier]["arrays"]["geometries"][geometry]
             ):
-                CONFIG.Logger.rc_referenced_geometry_not_in_entity(geometry.split(".")[-1], self._identifier)
+                raise RuntimeError(f"Geometry {geometry} not found in entity {self._identifier}. [{self._identifier}]")
 
         for material in self._controller[self.controller_identifier]["materials"]:
             if list(material.values())[0].split(".")[-1] not in materials:
-                CONFIG.Logger.rc_referenced_material_not_in_entity(material, self._identifier)
+                raise RuntimeError(
+                    f"Material {list(material.values())[0]} not found in entity {self._identifier}. Render controller [{self._identifier}]"
+                )
 
-    def __init__(self, identifier, controller_name, is_vanilla):
+    def __init__(self, identifier, controller_name):
         self._identifier = identifier
-        self._is_vanilla = is_vanilla
-        self._namespace_format = CONFIG.NAMESPACE
-        if is_vanilla:
-            self._namespace_format = "minecraft"
         self._controller_name = controller_name
-        self._controller = JsonSchemes.render_controller(CONFIG.NAMESPACE, self._identifier, self._controller_name)
-        self.controller_identifier = f"controller.render.{CONFIG.NAMESPACE}.{self._identifier}.{self._controller_name}"
+        self._controller = JsonSchemes.render_controller(self._identifier, self._controller_name)
+        self.controller_identifier = f"controller.render.{self._identifier.replace(':', '.')}.{self._controller_name}"
 
     def texture_array(self, array_name: str, *textures_short_names: str):
         self._controller[self.controller_identifier]["arrays"]["textures"].update(
@@ -974,16 +811,15 @@ class _RenderControllers(AddonObject):
         CONFIG.RP_PATH,
         "render_controllers",
     )
+    _object_type = "Render Controller"
 
-    def __init__(self, identifier: str, is_vanilla) -> None:
-        self._identifier = identifier
-        self._is_vanilla = is_vanilla
+    def __init__(self, identifier: str) -> None:
         self._controllers: list[_RenderController] = []
         self.render_controller = JsonSchemes.render_controllers()
-        super().__init__(self._identifier)
+        super().__init__(identifier)
 
     def add_controller(self, controller_name: str):
-        self._render_controller = _RenderController(self._identifier, controller_name, self._is_vanilla)
+        self._render_controller = _RenderController(self.identifier, controller_name)
         self._controllers.append(self._render_controller)
         return self._render_controller
 
@@ -1119,7 +955,9 @@ class _RP_ControllerState:
             if any(command.startswith(v) for v in MOLANG_PREFIXES):
                 self._controller_state[self._state_name]["on_entry"].append(f"{command};")
             else:
-                CONFIG.Logger.molang_only(command)
+                raise RuntimeError(
+                    f"Invalid command for on_entry: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
+                )
         self._default = False
         return self
 
@@ -1140,7 +978,10 @@ class _RP_ControllerState:
             if any(command.startswith(v) for v in MOLANG_PREFIXES):
                 self._controller_state[self._state_name]["on_exit"].append(f"{command};")
             else:
-                CONFIG.Logger.molang_only(command)
+                raise RuntimeError(
+                    f"Invalid command for on_exit: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
+                )
+
         self._default = False
         return self
 
@@ -1276,16 +1117,12 @@ class _RP_ControllerState:
 
 
 class _BP_Controller:
-    def __init__(self, identifier, controller_shortname, is_vanilla):
+    def __init__(self, identifier, controller_shortname):
         self._identifier = identifier
-        self._is_vanilla = is_vanilla
-        self._namespace_format = CONFIG.NAMESPACE
-        if is_vanilla:
-            self._namespace_format = "minecraft"
         self._controller_shortname = controller_shortname
-        self._controllers = JsonSchemes.animation_controller(CONFIG.NAMESPACE, self._identifier, self._controller_shortname)
+        self._controllers = JsonSchemes.animation_controller(self._identifier, self._controller_shortname)
         self._controller_states: list[_BP_ControllerState] = []
-        self._controller_namespace = f"controller.animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._controller_shortname}"
+        self._controller_namespace = f"controller.animation.{self._identifier.replace(':', '.')}.{self._controller_shortname}"
         self._states_names = []
         self._side = "Server"
 
@@ -1320,7 +1157,9 @@ class _BP_Controller:
 
         for state in set(collected_states):
             if state not in self._states_names:
-                CONFIG.Logger.missing_state(self._side, self._controller_namespace, state)
+                raise RuntimeError(
+                    f"State '{state}' is referenced in transitions but not defined in the. behavior Pack Animation Controller[{self._identifier}]."
+                )
 
         if len(self._controllers[self._controller_namespace]["states"].items()) > 0:
             return self._controllers
@@ -1328,8 +1167,8 @@ class _BP_Controller:
 
 
 class _RP_Controller(_BP_Controller):
-    def __init__(self, name, controller_shortname, is_vanilla):
-        super().__init__(name, controller_shortname, is_vanilla)
+    def __init__(self, name, controller_shortname):
+        super().__init__(name, controller_shortname)
         self._side = "Client"
         self._controller_states: list[_RP_ControllerState] = []
 
@@ -1346,11 +1185,10 @@ class _BP_AnimationControllers(AddonObject):
         CONFIG.BP_PATH,
         "animation_controllers",
     )
+    _object_type = "Behavior Pack Animation Controller"
 
-    def __init__(self, identifier, is_vanilla) -> None:
+    def __init__(self, identifier) -> None:
         super().__init__(identifier)
-        self._identifier = identifier
-        self._is_vanilla = is_vanilla
         self._animation_controllers = JsonSchemes.animation_controllers()
         self._controllers_list: list[_BP_Controller] = []
 
@@ -1367,7 +1205,7 @@ class _BP_AnimationControllers(AddonObject):
             Animation controller.
 
         """
-        ctrl = _BP_Controller(self._name, controller_shortname, self._is_vanilla)
+        ctrl = _BP_Controller(self.identifier, controller_shortname)
         self._controllers_list.append(ctrl)
         return ctrl
 
@@ -1382,11 +1220,10 @@ class _BP_AnimationControllers(AddonObject):
 class _RP_AnimationControllers(AddonObject):
     _extension = ".rp_ac.json"
     _path = os.path.join(CONFIG.RP_PATH, "animation_controllers")
+    _object_type = "Resource Pack Animation Controller"
 
-    def __init__(self, name, is_vanilla) -> None:
+    def __init__(self, name) -> None:
         super().__init__(name)
-        self._name = name
-        self._is_vanilla = is_vanilla
         self._animation_controllers = JsonSchemes.animation_controllers()
         self._controllers_list: list[_RP_Controller] = []
 
@@ -1403,7 +1240,7 @@ class _RP_AnimationControllers(AddonObject):
             Animation controller.
 
         """
-        self._animation_controller = _RP_Controller(self._name, controller_shortname, self._is_vanilla)
+        self._animation_controller = _RP_Controller(self.identifier, controller_shortname)
         self._controllers_list.append(self._animation_controller)
         return self._animation_controller
 
@@ -1418,15 +1255,11 @@ class _RP_AnimationControllers(AddonObject):
 
 # Animations
 class _BPAnimation:
-    def __init__(self, identifier, animation_short_name: str, loop: bool, is_vanilla):
-        self._is_vanilla = is_vanilla
+    def __init__(self, identifier, animation_short_name: str, loop: bool):
         self._identifier = identifier
-        self._namespace_format = CONFIG.NAMESPACE
-        if is_vanilla:
-            self._namespace_format = "minecraft"
         self._animation_short_name = animation_short_name
         self._animation_length = 0.05
-        self._animation = JsonSchemes.bp_animation(CONFIG.NAMESPACE, self._identifier, self._animation_short_name, loop)
+        self._animation = JsonSchemes.bp_animation(self._identifier, self._animation_short_name, loop)
 
     def timeline(self, timestamp: float, *commands: str):
         """Takes a timestamp and a list of events, command or molang to run at that time.
@@ -1445,29 +1278,22 @@ class _BPAnimation:
         """
         if self._animation_length <= timestamp:
             self._animation_length = timestamp + 0.05
-        self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"][
-            "animation_length"
-        ] = self._animation_length
-        if (
-            timestamp
-            not in self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"]["timeline"]
-        ):
-            self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"]["timeline"][
-                timestamp
-            ] = []
+        self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["animation_length"] = self._animation_length
+        if timestamp not in self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"]:
+            self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"][timestamp] = []
         for command in commands:
             if str(command).startswith("@s"):
-                self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"]["timeline"][
-                    timestamp
-                ].append(f"{command}")
+                self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"][timestamp].append(
+                    f"{command}"
+                )
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"]["timeline"][
-                    timestamp
-                ].append(f"{command};")
+                self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"][timestamp].append(
+                    f"{command};"
+                )
             else:
-                self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"]["timeline"][
-                    timestamp
-                ].append(f"/{command}")
+                self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"][timestamp].append(
+                    f"/{command}"
+                )
         return self
 
     def animation_length(self, animation_length: float):
@@ -1483,9 +1309,7 @@ class _BPAnimation:
             This animation.
 
         """
-        self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"][
-            "animation_length"
-        ] = animation_length
+        self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["animation_length"] = animation_length
         return self
 
     def anim_time_update(self, anim_time_update: Query):
@@ -1500,9 +1324,7 @@ class _BPAnimation:
             This animation.
 
         """
-        self._animation[f"animation.{CONFIG.NAMESPACE}.{self._identifier}.{self._animation_short_name}"][
-            "anim_time_update"
-        ] = anim_time_update
+        self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["anim_time_update"] = anim_time_update
         return self
 
     @property
@@ -1513,11 +1335,10 @@ class _BPAnimation:
 class _BPAnimations(AddonObject):
     _extension = ".animation.json"
     _path = os.path.join(CONFIG.BP_PATH, "animations")
+    _object_type = "behavior Pack Animation"
 
-    def __init__(self, identifier, is_vanilla) -> None:
+    def __init__(self, identifier) -> None:
         super().__init__(identifier)
-        self._identifier = identifier
-        self._is_vanilla = is_vanilla
         self._animations = JsonSchemes.bp_animations()
         self._animations_list: list[_BPAnimation] = []
 
@@ -1536,7 +1357,7 @@ class _BPAnimations(AddonObject):
             Animation.
 
         """
-        self._animation = _BPAnimation(self._identifier, animation_short_name, loop, self._is_vanilla)
+        self._animation = _BPAnimation(self.identifier, animation_short_name, loop)
         self._animations_list.append(self._animation)
         return self._animation
 
@@ -2022,15 +1843,11 @@ class _Condition:
 class _SpawnRule(AddonObject):
     _extension = ".spawn_rules.json"
     _path = os.path.join(CONFIG.BP_PATH, "spawn_rules")
+    _object_type = "Spawn Rule"
 
     def __init__(self, identifier, is_vanilla):
-        super().__init__(identifier)
-        self._identifier = identifier
-        self._is_vanilla = is_vanilla
-        self._namespace_format = CONFIG.NAMESPACE
-        if is_vanilla:
-            self._namespace_format = "minecraft"
-        self._description = _SpawnRuleDescription(self, self._identifier, self._is_vanilla)
+        super().__init__(identifier, is_vanilla)
+        self._description = _SpawnRuleDescription(self, self.identifier, self._is_vanilla)
         self._spawn_rule = JsonSchemes.spawn_rules()
         self._conditions = []
 
@@ -2262,46 +2079,61 @@ class _Event(_BaseEvent):
 class _Components:
     def __init__(self):
         self._component_group_name = "components"
-        self._components: dict[str, _component] = {}
+        self._components: List[_BaseComponent] = []
 
-    def _set(self, key: str, value: _component):
-        self._components[key] = value
+    def _set(self, component: _BaseComponent):
+        self.remove(component)
+        self.add(component)
 
-    def _remove(self, key: str):
-        if key in self._components.keys():
-            self._components.pop(key)
+    def _remove(self, component: _BaseComponent):
+        if self._has(component):
+            self._components.remove(component)
 
-    def _has(self, key: str):
-        return key in self._components
+    def _has(self, component: _BaseComponent):
+        """Checks if the component is already set."""
+        return component in self._components
 
-    def add(self, *components: _component):
+    def add(self, *components: _BaseComponent):
         for component in components:
-            self._set(component.component_namespace, component)
+            self._components.append(component)
         return self
 
-    def remove(self, *components: _component):
+    def remove(self, *components: _BaseComponent):
         for component in components:
-            self._remove(component.component_namespace)
+            self._remove(component)
         return self
-
-    def overwrite(self, *components: _component):
-        self._components = {}
-        for component in components:
-            self._set(component.component_namespace, component)
 
     def _export(self):
-        cmp = {}
-        for component in self._components.values():
-            cmp.update(component)
+        component_classes = {component.__class__ for component in self._components}
+        cmp_dict = {}
+        for component in self._components:
+            missing_dependencies = [
+                dep.__name__ for dep in component._dependencies if dep not in component_classes
+            ]
+            conflicting = [
+                cla.__name__ for cla in component._clashes if cla in component_classes
+            ]
 
-        return {self._component_group_name: cmp}
+            if missing_dependencies:
+                raise RuntimeError(
+                    f"Component '{component.__class__.__name__}' requires missing dependency "
+                    f"{missing_dependencies} in '{self._component_group_name}' group."
+                )
+
+            if conflicting:
+                raise RuntimeError(
+                    f"Component '{component.__class__.__name__}' conflicts with "
+                    f"{conflicting} in '{self._component_group_name}' group. Remove the conflicting component(s)."
+                )
+
+            cmp_dict.update(component)
+        return {self._component_group_name: cmp_dict}
 
 
 class _ComponentGroup(_Components):
     def __init__(self, component_group_name: str):
         super().__init__()
         self._component_group_name = component_group_name
-        self._components = {self._component_group_name: {}}
 
 
 class _Properties:
@@ -2363,71 +2195,128 @@ class _Properties:
 
 
 # ========================================================================================================
-class Entity:
-    def _validate_name(self, name: str):
-        if ":" in name:
-            CONFIG.Logger.namespaces_not_allowed(name)
-        if not str(name)[0].isalpha():
-            CONFIG.Logger.digits_not_allowed(name)
+
+
+class _EntityServer(AddonObject):
+    """Base class for all server entities."""
+
+    _extension = ".behavior.json"
+    _path = os.path.join(CONFIG.BP_PATH, "entities")
+    _object_type = "Server Entity"
+
+    def _add_despawn_function(self):
+        """Adds a despawn function to the entity."""
+        self.component_group("despawn").add(EntityInstantDespawn())
+        self.event("despawn").add("despawn")
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        self._is_vanilla = is_vanilla
-        self._name = str(name)
-        self._namespace_format = "minecraft" if is_vanilla else CONFIG.NAMESPACE
-        self._validate_name(self._name)
+        """Base class for all server entities.
 
-        if CONFIG._TARGET == "addon" and is_vanilla:
-            CONFIG.Logger.vanilla_override_error(self._name)
-
-        self._server = _EntityServer(self._name, self._is_vanilla)
-        self._client = _EntityClient(self._name, self._is_vanilla)
-
-    @property
-    def Server(self):
-        """Server-side logic.
-
-        Returns
-        -------
-            Server Entity.
+        Parameters:
+            name (str): The name of the entity.
+            is_vanilla (bool, optional): Whether or not the entity is a vanilla entity. Defaults to False.
         """
-        return self._server
+        super().__init__(name, is_vanilla)
+        self._server_entity = JsonSchemes.server_entity()
+        self._description = _EntityServerDescription(self.identifier, self._is_vanilla)
+        self._animation_controllers = _BP_AnimationControllers(self.identifier)
+        self._animations = _BPAnimations(self.identifier)
+        self._spawn_rule = _SpawnRule(self.identifier, self._is_vanilla)
+        self._components = _Components()
+        self._events: list[_Event] = []
+        self._component_groups: list[_ComponentGroup] = []
+        self._vars = []
+        self._add_despawn_function()
 
     @property
-    def Client(self) -> _EntityClient:
-        """Client-side.
+    def description(self):
+        """Returns the entity description."""
+        return self._description
 
-        Returns
-        -------
-            Client Entity.
+    @property
+    def spawn_rule(self):
+        """Returns the spawn rule of the entity."""
+        return self._spawn_rule
+
+    def animation_controller(self, controller_shortname: str, animate: bool = False, condition: str | Molang = None):
+        """Sets the mapping of internal animation controller references to actual animations.
+
+        Parameters:
+            controller_shortname (str): The name of the animation controller.
+            animate (bool, optional): Whether or not to animate the animation controller. Defaults to False.
+            condition (str | Molang, optional): The condition to animate the animation controller. Defaults to None.
+
         """
-        return self._client
+        self._description._animation_controller(controller_shortname, animate, condition)
+        return self._animation_controllers.add_controller(controller_shortname)
+
+    def animation(
+        self,
+        animation_name: str,
+        loop: bool = False,
+        animate: bool = False,
+        condition: str | Molang = None,
+    ):
+        """Sets the mapping of internal animation references to actual animations.
+
+        Parameters:
+            animation_name (str): The name of the animation.
+            loop (bool, optional): Whether or not the animation should loop. Defaults to False.
+            animate (bool, optional): Whether or not to animate the animation. Defaults to False.
+            condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
+
+        """
+        self._description._animations(self._name, animation_name, animate, condition)
+        return self._animations.add_animation(animation_name, loop)
+
+    def init_vars(self, **vars):
+        """Initializes variables for an entity."""
+        for k, v in vars.items():
+            Variable._set_var(k)
+            self._vars.extend([f"v.{k}={v}"])
+
+        return self
+
+    def event(self, event_name: str):
+        """Adds an event to the entity.
+
+        Parameters:
+            event_name (str): The name of the event.
+        """
+        self._events.append(_Event(event_name))
+        return self._events[-1]
 
     @property
-    def identifier(self) -> Identifier:
-        """Returns the identifier of the Entity."""
-        return self.Client.description.identifier
+    def components(self):
+        """Returns the components of the entity."""
+        return self._components
 
-    @property
-    def name(self) -> str:
-        """Returns the name of the Entity."""
-        return self.Client.description.name
+    def component_group(self, component_group_name: str):
+        """Adds a component group to the entity.
+
+        Parameters:
+            component_group_name (str): The name of the component group.
+
+        """
+        self._component_groups.append(_ComponentGroup(component_group_name))
+        return self._component_groups[-1]
 
     def add_basic_components(self):
         """Adds basic server components to the entity.
 
         This includes:
-            - `JumpStatic`
-            - `MovementType`
-            - `NavigationType`
-            - `Movement`
-            - `Physics`
-            - `KnockbackResistance`
-            - `Health`
-            - `CollisionBox`
-            - `Breathable`
-            - `DamageSensor`
-            - `Pushable`
-            - `PushThrough`
+            - `EntityBreathable`
+            - `EntityCollisionBox`
+            - `EntityDamageSensor`
+            - `EntityHealth`
+            - `EntityJumpStatic`
+            - `EntityKnockbackResistance`
+            - `EntityMovement`
+            - `EntityMovementType`
+            - `EntityNavigationType`
+            - `EntityPhysics`
+            - `EntityPushable`
+            - `EntityPushThrough`
         """
         from anvil.api.actors.components import (EntityBreathable,
                                                  EntityCollisionBox,
@@ -2442,20 +2331,104 @@ class Entity:
                                                  EntityPushThrough)
         from anvil.api.logic.commands import DamageCause
 
-        self.Server.components.add(
+        self.components.add(
             EntityJumpStatic(0),
-            EntityMovementType().Basic(),
-            EntityNavigationType().Walk(),
+            EntityMovementType.Basic(),
+            EntityNavigationType.Walk(),
             EntityMovement(0),
             EntityPhysics(True, True),
             EntityKnockbackResistance(10000),
             EntityHealth(6),
             EntityCollisionBox(1, 1),
             EntityBreathable(),
-            EntityDamageSensor().add_trigger(DamageCause.All, DamageSensorDamage.No),
+            EntityDamageSensor().add_trigger(DamageCause.All, DamageSensor.No),
             EntityPushable(False, False),
             EntityPushThrough(1),
         )
+
+    def queue(self, directory: str = None):
+        """Queues the entity for export.
+
+        Parameters:
+            directory (str, optional): The directory to export the entity to. Defaults to None.
+        """
+        if len(self._vars) > 0:
+            self.animation_controller("variables", True).add_state("default").on_entry(*self._vars)
+        self._animations.queue(directory=directory)
+        self._animation_controllers.queue(directory=directory)
+        self._spawn_rule.queue(directory=directory)
+
+        self._server_entity["minecraft:entity"].update(self.description._export)
+        self._server_entity["minecraft:entity"]["components"].update(self._components._export()["components"])
+
+        for event in self._events:
+            self._server_entity["minecraft:entity"]["events"].update(event._export)
+        for component_group in self._component_groups:
+            self._server_entity["minecraft:entity"]["component_groups"].update(component_group._export())
+
+        self.content(self._server_entity)
+
+        controllers = list(self._animation_controllers._animation_controllers["animation_controllers"].keys())
+        cleared_items = []
+        for key, controller in self._description._description["description"]["animations"].items():
+            if controller.startswith("controller.") and controller not in controllers:
+                cleared_items.append(key)
+
+        for item in cleared_items:
+            self._description._description["description"]["animations"].pop(item)
+
+        if self._components._has(EntityRideable) or any(c._has(EntityRideable) for c in self._component_groups):
+            ANVIL.definitions.register_lang(f"action.hint.exit.{self.identifier}", "Sneak to exit")
+
+        super().queue(directory=directory)
+
+
+class _EntityClient(AddonObject):
+    """Base class for all client entities."""
+
+    _extension = ".entity.json"
+    _path = os.path.join(CONFIG.RP_PATH, "entity")
+    _object_type = "Client Entity"
+
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        """Base class for all client entities.
+
+        Parameters:
+            name (str): The name of the entity.
+            is_vanilla (bool, optional): Whether or not the entity is a vanilla entity. Defaults to False.
+        """
+        super().__init__(name, is_vanilla)
+        self._client_entity = JsonSchemes.client_entity()
+        self._description = _EntityClientDescription(self.identifier, self._is_vanilla)
+
+    @property
+    def reuse_assets(self):
+        """Whether or not the actor should reuse assets from another actor."""
+        return _ActorReuseAssets(self._description)
+
+    @property
+    def description(self):
+        """Returns the entity description."""
+        return self._description
+
+    def queue(self, directory: str = None):
+        """Queues the entity for export.
+
+        Parameters:
+            directory (str, optional): The directory to export the entity to. Defaults to None.
+        """
+        self._client_entity["minecraft:client_entity"].update(self._description._export(directory))
+
+        self.content(self._client_entity)
+        super().queue(directory=directory)
+
+
+class Entity(EntityDescriptor):
+    def __init__(self, name, is_vanilla=False, allow_runtime=True):
+        super().__init__(name, is_vanilla, allow_runtime)
+
+        self.server = _EntityServer(name, is_vanilla)
+        self.client = _EntityClient(name, is_vanilla)
 
     def queue(
         self,
@@ -2463,73 +2436,54 @@ class Entity:
         display_name: str = None,
         spawn_egg_name: str = None,
     ):
-        display_name = self._name.replace("_", " ").title() if display_name is None else display_name
+        display_name = self._display_name if display_name is None else display_name
         spawn_egg_name = f"Spawn {display_name}" if spawn_egg_name is None else spawn_egg_name
         if self._is_vanilla:
             directory = "vanilla"
 
-        ANVIL.definitions.register_lang(f"entity.{self._namespace_format}:{self._name}.name", display_name)
-        ANVIL.definitions.register_lang(f"entity.{self._namespace_format}:{self._name}<>.name", display_name)
+        ANVIL.definitions.register_lang(f"entity.{self.identifier}.name", display_name)
+        ANVIL.definitions.register_lang(f"entity.{self.identifier}<>.name", display_name)
         ANVIL.definitions.register_lang(
-            f"item.spawn_egg.entity.{self._namespace_format}:{self._name}.name",
+            f"item.spawn_egg.entity.{self.identifier}.name",
             spawn_egg_name,
         )
-        self.Client.queue(directory)
-        self.Server.queue(directory)
+        self.client.queue(directory)
+        self.server.queue(directory)
 
         CONFIG.Report.add_report(
             ReportType.ENTITY,
             vanilla=self._is_vanilla,
             col0=display_name,
             col1=self.identifier,
-            # col2 = [event._event_name for event in self.Server._events]
+            col2=[event._event_name for event in self.server._events],
         )
-
-    def __str__(self):
-        return self.identifier
 
 
 class Attachable(AddonObject):
     _extension = ".attachable.json"
     _path = os.path.join(CONFIG.RP_PATH, "attachables")
+    _object_type = "Attachable"
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Initializes the attachable.
 
         Parameters:
             name (str): The name of the attachable.
         """
-        super().__init__(name)
-        self._name = name
-        self._is_vanilla = name in MinecraftItemTypes
-        self._namespace = "minecraft" if self._is_vanilla else CONFIG.NAMESPACE
-
-        if CONFIG._TARGET == "addon" and self._is_vanilla:
-            CONFIG.Logger.vanilla_override_error(self._name)
+        super().__init__(name, is_vanilla)
+        if not is_vanilla:
+            self._is_vanilla = self.identifier in MinecraftItemTypes
 
         self._attachable = JsonSchemes.attachable()
-        self._description = _AttachableClientDescription(self._name, False)
+        self._description = _AttachableClientDescription(self.identifier, False)
 
     @property
     def description(self):
         """Returns the description of the attachable."""
         return self._description
 
-    @property
-    def identifier(self) -> Identifier:
-        """Returns the identifier of the attachable."""
-        return self.description.identifier
-
-    @property
-    def name(self) -> str:
-        """Returns the name of the attachable."""
-        return self.description.name
-
-    @property
     def queue(self):
         """Queues the attachable."""
-
-        display_name = self._name.replace("_", " ").title()
 
         self._attachable["minecraft:attachable"].update(self._description._export())
         self.content(self._attachable)
@@ -2537,7 +2491,7 @@ class Attachable(AddonObject):
         CONFIG.Report.add_report(
             ReportType.ATTACHABLE,
             vanilla=self._is_vanilla,
-            col0=display_name,
+            col0=self._display_name,
             col1=self.identifier,
         )
         super().queue()

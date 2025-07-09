@@ -1,17 +1,25 @@
 import os
+from typing import List, Dict, Any
 
 from anvil import ANVIL, CONFIG
 from anvil.api.actors.actors import _Components
-from anvil.api.blocks.components import (BlockDefault, BlockDisplayName,
-                                         BlockGeometry, BlockMaterialInstance)
-from anvil.lib.enums import (BlockVanillaTags, ItemCategory, ItemGroups,
-                             PlacementDirectionTrait, PlacementPositionTrait)
+from anvil.api.blocks.components import BlockDefault, BlockDisplayName, BlockGeometry, BlockMaterialInstance
+from anvil.api.logic.molang import Molang
+from anvil.lib.enums import BlockVanillaTags, ItemCategory, ItemGroups, PlacementDirectionTrait, PlacementPositionTrait
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
-from anvil.lib.types import BlockDescriptor, Molang
+from anvil.lib.schemas import AddonObject, BlockDescriptor, JsonSchemes, MinecraftDescription, CustomComponent
 
 __all__ = ["Block"]
 
+
+class _tag:
+    def __init__(self, tag: BlockVanillaTags):
+        self._dependencies: List["_BaseComponent"] = []
+        self._clashes: List["_BaseComponent"] = []
+        self._component: Dict[str, Any] = {f"tag:{tag}": {"do_not_shorten": True}}
+
+    def __iter__(self):
+        return iter(self._component.items())
 
 # Core
 class _PermutationComponents(_Components):
@@ -37,7 +45,8 @@ class _PermutationComponents(_Components):
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
         """
         for tag in tags:
-            self._set(f"tag:{tag}", {f"tag:{tag}": {"do_not_shorten": True}})
+
+            self._set(_tag(tag))
 
         return self
 
@@ -99,7 +108,7 @@ class _BlockServerDescription(MinecraftDescription):
             }
         )
 
-    def add_state(self, name: str, *range: float | str | bool):
+    def add_state(self, name: str, range: set[float | str | bool]):
         """Adds a state to the block.
 
         Parameters:
@@ -108,7 +117,8 @@ class _BlockServerDescription(MinecraftDescription):
 
         """
         if len(range) > 16:
-            CONFIG.Logger.block_state_values_out_of_range(self._name, name, len(range))
+            raise ValueError(f"A block state can only have up to 16 values. {self._object_type}[{self.name}].")
+
         self._description["description"]["states"][f"{CONFIG.NAMESPACE}:{name}"] = range
         return self
 
@@ -128,7 +138,7 @@ class _BlockServerDescription(MinecraftDescription):
         """
         self._description["description"]["menu_category"] = {
             "category": category.value if not category == ItemCategory.none else {},
-            "group": f"{CONFIG.NAMESPACE}:{group}" if not group == ItemGroups.none else {},
+            "group": group.value if not group == ItemGroups.none else {},
         }
         return self
 
@@ -158,6 +168,7 @@ class _BlockServer(AddonObject):
 
     _extension = ".block.json"
     _path = os.path.join(CONFIG.BP_PATH, "blocks")
+    _object_type = "Block Server"
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """The block server object.
@@ -200,18 +211,17 @@ class _BlockServer(AddonObject):
         comps: dict = self._server_block["minecraft:block"]["components"]
         self._server_block["minecraft:block"]["permutations"] = [permutation._export() for permutation in self._permutations]
 
-        if not BlockDefault.component_namespace in comps:
-            if not BlockMaterialInstance.component_namespace in comps:
-                CONFIG.Logger.block_missing_texture(self._name)
-            if not BlockGeometry.component_namespace in comps:
-                CONFIG.Logger.block_missing_geometry(self._name)
+        if not BlockDefault._identifier in comps:
+            if not BlockMaterialInstance._identifier in comps:
+                raise RuntimeError(f"Block {self.identifier} missing default component. Block [{self.identifier}]")
+            if not BlockGeometry._identifier in comps:
+                raise RuntimeError(f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]")
         else:
-            ANVIL.definitions.register_block(self.description.identifier, comps[BlockDefault.component_namespace])
-            comps.pop(BlockDefault.component_namespace)
+            ANVIL.definitions.register_block(self.description.identifier, comps[BlockDefault._identifier])
+            comps.pop(BlockDefault._identifier)
 
-        if not BlockDisplayName.component_namespace in self._server_block["minecraft:block"]["components"]:
-            display_name = self._name.replace("_", " ").title()
-            self._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace] = display_name
+        if not BlockDisplayName._identifier in self._server_block["minecraft:block"]["components"]:
+            self._server_block["minecraft:block"]["components"][BlockDisplayName._identifier] = self._display_name
 
         self.content(self._server_block)
         super().queue()
@@ -221,22 +231,13 @@ class _BlockServer(AddonObject):
 
 
 class Block(BlockDescriptor):
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """The block object.
+    _object_type = "Block"
 
-        Parameters:
-            name (str): The name of the block.
-            is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
-        """
+    def __init__(self, name, is_vanilla=False):
         super().__init__(name, is_vanilla)
 
-        self._server = _BlockServer(name, is_vanilla)
+        self.server = _BlockServer(name, is_vanilla)
         self._item = None
-
-    @property
-    def Server(self):
-        """The block server object."""
-        return self._server
 
     @property
     def item(self):
@@ -249,17 +250,17 @@ class Block(BlockDescriptor):
 
     def queue(self):
         """Queues the block to be exported."""
-        self.Server.queue
+        self.server.queue
 
         if self._item:
             self._item.queue()
 
-        if self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace].startswith("tile."):
+        if self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier].startswith("tile."):
             display_name = ANVIL.definitions._language[
-                self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace]
+                self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier]
             ]
         else:
-            display_name = self.Server._server_block["minecraft:block"]["components"][BlockDisplayName.component_namespace]
+            display_name = self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier]
 
         CONFIG.Report.add_report(
             ReportType.BLOCK,
@@ -268,6 +269,6 @@ class Block(BlockDescriptor):
             col1=self.identifier,
             col2=[
                 f"{key}: {[', '.join(str(v) for v in value)]}"
-                for key, value in self.Server.description._description["description"]["states"].items()
+                for key, value in self.server.description._description["description"]["states"].items()
             ],
         )

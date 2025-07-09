@@ -264,14 +264,23 @@ def validate_namespace_project_name(namespace: str, project_name: str, is_addon:
     pascal_project_name = "".join(x[0] for x in project_name.split("_")).upper()
 
     if namespace == "minecraft":
-        Logger.reserved_namespace(namespace)
+        raise ValueError(
+            "The namespace 'minecraft' is reserved and cannot be used for custom packs. Please choose a different namespace."
+        )
 
     if len(namespace) > 8:
-        Logger.namespace_too_long(namespace)
+        raise ValueError(f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long.")
 
     if len(project_name) > 16:
-        Logger.project_name_too_long(namespace)
+        raise ValueError(f"Project name must be 16 characters or less. '{project_name}' is {len(project_name)} characters long.")
 
     if is_addon:
         if not namespace.endswith(f"_{pascal_project_name.lower()}"):
-            Logger.unique_namespace(f"{namespace}_{pascal_project_name.lower()}")
+            raise ValueError(f"Every namespace must be unique to the pack. For this pack it should be {namespace}.")
+
+
+def salt_from_str(s: str) -> int:
+    h = 0
+    for ch in s:
+        h = (h * 131 + ord(ch)) % 1_000_000
+    return h

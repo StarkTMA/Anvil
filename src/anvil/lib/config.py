@@ -5,11 +5,11 @@ from enum import StrEnum
 
 import commentjson as json
 import requests
+from packaging.version import Version
 
 from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
-from anvil.lib.lib import (APPDATA, FileExists, RemoveDirectory,
-                           validate_namespace_project_name)
+from anvil.lib.lib import APPDATA, FileExists, validate_namespace_project_name
 from anvil.lib.logger import Logger
 from anvil.lib.reports import ReportCollector
 
@@ -29,7 +29,7 @@ class ConfigOption(StrEnum):
     DISPLAY_NAME = "display_name"
     PROJECT_DESCRIPTION = "project_description"
     RESOURCE_DESCRIPTION = "resource_description"
-    BEHAVIOR_DESCRIPTION = "behavior_description"
+    BEHAVIOUR_DESCRIPTION = "behavior_description"
 
     TARGET = "target"
 
@@ -50,6 +50,10 @@ class ConfigOption(StrEnum):
     DATA_MODULE_UUID = "data_module_uuid"
     PREVIEW = "preview"
 
+
+class ConfigPackageTarget(StrEnum):
+    WORLD = "world"
+    ADDON = "addon"
 
 
 class Config:
@@ -132,7 +136,7 @@ class _AnvilConfig:
     DISPLAY_NAME: str
     PROJECT_DESCRIPTION: str
     RESOURCE_DESCRIPTION: str
-    BEHAVIOR_DESCRIPTION: str
+    BEHAVIOUR_DESCRIPTION: str
 
     RP_PATH: str
     BP_PATH: str
@@ -178,7 +182,7 @@ class _AnvilConfig:
         self.COMPANY = self._handle_config(ConfigSection.PACKAGE, ConfigOption.COMPANY, "input")
         self.DISPLAY_NAME = self._handle_config(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, "input")
         self.PROJECT_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, "input")
-        self.BEHAVIOR_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.BEHAVIOR_DESCRIPTION, "input")
+        self.BEHAVIOUR_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION, "input")
         self.RESOURCE_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, "input")
         self._DEBUG = self._handle_config(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
         self._PASCAL_PROJECT_NAME = self._handle_config(
@@ -209,8 +213,8 @@ class _AnvilConfig:
                 ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4())
             )
 
-        if self._TARGET not in ["world", "addon"]:
-            self.Logger.invalid_target(self._TARGET)
+        if self._TARGET not in ConfigPackageTarget:
+            raise ValueError(f"Invalid package target '{self._TARGET}'. Must be one of {list(ConfigPackageTarget)}.")
 
         validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon")
 
@@ -225,10 +229,7 @@ class _AnvilConfig:
         except:
             latest_build = __version__
 
-        p1 = list(map(int, __version__.split(".")))
-        p2 = list(map(int, latest_build.split(".")))
-
-        if (p1 > p2) - (p1 < p2) < 0:
+        if Version(__version__) < Version(latest_build):
             self.Logger.new_anvil_build(latest_build)
         else:
             self.Logger.anvil_up_to_date()
@@ -256,11 +257,7 @@ class _AnvilConfig:
             "games",
             "com.mojang",
         )
-        self._WORLD_PATH = os.path.join(
-            self._COM_MOJANG,
-            "minecraftWorlds",
-            self.PROJECT_NAME
-        )
+        self._WORLD_PATH = os.path.join(self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME)
 
         self.RP_PATH = os.path.join(self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}")
         self.BP_PATH = os.path.join(self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}")

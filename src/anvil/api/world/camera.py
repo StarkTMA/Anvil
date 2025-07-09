@@ -9,40 +9,37 @@ from anvil.lib.schemas import AddonObject, JsonSchemes
 class AimAssistPreset(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.BP_PATH, "Camera", "Presets")
+    _object_type = "Aim Assist Preset"
 
-    def __init__(self, identifier: str):
-        super().__init__(identifier)
-        self.content(JsonSchemes.aim_assist_preset(identifier))
-
-    @property
-    def identifier(self):
-        return self._content["minecraft:aim_assist_preset"]["identifier"]
+    def __init__(self, name: str):
+        super().__init__(name)
+        self.content(JsonSchemes.aim_assist_preset(self.identifier))
 
     def item_settings(self, settings: dict):
-        self._preset["minecraft:aim_assist_preset"]["item_settings"] = settings
+        self._content["minecraft:aim_assist_preset"]["item_settings"] = settings
         return self
 
     def default_item_settings(self, setting: str):
-        self._preset["minecraft:aim_assist_preset"]["default_item_settings"] = setting
+        self._content["minecraft:aim_assist_preset"]["default_item_settings"] = setting
         return self
 
     def hand_settings(self, setting: str):
-        self._preset["minecraft:aim_assist_preset"]["hand_settings"] = setting
+        self._content["minecraft:aim_assist_preset"]["hand_settings"] = setting
         return self
 
     def exclusion_list(self, exclusions: dict):
-        self._preset["minecraft:aim_assist_preset"]["exclusion_list"] = exclusions
+        self._content["minecraft:aim_assist_preset"]["exclusion_list"] = exclusions
         return self
 
     def liquid_targeting_list(self, targets: dict):
-        self._preset["minecraft:aim_assist_preset"]["liquid_targeting_list"] = targets
+        self._content["minecraft:aim_assist_preset"]["liquid_targeting_list"] = targets
         return self
 
     def _export(self):
-        return self._preset
+        return self._content
 
     def queue(self, directory: str = None):
-        self.content(self._preset)
+        self.content(self._content)
         return super().queue(directory)
 
 
@@ -77,6 +74,7 @@ class AimAssistCategory:
 class AimAssistCategories(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.BP_PATH, "Camera", "Presets")
+    _object_type = "Aim Assist Categories"
 
     def __init__(self):
         super().__init__("categories")
@@ -102,6 +100,7 @@ class CameraPreset(AddonObject):
 
     _extension = ".camera.json"
     _path = os.path.join(CONFIG.BP_PATH, "cameras", "presets")
+    _object_type = "Camera Preset"
 
     def __init__(self, name: str, inherit_from: CameraPresets) -> None:
         """Initializes a CameraPreset instance.
@@ -111,9 +110,8 @@ class CameraPreset(AddonObject):
             is_vanilla (bool, optional): Whether the camera preset is a vanilla camera preset. Defaults to False.
         """
         super().__init__(name)
-        self._name = name
         self._inherit = inherit_from.value if isinstance(inherit_from, CameraPresets) else str(inherit_from)
-        self._camera_preset = JsonSchemes.camera_preset(CONFIG.NAMESPACE, name, self._inherit)
+        self._camera_preset = JsonSchemes.camera_preset(self.identifier, self._inherit)
         self._replace_reticle = False
 
     def position(self, x: float = 0, y: float = 0, z: float = 0):
@@ -174,7 +172,9 @@ class CameraPreset(AddonObject):
             if value == False:
                 self._camera_preset["minecraft:camera_preset"]["extend_player_rendering"] = False
         else:
-            CONFIG.Logger.extend_player_rendering_not_free(self._name)
+            raise ValueError(
+                f"Extend player rendering can only be set for the Free camera preset, not {self._inherit}."
+            )
         return self
 
     def view_offset(self, x_offset: float, y_offset: float):
@@ -253,6 +253,3 @@ class CameraPreset(AddonObject):
                 )
 
         return super()._export()
-
-    def __str__(self) -> str:
-        return f"{CONFIG.NAMESPACE}:{self._name}"

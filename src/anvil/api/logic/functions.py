@@ -7,6 +7,7 @@ from anvil.lib.schemas import AddonObject
 class Function(AddonObject):
     _extension = ".mcfunction"
     _path = os.path.join(CONFIG.BP_PATH, "functions", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME)
+    _object_type = "Function"
 
     _ticking: list["Function"] = set()
     _setup: list["Function"] = set()
@@ -83,6 +84,7 @@ class Tick(AddonObject):
 
     _extension = ".json"
     _path = os.path.join(CONFIG.BP_PATH, "functions")
+    _object_type = "Tick Function"
 
     def __init__(self) -> None:
         """Initializes a _Tick instance."""

@@ -63,6 +63,8 @@ markdown_extensions:
   - pymdownx.details
 
 nav:
-  - Home: index.md
+  - Home: 
+    - Overview: index.md
+    - Anvil: anvil.md
   - Docs:
       - Config: guide/config.md

@@ -59,7 +59,7 @@ class _FogDistance:
             _FogDistance: Returns self for chaining.
         """
         if fog_start >= fog_end:
-            raise CONFIG.Logger.fog_start_end(fog_start, fog_end)
+            raise ValueError(f"fog_end: [{fog_end}] must be greater than fog_start: [{fog_start}].")
 
         self._distance[self._camera_location]["fog_start"] = fog_start
         self._distance[self._camera_location]["fog_end"] = fog_end
@@ -89,7 +89,7 @@ class _FogDistance:
             _FogDistance: Returns self for chaining.
         """
         if fog_start >= fog_end:
-            raise CONFIG.Logger.fog_start_end(fog_start, fog_end)
+            raise ValueError(f"fog_end: [{fog_end}] must be greater than fog_start: [{fog_start}].")
         self._distance[self._camera_location]["color"] = color
         self._distance[self._camera_location]["fog_start"] = fog_start
         self._distance[self._camera_location]["fog_end"] = fog_end
@@ -111,6 +111,7 @@ class Fog(AddonObject):
 
     _extension = ".fog.json"
     _path = os.path.join(CONFIG.RP_PATH, "fogs")
+    _object_type = "Fog"
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Initializes a Fog instance.
@@ -120,8 +121,7 @@ class Fog(AddonObject):
             is_vanilla (bool, optional): Whether the fog is a vanilla fog. Defaults to False.
         """
         super().__init__(name)
-        self._name = name
-        self._description = MinecraftDescription(self._name, is_vanilla)
+        self._description = MinecraftDescription(self.identifier, is_vanilla)
         self._fog = JsonSchemes.fog()
         self._locations: list[_FogDistance] = []
         self._volumes = []
@@ -138,10 +138,6 @@ class Fog(AddonObject):
     def add_volume(self):
         pass
 
-    @property
-    def identifier(self):
-        return self._description.identifier
-
     def queue(self):
         """Queues the fog to be exported."""
         for location in self._locations:
@@ -149,6 +145,3 @@ class Fog(AddonObject):
         self._fog["minecraft:fog_settings"].update(self._description._export())
         self.content(self._fog)
         return super().queue()
-
-    def __str__(self) -> str:
-        return self._description.identifier

@@ -2,7 +2,7 @@ import os
 
 from PIL import Image, ImageDraw, ImageFont
 
-from anvil import CONFIG
+from anvil import ANVIL, CONFIG
 from anvil.lib.lib import CopyFiles, FileExists
 
 
@@ -17,7 +17,7 @@ class Fonts:
             character_size (int, optional): The size of the character. Defaults to 32.
         """
         if character_size % 16 != 0:
-            CONFIG.Logger.unsupported_font_size()
+            raise ValueError(f"Character size must be a multiple of 16. Font [{font_name}]")
         font_size = round(character_size * 0.8)
 
         try:
@@ -133,9 +133,12 @@ class Fonts:
 
         return self
 
-    @property
     def queue(self):
         """Queues the font to be exported."""
+        ANVIL._queue(self)
+
+    def _export(self):
+        """Exports the font configuration."""
         for file in ["glyph_E1.png", "default8.png"]:
             if FileExists(os.path.join("assets", "textures", "ui", file)):
                 CopyFiles(os.path.join("assets", "textures", "ui"), self._path, file)

@@ -4,19 +4,17 @@ from anvil import ANVIL, CONFIG
 from anvil.api.actors.actors import Attachable, _Components
 from anvil.lib.enums import ItemCategory, ItemGroups
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+from anvil.lib.schemas import (AddonObject, ItemDescriptor, JsonSchemes,
+                               MinecraftDescription)
 
-__all__ = [
-    "Item"
-]
+__all__ = ["Item"]
 
 
 # Items
 class _ItemServerDescription(MinecraftDescription):
     def __init__(self, name, is_vanilla) -> None:
         super().__init__(name, is_vanilla)
-        self._description["description"]["properties"] = {}
-        self._description["description"]["menu_category"] = {}
+        self._description["description"].update({"properties": {}, "menu_category": {}})
 
     def group(self, group: ItemGroups):
         self._description["description"]["menu_category"]["group"] = f"{CONFIG.NAMESPACE}:{group}"
@@ -38,11 +36,10 @@ class _ItemServerDescription(MinecraftDescription):
 class _ItemServer(AddonObject):
     _extension = ".item.json"
     _path = os.path.join(CONFIG.BP_PATH, "items")
+    _object_type = "Item Server"
 
     def __init__(self, name: str, is_vanilla: bool) -> None:
         super().__init__(name)
-        self._name = name
-        self._is_vanilla = is_vanilla
         self._server_item = JsonSchemes.server_item()
         self._description = _ItemServerDescription(name, is_vanilla)
         self._components = _Components()
@@ -61,35 +58,21 @@ class _ItemServer(AddonObject):
         self._server_item["minecraft:item"].update(self.description._export())
         self._server_item["minecraft:item"]["components"].update(self._components._export()["components"])
 
-        if not ItemDisplayName.component_namespace in self._server_item["minecraft:item"]["components"]:
-            display_name = self._name.replace("_", " ").title()
-            self._server_item["minecraft:item"]["components"][ItemDisplayName.component_namespace] = {"value": display_name}
+        if not self._components._has(ItemDisplayName):
+            self._server_item["minecraft:item"]["components"][ItemDisplayName._identifier] = {
+                "value": self._display_name
+            }
 
         self.content(self._server_item)
 
         super().queue()
 
 
-class Item:
+class Item(ItemDescriptor):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        self._name = name
-        self._is_vanilla = is_vanilla
-        self._server = _ItemServer(name, is_vanilla)
+        super().__init__(name, is_vanilla)
+        self.server = _ItemServer(name, is_vanilla)
         self._attachable = None
-
-        self._namespace_format = "minecraft" if self._is_vanilla else CONFIG.NAMESPACE
-
-    @property
-    def Server(self):
-        return self._server
-
-    @property
-    def identifier(self):
-        return f"{self._namespace_format}:{self._name}"
-
-    @property
-    def name(self):
-        return self._name
 
     @property
     def attachable(self):
@@ -99,17 +82,17 @@ class Item:
         return self._attachable
 
     def queue(self):
-        self.Server.queue()
+        self.server.queue()
         if self._attachable:
-            self._attachable.queue
+            self._attachable.queue()
 
-        if self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"].startswith("item."):
+        if self.server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"].startswith("item."):
             display_name = ANVIL.definitions._language[
-                self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
+                self.server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
             ]
 
         else:
-            display_name = self.Server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
+            display_name = self.server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
 
         CONFIG.Report.add_report(
             ReportType.ITEM,
@@ -117,4 +100,3 @@ class Item:
             col0=display_name,
             col1=self.identifier,
         )
-

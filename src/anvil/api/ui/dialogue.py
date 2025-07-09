@@ -87,7 +87,7 @@ class _DialogueScene:
             _DialogueScene: The dialogue scene instance.
         """
         if len(self._buttons) >= 6:
-            CONFIG.Logger.dialogue_max_buttons(self._scene_tag, len(self._buttons))
+            raise RuntimeError(f"The Dialogue scene {self._scene_tag} has {len(self._buttons)} buttons, The maximum allowed is 6.")
         # Buttons cannot be translated
         button = _DialogueButton(button_name, *commands)
         self._buttons.append(button)
@@ -136,6 +136,7 @@ class _DialogueScene:
 class Dialogue(AddonObject):
     _extension = ".dialogue.json"
     _path = os.path.join(CONFIG.BP_PATH, "dialogue")
+    _object_type = "Dialogue"
 
     def __init__(self, name: str) -> None:
         super().__init__(name)
