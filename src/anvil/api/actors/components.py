@@ -13,7 +13,7 @@ from anvil.lib.enums import (Biomes, BreedingMutationStrategy, ContainerType,
                              RideableDismountMode, Slots, Vibrations)
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
-from anvil.lib.schemas import BlockDescriptor, _BaseComponent
+from anvil.lib.schemas import MinecraftBlockDescriptor, _BaseComponent
 from anvil.lib.types import *
 
 __all__ = [
@@ -132,9 +132,9 @@ __all__ = [
     "EntityLayDown",
     "EntityMeleeBoxAttack",
     "EntityCanJoinRaid",
-    "EntityTimerFlag1",
-    "EntityTimerFlag2",
-    "EntityTimerFlag3",
+    "EntityAITimerFlag1",
+    "EntityAITimerFlag2",
+    "EntityAITimerFlag3",
     "EntityTameable",
     "EntityRunAroundLikeCrazy",
     "EntitySlimeKeepOnJumping",
@@ -252,10 +252,10 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):  
-        from anvil.lib.schemas import BlockDescriptor
+        from anvil.lib.schemas import MinecraftBlockDescriptor
 
-        if not isinstance(value, (BlockDescriptor, str)):
-            raise TypeError(f"Expected BlockDescriptor or Identifier, got {type(value).__name__}. Filter [is_block]")
+        if not isinstance(value, (MinecraftBlockDescriptor, str)):
+            raise TypeError(f"Expected MinecraftBlockDescriptor or Identifier, got {type(value).__name__}. Filter [is_block]")
 
         return self._construct_filter(
             "is_block",
@@ -1331,10 +1331,10 @@ class EntityNavigationType:
             cls._add_field("is_amphibious", is_amphibious)
         if len(blocks_to_avoid) > 0:
             if not all(
-                isinstance(block, (BlockDescriptor, str)) for block in blocks_to_avoid
+                isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks_to_avoid
             ):
                 raise TypeError(
-                    f"blocks_to_avoid must be a list of BlockDescriptor or Identifier instances. Component [{cls._identifier}]."
+                    f"blocks_to_avoid must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{cls._identifier}]."
                 )
                 
             cls._add_field(
@@ -1710,10 +1710,10 @@ class EntityPreferredPath(_BaseComponent):
 
     def add_blocks(self, cost: int, *blocks: list[Block | Identifier]):
         if not all(
-            isinstance(block, (BlockDescriptor, str)) for block in blocks
+            isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks
         ):
             raise TypeError(
-                f"blocks must be a list of BlockDescriptor or Identifier instances. Component [{self._identifier}]."
+                f"blocks must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{self._identifier}]."
             )
         
         self._component["preferred_path_blocks"].append(
@@ -2474,14 +2474,13 @@ class EntityInsideBlockNotifier(_BaseComponent):
 
     def blocks(
         self,
-        block_name: Block | Identifier,
+        block_name: MinecraftBlockDescriptor | Identifier,
         entered_block_event: str = None,
         exited_block_event: str = None,
     ): 
-        from anvil.lib.schemas import BlockDescriptor
-        if not isinstance(block_name, (BlockDescriptor, str)):
+        if not isinstance(block_name, (MinecraftBlockDescriptor, str)):
             raise TypeError(
-                f"block_name must be a Block or Identifier instance. Component [{self._identifier}]."
+                f"block_name must be a MinecraftBlockDescriptor or Identifier instance. Component {self._identifier}[{block_name}]."
             )
         
         self._component["block_list"].append(
@@ -2490,7 +2489,7 @@ class EntityInsideBlockNotifier(_BaseComponent):
                     "name": (
                         str(block_name)
                     ),
-                    "states": block_name.states if isinstance(block_name, BlockDescriptor) else {},
+                    "states": block_name.states if isinstance(block_name, MinecraftBlockDescriptor) and block_name.states !="" else {},
                 }
             }
         )
@@ -3282,7 +3281,7 @@ class EntityBuoyant(_BaseComponent):
 
     def __init__(
         self,
-        liquid_blocks: list[str],
+        liquid_blocks: list[MinecraftBlockDescriptor],
         apply_gravity: bool = True,
         base_buoyancy: float = 1.0,
         big_wave_probability: float = 0.03,
@@ -3305,7 +3304,7 @@ class EntityBuoyant(_BaseComponent):
         """
         super().__init__("buoyant")
 
-        self._add_field("liquid_blocks", liquid_blocks)
+        self._add_field("liquid_blocks", list(map(str, liquid_blocks)))
         if not apply_gravity:
             self._add_field("apply_gravity", apply_gravity)
         if base_buoyancy != 1.0:
@@ -4079,6 +4078,30 @@ class EntityBodyRotationAlwaysFollowsHead(_BaseComponent):
         """
         super().__init__("body_rotation_always_follows_head")
 
+
+class EntityTimer(_BaseComponent):
+    _identifier = "minecraft:timer"
+
+    def __init__(
+        self,
+        event: Event,
+        target: FilterSubject = FilterSubject.Self,
+        looping: bool = True,
+        randomInterval: bool = True,
+        time: tuple[float, float] | float = 0,
+    ) -> None:
+        """Adds a timer after which an event will fire."""
+        super().__init__("timer")
+
+        self._add_field("time_down_event", {"event": event, "target": target.value})
+
+        if not looping:
+            self._add_field("looping", looping)
+        if not randomInterval:
+            self._add_field("randomInterval", randomInterval)
+        if not time == (0, 0):
+            self._add_field("time", time)
+
 # AI Goals ==========================================================================
 
 
@@ -4242,29 +4265,6 @@ class EntityAINearestPrioritizedAttackableTarget(_ai_goal):
         )
         return self
 
-
-class EntityAITimer(_ai_goal):
-    _identifier = "minecraft:timer"
-
-    def __init__(
-        self,
-        event: Event,
-        target: FilterSubject = FilterSubject.Self,
-        looping: bool = True,
-        randomInterval: bool = True,
-        time: tuple[float, float] | float = 0,
-    ) -> None:
-        """Adds a timer after which an event will fire."""
-        super().__init__("timer")
-
-        self._add_field("time_down_event", {"event": event, "target": target.value})
-
-        if not looping:
-            self._add_field("looping", looping)
-        if not randomInterval:
-            self._add_field("randomInterval", randomInterval)
-        if not time == (0, 0):
-            self._add_field("time", time)
 
 
 class EntityAIKnockbackRoar(_ai_goal):
@@ -4783,11 +4783,11 @@ class EntityAIMoveToBlock(_ai_goal):
         """Compels a mob to move towards a block."""
         super().__init__("behavior.move_to_block")
         
-        from anvil.lib.schemas import BlockDescriptor
+        from anvil.lib.schemas import MinecraftBlockDescriptor
 
-        if not all(isinstance(block, (BlockDescriptor, str)) for block in target_blocks):
+        if not all(isinstance(block, (MinecraftBlockDescriptor, str)) for block in target_blocks):
             raise TypeError(
-                f"All target_blocks must be either BlockDescriptor instances or strings representing block identifiers. Component [{self._identifier}]"
+                f"All target_blocks must be either MinecraftBlockDescriptor instances or strings representing block identifiers. Component [{self._identifier}]"
             ) 
         
         self._add_field(
@@ -6299,10 +6299,9 @@ class EntityAIRiseToLiquidLevel(_ai_goal):
         """Compels an entity to rise to the top of a liquid block if they are located in one or have spawned under a liquid block.
 
         Parameters:
-            liquid_y_offset (float, optional): Vertical offset from the liquid. Defaults to 0.0.
-            priority (int, optional): The higher the priority, the sooner this behavior will be executed as a goal. Defaults to 0.
-            rise_delta (float, optional): Displacement for how much the entity will move up in the vertical axis. Defaults to 0.0.
-            sink_delta (float, optional): Displacement for how much the entity will move down in the vertical axis. Defaults to 0.0.
+            liquid_y_offset (float, optional): Target distance down from the liquid surface. i.e. Positive values move the target Y down. Defaults to 0.0.
+            rise_delta (float, optional): Movement up in Y per tick when below the liquid surface. Defaults to 0.0.
+            sink_delta (float, optional): Movement down in Y per tick when above the liquid surface. Defaults to 0.0.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_rise_to_liquid_level
         """

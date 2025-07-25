@@ -1,5 +1,58 @@
 # Changelog
 
+# Version 0.9.2
+
+[ANVIL]
+
+- Cleaned up the codebase, removed unused imports and files.
+- Removed the Logger class as the code now relies heavily on exceptions.
+- Added 2 new entries to the anvilConfig file:
+  - ENTRY_POINT: This is the entry point for the Anvil CLI, it can be used to run Anvil from a specific python file.
+    - NOTE: The `anvil run` still requires the `anvilconfig.json` file to be present in the working directory.
+  - SCRIPT_BUNDLE_SCRIPT: This is the javascript compilation/bundling script that will be used to bundle the TypeScript/JavaScript files.
+- Changed the anvil project hierarchy.
+  - The new hierarchy is designed to be more intuitive and easier to navigate.
+  - The new hierarchy is as follows:
+    ```
+    project/
+    ├── assets/
+    │   ├── bbmodels/
+    │   ├── particles/
+    │   ├── textures/
+    │   └── sounds/
+    ├── marketing/
+    ├── output/
+    ├── scripts/
+    │   ├── javascript/
+    │   └── python/
+    ├── world/
+    │   └── structures/
+    ├── anvilconfig.json
+    ├── esbuild.js
+    ├── package.json
+    └── tsconfig.json
+    ```
+- Anvil now uses esbuild by default to bundle the TypeScript files into JavaScript files.
+  - esbuild is recommended by Microsoft for bundling TypeScript files for Minecraft Bedrock Edition.
+  - The Compiling/Bundling script can be changed in the `anvilconfig.json` file. So you can use your own bundling script if you wish.
+
+[BLOCKBENCH]
+
+- Blockbench API can now export Generic models containing meshes. This is not a fully supported feature, and likely will not be supported in the future. The API expects meshes containing Minecraft like cubic clusters with a Cubic scale of 1 meters squared.
+  - This was tested with .OBJ files extracted from Minecraft using Mineways.
+- Blockbench can export global animation rotation.
+
+[KIt]
+
+- Added a new module `anvil.kit`.
+  - The module contains useful functions and classes used for different purposes across different projects by startkma.
+- Added `ldtk()` class `anvil.kit.world`. This class can be used to load and parse LDtk files then convert them to Minecraft worlds.
+  - ldtk can be a little confusing to work with here, but it was powerful for the creation of [Beyond: Platformer](https://www.minecraft.net/en-us/marketplace/pdp/starktma/beyond:-platformer/f1ecf12b-1b6f-4794-a8de-24dfb82e6f25).
+  - A tutorial on how to use the `ldtk()` class will be available in the documentation sometime in the future.
+- Added `add_entity_outline()` function to the `anvil.kit.actors.materials` module. This function can be used to add 2 materials used for entity outlines.
+  - The function will add the `base` and `outline` materials to the entity.materials file.
+  - The `base` material is used for the base model, while the `outline` material is used for the outline of entities.
+
 # Version 0.9.1
 
 [ANVIL]

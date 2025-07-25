@@ -24,9 +24,7 @@ class CraftingItemCatalog(AddonObject):
         self.content(JsonSchemes.crafting_items_catalog())
         self._initialized = True
 
-    def add_group(
-        self, category_name: ItemCategory, group_name: str, group_icon: Item, items_list: list[Item] = []
-    ) -> "CraftingItemCatalog":
+    def add_group(self, category_name: ItemCategory, group_name: str, group_icon: Item, items_list: list[Item] = []) -> "CraftingItemCatalog":
         """
         Adds a group to an existing category.
 
@@ -49,13 +47,14 @@ class CraftingItemCatalog(AddonObject):
 
         for cat in self._content["minecraft:crafting_items_catalog"]["categories"]:
             if cat.get("category_name") == str(category_name):
-                groups = cat.setdefault("groups", [])
-                for existing_group in groups:
+                if "groups" not in cat:
+                    cat["groups"] = []
+                for existing_group in cat["groups"]:
                     if existing_group["group_identifier"]["name"] == group_id:
-                        existing_group.setdefault("items", []).extend([item.identifier for item in items_list])
-                    break
+                        existing_group.setdefault("items", existing_group.get("items", [])).extend([item.identifier for item in items_list])
+                    continue
                 else:
-                    groups.append(group)
+                    cat["groups"].append(group)
                 break
         else:
             self._content["minecraft:crafting_items_catalog"]["categories"].append(
@@ -246,9 +245,7 @@ class ShapedCraftingRecipe(AddonObject):
     def ingredients(self, items: list[list[tuple[Item | Identifier, int]]], keep_empty_slots: bool = False) -> None:
         max_items = 9
         if len(items) > max_items:
-            raise ValueError(
-                f"Too many items in shaped recipe, maximum is {max_items}. {self._object_type}[{self.identifier}]"
-            )
+            raise ValueError(f"Too many items in shaped recipe, maximum is {max_items}. {self._object_type}[{self.identifier}]")
 
         keys = "abcdefghijklmnopqrstuvwxyz"
         pattern = ["   ", "   ", "   "]

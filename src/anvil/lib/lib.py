@@ -9,8 +9,6 @@ from datetime import datetime
 from enum import StrEnum
 
 import commentjson as commentjson
-
-from anvil.lib.logger import Logger
 from anvil.lib.types import Color
 
 from ..__version__ import __version__
@@ -18,6 +16,7 @@ from ..__version__ import __version__
 APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")  # type: ignore
 DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
 MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.", "math.")
+IMAGE_EXTENSIONS_PRIORITY = [".tga", ".png", ".jpg", ".jpeg"]
 
 
 # --------------------------------------------------------------------------
@@ -109,7 +108,7 @@ def RemoveDirectory(path: str) -> None:
         path (str): The path to the directory to be removed.
     """
 
-    shutil.rmtree(path)
+    shutil.rmtree(path, ignore_errors=True)
 
 
 def RemoveFile(path: str) -> None:

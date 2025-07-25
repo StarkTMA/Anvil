@@ -9,7 +9,7 @@ from anvil.lib.schemas import AddonObject
 
 class Particle(AddonObject):
     _extension = ".particle.json"
-    _path = os.path.join(CONFIG.BP_PATH, "particles")
+    _path = os.path.join(CONFIG.RP_PATH, "particles")
     _object_type = "Particle"
 
     def __init__(self, particle_name, use_vanilla_texture: bool = False):
@@ -36,29 +36,23 @@ class Particle(AddonObject):
             col1=f"{CONFIG.NAMESPACE}:{self._name}",
         )
 
-        return super().queue("particles")
+        return super().queue()
 
     def _export(self):
         if not self._use_vanilla_texture:
             texture_path = self._content["particle_effect"]["description"]["basic_render_parameters"]["texture"]
             texture_name = texture_path.split("/")[-1]
-            self._content["particle_effect"]["description"]["basic_render_parameters"]["texture"] = os.path.join(
-                CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "particle", texture_name
-            )
 
             if not FileExists(os.path.join("assets", "particles", f"{texture_name}.png")):
                 raise FileNotFoundError(
                     f"Texture file '{texture_name}.png' does not exist in 'assets/particles'. {self._object_type}[{self._name}]"
                 )
+            
+            self._content["particle_effect"]["description"]["basic_render_parameters"]["texture"] = os.path.join("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "particle", texture_name)
 
             CopyFiles(
                 os.path.join("assets", "particles"),
                 os.path.join(CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "particle"),
                 f"{texture_name}.png",
             )
-
-        CopyFiles(
-            os.path.join("assets", "particles"),
-            os.path.join(CONFIG.RP_PATH, "particles"),
-            f"{self._name}.particle.json",
-        )
+        super()._export()

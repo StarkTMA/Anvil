@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Mapping
+from typing import List, Literal, Mapping
 
 from halo import Halo
 
@@ -18,7 +18,7 @@ from anvil.lib.enums import (DamageSensor, Difficulty, Population, Target,
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (AddonObject, EntityDescriptor, JsonSchemes,
-                               MinecraftDescription)
+                               MinecraftDescription, MinecraftEntityDescriptor)
 from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
 from anvil.lib.types import RGB, RGBA, Event
 
@@ -113,7 +113,7 @@ class _ActorDescription(MinecraftDescription):
                 self._animate_append({controller_shortname: condition})
 
         self._description["description"]["animations"].update(
-            {controller_shortname: f"controller.animation.{self.identifier.replace(':', '.')}.{controller_shortname}"}
+            {controller_shortname: f"controller.animation.{CONFIG.NAMESPACE}.{self.name}.{controller_shortname}"}
         )
 
     def _animations(self, geometry_name: str, animation_shortname: str, animate: bool = False, condition: str = None):
@@ -137,7 +137,7 @@ class _ActorDescription(MinecraftDescription):
                 self._animate_append({animation_shortname: condition})
 
         self._description["description"]["animations"].update(
-            {animation_shortname: f"animation.{self.identifier.replace(':', '.')}.{animation_shortname}"}
+            {animation_shortname: f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}"}
         )
 
 
@@ -163,7 +163,7 @@ class _ActorClientDescription(_ActorDescription):
                 f"Invalid type '{self._type}' for actor description. Expected 'entity' or 'attachables'. Actor [{self.identifier}]"
             )
 
-        if is_vanilla and self.identifier not in MinecraftEntityTypes:
+        if is_vanilla and self.identifier not in list(map(str, MinecraftEntityTypes.__dict__.values())):
             raise RuntimeError(
                 f"Invalid vanilla entity '{self.identifier}'. Please use a valid vanilla entity from MinecraftEntityTypes. Actor [{self.identifier}]"
             )
@@ -197,9 +197,6 @@ class _ActorClientDescription(_ActorDescription):
             condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
 
         """
-
-        anim_namespace = f"animation.{self._namespace}.{blockbench_name}.{animation_name}"
-
         bb = _Blockbench(blockbench_name, "actors")
         bb.animations.queue_animation(animation_name)
 
@@ -215,7 +212,7 @@ class _ActorClientDescription(_ActorDescription):
             material_name (str): The name of the material.
 
         """
-        self._description["description"]["materials"].update({material_id: material_name})
+        self._description["description"]["materials"].update({str(material_id): str(material_name)})
         return self
 
     def geometry(self, geometry_name: str):
@@ -232,7 +229,7 @@ class _ActorClientDescription(_ActorDescription):
         bb = _Blockbench(geometry_name, "actors")
         bb.model.queue_model()
 
-        self._description["description"]["geometry"].update({geometry_name: f"geometry.{self._namespace}.{geometry_name}"})
+        self._description["description"]["geometry"].update({geometry_name: f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"})
 
         return self
 
@@ -363,9 +360,9 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         if condition is None:
-            self._render_append(f"controller.render.{self.identifier.replace(':', '.')}.{controller_name}")
+            self._render_append(f"controller.render.{CONFIG.NAMESPACE}.{self.name}.{controller_name}")
         else:
-            self._render_append({f"controller.render.{self.identifier.replace(':', '.')}.{controller_name}": condition})
+            self._render_append({f"controller.render.{CONFIG.NAMESPACE}.{self.name}.{controller_name}": condition})
 
         return self._render_controllers.add_controller(controller_name)
 
@@ -552,14 +549,14 @@ class _EntityServerDescription(_ActorDescription):
         self._description["description"]["is_experimental"] = True
         return self
 
-    def RuntimeIdentifier(self, entity: "Entity"):
+    def RuntimeIdentifier(self, entity: "MinecraftEntityDescriptor"):
         """Sets the runtime identifier of the entity.
 
         Parameters:
-            entity (Entity): The vanilla entity to get the runtime identifier from.
+            entity (MinecraftEntityDescriptor): The vanilla entity to get the runtime identifier from.
         """
         if CONFIG._TARGET != ConfigPackageTarget.ADDON:
-            if type(entity) is Entity:
+            if type(entity) is MinecraftEntityDescriptor:
                 if entity._allow_runtime:
                     self._description["description"]["runtime_identifier"] = entity.identifier
                 else:
@@ -729,7 +726,7 @@ class _RenderController:
         )
         return self
 
-    def material(self, bone: str, material_shortname: str):
+    def material(self, bone: Literal["*", any], material_shortname: str):
         self._controller[self.controller_identifier]["materials"].append(
             {bone: material_shortname if material_shortname.startswith(("v", "q")) else f"Material.{material_shortname}"}
         )
@@ -1257,9 +1254,9 @@ class _RP_AnimationControllers(AddonObject):
 class _BPAnimation:
     def __init__(self, identifier, animation_short_name: str, loop: bool):
         self._identifier = identifier
-        self._animation_short_name = animation_short_name
+        self._animation_key = f"animation.{identifier.replace(':', '.')}.{animation_short_name}"
         self._animation_length = 0.05
-        self._animation = JsonSchemes.bp_animation(self._identifier, self._animation_short_name, loop)
+        self._animation = JsonSchemes.bp_animation(self._identifier, animation_short_name, loop)
 
     def timeline(self, timestamp: float, *commands: str):
         """Takes a timestamp and a list of events, command or molang to run at that time.
@@ -1278,20 +1275,21 @@ class _BPAnimation:
         """
         if self._animation_length <= timestamp:
             self._animation_length = timestamp + 0.05
-        self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["animation_length"] = self._animation_length
-        if timestamp not in self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"]:
-            self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"][timestamp] = []
+
+        self._animation[self._animation_key]["animation_length"] = self._animation_length
+        if timestamp not in self._animation[self._animation_key]["timeline"]:
+            self._animation[self._animation_key]["timeline"][timestamp] = []
         for command in commands:
             if str(command).startswith("@s"):
-                self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"][timestamp].append(
+                self._animation[self._animation_key]["timeline"][timestamp].append(
                     f"{command}"
                 )
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"][timestamp].append(
+                self._animation[self._animation_key]["timeline"][timestamp].append(
                     f"{command};"
                 )
             else:
-                self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["timeline"][timestamp].append(
+                self._animation[self._animation_key]["timeline"][timestamp].append(
                     f"/{command}"
                 )
         return self
@@ -1309,7 +1307,7 @@ class _BPAnimation:
             This animation.
 
         """
-        self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["animation_length"] = animation_length
+        self._animation[self._animation_key]["animation_length"] = animation_length
         return self
 
     def anim_time_update(self, anim_time_update: Query):
@@ -1324,7 +1322,7 @@ class _BPAnimation:
             This animation.
 
         """
-        self._animation[f"animation.{self._identifier}.{self._animation_short_name}"]["anim_time_update"] = anim_time_update
+        self._animation[self._animation_key]["anim_time_update"] = anim_time_update
         return self
 
     @property

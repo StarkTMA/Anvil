@@ -799,6 +799,7 @@ class _UIVariables(AddonObject):
 
     def __init__(self) -> None:
         super().__init__("_global_variables")
+        self.do_not_shorten()
 
     def add_variable(self, variable, value):
         self._content.update({variable: value})
@@ -811,7 +812,7 @@ class _UIDefs(AddonObject):
     
     def __init__(self) -> None:
         super().__init__("_ui_defs")
-        self.do_not_shorten
+        self.do_not_shorten()
         self._files = []
 
     def add_file(self, path: str):
@@ -830,13 +831,12 @@ class _UIAnimation(AddonObject):
 
     def __init__(self, name: str, namespace: str, defs: _UIDefs) -> None:
         super().__init__(name)
-        self.name = name
         self._defs = defs
-        self.namespace = namespace
         self._animations: list[_UIAnimationElement] = []
         self._content = {
             "namespace": namespace,
         }
+        self.do_not_shorten()
 
     def add_animation(self, animation_name: str):
         self._animations.append(_UIAnimationElement(animation_name))
@@ -860,8 +860,7 @@ class _UIScreen(AddonObject):
         self._content = {
             "namespace": namespace,
         }
-        self.name = name
-        self.namespace = namespace
+        self._namespace = namespace
         self._elements: list[_UIElement] = []
         self._anvil_animation = anvil_animation
         self._variables = variables
@@ -869,7 +868,7 @@ class _UIScreen(AddonObject):
         self._ignored_title_texts = []
         self._ignored_actionbar_texts = []
         self._hides_hud = []
-        self.do_not_shorten
+        self.do_not_shorten()
 
     def add_element(
         self,
@@ -895,7 +894,7 @@ class _UIScreen(AddonObject):
 
                 factory = self.add_element(f"{element_name}_factory")
                 factory.type(UIElementType.Panel)
-                factory.factory("hud_title_text_factory", "hud_title_text", f"{element_name}_element@{self.namespace}.{element_name}")
+                factory.factory("hud_title_text_factory", "hud_title_text", f"{element_name}_element@{self._namespace}.{element_name}")
                 self._elements.append(factory)
 
             case UIElementTrigger.Actionbar:
@@ -922,7 +921,7 @@ class _UIScreen(AddonObject):
         for element in self._elements:
             self._content.update(element.queue)
 
-        if self._content != {"namespace": self.namespace}:
+        if self._content != {"namespace": self._namespace}:
             self._defs.add_file(os.path.join("ui", directory, f"{self.name}{_UIScreen._extension}"))
             return super().queue(directory)
 
@@ -1006,7 +1005,7 @@ class _AnvilHUDScreen(_UIScreen):
         keyword: str = None,
         hides_hud: bool = False,
     ):
-        if trigger is not UIElementTrigger.NONE:
+        if not trigger is UIElementTrigger.NONE:
             self.anvil_hud.controls(f"{element_name}_instance@anvil_hud.{element_name}_factory")
 
         return super().add_element(element_name, trigger, keyword, hides_hud)
@@ -1208,7 +1207,7 @@ class _AnvilHUDScreen(_UIScreen):
 
 
     def queue(self, directory: str = ""):
-        return super().queue("anvil")
+        return super().queue(directory)
 
 
 class _AnvilNPCScreen(_UIScreen):

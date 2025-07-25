@@ -1,7 +1,12 @@
 import base64
 import json
 import os
-from typing import Dict, List, Union
+import uuid
+from collections import defaultdict
+from copy import deepcopy
+from csv import Error
+from typing import Dict, List, Tuple, Union
+from warnings import warn
 
 from anvil import CONFIG
 from anvil.lib.lib import FileExists
@@ -66,6 +71,7 @@ class _AnimationsManager:
             timeline = {}
             for animator in animation_dict.get("animators", {}).values():
                 bone_name = animator.get("name")
+
                 bones[bone_name] = {
                     "position": {},
                     "rotation": {},
@@ -112,20 +118,17 @@ class _AnimationsManager:
                                     bones[bone_name][channel_name][time] = points
                                 is_step = True
                     elif channel_name == "particle":
-                        for keyframe in list(channel.items()):
-                            time, value = keyframe
+                        for time, value in channel.items():
                             particles[time] = {
-                                "effect": value["data_points"][0],
-                                "locator": value["data_points"][1],
+                                "effect": value["data_points"][0]["effect"],
+                                "locator": value["data_points"][0]["locator"],
                             }
-                            if value["data_points"][2] != "":
-                                particles[time]["pre_effect_script"] = value["data_points"][2]
+                            if value["data_points"][0]["script"] != "":
+                                particles[time]["pre_effect_script"] = value["data_points"][0]["script"]
                     elif channel_name == "sound":
                         for keyframe in list(channel.items()):
                             time, value = keyframe
-                            sounds[time] = {
-                                "effect": value["data_points"][0]
-                            }
+                            sounds[time] = {"effect": value["data_points"][0]["effect"]}
                     elif channel_name == "timeline":
                         for keyframe in list(channel.items()):
                             time, value = keyframe
@@ -137,9 +140,13 @@ class _AnimationsManager:
                         del bones[bone_name][channel]
                     elif len(keys) == 1:
                         bones[bone_name][channel] = list(bones[bone_name][channel].values())[0]
-                    
+
                     if channel == "scale" and isinstance(bones[bone_name].get("scale"), list) and len(set(bones[bone_name]["scale"])) == 1:
                         bones[bone_name]["scale"] = bones[bone_name]["scale"][0]
+
+                if animator.get("rotation_global", False):
+                    bones[bone_name]["relative_to"] = {"rotation": "entity"}
+
             if bones != {}:
                 animation["bones"] = bones
             if particles != {}:
@@ -149,8 +156,8 @@ class _AnimationsManager:
             if timeline != {}:
                 animation["timeline"] = timeline
 
-        return { f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation_dict.get("name")}": animation}
-        #return { animation_dict.get("name"): animation}
+        return {f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation_dict.get("name")}": animation}
+        # return { animation_dict.get("name"): animation}
 
     def __init__(self, name: str, source: str, bbmodel: dict) -> None:
         self._name = name
@@ -275,6 +282,175 @@ class _Locator:
         return {self.name: self.position}
 
 
+class _Mesh:
+    mesh_texture_multiplier = 64
+
+    def __init__(self, mesh_dict: dict, parent: str = "root") -> None:
+        self.mesh = mesh_dict
+        self.parent = parent
+        self.vertices = self.mesh.get("vertices", [])
+        self.faces = self.mesh.get("faces", [])
+
+    def extract_cuboids(self):
+        face_verts = {fid: set(face["vertices"]) for fid, face in self.faces.items()}
+
+        vertex_to_faces = defaultdict(list)
+        for fid, face in self.faces.items():
+            for vid in face["vertices"]:
+                vertex_to_faces[vid].append(fid)
+
+        shared_counts = defaultdict(int)
+        for face_list in vertex_to_faces.values():
+            for i in range(len(face_list)):
+                for j in range(i + 1, len(face_list)):
+                    f1, f2 = face_list[i], face_list[j]
+                    if f1 > f2:
+                        f1, f2 = f2, f1
+                    shared_counts[(f1, f2)] += 1
+
+        face_neighbors = {fid: set() for fid in self.faces}
+        for (f1, f2), count in shared_counts.items():
+            if count >= 2:
+                face_neighbors[f1].add(f2)
+                face_neighbors[f2].add(f1)
+
+        all_visited = set()
+        cuboids = []
+        cuboid_id = 0
+
+        for fid in self.faces:
+            if fid in all_visited:
+                continue
+
+            # Extract a connected component of faces
+            original_component = set()
+            stack = [fid]
+            while stack:
+                current = stack.pop()
+                if current not in original_component:
+                    original_component.add(current)
+                    stack.extend(face_neighbors[current] - original_component)
+
+            unvisited = original_component - all_visited
+            while unvisited:
+                # Start a new sub-cuboid from a seed in the remaining set
+                seed = next(iter(unvisited))
+                working_faces = set()
+                working_verts = set()
+                working_stack = [seed]
+
+                while working_stack:
+                    current = working_stack.pop()
+                    if current in working_faces:
+                        continue
+
+                    current_verts = face_verts[current]
+                    new_verts = working_verts.union(current_verts)
+                    if len(new_verts) > 8:
+                        continue
+
+                    coords = [self.vertices[vid] for vid in new_verts]
+                    xs, ys, zs = zip(*coords)
+                    if max(xs) - min(xs) > 24 or max(ys) - min(ys) > 24 or max(zs) - min(zs) > 24:
+                        continue
+
+                    # All constraints passed, add face
+                    working_faces.add(current)
+                    working_verts = new_verts
+                    neighbors = face_neighbors[current] & unvisited
+                    working_stack.extend(neighbors - working_faces)
+
+                if working_faces:
+                    cuboid = {
+                        "name": f"{self.mesh.get('name')}_{cuboid_id}",
+                        "type": "mesh",
+                        "faces": {cfid: self.faces[cfid] for cfid in working_faces},
+                        "vertices": {vid: self.vertices[vid] for vid in working_verts},
+                    }
+                    cuboids.append(cuboid)
+                    cuboid_id += 1
+                    all_visited.update(working_faces)
+                    unvisited.difference_update(working_faces)
+                else:
+                    # Couldn’t grow anything from this seed? Mark it visited anyway
+                    all_visited.add(seed)
+                    unvisited.discard(seed)
+
+        return cuboids
+
+    def map_vertices(self, cube_origin: List[float], vertices: List[float]) -> str:
+        x_min = min(v[0] for v in vertices)
+        y_min = min(v[1] for v in vertices)
+        z_min = min(v[2] for v in vertices)
+
+        x_max = max(v[0] for v in vertices)
+        y_max = max(v[1] for v in vertices)
+        z_max = max(v[2] for v in vertices)
+
+        vertices_size = [
+            round(x_max - x_min, 4),
+            round(y_max - y_min, 4),
+            round(z_max - z_min, 4),
+        ]
+
+        if vertices_size[0] == 0:
+            return "west" if x_max > cube_origin[0] else "east"
+        elif vertices_size[1] == 0:
+            return "up" if y_max > cube_origin[1] else "down"
+        elif vertices_size[2] == 0:
+            return "south" if z_max > cube_origin[2] else "north"
+        else:
+            raise ValueError("Face is not planar or not axis-aligned. Cannot determine direction.")
+
+    def process_cubes(self):
+        vertices_values = self.vertices.values()
+
+        origin = [
+            min(x[0] for x in vertices_values),
+            min(x[1] for x in vertices_values),
+            min(x[2] for x in vertices_values),
+        ]
+        size = [
+            max(x[0] for x in vertices_values) - origin[0],
+            max(x[1] for x in vertices_values) - origin[1],
+            max(x[2] for x in vertices_values) - origin[2],
+        ]
+
+        uv = {}
+        for face_id, face_data in self.faces.items():
+            uv_values = list(face_data["uv"].values())
+            x_min = min(i[0] for i in uv_values) * _Mesh.mesh_texture_multiplier
+            y_min = min(i[1] for i in uv_values) * _Mesh.mesh_texture_multiplier
+
+            x_max = max(i[0] for i in uv_values) * _Mesh.mesh_texture_multiplier
+            y_max = max(i[1] for i in uv_values) * _Mesh.mesh_texture_multiplier
+
+            face_vertices = face_data["vertices"]
+            vertices = []
+
+            for v in face_vertices:
+                vertices.append(self.vertices[v])
+
+            uv[self.map_vertices(origin, vertices)] = {
+                "uv": [x_min, y_min],
+                "uv_size": [round(x_max - x_min, 4), round(y_max - y_min, 4)],
+            }
+
+        return [{"origin": origin, "size": size, "uv": uv}]
+
+    def compile(self):
+        vertices = len(self.vertices.keys())
+        if vertices <= 8:  # A cube or a face
+            return self.process_cubes()
+        else:
+            meshes = []
+            cuboids = self.extract_cuboids()
+
+            for cube in cuboids:
+                meshes.append(_Mesh(cube).compile()[0])
+            return meshes
+
+
 class _Bone:
     def __init__(self, bone_dict: dict, parent: str = "root") -> None:
         self.bone = bone_dict
@@ -287,6 +463,7 @@ class _Bone:
         self.mirror = self.bone.get("mirror_uv", False)
         self.cubes: List[_Cube] = []
         self.locators: List[_Locator] = []
+        self.meshes: List[_Mesh] = []
 
     def add_cube(self, _Cube: _Cube):
         self.cubes.append(_Cube)
@@ -294,11 +471,11 @@ class _Bone:
     def add_locator(self, _Locator: _Locator):
         self.locators.append(_Locator)
 
+    def add_mesh(self, _Mesh: _Mesh):
+        self.meshes.append(_Mesh)
+
     def compile(self) -> dict:
-        bone = {
-            "name": self.name,
-            "pivot": self.pivot,
-        }
+        bone = {"name": self.name, "pivot": self.pivot, "cubes": []}
         if self.rotation != [0, 0, 0]:
             bone["rotation"] = self.rotation
         if self.mirror:
@@ -311,6 +488,9 @@ class _Bone:
             bone["cubes"] = [cube.compile() for cube in self.cubes]
         if self.locators:
             bone["locators"] = {k: v for _Locator in self.locators for k, v in _Locator.compile().items()}
+        if self.meshes:
+            for mesh in self.meshes:
+                bone["cubes"].extend(mesh.compile())
         return bone
 
 
@@ -320,6 +500,13 @@ class _ModelManager:
         self._bbmodel = bbmodel
         self._queued = False
         self._source = source
+        self._is_wavefront = self._bbmodel["meta"]["model_format"] == "free"
+
+        if self._is_wavefront:
+            warn(
+                f"You are using a Blockbench model with a Wavefront format. This is not fully supported and it may not work correctly. Blockbench model [{self._name}]",
+                UserWarning,
+            )
 
     def process_bones(self, bones: List[Union[str, dict]], parent: str = "root") -> None:
         for bone in bones:
@@ -329,6 +516,8 @@ class _ModelManager:
                     self._bones[parent].add_cube(_Cube(bone_dict, parent))
                 elif bone_dict["type"] == "locator":
                     self._bones[parent].add_locator(_Locator(bone_dict, parent))
+                elif bone_dict["type"] == "mesh" and self._is_wavefront:
+                    self._bones[parent].add_mesh(_Mesh(bone_dict, parent))
             elif isinstance(bone, dict):
                 bone_name = bone["name"]
                 self._bones[bone_name] = _Bone(bone, parent if self._bones else None)
@@ -340,10 +529,18 @@ class _ModelManager:
             self._bones: Dict[str, _Bone] = {}
             self.process_bones(self._bbmodel["outliner"], "root")
 
+            texture_multiplier = 64 if self._is_wavefront else 1
+
             self._content = JsonSchemes.geometry(
                 self._bbmodel["model_identifier"],
-                [self._bbmodel["resolution"]["width"], self._bbmodel["resolution"]["height"]],
-                [self._bbmodel["visible_box"][0], self._bbmodel["visible_box"][1]],
+                [
+                    self._bbmodel["resolution"]["width"] * texture_multiplier,
+                    self._bbmodel["resolution"]["height"] * texture_multiplier,
+                ],
+                [
+                    self._bbmodel["visible_box"][0] if not self._is_wavefront else 1024,
+                    self._bbmodel["visible_box"][1] if not self._is_wavefront else 1024,
+                ],
                 [0, self._bbmodel["visible_box"][2], 0],
             )
             self._content["minecraft:geometry"][0]["bones"] = [bone.compile() for bone in self._bones.values()]
@@ -374,7 +571,7 @@ class _Blockbench:
             with open(self._path, "r") as model:
                 self.bbmodel = json.load(model)
                 if self.bbmodel["model_identifier"] != filename:
-                    CONFIG.Logger.blockbench_identifier_mismatch(self.bbmodel["model_identifier"], filename)
+                    raise ValueError(f"Blockbench model identifier mismatch: expected '{filename}', found '{self.bbmodel['model_identifier']}'.")
         else:
             raise FileNotFoundError(f"{filename}.bbmodel not found in {os.path.join('assets', 'bbmodels')}. Please ensure the file exists.")
 

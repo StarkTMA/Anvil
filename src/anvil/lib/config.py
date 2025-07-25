@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 from enum import StrEnum
 
+import click
 import commentjson as json
 import requests
 from packaging.version import Version
@@ -10,7 +11,6 @@ from packaging.version import Version
 from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import APPDATA, FileExists, validate_namespace_project_name
-from anvil.lib.logger import Logger
 from anvil.lib.reports import ReportCollector
 
 
@@ -49,6 +49,8 @@ class ConfigOption(StrEnum):
     SCRIPT_MODULE_UUID = "script_module_uuid"
     DATA_MODULE_UUID = "data_module_uuid"
     PREVIEW = "preview"
+    ENTRY_POINT = "entry_point"
+    JS_BUNDLE_SCRIPT = "js_bundle_script"
 
 
 class ConfigPackageTarget(StrEnum):
@@ -171,7 +173,6 @@ class _AnvilConfig:
             if prompt == "input":
                 prompt = input(f"Missing '{option}': ")
             self.Config.add_option(section, option, prompt)
-            self.Logger.config_added_option(section, option)
         return self.Config.get_option(section, option)
 
     def _load_configs(self) -> None:
@@ -193,9 +194,7 @@ class _AnvilConfig:
         self._TARGET = self._handle_config(ConfigSection.PACKAGE, ConfigOption.TARGET, "world")
 
         self._RELEASE = self._handle_config(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
-        self._LAST_CHECK = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        )
+        self._LAST_CHECK = self._handle_config(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         self._SCRIPT_API = self._handle_config(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, False)
         self._SCRIPT_UI = self._handle_config(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
@@ -203,15 +202,15 @@ class _AnvilConfig:
         self._RANDOM_SEED = self._handle_config(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False)
         self._EXPERIMENTAL = self._handle_config(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
         self._PREVIEW = self._handle_config(ConfigSection.ANVIL, ConfigOption.PREVIEW, False)
+        self._ENTRY_POINT = self._handle_config(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "main.py")
+        self._SCRIPT_BUNDLE_SCRIPT = self._handle_config(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "npm start")
 
         self._RP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
         self._BP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
         self._PACK_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
         self._DATA_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
         if self._SCRIPT_API:
-            self._SCRIPT_MODULE_UUID = self._handle_config(
-                ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4())
-            )
+            self._SCRIPT_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4()))
 
         if self._TARGET not in ConfigPackageTarget:
             raise ValueError(f"Invalid package target '{self._TARGET}'. Must be one of {list(ConfigPackageTarget)}.")
@@ -219,29 +218,44 @@ class _AnvilConfig:
         validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon")
 
     def _check_new_versions(self):
-        self.Logger.check_update()
+        click.echo(click.style("Checking for package updates...", fg="cyan"))
+
         try:
-            latest_build: str = (
-                requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py")
-                .split("=")[-1]
-                .strip()
-            )
+            vanilla_latest_build: str = json.loads(requests.get("https://raw.githubusercontent.com/Mojang/bedrock-samples/version.json"))["latest"][
+                "version"
+            ]
+        except:
+            vanilla_latest_build = MANIFEST_BUILD
+
+        try:
+            latest_build: str = requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py").split("=")[-1].strip()
         except:
             latest_build = __version__
 
         if Version(__version__) < Version(latest_build):
-            self.Logger.new_anvil_build(latest_build)
+            click.echo(f"A newer anvil build were found: [{latest_build}].", color="cyan")
         else:
-            self.Logger.anvil_up_to_date()
+            click.echo("Anvil is up to date.", color="green")
 
-        self.Config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, latest_build)
+        self.Config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, vanilla_latest_build)
         self.Config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     def __init__(self) -> None:
         self.Config = Config()
 
-        self.Logger = Logger()
-        self.Logger.header()
+        click.clear()
+        click.echo(
+            "\n".join(
+                [
+                    f"{click.style('Anvil', 'cyan')} - by StarkTMA.",
+                    f"Version {click.style(__version__, 'cyan')}.",
+                    f"Copyright © {datetime.now().year} {click.style('StarkTMA', 'red')}.",
+                    "All rights reserved.",
+                    "",
+                    "",
+                ]
+            )
+        )
 
         self.Report = ReportCollector()
         self.Report.add_headers()

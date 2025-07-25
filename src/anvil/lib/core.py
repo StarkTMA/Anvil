@@ -2,17 +2,17 @@ import os
 import zipfile
 from datetime import datetime
 
-import commentjson
+import click
 from halo import Halo
 from PIL import Image
 
 from anvil.api.actors.materials import _MaterialsObject
 from anvil.api.logic.molang import Molang
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.config import _AnvilConfig, ConfigPackageTarget
-from anvil.lib.lib import (CopyFiles, CreateDirectory, File, FileExists,
-                           RemoveDirectory, process_subcommand,
-                           validate_namespace_project_name, zipit)
+from anvil.lib.config import ConfigPackageTarget, _AnvilConfig
+from anvil.lib.lib import (CreateDirectory, File, FileExists, RemoveDirectory,
+                           process_subcommand, validate_namespace_project_name,
+                           zipit)
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.sounds import (EntitySoundEvent, MusicCategory, MusicDefinition,
@@ -133,12 +133,8 @@ class _AnvilDefinitions:
         if self._sound_definition_object is None:
             self._sound_definition_object = SoundDefinition()
 
-        self._sound_event_object.add_entity_event(
-            entity_identifier, sound_reference, sound_event, volume, pitch, variant_query, variant_map
-        )
-        return self._sound_definition_object.sound_reference(
-            sound_reference, category, max_distance=max_distance, min_distance=min_distance
-        )
+        self._sound_event_object.add_entity_event(entity_identifier, sound_reference, sound_event, volume, pitch, variant_query, variant_map)
+        return self._sound_definition_object.sound_reference(sound_reference, category, max_distance=max_distance, min_distance=min_distance)
 
     def register_individual_named_sounds(
         self,
@@ -196,15 +192,11 @@ class _AnvilDefinitions:
         """
         for score_id, score_value in score_id_value.items():
             if len(score_id) > 16:
-                raise ValueError(
-                    f"Score objective must be 16 characters or less. Error at {score_id}."
-                )
+                raise ValueError(f"Score objective must be 16 characters or less. Error at {score_id}.")
 
             start = f"{self.config.NAMESPACE}."
             if not score_id.startswith(start) and self.config._TARGET == ConfigPackageTarget.ADDON:
-                raise ValueError(
-                    f"Scores must start with the namespace [{start}]. Error at {score_id}."
-                )
+                raise ValueError(f"Scores must start with the namespace [{start}]. Error at {score_id}.")
 
             if not score_id in self._scores.keys():
                 self._scores[score_id] = score_value
@@ -224,10 +216,7 @@ class _AnvilDefinitions:
 
             start = f"{self.config.NAMESPACE}."
             if not tag.startswith(start) and self.config._TARGET == ConfigPackageTarget.ADDON:
-                self.config.Logger.invalid_tag_format(start, tag)
-                raise ValueError(
-                    f"Tags must start with the namespace [{start}]. Error at {tag}."
-                )
+                raise ValueError(f"Tags must start with the namespace [{start}]. Error at {tag}.")
 
             if not tag in self._tags:
                 self._tags.add(tags)
@@ -258,7 +247,7 @@ class _AnvilDefinitions:
         """Registers a skin pack."""
         if self.config._TARGET == ConfigPackageTarget.ADDON:
             raise ValueError("Skin packs are only supported for world templates.")
-        
+
         else:
             return _AnvilSkinPack()
 
@@ -324,9 +313,7 @@ class _AnvilDefinitions:
     def _export_scripts(self):
         File(
             "package.json",
-            JsonSchemes.packagejson(
-                self.config.PROJECT_NAME, self.config._RELEASE, self.config.PROJECT_DESCRIPTION, self.config.COMPANY
-            ),
+            JsonSchemes.packagejson(self.config.PROJECT_NAME, self.config._RELEASE, self.config.PROJECT_DESCRIPTION, self.config.COMPANY),
             "",
             "w",
             True,
@@ -441,14 +428,14 @@ class _AnvilCore:
             options (str): The options to check.
         """
         if not self.config.Config.has_section(self.config.PROJECT_NAME):
-            self.config.Logger.project_missing_config()
-            self.config.Logger.config_option_changeable(*options)
+            click.echo("The project require missing configuration. Please fill in the following options:", err=True, color="red")
+            click.echo(f"The options {options} can be changed from the config file at any time, recompilation will be required.", err=True, color="cyan")
             self.config.Config.add_section(self.config.PROJECT_NAME)
 
         for option in options:
             if not self.config.Config.has_option(self.config.PROJECT_NAME, option):
                 self.config.Config.add_option(self.config.PROJECT_NAME, str(option), input(f"Enter {option}: "))
-                self.config.Logger.config_added_option(self.config.PROJECT_NAME, option)
+                click.echo(f"{option} was added to {self.config.PROJECT_NAME}", err=True, color="cyan")
 
     @Halo(text="Translating", spinner="dots")
     def translate(self) -> None:
@@ -473,9 +460,7 @@ class _AnvilCore:
             File("languages.json", JsonSchemes.languages(), os.path.join(self.config._WORLD_PATH, "texts"), "w")
 
         for language in JsonSchemes.languages():
-            destination_language = (
-                language.replace("zh_CN", "zh-CN").replace("zh_TW", "zh-TW").replace("nb_NO", "no").split("_")[0]
-            )
+            destination_language = language.replace("zh_CN", "zh-CN").replace("zh_TW", "zh-TW").replace("nb_NO", "no").split("_")[0]
             if not FileExists(
                 os.path.join(
                     self.config.RP_PATH,
@@ -520,47 +505,34 @@ class _AnvilCore:
             try:
                 object._export()
             except Exception as e:
-                self.config.Logger.object_export_error(object._name, e)
+                traceback = f"<{object.__class__.__name__} created from:\n{''.join(object.__created_from)}>"
+                click.echo(f"Error exporting {object._name}: {e}", err=True, color="red")
+                click.echo(f"Traceback: {traceback}", err=True, color="red")
 
         from anvil.api.blocks.blocks import _PermutationComponents
 
         if _PermutationComponents._count > 10000:
             if self.config._TARGET == ConfigPackageTarget.ADDON:
-                raise RuntimeError(
-                    f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons cannot exceed this limit."
-                )
+                raise RuntimeError(f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons cannot exceed this limit.")
             else:
                 raise RuntimeError(
                     f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). For minimal performance impact, consider reducing the number of permutations."
                 )
 
         if self.config._SCRIPT_API:
-            source = os.path.join("assets", "javascript")
-            target = os.path.join(self.config.BP_PATH, "scripts")
-
-            do_ts = False
-            for subdir, dirname, files in os.walk(source):
-                for file in files:
-                    input_file_path = os.path.join(subdir, file)
-                    relative_subdir = os.path.relpath(subdir, source)
-                    new_output_dir = os.path.join(target, relative_subdir)
-                    if file.endswith(".js"):
-                        CopyFiles(subdir, new_output_dir, file)
-                    elif file.endswith(".ts"):
-                        do_ts = True
-
-            if do_ts:
-                tsconfig = {}
-                if FileExists("tsconfig.json"):
-                    with open("tsconfig.json", "r") as file:
-                        tsconfig = commentjson.load(file)
-                        tsconfig["compilerOptions"]["outDir"] = target
-                        tsconfig["include"] = ["assets/javascript/**/*"]
-                else:
-                    tsconfig = JsonSchemes.tsconfig(self.config._PASCAL_PROJECT_NAME)
-
-                File("tsconfig.json", tsconfig, "", "w", False)
-                process_subcommand("tsc", "Typescript compilation error")
+            if not FileExists("tsconfig.json"):
+                File("tsconfig.json", JsonSchemes.tsconfig(self.config.BP_PATH), "", "w", False)
+            if not FileExists("esbuild.js"):
+                File("esbuild.js", JsonSchemes.esbuild_config_js(self.config.BP_PATH), "", "w", False)
+            if not FileExists("package.json"):
+                File(
+                    "package.json",
+                    JsonSchemes.packagejson(self.config.PROJECT_NAME, self.config._RELEASE, self.config.PROJECT_DESCRIPTION, self.config.COMPANY),
+                    "",
+                    "w",
+                    True,
+                )
+            process_subcommand(self.config._SCRIPT_BUNDLE_SCRIPT, "Typescript compilation error")
 
         self._compiled = True
 
@@ -593,9 +565,9 @@ class _Anvil(_AnvilCore):
         store_screenshot_size = (800, 450)
         marketing_screenshot_size = (1920, 1080)
 
-        source = os.path.join("assets", "marketing")
-        output_store = os.path.join("assets", "output", "Store Art")
-        output_marketing = os.path.join("assets", "output", "Marketing Art")
+        source = os.path.join("marketing")
+        output_store = os.path.join("output", "Store Art")
+        output_marketing = os.path.join("output", "Marketing Art")
 
         if FileExists(os.path.join(source, "pack_icon.png")):
             original = Image.open(os.path.join(source, "pack_icon.png"))
@@ -603,7 +575,7 @@ class _Anvil(_AnvilCore):
             resize(original, "pack_icon.png", self.config.RP_PATH, pack_icon_size)
 
         else:
-            self.config.Logger.file_exist_warning("pack_icon.png")
+            raise FileNotFoundError("pack_icon.png not found in marketing directory. Please ensure the file exists.")
 
         if zip:
             CreateDirectory(output_store)
@@ -617,9 +589,7 @@ class _Anvil(_AnvilCore):
                     overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
 
                 resize(original, "world_icon.jpeg", self.config._WORLD_PATH, store_screenshot_size, 95, 72, overlay)
-                resize(
-                    original, f"{self.config.PROJECT_NAME}_Thumbnail_0.jpg", output_store, store_screenshot_size, 95, 72, overlay
-                )
+                resize(original, f"{self.config.PROJECT_NAME}_Thumbnail_0.jpg", output_store, store_screenshot_size, 95, 72, overlay)
                 resize(
                     original,
                     f"{self.config.PROJECT_NAME}_MarketingKeyArt.jpg",
@@ -631,7 +601,7 @@ class _Anvil(_AnvilCore):
                 )
 
             else:
-                self.config.Logger.file_exist_warning("keyart.png")
+                raise FileNotFoundError("keyart.png not found in marketing directory. Please ensure the file exists.")
 
             if FileExists(os.path.join(source, "panorama.png")):
                 original = Image.open(os.path.join(source, "panorama.png"))
@@ -647,12 +617,12 @@ class _Anvil(_AnvilCore):
                 )
 
             else:
-                self.config.Logger.file_exist_info("panorama.png")
+                click.echo(f"panorama.png does not exist. It is optional but might have been left out unintentionally.", color="yellow")
 
             for i in range(999):
                 if not FileExists(os.path.join(source, f"{i}.png")):
                     if i < 5:
-                        self.config.Logger.file_exist_warning(f"{i}.png")
+                        raise FileNotFoundError(f"{i}.png not found in marketing directory. Please ensure the file exists.")
                     break
                 else:
                     original = Image.open(os.path.join(source, f"{i}.png"))
@@ -686,13 +656,13 @@ class _Anvil(_AnvilCore):
                 )
 
             else:
-                self.config.Logger.file_exist_warning("partner_art.png")
+                raise FileNotFoundError("partner_art.png not found in marketing directory. Please ensure the file exists.")
 
             if FileExists(os.path.join(source, "pack_icon.png")):
                 original = Image.open(os.path.join(source, "pack_icon.png"))
                 resize(original, f"{self.config.PROJECT_NAME}_packicon_0.jpg", output_store, pack_icon_size)
             else:
-                self.config.Logger.file_exist_warning("pack_icon.png")
+                raise FileNotFoundError("pack_icon.png not found in marketing directory. Please ensure the file exists.")
 
     def package_zip(
         self,
@@ -702,7 +672,7 @@ class _Anvil(_AnvilCore):
         """Packages the project into a zip file for Marketplace."""
         if not self._compiled:
             raise RuntimeError("Project must be compiled before packaging.")
-        self.config.Logger.packaging_zip()
+        click.echo("Packaging submission zip file for Marketplace...", color="green")
 
         if not skip_translation:
             self.translate()
@@ -710,19 +680,15 @@ class _Anvil(_AnvilCore):
         self._process_art(apply_overlay)
 
         content_structure = {
-            os.path.join("assets", "output", "Store Art"): os.path.join("Store Art"),
-            os.path.join("assets", "output", "Marketing Art"): os.path.join("Marketing Art"),
+            os.path.join("output", "Store Art"): os.path.join("Store Art"),
+            os.path.join("output", "Marketing Art"): os.path.join("Marketing Art"),
         }
 
         if self.config._TARGET == ConfigPackageTarget.ADDON:
             if len(self.config._RP_UUID) > 1:
-                raise RuntimeError(
-                    "Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack."
-                )
+                raise RuntimeError("Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack.")
             if len(self.config._BP_UUID) > 1:
-                raise RuntimeError(
-                    "Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack."
-                )
+                raise RuntimeError("Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack.")
 
             content_structure.update(
                 {
@@ -734,12 +700,8 @@ class _Anvil(_AnvilCore):
         else:
             content_structure.update(
                 {
-                    self.config.RP_PATH: os.path.join(
-                        "Content", "world_template", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"
-                    ),
-                    self.config.BP_PATH: os.path.join(
-                        "Content", "world_template", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"
-                    ),
+                    self.config.RP_PATH: os.path.join("Content", "world_template", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
+                    self.config.BP_PATH: os.path.join("Content", "world_template", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
                     os.path.join(self.config._WORLD_PATH, "texts"): os.path.join("Content", "world_template", "texts"),
                     os.path.join(self.config._WORLD_PATH, "level.dat"): os.path.join("Content", "world_template"),
                     os.path.join(self.config._WORLD_PATH, "levelname.txt"): os.path.join("Content", "world_template"),
@@ -757,18 +719,18 @@ class _Anvil(_AnvilCore):
                 )
 
         zipit(
-            os.path.join("assets", "output", f"{self.config.PROJECT_NAME}.zip"),
+            os.path.join("output", f"{self.config.PROJECT_NAME}.zip"),
             content_structure,
         )
 
-        RemoveDirectory(os.path.join("assets", "output", "Store Art"))
-        RemoveDirectory(os.path.join("assets", "output", "Marketing Art"))
+        RemoveDirectory(os.path.join("output", "Store Art"))
+        RemoveDirectory(os.path.join("output", "Marketing Art"))
 
     def mcaddon(self):
         """Packages the project into a .mcaddon file."""
         if not self._compiled:
             raise RuntimeError("Project must be compiled before packaging.")
-        self.config.Logger.packaging_mcaddon()
+        click.echo("Packaging .mcaddon file...", color="green")
 
         self._process_art(False, False)
 
@@ -777,13 +739,13 @@ class _Anvil(_AnvilCore):
             self.config.BP_PATH: f"BP_{self.config.PROJECT_NAME}",
         }
 
-        zipit(os.path.join("assets", "output", f"{self.config.PROJECT_NAME}.mcaddon"), content_structure)
+        zipit(os.path.join("output", f"{self.config.PROJECT_NAME}.mcaddon"), content_structure)
 
     def mcworld(self):
         """Packages the project into a .mcworld file."""
         if not self._compiled:
             raise RuntimeError("Project must be compiled before packaging.")
-        self.config.Logger.packaging_mcworld()
+        click.echo("Packaging .mcworld file...", color="green")
 
         self._process_art(False, False)
 
@@ -800,7 +762,7 @@ class _Anvil(_AnvilCore):
         }
 
         zipit(
-            os.path.join("assets", "output", f"{self.config.PROJECT_NAME}.mcworld"),
+            os.path.join("output", f"{self.config.PROJECT_NAME}.mcworld"),
             content_structure,
         )
 
@@ -852,7 +814,7 @@ class _Anvil(_AnvilCore):
             return title, Spacer(1, 0.3 * cm), table, Spacer(1, 1 * cm)
 
         doc = SimpleDocTemplate(
-            os.path.join("assets", "output", "technical_notes.pdf"),
+            os.path.join("output", "technical_notes.pdf"),
             pagesize=A4,
             leftMargin=1 * cm,
             rightMargin=1 * cm,

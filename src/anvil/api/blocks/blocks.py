@@ -1,13 +1,18 @@
 import os
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from anvil import ANVIL, CONFIG
 from anvil.api.actors.actors import _Components
-from anvil.api.blocks.components import BlockDefault, BlockDisplayName, BlockGeometry, BlockMaterialInstance
+from anvil.api.blocks.components import (BlockDefault, BlockDisplayName,
+                                         BlockGeometry, BlockMaterialInstance)
 from anvil.api.logic.molang import Molang
-from anvil.lib.enums import BlockVanillaTags, ItemCategory, ItemGroups, PlacementDirectionTrait, PlacementPositionTrait
+from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.lib.enums import (BlockVanillaTags, ItemCategory, ItemGroups,
+                             PlacementDirectionTrait, PlacementPositionTrait)
+from anvil.lib.lib import CopyFiles, IMAGE_EXTENSIONS_PRIORITY
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, BlockDescriptor, JsonSchemes, MinecraftDescription, CustomComponent
+from anvil.lib.schemas import (AddonObject, BlockDescriptor, JsonSchemes,
+                               MinecraftDescription, _BaseComponent)
 
 __all__ = ["Block"]
 
@@ -20,6 +25,7 @@ class _tag:
 
     def __iter__(self):
         return iter(self._component.items())
+
 
 # Core
 class _PermutationComponents(_Components):
@@ -203,7 +209,6 @@ class _BlockServer(AddonObject):
         self._permutations.append(self._permutation)
         return self._permutation
 
-    @property
     def queue(self):
         """Queues the block to be exported."""
         self._server_block["minecraft:block"].update(self.description._export())
@@ -227,6 +232,37 @@ class _BlockServer(AddonObject):
         super().queue()
 
 
+class _BlockClient:
+    def __init__(self, name: str, is_vanilla: bool = False):
+        self._name = name.split(":")[-1]
+        self._is_vanilla = is_vanilla
+        self._textures: Dict[str:str] = {}
+
+    def replace_vanilla_texture(self, texture_name: str, directory: str = ""):
+        if not self._is_vanilla:
+            raise RuntimeError("The Block Client property is only accessible to vanilla block types.")
+
+        self._textures[texture_name] = directory
+
+        return self
+
+    def queue(self):
+        ANVIL._queue(self)
+
+    def _export(self):
+        for texture, directory in self._textures.items():
+            for i in IMAGE_EXTENSIONS_PRIORITY:
+                if os.path.exists(os.path.join("assets", "textures", "blocks", f"{texture}{i}")):
+                    CopyFiles(
+                        os.path.join("assets", "textures", "blocks"),
+                        os.path.join(CONFIG.RP_PATH, "textures", "blocks", directory),
+                        f"{texture}{i}",
+                    )
+                    break
+            else:
+                raise RuntimeError(f"Texture {texture} not found in assets/textures/blocks.")
+
+
 # ===========================================
 
 
@@ -237,6 +273,8 @@ class Block(BlockDescriptor):
         super().__init__(name, is_vanilla)
 
         self.server = _BlockServer(name, is_vanilla)
+        self.client = _BlockClient(name, is_vanilla)
+
         self._item = None
 
     @property
@@ -250,7 +288,8 @@ class Block(BlockDescriptor):
 
     def queue(self):
         """Queues the block to be exported."""
-        self.server.queue
+        self.server.queue()
+        self.client.queue()
 
         if self._item:
             self._item.queue()

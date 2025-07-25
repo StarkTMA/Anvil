@@ -16,62 +16,22 @@ from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File, FileExists,
 from .__version__ import __version__
 
 
-def CreateDirectoriesFromTree(tree: dict) -> None:
-    """
-    Recursively creates directories based on the structure of a tree.
-
-    Parameters:
-        tree (dict): The tree structure representing the directories.
-
-    Returns:
-        None
-    """
-
-    def find_key(tree: dict, path: str, a: list) -> list:
-        """
-        Recursively finds keys in the tree structure.
-
-        Parameters:
-            tree (dict): The tree structure.
-            path (str): The current path.
-            a (list): The list to store the found keys.
-
-        Returns:
-            list: The list of found keys.
-        """
-        for key, value in tree.items():
-            if isinstance(value, dict):
-                find_key(value, f"{path}/{key}", a)
-            if value == {}:
-                a.append(f"{path}/{key}")
-        return a
-
-    directories = find_key(tree, "", a=[])
-    for directory in directories:
-        CreateDirectory(directory)
-
-
 class JsonSchemes:
     @staticmethod
     def structure(project_name):
         return {
             project_name: {
                 "assets": {
-                    "bbmodels": {},
-                    "javascript": {},
-                    "marketing": {},
-                    "particles": {},
-                    "python": {},
-                    "skins": {},
+                    "models": {},
+                    "textures": {"environment": {}, "items": {}, "ui": {}},
                     "sounds": {},
-                    "world": {},
-                    "textures": {
-                        "environment": {},
-                        "items": {},
-                        "ui": {},
-                    },
-                    "output": {},
+                    "particles": {},
+                    "skins": {},
                 },
+                "scripts": {"javascript": {}, "python": {}},
+                "world": {"structures": {}},
+                "marketing": {},
+                "output": {},
             }
         }
 
@@ -82,7 +42,7 @@ class JsonSchemes:
                 "from anvil import *",
                 "",
                 'if __name__ == "__main__":',
-                "    ANVIL.compile()",
+                "    ANVIL.compile(extract_world=None)",
                 "    #ANVIL.package()",
             ]
         )
@@ -267,42 +227,6 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def packagejson(project_name, version, description, author):
-        return {
-            "name": project_name,
-            "version": version,
-            "description": description,
-            "main": "scripts/main.js",
-            "scripts": {"test": 'echo "Error: no test specified" && exit 1'},
-            "keywords": [],
-            "author": author,
-            "license": "ISC",
-        }
-
-    @staticmethod
-    def tsconfig(pascal_project_name):
-        return {
-            "compilerOptions": {
-                "target": "ESNext",
-                "module": "es2020",
-                "declaration": False,
-                "outDir": f"behavior_packs/BP_{pascal_project_name}/scripts",
-                "strict": True,
-                "pretty": True,
-                "esModuleInterop": True,
-                "moduleResolution": "Node",
-                "resolveJsonModule": True,
-                "forceConsistentCasingInFileNames": True,
-                "lib": [
-                    "ESNext",
-                    "dom",
-                ],
-            },
-            "include": ["assets/javascript/**/*"],
-            "exclude": ["node_modules"],
-        }
-
-    @staticmethod
     def vscode(path):
         return {
             "version": "0.3.0",
@@ -319,12 +243,228 @@ class JsonSchemes:
         }
 
     @staticmethod
+    def packagejson(project_name, version, description, author):
+        return {
+            "name": project_name,
+            "version": version,
+            "description": description,
+            "type": "module",
+            "keywords": [],
+            "author": author,
+            "license": "ISC",
+        }
+
+    @staticmethod
+    def tsconfig(out_dir):
+        return {
+            "compilerOptions": {
+                "target": "ESNext",
+                "module": "es2020",
+                "declaration": False,
+                "outDir": os.path.join(out_dir, "scripts"),
+                "strict": True,
+                "pretty": True,
+                "esModuleInterop": True,
+                "moduleResolution": "Node",
+                "resolveJsonModule": True,
+                "forceConsistentCasingInFileNames": True,
+                "lib": ["ESNext"],
+            },
+            "include": ["scripts/javascript/**/*"],
+            "exclude": ["node_modules"],
+        }
+
+    @staticmethod
     def tsconstants(namespace: str, project_name: str):
         file = []
         file.append(f'export const NAMESPACE = "{namespace}"')
         file.append(f'export const PROJECT_NAME = "{project_name}"')
 
         return "\n".join(file)
+
+    @staticmethod
+    def esbuild_config_js(outDir):
+        return "\n".join(
+            [
+                "import esbuild from 'esbuild';",
+                f"const outDir = '{os.path.join(outDir, 'scripts')}';",
+                "esbuild",
+                "    .build({",
+                '        entryPoints: ["scripts/javascript/main.ts"],',
+                "        bundle: true,",
+                '        format: "esm",',
+                "        sourcemap: true,",
+                "        minify: true,",
+                "        external: [",
+                "            '@minecraft/server',",
+                "            '@minecraft/server-ui',",
+                "        ],",
+                "    })",
+                "    .catch(() => process.exit(1));",
+            ]
+        )
+
+
+def CreateDirectoriesFromTree(tree: dict) -> None:
+    """
+    Recursively creates directories based on the structure of a tree.
+
+    Parameters:
+        tree (dict): The tree structure representing the directories.
+
+    Returns:
+        None
+    """
+
+    def find_key(tree: dict, path: str, a: list) -> list:
+        """
+        Recursively finds keys in the tree structure.
+
+        Parameters:
+            tree (dict): The tree structure.
+            path (str): The current path.
+            a (list): The list to store the found keys.
+
+        Returns:
+            list: The list of found keys.
+        """
+        for key, value in tree.items():
+            if isinstance(value, dict):
+                find_key(value, f"{path}/{key}", a)
+            if value == {}:
+                a.append(f"{path}/{key}")
+        return a
+
+    directories = find_key(tree, "", a=[])
+    for directory in directories:
+        CreateDirectory(directory)
+
+
+def handle_configuration(
+    namespace: str, project_name: str, display_name: str, preview: bool, scriptapi: bool, pbr: bool, random_seed: bool, addon: bool
+):
+    config = Config()
+
+    config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
+
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, display_name)
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION, f"{display_name} behavior Pack")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, f"{display_name} Resource Pack")
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world")
+
+    config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper())
+    config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, scriptapi)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, pbr)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.PREVIEW, preview)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "main.py")
+
+    config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
+    config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
+    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
+
+    config.add_section(namespace)
+
+    config.save()
+
+    return config
+
+
+def display_welcome_message(display_name: str) -> None:
+    """
+    Displays the welcome message for the Anvil CLI.
+
+    Returns:
+        None
+    """
+    click.clear()
+    click.echo(
+        "\n".join(
+            [
+                f"{click.style("Anvil", "cyan")} - by StarkTMA.",
+                f"Version {click.style(__version__, "cyan")}.",
+                f"Copyright © {datetime.now().year} {click.style("StarkTMA", "red")}.",
+                "All rights reserved.",
+                "",
+                "",
+            ]
+        )
+    )
+    click.echo(f"Initiating {display_name}")
+
+
+def check_version() -> None:
+    """
+    Checks the current version of Anvil and compares it with the latest version.
+
+    Returns:
+        None
+    """
+    try:
+        latest_build: str = requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py").split("=")[-1].strip()
+    except:
+        latest_build = __version__
+
+    if Version(__version__) < Version(latest_build):
+        click.echo(
+            click.style(
+                f"Anvil has been updated to version {latest_build}, please run `pip install --upgrade mcanvil` to update your project.",
+                "yellow",
+            )
+        )
+
+
+def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR, DEV_RES_DIR) -> None:
+    click.echo("Initiating ScriptingAPI modules")
+    install_locally_modules = ["@minecraft/server", "@minecraft/server-ui", "@minecraft/vanilla-data"]
+    install_global_modules = ["typescript", "esbuild"]
+
+    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
+    config.add_option(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js")
+
+    File(
+        "package.json",
+        JsonSchemes.packagejson(
+            project_name,
+            "1.0.0",
+            config.get_option("package", "display_name") + " Essentials",
+            config.get_option("package", "company"),
+        ),
+        "",
+        "w",
+        True,
+    )
+    File("tsconfig.json", JsonSchemes.tsconfig(DEV_BEH_DIR), "", "w", False)
+    File("esbuild.js", JsonSchemes.esbuild_config_js(), "", "w", False)
+    File(
+        "launch.json",
+        JsonSchemes.vscode(os.path.join(DEV_RES_DIR, f"BP_{config.get_option("anvil", "pascal_project_name")}", "scripts")),
+        ".vscode",
+        "w",
+        False,
+    )
+    File("anvilconfig.ts", JsonSchemes.tsconstants(namespace, project_name), os.path.join("scripts", "javascript"), "w", False)
+    File("main.ts", 'import * as mc from "@minecraft/server";\n', os.path.join("scripts", "javascript"), "w", False)
+
+    print(f"Installing npm packages... [{', '.join(install_locally_modules + install_global_modules)}]")
+    process_subcommand(
+        f"npm init -y && npm install --save {', '.join(install_locally_modules)}",
+        f"Unable to initiate npm packages [{', '.join(install_locally_modules)}].",
+    )
+    process_subcommand(
+        f"npm init -y && npm install -g {', '.join(install_global_modules)}",
+        f"Unable to initiate npm packages [{', '.join(install_global_modules)}].",
+    )
 
 
 @click.group()
@@ -341,41 +481,11 @@ def cli() -> None:
 @cli.command(help="Initiate an Anvil project")
 @click.argument("namespace")
 @click.argument("project_name")
-@click.option(
-    "--preview",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Generates the project in Minecraft Preview com.mojang instead of release.",
-)
-@click.option(
-    "--scriptapi",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Adds dependencies support of ScriptAPI.",
-)
-@click.option(
-    "--pbr",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Adds capabilities support of Physically based rendering.",
-)
-@click.option(
-    "--random_seed",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Adds support of Random Seed Worlds.",
-)
-@click.option(
-    "--addon",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Sets this package as an addon, comes with many restrictions.",
-)
+@click.option("--preview", is_flag=True, default=False, show_default=True, help="Generates the project in Minecraft Preview com.mojang.")
+@click.option("--scriptapi", is_flag=True, default=False, show_default=True, help="Adds dependencies support of ScriptAPI.")
+@click.option("--pbr", is_flag=True, default=False, show_default=True, help="Adds capabilities support of Physically based rendering.")
+@click.option("--random_seed", is_flag=True, default=False, show_default=True, help="Adds support of Random Seed Worlds.")
+@click.option("--addon", is_flag=True, default=False, show_default=True, help="Sets this package as an addon, comes with many restrictions.")
 def create(
     namespace: str,
     project_name: str,
@@ -397,159 +507,41 @@ def create(
         random_seed (bool, optional): Whether to add support of Random Seed Worlds. Defaults to False.
 
     """
-    click.clear()
-    click.echo(
-        "\n".join(
-            [
-                f"{click.style("Anvil", "cyan")} - by StarkTMA.",
-                f"Version {click.style(__version__, "cyan")}.",
-                f"Copyright © {datetime.now().year} {click.style("StarkTMA", "red")}.",
-                "All rights reserved.",
-                "",
-                "",
-            ]
-        )
-    )
 
     validate_namespace_project_name(namespace, project_name, addon)
-
     display_name = project_name.title().replace("-", " ").replace("_", " ")
-    # Prints message
-    click.echo(f"Initiating {display_name}")
+    display_welcome_message(display_name)
 
-    # Setup the directory
-    try:
-        latest_build: str = (
-            requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py").split("=")[-1].strip()
-        )
-    except:
-        latest_build = __version__
+    config = handle_configuration(namespace, project_name, display_name, preview, scriptapi, pbr, random_seed, addon)
 
-    base_dir = os.getcwd()
-
-    dev_res = os.path.join(
-        APPDATA,
-        "Local",
-        "Packages",
-        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
-        "LocalState",
-        "games",
-        "com.mojang",
-        "development_resource_packs",
-    )
-    dev_beh = os.path.join(
-        APPDATA,
-        "Local",
-        "Packages",
-        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
-        "LocalState",
-        "games",
-        "com.mojang",
-        "development_behavior_packs",
-    )
+    WORKING_DIR = os.getcwd()
+    MINECRAFT_BUILD = f"Microsoft.Minecraft" + "WindowsBeta" if preview else "UWP" + "_8wekyb3d8bbwe"
+    APP_PACKAGES = os.path.join(APPDATA, "Local", "Packages")
+    COM_MOJANG = os.path.join(APP_PACKAGES, MINECRAFT_BUILD, "LocalState", "games", "com.mojang")
+    DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
+    DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
 
     CreateDirectoriesFromTree(JsonSchemes.structure(project_name))
+
     os.chdir(project_name)
 
-    # Init the config file
-    config = Config()
-
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
-
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, display_name)
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs")
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION, f"{display_name} behavior Pack")
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, f"{display_name} Resource Pack")
-    config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
-    config.add_option(
-        ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper()
-    )
-
-    config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world")
-
-    config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
-    config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, scriptapi)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, pbr)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PREVIEW, preview)
-
-    config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
-    config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
-    config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
-    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
-
-
-    config.add_section(namespace)
-
-    config.save()
-
-    File(f"{project_name}.anvil.py", JsonSchemes.script(), "", "w")
+    File("main.py", JsonSchemes.script(), "scripts/python/", "w")
     File(".gitignore", JsonSchemes.gitignore(), "", "w")
     File("CHANGELOG.md", "", "", "w")
-
     File(
         f"{project_name}.code-workspace",
-        JsonSchemes.code_workspace(config.get_option("package", "company"), base_dir, project_name, preview),
+        JsonSchemes.code_workspace(config.get_option("package", "company"), WORKING_DIR, project_name, preview),
         DESKTOP,
         "w",
     )
 
     if scriptapi:
-        click.echo("Initiating ScriptingAPI modules")
-        config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
-        File(
-            "package.json",
-            JsonSchemes.packagejson(
-                project_name,
-                "1.0.0",
-                config.get_option("package", "display_name") + " Essentials",
-                config.get_option("package", "company"),
-            ),
-            "",
-            "w",
-            True,
-        )
-        File("tsconfig.json", JsonSchemes.tsconfig(config.get_option("anvil", "pascal_project_name")), "", "w", False)
-        File(
-            "launch.json",
-            JsonSchemes.vscode(os.path.join(dev_res, f"BP_{config.get_option("anvil", "pascal_project_name")}", "scripts")),
-            ".vscode",
-            "w",
-            False,
-        )
-        File(
-            "anvilConstants.ts",
-            JsonSchemes.tsconstants(namespace, project_name),
-            os.path.join("assets", "javascript"),
-            "w",
-            False,
-        )
-        File("main.ts", 'import * as mc from "@minecraft/server";\n', os.path.join("assets", "javascript"), "w", False)
-
-        process_subcommand(
-            "npm init -y && npm install @minecraft/server @minecraft/server-ui typescript", "Unable to initiate npm packages."
-        )
+        handle_script(config, namespace, project_name, DEV_BEH_DIR, DEV_RES_DIR)
 
     config.save()
 
-    process_subcommand(
-        f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace"
-    )
-    
-    if Version(__version__) < Version(latest_build):
-        click.echo(
-            click.style(
-                f"Anvil has been updated to version {latest_build}, please run `pip install --upgrade mcanvil` to update your project.",
-                "yellow",
-            )
-        )
+    process_subcommand(f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace")
+    check_version()
 
 
 @cli.command(help="Run an Anvil project")
@@ -562,6 +554,9 @@ def run() -> None:
     else:
         with open("./anvilconfig.json", "r") as file:
             data: dict = json.loads(file.read())
-            project_name = data.get("package").get("project_name")
+            entry_point = data.get(ConfigSection.ANVIL).get(ConfigOption.ENTRY_POINT)
+            if not entry_point:
+                click.echo("No entry point found in the Anvil project configuration.")
+                return
 
-        process_subcommand(f"py {project_name}.py", "Unable to run the anvil project.")
+        process_subcommand(f"py {os.path.join(*entry_point.split('/'))}", "Unable to run the anvil project.")

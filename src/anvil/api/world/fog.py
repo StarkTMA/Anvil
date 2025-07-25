@@ -52,9 +52,6 @@ class _FogDistance:
             fog_end (int): The ending distance of the fog.
             render_distance_type (RenderDistanceType, optional): The type of render distance. Defaults to RenderDistanceType.Render.
 
-        Raises:
-            CONFIG.Logger.fog_start_end: If fog_end is less than or equal to fog_start.
-
         Returns:
             _FogDistance: Returns self for chaining.
         """
@@ -81,9 +78,6 @@ class _FogDistance:
             fog_start (int): The starting distance of the fog.
             fog_end (int): The ending distance of the fog.
             render_distance_type (RenderDistanceType, optional): The type of render distance. Defaults to RenderDistanceType.Render.
-
-        Raises:
-            CONFIG.Logger.fog_start_end: If fog_end is less than or equal to fog_start.
 
         Returns:
             _FogDistance: Returns self for chaining.

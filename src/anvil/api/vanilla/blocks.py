@@ -7928,7 +7928,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:warped_wart_block", True)
 
     @staticmethod
-    def Water(liquid_depth: LiquidDepth) -> MinecraftBlockDescriptor:
+    def Water(liquid_depth: LiquidDepth = None) -> MinecraftBlockDescriptor:
         """Factory for Water"""
         return MinecraftBlockDescriptor("minecraft:water", True, {_BlockStateKeys.LiquidDepth: liquid_depth})
 

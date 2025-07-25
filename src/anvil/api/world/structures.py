@@ -18,10 +18,12 @@ class Structure:
         Parameters:
             structure_name (str): The name of the structure.
         """
-        self._structure_name = structure_name
-        self._path = os.path.join("structures", CONFIG.NAMESPACE, f"{self._structure_name}.mcstructure")
-        if not FileExists(os.path.join("assets", "world", f"{self._structure_name}.mcstructure")):
-            raise FileNotFoundError(f"{self._structure_name}.mcstructure not found in {os.path.join('assets', 'world')}. Please ensure the file exists.")
+        splits = structure_name.split("/")
+        self._sub_path = splits[:-1]
+        self._name = splits[-1]
+        self._path = os.path.join("structures", CONFIG.NAMESPACE, *self._sub_path, f"{self._name}.mcstructure")
+        if not FileExists(os.path.join("world", "structures", *self._sub_path, f"{self._name}.mcstructure")):
+            raise FileNotFoundError(f"{self._name}.mcstructure not found in {os.path.join('assets', 'world', 'structures')}. Please ensure the file exists.")
 
     def queue(self):
         """Queues the structure to be exported."""
@@ -30,7 +32,7 @@ class Structure:
     @property
     def identifier(self) -> Identifier:
         """Returns the identifier of the structure."""
-        return f"{CONFIG.NAMESPACE}:{self._structure_name}"
+        return f"{CONFIG.NAMESPACE}:{self._name}"
 
     @property
     def reference(self) -> str:
@@ -40,13 +42,14 @@ class Structure:
     def _export(self):
         """Exports the structure to the file system."""
         CopyFiles(
-            os.path.join("assets", "world"),
+            os.path.join("world", "structures", *self._sub_path),
             os.path.join(
                 CONFIG.BP_PATH,
                 "structures",
                 CONFIG.NAMESPACE,
+                *self._sub_path
             ),
-            f"{self._structure_name}.mcstructure",
+            f"{self._name}.mcstructure",
         )
 
 

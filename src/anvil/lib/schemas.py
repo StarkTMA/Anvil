@@ -4,12 +4,14 @@ import os
 import uuid
 from typing import Any, Dict, List, Mapping
 
+from packaging.version import Version
+
 from anvil import CONFIG
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.format_versions import *
 from anvil.lib.lib import File, salt_from_str
 from anvil.lib.types import Identifier
-from packaging.version import Version
+import traceback
 
 
 class JsonSchemes:
@@ -132,19 +134,6 @@ class JsonSchemes:
             "folders": [
                 {"name": name, "path": os.path.join(path1, path2)},
             ]
-        }
-
-    @staticmethod
-    def packagejson(project_name, version, description, author):
-        return {
-            "name": project_name,
-            "version": version,
-            "description": description,
-            "main": "scripts/main.js",
-            "scripts": {"test": 'echo "Error: no test specified" && exit 1'},
-            "keywords": [],
-            "author": author,
-            "license": "ISC",
         }
 
     @staticmethod
@@ -458,27 +447,68 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def tsconfig(pascal_project_name):
+    def packagejson(project_name, version, description, author):
+        return {
+            "name": project_name,
+            "version": version,
+            "description": description,
+            "type": "module",
+            "keywords": [],
+            "author": author,
+            "license": "ISC",
+        }
+
+    @staticmethod
+    def tsconstants(namespace: str, project_name: str):
+        file = []
+        file.append(f'export const NAMESPACE = "{namespace}"')
+        file.append(f'export const PROJECT_NAME = "{project_name}"')
+
+        return "\n".join(file)
+
+    @staticmethod
+    def tsconfig(out_dir):
         return {
             "compilerOptions": {
                 "target": "ESNext",
                 "module": "es2020",
                 "declaration": False,
-                "outDir": f"behavior_packs/BP_{pascal_project_name}/scripts",
+                "outDir": os.path.join(out_dir, "scripts"),
                 "strict": True,
                 "pretty": True,
                 "esModuleInterop": True,
                 "moduleResolution": "Node",
                 "resolveJsonModule": True,
                 "forceConsistentCasingInFileNames": True,
-                "lib": [
-                    "ESNext",
-                    "dom",
-                ],
+                "lib": ["ESNext"],
             },
-            "include": ["assets/javascript/**/*"],
+            "include": ["scripts/javascript/**/*"],
             "exclude": ["node_modules"],
         }
+
+    @staticmethod
+    def esbuild_config_js(outDir):
+        path = os.path.join(outDir, "scripts").replace("\\", "\\\\")
+        return "\n".join(
+            [
+                "import esbuild from 'esbuild';",
+                f"const outDir = '{path}';",
+                "esbuild",
+                "    .build({",
+                '        entryPoints: ["scripts/javascript/main.ts"],',
+                "        bundle: true,",
+                '        format: "esm",',
+                "        sourcemap: true,",
+                "        minify: true,",
+                "        external: [",
+                "            '@minecraft/server',",
+                "            '@minecraft/server-ui',",
+                "        ],",
+                f"        outdir: outDir,",
+                "    })",
+                "    .catch(() => process.exit(1));",
+            ]
+        )
 
     @staticmethod
     def vscode(pascal_project_name):
@@ -634,14 +664,6 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def tsconstants(namespace: str, project_name: str):
-        file = []
-        file.append(f'export const NAMESPACE = "{namespace}"')
-        file.append(f'export const PROJECT_NAME = "{project_name}"')
-
-        return "\n".join(file)
-
-    @staticmethod
     def crafting_items_catalog():
         return {
             "format_version": CRAFTING_ITEMS_CATALOG,
@@ -753,16 +775,14 @@ class AddonDescriptor:
             object_namespace = "minecraft" if is_vanilla else CONFIG.NAMESPACE
             object_name = name
 
-        if not str(object_name)[0].isalpha():
-            raise ValueError(f"Names cannot start with a digit. {self._object_type}[{name}]")
+        if str(object_name)[0].isdigit():
+            raise ValueError(f"Names cannot start with a digit. {object_name} at {self._object_type}[{name}]")
 
         if not str(object_namespace)[0].isalpha():
             raise ValueError(f"Namespaces cannot start with a digit. {self._object_type}[{name}]")
 
         if CONFIG._TARGET == ConfigPackageTarget.ADDON and is_vanilla and not is_vanilla_allowed:
-            raise RuntimeError(
-                f"Overriding vanilla features is not allowed for packages of type '{CONFIG._TARGET}'. {self._object_type}[{name}]"
-            )
+            raise RuntimeError(f"Overriding vanilla features is not allowed for packages of type '{CONFIG._TARGET}'. {self._object_type}[{name}]")
 
         if is_vanilla and object_namespace != "minecraft":
             raise ValueError(f"Invalid namespace '{object_namespace}' overriding Vanilla for. {self._object_type}[{name}]")
@@ -778,8 +798,9 @@ class AddonDescriptor:
         """
 
         self._is_vanilla = is_vanilla
-        self._name, self._namespace = self._validate_name(name, is_vanilla, is_vanilla_allowed)
+        self._name, self._namespace = self._validate_name(str(name), is_vanilla, is_vanilla_allowed)
         self._display_name = self._name.replace("_", " ").title()
+        self.__created_from = traceback.format_stack()[:-1]
 
     @property
     def identifier(self) -> Identifier:
@@ -922,9 +943,7 @@ class AddonObject(AddonDescriptor):
         path = self._path.removeprefix(CONFIG.RP_PATH).removeprefix(CONFIG.BP_PATH)
         path = os.path.join(path, f"{self._name}{self._extension}")
         if len(path) > 80:
-            raise ValueError(
-                f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters."
-            )
+            raise ValueError(f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters.")
 
         if self._shorten and type(self._content) is dict:
             self._content = _shorten_dict(self._content)
@@ -958,7 +977,11 @@ class MinecraftBlockDescriptor(AddonDescriptor):
         is_vanilla_allowed=True,
     ) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
-        self._states = states if states is not None else {}
+        self._states = {}
+        if states:
+            for k, v in states.items():
+                if v is not None:
+                    self._states[str(k)] = str(v)
         self._tags = tags if tags is not None else set()
 
     @property
@@ -974,7 +997,7 @@ class MinecraftBlockDescriptor(AddonDescriptor):
         return ""
 
     def __str__(self) -> Identifier:
-        if self.states != "":
+        if self.states:
             return f"{self.identifier} [{self.states}]"
         return self.identifier
 
@@ -995,9 +1018,7 @@ class EntityDescriptor(MinecraftEntityDescriptor):
 
 
 class BlockDescriptor(MinecraftBlockDescriptor):
-    def __init__(
-        self, name: str, is_vanilla: bool = False, states: Mapping[str, str | int | float | bool] = None, tags: set[str] = None
-    ) -> None:
+    def __init__(self, name: str, is_vanilla: bool = False, states: Mapping[str, str | int | float | bool] = None, tags: set[str] = None) -> None:
         super().__init__(name, is_vanilla, states, tags, False)
 
 

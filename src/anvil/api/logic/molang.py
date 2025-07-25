@@ -1,8 +1,7 @@
-from deprecated import deprecated
-
 from anvil import CONFIG
 from anvil.lib.enums import InputModes, Slots
 from anvil.lib.lib import *
+from deprecated import deprecated
 
 
 class Molang(str):
@@ -2873,8 +2872,7 @@ class Context(Query):
 
     @classmethod
     def _set_var(self, name):
-        setattr(self, name, self._query(self, "v", name))
-
+        setattr(self, name, self._query(self, self.handle, name))
 
 class Variable(Molang):
     handle = "v"
@@ -3015,3 +3013,7 @@ class Math(Molang):
 
 def molang_conditions(condition, expression, expression2):
     return f"{condition} ? {expression} : ({expression2})"
+
+def arrow_operator(left, right):
+    """Returns a string representing the arrow operator for Molang."""
+    return f"{left} -> {right}"
