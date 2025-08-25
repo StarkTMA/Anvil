@@ -5,13 +5,57 @@ from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import __TextureSet
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.enums import (BlockFaces, BlockLiquidDetectionTouching,
-                             BlockMaterial, TintMethod)
+                             BlockMaterial, BlockMovementType, TintMethod)
 from anvil.lib.format_versions import (BLOCK_JSON_FORMAT_VERSION,
                                        BLOCK_SERVER_VERSION,
                                        ITEM_SERVER_VERSION)
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.schemas import _BaseComponent
 from anvil.lib.types import RGB, RGBA
+
+
+class BlockDestructionParticles(_BaseComponent):
+    _identifier = "minecraft:destruction_particles"
+
+    def __init__(self, blockbench_name: str, texture: str, particle_count: int, tint_method: TintMethod = TintMethod.None_) -> None:
+        """Sets the particles that will be used when the block is destroyed.
+
+        Parameters:
+            blockbench_name (str): The name of the blockbench model.
+            texture (str): The texture name used for the particle.
+            particle_count (int): The number of particles to spawn on destruction.
+            tint_method (TintMethod, optional): Tint multiplied to the color. Defaults to TintMethod.None_.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_destruction_particles
+        """
+        super().__init__("destruction_particles")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.100")
+        bb = _Blockbench(blockbench_name, "blocks")
+        bb.textures.queue_texture(texture)
+        self._add_field("texture", texture)
+
+        self._add_field("particle_count", particle_count)
+
+        if tint_method is not TintMethod.None_:
+            self._add_field("tint_method", tint_method)
+
+
+class BlockMovable(_BaseComponent):
+    _identifier = "minecraft:movable"
+
+    def __init__(self, movement_type: BlockMovementType = BlockMovementType.PushPull, sticky: str = "none") -> None:
+        """The description identifier of the movable component.
+
+        Parameters:
+            movement_type (BlockMovementType, optional): How the block reacts to being pushed by another block like a piston. Defaults to BlockMovementType.PushPull.
+            sticky (str, optional): How the block should handle adjacent blocks around it when being pushed by another block like a piston. Defaults to "none".
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_movable
+        """
+        super().__init__("movable")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.100")
+        self._add_field("movement_type", movement_type)
+        self._add_field("sticky", sticky)
 
 
 class BlockRedstoneConductivity(_BaseComponent):
@@ -76,9 +120,7 @@ class BlockDefault(_BaseComponent):
         """The textures of the block."""
         for k in kwParameters.keys():
             if not FileExists(os.path.join("assets", "textures", "blocks", f"{k}.png")):
-                raise FileNotFoundError(
-                    f"{k}.png not found in {os.path.join("assets", "textures", "blocks")}. Please ensure the file exists."
-                )
+                raise FileNotFoundError(f"{k}.png not found in {os.path.join("assets", "textures", "blocks")}. Please ensure the file exists.")
 
             CopyFiles(
                 os.path.join("assets", "textures", "blocks"),
@@ -97,9 +139,7 @@ class BlockDefault(_BaseComponent):
     def carried_textures(self, **kwParameters: dict[str, BlockFaces]):
         """The carried textures of the block."""
         if BlockFaces.All in kwParameters.values():
-            self._set_value(
-                "carried_textures", [f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items() if v == BlockFaces.All][0]
-            )
+            self._set_value("carried_textures", [f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items() if v == BlockFaces.All][0])
         else:
             self._add_field("carried_textures", {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items()})
         return self
@@ -307,14 +347,18 @@ class BlockMaterialInstance(_BaseComponent):
 class BlockGeometry(_BaseComponent):
     _identifier = "minecraft:geometry"
 
-    def __init__(self, geometry_name: str) -> None:
+    def __init__(self, geometry_name: str, uv_lock: bool = False) -> None:
         """The description identifier of the geometry file to use to render this block.
 
         Parameters:
             geometry_name (str): The name of the geometry to use to render this block.
+            uv_lock (bool, optional): A Boolean locking UV orientation of all bones in the geometry, or an array of strings locking UV orientation of specific bones in the geometry. For performance reasons it is recommended to use the Boolean. Note that for cubes using Box UVs, rather than Per-face UVs, 'uv_lock' is only supported if the cube faces are square.
         """
         super().__init__("geometry")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.100")
         self._add_field("identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
+        if uv_lock:
+            self._add_field("uv_lock", uv_lock)
 
         bb = _Blockbench(geometry_name, "blocks")
         bb.model.queue_model()
@@ -503,9 +547,12 @@ class BlockItemVisual(_BaseComponent):
 
         bb = _Blockbench(geometry_name, "blocks")
         bb.model.queue_model()
+        
+        ANVIL.definitions.register_terrain_texture(texture, geometry_name, texture)
 
-        self._add_field("geometry", {"identifier": geometry_name})
-        self._add_field("material_instances", {"*": {"texture": texture, "render_method": render_method}})
+
+        self._add_field("geometry", {"identifier": f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"})
+        self._add_field("material_instances", {"*": {"texture": f"{CONFIG.NAMESPACE}:{texture}", "render_method": render_method}})
 
 
 class BlockLiquidDetection(_BaseComponent):

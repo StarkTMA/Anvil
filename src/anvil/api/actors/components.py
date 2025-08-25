@@ -13,7 +13,8 @@ from anvil.lib.enums import (Biomes, BreedingMutationStrategy, ContainerType,
                              RideableDismountMode, Slots, Vibrations)
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
-from anvil.lib.schemas import MinecraftBlockDescriptor, _BaseComponent
+from anvil.lib.schemas import (BlockDescriptor, ItemDescriptor,
+                               MinecraftBlockDescriptor, _BaseComponent)
 from anvil.lib.types import *
 
 __all__ = [
@@ -87,12 +88,12 @@ __all__ = [
     "EntityTransformation",
     "EntityNPC",
     "EntityEquipment",
-    "Entity_EquipItem",
     "EntityEquipItem",
+    "EntityAIEquipItem",
     "EntityFireImmune",
     "EntitySendEvent",
     "EntityMoveTowardsTarget",
-    "EntityEntitySensor",
+    "EntitySensor",
     "EntityAmbientSoundInterval",
     "EntityRandomSitting",
     "EntityStayWhileSitting",
@@ -167,11 +168,14 @@ __all__ = [
     "EntityRendersWhenInvisible",
     "EntityBreedable",
     "EntityIsCollidable",
-    "EntityBodyRotationAxisAligned",
+    "EntityRotationAxisAligned",
     "EntityInputAirControlled",
     "EntityLeashable",
     "EntityBodyRotationAlwaysFollowsHead",
+    "EntityAITakeBlock",
+    "EntityAIPlaceBlock",
 ]
+
 
 class _ai_goal(_BaseComponent):
     def __init__(self, component_name: str) -> None:
@@ -199,7 +203,7 @@ class Filter:
             _filter.update({"domain": domain})
 
         return _filter
-    
+
     # Filter Groups
     @staticmethod
     def all_of(*filters: "Filter"):
@@ -251,7 +255,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):  
+    ):
         from anvil.lib.schemas import MinecraftBlockDescriptor
 
         if not isinstance(value, (MinecraftBlockDescriptor, str)):
@@ -689,6 +693,17 @@ class Filter:
         """Checks if the entity is in a biome with the specified tag."""
         return self._construct_filter("has_biome_tag", subject, operator, None, value)
 
+    @classmethod
+    def is_moving(
+        self,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        return self._construct_filter("is_moving", subject, operator, None, value)
+
+
 # Components ==========================================================================
 # Attributes ==========================================================================
 
@@ -848,15 +863,15 @@ class EntityTickWorld(_BaseComponent):
     def __init__(
         self,
         never_despawn: bool = True,
-        radius: int = None,
-        distance_to_players: int = None,
+        radius: int = 0,
+        distance_to_players: int = 0,
     ) -> None:
         """Defines if the entity ticks the world and the radius around it to tick."""
         super().__init__("tick_world")
         self._add_field("never_despawn", never_despawn)
-        if not radius is None:
-            self._add_field("radius", radius)
-        if not distance_to_players is None:
+        if radius != 0:
+            self._add_field("radius", clamp(radius, 2, 6))
+        if distance_to_players != 0:
             self._add_field("distance_to_players", distance_to_players)
 
 
@@ -1330,23 +1345,16 @@ class EntityNavigationType:
         if is_amphibious:
             cls._add_field("is_amphibious", is_amphibious)
         if len(blocks_to_avoid) > 0:
-            if not all(
-                isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks_to_avoid
-            ):
-                raise TypeError(
-                    f"blocks_to_avoid must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{cls._identifier}]."
-                )
-                
+            if not all(isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks_to_avoid):
+                raise TypeError(f"blocks_to_avoid must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{cls._identifier}].")
+
             cls._add_field(
                 "blocks_to_avoid",
-                [
-                    str(block)
-                    for block in blocks_to_avoid
-                ],
+                [str(block) for block in blocks_to_avoid],
             )
-        
+
         return cls
-    
+
     def Climb(
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -1371,7 +1379,8 @@ class EntityNavigationType:
     ):
         """Allows this entity to generate paths that include vertical walls like the vanilla Spiders do."""
         navigation = _BaseComponent("navigation.climb")
-        EntityNavigationType._basic(navigation, 
+        EntityNavigationType._basic(
+            navigation,
             avoid_damage_blocks,
             avoid_portals,
             avoid_sun,
@@ -1419,7 +1428,8 @@ class EntityNavigationType:
     ):
         """Allows this entity to generate paths by flying around the air like the regular Ghast."""
         navigation = _BaseComponent("navigation.float")
-        EntityNavigationType._basic(navigation, 
+        EntityNavigationType._basic(
+            navigation,
             avoid_damage_blocks,
             avoid_portals,
             avoid_sun,
@@ -1467,7 +1477,8 @@ class EntityNavigationType:
     ):
         """Allows this entity to generate paths in the air like the vanilla Parrots do."""
         navigation = _BaseComponent("navigation.fly")
-        EntityNavigationType._basic(navigation, 
+        EntityNavigationType._basic(
+            navigation,
             avoid_damage_blocks,
             avoid_portals,
             avoid_sun,
@@ -1515,7 +1526,8 @@ class EntityNavigationType:
     ):
         """Allows this entity to generate paths by walking, swimming, flying and/or climbing around and jumping up and down a block."""
         navigation = _BaseComponent("navigation.generic")
-        EntityNavigationType._basic(navigation, 
+        EntityNavigationType._basic(
+            navigation,
             avoid_damage_blocks,
             avoid_portals,
             avoid_sun,
@@ -1563,7 +1575,8 @@ class EntityNavigationType:
     ):
         """Allows this entity to generate paths in the air like the vanilla Bees do. Keeps them from falling out of the skies and doing predictive movement."""
         navigation = _BaseComponent("navigation.hover")
-        EntityNavigationType._basic(navigation, 
+        EntityNavigationType._basic(
+            navigation,
             avoid_damage_blocks,
             avoid_portals,
             avoid_sun,
@@ -1611,7 +1624,8 @@ class EntityNavigationType:
     ):
         """Allows this entity to generate paths that include water."""
         navigation = _BaseComponent("navigation.swim")
-        EntityNavigationType._basic(navigation, 
+        EntityNavigationType._basic(
+            navigation,
             avoid_damage_blocks,
             avoid_portals,
             avoid_sun,
@@ -1659,7 +1673,8 @@ class EntityNavigationType:
     ):
         """Allows this entity to generate paths by walking around and jumping up and down a block like regular mobs."""
         navigation = _BaseComponent("navigation.walk")
-        EntityNavigationType._basic(navigation, 
+        EntityNavigationType._basic(
+            navigation,
             avoid_damage_blocks,
             avoid_portals,
             avoid_sun,
@@ -1709,20 +1724,13 @@ class EntityPreferredPath(_BaseComponent):
         self._add_field("preferred_path_blocks", [])
 
     def add_blocks(self, cost: int, *blocks: list[Block | Identifier]):
-        if not all(
-            isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks
-        ):
-            raise TypeError(
-                f"blocks must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{self._identifier}]."
-            )
-        
+        if not all(isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks):
+            raise TypeError(f"blocks must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{self._identifier}].")
+
         self._component["preferred_path_blocks"].append(
             {
                 "cost": cost,
-                "blocks": [
-                    str(block)
-                    for block in blocks
-                ],
+                "blocks": [str(block) for block in blocks],
             }
         )
         return self
@@ -1812,9 +1820,7 @@ class EntityRideable(_BaseComponent):
                 "min_rider_count": min_rider_count if not min_rider_count == 0 else {},
                 "rotate_rider_by": rotate_rider_by if not rotate_rider_by == 0 else {},
                 "third_person_camera_radius": third_person_camera_radius if not third_person_camera_radius == 1.0 else {},
-                "camera_relax_distance_smoothing": (
-                    camera_relax_distance_smoothing if not camera_relax_distance_smoothing == 1.0 else {}
-                ),
+                "camera_relax_distance_smoothing": (camera_relax_distance_smoothing if not camera_relax_distance_smoothing == 1.0 else {}),
             }
         )
 
@@ -1840,7 +1846,7 @@ class EntityProjectile(_BaseComponent):
         hit_sound: str = "",
         hit_ground_sound: str = "",
         homing: bool = False,
-        inertia: float = 0.09,
+        inertia: float = 0.9,
         is_dangerous: bool = False,
         knockback: bool = True,
         lightning: bool = False,
@@ -1882,7 +1888,7 @@ class EntityProjectile(_BaseComponent):
             self._add_field("hit_ground_sound", hit_ground_sound)
         if homing:
             self._add_field("homing", homing)
-        if inertia != 0.09:
+        if inertia != 0.9:
             self._add_field("inertia", inertia)
         if is_dangerous:
             self._add_field("is_dangerous", is_dangerous)
@@ -1997,9 +2003,7 @@ class EntityProjectile(_BaseComponent):
         if destroy_on_hit:
             self._component["on_hit"]["impact_damage"]["destroy_on_hit"] = destroy_on_hit
         if not destroy_on_hit_requires_damage:
-            self._component["on_hit"]["impact_damage"][
-                "destroy_on_hit_requires_damage"
-            ] = destroy_on_hit_requires_damage
+            self._component["on_hit"]["impact_damage"]["destroy_on_hit_requires_damage"] = destroy_on_hit_requires_damage
         if not knockback:
             self._component["on_hit"]["impact_damage"]["knockback"] = knockback
         if max_critical_damage != 5:
@@ -2011,9 +2015,7 @@ class EntityProjectile(_BaseComponent):
         if semi_random_diff_damage:
             self._component["on_hit"]["impact_damage"]["semi_random_diff_damage"] = semi_random_diff_damage
         if set_last_hurt_requires_damage:
-            self._component["on_hit"]["impact_damage"][
-                "set_last_hurt_requires_damage"
-            ] = set_last_hurt_requires_damage
+            self._component["on_hit"]["impact_damage"]["set_last_hurt_requires_damage"] = set_last_hurt_requires_damage
 
         return self
 
@@ -2477,19 +2479,15 @@ class EntityInsideBlockNotifier(_BaseComponent):
         block_name: MinecraftBlockDescriptor | Identifier,
         entered_block_event: str = None,
         exited_block_event: str = None,
-    ): 
+    ):
         if not isinstance(block_name, (MinecraftBlockDescriptor, str)):
-            raise TypeError(
-                f"block_name must be a MinecraftBlockDescriptor or Identifier instance. Component {self._identifier}[{block_name}]."
-            )
-        
+            raise TypeError(f"block_name must be a MinecraftBlockDescriptor or Identifier instance. Component {self._identifier}[{block_name}].")
+
         self._component["block_list"].append(
             {
                 "block": {
-                    "name": (
-                        str(block_name)
-                    ),
-                    "states": block_name.states if isinstance(block_name, MinecraftBlockDescriptor) and block_name.states !="" else {},
+                    "name": (str(block_name)),
+                    "states": block_name.states if isinstance(block_name, MinecraftBlockDescriptor) and block_name.states != "" else {},
                 }
             }
         )
@@ -2570,17 +2568,10 @@ class EntityTransformation(_BaseComponent):
         if not value == 0:
             self._component["delay"]["value"] = value
         if len(block_type) > 0:
-            if not all(
-                isinstance(block, (Block, Identifier)) for block in block_type
-            ):
-                raise TypeError(
-                    f"block_type must be a list of Block or Identifier instances. Component [{self._identifier}]."
-                )
-                
-            self._component["delay"]["block_type"] = [
-                str(block)
-                for block in block_type
-            ]
+            if not all(isinstance(block, (Block, Identifier)) for block in block_type):
+                raise TypeError(f"block_type must be a list of Block or Identifier instances. Component [{self._identifier}].")
+
+            self._component["delay"]["block_type"] = [str(block) for block in block_type]
 
         return self
 
@@ -2617,13 +2608,18 @@ class EntityEquipment(_BaseComponent):
         self._add_field("table", path)
 
 
-class Entity_EquipItem(_BaseComponent):
+class EntityEquipItem(_BaseComponent):
     _identifier = "minecraft:equip_item"
 
-    def __init__(self) -> None:
+    def __init__(self, can_wear_armor: bool = False, excluded_items: list[ItemDescriptor] = []) -> None:
         """Compels the entity to equip desired equipment."""
         super().__init__("equip_item")
-
+        if can_wear_armor:
+            self._add_field("can_wear_armor", can_wear_armor)
+        if excluded_items:
+            if not all(isinstance(item, ItemDescriptor) for item in excluded_items):
+                raise TypeError(f"excluded_items must be a list of ItemDescriptor instances. Component [{self._identifier}].")
+            self._add_field("excluded_items", excluded_items)
 
 class EntityFireImmune(_BaseComponent):
     _identifier = "minecraft:fire_immune"
@@ -2633,7 +2629,7 @@ class EntityFireImmune(_BaseComponent):
         super().__init__("fire_immune")
 
 
-class EntityEntitySensor(_BaseComponent):
+class EntitySensor(_BaseComponent):
     _identifier = "minecraft:entity_sensor"
 
     def __init__(self, relative_range: bool = True, find_players_only: bool = False) -> None:
@@ -3541,11 +3537,14 @@ class EntityConditionalBandwidthOptimization(_BaseComponent):
 
     def conditional_values(
         self,
+        filters: Filter = None,
         max_dropped_ticks: int = 0,
         max_optimized_distance: int = 0,
         use_motion_prediction_hints: bool = False,
     ):
-        a = {}
+        a = {
+            "conditional_values": [filters] if not filters is None else [],
+        }
         if max_dropped_ticks != 0:
             a["max_dropped_ticks"] = max_dropped_ticks
         if max_optimized_distance != 0:
@@ -3821,13 +3820,9 @@ class EntityBreedable(_BaseComponent):
         if mutation_strategy != BreedingMutationStrategy.None_:
             self._add_field("mutation_strategy", mutation_strategy.value)
         if parent_centric_attribute_blending is not None:
-            self._add_field(
-                "parent_centric_attribute_blending", [c.identifier for c in parent_centric_attribute_blending]
-            )
+            self._add_field("parent_centric_attribute_blending", [c.identifier for c in parent_centric_attribute_blending])
         if property_inheritance is not None:
-            self._add_field(
-                "property_inheritance", [f"{CONFIG.NAMESPACE}:{property}" for property in property_inheritance]
-            )
+            self._add_field("property_inheritance", [f"{CONFIG.NAMESPACE}:{property}" for property in property_inheritance])
         if random_extra_variant_mutation_interval != (0, 0):
             self._add_field("random_extra_variant_mutation_interval", random_extra_variant_mutation_interval)
         if random_variant_mutation_interval != (0, 0):
@@ -3936,15 +3931,15 @@ class EntityIsCollidable(_BaseComponent):
         super().__init__("is_collidable")
 
 
-class EntityBodyRotationAxisAligned(_BaseComponent):
-    _identifier = "minecraft:body_rotation_axis_aligned"
+class EntityRotationAxisAligned(_BaseComponent):
+    _identifier = "minecraft:rotation_axis_aligned"
 
     def __init__(self) -> None:
         """Causes the entity's body to automatically rotate to align with the nearest cardinal direction based on its current facing direction.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_axis_aligned
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rotation_axis_aligned
         """
-        super().__init__("body_rotation_axis_aligned")
+        super().__init__("rotation_axis_aligned")
 
 
 class EntityInputAirControlled(_BaseComponent):
@@ -4073,7 +4068,7 @@ class EntityBodyRotationAlwaysFollowsHead(_BaseComponent):
 
     def __init__(self) -> None:
         """Causes the entity's body to always be automatically rotated to align with the entity's head. Does not override the "minecraft:body_rotation_blocked" component.
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_always_follows_head
         """
         super().__init__("body_rotation_always_follows_head")
@@ -4101,6 +4096,7 @@ class EntityTimer(_BaseComponent):
             self._add_field("randomInterval", randomInterval)
         if not time == (0, 0):
             self._add_field("time", time)
+
 
 # AI Goals ==========================================================================
 
@@ -4264,7 +4260,6 @@ class EntityAINearestPrioritizedAttackableTarget(_ai_goal):
             }
         )
         return self
-
 
 
 class EntityAIKnockbackRoar(_ai_goal):
@@ -4522,9 +4517,7 @@ class EntityAIMeleeAttack(_ai_goal):
         return self
 
     def on_kill(self, on_kill: str, subject: FilterSubject = FilterSubject.Self, filter: Filter = None):
-        self._add_field(
-            "on_kill", {"event": on_kill, "filters": filter if not filter is None else {}, "target": subject}
-        )
+        self._add_field("on_kill", {"event": on_kill, "filters": filter if not filter is None else {}, "target": subject})
 
 
 class EntityAIRangedAttack(_ai_goal):
@@ -4758,9 +4751,7 @@ class EntityAIDelayedAttack(_ai_goal):
         return self
 
     def on_attack(self, on_attack: str, target: FilterSubject = FilterSubject.Self, filter: Filter = None):
-        self._add_field(
-            "on_attack", {"event": on_attack, "filters": filter if not filter is None else {}, "target": target}
-        )
+        self._add_field("on_attack", {"event": on_attack, "filters": filter if not filter is None else {}, "target": target})
         return self
 
 
@@ -4782,20 +4773,17 @@ class EntityAIMoveToBlock(_ai_goal):
     ) -> None:
         """Compels a mob to move towards a block."""
         super().__init__("behavior.move_to_block")
-        
+
         from anvil.lib.schemas import MinecraftBlockDescriptor
 
         if not all(isinstance(block, (MinecraftBlockDescriptor, str)) for block in target_blocks):
             raise TypeError(
                 f"All target_blocks must be either MinecraftBlockDescriptor instances or strings representing block identifiers. Component [{self._identifier}]"
-            ) 
-        
+            )
+
         self._add_field(
             "target_blocks",
-            [
-                str(block)
-                for block in target_blocks
-            ],
+            [str(block) for block in target_blocks],
         )
 
         if goal_radius != 0.5:
@@ -4910,9 +4898,7 @@ class EntityAIMoveTowardsTarget(_ai_goal):
 class EntityAIRandomSitting(_ai_goal):
     _identifier = "minecraft:behavior.random_sitting"
 
-    def __init__(
-        self, cooldown_time: float = 0, min_sit_time: float = 10, start_chance: float = 0.1, stop_chance: float = 0.3
-    ) -> None:
+    def __init__(self, cooldown_time: float = 0, min_sit_time: float = 10, start_chance: float = 0.1, stop_chance: float = 0.3) -> None:
         """Compels an entity to stop and sit for a random duration of time.
 
         Parameters:
@@ -6313,3 +6299,130 @@ class EntityAIRiseToLiquidLevel(_ai_goal):
             self._add_field("rise_delta", rise_delta)
         if sink_delta != 0.0:
             self._add_field("sink_delta", sink_delta)
+
+
+class EntityAITakeBlock(_ai_goal):
+    _identifier = "minecraft:behavior.take_block"
+
+    def __init__(
+        self,
+        affected_by_griefing_rule: bool = False,
+        blocks: list[BlockDescriptor] = [],
+        can_take: Filter = None,
+        chance: float = 0.0,
+        requires_line_of_sight: bool = False,
+        xz_range: Vector2D = (0, 0),
+        y_range: Vector2D = (0, 0),
+    ):
+        """Compels an entity to take blocks from the world, such as Endermen taking blocks.
+
+        Args:
+            affected_by_griefing_rule (bool, optional): Whether the goal is affected by the mob griefing game rule. Defaults to False.
+            blocks (list[BlockDescriptor], optional): Block descriptors for which blocks are valid to be taken by the entity, if empty all blocks are valid. Defaults to [].
+            can_take (Filter, optional): Filters for if the entity should try to take a block. Self and Target are set. Defaults to None.
+            chance (float, optional): Chance each tick for the entity to try and take a block. Defaults to 0.0.
+            requires_line_of_sight (bool, optional): Whether the entity needs line of sight to the block they are trying to take. Defaults to False.
+            xz_range (tuple[int, int], optional): XZ range from which the entity will try and take blocks from. Defaults to (0, 0).
+            y_range (tuple[int, int], optional): Y range from which the entity will try and take blocks from. Defaults to (0, 0).
+        
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_block
+        """
+        super().__init__("behavior.take_block")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.20.100")
+
+        if affected_by_griefing_rule:
+            self._add_field("affected_by_griefing_rule", affected_by_griefing_rule)
+        if blocks:
+            self._add_field("blocks", blocks)
+        if can_take is not None:
+            self._add_field("can_take", can_take)
+        if chance != 0.0:
+            self._add_field("chance", chance)
+        if requires_line_of_sight:
+            self._add_field("requires_line_of_sight", requires_line_of_sight)
+        if xz_range != (0, 0):
+            self._add_field("xz_range", xz_range)
+        if y_range != (0, 0):
+            self._add_field("y_range", y_range)
+
+    def on_take(self, event: str, target: FilterSubject = FilterSubject.Self):
+        """Sets the event to be triggered when the entity successfully takes a block.
+
+        Parameters:
+            event (str): The name of the event to trigger.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        Returns:
+            self: Returns the current instance for method chaining.
+        """
+        self._add_field("on_take", {"event": event, "target": target.value})
+        return self
+
+
+class EntityAIPlaceBlock(_ai_goal):
+    _identifier = "minecraft:behavior.place_block"
+
+    def __init__(
+        self,
+        affected_by_griefing_rule: bool = False,
+        can_place: Filter = None,
+        chance: float = 0.0,
+        placeable_carried_blocks: list[BlockDescriptor] = [],
+        xz_range: Vector2D = (0, 0),
+        y_range: Vector2D = (0, 0),
+    ) -> None:
+        """Compels an entity to place blocks in the world, such as Copper Golems placing statues.
+
+        Args:
+            affected_by_griefing_rule (bool, optional): Whether the goal is affected by the mob griefing game rule. Defaults to False.
+            can_place (Filter, optional): Filters for if the entity should try to place its block. Self and Target are set. Defaults to None.
+            chance (float, optional): Chance each tick for the entity to try and place a block. Defaults to 0.0.
+            placeable_carried_blocks (list[BlockDescriptor], optional): Block descriptors for which blocks are valid to be placed from the entity's carried item, if empty all blocks are valid. Defaults to [].
+            xz_range (Vector2D, optional): XZ range from which the entity will try and place blocks in. Defaults to (0, 0).
+            y_range (Vector2D, optional): Y range from which the entity will try and place blocks in. Defaults to (0, 0).
+        
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_place_block
+        """
+        super().__init__("behavior.place_block")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.20.100")
+
+        if affected_by_griefing_rule:
+            self._add_field("affected_by_griefing_rule", affected_by_griefing_rule)
+        if can_place is not None:
+            self._add_field("can_place", can_place)
+        if chance:
+            self._add_field("chance", chance)
+        if placeable_carried_blocks:
+            self._add_field("placeable_carried_blocks", placeable_carried_blocks)
+        if xz_range != (0, 0):
+            self._add_field("xz_range", xz_range)
+        if y_range != (0, 0):
+            self._add_field("y_range", y_range)
+        self._add_field("randomly_placeable_blocks", [])
+
+    def on_place(self, event: str, target: FilterSubject = FilterSubject.Self):
+        """Sets the event to be triggered when the entity successfully places a block.
+
+        Parameters:
+            event (str): The name of the event to trigger.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        Returns:
+            self: Returns the current instance for method chaining.
+        """
+        self._add_field("on_place", {"event": event, "target": target.value})
+        return self
+
+    def randomly_placeable_block(self, block: BlockDescriptor, filter: Filter, states: dict[str, Any] = None):
+        """Sets the block that the entity can randomly place.
+
+        Parameters:
+            block (BlockDescriptor): The block descriptor for which the block should be randomly placed.
+            filter (Filter): The filter that determines when the block can be placed.
+            states (dict[str, Any], optional): The states of the block to be placed.
+
+        Returns:
+            self: Returns the current instance for method chaining.
+        """
+        self._get_field("randomly_placeable_blocks").append({"block": {"name": block.name, "states": states if states else {}}, "filter": filter})
+        return self

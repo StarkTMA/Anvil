@@ -1,0 +1,19 @@
+{
+    "format_version": 2,
+    "header": {
+        "name": "pack.name",
+        "description": "pack.description",
+        "version": "{{ version }}",
+        "uuid": "{{ world_uuid }}",
+        "lock_template_options": true,
+        "min_engine_version": "{{ engine_version }}"
+    },
+    "modules": [
+        { "type": "world_template", "uuid": "{{ world_module_uuid }}", "version": "{{ version }}" }
+    ],
+    "metadata": {
+        "authors": [
+            "{{ company }}"
+        ]
+    }
+}

@@ -19,6 +19,7 @@ class Target(StrEnum):
     C = "@c"
     V = "@v"
     Initiator = "@initiator"
+    N = "@n"
 
 
 class Style(StrEnum):
@@ -1646,6 +1647,7 @@ class MinecraftBiomeTypes(StrEnum):
     WarmOcean = "minecraft:warm_ocean"
     WarpedForest = "minecraft:warped_forest"
 
+
 class MinecraftBiomeTags(StrEnum):
     Animal = "animal"
     BasaltDeltas = "basalt_deltas"
@@ -1713,3 +1715,30 @@ class MinecraftBiomeTags(StrEnum):
     TheEnd = "the_end"
     Warm = "warm"
     WarpedForest = "warped_forest"
+
+
+class BlockMovementType(StrEnum):
+    """
+    Enumeration for the different types of block movement in Minecraft.
+
+    PushPull: The default value for this field. The block will be pushed and pulled by a piston.
+    Push: The block will only be pulled by a piston and will ignore a sticky piston.
+    Popped: The block is destroyed when moved by a piston.
+    Immovable: The block is unaffected by a piston.
+    """
+
+    PushPull = "push_pull"
+    Push = "push"
+    Popped = "popped"
+    Immovable = "immovable"
+
+class BlockStickyType(StrEnum):
+    """
+    Enumeration for the different types of block stickiness in Minecraft.
+
+    Sticky: The block will stick to a sticky piston.
+    NonSticky: The block will not stick to a sticky piston.
+    """
+
+    Same = "same"
+    None_ = "none"

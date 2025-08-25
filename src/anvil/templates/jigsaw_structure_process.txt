@@ -1,0 +1,9 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:processor_list": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        },
+        "processors": []
+    }
+}

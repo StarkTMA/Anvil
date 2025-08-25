@@ -1,4 +1,4 @@
-MANIFEST_BUILD: str = "1.21.92"  # The build version of the manifest.
+MANIFEST_BUILD: str = "1.21.100"  # The build version of the manifest.
 BLOCK_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the block server.
 ENTITY_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = MANIFEST_BUILD  # The version of the entity client.
@@ -24,7 +24,7 @@ CRAFTING_ITEMS_CATALOG = "1.21.60"  # The version of the crafting items catalog.
 
 PBR_SETTINGS_VERSION: str = MANIFEST_BUILD  # The version of the atmospheric effects.
 
-MODULE_MINECRAFT_SERVER: str = "2.0.0"  # The version of the Minecraft server module.
+MODULE_MINECRAFT_SERVER: str = "2.1.0"  # The version of the Minecraft server module.
 MODULE_MINECRAFT_SERVER_UI: str = "2.0.0"  # The version of the Minecraft UI module.
 MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"  # The version of the Minecraft UI module.
 MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"  # The version of the Minecraft UI module.

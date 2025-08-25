@@ -1,6 +1,7 @@
 import os
 import zipfile
 from datetime import datetime
+from typing import Optional
 
 import click
 from halo import Halo
@@ -18,7 +19,8 @@ from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.sounds import (EntitySoundEvent, MusicCategory, MusicDefinition,
                               SoundCategory, SoundDefinition, SoundEvent)
 from anvil.lib.textures import (BlocksJSONObject, ItemTexturesObject,
-                                TerrainTexturesObject)
+                                TerrainTexturesObject, UITexturesObject)
+from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import Identifier
 
 from ..__version__ import __version__
@@ -34,7 +36,7 @@ class _AnvilSkinPack(AddonObject):
         self._config = config
         self._languages = []
         self._skins = []
-        self.content(JsonSchemes.skins_json(self._config.PROJECT_NAME))
+        self.content(JsonSchemes.skin_pack(self._config.PROJECT_NAME))
 
     def add_skin(
         self,
@@ -76,17 +78,19 @@ class _AnvilDefinitions:
     _sound_event_object: SoundEvent = None
     _item_textures_object: ItemTexturesObject = None
     _terrain_texture_object: TerrainTexturesObject = None
+    _ui_textures_object: UITexturesObject = None
 
     _scores: dict[str, int] = {}
-    _language: dict[str, str] = {}
     _tags: set[str] = ()
     _raw_text: int = 0
+    _translator: AnvilTranslator = None
 
     _blocks_object: BlocksJSONObject = None
 
     def __init__(self, config: _AnvilConfig):
         self.config = config
         self._materials_object = _MaterialsObject()
+        self._translator = AnvilTranslator()
 
     def register_sound_definition(
         self,
@@ -159,6 +163,11 @@ class _AnvilDefinitions:
             self._item_textures_object = ItemTexturesObject()
         return self._item_textures_object.add_item(item_name, directory, *item_sprites)
 
+    def register_ui_textures(self, item_name: str, directory: str, *item_sprites: str):
+        if self._ui_textures_object is None:
+            self._ui_textures_object = UITexturesObject()
+        return self._ui_textures_object.add_item(item_name, directory, *item_sprites)
+
     def register_music(self, music_reference: MusicCategory | str, min_delay: int = 60, max_delay: int = 180):
         """Adds a music to the music definition.
 
@@ -203,8 +212,7 @@ class _AnvilDefinitions:
 
     def register_lang(self, key: str, value: str):
         """Adds a localized string to en_US. Translatable."""
-        if key not in self._language:
-            self._language.update({key: value})
+        self._translator.add_localization_entry(key, value)
 
     def register_tag(self, *tags: str):
         """Registers tags.
@@ -266,8 +274,8 @@ class _AnvilDefinitions:
     def _export_manifest(self, extract_world: bool = False):
         release_list = [int(i) for i in self.config._RELEASE.split(".")]
 
-        File("manifest.json", JsonSchemes.manifest_rp(version=release_list), self.config.RP_PATH, "w")
-        File("manifest.json", JsonSchemes.manifest_bp(version=release_list), self.config.BP_PATH, "w")
+        File("manifest.json", JsonSchemes.manifest_rp(version=self.config._RELEASE), self.config.RP_PATH, "w")
+        File("manifest.json", JsonSchemes.manifest_bp(version=self.config._RELEASE), self.config.BP_PATH, "w")
         if extract_world:
             File("manifest.json", JsonSchemes.manifest_world(version=release_list), self.config._WORLD_PATH, "w")
 
@@ -284,40 +292,19 @@ class _AnvilDefinitions:
                 "w",
             )
 
-    def _export_language(self):
-        default_langs = JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.RESOURCE_DESCRIPTION)
-        langs = default_langs.copy()
-        langs.extend([f"{k}={v}" for k, v in self._language.items()])
-        langs.sort(reverse=True)
-
-        File("languages.json", ["en_US"], os.path.join(self.config.BP_PATH, "texts"), "w")
-        File("languages.json", ["en_US"], os.path.join(self.config.RP_PATH, "texts"), "w")
-
-        File("en_US.lang", "\n".join(langs), os.path.join(self.config.RP_PATH, "texts"), "w")
-        File(
-            "en_US.lang",
-            "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.BEHAVIOUR_DESCRIPTION)),
-            os.path.join(self.config.BP_PATH, "texts"),
-            "w",
-        )
-
-        if self.config._TARGET == "world":
-            File("languages.json", ["en_US"], os.path.join(self.config._WORLD_PATH, "texts"), "w")
-            File(
-                "en_US.lang",
-                "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
-                os.path.join(self.config._WORLD_PATH, "texts"),
-                "w",
-            )
-
     def _export_scripts(self):
-        File(
-            "package.json",
-            JsonSchemes.packagejson(self.config.PROJECT_NAME, self.config._RELEASE, self.config.PROJECT_DESCRIPTION, self.config.COMPANY),
-            "",
-            "w",
-            True,
-        )
+        if not FileExists("tsconfig.json"):
+            File("tsconfig.json", JsonSchemes.tsconfig(self.config.BP_PATH), "", "w", False)
+        if not FileExists("esbuild.js") and "esbuild" in self.config._SCRIPT_BUNDLE_SCRIPT:
+            File("esbuild.js", JsonSchemes.esbuild_config_js(self.config.BP_PATH, self.config._MINIFY), "", "w", False)
+        if not FileExists("package.json"):
+            File(
+                "package.json",
+                JsonSchemes.package_json(self.config.PROJECT_NAME, self.config._RELEASE, self.config.PROJECT_DESCRIPTION, self.config.COMPANY),
+                "",
+                "w",
+                True,
+            )
 
     def _export_helper_functions(self):
         from anvil.api.logic.commands import (Scoreboard, ScriptEvent, Tag,
@@ -380,16 +367,20 @@ class _AnvilDefinitions:
             self._terrain_texture_object.queue
         if not self._blocks_object == None:
             self._blocks_object.queue
+        if not self._ui_textures_object == None:
+            self._ui_textures_object.queue
 
         self._export_manifest(extract_world)
-        self._export_language()
+        self._translator._export()
         # self._export_helper_functions()
 
         if any([self.config._SCRIPT_API, self.config._SCRIPT_UI]):
             self._export_scripts()
 
 
-class _AnvilCore:
+class _Anvil:
+    """A class representing an Anvil instance."""
+
     _instance = None
     _objects_list: list[AddonObject] = []
     _definitions: _AnvilDefinitions
@@ -407,7 +398,6 @@ class _AnvilCore:
         else:
             raise Exception("Anvil instance already exists.")
 
-        super().__init__()
         self._compiled = False
         self._config = config
         validate_namespace_project_name(config.NAMESPACE, config.PROJECT_NAME)
@@ -421,81 +411,18 @@ class _AnvilCore:
     def config(self):
         return self._config
 
-    def require_config(self, *options):
-        """Checks if the config has the required options.
-
-        Parameters:
-            options (str): The options to check.
-        """
-        if not self.config.Config.has_section(self.config.PROJECT_NAME):
-            click.echo("The project require missing configuration. Please fill in the following options:", err=True, color="red")
-            click.echo(f"The options {options} can be changed from the config file at any time, recompilation will be required.", err=True, color="cyan")
-            self.config.Config.add_section(self.config.PROJECT_NAME)
-
-        for option in options:
-            if not self.config.Config.has_option(self.config.PROJECT_NAME, option):
-                self.config.Config.add_option(self.config.PROJECT_NAME, str(option), input(f"Enter {option}: "))
-                click.echo(f"{option} was added to {self.config.PROJECT_NAME}", err=True, color="cyan")
-
     @Halo(text="Translating", spinner="dots")
-    def translate(self) -> None:
-        """
-        Translates en_US to all supported Minecraft languages.
-        This is a time consuming function, it will be executed with anvil.package(), so it's better to avoid it unless you really want to use it.
-        """
+    def translate(self, languages: Optional[list[str]] = None) -> None:
+        """Translates the project."""
+        self.definitions._translator.auto_translate_all(languages)
 
-        from deep_translator import GoogleTranslator
-
-        def _to_lang(translator: GoogleTranslator, langs: dict):
-            lang = JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)
-            translated = translator.translate_batch(langs.values())
-            for k, v in zip(langs.keys(), translated):
-                lang.append(f"{k}={v}")
-            return lang
-
-        File("languages.json", JsonSchemes.languages(), os.path.join(self.config.BP_PATH, "texts"), "w")
-        File("languages.json", JsonSchemes.languages(), os.path.join(self.config.RP_PATH, "texts"), "w")
-
-        if self.config._TARGET == "world":
-            File("languages.json", JsonSchemes.languages(), os.path.join(self.config._WORLD_PATH, "texts"), "w")
-
-        for language in JsonSchemes.languages():
-            destination_language = language.replace("zh_CN", "zh-CN").replace("zh_TW", "zh-TW").replace("nb_NO", "no").split("_")[0]
-            if not FileExists(
-                os.path.join(
-                    self.config.RP_PATH,
-                    "texts",
-                    f"{language}.lang",
-                )
-            ):
-                self._langs = dict(sorted(self.definitions._language.items()))
-                Translator = GoogleTranslator(target=destination_language)
-                File(
-                    f"{language}.lang",
-                    "\n".join(_to_lang(Translator, self._langs)),
-                    os.path.join(self.config.RP_PATH, "texts"),
-                    "w",
-                )
-                File(
-                    f"{language}.lang",
-                    "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.BEHAVIOUR_DESCRIPTION)),
-                    os.path.join(self.config.BP_PATH, "texts"),
-                    "w",
-                )
-                if self.config._TARGET == "world":
-                    File(
-                        f"{language}.lang",
-                        "\n".join(JsonSchemes.pack_name_lang(self.config.DISPLAY_NAME, self.config.PROJECT_DESCRIPTION)),
-                        os.path.join(self.config._WORLD_PATH, "texts"),
-                        "w",
-                    )
-
+    @Halo(text="Compiling", spinner="dots")
     def compile(self, extract_world: str = None) -> None:
         """Compiles the project."""
 
         if extract_world != None and type(extract_world) is str:
             RemoveDirectory(self.config._WORLD_PATH)
-            with zipfile.ZipFile(os.path.join("assets", "world", f"{extract_world}.mcworld"), "r") as zip_ref:
+            with zipfile.ZipFile(os.path.join("world", f"{extract_world}.mcworld"), "r") as zip_ref:
                 zip_ref.extractall(self.config._WORLD_PATH)
 
         self._definitions.queue(extract_world != None)
@@ -520,33 +447,201 @@ class _AnvilCore:
                 )
 
         if self.config._SCRIPT_API:
-            if not FileExists("tsconfig.json"):
-                File("tsconfig.json", JsonSchemes.tsconfig(self.config.BP_PATH), "", "w", False)
-            if not FileExists("esbuild.js"):
-                File("esbuild.js", JsonSchemes.esbuild_config_js(self.config.BP_PATH), "", "w", False)
-            if not FileExists("package.json"):
-                File(
-                    "package.json",
-                    JsonSchemes.packagejson(self.config.PROJECT_NAME, self.config._RELEASE, self.config.PROJECT_DESCRIPTION, self.config.COMPANY),
-                    "",
-                    "w",
-                    True,
-                )
+
             process_subcommand(self.config._SCRIPT_BUNDLE_SCRIPT, "Typescript compilation error")
 
         self._compiled = True
+
+    @Halo(text="Packaging ZIP", spinner="dots")
+    def package_zip(
+        self,
+        apply_overlay: bool = False,
+    ) -> None:
+        """Packages the project into a zip file for Marketplace."""
+        if not self._compiled:
+            raise RuntimeError("Project must be compiled before packaging.")
+        click.echo("Packaging submission zip file for Marketplace...", color="green")
+
+        self._process_art(apply_overlay)
+
+        content_structure = {
+            os.path.join("output", "Store Art"): os.path.join("Store Art"),
+            os.path.join("output", "Marketing Art"): os.path.join("Marketing Art"),
+        }
+
+        if self.config._TARGET == ConfigPackageTarget.ADDON:
+            if len(self.config._RP_UUID) > 1:
+                raise RuntimeError("Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack.")
+            if len(self.config._BP_UUID) > 1:
+                raise RuntimeError("Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack.")
+
+            content_structure.update(
+                {
+                    self.config.RP_PATH: os.path.join("Content", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
+                    self.config.BP_PATH: os.path.join("Content", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
+                }
+            )
+
+        else:
+            content_structure.update(
+                {
+                    self.config.RP_PATH: os.path.join("Content", "world_template", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
+                    self.config.BP_PATH: os.path.join("Content", "world_template", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
+                    os.path.join(self.config._WORLD_PATH, "texts"): os.path.join("Content", "world_template", "texts"),
+                    os.path.join(self.config._WORLD_PATH, "level.dat"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "levelname.txt"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "manifest.json"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "world_icon.jpeg"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "world_behavior_packs.json"): os.path.join("Content", "world_template"),
+                    os.path.join(self.config._WORLD_PATH, "world_resource_packs.json"): os.path.join("Content", "world_template"),
+                }
+            )
+            if not self.config._RANDOM_SEED:
+                content_structure.update(
+                    {
+                        os.path.join(self.config._WORLD_PATH, "db"): os.path.join("Content", "world_template", "db"),
+                    }
+                )
+
+        zipit(
+            os.path.join("output", f"{self.config.PROJECT_NAME}.zip"),
+            content_structure,
+        )
+
+        RemoveDirectory(os.path.join("output", "Store Art"))
+        RemoveDirectory(os.path.join("output", "Marketing Art"))
+
+    @Halo(text="Packaging mcaddon", spinner="dots")
+    def mcaddon(self):
+        """Packages the project into a .mcaddon file."""
+        if not self._compiled:
+            raise RuntimeError("Project must be compiled before packaging.")
+        click.echo("Packaging .mcaddon file...", color="green")
+
+        self._process_art(False, False)
+
+        content_structure = {
+            self.config.RP_PATH: f"RP_{self.config.PROJECT_NAME}",
+            self.config.BP_PATH: f"BP_{self.config.PROJECT_NAME}",
+        }
+
+        zipit(os.path.join("output", f"{self.config.PROJECT_NAME}.mcaddon"), content_structure)
+
+    @Halo(text="Packaging mcworld", spinner="dots")
+    def mcworld(self):
+        """Packages the project into a .mcworld file."""
+        if not self._compiled:
+            raise RuntimeError("Project must be compiled before packaging.")
+        click.echo("Packaging .mcworld file...", color="green")
+
+        self._process_art(False, False)
+
+        content_structure = {
+            self.config.RP_PATH: os.path.join("resource_packs", f"RP_{self.config.PROJECT_NAME}"),
+            self.config.BP_PATH: os.path.join("behavior_packs", f"BP_{self.config.PROJECT_NAME}"),
+            os.path.join(self.config._WORLD_PATH, "texts"): "texts",
+            os.path.join(self.config._WORLD_PATH, "level.dat"): "",
+            os.path.join(self.config._WORLD_PATH, "levelname.txt"): "",
+            os.path.join(self.config._WORLD_PATH, "manifest.json"): "",
+            os.path.join(self.config._WORLD_PATH, "world_icon.jpeg"): "",
+            os.path.join(self.config._WORLD_PATH, "world_behavior_packs.json"): "",
+            os.path.join(self.config._WORLD_PATH, "world_resource_packs.json"): "",
+        }
+
+        zipit(
+            os.path.join("output", f"{self.config.PROJECT_NAME}.mcworld"),
+            content_structure,
+        )
+
+    @Halo(text="Generating technical notes", spinner="dots")
+    def generate_technical_notes(self):
+        """Generates a technical notes PDF that contains information about included entities, blocks, items, sounds and more."""
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.units import cm
+        from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer,
+                                        Table, TableStyle)
+
+        def add_table(section_name: str, data: dict[bool, set[str]]):
+            title_style.spaceBefore = 0
+            title_style.fontSize = 14
+            title_style.textColor = colors.royalblue
+            title = Paragraph(section_name, title_style)
+
+            converted_data = []
+            vanilla_true_rows = []
+
+            for idx, (row, columns) in enumerate(data.items()):
+                vals = []
+                for col_name, col_values in columns.items():
+                    value_string = "<br/>".join(col_values)
+                    if col_name != "vanilla":
+                        vals.append(Paragraph(value_string, styles["Normal"]))
+                    elif value_string == "True":
+                        vanilla_true_rows.append(idx)
+                converted_data.append([Paragraph(row, styles["Normal"]), *vals])
+
+            table = Table(converted_data, hAlign="LEFT", colWidths=doc.width / len(converted_data[0]))
+
+            style_commands = [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("FONTSIZE", (0, 0), (-1, 0), 12),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica"),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("GRID", (0, 0), (-1, -1), 1, colors.black),
+            ]
+            for row in vanilla_true_rows:
+                style_commands.append(("BACKGROUND", (0, row), (-1, row), colors.lightgreen))
+            table.setStyle(TableStyle(style_commands))
+
+            return title, Spacer(1, 0.3 * cm), table, Spacer(1, 1 * cm)
+
+        doc = SimpleDocTemplate(
+            os.path.join("output", "technical_notes.pdf"),
+            pagesize=A4,
+            leftMargin=1 * cm,
+            rightMargin=1 * cm,
+            topMargin=1 * cm,
+            bottomMargin=1 * cm,
+            title=f"{self.config.DISPLAY_NAME} Technical Notes",
+            author=self.config.COMPANY,
+            subject=f"{self.config.DISPLAY_NAME} Technical Notes",
+            creator=f"Anvil@stark_lg {__version__}",
+        )
+        styles = getSampleStyleSheet()
+        title_style = styles["Heading1"]
+        body_style = styles["BodyText"]
+        bullet_style = styles["Bullet"]
+
+        elements = [
+            Paragraph(f"{self.config.DISPLAY_NAME}:", title_style),
+            Paragraph(f"Developed by: {self.config.COMPANY}", body_style),
+            Paragraph(f"Generated with StarkTMA/Anvil {__version__}", body_style),
+            Spacer(1, 1 * cm),
+            Paragraph("General information:", title_style),
+            Paragraph("The following technical notes have been entirely generated from source code using Anvil.", body_style),
+            Paragraph("Features overwriting vanilla defaults will be highlighted in green.", bullet_style, "*"),
+            Spacer(1, 1 * cm),
+            *add_table("Entities:", self.config.Report.dict[ReportType.ENTITY]),
+            *add_table("Attachables:", self.config.Report.dict[ReportType.ATTACHABLE]),
+            *add_table("Items:", self.config.Report.dict[ReportType.ITEM]),
+            *add_table("Blocks:", self.config.Report.dict[ReportType.BLOCK]),
+            *add_table("Particles:", self.config.Report.dict[ReportType.PARTICLE]),
+            *add_table("Sounds:", self.config.Report.dict[ReportType.SOUND]),
+        ]
+
+        doc.build(elements)
 
     def _queue(self, object: AddonObject):
         """Queues an object to be compiled."""
         self._objects_list.append(object)
 
-
-class _Anvil(_AnvilCore):
-    """A class representing an Anvil instance."""
-
-    def __init__(self, config: _AnvilConfig):
-        super().__init__(config)
-
+    @Halo(text="Processing Art", spinner="dots")
     def _process_art(self, apply_overlay: bool = False, zip: bool = True):
         def resize(image: Image.Image, name: str, output: str, size, quality=95, dpi=72, overlay: Image.Image = None):
             resized = image.resize(size)
@@ -663,188 +758,3 @@ class _Anvil(_AnvilCore):
                 resize(original, f"{self.config.PROJECT_NAME}_packicon_0.jpg", output_store, pack_icon_size)
             else:
                 raise FileNotFoundError("pack_icon.png not found in marketing directory. Please ensure the file exists.")
-
-    def package_zip(
-        self,
-        skip_translation: bool = False,
-        apply_overlay: bool = False,
-    ) -> None:
-        """Packages the project into a zip file for Marketplace."""
-        if not self._compiled:
-            raise RuntimeError("Project must be compiled before packaging.")
-        click.echo("Packaging submission zip file for Marketplace...", color="green")
-
-        if not skip_translation:
-            self.translate()
-
-        self._process_art(apply_overlay)
-
-        content_structure = {
-            os.path.join("output", "Store Art"): os.path.join("Store Art"),
-            os.path.join("output", "Marketing Art"): os.path.join("Marketing Art"),
-        }
-
-        if self.config._TARGET == ConfigPackageTarget.ADDON:
-            if len(self.config._RP_UUID) > 1:
-                raise RuntimeError("Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack.")
-            if len(self.config._BP_UUID) > 1:
-                raise RuntimeError("Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack.")
-
-            content_structure.update(
-                {
-                    self.config.RP_PATH: os.path.join("Content", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
-                    self.config.BP_PATH: os.path.join("Content", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
-                }
-            )
-
-        else:
-            content_structure.update(
-                {
-                    self.config.RP_PATH: os.path.join("Content", "world_template", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
-                    self.config.BP_PATH: os.path.join("Content", "world_template", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
-                    os.path.join(self.config._WORLD_PATH, "texts"): os.path.join("Content", "world_template", "texts"),
-                    os.path.join(self.config._WORLD_PATH, "level.dat"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "levelname.txt"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "manifest.json"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "world_icon.jpeg"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "world_behavior_packs.json"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "world_resource_packs.json"): os.path.join("Content", "world_template"),
-                }
-            )
-            if not self.config._RANDOM_SEED:
-                content_structure.update(
-                    {
-                        os.path.join(self.config._WORLD_PATH, "db"): os.path.join("Content", "world_template", "db"),
-                    }
-                )
-
-        zipit(
-            os.path.join("output", f"{self.config.PROJECT_NAME}.zip"),
-            content_structure,
-        )
-
-        RemoveDirectory(os.path.join("output", "Store Art"))
-        RemoveDirectory(os.path.join("output", "Marketing Art"))
-
-    def mcaddon(self):
-        """Packages the project into a .mcaddon file."""
-        if not self._compiled:
-            raise RuntimeError("Project must be compiled before packaging.")
-        click.echo("Packaging .mcaddon file...", color="green")
-
-        self._process_art(False, False)
-
-        content_structure = {
-            self.config.RP_PATH: f"RP_{self.config.PROJECT_NAME}",
-            self.config.BP_PATH: f"BP_{self.config.PROJECT_NAME}",
-        }
-
-        zipit(os.path.join("output", f"{self.config.PROJECT_NAME}.mcaddon"), content_structure)
-
-    def mcworld(self):
-        """Packages the project into a .mcworld file."""
-        if not self._compiled:
-            raise RuntimeError("Project must be compiled before packaging.")
-        click.echo("Packaging .mcworld file...", color="green")
-
-        self._process_art(False, False)
-
-        content_structure = {
-            self.config.RP_PATH: os.path.join("resource_packs", f"RP_{self.config.PROJECT_NAME}"),
-            self.config.BP_PATH: os.path.join("behavior_packs", f"BP_{self.config.PROJECT_NAME}"),
-            os.path.join(self.config._WORLD_PATH, "texts"): "texts",
-            os.path.join(self.config._WORLD_PATH, "level.dat"): "",
-            os.path.join(self.config._WORLD_PATH, "levelname.txt"): "",
-            os.path.join(self.config._WORLD_PATH, "manifest.json"): "",
-            os.path.join(self.config._WORLD_PATH, "world_icon.jpeg"): "",
-            os.path.join(self.config._WORLD_PATH, "world_behavior_packs.json"): "",
-            os.path.join(self.config._WORLD_PATH, "world_resource_packs.json"): "",
-        }
-
-        zipit(
-            os.path.join("output", f"{self.config.PROJECT_NAME}.mcworld"),
-            content_structure,
-        )
-
-    def generate_technical_notes(self):
-        """Generates a technical notes PDF that contains information about included entities, blocks, items, sounds and more."""
-        from reportlab.lib import colors
-        from reportlab.lib.pagesizes import A4
-        from reportlab.lib.styles import getSampleStyleSheet
-        from reportlab.lib.units import cm
-        from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer,
-                                        Table, TableStyle)
-
-        def add_table(section_name: str, data: dict[bool, set[str]]):
-            title_style.spaceBefore = 0
-            title_style.fontSize = 14
-            title_style.textColor = colors.royalblue
-            title = Paragraph(section_name, title_style)
-
-            converted_data = []
-            vanilla_true_rows = []
-
-            for idx, (row, columns) in enumerate(data.items()):
-                vals = []
-                for col_name, col_values in columns.items():
-                    value_string = "<br/>".join(col_values)
-                    if col_name != "vanilla":
-                        vals.append(Paragraph(value_string, styles["Normal"]))
-                    elif value_string == "True":
-                        vanilla_true_rows.append(idx)
-                converted_data.append([Paragraph(row, styles["Normal"]), *vals])
-
-            table = Table(converted_data, hAlign="LEFT", colWidths=doc.width / len(converted_data[0]))
-
-            style_commands = [
-                ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("FONTSIZE", (0, 0), (-1, 0), 12),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica"),
-                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
-                ("GRID", (0, 0), (-1, -1), 1, colors.black),
-            ]
-            for row in vanilla_true_rows:
-                style_commands.append(("BACKGROUND", (0, row), (-1, row), colors.lightgreen))
-            table.setStyle(TableStyle(style_commands))
-
-            return title, Spacer(1, 0.3 * cm), table, Spacer(1, 1 * cm)
-
-        doc = SimpleDocTemplate(
-            os.path.join("output", "technical_notes.pdf"),
-            pagesize=A4,
-            leftMargin=1 * cm,
-            rightMargin=1 * cm,
-            topMargin=1 * cm,
-            bottomMargin=1 * cm,
-            title=f"{self.config.DISPLAY_NAME} Technical Notes",
-            author=self.config.COMPANY,
-            subject=f"{self.config.DISPLAY_NAME} Technical Notes",
-            creator=f"Anvil@stark_lg {__version__}",
-        )
-        styles = getSampleStyleSheet()
-        title_style = styles["Heading1"]
-        body_style = styles["BodyText"]
-        bullet_style = styles["Bullet"]
-
-        elements = [
-            Paragraph(f"{self.config.DISPLAY_NAME}:", title_style),
-            Paragraph(f"Developed by: {self.config.COMPANY}", body_style),
-            Paragraph(f"Generated with StarkTMA/Anvil {__version__}", body_style),
-            Spacer(1, 1 * cm),
-            Paragraph("General information:", title_style),
-            Paragraph("The following technical notes have been entirely generated from source code using Anvil.", body_style),
-            Paragraph("Features overwriting vanilla defaults will be highlighted in green.", bullet_style, "*"),
-            Spacer(1, 1 * cm),
-            *add_table("Entities:", self.config.Report.dict[ReportType.ENTITY]),
-            *add_table("Attachables:", self.config.Report.dict[ReportType.ATTACHABLE]),
-            *add_table("Items:", self.config.Report.dict[ReportType.ITEM]),
-            *add_table("Blocks:", self.config.Report.dict[ReportType.BLOCK]),
-            *add_table("Particles:", self.config.Report.dict[ReportType.PARTICLE]),
-            *add_table("Sounds:", self.config.Report.dict[ReportType.SOUND]),
-        ]
-
-        doc.build(elements)

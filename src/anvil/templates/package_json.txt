@@ -1,0 +1,9 @@
+{
+    "name": "{{ project_name }}",
+    "version": "{{ version }}",
+    "description": "{{ description }}",
+    "type": "module",
+    "keywords": [],
+    "author": "{{ author }}",
+    "license": "ISC"
+}

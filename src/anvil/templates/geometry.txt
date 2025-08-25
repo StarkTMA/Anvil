@@ -1,0 +1,16 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:geometry": [
+        {
+            "description": {
+                "identifier": "geometry.{{ namespace }}.{{ model_name }}",
+                "texture_width": {{ texture_width }},
+                "texture_height": {{ texture_height }},
+                "visible_bounds_width": {{ visible_bounds_width }},
+                "visible_bounds_height": {{ visible_bounds_height }},
+                "visible_bounds_offset": {{ visible_bounds_offset }}
+            },
+            "bones": []
+        }
+    ]
+}

@@ -1,0 +1,1 @@
+skinpack.{{ name }}={{ display_name }}

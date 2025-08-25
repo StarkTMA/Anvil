@@ -241,7 +241,7 @@ class SoundEvent(AddonObject):
     def __init__(self) -> None:
         """Initializes a SoundEvent instance."""
         super().__init__("sounds")
-        self.content(JsonSchemes.sounds())
+        self.content(JsonSchemes.sounds_json())
 
     def add_entity_event(
         self,

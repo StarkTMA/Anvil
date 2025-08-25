@@ -51,6 +51,7 @@ class ConfigOption(StrEnum):
     PREVIEW = "preview"
     ENTRY_POINT = "entry_point"
     JS_BUNDLE_SCRIPT = "js_bundle_script"
+    MINIFY = "minify"
 
 
 class ConfigPackageTarget(StrEnum):
@@ -159,6 +160,7 @@ class _AnvilConfig:
     _EXPERIMENTAL: bool
     _DATA_MODULE_UUID: str
     _SCRIPT_MODULE_UUID: str
+    _MINIFY: bool
 
     def _handle_config(self, section: ConfigSection, option: ConfigOption, prompt) -> None:
         """Handles the config of the Anvil instance.
@@ -202,8 +204,7 @@ class _AnvilConfig:
         self._RANDOM_SEED = self._handle_config(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False)
         self._EXPERIMENTAL = self._handle_config(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
         self._PREVIEW = self._handle_config(ConfigSection.ANVIL, ConfigOption.PREVIEW, False)
-        self._ENTRY_POINT = self._handle_config(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "main.py")
-        self._SCRIPT_BUNDLE_SCRIPT = self._handle_config(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "npm start")
+        self._ENTRY_POINT = self._handle_config(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py")
 
         self._RP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
         self._BP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
@@ -211,9 +212,12 @@ class _AnvilConfig:
         self._DATA_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
         if self._SCRIPT_API:
             self._SCRIPT_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4()))
+            self._SCRIPT_BUNDLE_SCRIPT = self._handle_config(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js")
 
         if self._TARGET not in ConfigPackageTarget:
             raise ValueError(f"Invalid package target '{self._TARGET}'. Must be one of {list(ConfigPackageTarget)}.")
+
+        self._MINIFY = self._handle_config(ConfigSection.ANVIL, ConfigOption.MINIFY, False)
 
         validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon")
 

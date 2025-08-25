@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import os
+import traceback
 import uuid
 from typing import Any, Dict, List, Mapping
 
@@ -9,9 +11,9 @@ from packaging.version import Version
 from anvil import CONFIG
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.format_versions import *
-from anvil.lib.lib import File, salt_from_str
+from anvil.lib.lib import APPDATA, File, salt_from_str
+from anvil.lib.templater import load_file
 from anvil.lib.types import Identifier
-import traceback
 
 
 class JsonSchemes:
@@ -19,27 +21,31 @@ class JsonSchemes:
 
     @staticmethod
     def pack_name_lang(name, description):
-        return [f"pack.name={name}", f"pack.description={description}"]
+        return load_file("pack_name_lang.txt", {"name": name, "description": description}).splitlines()
 
     @staticmethod
     def skin_pack_name_lang(name, display_name):
-        return [f"skinpack.{name}={display_name}"]
+        return load_file("skin_pack_name_lang.txt", {"name": name, "display_name": display_name}).splitlines()
+
+    @staticmethod
+    def esbuild_config_js(outDir, minify):
+        return load_file("esbuild.txt", {"out_dir": os.path.join(outDir, "scripts"), "minify": json.dumps(minify)}, is_json=False)
 
     @staticmethod
     def manifest_bp(version):
-        m = {
-            "format_version": 2,
-            "header": {
-                "description": "pack.description",
-                "name": "pack.name",
-                "uuid": CONFIG._BP_UUID[0],
+        m = load_file(
+            "manifest_bp.txt",
+            {
+                "bp_uuid": CONFIG._BP_UUID[0],
                 "version": version,
-                "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+                "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+                "data_module_uuid": CONFIG._DATA_MODULE_UUID,
+                "rp_uuid": CONFIG._RP_UUID[0],
+                "company": CONFIG.COMPANY,
             },
-            "modules": [{"type": "data", "uuid": CONFIG._DATA_MODULE_UUID, "version": version}],
-            "dependencies": [{"uuid": CONFIG._RP_UUID[0], "version": version}],
-            "metadata": {"authors": [CONFIG.COMPANY]},
-        }
+            is_json=True,
+        )
+
         if CONFIG._SCRIPT_API:
             m["modules"].append(
                 {
@@ -70,25 +76,18 @@ class JsonSchemes:
 
     @staticmethod
     def manifest_rp(version):
-        m = {
-            "format_version": 2,
-            "header": {
-                "description": "pack.description",
-                "name": "pack.name",
-                "uuid": CONFIG._RP_UUID[0],
+        m = load_file(
+            "manifest_rp.txt",
+            {
+                "rp_uuid": CONFIG._RP_UUID[0],
                 "version": version,
-                "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+                "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+                "resource_module_uuid": str(uuid.uuid4()),
+                "bp_uuid": CONFIG._BP_UUID[0],
+                "company": CONFIG.COMPANY,
             },
-            "modules": [
-                {
-                    "type": "resources",
-                    "uuid": str(uuid.uuid4()),
-                    "version": version,
-                }
-            ],
-            "dependencies": [{"uuid": CONFIG._BP_UUID[0], "version": version}],
-            "metadata": {"authors": [CONFIG.COMPANY]},
-        }
+            is_json=True,
+        )
         if CONFIG._PBR:
             m.update({"capabilities": ["pbr"]})
         if CONFIG._TARGET == "addon":
@@ -98,26 +97,17 @@ class JsonSchemes:
 
     @staticmethod
     def manifest_world(version):
-        m = {
-            "format_version": 2,
-            "header": {
-                "name": "pack.name",
-                "description": "pack.description",
+        m = load_file(
+            "manifest_rp.txt",
+            {
+                "world_uuid": CONFIG._PACK_UUID,
                 "version": version,
-                "uuid": CONFIG._PACK_UUID,
-                # "platform_locked": False,
-                "lock_template_options": True,
-                "base_game_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+                "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+                "world_module_uuid": str(uuid.uuid4()),
+                "company": CONFIG.COMPANY,
             },
-            "modules": [
-                {
-                    "type": "world_template",
-                    "uuid": str(uuid.uuid4()),
-                    "version": version,
-                }
-            ],
-            "metadata": {"authors": [CONFIG.COMPANY]},
-        }
+            is_json=True,
+        )
 
         if CONFIG._RANDOM_SEED:
             m["header"]["allow_random_seed"] = True
@@ -125,51 +115,36 @@ class JsonSchemes:
         return m
 
     @staticmethod
-    def world_packs(version, pack_id):
-        return [{"pack_id": i, "version": version} for i in pack_id]
+    def world_packs(version, pack_ids):
+        return [{"pack_id": pack, "version": version} for pack in pack_ids]
 
     @staticmethod
-    def code_workspace(name, path1, path2):
-        return {
-            "folders": [
-                {"name": name, "path": os.path.join(path1, path2)},
-            ]
-        }
-
-    @staticmethod
-    def skins_json(serialize_name):
-        return {
-            "serialize_name": serialize_name,
-            "localization_name": serialize_name,
-            "skins": [],
-        }
+    def skin_pack(serialize_name):
+        return load_file("skin_pack.txt", {"serialize_name": serialize_name}, is_json=True)
 
     @staticmethod
     def skin_json(filename: str, is_slim: bool, free: bool):
-        return {
-            "localization_name": filename,
-            "geometry": f"geometry.humanoid.{ 'customSlim' if is_slim else 'custom'}",
-            "texture": f"{filename}.png",
-            "type": "free" if free else "paid",
-        }
+        return load_file(
+            "skin_json.txt",
+            {
+                "filename": filename,
+                "geo_type": "customSlim" if is_slim else "custom",
+                "paid": "free" if free else "paid",
+            },
+            is_json=True,
+        )
 
     @staticmethod
     def manifest_skins(version):
-        return {
-            "format_version": 1,
-            "header": {
-                "name": "pack.name",
-                "uuid": str(uuid.uuid4()),
+        return load_file(
+            "manifest_skins.txt",
+            {
+                "skin_uuid": str(uuid.uuid4()),
                 "version": version,
+                "skin_module_uuid": str(uuid.uuid4()),
             },
-            "modules": [
-                {
-                    "type": "skin_pack",
-                    "uuid": str(uuid.uuid4()),
-                    "version": version,
-                }
-            ],
-        }
+            is_json=True,
+        )
 
     @staticmethod
     def description(namespace, identifier):
@@ -177,22 +152,15 @@ class JsonSchemes:
 
     @staticmethod
     def item_texture(resource_pack_name):
-        return {
-            "resource_pack_name": resource_pack_name,
-            "texture_name": "atlas.items",
-            "texture_data": {},
-        }
+        return load_file("item_texture.txt", {"resource_pack_name": resource_pack_name}, is_json=True)
 
     @staticmethod
     def sound_definitions():
-        return {
-            "format_version": SOUND_DEFINITIONS_VERSION,
-            "sound_definitions": {},
-        }
+        return load_file("sound_definitions.txt", {"format_version": SOUND_DEFINITIONS_VERSION}, is_json=True)
 
     @staticmethod
     def music_definitions():
-        return {}
+        return load_file("music_definitions.txt", is_json=True)
 
     @staticmethod
     def sound(name, category):
@@ -200,45 +168,17 @@ class JsonSchemes:
 
     @staticmethod
     def materials():
-        return {"materials": {"version": MATERIALS_VERSION}}
+        return load_file("materials.txt", {"version": MATERIALS_VERSION}, is_json=True)
 
     @staticmethod
-    def languages():
-        return [
-            "en_US",
-            "en_GB",
-            "de_DE",
-            "es_ES",
-            "es_MX",
-            "fr_FR",
-            "fr_CA",
-            "it_IT",
-            "pt_BR",
-            "pt_PT",
-            "ru_RU",
-            "zh_CN",
-            "zh_TW",
-            "nl_NL",
-            "bg_BG",
-            "cs_CZ",
-            "da_DK",
-            "el_GR",
-            "fi_FI",
-            "hu_HU",
-            "id_ID",
-            "nb_NO",
-            "pl_PL",
-            "sk_SK",
-            "sv_SE",
-            "tr_TR",
-            "uk_UA",
-        ]
+    def languages() -> Dict:
+        return load_file("languages.txt", is_json=True)
 
     @staticmethod
     def client_description():
         return {
             "materials": {"default": "entity_alphatest"},
-            "scripts": {"pre_animation": [], "initialize": [], "animate": []},
+            "scripts": {"pre_animation": [], "initialize": [], "animate": [], "parent_setup": []},
             "textures": {},
             "geometry": {},
             "particle_effects": {},
@@ -247,26 +187,16 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def client_entity():
-        return {
-            "format_version": ENTITY_CLIENT_VERSION,
-            "minecraft:client_entity": {},
-        }
+    def entity_client():
+        return load_file("entity_client.txt", {"format_version": ENTITY_CLIENT_VERSION}, is_json=True)
 
     @staticmethod
-    def server_entity():
-        return {
-            "format_version": ENTITY_SERVER_VERSION,
-            "minecraft:entity": {
-                "component_groups": {},
-                "components": {},
-                "events": {},
-            },
-        }
+    def entity_server():
+        return load_file("entity_server.txt", {"format_version": ENTITY_SERVER_VERSION}, is_json=True)
 
     @staticmethod
-    def bp_animations():
-        return {"format_version": BP_ANIMATION_VERSION, "animations": {}}
+    def animations_bp():
+        return load_file("animations_bp.txt", {"format_version": BP_ANIMATION_VERSION}, is_json=True)
 
     @staticmethod
     def bp_animation(identifier, animation_short_name, loop):
@@ -278,8 +208,8 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def rp_animations():
-        return {"format_version": RP_ANIMATION_VERSION, "animations": {}}
+    def animations_rp():
+        return load_file("animations_rp.txt", {"format_version": RP_ANIMATION_VERSION}, is_json=True)
 
     @staticmethod
     def animation_controller_state(state):
@@ -303,29 +233,23 @@ class JsonSchemes:
 
     @staticmethod
     def animation_controllers():
-        return {
-            "format_version": ANIMATION_CONTROLLERS_VERSION,
-            "animation_controllers": {},
-        }
+        return load_file("animation_controllers.txt", {"format_version": ANIMATION_CONTROLLERS_VERSION}, is_json=True)
 
     @staticmethod
     def geometry(model_name: str, texture_size: list[int], visible_box: list[int], visible_offset: list[int]):
-        return {
-            "format_version": GEOMETRY_VERSION,
-            "minecraft:geometry": [
-                {
-                    "description": {
-                        "identifier": f"geometry.{CONFIG.NAMESPACE}.{model_name}",
-                        "texture_width": texture_size[0],
-                        "texture_height": texture_size[1],
-                        "visible_bounds_width": visible_box[0],
-                        "visible_bounds_height": visible_box[1],
-                        "visible_bounds_offset": visible_offset,
-                    },
-                    "bones": [],
-                }
-            ],
-        }
+        return load_file("geometry.txt",
+            {
+                "format_version": GEOMETRY_VERSION,
+                "namespace": CONFIG.NAMESPACE,
+                "model_name": model_name,
+                "texture_width": texture_size[0],
+                "texture_height": texture_size[1],
+                "visible_bounds_width": visible_box[0],
+                "visible_bounds_height": visible_box[1],
+                "visible_bounds_offset": visible_offset,
+            },
+            is_json=True,
+        )
 
     @staticmethod
     def render_controller(identifier, controller_name):
@@ -341,78 +265,39 @@ class JsonSchemes:
 
     @staticmethod
     def render_controllers():
-        return {
-            "format_version": RENDER_CONTROLLER_VERSION,
-            "render_controllers": {},
-        }
+        return load_file("render_controllers.txt", {"format_version": RENDER_CONTROLLER_VERSION}, is_json=True)
 
     @staticmethod
     def attachable():
-        return {"format_version": ENTITY_CLIENT_VERSION, "minecraft:attachable": {}}
+        return load_file("attachable.txt", {"format_version": ENTITY_CLIENT_VERSION}, is_json=True)
 
     @staticmethod
     def spawn_rules():
-        return {
-            "format_version": SPAWN_RULES_VERSION,
-            "minecraft:spawn_rules": {"conditions": []},
-        }
+        return load_file("spawn_rules.txt", {"format_version": SPAWN_RULES_VERSION}, is_json=True)
 
     @staticmethod
     def server_block():
-        return {
-            "format_version": BLOCK_SERVER_VERSION,
-            "minecraft:block": {
-                "description": {},
-                "components": {},
-                "permutations": [],
-            },
-        }
+        return load_file("server_block.txt", {"format_version": BLOCK_SERVER_VERSION}, is_json=True)
 
     @staticmethod
     def terrain_texture(resource_pack_name):
-        return {
-            "num_mip_levels": 4,
-            "padding": 8,
-            "resource_pack_name": resource_pack_name,
-            "texture_data": {},
-            "texture_name": "atlas.terrain",
-        }
+        return load_file("terrain_texture.txt", {"resource_pack_name": resource_pack_name}, is_json=True)
 
     @staticmethod
     def flipbook_textures():
-        return []
+        return load_file("flipbook_textures.txt", is_json=True)
 
     @staticmethod
     def font(font_name, font_file):
-        return {
-            "version": 1,
-            "fonts": [
-                {
-                    "font_format": "ttf",
-                    "font_name": font_name,
-                    "version": 1,
-                    "font_file": f"font/{font_file}",
-                    "lowPerformanceCompatible": False,
-                }
-            ],
-        }
+        return load_file("font.txt", {"font_name": font_name, "font_file": font_file}, is_json=True)
 
     @staticmethod
     def fog():
-        return {
-            "format_version": FOG_VERSION,
-            "minecraft:fog_settings": {
-                "distance": {},
-                "volumetric": {},
-            },
-        }
+        return load_file("fog.txt", {"format_version": FOG_VERSION}, is_json=True)
 
     @staticmethod
     def dialogues():
-        return {
-            "format_version": DIALOGUE_VERSION,
-            "minecraft:npc_dialogue": {"scenes": []},
-        }
+        return load_file("dialogues_json.txt", {"format_version": DIALOGUE_VERSION}, is_json=True)
 
     @staticmethod
     def dialogue_scene(scene_tag, npc_name, text, on_open_commands, on_close_commands, buttons):
@@ -431,271 +316,121 @@ class JsonSchemes:
 
     @staticmethod
     def server_item():
-        return {
-            "format_version": ITEM_SERVER_VERSION,
-            "minecraft:item": {"components": {}},
-        }
+        return load_file("server_item.txt", {"format_version": ITEM_SERVER_VERSION}, is_json=True)
 
     @staticmethod
     def camera_preset(identifier, inherit_from):
-        return {
-            "format_version": CAMERA_PRESET_VERSION,
-            "minecraft:camera_preset": {
-                "identifier": identifier,
-                "inherit_from": inherit_from,
-            },
-        }
-
-    @staticmethod
-    def packagejson(project_name, version, description, author):
-        return {
-            "name": project_name,
-            "version": version,
-            "description": description,
-            "type": "module",
-            "keywords": [],
-            "author": author,
-            "license": "ISC",
-        }
-
-    @staticmethod
-    def tsconstants(namespace: str, project_name: str):
-        file = []
-        file.append(f'export const NAMESPACE = "{namespace}"')
-        file.append(f'export const PROJECT_NAME = "{project_name}"')
-
-        return "\n".join(file)
-
-    @staticmethod
-    def tsconfig(out_dir):
-        return {
-            "compilerOptions": {
-                "target": "ESNext",
-                "module": "es2020",
-                "declaration": False,
-                "outDir": os.path.join(out_dir, "scripts"),
-                "strict": True,
-                "pretty": True,
-                "esModuleInterop": True,
-                "moduleResolution": "Node",
-                "resolveJsonModule": True,
-                "forceConsistentCasingInFileNames": True,
-                "lib": ["ESNext"],
-            },
-            "include": ["scripts/javascript/**/*"],
-            "exclude": ["node_modules"],
-        }
-
-    @staticmethod
-    def esbuild_config_js(outDir):
-        path = os.path.join(outDir, "scripts").replace("\\", "\\\\")
-        return "\n".join(
-            [
-                "import esbuild from 'esbuild';",
-                f"const outDir = '{path}';",
-                "esbuild",
-                "    .build({",
-                '        entryPoints: ["scripts/javascript/main.ts"],',
-                "        bundle: true,",
-                '        format: "esm",',
-                "        sourcemap: true,",
-                "        minify: true,",
-                "        external: [",
-                "            '@minecraft/server',",
-                "            '@minecraft/server-ui',",
-                "        ],",
-                f"        outdir: outDir,",
-                "    })",
-                "    .catch(() => process.exit(1));",
-            ]
+        return load_file(
+            "camera_preset.txt", {"format_version": CAMERA_PRESET_VERSION, "identifier": identifier, "inherit_from": inherit_from}, is_json=True
         )
 
     @staticmethod
-    def vscode(pascal_project_name):
-        return {
-            "version": "0.3.0",
-            "configurations": [
-                {
-                    "type": "minecraft-js",
-                    "request": "attach",
-                    "name": "Wait for Minecraft Debug Connections",
-                    "mode": "listen",
-                    "localRoot": f"${{workspaceFolder}}/behavior_packs/BP_{pascal_project_name}/scripts",
-                    "port": 19144,
-                }
-            ],
-        }
+    def package_json(project_name, version, description, author):
+        return load_file(
+            "package_json.txt", {"project_name": project_name, "version": version, "description": description, "author": author}, is_json=True
+        )
 
     @staticmethod
-    def blocks():
-        return {
-            "format_version": [int(i) for i in BLOCK_JSON_FORMAT_VERSION.split(".")],
-        }
+    def tsconstants(namespace: str, project_name: str):
+        return load_file("tsconstants.txt", {"namespace": namespace, "project_name": project_name})
 
     @staticmethod
-    def sounds():
-        return {
-            "individual_event_sounds": {},
-            "block_sounds": {},
-            "entity_sounds": {"entities": {}},
-            "interactive_sounds": {},
-        }
+    def tsconfig(out_dir):
+        return load_file("tsconfig.txt", {"out_dir": os.path.join(out_dir, "scripts")}, is_json=True)
+
+    @staticmethod
+    def blocks_json():
+        return load_file("blocks_json.txt", {"format_version": [int(i) for i in BLOCK_JSON_FORMAT_VERSION.split(".")]}, is_json=True)
+
+    @staticmethod
+    def sounds_json():
+        return load_file("sounds_json.txt", is_json=True)
 
     @staticmethod
     def atmosphere_settings(identifier: str):
-        return {
-            "format_version": PBR_SETTINGS_VERSION,
-            "minecraft:atmosphere_settings": {
-                "identifier": identifier,
-            },
-        }
+        return load_file("atmosphere_settings.txt", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
 
     @staticmethod
     def fog_settings(identifier: str):
-        return {
-            "format_version": FOG_VERSION,
-            "minecraft:fog_settings": {
-                "identifier": identifier,
-                "volumetric": {},
-            },
-        }
+        return load_file("fog_settings.txt", {"format_version": FOG_VERSION, "identifier": identifier}, is_json=True)
 
     @staticmethod
     def shadow_settings():
-        return {"format_version": PBR_SETTINGS_VERSION, "minecraft:shadow_settings": {}}
+        return load_file("shadow_settings.txt", {"format_version": PBR_SETTINGS_VERSION}, is_json=True)
 
     @staticmethod
     def water_settings(identifier: str):
-        return {
-            "format_version": PBR_SETTINGS_VERSION,
-            "minecraft:water_settings": {
-                "description": {"identifier": identifier},
-            },
-        }
+        return load_file("water_settings.txt", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
 
     @staticmethod
     def color_grading_settings(identifier: str):
-        return {
-            "format_version": PBR_SETTINGS_VERSION,
-            "minecraft:color_grading_settings": {"description": {"identifier": identifier}, "color_grading": {}},
-        }
+        return load_file("color_grading_settings.txt", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
 
     @staticmethod
     def client_biome(biome_identifier: str):
-        return {
-            "format_version": PBR_SETTINGS_VERSION,
-            "minecraft:client_biome": {"description": {"identifier": biome_identifier}, "components": {}},
-        }
+        return load_file("client_biome.txt", {"format_version": PBR_SETTINGS_VERSION, "identifier": biome_identifier}, is_json=True)
 
     @staticmethod
     def lighting_settings(identifier: str):
-        return {
-            "format_version": PBR_SETTINGS_VERSION,
-            "minecraft:lighting_settings": {"description": {"identifier": identifier}, "directional_lights": {}},
-        }
+        return load_file("lighting_settings.txt", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
 
     @staticmethod
     def point_lights():
-        return {"format_version": PBR_SETTINGS_VERSION, "minecraft:point_light_settings": {"colors": {}}}
+        return load_file("point_lights.txt", {"format_version": PBR_SETTINGS_VERSION}, is_json=True)
 
     @staticmethod
     def pbr_fallback_settings():
-        return {
-            "format_version": PBR_SETTINGS_VERSION,
-            "minecraft:pbr_fallback_settings": {},
-        }
+        return load_file("pbr_fallback_settings.txt", {"format_version": PBR_SETTINGS_VERSION}, is_json=True)
 
     @staticmethod
     def loot_table():
-        return {"pools": []}
+        return load_file("loot_table.txt", is_json=True)
 
     @staticmethod
     def smelting_recipe(identifier: str, tags: list[str]):
-        return {
-            "format_version": RECIPE_JSON_FORMAT_VERSION,
-            "minecraft:recipe_furnace": {
-                "tags": tags,
-                "description": {"identifier": identifier},
-            },
-        }
+        return load_file("smelting_recipe.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True)
 
     @staticmethod
     def smithing_table_recipe(identifier: str, tags: list[str]):
-        return {
-            "format_version": RECIPE_JSON_FORMAT_VERSION,
-            "minecraft:recipe_smithing_transform": {
-                "description": {"identifier": identifier},
-                "tags": tags,
-            },
-        }
+        return load_file(
+            "smithing_table_recipe.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+        )
 
     @staticmethod
     def smithing_table_trim_recipe(identifier: str, tags: list[str]):
-        return {
-            "format_version": RECIPE_JSON_FORMAT_VERSION,
-            "minecraft:recipe_smithing_trim": {
-                "description": {"identifier": identifier},
-                "tags": tags,
-            },
-        }
+        return load_file(
+            "smithing_table_trim_recipe.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+        )
 
     @staticmethod
     def shapeless_crafting_recipe(identifier: str, tags: list[str]):
-        return {
-            "format_version": RECIPE_JSON_FORMAT_VERSION,
-            "minecraft:recipe_shapeless": {
-                "description": {"identifier": identifier},
-                "tags": tags,
-                "ingredients": [],
-            },
-        }
+        return load_file(
+            "shapeless_crafting_recipe.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+        )
 
     @staticmethod
     def shaped_crafting_recipe(identifier: str, assume_symmetry: bool, tags: list[str]):
-        return {
-            "format_version": RECIPE_JSON_FORMAT_VERSION,
-            "minecraft:recipe_shaped": {
-                "description": {"identifier": identifier},
-                "tags": tags,
-                "assume_symmetry": assume_symmetry,
-                "pattern": [],
-                "key": {},
-            },
-        }
+        return load_file(
+            "shaped_crafting_recipe.txt",
+            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags, "assume_symmetry": assume_symmetry},
+            is_json=True,
+        )
 
     @staticmethod
     def crafting_items_catalog():
-        return {
-            "format_version": CRAFTING_ITEMS_CATALOG,
-            "minecraft:crafting_items_catalog": {"categories": []},
-        }
+        return load_file("crafting_items_catalog.txt", {"format_version": CRAFTING_ITEMS_CATALOG}, is_json=True)
 
     @staticmethod
     def aim_assist_preset(identifier: str):
-        return {
-            "minecraft:aim_assist_preset": {
-                "identifier": identifier,
-                "item_settings": {},
-                "default_item_settings": "default",
-                "hand_settings": "default",
-                "exclusion_list": {},
-                "liquid_targeting_list": {},
-            }
-        }
+        return load_file("aim_assist_preset.txt", {"identifier": identifier}, is_json=True)
 
     @staticmethod
     def aim_assist_categories():
-        return {"minecraft:aim_assist_categories": {"categories": []}}
+        return load_file("aim_assist_categories.txt", is_json=True)
 
     @staticmethod
     def jigsaw_structure_process(identifier: str):
-        return {
-            "format_version": JIGSAW_VERSION,
-            "minecraft:processor_list": {
-                "description": {"identifier": identifier},
-                "processors": [],
-            },
-        }
+        return load_file("jigsaw_structure_process.txt", {"format_version": JIGSAW_VERSION, "identifier": identifier}, is_json=True)
 
     @staticmethod
     def jigsaw_structures(
@@ -707,52 +442,100 @@ class JsonSchemes:
         start_height,
         liquid_settings,
     ):
-        return {
-            "format_version": JIGSAW_VERSION,
-            "minecraft:jigsaw": {
-                "description": {"identifier": identifier},
-                "biome_filters": [],
-                "step": placement_step,
-                "start_pool": start_pool_identifier,
+        return load_file(
+            "jigsaw_structures.txt",
+            {
+                "format_version": JIGSAW_VERSION,
+                "identifier": identifier,
+                "placement_step": placement_step,
+                "start_pool_identifier": start_pool_identifier,
                 "start_jigsaw_name": start_jigsaw_name if start_jigsaw_name is not None else {},
                 "max_depth": max_depth,
                 "start_height": start_height,
-                "pool_aliases": [],
                 "liquid_settings": liquid_settings,
             },
-        }
+            is_json=True,
+        )
 
     @staticmethod
     def jigsaw_template_pools(identifier: str, fallback_identifier: str | None):
-        return {
-            "format_version": "1.21.20",
-            "minecraft:template_pool": {
-                "description": {"identifier": identifier},
-                "elements": [],
-                "fallback": fallback_identifier if fallback_identifier else {},
+        return load_file(
+            "jigsaw_template_pools.txt",
+            {
+                "format_version": JIGSAW_VERSION,
+                "identifier": identifier,
+                "fallback_identifier": fallback_identifier if fallback_identifier else {},
             },
-        }
+            is_json=True,
+        )
 
     @staticmethod
     def jigsaw_structure_set(identifier: str, separation: int, spacing: int, spread_type, placement_type):
-        return {
-            "format_version": JIGSAW_VERSION,
-            "minecraft:structure_set": {
-                "description": {"identifier": identifier},
-                "placement": {
-                    "type": "minecraft:random_spread",  # placement_type
-                    "salt": salt_from_str(identifier),
-                    "separation": separation,
-                    "spacing": spacing,
-                    "spread_type": spread_type,
-                },
-                "structures": [],
+        return load_file(
+            "jigsaw_structure_set.txt",
+            {
+                "format_version": JIGSAW_VERSION,
+                "identifier": identifier,
+                "salt": salt_from_str(identifier),
+                "separation": separation,
+                "spacing": spacing,
+                "spread_type": spread_type,
             },
-        }
+            is_json=True,
+        )
 
     @staticmethod
     def texture_set():
-        return {"format_version": PBR_SETTINGS_VERSION, "minecraft:texture_set": {}}
+        return load_file(
+            "texture_set.txt",
+            {
+                "format_version": PBR_SETTINGS_VERSION,
+            },
+            is_json=True,
+        )
+
+    @staticmethod
+    def python():
+        return load_file("python.txt")
+
+    @staticmethod
+    def gitignore():
+        return load_file("gitignore.txt")
+
+    @staticmethod
+    def code_workspace(name, path1, path2, preview=False):
+        return load_file(
+            "code_workspace.txt",
+            {
+                "name": name,
+                "path": os.path.join(path1, path2),
+                "dev_res_path": os.path.join(
+                    APPDATA,
+                    "Local",
+                    "Packages",
+                    f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+                    "LocalState",
+                    "games",
+                    "com.mojang",
+                    "development_resource_packs",
+                ),
+                "dev_beh_path": os.path.join(
+                    APPDATA,
+                    "Local",
+                    "Packages",
+                    f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+                    "LocalState",
+                    "games",
+                    "com.mojang",
+                    "development_behavior_packs",
+                ),
+            },
+            is_json=True,
+        )
+
+    @staticmethod
+    def vscode(path, wkspc, script_uuid):
+        return load_file("vscode.txt", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path}, is_json=True)
 
 
 class AddonDescriptor:

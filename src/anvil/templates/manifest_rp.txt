@@ -1,0 +1,19 @@
+{
+    "format_version": 2,
+    "header": {
+        "description": "pack.description",
+        "name": "pack.name",
+        "uuid": "{{ rp_uuid }}",
+        "version": "{{ version }}",
+        "min_engine_version": {{ engine_version }}
+    },
+    "modules": [
+        { "type": "resources", "uuid": "{{ resource_module_uuid }}", "version":  "{{ version }}" }
+    ],
+    "dependencies": [{"uuid": "{{ bp_uuid }}", "version": "{{ version }}" }],
+    "metadata": {
+        "authors": [
+            "{{ company }}"
+        ]
+    }
+}

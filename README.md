@@ -74,24 +74,24 @@ Once you create your project, the structure will look like this:
 
 ```
 awesome_project/
-├───assets
-│   ├───bbmodels
-│   ├───javascript
-│   ├───marketing
-│   ├───output
-│   ├───particles
-│   ├───python
-│   ├───skins
-│   ├───sounds
-│   ├───world
-│   ├───textures
-│   │   ├───environment
-│   │   ├───items
-│   │   └───ui
-├───.gitignore
-├───anvilconfig.json
-├───awesome_project.py
-└───CHANGELOG.md
+├── assets/
+│   ├── bbmodels/
+│   ├── particles/
+│   ├── textures/
+│   └── sounds/
+├── marketing/
+├── output/
+├── scripts/
+│   ├── javascript/
+│   └── python/
+├── world/
+│   └── structures/
+├── .gitignore
+├── CHANGELOG.md
+├── anvilconfig.json
+├── esbuild.js
+├── package.json
+└── tsconfig.json
 ```
 
 ### Running Your Project

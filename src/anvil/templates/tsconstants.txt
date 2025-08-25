@@ -1,0 +1,2 @@
+export const NAMESPACE = "{{ namespace }}"
+export const PROJECT_NAME = "{{ project_name }}"

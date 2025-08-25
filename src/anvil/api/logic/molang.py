@@ -1,3 +1,5 @@
+from enum import StrEnum
+
 from anvil import CONFIG
 from anvil.lib.enums import InputModes, Slots
 from anvil.lib.lib import *
@@ -9,7 +11,7 @@ class Molang(str):
         return Molang(f"!({self})")
 
     def __eq__(self, other):
-        o = f"'{other}'" if type(other) is str else f"{other}"
+        o = f"'{other}'" if isinstance(other, (str, StrEnum)) else f"{other}"
         return Molang(f"{self} == {o}")
 
     def __ne__(self, other):
@@ -92,11 +94,7 @@ class Molang(str):
         a = f"{qtype}.{query}"
         if len(arguments):
             Parameters = ", ".join(
-                (
-                    f"'{arg}'"
-                    if isinstance(arg, (str, StrEnum)) and not isinstance(arg, Molang) and not arg.startswith(MOLANG_PREFIXES)
-                    else f"{arg}"
-                )
+                (f"'{arg}'" if isinstance(arg, (str, StrEnum)) and not isinstance(arg, Molang) and not arg.startswith(MOLANG_PREFIXES) else f"{arg}")
                 for arg in arguments
             )
             a += f"({Parameters})"
@@ -267,7 +265,7 @@ class Query(Molang):
         return self._query(self, self.handle, "approx_eq", *Parameters)
 
     @classmethod
-    def ArmorColorSlot(self, index: int):
+    def ArmorColorSlot(self, index: int, colorChannel: int):
         """Takes the armor slot index as a parameter and returns the color of the armor in the requested slot.
 
         Parameters:
@@ -276,7 +274,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "armor_color_slot", index)
+        return self._query(self, self.handle, "armor_color_slot", clamp(index, 0, 3), clamp(colorChannel, 0, 3))
 
     @classmethod
     def ArmorMaterialSlot(self, index: int):
@@ -417,13 +415,13 @@ class Query(Molang):
 
     # More info needed
     @classmethod
-    def BoneRotation(self):
+    def BoneRotation(self, bone_name: str):
         """Returns the initial (from the .geo) rotation of a bone as a struct with members '.x', '.y', and '.z' in degrees.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "bone_rotation")
+        return vec3(self._query(self, self.handle, "bone_rotation", bone_name))
 
     @classmethod
     def CameraDistanceRangeLerp(self, d1: int, d2: int):
@@ -2777,22 +2775,22 @@ class Query(Molang):
         return self._query(self, self.handle, "ride_head_y_rotation", clamp)
 
     @classmethod
-    def RiderBodyXRotation(self):
+    def RiderBodyXRotation(self, rider: int = 0):
         """Returns the body pitch world-rotation of a valid rider at the provided index if called on an entity, else it returns 0.0.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "rider_body_x_rotation")
+        return self._query(self, self.handle, "rider_body_x_rotation", rider)
 
     @classmethod
-    def RiderBodyYRotation(self):
+    def RiderBodyYRotation(self, rider: int = 0):
         """Returns the body yaw world-rotation of a valid rider at the provided index if called on an entity, else it returns 0.0.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "rider_body_y_rotation")
+        return self._query(self, self.handle, "rider_body_y_rotation", rider)
 
     @classmethod
     def RiderHeadXRotation(self, head: int = 0):
@@ -2829,7 +2827,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return self._query(self, self.handle, "client_memory_tier")
-    
+
     @classmethod
     def ServerMemoryTier(self):
         """Returns a number representing the server RAM memory tier, 0 = 'SuperLow', 1 = 'Low', 2 = 'Mid', 3 = 'High', or 4 = 'SuperHigh'. Available on the server side (behavior Packs) only.
@@ -2838,7 +2836,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return self._query(self, self.handle, "server_memory_tier")
-    
+
     @classmethod
     def ClientMaxRenderDistance(self):
         """Returns the max render distance in chunks of the current client. Available on the Client (Resource Packs) only.
@@ -2849,14 +2847,14 @@ class Query(Molang):
         return self._query(self, self.handle, "client_max_render_distance")
 
     @classmethod
-    def LastInputModeIsAny(self, input:InputModes):
+    def LastInputModeIsAny(self, input: InputModes):
         """Returns 1.0 if the last input mode is any of the specified input modes, else it returns 0.0.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
         return self._query(self, self.handle, "last_input_mode_is_any", input)
-    
+
     @classmethod
     def TouchOnlyAffectsHotbar(self):
         """Returns 1.0 if the touch only affects hotbar, else it returns 0.0.
@@ -2865,14 +2863,21 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return self._query(self, self.handle, "touch_only_affects_hotbar")
-    
+
 
 class Context(Query):
-    handle = "c"
+    handle = "context"
 
     @classmethod
     def _set_var(self, name):
         setattr(self, name, self._query(self, self.handle, name))
+
+    @classmethod
+    def OwningEntity(self, molang: Molang = None):
+        if molang:
+            return Molang(f"({self._query(self, self.handle, "owning_entity")} -> {molang})")
+        return Molang._query(self, self.handle, "owning_entity")
+
 
 class Variable(Molang):
     handle = "v"
@@ -3013,6 +3018,7 @@ class Math(Molang):
 
 def molang_conditions(condition, expression, expression2):
     return f"{condition} ? {expression} : ({expression2})"
+
 
 def arrow_operator(left, right):
     """Returns a string representing the arrow operator for Molang."""

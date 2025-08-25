@@ -1,16 +1,95 @@
-
-# Require ITEM_SERVER_VERSION >= 1.21.30
 from math import inf
 
 from anvil import ANVIL, CONFIG
-from anvil.lib.enums import (Effects, EnchantsSlots, ItemCategory, ItemGroups,
-                             ItemRarity, ItemVanillaTags, Slots)
+from anvil.lib.enums import Effects, EnchantsSlots, ItemCategory, ItemGroups, ItemRarity, ItemVanillaTags, Slots
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
-from anvil.lib.lib import clamp
-from anvil.lib.schemas import _BaseComponent
-from anvil.lib.types import Identifier, Seconds
+from anvil.lib.lib import clamp, process_color
+from anvil.lib.schemas import ItemDescriptor, _BaseComponent
+from anvil.lib.types import RGB, RGBA, Identifier, Seconds
 
 
+# Require ITEM_SERVER_VERSION >= 1.21.40
+class ItemStorageItem(_BaseComponent):
+    _identifier = "minecraft:storage_item"
+
+    def __init__(self, allow_nested_storage_items: bool = True, max_slots: int = 64) -> None:
+        """Enables an item to store data of the dynamic container associated with it. A dynamic container is a container for storing items that is linked to an item instead of a block or an entity.
+
+        Parameters:
+            allow_nested_storage_items (bool): Determines whether another Storage Item is allowed inside of this item. Default is True.
+            max_slots (int): The maximum allowed weight of the sum of all contained items. Maximum is 64. Default is 64.
+            max_weight_limit (float): The maximum weight limit of the items in the storage item. Default is 64.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_item
+        """
+        super().__init__("storage_item")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
+
+        self._add_field("allow_nested_storage_items", allow_nested_storage_items)
+        self._add_field("max_slots", clamp(max_slots, 1, 64))
+
+    def allowed_items(self, *items: ItemDescriptor | str):
+        """List of items that are exclusively allowed in this Storage Item. If empty all items are allowed."""
+        self._add_field("allowed_items", [str(i) for i in items])
+        return self
+
+    def banned_items(self, *items: ItemDescriptor | str):
+        """List of items that are not allowed in this Storage Item."""
+        self._add_field("banned_items", [str(i) for i in items])
+        return self
+
+
+class ItemStorageWeightLimit(_BaseComponent):
+    _identifier = "minecraft:storage_weight_limit"
+
+    def __init__(self, max_weight_limit: float = 64.0) -> None:
+        """Specifies the maximum weight limit that a storage item can hold.
+
+        Parameters:
+            max_weight_limit (float): The maximum allowed weight of the sum of all contained items. Maximum is 64. Default is 64. Value must be <= 64.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_limit
+        """
+        super().__init__("storage_weight_limit")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
+        self._add_field("max_weight_limit", clamp(max_weight_limit, 0, 64))
+
+
+class ItemStorageWeightModifier(_BaseComponent):
+    _identifier = "minecraft:storage_weight_modifier"
+
+    def __init__(self, weight_in_storage_item: int = 4) -> None:
+        """Specifies the weight of this item when inside another Storage Item.
+
+        Parameters:
+            weight_in_storage_item (int): The weight of this item when inside another Storage Item. Default is 4. 0 means item is not allowed in another Storage Item.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_modifier
+        """
+        super().__init__("storage_weight_modifier")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
+        self._add_field("weight_in_storage_item", clamp(weight_in_storage_item, 0, inf))
+
+
+class ItemBundleInteraction(_BaseComponent):
+    _identifier = "minecraft:bundle_interaction"
+
+    def __init__(self, num_viewable_slots: int = 12) -> None:
+        """Specifies the number of slots in the bundle viewable by the player.
+
+        Parameters:
+            num_viewable_slots (int): The maximum number of slots in the bundle viewable by the player. Can be from 1 to 64. Default is 12. Value must be >= 1 and <= 64.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_bundle_interaction
+        """
+        super().__init__("bundle_interaction")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.30")
+        self._require_components(ItemStorageItem, ItemMaxStackSize)
+
+        self._add_field("num_viewable_slots", clamp(num_viewable_slots, 1, 64))
+
+
+# Require ITEM_SERVER_VERSION >= 1.20.30
 class ItemRarity(_BaseComponent):
     _identifier = "minecraft:rarity"
 
@@ -26,6 +105,15 @@ class ItemRarity(_BaseComponent):
         super().__init__("rarity")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
         self._set_value("value", value)
+
+
+class ItemDyeable(_BaseComponent):
+    _identifier = "minecraft:dyeable"
+
+    def __init__(self, default_color: str | RGB | RGBA = None) -> None:
+        super().__init__("dyeable")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.30")
+        self._add_field("default_color", process_color(default_color, False))
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.20
@@ -98,9 +186,7 @@ class ItemEnchantable(_BaseComponent):
 class ItemFood(_BaseComponent):
     _identifier = "minecraft:food"
 
-    def __init__(
-        self, can_always_eat: bool = False, nutrition: int = 0, saturation_modifier: float = 0, using_converts_to: str = None
-    ) -> None:
+    def __init__(self, can_always_eat: bool = False, nutrition: int = 0, saturation_modifier: float = 0, using_converts_to: str = None) -> None:
         """Sets the item as a food component, allowing it to be edible to the player.
 
         Parameters:
@@ -436,9 +522,7 @@ class ItemRepairable(_BaseComponent):
             repair_amount (int): How much durability is repaired.
             repair_items (str): List of repair item entries.
         """
-        self._component["repair_items"].append(
-            {"items": [str(i) for i in repair_items], "repair_amount": repair_amount}
-        )
+        self._component["repair_items"].append({"items": [str(i) for i in repair_items], "repair_amount": repair_amount})
         return self
 
 
@@ -536,9 +620,7 @@ class ItemShooter(_BaseComponent):
         if scale_power_by_draw_duration:
             self._add_field("scale_power_by_draw_duration", scale_power_by_draw_duration)
 
-    def add_ammunition(
-        self, ammunition: Identifier, search_inventory: bool = True, use_in_creative: bool = False, use_offhand: bool = False
-    ):
+    def add_ammunition(self, ammunition: Identifier, search_inventory: bool = True, use_in_creative: bool = False, use_offhand: bool = False):
         self._component["ammunition"].append(
             {
                 "item": ammunition,

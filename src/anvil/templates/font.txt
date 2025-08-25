@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "fonts": [
+        {
+            "font_format": "ttf",
+            "font_name": "{{ font_name }}",
+            "version": 1,
+            "font_file": "font/{{ font_file }}",
+            "lowPerformanceCompatible": false
+        }
+    ]
+}

@@ -232,6 +232,19 @@ class CameraPreset(AddonObject):
         self._camera_preset["minecraft:camera_preset"]["tracking_radius"] = tracking_radius
         return self
 
+    def starting_rotation(self, x: float = 0, y: float = 0):
+        """Sets the starting rotation of the camera preset.
+
+        Parameters:
+            x (float): The x rotation of the camera preset.
+            y (float): The y rotation of the camera preset.
+        """
+        if x != 0:
+            self._camera_preset["minecraft:camera_preset"]["starting_rot_x"] = x
+        if y != 0:
+            self._camera_preset["minecraft:camera_preset"]["starting_rot_y"] = y
+        return self
+    
     def queue(self):
         """Queues the camera preset to be exported."""
         self.content(self._camera_preset)

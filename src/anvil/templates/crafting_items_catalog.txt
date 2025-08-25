@@ -1,0 +1,6 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:crafting_items_catalog": {
+        "categories": []
+    }
+}

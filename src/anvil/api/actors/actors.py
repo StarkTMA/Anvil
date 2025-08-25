@@ -2,25 +2,21 @@ import json
 import os
 from typing import List, Literal, Mapping
 
-from halo import Halo
-
 from anvil import ANVIL, CONFIG
-from anvil.api.actors.components import (EntityInstantDespawn, EntityRideable,
-                                         Filter, _BaseComponent)
+from anvil.api.actors.components import EntityInstantDespawn, EntityRideable, Filter, _BaseComponent
 from anvil.api.logic.molang import Molang, Query, Variable
 from anvil.api.pbr.pbr import __TextureSet
 from anvil.api.vanilla.entities import MinecraftEntityTypes
 from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import ConfigPackageTarget
-from anvil.lib.enums import (DamageSensor, Difficulty, Population, Target,
-                             Vibrations)
+from anvil.lib.enums import DamageSensor, Difficulty, Population, Target, Vibrations
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (AddonObject, EntityDescriptor, JsonSchemes,
-                               MinecraftDescription, MinecraftEntityDescriptor)
+from anvil.lib.schemas import AddonObject, EntityDescriptor, JsonSchemes, MinecraftDescription, MinecraftEntityDescriptor
 from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
-from anvil.lib.types import RGB, RGBA, Event
+from anvil.lib.types import RGB, RGBA, Event, Vector2D
+from halo import Halo
 
 __all__ = ["Entity", "Attachable"]
 
@@ -38,9 +34,7 @@ class _ActorReuseAssets:
 
         self.client._description["description"]["animations"].update({shortname: animation_name})
 
-    def animation_controller(
-        self, shortname: str, animation_controller_name: str, animate: bool = False, condition: str | Molang = None
-    ):
+    def animation_controller(self, shortname: str, animation_controller_name: str, animate: bool = False, condition: str | Molang = None):
         if animate is True:
             if condition is None:
                 self.client._animate_append(shortname)
@@ -159,9 +153,7 @@ class _ActorClientDescription(_ActorDescription):
         """
         super().__init__(name, is_vanilla)
         if self._type not in ["entity", "attachables"]:
-            raise RuntimeError(
-                f"Invalid type '{self._type}' for actor description. Expected 'entity' or 'attachables'. Actor [{self.identifier}]"
-            )
+            raise RuntimeError(f"Invalid type '{self._type}' for actor description. Expected 'entity' or 'attachables'. Actor [{self.identifier}]")
 
         if is_vanilla and self.identifier not in list(map(str, MinecraftEntityTypes.__dict__.values())):
             raise RuntimeError(
@@ -215,18 +207,21 @@ class _ActorClientDescription(_ActorDescription):
         self._description["description"]["materials"].update({str(material_id): str(material_name)})
         return self
 
-    def geometry(self, geometry_name: str):
+    def geometry(self, geometry_name: str, override_bounding_box: Vector2D = None):
         """
         This method manages the geometry for an entity.
 
         Parameters:
             geometry_name (str): The name of the geometry.
+            override_bounding_box (Vector2D, optional): The bounding box to override the default bounding box. Defaults to None.
 
         Returns:
             self: Returns an instance of the class.
         """
 
         bb = _Blockbench(geometry_name, "actors")
+        if override_bounding_box:
+            bb.override_bounding_box(override_bounding_box)
         bb.model.queue_model()
 
         self._description["description"]["geometry"].update({geometry_name: f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"})
@@ -246,9 +241,7 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         if not geometry_shortname in self._description["description"]["geometry"]:
-            raise RuntimeError(
-                f"Queryable geometry '{geometry_shortname}' not found in entity {self.identifier}. Entity [{self.identifier}]"
-            )
+            raise RuntimeError(f"Queryable geometry '{geometry_shortname}' not found in entity {self.identifier}. Entity [{self.identifier}]")
         self._description["description"]["queryable_geometry"] = geometry_shortname
         return self
 
@@ -271,11 +264,7 @@ class _ActorClientDescription(_ActorDescription):
         bb.textures.queue_texture(color_texture)
 
         self._description["description"]["textures"].update(
-            {
-                color_texture: os.path.join(
-                    "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "actors", blockbench_name, color_texture
-                )
-            }
+            {color_texture: os.path.join("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "actors", blockbench_name, color_texture)}
         )
 
         if any(
@@ -300,6 +289,11 @@ class _ActorClientDescription(_ActorDescription):
     def script(self, variable: Variable | str, script: Molang | str):
         """This method manages the scripts for an entity."""
         self._description["description"]["scripts"]["pre_animation"].append(f"{variable}={script};".replace(";;", ";"))
+        return self
+
+    def parent_setup(self, variable: Variable | str, script: Molang | str):
+        """This method manages the scripts for an entity."""
+        self._description["description"]["scripts"]["parent_setup"].append(f"{variable}={script};".replace(";;", ";"))
         return self
 
     def init_vars(self, **vars):
@@ -376,16 +370,14 @@ class _ActorClientDescription(_ActorDescription):
         from anvil.api.world.particles import Particle
 
         self._particle_name = particle_name
-        self._description["description"]["particle_effects"].update(
-            {self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"}
-        )
+        self._description["description"]["particle_effects"].update({self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"})
         Particle(self._particle_name, use_vanilla_texture).queue()
         return self
 
     def sound_effect(
         self,
         sound_name: str,
-        sound_reference: str,
+        sound_path: str,
         category: SoundCategory = SoundCategory.Neutral,
         max_distance: int = 0,
         min_distance: int = 9999,
@@ -394,13 +386,13 @@ class _ActorClientDescription(_ActorDescription):
 
         Parameters:
             sound_shortname (str): The shortname of the sound effect.
-            sound_reference (str): The identifier of the sound effect.
+            sound_path (str): The path to the sound effects from the assets/sounds folder.
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
 
         """
-        self._description["description"]["sound_effects"].update({sound_name: f"{CONFIG.NAMESPACE}:{sound_reference}"})
+        self._description["description"]["sound_effects"].update({sound_name: f"{CONFIG.NAMESPACE}:{sound_path}"})
         sound: SoundDescription = ANVIL.definitions.register_sound_definition(
-            sound_reference, category, max_distance=max_distance, min_distance=min_distance
+            sound_path, category, max_distance=max_distance, min_distance=min_distance
         )
         self._sounds.append(sound)
         return sound
@@ -486,6 +478,9 @@ class _ActorClientDescription(_ActorDescription):
         if self._texture_set:
             self._texture_set.queue()
 
+        if self._description["description"]["scripts"]["parent_setup"] != []:
+            self._description["description"]["scripts"]["parent_setup"] = ";".join(self._description["description"]["scripts"]["parent_setup"])
+
         return super()._export()
 
 
@@ -542,9 +537,7 @@ class _EntityServerDescription(_ActorDescription):
         """
         if CONFIG._EXPERIMENTAL:
             if CONFIG._TARGET == "addon":
-                raise RuntimeError(
-                    f"Experimental entities are not allowed for packages of type 'addon'. Entity [{self.identifier}]."
-                )
+                raise RuntimeError(f"Experimental entities are not allowed for packages of type 'addon'. Entity [{self.identifier}].")
 
         self._description["description"]["is_experimental"] = True
         return self
@@ -560,15 +553,11 @@ class _EntityServerDescription(_ActorDescription):
                 if entity._allow_runtime:
                     self._description["description"]["runtime_identifier"] = entity.identifier
                 else:
-                    raise RuntimeError(
-                        f"Entity {entity.identifier} does not allow runtime identifier usage. Entity [{self.identifier}]."
-                    )
+                    raise RuntimeError(f"Entity {entity.identifier} does not allow runtime identifier usage. Entity [{self.identifier}].")
             else:
                 raise TypeError(f"Expected Entity, got {type(entity).__name__}. Entity [{self.identifier}]")
         else:
-            raise RuntimeError(
-                f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]"
-            )
+            raise RuntimeError(f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]")
 
     @property
     def add_property(self):
@@ -685,9 +674,7 @@ class _RenderController:
         def log_invalid_texture(texture):
             texture_ext = texture.split(".")[-1]
             if texture_ext not in textures:
-                raise RuntimeError(
-                    f"Texture {texture} not found in entity {self._identifier}. Render controller [{self._identifier}]"
-                )
+                raise RuntimeError(f"Texture {texture} not found in entity {self._identifier}. Render controller [{self._identifier}]")
 
         for texture in controller_textures:
             if texture.startswith("Texture."):
@@ -699,9 +686,7 @@ class _RenderController:
 
         for geometry in self._controller[self.controller_identifier]["geometry"]:
             if geometry.startswith("Geometry.") and geometry.split(".")[-1] not in geometries:
-                raise RuntimeError(
-                    f"Geometry {geometry} not found in entity {self._identifier}. Render controller [{self._identifier}]"
-                )
+                raise RuntimeError(f"Geometry {geometry} not found in entity {self._identifier}. Render controller [{self._identifier}]")
             elif (
                 geometry.startswith("Array.")
                 and geometry.split(".")[-1] not in self._controller[self.controller_identifier]["arrays"]["geometries"][geometry]
@@ -935,7 +920,7 @@ class _RP_ControllerState:
         self._controller_state[self._state_name]["sound_effects"] = []
         self._default = True
 
-    def on_entry(self, *commands: str):
+    def on_entry(self, *commands: str | Molang):
         """molang to preform on entry of this state.
 
         Parameters
@@ -1281,17 +1266,11 @@ class _BPAnimation:
             self._animation[self._animation_key]["timeline"][timestamp] = []
         for command in commands:
             if str(command).startswith("@s"):
-                self._animation[self._animation_key]["timeline"][timestamp].append(
-                    f"{command}"
-                )
+                self._animation[self._animation_key]["timeline"][timestamp].append(f"{command}")
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                self._animation[self._animation_key]["timeline"][timestamp].append(
-                    f"{command};"
-                )
+                self._animation[self._animation_key]["timeline"][timestamp].append(f"{command};")
             else:
-                self._animation[self._animation_key]["timeline"][timestamp].append(
-                    f"/{command}"
-                )
+                self._animation[self._animation_key]["timeline"][timestamp].append(f"/{command}")
         return self
 
     def animation_length(self, animation_length: float):
@@ -1337,7 +1316,7 @@ class _BPAnimations(AddonObject):
 
     def __init__(self, identifier) -> None:
         super().__init__(identifier)
-        self._animations = JsonSchemes.bp_animations()
+        self._animations = JsonSchemes.animations_bp()
         self._animations_list: list[_BPAnimation] = []
 
     def add_animation(self, animation_short_name: str, loop: bool = False):
@@ -2105,12 +2084,8 @@ class _Components:
         component_classes = {component.__class__ for component in self._components}
         cmp_dict = {}
         for component in self._components:
-            missing_dependencies = [
-                dep.__name__ for dep in component._dependencies if dep not in component_classes
-            ]
-            conflicting = [
-                cla.__name__ for cla in component._clashes if cla in component_classes
-            ]
+            missing_dependencies = [dep.__name__ for dep in component._dependencies if dep not in component_classes]
+            conflicting = [cla.__name__ for cla in component._clashes if cla in component_classes]
 
             if missing_dependencies:
                 raise RuntimeError(
@@ -2215,7 +2190,7 @@ class _EntityServer(AddonObject):
             is_vanilla (bool, optional): Whether or not the entity is a vanilla entity. Defaults to False.
         """
         super().__init__(name, is_vanilla)
-        self._server_entity = JsonSchemes.server_entity()
+        self._server_entity = JsonSchemes.entity_server()
         self._description = _EntityServerDescription(self.identifier, self._is_vanilla)
         self._animation_controllers = _BP_AnimationControllers(self.identifier)
         self._animations = _BPAnimations(self.identifier)
@@ -2316,17 +2291,20 @@ class _EntityServer(AddonObject):
             - `EntityPushable`
             - `EntityPushThrough`
         """
-        from anvil.api.actors.components import (EntityBreathable,
-                                                 EntityCollisionBox,
-                                                 EntityDamageSensor,
-                                                 EntityHealth,
-                                                 EntityJumpStatic,
-                                                 EntityKnockbackResistance,
-                                                 EntityMovement,
-                                                 EntityMovementType,
-                                                 EntityNavigationType,
-                                                 EntityPhysics, EntityPushable,
-                                                 EntityPushThrough)
+        from anvil.api.actors.components import (
+            EntityBreathable,
+            EntityCollisionBox,
+            EntityDamageSensor,
+            EntityHealth,
+            EntityJumpStatic,
+            EntityKnockbackResistance,
+            EntityMovement,
+            EntityMovementType,
+            EntityNavigationType,
+            EntityPhysics,
+            EntityPushable,
+            EntityPushThrough,
+        )
         from anvil.api.logic.commands import DamageCause
 
         self.components.add(
@@ -2396,7 +2374,7 @@ class _EntityClient(AddonObject):
             is_vanilla (bool, optional): Whether or not the entity is a vanilla entity. Defaults to False.
         """
         super().__init__(name, is_vanilla)
-        self._client_entity = JsonSchemes.client_entity()
+        self._client_entity = JsonSchemes.entity_client()
         self._description = _EntityClientDescription(self.identifier, self._is_vanilla)
 
     @property

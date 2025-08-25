@@ -6,6 +6,56 @@ from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.types import Identifier
 
 
+class UITexturesObject(AddonObject):
+    """Handles UI textures for the addon."""
+
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "textures")
+    _textures = {}
+
+    def __init__(self) -> None:
+        """Initializes a UITexturesObject instance."""
+        super().__init__("ui_texture")
+
+    def add_item(self, texture_name: str, directory: str, *textures: str):
+        """Adds item textures to the content.
+
+        Parameters:
+            texture_name (str): The name of the texture.
+            directory (str): The directory path for the textures.
+            textures (str): The names of the textures.
+        """
+        for texture in textures:
+            if not FileExists(os.path.join("assets", "textures", "ui", directory, f"{texture}.png")):
+                raise FileNotFoundError(
+                    f"UI texture '{texture}.png' does not exist in '{os.path.join("assets", "textures", "ui", directory)}'. {self._object_type}[{texture_name}]"
+                )
+            self._textures.setdefault(directory, []).append(texture)
+
+    @property
+    def queue(self):
+        """Queues the item textures.
+
+        Returns:
+            object: The parent's queue method result.
+        """
+        return super().queue("")
+
+    def _export(self):
+        """Exports the item textures if at least one item was added.
+
+        Returns:
+            object: The parent's export method result.
+        """
+        for directory, sprites in self._textures.items():
+            for sprite in sprites:
+                CopyFiles(
+                    os.path.join("assets", "textures", "ui", directory),
+                    os.path.join(CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "ui", directory),
+                    sprite + ".png",
+                )
+
+
 class ItemTexturesObject(AddonObject):
     """Handles item textures for the addon."""
 
@@ -35,9 +85,7 @@ class ItemTexturesObject(AddonObject):
         self._content["texture_data"][f"{CONFIG.NAMESPACE}:{item_name}"] = {
             "textures": [
                 *[
-                    os.path.join(
-                        "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "items", directory, sprite
-                    ).replace("\\", "/")
+                    os.path.join("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "items", directory, sprite).replace("\\", "/")
                     for sprite in item_sprites
                 ]
             ]
@@ -116,7 +164,7 @@ class TerrainTexturesObject(AddonObject):
             object: The parent's export method result.
         """
         if len(self._content["texture_data"]) > 0:
-            #for items in self._content["texture_data"].values():
+            # for items in self._content["texture_data"].values():
             #    for sprite in items["textures"]:
             #        CopyFiles(
             #            os.path.join("assets", "textures", "blocks"),
@@ -135,7 +183,7 @@ class BlocksJSONObject(AddonObject):
 
     def __init__(self) -> None:
         super().__init__("blocks")
-        self.content(JsonSchemes.blocks())
+        self.content(JsonSchemes.blocks_json())
 
     def add_block(self, block_identifier: Identifier, block_data: dict):
         self._content.update({block_identifier: block_data})

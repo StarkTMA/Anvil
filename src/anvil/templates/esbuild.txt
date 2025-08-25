@@ -1,0 +1,51 @@
+import esbuild from "esbuild";
+import path from "path";
+import { fileURLToPath } from "url";
+import { mkdirSync, writeFileSync } from "fs";
+
+const outDir = "{{ out_dir|path }}";
+
+const removeFileSchemePlugin = {
+	name: "remove-file-scheme",
+	setup(build) {
+		build.onEnd((result) => {
+			if (!result.outputFiles?.length) return;
+
+			for (const file of result.outputFiles) {
+				if (!file.path.endsWith(".map")) continue;
+
+				const map = JSON.parse(Buffer.from(file.contents).toString("utf8"));
+
+				map.sources = map.sources.map((src) => {
+					if (src.startsWith("file://")) {
+						try {
+							src = fileURLToPath(src);
+						} catch {
+							src = src.replace("file://", "");
+						}
+					}
+					return src
+				});
+
+				file.contents = Buffer.from(JSON.stringify(map));
+			}
+		});
+	},
+};
+
+const result = await esbuild.build({
+	entryPoints: ["scripts/javascript/main.ts"],
+	bundle: true,
+	format: "esm",
+	sourcemap: true,
+	minify: {{ minify }},
+	outdir: outDir,
+	external: ["@minecraft/server", "@minecraft/server-ui"],
+	write: false,
+	plugins: [removeFileSchemePlugin],
+});
+
+for (const f of result.outputFiles ?? []) {
+	mkdirSync(path.dirname(f.path), { recursive: true });
+	writeFileSync(f.path, f.contents);
+}

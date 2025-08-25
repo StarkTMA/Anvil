@@ -1,0 +1,12 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:recipe_shaped": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        },
+        "tags": "{{ tags }}",
+        "assume_symmetry": "{{ assume_symmetry }}",
+        "pattern": [],
+        "key": {}
+    }
+}

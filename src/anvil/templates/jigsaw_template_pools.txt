@@ -1,0 +1,10 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:template_pool": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        },
+        "elements": [],
+        "fallback": "{{ fallback_identifier }}
+    }
+}

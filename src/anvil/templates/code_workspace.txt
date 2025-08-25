@@ -1,0 +1,16 @@
+{
+    "folders": [
+        {
+            "name": "{{ name }}",
+            "path": "{{ path }}"
+        },
+        {
+            "name": "Dev Resource Packs",
+            "path": "{{ dev_res_path }}"
+        },
+        {
+            "name": "Dev behavior Packs",
+            "path": "{{ dev_beh_path }}"
+        }
+    ]
+}

@@ -1,0 +1,13 @@
+{
+    "format_version": 1,
+    "header": {
+        "name": "pack.name",
+        "uuid": "{{ skin_uuid }}",
+        "version": "{{ version }}"
+    },
+    "modules": [{
+        "type": "skin_pack",
+        "uuid": "{{ skin_module_uuid }}",
+        "version": "{{ version }}"
+    }]
+}

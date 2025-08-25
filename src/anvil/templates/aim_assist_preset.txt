@@ -1,0 +1,10 @@
+{
+    "minecraft:aim_assist_preset": {
+        "identifier": "{{ identifier }}",
+        "item_settings": {},
+        "default_item_settings": "default",
+        "hand_settings": "default",
+        "exclusion_list": {},
+        "liquid_targeting_list": {}
+    }
+}

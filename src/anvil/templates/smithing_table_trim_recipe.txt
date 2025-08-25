@@ -1,0 +1,9 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:recipe_smithing_trim": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        },
+        "tags": "{{ tags }}
+    }
+}

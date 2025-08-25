@@ -1,0 +1,6 @@
+{
+    "localization_name": "{{ filename }}",
+    "geometry": "geometry.humanoid.{{ geo_type }}",
+    "texture": "{{ filename }}.png",
+    "type": "{{ paid }}"
+}

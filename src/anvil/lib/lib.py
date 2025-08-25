@@ -9,6 +9,7 @@ from datetime import datetime
 from enum import StrEnum
 
 import commentjson as commentjson
+
 from anvil.lib.types import Color
 
 from ..__version__ import __version__
@@ -90,9 +91,7 @@ def process_color(Color: Color, add_alpha: bool = False) -> str | list[float]:
         return (clamp(c, 0.0, 255.0) for c in Color)
     elif isinstance(Color, str):
         if Color[0] != "#" or len(Color) not in [7, 9]:
-            raise ValueError(
-                "Invalid Color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'."
-            )
+            raise ValueError("Invalid Color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'.")
         if len(Color) == 7 and add_alpha:
             Color += "ff"
         return Color
@@ -174,10 +173,14 @@ def zipit(zip_name, dir_list: dict) -> None:
         The target directories represent the structure inside the ZIP archive.
     """
 
+    excluded_extensions = [".js.map"]
+
     def zipdir(ziph: zipfile.ZipFile, source, target):
         if os.path.isdir(source):
             for root, dirs, files in os.walk(source):
                 for file in files:
+                    if any(file.endswith(ext) for ext in excluded_extensions):
+                        continue
                     ziph.write(
                         os.path.join(root, file),
                         os.path.join(target, os.path.relpath(os.path.join(root, file), os.path.join(source, "."))),
@@ -202,7 +205,7 @@ def CreateDirectory(path: str) -> None:
     os.makedirs(this_path, exist_ok=True)
 
 
-def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bool = False, *Parameters) -> None:
+def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bool = False, **parameters) -> None:
     """
     Create or modify a file with the given content.
 
@@ -227,11 +230,12 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
     time = datetime.now(datetime.now().astimezone().tzinfo).strftime("%d-%m-%Y %H:%M:%S %z")
     copyright = f"Property of {Config().get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY)}"
     path = os.path.normpath(os.path.join(directory, name))
+    oneline = Config().get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)
     if mode == "w":
         match type:
             case "json" | "material" | "code-workspace":
                 out_content = f"//Filename: {name}\n//{stamp}\n//{time}\n//{copyright}\n\n"
-                file_content = json.dumps(content, sort_keys=False, indent=4, ensure_ascii=False)
+                file_content = json.dumps(content, sort_keys=False, indent=4 if not oneline else None, ensure_ascii=False)
             case "py" | "mcfunction":
                 out_content = f"#Filename: {name}\n#{stamp}\n#{time}\n#{copyright}\n\n"
             case "lang":
@@ -241,15 +245,8 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
     else:
         out_content += file_content
 
-    prev = ""
-
-    if FileExists(path):
-        with open(path, "r", encoding="utf-8") as file:
-            prev = file.read()
-
-    if prev.split("\n")[6::] != file_content.split("\n"):
-        with open(path, mode, encoding="utf-8") as file:
-            file.write(out_content)
+    with open(path, mode, encoding="utf-8") as file:
+        file.write(out_content)
 
 
 def process_subcommand(command: str, error_handle: str = "Error"):
@@ -263,9 +260,7 @@ def validate_namespace_project_name(namespace: str, project_name: str, is_addon:
     pascal_project_name = "".join(x[0] for x in project_name.split("_")).upper()
 
     if namespace == "minecraft":
-        raise ValueError(
-            "The namespace 'minecraft' is reserved and cannot be used for custom packs. Please choose a different namespace."
-        )
+        raise ValueError("The namespace 'minecraft' is reserved and cannot be used for custom packs. Please choose a different namespace.")
 
     if len(namespace) > 8:
         raise ValueError(f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long.")

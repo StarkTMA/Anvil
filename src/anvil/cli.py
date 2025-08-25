@@ -8,301 +8,77 @@ import requests
 from packaging.version import Version
 
 from anvil.lib.config import Config, ConfigOption, ConfigSection
-from anvil.lib.format_versions import (MANIFEST_BUILD, MODULE_MINECRAFT_SERVER,
-                                       MODULE_MINECRAFT_SERVER_UI)
+from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File, FileExists,
                            process_subcommand, validate_namespace_project_name)
+from anvil.lib.templater import load_file
 
 from .__version__ import __version__
 
 
 class JsonSchemes:
     @staticmethod
-    def structure(project_name):
-        return {
-            project_name: {
-                "assets": {
-                    "models": {},
-                    "textures": {"environment": {}, "items": {}, "ui": {}},
-                    "sounds": {},
-                    "particles": {},
-                    "skins": {},
-                },
-                "scripts": {"javascript": {}, "python": {}},
-                "world": {"structures": {}},
-                "marketing": {},
-                "output": {},
-            }
-        }
+    def python():
+        return load_file("python.txt")
 
     @staticmethod
-    def script():
-        return "\n".join(
-            [
-                "from anvil import *",
-                "",
-                'if __name__ == "__main__":',
-                "    ANVIL.compile(extract_world=None)",
-                "    #ANVIL.package()",
-            ]
+    def package_json(project_name, version, description, author):
+        return load_file(
+            "package_json.txt", {"project_name": project_name, "version": version, "description": description, "author": author}, is_json=True
         )
+
+    @staticmethod
+    def vscode(path, wkspc, script_uuid):
+        return load_file("vscode.txt", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path})
 
     @staticmethod
     def gitignore():
-        return "\n".join(
-            [
-                "#Anvil",
-                "assets/cache/",
-                "# Byte-compiled / optimized / DLL files",
-                "__pycache__/",
-                "*.py[cod]",
-                "*$py.class",
-                "# C extensions",
-                "*.so",
-                "# Distribution / packaging",
-                ".Python",
-                "build/",
-                "develop-eggs/",
-                "dist/",
-                "downloads/",
-                "eggs/",
-                ".eggs/",
-                "lib/",
-                "lib64/",
-                "parts/",
-                "sdist/",
-                "var/",
-                "wheels/",
-                "pip-wheel-metadata/",
-                "share/python-wheels/",
-                "*.egg-info/",
-                ".installed.cfg",
-                "*.egg",
-                "MANIFEST",
-                "# Environments",
-                ".env",
-                ".venv",
-                "env/",
-                "venv/",
-                "ENV/",
-                "env.bak/",
-                "venv.bak/",
-                "# Typescript/Javascript",
-                "node_modules/",
-            ]
-        )
-
-    @staticmethod
-    def pack_name_lang(name, description):
-        return [f"pack.name={name}", f"pack.description={description}"]
-
-    @staticmethod
-    def manifest_bp(version, uuid1, rpuuid, author, has_script: bool, server_ui: bool):
-        m = {
-            "format_version": 2,
-            "header": {
-                "description": "pack.description",
-                "name": "pack.name",
-                "uuid": uuid1,
-                "version": version,
-                "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
-            },
-            "modules": [{"type": "data", "uuid": str(uuid.uuid4()), "version": version}],
-            "dependencies": [{"uuid": rpuuid, "version": version}],
-            "metadata": {"authors": [author]},
-        }
-        if has_script:
-            m["modules"].append(
-                {
-                    "uuid": str(uuid.uuid4()),
-                    "version": version,
-                    "type": "script",
-                    "language": "javascript",
-                    "entry": "scripts/main.js",
-                }
-            )
-            m["dependencies"].append(
-                {
-                    "module_name": "@minecraft/server",
-                    "version": MODULE_MINECRAFT_SERVER,
-                }
-            )
-            if server_ui:
-                m["dependencies"].append(
-                    {
-                        "module_name": "@minecraft/server-ui",
-                        "version": MODULE_MINECRAFT_SERVER_UI,
-                    }
-                )
-        return m
-
-    @staticmethod
-    def manifest_rp(version, uuid1, bp_uuid, author, has_pbr, addon):
-        m = {
-            "format_version": 2,
-            "header": {
-                "description": "pack.description",
-                "name": "pack.name",
-                "uuid": uuid1,
-                "version": version,
-                "min_engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
-            },
-            "modules": [
-                {
-                    "type": "resources",
-                    "uuid": str(uuid.uuid4()),
-                    "version": version,
-                }
-            ],
-            "dependencies": [{"uuid": bp_uuid, "version": version}],
-            "metadata": {"authors": [author]},
-        }
-        if has_pbr:
-            m.update({"capabilities": ["pbr"]})
-        if addon:
-            m["header"]["pack_scope"] = "world"
-            m["metadata"]["product_type"] = "addon"
-        return m
-
-    @staticmethod
-    def manifest_world(version, uuid1, author, seed):
-        return {
-            "format_version": 2,
-            "header": {
-                "name": "pack.name",
-                "description": "pack.description",
-                "version": version,
-                "uuid": uuid1,
-                # "platform_locked": False,
-                "lock_template_options": True,
-                "base_game_version": [int(i) for i in MANIFEST_BUILD.split(".")],
-                "allow_random_seed": seed,
-            },
-            "modules": [
-                {
-                    "type": "world_template",
-                    "uuid": str(uuid.uuid4()),
-                    "version": version,
-                }
-            ],
-            "metadata": {"authors": [author]},
-        }
-
-    @staticmethod
-    def world_packs(pack_id, version):
-        return [{"pack_id": i, "version": version} for i in pack_id]
+        return load_file("gitignore.txt")
 
     @staticmethod
     def code_workspace(name, path1, path2, preview=False):
-        return {
-            "folders": [
-                {"name": name, "path": os.path.join(path1, path2)},
-                {
-                    "name": "Dev Resource Packs",
-                    "path": os.path.join(
-                        APPDATA,
-                        "Local",
-                        "Packages",
-                        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
-                        "LocalState",
-                        "games",
-                        "com.mojang",
-                        "development_resource_packs",
-                    ),
-                },
-                {
-                    "name": "Dev behavior Packs",
-                    "path": os.path.join(
-                        APPDATA,
-                        "Local",
-                        "Packages",
-                        f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
-                        "LocalState",
-                        "games",
-                        "com.mojang",
-                        "development_behavior_packs",
-                    ),
-                },
-            ]
-        }
-
-    @staticmethod
-    def vscode(path):
-        return {
-            "version": "0.3.0",
-            "configurations": [
-                {
-                    "type": "minecraft-js",
-                    "request": "attach",
-                    "name": "Wait for Minecraft Debug Connections",
-                    "mode": "listen",
-                    "localRoot": path,
-                    "port": 19144,
-                }
-            ],
-        }
-
-    @staticmethod
-    def packagejson(project_name, version, description, author):
-        return {
-            "name": project_name,
-            "version": version,
-            "description": description,
-            "type": "module",
-            "keywords": [],
-            "author": author,
-            "license": "ISC",
-        }
+        return load_file(
+            "code_workspace.txt",
+            {
+                "name": name,
+                "path": os.path.join(path1, path2),
+                "dev_res_path": os.path.join(
+                    APPDATA,
+                    "Local",
+                    "Packages",
+                    f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+                    "LocalState",
+                    "games",
+                    "com.mojang",
+                    "development_resource_packs",
+                ),
+                "dev_beh_path": os.path.join(
+                    APPDATA,
+                    "Local",
+                    "Packages",
+                    f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
+                    "LocalState",
+                    "games",
+                    "com.mojang",
+                    "development_behavior_packs",
+                ),
+            },
+            is_json=True,
+        )
 
     @staticmethod
     def tsconfig(out_dir):
-        return {
-            "compilerOptions": {
-                "target": "ESNext",
-                "module": "es2020",
-                "declaration": False,
-                "outDir": os.path.join(out_dir, "scripts"),
-                "strict": True,
-                "pretty": True,
-                "esModuleInterop": True,
-                "moduleResolution": "Node",
-                "resolveJsonModule": True,
-                "forceConsistentCasingInFileNames": True,
-                "lib": ["ESNext"],
-            },
-            "include": ["scripts/javascript/**/*"],
-            "exclude": ["node_modules"],
-        }
-
-    @staticmethod
-    def tsconstants(namespace: str, project_name: str):
-        file = []
-        file.append(f'export const NAMESPACE = "{namespace}"')
-        file.append(f'export const PROJECT_NAME = "{project_name}"')
-
-        return "\n".join(file)
+        return load_file("tsconfig.txt", {"out_dir": os.path.join(out_dir, "scripts")})
 
     @staticmethod
     def esbuild_config_js(outDir):
-        return "\n".join(
-            [
-                "import esbuild from 'esbuild';",
-                f"const outDir = '{os.path.join(outDir, 'scripts')}';",
-                "esbuild",
-                "    .build({",
-                '        entryPoints: ["scripts/javascript/main.ts"],',
-                "        bundle: true,",
-                '        format: "esm",',
-                "        sourcemap: true,",
-                "        minify: true,",
-                "        external: [",
-                "            '@minecraft/server',",
-                "            '@minecraft/server-ui',",
-                "        ],",
-                "    })",
-                "    .catch(() => process.exit(1));",
-            ]
+        return load_file(
+            "esbuild.txt", {"out_dir": os.path.join(outDir, "scripts"), "minify": Config().get_option(ConfigSection.PACKAGE, ConfigOption.MINIFY)}
         )
+
+    @staticmethod
+    def tsconstants(namespace: str, project_name: str):
+        return load_file("tsconstants.txt", {"namespace": namespace, "project_name": project_name})
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -365,7 +141,8 @@ def handle_configuration(
     config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
     config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.PREVIEW, preview)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "main.py")
+    config.add_option(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py")
+    config.add_option(ConfigSection.ANVIL, ConfigOption.MINIFY, False)
 
     config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
     config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
@@ -374,8 +151,6 @@ def handle_configuration(
     config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
 
     config.add_section(namespace)
-
-    config.save()
 
     return config
 
@@ -424,17 +199,17 @@ def check_version() -> None:
         )
 
 
-def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR, DEV_RES_DIR) -> None:
+def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR, WORKING_DIR) -> None:
     click.echo("Initiating ScriptingAPI modules")
-    install_locally_modules = ["@minecraft/server", "@minecraft/server-ui", "@minecraft/vanilla-data"]
-    install_global_modules = ["typescript", "esbuild"]
+    install_dependencies = ["@minecraft/server", "@minecraft/server-ui", "typescript", "esbuild"]
 
-    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
+    script_uuid = str(uuid.uuid4())
+    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, script_uuid)
     config.add_option(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js")
 
     File(
         "package.json",
-        JsonSchemes.packagejson(
+        JsonSchemes.package_json(
             project_name,
             "1.0.0",
             config.get_option("package", "display_name") + " Essentials",
@@ -444,26 +219,26 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
         "w",
         True,
     )
-    File("tsconfig.json", JsonSchemes.tsconfig(DEV_BEH_DIR), "", "w", False)
-    File("esbuild.js", JsonSchemes.esbuild_config_js(), "", "w", False)
     File(
         "launch.json",
-        JsonSchemes.vscode(os.path.join(DEV_RES_DIR, f"BP_{config.get_option("anvil", "pascal_project_name")}", "scripts")),
+        JsonSchemes.vscode(
+            os.path.join(DEV_BEH_DIR, f"BP_{config.get_option("anvil", "pascal_project_name")}", "scripts"),
+            os.path.join(WORKING_DIR, "scripts", "javascript"),
+            script_uuid,
+        ),
         ".vscode",
         "w",
         False,
     )
-    File("anvilconfig.ts", JsonSchemes.tsconstants(namespace, project_name), os.path.join("scripts", "javascript"), "w", False)
+    File("tsconfig.json", JsonSchemes.tsconfig(DEV_BEH_DIR), "", "w", False)
+    File("esbuild.js", JsonSchemes.esbuild_config_js(DEV_BEH_DIR), "", "w", False)
+    File("constants.ts", JsonSchemes.tsconstants(namespace, project_name), os.path.join("scripts", "javascript"), "w", False)
     File("main.ts", 'import * as mc from "@minecraft/server";\n', os.path.join("scripts", "javascript"), "w", False)
 
-    print(f"Installing npm packages... [{', '.join(install_locally_modules + install_global_modules)}]")
+    print(f"Installing npm packages... [{', '.join(install_dependencies)}]")
     process_subcommand(
-        f"npm init -y && npm install --save {', '.join(install_locally_modules)}",
-        f"Unable to initiate npm packages [{', '.join(install_locally_modules)}].",
-    )
-    process_subcommand(
-        f"npm init -y && npm install -g {', '.join(install_global_modules)}",
-        f"Unable to initiate npm packages [{', '.join(install_global_modules)}].",
+        f"npm init -y && npm install {' '.join(install_dependencies)}",
+        f"Unable to initiate npm packages [{', '.join(install_dependencies)}].",
     )
 
 
@@ -521,11 +296,27 @@ def create(
     DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
     DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
 
-    CreateDirectoriesFromTree(JsonSchemes.structure(project_name))
+    CreateDirectoriesFromTree(
+        {
+            project_name: {
+                "assets": {
+                    "bbmodels": {},
+                    "textures": {"environment": {}, "items": {}, "ui": {}},
+                    "sounds": {},
+                    "particles": {},
+                    "skins": {},
+                },
+                "scripts": {"javascript": {}, "python": {}},
+                "world": {"structures": {}},
+                "marketing": {},
+                "output": {},
+            }
+        }
+    )
 
     os.chdir(project_name)
 
-    File("main.py", JsonSchemes.script(), "scripts/python/", "w")
+    File("main.py", JsonSchemes.python(), "scripts/python/", "w")
     File(".gitignore", JsonSchemes.gitignore(), "", "w")
     File("CHANGELOG.md", "", "", "w")
     File(
@@ -536,7 +327,7 @@ def create(
     )
 
     if scriptapi:
-        handle_script(config, namespace, project_name, DEV_BEH_DIR, DEV_RES_DIR)
+        handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR)
 
     config.save()
 

@@ -11,6 +11,7 @@ from warnings import warn
 from anvil import CONFIG
 from anvil.lib.lib import FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.types import Vector2D
 
 
 def _keyframes_mapper(keyframes: List[dict]) -> dict:
@@ -162,7 +163,7 @@ class _AnimationsManager:
     def __init__(self, name: str, source: str, bbmodel: dict) -> None:
         self._name = name
         self._bbanimations = bbmodel.get("animations", [])
-        self._content = JsonSchemes.rp_animations()
+        self._content = JsonSchemes.animations_rp()
         self._queued = False
         self._source = "actors"
 
@@ -285,11 +286,12 @@ class _Locator:
 class _Mesh:
     mesh_texture_multiplier = 64
 
-    def __init__(self, mesh_dict: dict, parent: str = "root") -> None:
+    def __init__(self, mesh_dict: dict, parent: str = "root", model_center_offset: List[float] = None) -> None:
         self.mesh = mesh_dict
         self.parent = parent
         self.vertices = self.mesh.get("vertices", [])
         self.faces = self.mesh.get("faces", [])
+        self.model_center_offset = model_center_offset or [0, 0, 0]
 
     def extract_cuboids(self):
         face_verts = {fid: set(face["vertices"]) for fid, face in self.faces.items()}
@@ -400,7 +402,9 @@ class _Mesh:
         elif vertices_size[2] == 0:
             return "south" if z_max > cube_origin[2] else "north"
         else:
-            raise ValueError("Face is not planar or not axis-aligned. Cannot determine direction.")
+            return "east"
+        # else:
+        #    raise ValueError(f"Face is not planar or not axis-aligned. Cannot determine direction. {self.mesh.get('name')} {vertices_size}")
 
     def process_cubes(self):
         vertices_values = self.vertices.values()
@@ -415,6 +419,12 @@ class _Mesh:
             max(x[1] for x in vertices_values) - origin[1],
             max(x[2] for x in vertices_values) - origin[2],
         ]
+
+        # Apply model center offset to center the entire model
+        if self.model_center_offset != [0, 0, 0]:
+            origin[0] -= self.model_center_offset[0]
+            origin[1] -= self.model_center_offset[1]
+            origin[2] -= self.model_center_offset[2]
 
         uv = {}
         for face_id, face_data in self.faces.items():
@@ -431,7 +441,12 @@ class _Mesh:
             for v in face_vertices:
                 vertices.append(self.vertices[v])
 
-            uv[self.map_vertices(origin, vertices)] = {
+            original_origin = [
+                origin[0] + self.model_center_offset[0],
+                origin[1] + self.model_center_offset[1],
+                origin[2] + self.model_center_offset[2],
+            ]
+            uv[self.map_vertices(original_origin, vertices)] = {
                 "uv": [x_min, y_min],
                 "uv_size": [round(x_max - x_min, 4), round(y_max - y_min, 4)],
             }
@@ -440,14 +455,14 @@ class _Mesh:
 
     def compile(self):
         vertices = len(self.vertices.keys())
-        if vertices <= 8:  # A cube or a face
+        if vertices > 0 and vertices <= 8:  # A cube or a face
             return self.process_cubes()
         else:
             meshes = []
             cuboids = self.extract_cuboids()
 
             for cube in cuboids:
-                meshes.append(_Mesh(cube).compile()[0])
+                meshes.append(_Mesh(cube, self.parent, self.model_center_offset).compile()[0])
             return meshes
 
 
@@ -496,17 +511,53 @@ class _Bone:
 
 class _ModelManager:
     def __init__(self, filename, source: str, bbmodel: dict) -> None:
+        """Handles loading and managing Blockbench models.
+
+        Args:
+            filename (str): The name of the model file (without extension).
+            source (str): The source of the model. Defaults to "actors".
+            bbmodel (dict): The Blockbench model data.
+        """
+
         self._name = filename
         self._bbmodel = bbmodel
         self._queued = False
         self._source = source
         self._is_wavefront = self._bbmodel["meta"]["model_format"] == "free"
+        self._bounding_box = None
+        self._model_center_offset = None
 
-        if self._is_wavefront:
-            warn(
-                f"You are using a Blockbench model with a Wavefront format. This is not fully supported and it may not work correctly. Blockbench model [{self._name}]",
-                UserWarning,
-            )
+    def _calculate_model_center_offset(self) -> None:
+        """Calculate the offset needed to center the entire model around the origin."""
+        if not self._is_wavefront:
+            return
+
+        all_vertices = []
+
+        # Collect all vertices from all mesh elements
+        for element in self._bbmodel["elements"]:
+            if element["type"] == "mesh":
+                vertices = element.get("vertices", {})
+                for vertex in vertices.values():
+                    all_vertices.append(vertex)
+
+        if not all_vertices:
+            return
+
+        # Calculate overall bounding box
+        min_x = min(v[0] for v in all_vertices)
+        min_y = min(v[1] for v in all_vertices)
+        min_z = min(v[2] for v in all_vertices)
+
+        max_x = max(v[0] for v in all_vertices)
+        max_y = max(v[1] for v in all_vertices)
+        max_z = max(v[2] for v in all_vertices)
+
+        # Calculate center offset - center X and Z, but put bottom at Y=0
+        center_x = (min_x + max_x) / 2
+        center_z = (min_z + max_z) / 2
+
+        self._model_center_offset = [center_x, min_y, center_z]
 
     def process_bones(self, bones: List[Union[str, dict]], parent: str = "root") -> None:
         for bone in bones:
@@ -517,7 +568,7 @@ class _ModelManager:
                 elif bone_dict["type"] == "locator":
                     self._bones[parent].add_locator(_Locator(bone_dict, parent))
                 elif bone_dict["type"] == "mesh" and self._is_wavefront:
-                    self._bones[parent].add_mesh(_Mesh(bone_dict, parent))
+                    self._bones[parent].add_mesh(_Mesh(bone_dict, parent, self._model_center_offset))
             elif isinstance(bone, dict):
                 bone_name = bone["name"]
                 self._bones[bone_name] = _Bone(bone, parent if self._bones else None)
@@ -527,6 +578,11 @@ class _ModelManager:
         if not self._queued:
             self._cubes = {d["uuid"]: d for d in self._bbmodel["elements"]}
             self._bones: Dict[str, _Bone] = {}
+
+            # Calculate model center offset for mesh models
+            if self._is_wavefront:
+                self._calculate_model_center_offset()
+
             self.process_bones(self._bbmodel["outliner"], "root")
 
             texture_multiplier = 64 if self._is_wavefront else 1
@@ -538,8 +594,8 @@ class _ModelManager:
                     self._bbmodel["resolution"]["height"] * texture_multiplier,
                 ],
                 [
-                    self._bbmodel["visible_box"][0] if not self._is_wavefront else 1024,
-                    self._bbmodel["visible_box"][1] if not self._is_wavefront else 1024,
+                    self._bounding_box[0] if self._bounding_box else self._bbmodel["visible_box"][0] if not self._is_wavefront else 1024,
+                    self._bounding_box[1] if self._bounding_box else self._bbmodel["visible_box"][1] if not self._is_wavefront else 1024,
                 ],
                 [0, self._bbmodel["visible_box"][2], 0],
             )
@@ -562,6 +618,16 @@ class _Blockbench:
         return _Blockbench._loaded_blockbench_models[filename]
 
     def __init__(self, filename: str, source: str = "actors") -> None:
+        """Handles loading and managing Blockbench models.
+
+        Args:
+            filename (str): The name of the model file (without extension).
+            source (str, optional): The source of the model. Defaults to "actors".
+
+        Raises:
+            ValueError: If the model identifier does not match the filename.
+            FileNotFoundError: If the model file is not found.
+        """
         if hasattr(self, "_path"):
             return
 
@@ -579,8 +645,19 @@ class _Blockbench:
         self.animations = _AnimationsManager(filename, source, self.bbmodel)
         self.textures = _TexturesManager(filename, source, self.bbmodel)
 
+    def override_bounding_box(self, bounding_box: Vector2D) -> None:
+        self.model._bounding_box = bounding_box
+
     def _export():
+        meshes = []
         for bb in _Blockbench._loaded_blockbench_models.values():
             bb.model._export()
             bb.animations._export()
             bb.textures._export()
+            if bb.model._is_wavefront:
+                meshes.append(bb.model._name)
+        if len(meshes) > 0:
+            warn(
+                f"Some Blockbench models are using a Wavefront format. This is not fully supported and it may not work correctly.",
+                UserWarning,
+            )

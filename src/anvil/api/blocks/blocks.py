@@ -9,7 +9,7 @@ from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.lib.enums import (BlockVanillaTags, ItemCategory, ItemGroups,
                              PlacementDirectionTrait, PlacementPositionTrait)
-from anvil.lib.lib import CopyFiles, IMAGE_EXTENSIONS_PRIORITY
+from anvil.lib.lib import IMAGE_EXTENSIONS_PRIORITY, CopyFiles
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (AddonObject, BlockDescriptor, JsonSchemes,
                                MinecraftDescription, _BaseComponent)
@@ -294,12 +294,11 @@ class Block(BlockDescriptor):
         if self._item:
             self._item.queue()
 
-        if self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier].startswith("tile."):
-            display_name = ANVIL.definitions._language[
-                self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier]
-            ]
+        block_name_comp = self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier]
+        if block_name_comp.startswith("tile."):
+            display_name = ANVIL.definitions._translator.get_localization_value(block_name_comp)
         else:
-            display_name = self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier]
+            display_name = block_name_comp
 
         CONFIG.Report.add_report(
             ReportType.BLOCK,
