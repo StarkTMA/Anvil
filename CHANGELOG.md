@@ -67,6 +67,10 @@
 
 ---
 
+## Version 0.9.3
+
+- PyPI version fix
+
 ## Version 0.9.2
 
 ### Anvil
