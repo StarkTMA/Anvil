@@ -433,8 +433,8 @@ class _Anvil:
                 object._export()
             except Exception as e:
                 traceback = f"<{object.__class__.__name__} created from:\n{''.join(object.__created_from)}>"
-                click.echo(f"Error exporting {object._name}: {e}", err=True, color="red")
-                click.echo(f"Traceback: {traceback}", err=True, color="red")
+                click.echo(f"\rError exporting {object._name}: {e}", err=True, color="red")
+                click.echo(f"\rTraceback: {traceback}", err=True, color="red")
 
         from anvil.api.blocks.blocks import _PermutationComponents
 
@@ -443,7 +443,7 @@ class _Anvil:
                 raise RuntimeError(f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons cannot exceed this limit.")
             else:
                 raise RuntimeError(
-                    f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). For minimal performance impact, consider reducing the number of permutations."
+                    f"\rTotal Block permutations exceeded 10000 ({_PermutationComponents._count}). For minimal performance impact, consider reducing the number of permutations."
                 )
 
         if self.config._SCRIPT_API:
@@ -460,7 +460,6 @@ class _Anvil:
         """Packages the project into a zip file for Marketplace."""
         if not self._compiled:
             raise RuntimeError("Project must be compiled before packaging.")
-        click.echo("Packaging submission zip file for Marketplace...", color="green")
 
         self._process_art(apply_overlay)
 
@@ -516,7 +515,6 @@ class _Anvil:
         """Packages the project into a .mcaddon file."""
         if not self._compiled:
             raise RuntimeError("Project must be compiled before packaging.")
-        click.echo("Packaging .mcaddon file...", color="green")
 
         self._process_art(False, False)
 
@@ -532,7 +530,6 @@ class _Anvil:
         """Packages the project into a .mcworld file."""
         if not self._compiled:
             raise RuntimeError("Project must be compiled before packaging.")
-        click.echo("Packaging .mcworld file...", color="green")
 
         self._process_art(False, False)
 
@@ -712,7 +709,7 @@ class _Anvil:
                 )
 
             else:
-                click.echo(f"panorama.png does not exist. It is optional but might have been left out unintentionally.", color="yellow")
+                click.echo(f"\rpanorama.png does not exist. It is optional but might have been left out unintentionally.", color="yellow")
 
             for i in range(999):
                 if not FileExists(os.path.join(source, f"{i}.png")):

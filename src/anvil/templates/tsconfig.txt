@@ -3,7 +3,7 @@
         "target": "ESNext",
         "module": "es2020",
         "declaration": false,
-        "outDir": "{{ out_dir }}",
+        "outDir": "{{ out_dir|path }}",
         "strict": true,
         "pretty": true,
         "esModuleInterop": true,

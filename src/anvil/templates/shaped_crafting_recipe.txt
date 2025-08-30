@@ -4,8 +4,8 @@
         "description": {
             "identifier": "{{ identifier }}"
         },
-        "tags": "{{ tags }}",
-        "assume_symmetry": "{{ assume_symmetry }}",
+        "tags": {{ tags }},
+        "assume_symmetry": {{ assume_symmetry|lower }},
         "pattern": [],
         "key": {}
     }

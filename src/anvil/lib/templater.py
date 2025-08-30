@@ -12,11 +12,12 @@ _DEFAULT_FILTERS: Dict[str, Callable[[object], str]] = {
     "lower": lambda v: str(v).lower(),
     "json": lambda v: json.dumps(v, ensure_ascii=False),
     "path": lambda v: str(v).replace("\\", "/"),
+    "dquote": lambda v: str(v).replace("'", '"'),
 }
 _TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
 
 
-def load_file(file_path: str, vars: Dict[str, object] = {}, *, on_missing: str = "keep", is_json: bool = False) -> str | Any:  # "keep" | "empty" | "error"
+def load_file(file_path: str, vars: Dict[str, object] = {}, *, on_missing: str = "empty", is_json: bool = False) -> str | Any:  # "keep" | "empty" | "error"
     def replace(match: re.Match) -> str:
         var_name, filter_name = match.group(1), match.group(2)
         if var_name not in vars:
@@ -31,12 +32,13 @@ def load_file(file_path: str, vars: Dict[str, object] = {}, *, on_missing: str =
             if not filter_func:
                 raise ValueError(f"Unknown filter: {filter_name}")
             return str(filter_func(value))
-        return str(value)
+        # Apply dquote filter by default
+        return str(value).replace("'", '"')
 
     with open(os.path.join(_TEMPLATES_DIR, file_path), "r", encoding="utf-8") as file:
         text = file.read()
 
-    result = _TOKEN_RE.sub(replace, text).replace("\\", "/")
-    if is_json:
+    result = _TOKEN_RE.sub(replace, text)
+    if is_json: 
         return json.loads(result)
     return result

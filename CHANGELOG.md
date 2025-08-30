@@ -4,7 +4,9 @@
 
 ### Latest Releases
 
-- [**Version 0.9.2**](#version-092)
+- [**Version 0.9.3.1**](#version-0931)
+- [Version 0.9.3](#version-093)
+- [Version 0.9.2](#version-092)
 - [Version 0.9.1](#version-091)
 - [**Version 0.9.0** - _Modular Architecture_](#version-090)
 
@@ -66,6 +68,12 @@
 - [Version 0.0.0 → 0.1.0](#version-000--010)
 
 ---
+
+## Version 0.9.3.1
+
+- Fixed some templates.
+- Fixed "en_US" lang files not exporting.
+- Cleaned up some CLI print statements during compilation.
 
 ## Version 0.9.3
 

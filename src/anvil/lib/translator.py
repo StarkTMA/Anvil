@@ -19,7 +19,7 @@ class AnvilTranslator:
         self._excel_file_path = Path("localization.xlsx")
         self._source_language = "en_US"
         self._translated = False
-        self.translated_languages = ["en_US"]
+        self.translated_languages = [self._source_language]
 
         if not self._excel_file_path.exists():
             with pd.ExcelWriter(self._excel_file_path, engine="openpyxl") as writer:
@@ -28,15 +28,25 @@ class AnvilTranslator:
                     df.to_excel(writer, sheet_name=lang_code, index=False)
 
         self.add_localization_entry("pack.name", CONFIG.DISPLAY_NAME)
-        self.add_localization_entry("pack.project_description", CONFIG.PROJECT_DESCRIPTION)
-        self.add_localization_entry("pack.resource_description", CONFIG.RESOURCE_DESCRIPTION)
-        self.add_localization_entry("pack.behaviour_description", CONFIG.BEHAVIOUR_DESCRIPTION)
+        self.add_localization_entry(
+            "pack.project_description", CONFIG.PROJECT_DESCRIPTION
+        )
+        self.add_localization_entry(
+            "pack.resource_description", CONFIG.RESOURCE_DESCRIPTION
+        )
+        self.add_localization_entry(
+            "pack.behaviour_description", CONFIG.BEHAVIOUR_DESCRIPTION
+        )
 
     def _get_languages(self) -> List[str]:
-        languages = [lang for lang in JsonSchemes.languages() if lang != self._source_language]
+        """Returns a list of all languages."""
+        languages = [lang for lang in JsonSchemes.languages()]
         return languages
 
     def _get_localization_entries(self, language: str) -> Dict[str, str]:
+        """
+        Returns a dictionary of localization entries for a specific language.
+        """
         try:
             df = pd.read_excel(self._excel_file_path, sheet_name=language)
             return dict(zip(df["Key"], df["Value"]))
@@ -48,7 +58,9 @@ class AnvilTranslator:
         Remove keys from other languages that don't exist in the source language (en_US).
         """
         try:
-            source_df = pd.read_excel(self._excel_file_path, sheet_name=self._source_language)
+            source_df = pd.read_excel(
+                self._excel_file_path, sheet_name=self._source_language
+            )
             source_keys = set(source_df["Key"].tolist())
         except ValueError:
             return
@@ -72,14 +84,25 @@ class AnvilTranslator:
                 continue
 
         if languages_to_update:
-            with pd.ExcelWriter(self._excel_file_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+            with pd.ExcelWriter(
+                self._excel_file_path,
+                engine="openpyxl",
+                mode="a",
+                if_sheet_exists="replace",
+            ) as writer:
                 for language in languages_to_update:
                     df = all_dfs[language]
                     df.to_excel(writer, sheet_name=language, index=False)
                     worksheet = writer.sheets[language]
                     if not df.empty:
-                        max_key_length = max(len(str(key)) for key in df["Key"]) if len(df["Key"]) > 0 else 10
-                        worksheet.column_dimensions["A"].width = max(max_key_length + 5, 20)
+                        max_key_length = (
+                            max(len(str(key)) for key in df["Key"])
+                            if len(df["Key"]) > 0
+                            else 10
+                        )
+                        worksheet.column_dimensions["A"].width = max(
+                            max_key_length + 5, 20
+                        )
                     worksheet.column_dimensions["B"].width = 20
 
     def add_localization_entry(self, key: str, value: str) -> None:
@@ -91,7 +114,9 @@ class AnvilTranslator:
             value (str): The English value
         """
         try:
-            df_en_us = pd.read_excel(self._excel_file_path, sheet_name=self._source_language)
+            df_en_us = pd.read_excel(
+                self._excel_file_path, sheet_name=self._source_language
+            )
         except ValueError:
             df_en_us = pd.DataFrame(columns=["Key", "Value"])
 
@@ -125,12 +150,21 @@ class AnvilTranslator:
 
             all_dfs[language] = df_lang
 
-        with pd.ExcelWriter(self._excel_file_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+        with pd.ExcelWriter(
+            self._excel_file_path,
+            engine="openpyxl",
+            mode="a",
+            if_sheet_exists="replace",
+        ) as writer:
             for lang, df in all_dfs.items():
                 df.to_excel(writer, sheet_name=lang, index=False)
                 worksheet = writer.sheets[lang]
                 if not df.empty:
-                    max_key_length = max(len(str(key)) for key in df["Key"]) if len(df["Key"]) > 0 else 10
+                    max_key_length = (
+                        max(len(str(key)) for key in df["Key"])
+                        if len(df["Key"]) > 0
+                        else 10
+                    )
                     worksheet.column_dimensions["A"].width = max(max_key_length + 5, 20)
                 worksheet.column_dimensions["B"].width = 20
 
@@ -160,18 +194,29 @@ class AnvilTranslator:
         if languages is None:
             languages = self._get_languages()
 
-        source_language = "en_US"
-        source_entries = self._get_localization_entries(source_language)
+        source_entries = self._get_localization_entries(self._source_language)
 
-        with pd.ExcelWriter(self._excel_file_path, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+        with pd.ExcelWriter(
+            self._excel_file_path,
+            engine="openpyxl",
+            mode="a",
+            if_sheet_exists="replace",
+        ) as writer:
             for target_lang in languages:
+
+                if target_lang == self._source_language:
+                    continue
 
                 existing_entries = self._get_localization_entries(target_lang)
                 keys_to_translate = []
                 values_to_translate = []
 
                 for key, value in source_entries.items():
-                    if key not in existing_entries or existing_entries[key] == "" or pd.isna(existing_entries[key]):
+                    if (
+                        key not in existing_entries
+                        or existing_entries[key] == ""
+                        or pd.isna(existing_entries[key])
+                    ):
                         keys_to_translate.append(key)
                         values_to_translate.append(value)
 
@@ -186,7 +231,9 @@ class AnvilTranslator:
                     try:
                         translated_values.extend(translator.translate_batch(batch))
                     except Exception as e:
-                        click.echo(f"Translation error for {target_lang}: {e}", color="red")
+                        click.echo(
+                            f"Translation error for {target_lang}: {e}", color="red"
+                        )
                         translated_values.extend(batch)
 
                 translation_map = dict(zip(keys_to_translate, translated_values))
@@ -213,7 +260,7 @@ class AnvilTranslator:
         Export translations to Anvil's .lang file format.
         """
 
-        languages = [self._source_language]
+        languages = []
         skipped = []
 
         for lang_code in self._get_languages():
@@ -227,32 +274,70 @@ class AnvilTranslator:
             languages.append(lang_code)
 
             lang_content = []
-            ordered_keys = ["pack.name", "pack.project_description", "pack.resource_description", "pack.behaviour_description"]
+            ordered_keys = [
+                "pack.name",
+                "pack.project_description",
+                "pack.resource_description",
+                "pack.behaviour_description",
+            ]
             for key in ordered_keys:
                 if key in entries:
                     lang_content.append(f"{key}={entries[key]}")
 
-            remaining_entries = {k: v for k, v in entries.items() if k not in ordered_keys}
+            remaining_entries = {
+                k: v for k, v in entries.items() if k not in ordered_keys
+            }
             for key, value in sorted(remaining_entries.items()):
                 lang_content.append(f"{key}={value}")
 
-            bp_content = [lang_content[0], lang_content[3].replace("behaviour_description", "description")]
-            world_content = [lang_content[0], lang_content[1].replace("project_description", "description")]
+            bp_content = [
+                lang_content[0],
+                lang_content[3].replace("behaviour_description", "description"),
+            ]
+            world_content = [
+                lang_content[0],
+                lang_content[1].replace("project_description", "description"),
+            ]
 
             rp_content = lang_content.copy()
-            rp_content[2] = lang_content[2].replace("resource_description", "description")
+            rp_content[2] = lang_content[2].replace(
+                "resource_description", "description"
+            )
             del rp_content[1]
             del rp_content[2]
 
-            File(f"{lang_code}.lang", "\n".join(rp_content), os.path.join(CONFIG.RP_PATH, "texts"), "w")
-            File(f"{lang_code}.lang", "\n".join(bp_content), os.path.join(CONFIG.BP_PATH, "texts"), "w")
+            File(
+                f"{lang_code}.lang",
+                "\n".join(rp_content),
+                os.path.join(CONFIG.RP_PATH, "texts"),
+                "w",
+            )
+            File(
+                f"{lang_code}.lang",
+                "\n".join(bp_content),
+                os.path.join(CONFIG.BP_PATH, "texts"),
+                "w",
+            )
 
             if CONFIG._TARGET == "world":
-                File(f"{lang_code}.lang", "\n".join(world_content), os.path.join(CONFIG._WORLD_PATH, "texts"), "w")
+                File(
+                    f"{lang_code}.lang",
+                    "\n".join(world_content),
+                    os.path.join(CONFIG._WORLD_PATH, "texts"),
+                    "w",
+                )
 
         if skipped:
-            click.echo(f"\rSkipping [{', '.join(skipped)}] - contains empty values", color="yellow")
+            click.echo(
+                f"\rSkipping [{', '.join(skipped)}] - contains empty values",
+                color="yellow",
+            )
         File("languages.json", languages, os.path.join(CONFIG.BP_PATH, "texts"), "w")
         File("languages.json", languages, os.path.join(CONFIG.RP_PATH, "texts"), "w")
         if CONFIG._TARGET == "world":
-            File("languages.json", languages, os.path.join(CONFIG._WORLD_PATH, "texts"), "w")
+            File(
+                "languages.json",
+                languages,
+                os.path.join(CONFIG._WORLD_PATH, "texts"),
+                "w",
+            )

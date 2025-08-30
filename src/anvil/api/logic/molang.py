@@ -3,7 +3,6 @@ from enum import StrEnum
 from anvil import CONFIG
 from anvil.lib.enums import InputModes, Slots
 from anvil.lib.lib import *
-from deprecated import deprecated
 
 
 class Molang(str):
@@ -511,7 +510,6 @@ class Query(Molang):
         return self._query(self, self.handle, "cape_flap_amount")
 
     @classmethod
-    @deprecated
     def CardinalBlockFacePlacedOn(self):
         """DEPRECATED (please use query.block_face instead) Returns the block face for this (only valid for on_placed_by_player trigger) (Down=0.0, Up=1.0, North=2.0, South=3.0, West=4.0, East=5.0, Undefined=6.0).
 
@@ -766,7 +764,6 @@ class Query(Molang):
         return self._query(self, self.handle, "get_default_bone_pivot")
 
     @classmethod
-    @deprecated
     def GetEquippedItemName(self, hand_slot: int, index=0):
         """DEPRECATED (Use query.is_item_name_any instead if possible so names can be changed later without breaking content.) Takes one optional hand slot as a parameter (0 or 'main_hand' for main hand, 1 or 'off_hand' for off hand), and a second parameter (0=default) if you would like the equipped item or any non-zero number for the currently rendered item, and returns the name of the item in the requested slot (defaulting to the main hand if no parameter is supplied) if there is one, otherwise returns ''.
 
@@ -786,7 +783,6 @@ class Query(Molang):
         return self._query(self, self.handle, "get_locator_offset")
 
     @classmethod
-    @deprecated
     def GetName(self):
         """DEPRECATED (Use query.is_name_any instead if possible so names can be changed later without breaking content.) Get the name of the mob if there is one, otherwise return ''.
 
@@ -2174,7 +2170,6 @@ class Query(Molang):
         return self._query(self, self.handle, "out_of_control")
 
     @classmethod
-    @deprecated
     def OverlayAlpha(self):
         """DEPRECATED (Do not use - this function is deprecated and will be removed).
 
@@ -2184,7 +2179,6 @@ class Query(Molang):
         return self._query(self, self.handle, "overlay_alpha")
 
     @classmethod
-    @deprecated
     def OwnerIdentifier(self):
         """DEPRECATED (Use query.is_owner_identifier_any instead if possible so names can be changed later without breaking content.) Returns the root actor identifier.
 

@@ -4,6 +4,6 @@
         "description": {
             "identifier": "{{ identifier }}"
         },
-        "tags": "{{ tags }}
+        "tags": {{ tags }}
     }
 }
