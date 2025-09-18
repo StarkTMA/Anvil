@@ -15,6 +15,10 @@ from anvil.lib.reports import ReportCollector
 
 
 class ConfigSection(StrEnum):
+    """Configuration sections for the anvil config file.
+    
+    Defines the main sections that can be present in the configuration file.
+    """
     ANVIL = "anvil"
     BUILD = "build"
     PACKAGE = "package"
@@ -22,6 +26,11 @@ class ConfigSection(StrEnum):
 
 
 class ConfigOption(StrEnum):
+    """Configuration options available in the anvil config file.
+    
+    Defines all the configuration keys that can be set in various sections
+    of the configuration file.
+    """
     VANILLA_VERSION = "vanilla_version"
     COMPANY = "company"
     NAMESPACE = "namespace"
@@ -55,6 +64,10 @@ class ConfigOption(StrEnum):
 
 
 class ConfigPackageTarget(StrEnum):
+    """Package target types for anvil projects.
+    
+    Defines the types of packages that can be created.
+    """
     WORLD = "world"
     ADDON = "addon"
 
@@ -133,6 +146,11 @@ class Config:
 
 
 class _AnvilConfig:
+    """Main configuration class for Anvil instances.
+    
+    Manages all configuration settings, paths, and initialization
+    for an Anvil project instance.
+    """
     COMPANY: str
     NAMESPACE: str
     PROJECT_NAME: str
@@ -178,7 +196,11 @@ class _AnvilConfig:
         return self.Config.get_option(section, option)
 
     def _load_configs(self) -> None:
-        """Loads the configs of the Anvil instance."""
+        """Loads and validates all configuration settings for the Anvil instance.
+        
+        Handles loading configuration values from the config file, prompting for
+        missing values, and setting up all necessary project configurations.
+        """
         self.NAMESPACE = self._handle_config(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, "input")
         self.PROJECT_NAME = self._handle_config(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, "input")
 
@@ -222,6 +244,11 @@ class _AnvilConfig:
         validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon")
 
     def _check_new_versions(self):
+        """Checks for updates to both Anvil and Minecraft versions.
+        
+        Compares current versions with the latest available versions
+        and updates the configuration with the latest Minecraft version.
+        """
         click.echo(click.style("Checking for package updates...", fg="cyan"))
 
         try:
@@ -245,6 +272,11 @@ class _AnvilConfig:
         self.Config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     def __init__(self) -> None:
+        """Initializes a new Anvil configuration instance.
+        
+        Sets up the configuration, displays version information,
+        loads all settings, and establishes project paths.
+        """
         self.Config = Config()
 
         click.clear()

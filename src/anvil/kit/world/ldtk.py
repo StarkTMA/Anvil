@@ -115,7 +115,7 @@ class LDtk:
             json.dump(self.dictionary, File)
 
     def _prepare_level(self):
-        world = amulet.load_level(CONFIG._WORLD_PATH)
+        world = amulet.load_level(CONFIG.WORLD_PATH)
 
         # The following deletes EVERYTHING, DO NOT USE IF YOU HAVE HAND BUILT STRUCTURES
         if self._clear_chunks:
@@ -133,7 +133,7 @@ class LDtk:
     def __init__(self, filename: str, *, clear_chunks: bool = False, default_origin_block=MinecraftBlockTypes.Air()) -> None:
         """Converts LDtk map to Minecraft worlds.
 
-        Args:
+        Parameters:
             filename (str): filename of the map, no extension.
             clear_chunks (bool, optional): If chunks should be cleared before writing to the map. Defaults to False.
         """

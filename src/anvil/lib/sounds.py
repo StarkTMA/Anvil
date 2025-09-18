@@ -11,6 +11,11 @@ from anvil.lib.types import Identifier
 
 
 class SoundDescription:
+    """Represents a sound description for Minecraft addon sound definitions.
+    
+    Manages the configuration and properties of individual sound effects,
+    including volume, distance, and 3D positioning parameters.
+    """
     def __init__(
         self,
         sound_reference: str,
@@ -89,6 +94,11 @@ class SoundDescription:
 
     @property
     def identifier(self):
+        """Gets the sound definition identifier.
+        
+        Returns:
+            str: The sound definition identifier.
+        """
         return self._sound_definition
 
     @property
@@ -234,7 +244,11 @@ class MusicDefinition(AddonObject):
 
 
 class SoundEvent(AddonObject):
-    """Handles sound events."""
+    """Handles sound events for entities and individual sounds.
+    
+    Manages the creation and configuration of sound events that can be
+    triggered by entities or as standalone sounds in the game.
+    """
 
     _path = os.path.join(CONFIG.RP_PATH)
 

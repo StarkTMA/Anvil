@@ -10,6 +10,7 @@ from packaging.version import Version
 
 from anvil import CONFIG
 from anvil.lib.config import ConfigPackageTarget
+from anvil.lib.enums import ComponentTarget
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA, File, salt_from_str
 from anvil.lib.templater import load_file
@@ -367,10 +368,6 @@ class JsonSchemes:
         return load_file("color_grading_settings.txt", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
 
     @staticmethod
-    def client_biome(biome_identifier: str):
-        return load_file("client_biome.txt", {"format_version": PBR_SETTINGS_VERSION, "identifier": biome_identifier}, is_json=True)
-
-    @staticmethod
     def lighting_settings(identifier: str):
         return load_file("lighting_settings.txt", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
 
@@ -387,33 +384,45 @@ class JsonSchemes:
         return load_file("loot_table.txt", is_json=True)
 
     @staticmethod
-    def smelting_recipe(identifier: str, tags: list[str]):
-        return load_file("smelting_recipe.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True)
+    def recipe_smelting(identifier: str, tags: list[str]):
+        return load_file("recipe_smelting.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True)
 
     @staticmethod
-    def smithing_table_recipe(identifier: str, tags: list[str]):
+    def recipe_smithing_table(identifier: str, tags: list[str]):
         return load_file(
-            "smithing_table_recipe.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_smithing_table.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
         )
 
     @staticmethod
-    def smithing_table_trim_recipe(identifier: str, tags: list[str]):
+    def recipe_smithing_table_trim(identifier: str, tags: list[str]):
         return load_file(
-            "smithing_table_trim_recipe.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_smithing_table_trim.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
         )
 
     @staticmethod
-    def shapeless_crafting_recipe(identifier: str, tags: list[str]):
+    def recipe_shapeless_crafting(identifier: str, tags: list[str]):
         return load_file(
-            "shapeless_crafting_recipe.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_shapeless_crafting.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
         )
 
     @staticmethod
-    def shaped_crafting_recipe(identifier: str, assume_symmetry: bool, tags: list[str]):
+    def recipe_shaped_crafting(identifier: str, assume_symmetry: bool, tags: list[str]):
         return load_file(
-            "shaped_crafting_recipe.txt",
+            "recipe_shaped_crafting.txt",
             {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags, "assume_symmetry": assume_symmetry},
             is_json=True,
+        )
+    
+    @staticmethod
+    def recipe_brewing_container(identifier: str, tags: list[str]):
+        return load_file(
+            "recipe_brewing_container.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+        )
+    
+    @staticmethod
+    def recipe_brewing_mix(identifier: str, tags: list[str]):
+        return load_file(
+            "recipe_brewing_mix.txt", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
         )
 
     @staticmethod
@@ -536,6 +545,14 @@ class JsonSchemes:
     @staticmethod
     def vscode(path, wkspc, script_uuid):
         return load_file("vscode.txt", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path}, is_json=True)
+
+    @staticmethod
+    def biome_server():
+        return load_file("biome_server.txt", {"format_version": BIOME_SERVER_VERSION}, is_json=True)
+
+    @staticmethod
+    def biome_client():
+        return load_file("biome_client.txt", {"format_version": BIOME_CLIENT_VERSION}, is_json=True)
 
 
 class AddonDescriptor:
@@ -664,7 +681,7 @@ class AddonObject(AddonDescriptor):
         """
         self._shorten = False
 
-    def content(self, content):
+    def content(self, content) -> AddonObject:
         """
         Sets the content of the addon object and returns the object.
 
@@ -677,7 +694,7 @@ class AddonObject(AddonDescriptor):
         self._content = content
         return self
 
-    def queue(self, directory: str | None = None):
+    def queue(self, directory: str | None = None) -> AddonObject:
         """
         Queues the addon object for processing and logs the event.
 
@@ -705,7 +722,7 @@ class AddonObject(AddonDescriptor):
                 return {
                     k: (v if v != {"do_not_shorten": True} else {})
                     for k, v in ((k, _shorten_dict(v)) for k, v in d.items())
-                    if (v != {} and v != []) or str(k).startswith("minecraft:") or v == {"do_not_shorten": True}
+                    if (v != {} and v != [] and v != None) or str(k).startswith("minecraft:") or v == {"do_not_shorten": True}
                 }
 
             elif isinstance(d, list):
@@ -795,6 +812,16 @@ class MinecraftItemDescriptor(AddonDescriptor):
         return self.identifier
 
 
+class MinecraftBiomeDescriptor(AddonDescriptor):
+    _object_type = "Biome Descriptor"
+
+    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True) -> None:
+        super().__init__(name, is_vanilla, is_vanilla_allowed)
+
+    def __str__(self) -> Identifier:
+        return self.identifier
+
+
 class EntityDescriptor(MinecraftEntityDescriptor):
     def __init__(self, name: str, is_vanilla: bool = False, allow_runtime: bool = True) -> None:
         super().__init__(name, is_vanilla, allow_runtime, False)
@@ -810,8 +837,14 @@ class ItemDescriptor(MinecraftItemDescriptor):
         super().__init__(name, is_vanilla, False)
 
 
+class BiomeDescriptor(MinecraftBiomeDescriptor):
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        super().__init__(name, is_vanilla, False)
+
+
 class _BaseComponent(AddonDescriptor):
     _object_type = "Base Component"
+    _target: ComponentTarget = ComponentTarget.Any
 
     def _require_components(self, *components: "_BaseComponent") -> None:
         self._dependencies.extend(components)
@@ -844,20 +877,11 @@ class _BaseComponent(AddonDescriptor):
     def __iter__(self):
         """Iterates over the component's fields."""
         return iter({self.identifier: self._component}.items())
+    
+    def _export(self) -> Dict[str, Any]:
+        """Exports the component as a dictionary.
 
-
-class CustomComponent(_BaseComponent):
-    """A custom component that can be used to extend the functionality of Minecraft objects.
-
-    Attributes:
-        component_name (str): The name of the component.
-    """
-
-    def __init__(self, component_name: str) -> None:
+        Returns:
+            dict: The exported component.
         """
-        Constructs all the necessary attributes for the CustomComponent object.
-
-        Parameters:
-            component_name (str): The name of the custom component.
-        """
-        super().__init__(component_name, False)
+        return {self.identifier: self._component}

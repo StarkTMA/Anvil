@@ -8,6 +8,8 @@ SPAWN_RULES_VERSION: str = MANIFEST_BUILD  # The version of the spawn rules.
 SOUND_DEFINITIONS_VERSION: str = MANIFEST_BUILD  # The version of the sound definitions.
 FOG_VERSION: str = MANIFEST_BUILD  # The version of the fog.
 JIGSAW_VERSION: str = MANIFEST_BUILD  # The version of the jigsaw.
+BIOME_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the biome server.
+BIOME_CLIENT_VERSION: str = MANIFEST_BUILD  # The version of the biome client.
 
 
 ANIMATION_CONTROLLERS_VERSION: str = "1.10.0"  # The version of the animation controllers.

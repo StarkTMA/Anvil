@@ -1,5 +1,5 @@
 import os
-from typing import Literal
+from typing import Literal, Optional
 from xml.dom.minidom import Identified
 
 from anvil import ANVIL, CONFIG
@@ -26,15 +26,15 @@ class __TextureSet(AddonObject):
         self,
         blockbench_name: str,
         color_texture: str,
-        normal_texture: str | RGB | RGBA = None,
-        heightmap_texture: str | RGB | RGBA = None,
-        metalness_emissive_roughness_texture: str | RGB | RGBA = None,
-        metalness_emissive_roughness_subsurface_texture: str | RGB | RGBA = None,
+        normal_texture: Optional[str | RGB | RGBA],
+        heightmap_texture: Optional[str | RGB | RGBA],
+        metalness_emissive_roughness_texture: Optional[str | RGB | RGBA],
+        metalness_emissive_roughness_subsurface_texture: Optional[str | RGB | RGBA],
     ):
-        if normal_texture != None and heightmap_texture != None:
+        if normal_texture is not None and heightmap_texture is not None:
             raise ValueError("Normal and heightmap textures are mutually exclusive.")
 
-        if metalness_emissive_roughness_texture != None and metalness_emissive_roughness_subsurface_texture != None:
+        if metalness_emissive_roughness_texture is not None and metalness_emissive_roughness_subsurface_texture is not None:
             raise ValueError("Metalness, emissive, roughness and subsurface textures are mutually exclusive.")
 
         bb = _Blockbench(blockbench_name, "actors")
@@ -414,128 +414,6 @@ class ColorGradingSettings(AddonObject):
     def tone_mapping(self, operator: Literal["reinhard", "reinhard_luma", "reinhard_luminance", "hable", "aces", "generic"]):
         self._content["minecraft:color_grading_settings"].setdefault("tone_mapping", {})
         self._content["minecraft:color_grading_settings"]["tone_mapping"]["operator"] = operator
-
-
-class BiomeCustomization(AddonObject):
-    _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "biomes")
-    _object_type = "Biome Customization"
-
-    def __init__(self, biome_identifier: str) -> None:
-        super().__init__(biome_identifier)
-        self.content(JsonSchemes.client_biome(f"{CONFIG.NAMESPACE}:{biome_identifier}"))
-        self._fog: Fog | None = None
-
-    def set_atmosphere(self, atmosphere_identifier: AtmosphericSettings) -> None:
-        self._content["minecraft:client_biome"]["components"]["minecraft:atmosphere_identifier"] = {
-            "atmosphere_identifier": atmosphere_identifier.identifier
-        }
-
-    def set_color_grading(self, color_grading_identifier: ColorGradingSettings) -> None:
-        self._content["minecraft:client_biome"]["components"]["minecraft:color_grading_identifier"] = {
-            "color_grading_identifier": color_grading_identifier.identifier
-        }
-
-    def set_lighting(self, lighting_identifier: str) -> None:
-        self._content["minecraft:client_biome"]["components"]["minecraft:lighting_identifier"] = {
-            "lighting_identifier": lighting_identifier
-        }
-
-    def set_water(self, water_identifier: WaterSettings) -> None:
-        self._content["minecraft:client_biome"]["components"]["minecraft:water_identifier"] = {
-            "water_identifier": water_identifier.identifier
-        }
-
-    def sky_color(self, color: ColorHex):
-        """
-        Sets the sky color for the biome.
-
-        Parameters:
-            color (ColorHex): The color of the sky in hexadecimal format (e.g., "#RRGGBB").
-        """
-        self._content["minecraft:client_biome"]["components"]["minecraft:sky_color"] = process_color(color, add_alpha=False)
-
-    def fog_appearance(self, fog: str | Fog):
-        """
-        Sets the fog appearance for the biome.
-
-        Parameters:
-            fog (str | Fog): The identifier of the fog appearance or a Fog object.
-        """
-        if isinstance(fog, str):
-            self._fog = Fog(fog)
-        elif isinstance(fog, Fog):
-            self._fog = fog
-
-        self._content["minecraft:client_biome"]["components"]["minecraft:fog_appearance"] = {
-            "fog_appearance": self._fog.identifier
-        }
-
-    def water_appearance(self, color: ColorHex):
-        """
-        Sets the water appearance for the biome.
-
-        Parameters:
-            color (ColorHex): The color of the water in hexadecimal format (e.g., "#RRGGBB").
-        """
-        self._content["minecraft:client_biome"]["components"]["minecraft:water_appearance"] = process_color(
-            color, add_alpha=False
-        )
-
-    def ambient_sounds(
-        self, sound_reference: str, loop: bool, mood_reference: str | None = None
-    ) -> SoundDescription | tuple[SoundDescription, SoundDescription]:
-        """
-        Sets the ambient sounds for the biome.
-
-        Parameters:
-            sound_reference (str): The identifier of the ambient sound.
-        """
-        self._content["minecraft:client_biome"]["components"]["minecraft:ambient_sounds"] = {
-            "addition": sound_reference,
-            "loop": loop,
-            "mood": mood_reference,
-        }
-
-        if mood_reference:
-            return [
-                ANVIL.definitions.register_individual_named_sounds(sound_reference, SoundCategory.Ambient),
-                ANVIL.definitions.register_individual_named_sounds(mood_reference, SoundCategory.Ambient),
-            ]
-        return ANVIL.definitions.register_individual_named_sounds(sound_reference, SoundCategory.Ambient)
-
-    def biome_music(
-        self,
-        music_reference: MusicCategory | str,
-        volume_multiplier: float = 1.0,
-    ):
-        """
-        Sets the ambient sounds for the biome.
-
-        Parameters:
-            sound_reference (str): The identifier of the ambient sound.
-        """
-        self._content["minecraft:client_biome"]["components"]["minecraft:biome_music"] = {
-            "music_definition": music_reference,
-            "volume_multiplier": clamp(volume_multiplier, 0, 1),
-        }
-
-        return ANVIL.definitions.register_music(music_reference)
-
-    def foliage_appearance(self, color: RGB):
-        self._content["minecraft:client_biome"]["components"]["minecraft:foliage_appearance"] = {
-            "color": process_color(color, add_alpha=False)
-        }
-
-    def grass_appearance(self, color: RGB):
-        self._content["minecraft:client_biome"]["components"]["minecraft:grass_appearance"] = {
-            "color": process_color(color, add_alpha=False)
-        }
-
-    def queue(self, directory=None):
-        if self._fog:
-            self._fog.queue()
-        return super().queue(directory)
 
 
 class LightingSettings(AddonObject):

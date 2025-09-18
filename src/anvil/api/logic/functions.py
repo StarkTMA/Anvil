@@ -1,6 +1,7 @@
 import os
 
 from anvil import CONFIG
+from anvil.api.logic.commands import Command
 from anvil.lib.schemas import AddonObject
 
 
@@ -24,7 +25,7 @@ class Function(AddonObject):
         self._function: list[str] = []
         self._sub_functions: list[Function] = [self]
 
-    def add(self, *commands: str):
+    def add(self, *commands: str | Command):
         """Adds a command to the function."""
         if len(self._sub_functions[-1]._function) >= self._function_limit - len(commands) - 1:
             self._sub_functions.append(Function(f"{self._name}_{len(self._sub_functions)}"))

@@ -17,26 +17,70 @@ from .__version__ import __version__
 
 
 class JsonSchemes:
+    """Collection of static methods for generating various project templates and configurations."""
+    
     @staticmethod
     def python():
+        """Generates a Python template.
+        
+        Returns:
+            str: The Python template content.
+        """
         return load_file("python.txt")
 
     @staticmethod
     def package_json(project_name, version, description, author):
+        """Generates a package.json template.
+        
+        Args:
+            project_name (str): The name of the project.
+            version (str): The version of the project.
+            description (str): The project description.
+            author (str): The project author.
+            
+        Returns:
+            dict: The package.json template data.
+        """
         return load_file(
             "package_json.txt", {"project_name": project_name, "version": version, "description": description, "author": author}, is_json=True
         )
 
     @staticmethod
     def vscode(path, wkspc, script_uuid):
-        return load_file("vscode.txt", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path})
+        """Generates a VSCode configuration template.
+        
+        Args:
+            path (str): The project path.
+            wkspc (str): The workspace path.
+            script_uuid (str): The script UUID.
+            
+        Returns:
+            dict: The VSCode configuration data.
+        """
+        return load_file("vscode.txt", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path}, is_json=True)
 
     @staticmethod
     def gitignore():
+        """Generates a .gitignore template.
+        
+        Returns:
+            str: The .gitignore template content.
+        """
         return load_file("gitignore.txt")
 
     @staticmethod
     def code_workspace(name, path1, path2, preview=False):
+        """Generates a VS Code workspace configuration.
+        
+        Args:
+            name (str): The workspace name.
+            path1 (str): The first path component.
+            path2 (str): The second path component.
+            preview (bool, optional): Whether this is for preview mode. Defaults to False.
+            
+        Returns:
+            dict: The workspace configuration data.
+        """
         return load_file(
             "code_workspace.txt",
             {
@@ -73,7 +117,7 @@ class JsonSchemes:
     @staticmethod
     def esbuild_config_js(outDir):
         return load_file(
-            "esbuild.txt", {"out_dir": os.path.join(outDir, "scripts"), "minify": Config().get_option(ConfigSection.PACKAGE, ConfigOption.MINIFY)}
+            "esbuild.txt", {"out_dir": os.path.join(outDir, "scripts"), "minify": Config().get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)}
         )
 
     @staticmethod
@@ -233,7 +277,7 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
     File("tsconfig.json", JsonSchemes.tsconfig(DEV_BEH_DIR), "", "w", False)
     File("esbuild.js", JsonSchemes.esbuild_config_js(DEV_BEH_DIR), "", "w", False)
     File("constants.ts", JsonSchemes.tsconstants(namespace, project_name), os.path.join("scripts", "javascript"), "w", False)
-    File("main.ts", 'import * as mc from "@minecraft/server";\n', os.path.join("scripts", "javascript"), "w", False)
+    File("main.ts", 'import { world, system } from "@minecraft/server";\n', os.path.join("scripts", "javascript"), "w", False)
 
     print(f"Installing npm packages... [{', '.join(install_dependencies)}]")
     process_subcommand(
@@ -315,6 +359,10 @@ def create(
     )
 
     os.chdir(project_name)
+    config.save()
+
+    if scriptapi:
+        handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR)
 
     File("main.py", JsonSchemes.python(), "scripts/python/", "w")
     File(".gitignore", JsonSchemes.gitignore(), "", "w")
@@ -325,11 +373,6 @@ def create(
         DESKTOP,
         "w",
     )
-
-    if scriptapi:
-        handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR)
-
-    config.save()
 
     process_subcommand(f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace")
     check_version()

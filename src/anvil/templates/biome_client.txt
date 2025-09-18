@@ -1,0 +1,6 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:biome": {
+        "components": {}
+    }
+}

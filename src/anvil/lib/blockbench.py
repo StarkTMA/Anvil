@@ -125,7 +125,7 @@ class _AnimationsManager:
                                 "locator": value["data_points"][0]["locator"],
                             }
                             if value["data_points"][0]["script"] != "":
-                                particles[time]["pre_effect_script"] = value["data_points"][0]["script"]
+                                particles[time]["pre_effect_script"] = (value["data_points"][0]["script"] + ";").replace(";;", ";")
                     elif channel_name == "sound":
                         for keyframe in list(channel.items()):
                             time, value = keyframe
@@ -513,7 +513,7 @@ class _ModelManager:
     def __init__(self, filename, source: str, bbmodel: dict) -> None:
         """Handles loading and managing Blockbench models.
 
-        Args:
+        Parameters:
             filename (str): The name of the model file (without extension).
             source (str): The source of the model. Defaults to "actors".
             bbmodel (dict): The Blockbench model data.
@@ -620,7 +620,7 @@ class _Blockbench:
     def __init__(self, filename: str, source: str = "actors") -> None:
         """Handles loading and managing Blockbench models.
 
-        Args:
+        Parameters:
             filename (str): The name of the model file (without extension).
             source (str, optional): The source of the model. Defaults to "actors".
 
@@ -637,7 +637,9 @@ class _Blockbench:
             with open(self._path, "r") as model:
                 self.bbmodel = json.load(model)
                 if self.bbmodel["model_identifier"] != filename:
-                    raise ValueError(f"Blockbench model identifier mismatch: expected '{filename}', found '{self.bbmodel['model_identifier']}'.")
+                    raise ValueError(
+                        f"Blockbench model identifier mismatch: expected '{filename}', found '{self.bbmodel['model_identifier']}'."
+                    )
         else:
             raise FileNotFoundError(f"{filename}.bbmodel not found in {os.path.join('assets', 'bbmodels')}. Please ensure the file exists.")
 
@@ -648,7 +650,8 @@ class _Blockbench:
     def override_bounding_box(self, bounding_box: Vector2D) -> None:
         self.model._bounding_box = bounding_box
 
-    def _export():
+    @classmethod
+    def _export(cls):
         meshes = []
         for bb in _Blockbench._loaded_blockbench_models.values():
             bb.model._export()

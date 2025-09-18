@@ -18,12 +18,27 @@ __all__ = ["Block"]
 
 
 class _tag:
+    """Represents a block tag component.
+    
+    Handles the creation and management of Minecraft block tags
+    with associated dependencies and clashes.
+    """
     def __init__(self, tag: BlockVanillaTags):
+        """Initializes a block tag component.
+        
+        Args:
+            tag (BlockVanillaTags): The vanilla tag to assign to the block.
+        """
         self._dependencies: List["_BaseComponent"] = []
         self._clashes: List["_BaseComponent"] = []
         self._component: Dict[str, Any] = {f"tag:{tag}": {"do_not_shorten": True}}
 
     def __iter__(self):
+        """Iterates over the tag component items.
+        
+        Returns:
+            iterator: An iterator over the component dictionary items.
+        """
         return iter(self._component.items())
 
 
@@ -34,8 +49,8 @@ class _PermutationComponents(_Components):
     def __init__(self, condition: str | Molang = None):
         """The permutation components.
 
-        Parameters:
-            condition (str | Molang): The condition for the permutation.
+        Args:
+            condition (str | Molang, optional): The condition for the permutation.
         """
         super().__init__()
         _PermutationComponents._count += 1
@@ -45,8 +60,8 @@ class _PermutationComponents(_Components):
     def tag(self, *tags: BlockVanillaTags):
         """The tags for the block.
 
-        Parameters:
-            tags (BlockVanillaTags): The tags for the block.
+        Args:
+            *tags (BlockVanillaTags): The tags for the block.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
         """

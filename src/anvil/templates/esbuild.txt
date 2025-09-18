@@ -38,7 +38,7 @@ const result = await esbuild.build({
 	bundle: true,
 	format: "esm",
 	sourcemap: true,
-	minify: {{ minify }},
+	minify: {{ minify|lower }},
 	outdir: outDir,
 	external: ["@minecraft/server", "@minecraft/server-ui"],
 	write: false,

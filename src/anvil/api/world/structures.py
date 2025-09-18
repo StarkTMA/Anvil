@@ -2,7 +2,7 @@ import os
 from typing import Literal, TypedDict
 
 from anvil import ANVIL, CONFIG
-from anvil.api.actors.components import Filter
+from anvil.lib.filters import Filter
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.types import (ConstantIntProvider, Identifier,

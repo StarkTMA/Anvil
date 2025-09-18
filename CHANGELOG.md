@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.3.1**](#version-0931)
+- [**Version 0.9.4**](#version-094)
+- [Version 0.9.3.1](#version-0931)
 - [Version 0.9.3](#version-093)
 - [Version 0.9.2](#version-092)
 - [Version 0.9.1](#version-091)
@@ -68,6 +69,31 @@
 - [Version 0.0.0 → 0.1.0](#version-000--010)
 
 ---
+
+## Version 0.9.4
+
+### Anvil
+
+- Preparing for Full Anvil Release.
+- Moved the Filters class from api.actors.components to lib.filters.
+- Added all missing filters.
+
+### Biomes
+
+- Added a new api to manage biome components.
+- Added Biomes server components.
+- Moved BiomeCustomization class to the Biomes api, the customization options are now more accessible through the Biome Client property, similar to Entities and Blocks.
+
+### Recipes
+- Added support for Potion Brewing Recipes.
+- Added support for Shapeless, Shaped, and Stonecutter custom block tags.
+
+## Loot Tables
+- The loot table classes are now up to date with the current Anvil API architecture.
+- Added missing loot table functions.
+
+## Actors
+- Separated the Spawn Rule classes from the actors classes, now you can write spawn rules without needing to create an entity.
 
 ## Version 0.9.3.1
 

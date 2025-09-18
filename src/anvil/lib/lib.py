@@ -83,6 +83,19 @@ def frange(start: int, stop: int, num: float = 1):
 
 
 def process_color(Color: Color, add_alpha: bool = False) -> str | list[float]:
+    """Processes color values from different formats.
+    
+    Args:
+        Color (Color): The color to process, can be tuple or hex string.
+        add_alpha (bool, optional): Whether to add alpha channel if missing. Defaults to False.
+        
+    Returns:
+        str | list[float]: Processed color in the appropriate format.
+        
+    Raises:
+        ValueError: If color format is invalid.
+        TypeError: If color type is not supported.
+    """
     if isinstance(Color, tuple):
         if len(Color) not in [3, 4]:
             raise ValueError("Color tuple must have 3 or 4 elements.")
@@ -250,6 +263,12 @@ def File(name: str, content: str | dict, directory: str, mode: str, skip_tag: bo
 
 
 def process_subcommand(command: str, error_handle: str = "Error"):
+    """Executes a subprocess command with error handling.
+    
+    Args:
+        command (str): The command to execute.
+        error_handle (str, optional): Error message prefix. Defaults to "Error".
+    """
     try:
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
@@ -257,6 +276,16 @@ def process_subcommand(command: str, error_handle: str = "Error"):
 
 
 def validate_namespace_project_name(namespace: str, project_name: str, is_addon: bool = False):
+    """Validates namespace and project name according to Minecraft addon requirements.
+    
+    Args:
+        namespace (str): The namespace to validate.
+        project_name (str): The project name to validate.
+        is_addon (bool, optional): Whether this is for an addon. Defaults to False.
+        
+    Raises:
+        ValueError: If validation fails for any requirement.
+    """
     pascal_project_name = "".join(x[0] for x in project_name.split("_")).upper()
 
     if namespace == "minecraft":
@@ -274,6 +303,14 @@ def validate_namespace_project_name(namespace: str, project_name: str, is_addon:
 
 
 def salt_from_str(s: str) -> int:
+    """Generates a hash value from a string for use as a random seed.
+    
+    Args:
+        s (str): The input string to hash.
+        
+    Returns:
+        int: A hash value derived from the input string.
+    """
     h = 0
     for ch in s:
         h = (h * 131 + ord(ch)) % 1_000_000

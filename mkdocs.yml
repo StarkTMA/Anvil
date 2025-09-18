@@ -68,3 +68,58 @@ nav:
     - Anvil: anvil.md
   - Docs:
       - Config: guide/config.md
+  - API Reference:
+      - Overview: api/index.md
+      - Actors:
+          - Overview: api/actors/index.md
+          - Actors: api/actors/actors.md
+          - Components: api/actors/components.md
+          - Materials: api/actors/materials.md
+          - Spawn Rules: api/actors/spawn_rules.md
+      - Logic:
+          - Overview: api/logic/index.md
+          - Functions: api/logic/functions.md
+          - Commands: api/logic/commands.md
+          - Molang: api/logic/molang.md
+      - Blocks:
+          - Overview: api/blocks/index.md
+          - Blocks: api/blocks/blocks.md
+          - Components: api/blocks/components.md
+      - Items:
+          - Overview: api/items/index.md
+          - Items: api/items/items.md
+          - Components: api/items/components.md
+          - Crafting: api/items/crafting.md
+      - World:
+          - Overview: api/world/index.md
+          - Camera: api/world/camera.md
+          - Features: api/world/features.md
+          - Fog: api/world/fog.md
+          - Loot Tables: api/world/loot_tables.md
+          - Particles: api/world/particles.md
+          - Structures: api/world/structures.md
+      - Biomes:
+          - Overview: api/biomes/index.md
+      - UI:
+          - Overview: api/ui/index.md
+      - PBR:
+          - Overview: api/pbr/index.md
+      - Vanilla:
+          - Overview: api/vanilla/index.md
+          - Entities: api/vanilla/entities.md
+          - Items: api/vanilla/items.md
+      - Core Library:
+          - Overview: api/core/index.md
+          - Config: api/core/config.md
+          - Schemas: api/core/schemas.md
+          - Types: api/core/types.md
+          - Enums: api/core/enums.md
+          - Filters: api/core/filters.md
+          - Lib: api/core/lib.md
+          - Reports: api/core/reports.md
+          - Sounds: api/core/sounds.md
+          - Textures: api/core/textures.md
+          - Templater: api/core/templater.md
+          - Translator: api/core/translator.md
+          - Blockbench: api/core/blockbench.md
+          - Format Versions: api/core/format_versions.md

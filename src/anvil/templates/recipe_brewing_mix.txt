@@ -1,0 +1,9 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:recipe_brewing_mix": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        },
+        "tags": {{ tags }}
+    }
+}

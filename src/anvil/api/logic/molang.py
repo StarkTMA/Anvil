@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import Optional
 
 from anvil import CONFIG
 from anvil.lib.enums import InputModes, Slots
@@ -93,7 +94,11 @@ class Molang(str):
         a = f"{qtype}.{query}"
         if len(arguments):
             Parameters = ", ".join(
-                (f"'{arg}'" if isinstance(arg, (str, StrEnum)) and not isinstance(arg, Molang) and not arg.startswith(MOLANG_PREFIXES) else f"{arg}")
+                (
+                    f"'{arg}'"
+                    if isinstance(arg, (str, StrEnum)) and not isinstance(arg, Molang) and not arg.startswith(MOLANG_PREFIXES)
+                    else f"{arg}"
+                )
                 for arg in arguments
             )
             a += f"({Parameters})"
@@ -2867,7 +2872,7 @@ class Context(Query):
         setattr(self, name, self._query(self, self.handle, name))
 
     @classmethod
-    def OwningEntity(self, molang: Molang = None):
+    def OwningEntity(self, molang: Optional[Molang]):
         if molang:
             return Molang(f"({self._query(self, self.handle, "owning_entity")} -> {molang})")
         return Molang._query(self, self.handle, "owning_entity")

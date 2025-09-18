@@ -1,7 +1,8 @@
 import os
 
 from anvil import ANVIL, CONFIG
-from anvil.api.actors.actors import Attachable, _Components
+from anvil.api.actors._component_group import _Components
+from anvil.api.actors.actors import Attachable
 from anvil.lib.enums import ItemCategory, ItemGroups
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (AddonObject, ItemDescriptor, JsonSchemes,

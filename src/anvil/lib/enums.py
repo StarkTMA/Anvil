@@ -859,7 +859,7 @@ class ItemGroups(StrEnum):
     none = "None"
 
 
-class WeatherSet(StrEnum):
+class Weather(StrEnum):
     """
     Enumeration representing the different types of weather that can be set in Minecraft.
     """
@@ -909,27 +909,6 @@ class FilterEquipmentDomain(StrEnum):
     Inventory = "inventory"
     Leg = "leg"
     Torso = "torso"
-
-
-class Biomes(StrEnum):
-    BEACH = "beach"
-    DESERT = "desert"
-    EXTREME_HILLS = "extreme_hills"
-    FLAT = "flat"
-    FOREST = "forest"
-    ICE = "ice"
-    JUNGLE = "jungle"
-    MESA = "mesa"
-    MUSHROOM_ISLAND = "mushroom_island"
-    OCEAN = "ocean"
-    PLAIN = "plain"
-    RIVER = "river"
-    SAVANNA = "savanna"
-    STONE_BEACH = "stone_beach"
-    SWAMP = "swamp"
-    TAIGA = "taiga"
-    THE_END = "the_end"
-    THE_NETHER = "the_nether"
 
 
 class Vibrations(StrEnum):
@@ -1732,6 +1711,7 @@ class BlockMovementType(StrEnum):
     Popped = "popped"
     Immovable = "immovable"
 
+
 class BlockStickyType(StrEnum):
     """
     Enumeration for the different types of block stickiness in Minecraft.
@@ -1742,3 +1722,43 @@ class BlockStickyType(StrEnum):
 
     Same = "same"
     None_ = "none"
+
+
+class ComponentTarget(StrEnum):
+    """
+    Enumeration for the different component targets in Minecraft.
+
+    """
+
+    Any = "any"
+    Client = "client"
+    Server = "server"
+
+
+class ExplorationMapDestinations(StrEnum):
+    BuriedTreasure = "buriedtreasure"
+    EndCity = "endcity"
+    Fortress = "fortress"
+    Mansion = "mansion"
+    Mineshaft = "mineshaft"
+    Monument = "monument"
+    PillagerOutpost = "pillageroutpost"
+    Ruins = "ruins"
+    Shipwreck = "shipwreck"
+    Stronghold = "stronghold"
+    Temple = "temple"
+    Village = "village"
+
+
+class PlayerAbilities(StrEnum):
+    FlySpeed = "flySpeed"
+    Flying = "flying"
+    Instabuild = "instabuild"
+    Invulnerable = "invulnerable"
+    Lightning = "lightning"
+    Mayfly = "mayfly"
+    Mute = "mute"
+    Noclip = "noclip"
+    VerticalFlySpeed = "verticalFlySpeed"
+    WalkSpeed = "walkSpeed"
+    Worldbuilder = "worldbuilder"
