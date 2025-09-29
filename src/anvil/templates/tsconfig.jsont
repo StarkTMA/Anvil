@@ -10,7 +10,8 @@
         "moduleResolution": "bundler",
         "resolveJsonModule": true,
         "forceConsistentCasingInFileNames": true,
-        "lib": ["ESNext", "DOM"]
+        "lib": ["ESNext", "DOM"],
+        "tsconfig": "./tsconfig.json"
     },
     "include": ["scripts/javascript/**/*"],
     "exclude": ["node_modules"]

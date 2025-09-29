@@ -4,9 +4,6 @@ from datetime import datetime
 from typing import Optional
 
 import click
-from halo import Halo
-from PIL import Image
-
 from anvil.api.actors.materials import _MaterialsObject
 from anvil.api.logic.molang import Molang
 from anvil.lib.blockbench import _Blockbench
@@ -22,6 +19,8 @@ from anvil.lib.textures import (BlocksJSONObject, ItemTexturesObject,
                                 TerrainTexturesObject, UITexturesObject)
 from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import Identifier
+from halo import Halo
+from PIL import Image
 
 from ..__version__ import __version__
 

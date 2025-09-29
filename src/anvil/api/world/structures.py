@@ -23,7 +23,9 @@ class Structure:
         self._name = splits[-1]
         self._path = os.path.join("structures", CONFIG.NAMESPACE, *self._sub_path, f"{self._name}.mcstructure")
         if not FileExists(os.path.join("world", "structures", *self._sub_path, f"{self._name}.mcstructure")):
-            raise FileNotFoundError(f"{self._name}.mcstructure not found in {os.path.join('assets', 'world', 'structures')}. Please ensure the file exists.")
+            raise FileNotFoundError(
+                f"{self._name}.mcstructure not found in {os.path.join('assets', 'world', 'structures')}. Please ensure the file exists."
+            )
 
     def queue(self):
         """Queues the structure to be exported."""
@@ -43,12 +45,7 @@ class Structure:
         """Exports the structure to the file system."""
         CopyFiles(
             os.path.join("world", "structures", *self._sub_path),
-            os.path.join(
-                CONFIG.BP_PATH,
-                "structures",
-                CONFIG.NAMESPACE,
-                *self._sub_path
-            ),
+            os.path.join(CONFIG.BP_PATH, "structures", CONFIG.NAMESPACE, *self._sub_path),
             f"{self._name}.mcstructure",
         )
 
@@ -138,17 +135,13 @@ class _JigsawStructureProcess(AddonObject):
         if not isinstance(blocks, list):
             raise TypeError("blocks must be a list or a string")
 
-        self._content["minecraft:processor_list"]["processors"].append(
-            {"processor_type": "minecraft:block_ignore", "blocks": blocks}
-        )
+        self._content["minecraft:processor_list"]["processors"].append({"processor_type": "minecraft:block_ignore", "blocks": blocks})
 
     def add_protected_blocks_processor(self, block_tag: str):
         if not isinstance(block_tag, str):
             raise TypeError("block_tag must be a string")
 
-        self._content["minecraft:processor_list"]["processors"].append(
-            {"processor_type": "minecraft:protected_blocks", "value": block_tag}
-        )
+        self._content["minecraft:processor_list"]["processors"].append({"processor_type": "minecraft:protected_blocks", "value": block_tag})
 
     def add_capped_processor(self, delegate: StructureProcessors, limit: int | ConstantIntProvider | UniformIntProvider):
         if not isinstance(delegate, str):
@@ -174,21 +167,21 @@ class _JigsawStructureProcess(AddonObject):
             raise TypeError("output_block must be a string")
         if loot_table_path is not None and not isinstance(loot_table_path, str):
             raise TypeError("loot_table_path must be a string or None")
-        
+
         processors: list[dict] = self._content["minecraft:processor_list"]["processors"]
-        processor = next(
-            (pr for pr in processors if pr.get("processor_type") == "minecraft:rule"), None
-        )
+        processor = next((pr for pr in processors if pr.get("processor_type") == "minecraft:rule"), None)
         if processor is None:
             processor = {"processor_type": "minecraft:rule", "rules": []}
             processors.append(processor)
-        
-        processor["rules"].append({
-            "input_predicate": {},
-            "position_predicate": {},
-            "location_predicate": {},
-            "output_state": {"name": output_block},
-        })
+
+        processor["rules"].append(
+            {
+                "input_predicate": {},
+                "position_predicate": {},
+                "location_predicate": {},
+                "output_state": {"name": output_block},
+            }
+        )
 
         if loot_table_path:
             processor["block_entity_modifier"] = {
@@ -199,7 +192,9 @@ class _JigsawStructureProcess(AddonObject):
         predicate = _JigsawStructureProcess.predicates(processor["rules"][-1])
         return predicate
 
-    def queue(self,):
+    def queue(
+        self,
+    ):
         return super().queue()
 
 
@@ -344,7 +339,7 @@ class _JigsawStructure(AddonObject):
             max_depth (int): The maximum recursion depth for Jigsaw Structure generation.
             start_height (tuple[int, int] | int): Height at which the Jigsaw Structure's start_pool should begin.
             placement_step (Literal[ 'raw_generation', 'lakes', 'local_modifications', 'underground_structures', 'surface_structures', 'strongholds', 'underground_ores', 'underground_decoration', 'fluid_springs', 'vegetal_decoration', 'top_layer_modification' ]): Specifies the world generation phase in which the Jigsaw Structure is generated.
-            start_jigsaw_name (str, optional): The name of the Jigsaw Block from the start_pool to be placed first.	
+            start_jigsaw_name (str, optional): The name of the Jigsaw Block from the start_pool to be placed first.
         """
         super().__init__(name)  # "jigsaw"
 
@@ -357,7 +352,7 @@ class _JigsawStructure(AddonObject):
                 height = {"type": "constant", "value": {"from_sea": start_height}}
             else:
                 height = {"type": "constant", "value": {"absolute": start_height}}
-            
+
         elif isinstance(start_height, tuple) and len(start_height) == 2:
             height = {"type": "uniform", "min": {"above_bottom": min(start_height)}, "max": {"below_top": max(start_height)}}
         else:
@@ -534,7 +529,14 @@ class JigsawStructureSet(AddonObject):
     _structures: list[_JigsawStructure] = []
     _object_type = "Jigsaw Structure Set"
 
-    def __init__(self, name: str, separation: int = 4, spacing: int = 10, spread_type: Literal["linear", "triangle"] = "linear", placement_type: Literal["minecraft:random_spread"] = "minecraft:random_spread"):
+    def __init__(
+        self,
+        name: str,
+        separation: int = 4,
+        spacing: int = 10,
+        spread_type: Literal["linear", "triangle"] = "linear",
+        placement_type: Literal["minecraft:random_spread"] = "minecraft:random_spread",
+    ):
         """Initializes a JigsawStructureSet instance.
 
         Parameters:

@@ -79,16 +79,16 @@ class BlockRedstoneConductivity(_BaseComponent):
 class BlockCustomComponents(_BaseComponent):
     _identifier = "minecraft:custom_components"
 
-    def __init__(self, *components: str) -> None:
-        """Sets the color of the block when rendered to a map.
+    def __init__(self, component_name: str) -> None:
+        """Allows you to add custom components to a block by specifying the components in a comma-separated list.
 
         Parameters:
             components (str): The components to register, if the namespace is not provided, the project namespace will be used.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_custom_components
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components
         """
-        super().__init__("custom_components")
-        self._set_value(components)
+        super().__init__(component_name, False)
+        self._set_value({"do_not_shorten": True})
 
 
 class BlockDefault(_BaseComponent):
@@ -120,7 +120,9 @@ class BlockDefault(_BaseComponent):
         """The textures of the block."""
         for k in kwParameters.keys():
             if not FileExists(os.path.join("assets", "textures", "blocks", f"{k}.png")):
-                raise FileNotFoundError(f"{k}.png not found in {os.path.join("assets", "textures", "blocks")}. Please ensure the file exists.")
+                raise FileNotFoundError(
+                    f"{k}.png not found in {os.path.join("assets", "textures", "blocks")}. Please ensure the file exists."
+                )
 
             CopyFiles(
                 os.path.join("assets", "textures", "blocks"),
@@ -148,35 +150,44 @@ class BlockDefault(_BaseComponent):
 class BlockDestructibleByExplosion(_BaseComponent):
     _identifier = "minecraft:destructible_by_explosion"
 
-    def __init__(self, explosion_resistance: int) -> None:
+    def __init__(self, explosion_resistance: int = None) -> None:
         """Describes the destructible by explosion properties for this block.
 
         Parameters:
             explosion_resistance (int): The amount of resistance to explosions in a range of 0 to 100.
         """
         super().__init__("destructible_by_explosion")
-        self._add_field("explosion_resistance", explosion_resistance)
+
+        if explosion_resistance is None:
+            self._set_value(False)
+        else:
+            self._add_field("explosion_resistance", explosion_resistance)
 
 
 class BlockDestructibleByMining(_BaseComponent):
     _identifier = "minecraft:destructible_by_mining"
 
-    def __init__(self, seconds_to_destroy: int) -> None:
+    def __init__(self, seconds_to_destroy: int = None) -> None:
         """Describes the destructible by mining properties for this block.
 
         Parameters:
-            seconds_to_destroy (int): The amount of time it takes to destroy the block in seconds.
+            seconds_to_destroy (int, optional): The amount of time it takes to destroy the block in seconds. If None, disables mining destructibility.
         """
         super().__init__("destructible_by_mining")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.50")
-        self._add_field("seconds_to_destroy", seconds_to_destroy)
-        self._add_field("item_specific_speeds", [])
+        if seconds_to_destroy is None:
+            self._set_value(False)
+        else:
+            self._add_field("seconds_to_destroy", seconds_to_destroy)
+            self._add_field("item_specific_speeds", [])
 
     def item_specific_speeds_name(self, destroy_speed: float, item_name: str):
-        self._component["item_specific_speeds"].append({"item": item_name, "destroy_speed": destroy_speed})
+        if "item_specific_speeds" in self._component:
+            self._component["item_specific_speeds"].append({"item": item_name, "destroy_speed": destroy_speed})
 
     def item_specific_speeds_tag(self, destroy_speed: float, item_tag: str | Molang):
-        self._component["item_specific_speeds"].append({"item": {"tags": item_tag}, "destroy_speed": destroy_speed})
+        if "item_specific_speeds" in self._component:
+            self._component["item_specific_speeds"].append({"item": {"tags": item_tag}, "destroy_speed": destroy_speed})
 
 
 class BlockFlammable(_BaseComponent):
@@ -355,13 +366,14 @@ class BlockGeometry(_BaseComponent):
             uv_lock (bool, optional): A Boolean locking UV orientation of all bones in the geometry, or an array of strings locking UV orientation of specific bones in the geometry. For performance reasons it is recommended to use the Boolean. Note that for cubes using Box UVs, rather than Per-face UVs, 'uv_lock' is only supported if the cube faces are square.
         """
         super().__init__("geometry")
-        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.100")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.80")
         self._add_field("identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
+        self._geometry_name = geometry_name
         if uv_lock:
             self._add_field("uv_lock", uv_lock)
 
-        bb = _Blockbench(geometry_name, "blocks")
-        bb.model.queue_model()
+        self._bb = _Blockbench(geometry_name, "blocks")
+        self._bb.model.queue_model()
 
     def bone_visibility(self, **bone: dict[str, bool | str | Molang]):
         """Specifies the visibility of bones in the geometry file.
@@ -372,6 +384,10 @@ class BlockGeometry(_BaseComponent):
         """
         self._add_field("bone_visibility", {b: v for b, v in bone.items()})
         return self
+
+    def block_culling(self):
+        self._add_field("culling", f"{CONFIG.NAMESPACE}:{self._geometry_name}")
+        return self._bb.model.block_culling()
 
 
 class BlockCollisionBox(_BaseComponent):
@@ -385,9 +401,13 @@ class BlockCollisionBox(_BaseComponent):
             origin (list[float]): The origin of the collision box.
         """
         super().__init__("collision_box")
+        min_origin = (-8, 0, -8)
+        max_origin = (8, 16, 8)
         if size == (0, 0, 0):
             self._set_value(False)
         else:
+            if any(o < min_o or o > max_o for o, min_o, max_o in zip(origin, min_origin, max_origin)):
+                raise ValueError(f"Origin {origin} must be within {min_origin} and {max_origin}.")
             self._add_field("size", size)
             self._add_field("origin", origin)
 
@@ -547,9 +567,9 @@ class BlockItemVisual(_BaseComponent):
 
         bb = _Blockbench(geometry_name, "blocks")
         bb.model.queue_model()
-        
-        ANVIL.definitions.register_terrain_texture(texture, geometry_name, texture)
+        bb.textures.queue_texture(texture)
 
+        ANVIL.definitions.register_terrain_texture(texture, geometry_name, texture)
 
         self._add_field("geometry", {"identifier": f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"})
         self._add_field("material_instances", {"*": {"texture": f"{CONFIG.NAMESPACE}:{texture}", "render_method": render_method}})

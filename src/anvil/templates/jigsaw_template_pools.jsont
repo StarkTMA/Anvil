@@ -5,6 +5,6 @@
             "identifier": "{{ identifier }}"
         },
         "elements": [],
-        "fallback": "{{ fallback_identifier }}
+        "fallback": "{{ fallback_identifier }}"
     }
 }

@@ -2,10 +2,6 @@
 
 Complete API reference for Anvil, exposing all available classes, functions, and modules.
 
-## Main Anvil Module
-
-::: anvil
-
 ## API Modules
 
 ### Actors API

@@ -1,5 +1,6 @@
 import os
 import uuid
+import zipfile
 from datetime import datetime
 
 import click
@@ -10,7 +11,8 @@ from packaging.version import Version
 from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File, FileExists,
-                           process_subcommand, validate_namespace_project_name)
+                           RemoveDirectory, process_subcommand,
+                           validate_namespace_project_name)
 from anvil.lib.templater import load_file
 
 from .__version__ import __version__
@@ -18,71 +20,73 @@ from .__version__ import __version__
 
 class JsonSchemes:
     """Collection of static methods for generating various project templates and configurations."""
-    
+
     @staticmethod
     def python():
         """Generates a Python template.
-        
+
         Returns:
             str: The Python template content.
         """
-        return load_file("python.txt")
+        return load_file("python.jsont")
 
     @staticmethod
     def package_json(project_name, version, description, author):
         """Generates a package.json template.
-        
+
         Args:
             project_name (str): The name of the project.
             version (str): The version of the project.
             description (str): The project description.
             author (str): The project author.
-            
+
         Returns:
             dict: The package.json template data.
         """
         return load_file(
-            "package_json.txt", {"project_name": project_name, "version": version, "description": description, "author": author}, is_json=True
+            "package_json.jsont",
+            {"project_name": project_name, "version": version, "description": description, "author": author},
+            is_json=True,
         )
 
     @staticmethod
     def vscode(path, wkspc, script_uuid):
         """Generates a VSCode configuration template.
-        
+
         Args:
             path (str): The project path.
             wkspc (str): The workspace path.
             script_uuid (str): The script UUID.
-            
+
         Returns:
             dict: The VSCode configuration data.
         """
-        return load_file("vscode.txt", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path}, is_json=True)
+        return load_file("vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path}, is_json=True)
 
     @staticmethod
     def gitignore():
         """Generates a .gitignore template.
-        
+
         Returns:
             str: The .gitignore template content.
         """
-        return load_file("gitignore.txt")
+        return load_file("gitignore.jsont")
 
     @staticmethod
     def code_workspace(name, path1, path2, preview=False):
         """Generates a VS Code workspace configuration.
-        
+
         Args:
             name (str): The workspace name.
             path1 (str): The first path component.
             path2 (str): The second path component.
             preview (bool, optional): Whether this is for preview mode. Defaults to False.
-            
+
         Returns:
             dict: The workspace configuration data.
         """
         return load_file(
-            "code_workspace.txt",
+            "code_workspace.jsont",
             {
                 "name": name,
                 "path": os.path.join(path1, path2),
@@ -112,17 +116,18 @@ class JsonSchemes:
 
     @staticmethod
     def tsconfig(out_dir):
-        return load_file("tsconfig.txt", {"out_dir": os.path.join(out_dir, "scripts")})
+        return load_file("tsconfig.jsont", {"out_dir": os.path.join(out_dir, "scripts")}, is_json=True)
 
     @staticmethod
     def esbuild_config_js(outDir):
         return load_file(
-            "esbuild.txt", {"out_dir": os.path.join(outDir, "scripts"), "minify": Config().get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)}
+            "esbuild.jsont",
+            {"out_dir": os.path.join(outDir, "scripts"), "minify": Config().get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)},
         )
 
     @staticmethod
     def tsconstants(namespace: str, project_name: str):
-        return load_file("tsconstants.txt", {"namespace": namespace, "project_name": project_name})
+        return load_file("tsconstants.jsont", {"namespace": namespace, "project_name": project_name})
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -230,7 +235,9 @@ def check_version() -> None:
         None
     """
     try:
-        latest_build: str = requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py").split("=")[-1].strip()
+        latest_build: str = (
+            requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py").split("=")[-1].strip()
+        )
     except:
         latest_build = __version__
 
@@ -250,6 +257,7 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
     script_uuid = str(uuid.uuid4())
     config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, script_uuid)
     config.add_option(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js")
+    DEV_BEH_DIR = os.path.join(DEV_BEH_DIR, f"BP_{config.get_option('anvil', 'pascal_project_name')}")
 
     File(
         "package.json",
@@ -266,7 +274,7 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
     File(
         "launch.json",
         JsonSchemes.vscode(
-            os.path.join(DEV_BEH_DIR, f"BP_{config.get_option("anvil", "pascal_project_name")}", "scripts"),
+            os.path.join(DEV_BEH_DIR, "scripts"),
             os.path.join(WORKING_DIR, "scripts", "javascript"),
             script_uuid,
         ),
@@ -275,7 +283,13 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
         False,
     )
     File("tsconfig.json", JsonSchemes.tsconfig(DEV_BEH_DIR), "", "w", False)
-    File("esbuild.js", JsonSchemes.esbuild_config_js(DEV_BEH_DIR), "", "w", False)
+    File(
+        "esbuild.js",
+        JsonSchemes.esbuild_config_js(os.path.join(DEV_BEH_DIR, "scripts")),
+        "",
+        "w",
+        False,
+    )
     File("constants.ts", JsonSchemes.tsconstants(namespace, project_name), os.path.join("scripts", "javascript"), "w", False)
     File("main.ts", 'import { world, system } from "@minecraft/server";\n', os.path.join("scripts", "javascript"), "w", False)
 
@@ -304,7 +318,9 @@ def cli() -> None:
 @click.option("--scriptapi", is_flag=True, default=False, show_default=True, help="Adds dependencies support of ScriptAPI.")
 @click.option("--pbr", is_flag=True, default=False, show_default=True, help="Adds capabilities support of Physically based rendering.")
 @click.option("--random_seed", is_flag=True, default=False, show_default=True, help="Adds support of Random Seed Worlds.")
-@click.option("--addon", is_flag=True, default=False, show_default=True, help="Sets this package as an addon, comes with many restrictions.")
+@click.option(
+    "--addon", is_flag=True, default=False, show_default=True, help="Sets this package as an addon, comes with many restrictions."
+)
 def create(
     namespace: str,
     project_name: str,
@@ -333,13 +349,6 @@ def create(
 
     config = handle_configuration(namespace, project_name, display_name, preview, scriptapi, pbr, random_seed, addon)
 
-    WORKING_DIR = os.getcwd()
-    MINECRAFT_BUILD = f"Microsoft.Minecraft" + "WindowsBeta" if preview else "UWP" + "_8wekyb3d8bbwe"
-    APP_PACKAGES = os.path.join(APPDATA, "Local", "Packages")
-    COM_MOJANG = os.path.join(APP_PACKAGES, MINECRAFT_BUILD, "LocalState", "games", "com.mojang")
-    DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
-    DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
-
     CreateDirectoriesFromTree(
         {
             project_name: {
@@ -360,6 +369,13 @@ def create(
 
     os.chdir(project_name)
     config.save()
+
+    WORKING_DIR = os.getcwd()
+    MINECRAFT_BUILD = f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe"
+    APP_PACKAGES = os.path.join(APPDATA, "Local", "Packages")
+    COM_MOJANG = os.path.join(APP_PACKAGES, MINECRAFT_BUILD, "LocalState", "games", "com.mojang")
+    DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
+    DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
 
     if scriptapi:
         handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR)
@@ -394,3 +410,27 @@ def run() -> None:
                 return
 
         process_subcommand(f"py {os.path.join(*entry_point.split('/'))}", "Unable to run the anvil project.")
+
+
+@cli.command(help="Export an mcworld to the Minecraft worlds")
+@click.argument("world_name", default="world")
+def export_world(world_name: str) -> None:
+    """
+    Runs an Anvil Project
+    """
+    if not FileExists("anvilconfig.json"):
+        click.echo("No valid Anvil project found, to create a new project run: `anvil create --help`")
+    else:
+        with open("./anvilconfig.json", "r") as file:
+            data: dict = json.loads(file.read())
+            preview = data.get(ConfigSection.ANVIL).get(ConfigOption.PREVIEW)
+            project_name = data.get(ConfigSection.PACKAGE).get(ConfigOption.PROJECT_NAME)
+
+        MINECRAFT_BUILD = f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe"
+        APP_PACKAGES = os.path.join(APPDATA, "Local", "Packages")
+        COM_MOJANG = os.path.join(APP_PACKAGES, MINECRAFT_BUILD, "LocalState", "games", "com.mojang")
+        WORLD_PATH = os.path.join(COM_MOJANG, "minecraftWorlds", project_name)
+
+        RemoveDirectory(WORLD_PATH)
+        with zipfile.ZipFile(os.path.join("world", f"{world_name}.mcworld"), "r") as zip_ref:
+            zip_ref.extractall(WORLD_PATH)

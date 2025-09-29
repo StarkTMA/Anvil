@@ -1,14 +1,17 @@
 import base64
 import json
 import os
+import pprint
 import uuid
+from calendar import c
 from collections import defaultdict
 from copy import deepcopy
 from csv import Error
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Literal, Tuple, Union
 from warnings import warn
 
 from anvil import CONFIG
+from anvil.lib.enums import BlockFaces
 from anvil.lib.lib import FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.types import Vector2D
@@ -509,6 +512,54 @@ class _Bone:
         return bone
 
 
+class _BlockCulling(AddonObject):
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "block_culling")
+
+    def __init__(self, name: str, bbmodel: dict) -> None:
+        super().__init__(name)
+        self._bbmodel = bbmodel
+        self.bones = {bone["name"]: len(bone["children"]) for bone in self._bbmodel["outliner"] if isinstance(bone, dict)}
+        self.content(JsonSchemes.block_culling_rules(self.identifier))
+
+    def add_rule(
+        self,
+        direction: BlockFaces,
+        bone: str,
+        face: BlockFaces = None,
+        cube_index: int = None,
+        #condition: Literal["same_block", "same_block_permutation", "same_culling_layer"] = "",
+        #cull_against_full_and_opaque: bool = False,
+    ) -> None:
+        if bone not in self.bones:
+            raise ValueError(f"Bone '{bone}' not found in blockbench model '{self._bbmodel['model_identifier']}'.")
+        if cube_index is not None and (cube_index < 0 or cube_index >= self.bones[bone]):
+            raise ValueError(f"Cube index '{cube_index}' out of range for bone '{bone}' in blockbench model '{self._bbmodel['model_identifier']}'.")
+        
+        if direction == BlockFaces.All or direction == BlockFaces.Side:
+            raise ValueError("Direction cannot be 'all' or 'side'. Please specify a single direction.")
+        if face == BlockFaces.All or face == BlockFaces.Side:
+            raise ValueError("Face cannot be 'all' or 'side'. Please specify a single face.")
+        if face is not None and cube_index is None:
+            raise ValueError("Face specified without cube_index. Please specify cube_index when using face.")
+        
+        rule = {
+            "direction": direction.value,
+            "geometry_part": {
+                "bone": bone,
+            },
+        }
+        if face:
+            rule["geometry_part"]["face"] = face.value
+        if cube_index is not None:
+            rule["geometry_part"]["cube"] = cube_index
+        #if condition:
+        #    rule["condition"] = condition
+        #if cull_against_full_and_opaque:
+        #    rule["cull_against_full_and_opaque"] = cull_against_full_and_opaque
+        self._content["minecraft:block_culling_rules"]["rules"].append(rule)
+
+
 class _ModelManager:
     def __init__(self, filename, source: str, bbmodel: dict) -> None:
         """Handles loading and managing Blockbench models.
@@ -526,6 +577,7 @@ class _ModelManager:
         self._is_wavefront = self._bbmodel["meta"]["model_format"] == "free"
         self._bounding_box = None
         self._model_center_offset = None
+        self._culling = None
 
     def _calculate_model_center_offset(self) -> None:
         """Calculate the offset needed to center the entire model around the origin."""
@@ -604,9 +656,16 @@ class _ModelManager:
                 self._content["minecraft:geometry"][0]["item_display_transforms"] = self._bbmodel["display"]
             self._queued = True
 
+    def block_culling(self) -> _BlockCulling:
+        if not self._culling:
+            self._culling = _BlockCulling(self._name, self._bbmodel)
+        return self._culling
+
     def _export(self) -> None:
         if self._queued:
             _Geometry(self._bbmodel["model_identifier"], self._content).queue(self._source)
+            if self._culling:
+                self._culling.queue()
 
 
 class _Blockbench:

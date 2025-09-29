@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.4**](#version-094)
+- [**Version 0.9.4.1**](#version-0941)
+- [Version 0.9.4](#version-094)
 - [Version 0.9.3.1](#version-0931)
 - [Version 0.9.3](#version-093)
 - [Version 0.9.2](#version-092)
@@ -69,6 +70,18 @@
 - [Version 0.0.0 → 0.1.0](#version-000--010)
 
 ---
+
+## Version 0.9.4.1
+
+### Anvil
+- Added a new cli command `anvil export-world` to export the world from the `.mcworld` file to the `world` directory. this works exactly like the `extract_world` argument in the `Anvil.compile()` method.
+
+### Actors
+- Added `EntityPersistent`, `EntityAIMoveToRandomBlock` components.
+
+### Blocks
+- Added `block_culling` method to the `BlockGeometry` component.
+
 
 ## Version 0.9.4
 

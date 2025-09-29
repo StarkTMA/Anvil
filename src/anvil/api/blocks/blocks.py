@@ -7,6 +7,7 @@ from anvil.api.blocks.components import (BlockDefault, BlockDisplayName,
                                          BlockGeometry, BlockMaterialInstance)
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.lib.blockbench import _Blockbench
 from anvil.lib.enums import (BlockVanillaTags, ItemCategory, ItemGroups,
                              PlacementDirectionTrait, PlacementPositionTrait)
 from anvil.lib.lib import IMAGE_EXTENSIONS_PRIORITY, CopyFiles
@@ -252,7 +253,7 @@ class _BlockClient:
         self._name = name.split(":")[-1]
         self._is_vanilla = is_vanilla
         self._textures: Dict[str:str] = {}
-
+    
     def replace_vanilla_texture(self, texture_name: str, directory: str = ""):
         if not self._is_vanilla:
             raise RuntimeError("The Block Client property is only accessible to vanilla block types.")

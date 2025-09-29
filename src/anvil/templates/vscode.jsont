@@ -1,0 +1,16 @@
+{
+	"version": "0.3.0",
+	"configurations": [
+		{
+			"type": "minecraft-js",
+			"request": "attach",
+			"name": "Debug with Minecraft",
+			"mode": "listen",
+			"targetModuleUuid": "{{ script_uuid }}",
+			"localRoot": "{{ wkspc|path }}",
+			"sourceMapRoot": "{{ path|path }}",
+			"generatedSourceRoot": "{{ path|path }}",
+			"port": 19144
+		}
+	]
+}

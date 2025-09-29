@@ -175,6 +175,7 @@ __all__ = [
     "EntityBodyRotationAlwaysFollowsHead",
     "EntityAITakeBlock",
     "EntityAIPlaceBlock",
+    "EntityAIMoveToRandomBlock"
 ]
 
 
@@ -190,6 +191,7 @@ class _ai_goal(_BaseComponent):
         """
         self._add_field("priority", priority)
         return self
+
 
 # Components ==========================================================================
 # Attributes ==========================================================================
@@ -675,12 +677,14 @@ class EntityFollowRange(_BaseComponent):
 
 
 class EntityMovementType:
+    @staticmethod
     def Basic(max_turn: float = 30):
         movement = _BaseComponent("movement.basic")
         if not max_turn == 30:
             movement._add_field("max_turn", max_turn)
         return movement
 
+    @staticmethod
     def Amphibious(max_turn: float = 30):
         """Allows the mob to swim in water and walk on land."""
         movement = _BaseComponent("movement.amphibious")
@@ -688,11 +692,13 @@ class EntityMovementType:
             movement._add_field("max_turn", max_turn)
         return movement
 
+    @staticmethod
     def Dolphin() -> None:
         """Allows the mob to swim in water like a dolphin."""
         movement = _BaseComponent("movement.dolphin")
         return movement
 
+    @staticmethod
     def Fly(
         max_turn: float = 30,
         start_speed: float = 0.1,
@@ -708,6 +714,7 @@ class EntityMovementType:
             movement._add_field("speed_when_turning", speed_when_turning)
         return movement
 
+    @staticmethod
     def Generic(max_turn: float = 30):
         """Allows a mob to fly, swim, climb, etc."""
         movement = _BaseComponent("movement.generic")
@@ -715,6 +722,7 @@ class EntityMovementType:
             movement._add_field("max_turn", max_turn)
         return movement
 
+    @staticmethod
     def Glide(
         max_turn: float = 30,
         start_speed: float = 0.1,
@@ -730,6 +738,7 @@ class EntityMovementType:
             movement._add_field("speed_when_turning", speed_when_turning)
         return movement
 
+    @staticmethod
     def Jump(max_turn: float = 30, jump_delay: tuple[float, float] = (0, 0)):
         """Causes the mob to jump as it moves with a specified delay between jumps."""
         movement = _BaseComponent("movement.jump")
@@ -739,6 +748,7 @@ class EntityMovementType:
             movement._add_field("jump_delay", jump_delay)
         return movement
 
+    @staticmethod
     def Skip(max_turn: float = 30):
         """Causes the mob to hop as it moves."""
         movement = _BaseComponent("movement.skip")
@@ -746,6 +756,7 @@ class EntityMovementType:
             movement._add_field("max_turn", max_turn)
         return movement
 
+    @staticmethod
     def Sway(
         max_turn: float = 30,
         sway_amplitude: float = 0.05,
@@ -761,6 +772,7 @@ class EntityMovementType:
             movement._add_field("sway_frequency", sway_frequency)
         return movement
 
+    @staticmethod
     def Hover(max_turn: float = 30):
         """Causes the mob to hover."""
         movement = _BaseComponent("movement.hover")
@@ -770,6 +782,7 @@ class EntityMovementType:
 
 
 class EntityNavigationType:
+    @staticmethod
     def _basic(
         cls: _BaseComponent,
         avoid_damage_blocks: bool = False,
@@ -833,7 +846,9 @@ class EntityNavigationType:
             cls._add_field("is_amphibious", is_amphibious)
         if len(blocks_to_avoid) > 0:
             if not all(isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks_to_avoid):
-                raise TypeError(f"blocks_to_avoid must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{cls._identifier}].")
+                raise TypeError(
+                    f"blocks_to_avoid must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{cls._identifier}]."
+                )
 
             cls._add_field(
                 "blocks_to_avoid",
@@ -842,6 +857,7 @@ class EntityNavigationType:
 
         return cls
 
+    @staticmethod
     def Climb(
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -891,6 +907,7 @@ class EntityNavigationType:
         )
         return navigation
 
+    @staticmethod
     def Float(
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -940,6 +957,7 @@ class EntityNavigationType:
         )
         return navigation
 
+    @staticmethod
     def Fly(
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -989,6 +1007,7 @@ class EntityNavigationType:
         )
         return navigation
 
+    @staticmethod
     def Generic(
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -1038,6 +1057,7 @@ class EntityNavigationType:
         )
         return navigation
 
+    @staticmethod
     def Hover(
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -1087,6 +1107,7 @@ class EntityNavigationType:
         )
         return navigation
 
+    @staticmethod
     def Swim(
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -1136,6 +1157,7 @@ class EntityNavigationType:
         )
         return navigation
 
+    @staticmethod
     def Walk(
         avoid_damage_blocks: bool = False,
         avoid_portals: bool = False,
@@ -1968,7 +1990,9 @@ class EntityInsideBlockNotifier(_BaseComponent):
         exited_block_event: str = None,
     ):
         if not isinstance(block_name, (MinecraftBlockDescriptor, str)):
-            raise TypeError(f"block_name must be a MinecraftBlockDescriptor or Identifier instance. Component {self._identifier}[{block_name}].")
+            raise TypeError(
+                f"block_name must be a MinecraftBlockDescriptor or Identifier instance. Component {self._identifier}[{block_name}]."
+            )
 
         self._component["block_list"].append(
             {
@@ -2107,6 +2131,7 @@ class EntityEquipItem(_BaseComponent):
             if not all(isinstance(item, ItemDescriptor) for item in excluded_items):
                 raise TypeError(f"excluded_items must be a list of ItemDescriptor instances. Component [{self._identifier}].")
             self._add_field("excluded_items", excluded_items)
+
 
 class EntityFireImmune(_BaseComponent):
     _identifier = "minecraft:fire_immune"
@@ -3583,6 +3608,17 @@ class EntityTimer(_BaseComponent):
             self._add_field("randomInterval", randomInterval)
         if not time == (0, 0):
             self._add_field("time", time)
+
+
+class EntityPersistent(_BaseComponent):
+    _identifier = "minecraft:persistent"
+
+    def __init__(self) -> None:
+        """Defines whether an entity should be persistent in the game world.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_persistent
+        """
+        super().__init__("persistent")
 
 
 # AI Goals ==========================================================================
@@ -5811,7 +5847,7 @@ class EntityAITakeBlock(_ai_goal):
             requires_line_of_sight (bool, optional): Whether the entity needs line of sight to the block they are trying to take. Defaults to False.
             xz_range (tuple[int, int], optional): XZ range from which the entity will try and take blocks from. Defaults to (0, 0).
             y_range (tuple[int, int], optional): Y range from which the entity will try and take blocks from. Defaults to (0, 0).
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_block
         """
         super().__init__("behavior.take_block")
@@ -5867,7 +5903,7 @@ class EntityAIPlaceBlock(_ai_goal):
             placeable_carried_blocks (list[BlockDescriptor], optional): Block descriptors for which blocks are valid to be placed from the entity's carried item, if empty all blocks are valid. Defaults to [].
             xz_range (Vector2D, optional): XZ range from which the entity will try and place blocks in. Defaults to (0, 0).
             y_range (Vector2D, optional): Y range from which the entity will try and place blocks in. Defaults to (0, 0).
-        
+
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_place_block
         """
         super().__init__("behavior.place_block")
@@ -5911,5 +5947,35 @@ class EntityAIPlaceBlock(_ai_goal):
         Returns:
             self: Returns the current instance for method chaining.
         """
-        self._get_field("randomly_placeable_blocks").append({"block": {"name": block.name, "states": states if states else {}}, "filter": filter})
+        self._get_field("randomly_placeable_blocks").append(
+            {"block": {"name": block.name, "states": states if states else {}}, "filter": filter}
+        )
         return self
+
+
+class EntityAIMoveToRandomBlock(_ai_goal):
+    _identifier = "minecraft:behavior.move_to_random_block"
+
+    def __init__(
+        self,
+        block_distance: float = 16,
+        speed_multiplier: float = 1.0,
+        within_radius: float = 0.0,
+    ) -> None:
+        """Compels a mob to move towards a randomly chosen block.
+
+        Parameters:
+            block_distance (float, optional): Distance from the mob (in blocks) used to choose the random block. Default: 16.
+            speed_multiplier (float, optional): Movement speed multiplier while using this goal. Default: 1.0.
+            within_radius (float, optional): Distance in blocks the mob must be from the block to consider movement finished. Default: 0.0.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_random_block
+        """
+        super().__init__("behavior.move_to_random_block")
+
+        if block_distance != 16:
+            self._add_field("block_distance", block_distance)
+        if speed_multiplier != 1.0:
+            self._add_field("speed_multiplier", speed_multiplier)
+        if within_radius != 0.0:
+            self._add_field("within_radius", within_radius)

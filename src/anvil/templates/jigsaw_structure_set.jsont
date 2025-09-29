@@ -9,7 +9,7 @@
             "salt": "{{ salt }}",
             "separation": "{{ separation }}",
             "spacing": "{{ spacing }}",
-            "spread_type": "{{ spread_type }}
+            "spread_type": "{{ spread_type }}"
         },
         "structures": []
     }

@@ -96,7 +96,7 @@ awesome_project/
 
 ### Running Your Project
 
-To test your project in Minecraft, navigate to your project folder and run the `awesome_project.py` python file or use the following command:
+To test your project in Minecraft, navigate to your project folder and use the following command:
 
 ```bash
 anvil run

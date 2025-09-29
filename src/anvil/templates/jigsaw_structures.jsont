@@ -1,0 +1,16 @@
+{
+	"format_version": "{{ format_version }}",
+	"minecraft:jigsaw": {
+		"description": {
+			"identifier": "{{ identifier }}"
+		},
+		"biome_filters": [],
+		"step": "{{ placement_step }}",
+		"start_pool": "{{ start_pool_identifier }}",
+		"start_jigsaw_name": "{{ start_jigsaw_name }}",
+		"max_depth": "{{ max_depth }}",
+		"start_height": {{ start_height }},
+		"pool_aliases": [],
+		"liquid_settings": "{{ liquid_settings }}"
+	}
+}

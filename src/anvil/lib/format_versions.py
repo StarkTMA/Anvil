@@ -1,4 +1,4 @@
-MANIFEST_BUILD: str = "1.21.100"  # The build version of the manifest.
+MANIFEST_BUILD: str = "1.21.101"  # The build version of the manifest.
 BLOCK_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the block server.
 ENTITY_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = MANIFEST_BUILD  # The version of the entity client.
@@ -23,6 +23,7 @@ MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
 CAMERA_PRESET_VERSION = "1.21.0"  # The version of the camera presets.
 BLOCK_JSON_FORMAT_VERSION = "1.1.0"  # The version of the block json format.
 CRAFTING_ITEMS_CATALOG = "1.21.60"  # The version of the crafting items catalog.
+BLOCK_CULLING_VERSION = "1.20.80"  # The version of the block culling rules.
 
 PBR_SETTINGS_VERSION: str = MANIFEST_BUILD  # The version of the atmospheric effects.
 
