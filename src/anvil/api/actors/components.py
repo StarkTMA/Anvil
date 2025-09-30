@@ -15,7 +15,8 @@ from anvil.lib.filters import Filter
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import (BlockDescriptor, ItemDescriptor,
-                               MinecraftBlockDescriptor, _BaseComponent)
+                               MinecraftBlockDescriptor, _BaseAIGoal,
+                               _BaseComponent, _BaseEventTrigger)
 from anvil.lib.types import *
 
 __all__ = [
@@ -142,7 +143,7 @@ __all__ = [
     "EntitySlimeKeepOnJumping",
     "EntityAgeable",
     "EntityInventory",
-    "EntityDash",
+    "EntityDashAction",
     "EntityBreathable",
     "EntityVariableMaxAutoStep",
     "EntityRiseToLiquidLevel",
@@ -170,28 +171,24 @@ __all__ = [
     "EntityBreedable",
     "EntityIsCollidable",
     "EntityRotationAxisAligned",
-    "EntityInputAirControlled",
+    "EntityFreeCameraControlled",
     "EntityLeashable",
     "EntityBodyRotationAlwaysFollowsHead",
     "EntityAITakeBlock",
     "EntityAIPlaceBlock",
-    "EntityAIMoveToRandomBlock"
+    "EntityAIMoveToRandomBlock",
+    "EntityVerticalMovementAction",
+    "EntityOnDeath",
+    "EntityOnFriendlyAnger",
+    "EntityOnHurt",
+    "EntityOnHurtByPlayer",
+    "EntityOnIgnite",
+    "EntityOnStartLanding",
+    "EntityOnStartTakeoff",
+    "EntityOnTargetAcquired",
+    "EntityOnTargetEscaped",
+    "EntityOnWakeWithOwner",
 ]
-
-
-class _ai_goal(_BaseComponent):
-    def __init__(self, component_name: str) -> None:
-        super().__init__(component_name)
-
-    def priority(self, priority: int):
-        """The higher the priority, the sooner this behavior will be executed as a goal.
-
-        Parameters:
-            priority (int): The higher the priority, the sooner this behavior will be executed as a goal.
-        """
-        self._add_field("priority", priority)
-        return self
-
 
 # Components ==========================================================================
 # Attributes ==========================================================================
@@ -2672,11 +2669,12 @@ class EntityInventory(_BaseComponent):
             self._add_field("restrict_to_owner", restrict_to_owner)
 
 
-class EntityDash(_BaseComponent):
-    _identifier = "minecraft:dash"
+class EntityDashAction(_BaseComponent):
+    _identifier = "minecraft:dash_action"
 
     def __init__(
         self,
+        direction: Literal["entity", "passenger"] = "entity",
         cooldown_time: Seconds = 1.0,
         horizontal_momentum: float = 1.0,
         vertical_momentum: float = 1.0,
@@ -2684,14 +2682,17 @@ class EntityDash(_BaseComponent):
         """Determines a rideable entity's ability to dash.
 
         Parameters:
+            direction (Literal["entity", "passenger"], optional): Should the momentum be applied in the direction of the 'entity' or 'passenger'. When 'entity' is used the momentum is applied horizontally according to the direction the entity is looking, using only the entity's yaw. When 'passenger' is used the momentum will be applied in the direction the controlling passenger is looking, using the passenger's pitch and yaw.
             cooldown_time (Seconds, optional): The dash cooldown time, in seconds. Defaults to 1.0.
             horizontal_momentum (float, optional): Horizontal momentum of the dash. Defaults to 1.0.
             vertical_momentum (float, optional): Vertical momentum of the dash. Defaults to 1.0.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash
         """
-        super().__init__("dash")
+        super().__init__("dash_action")
 
+        if direction != "entity":
+            self._add_field("direction", direction)
         if cooldown_time != 1.0:
             self._add_field("cooldown_time", cooldown_time)
         if horizontal_momentum != 1.0:
@@ -2841,20 +2842,22 @@ class EntityExperienceReward(_BaseComponent):
 
     def __init__(
         self,
+        on_bred: int |float | Molang = 0,
+        on_death: int |float | Molang = 0,
     ) -> None:
         """Defines the amount of experience rewarded when the entity dies or is successfully bred.
+
+        Parameters:
+            on_bred (int | float | Molang, optional): A Molang expression defining the amount of experience rewarded when this entity is successfully bred. Defaults to 0.
+            on_death (int | float | Molang, optional): A Molang expression defining the amount of experience rewarded when this entity dies. Defaults to 0.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_experience_reward
         """
         super().__init__("experience_reward")
-
-    def on_bred(self, on_bred: str | int | Molang):
-        self._add_field("on_bred", on_bred)
-        return self
-
-    def on_death(self, on_death: str | int | Molang):
-        self._add_field("on_death", on_death)
-        return self
+        if not on_bred == 0:
+            self._add_field("on_bred", on_bred)
+        if not on_death == 0:
+            self._add_field("on_death", on_death)
 
 
 class EntityEquippable(_BaseComponent):
@@ -3454,8 +3457,8 @@ class EntityRotationAxisAligned(_BaseComponent):
         super().__init__("rotation_axis_aligned")
 
 
-class EntityInputAirControlled(_BaseComponent):
-    _identifier = "minecraft:input_air_controlled"
+class EntityFreeCameraControlled(_BaseComponent):
+    _identifier = "minecraft:free_camera_controlled"
 
     def __init__(
         self,
@@ -3470,7 +3473,7 @@ class EntityInputAirControlled(_BaseComponent):
             backwards_movement_modifier (float, optional): Modifies speed when moving backwards. Defaults to 0.5.
             strafe_speed_modifier (float, optional): Modifies the strafe speed. Defaults to 0.4.
         """
-        super().__init__("input_air_controlled")
+        super().__init__("free_camera_controlled")
         if backwards_movement_modifier != 0.5:
             self._add_field("backwards_movement_modifier", backwards_movement_modifier)
         if strafe_speed_modifier != 0.4:
@@ -3621,10 +3624,186 @@ class EntityPersistent(_BaseComponent):
         super().__init__("persistent")
 
 
+class EntityVerticalMovementAction(_BaseComponent):
+    _identifier = "minecraft:vertical_movement_action"
+
+    def __init__(self, vertical_velocity: float = 0.5) -> None:
+        """When configured as a rideable entity, moves the entity up/down when the player uses the jump action.
+
+        Parameters:
+            vertical_velocity (float): Vertical velocity to apply when jump action is issued. Default: 0.5.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vertical_movement.action
+        """
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.21.111")
+        super().__init__("vertical_movement_action")
+        if vertical_velocity != 0.5:
+            self._add_field("vertical_velocity", vertical_velocity)
+
+
+class EntityOnDeath(_BaseEventTrigger):
+    _identifier = "minecraft:on_death"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Add a trigger to run when the entity dies.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_death
+        """
+        super().__init__(event, filters, target)
+
+
+class EntityOnFriendlyAnger(_BaseEventTrigger):
+    _identifier = "minecraft:on_friendly_anger"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Adds a trigger that will run when a nearby entity of the same type as this entity becomes Angry.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_friendly_anger
+        """
+        super().__init__(event, filters, target)
+    
+
+class EntityOnHurt(_BaseEventTrigger):
+    _identifier = "minecraft:on_hurt"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Add a trigger to run when the entity is hurt.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt
+        """
+        super().__init__(event, filters, target)
+
+
+class EntityOnHurtByPlayer(_BaseEventTrigger):
+    _identifier = "minecraft:on_hurt_by_player"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Adds a trigger to call when this entity is attacked by the player.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt_by_player
+        """
+        super().__init__(event, filters, target)
+
+
+class EntityOnIgnite(_BaseEventTrigger):
+    _identifier = "minecraft:on_ignite"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Adds a trigger to call when this entity is set on fire.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_ignite
+        """
+        super().__init__(event, filters, target)
+
+
+class EntityOnStartLanding(_BaseEventTrigger):
+    _identifier = "minecraft:on_start_landing"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Only usable by the Ender Dragon. Adds a trigger to call when this entity lands.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_landing
+        """
+        super().__init__(event, filters, target)
+
+
+class EntityOnStartTakeoff(_BaseEventTrigger):
+    _identifier = "minecraft:on_start_takeoff"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Only usable by the Ender Dragon. Adds a trigger to call when this entity starts flying.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_takeoff
+        """
+        super().__init__(event, filters, target)
+
+
+class EntityOnTargetAcquired(_BaseEventTrigger):
+    _identifier = "minecraft:on_target_acquired"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Adds a trigger to call when this entity finds a target.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_acquired
+        """
+        super().__init__(event, filters, target)
+
+
+class EntityOnTargetEscaped(_BaseEventTrigger):
+    _identifier = "minecraft:on_target_escaped"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """Adds a trigger to call when this entity loses the target it currently has.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_escaped
+        """
+        super().__init__(event, filters, target)
+
+
+class EntityOnWakeWithOwner(_BaseEventTrigger):
+    _identifier = "minecraft:on_wake_with_owner"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        """A trigger when a mob's tamed onwer wakes up.
+
+        Parameters:
+            event (Event): The event to run when the conditions for this trigger are met.
+            filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_wake_with_owner
+        """
+        super().__init__(event, filters, target)
+
 # AI Goals ==========================================================================
 
 
-class EntityAINearestAttackableTarget(_ai_goal):
+class EntityAINearestAttackableTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.nearest_attackable_target"
 
     def __init__(
@@ -3704,7 +3883,7 @@ class EntityAINearestAttackableTarget(_ai_goal):
         return self
 
 
-class EntityAINearestPrioritizedAttackableTarget(_ai_goal):
+class EntityAINearestPrioritizedAttackableTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.nearest_prioritized_attackable_target"
 
     def __init__(
@@ -3785,7 +3964,7 @@ class EntityAINearestPrioritizedAttackableTarget(_ai_goal):
         return self
 
 
-class EntityAIKnockbackRoar(_ai_goal):
+class EntityAIKnockbackRoar(_BaseAIGoal):
     _identifier = "minecraft:behavior.knockback_roar"
 
     def __init__(
@@ -3830,7 +4009,7 @@ class EntityAIKnockbackRoar(_ai_goal):
         return self
 
 
-class EntityAIFloat(_ai_goal):
+class EntityAIFloat(_BaseAIGoal):
     _identifier = "minecraft:behavior.float"
 
     def __init__(self, sink_with_passengers: bool = False) -> None:
@@ -3840,7 +4019,7 @@ class EntityAIFloat(_ai_goal):
             self._add_field("sink_with_passengers", sink_with_passengers)
 
 
-class EntityAIRandomStroll(_ai_goal):
+class EntityAIRandomStroll(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_stroll"
 
     def __init__(
@@ -3871,7 +4050,7 @@ class EntityAIRandomStroll(_ai_goal):
             self._add_field("y_dist", max(1, y_dist))
 
 
-class EntityAILookAtPlayer(_ai_goal):
+class EntityAILookAtPlayer(_BaseAIGoal):
     _identifier = "minecraft:behavior.look_at_player"
 
     def __init__(
@@ -3899,7 +4078,7 @@ class EntityAILookAtPlayer(_ai_goal):
             self._add_field("target_distance", target_distance)
 
 
-class EntityAIRandomLookAround(_ai_goal):
+class EntityAIRandomLookAround(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_look_around"
 
     def __init__(
@@ -3927,7 +4106,7 @@ class EntityAIRandomLookAround(_ai_goal):
             self._add_field("target_distance", target_distance)
 
 
-class EntityAIHurtByTarget(_ai_goal):
+class EntityAIHurtByTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.hurt_by_target"
 
     def __init__(
@@ -3965,7 +4144,7 @@ class EntityAIHurtByTarget(_ai_goal):
             self._add_field("hurt_owner", hurt_owner)
 
 
-class EntityAIMeleeAttack(_ai_goal):
+class EntityAIMeleeAttack(_BaseAIGoal):
     _identifier = "minecraft:behavior.melee_attack"
 
     def __init__(
@@ -4043,7 +4222,7 @@ class EntityAIMeleeAttack(_ai_goal):
         self._add_field("on_kill", {"event": on_kill, "filters": filter if not filter is None else {}, "target": subject})
 
 
-class EntityAIRangedAttack(_ai_goal):
+class EntityAIRangedAttack(_BaseAIGoal):
     _identifier = "minecraft:behavior.ranged_attack"
 
     def __init__(
@@ -4102,7 +4281,7 @@ class EntityAIRangedAttack(_ai_goal):
             self._add_field("y_max_head_rotation", y_max_head_rotation)
 
 
-class EntityAISummonEntity(_ai_goal):
+class EntityAISummonEntity(_BaseAIGoal):
     _identifier = "minecraft:behavior.summon_entity"
 
     def __init__(self) -> None:
@@ -4172,7 +4351,7 @@ class EntityAISummonEntity(_ai_goal):
         return self
 
 
-class EntityAIDelayedAttack(_ai_goal):
+class EntityAIDelayedAttack(_BaseAIGoal):
     _identifier = "minecraft:behavior.delayed_attack"
 
     def __init__(
@@ -4278,7 +4457,7 @@ class EntityAIDelayedAttack(_ai_goal):
         return self
 
 
-class EntityAIMoveToBlock(_ai_goal):
+class EntityAIMoveToBlock(_BaseAIGoal):
     _identifier = "minecraft:behavior.move_to_block"
 
     def __init__(
@@ -4337,7 +4516,7 @@ class EntityAIMoveToBlock(_ai_goal):
         return self
 
 
-class EntityAIEquipItem(_ai_goal):
+class EntityAIEquipItem(_BaseAIGoal):
     _identifier = "minecraft:behavior.equip_item"
 
     def __init__(self) -> None:
@@ -4345,7 +4524,7 @@ class EntityAIEquipItem(_ai_goal):
         super().__init__("behavior.equip_item")
 
 
-class EntityAISendEvent(_ai_goal):
+class EntityAISendEvent(_BaseAIGoal):
     _identifier = "minecraft:behavior.send_event"
 
     def __init__(self) -> None:
@@ -4398,7 +4577,7 @@ class EntityAISendEvent(_ai_goal):
         return self
 
 
-class EntityAIMoveTowardsTarget(_ai_goal):
+class EntityAIMoveTowardsTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.move_towards_target"
 
     def __init__(self, within_radius: float = 0.0, speed_multiplier: float = 1.0) -> None:
@@ -4418,7 +4597,7 @@ class EntityAIMoveTowardsTarget(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAIRandomSitting(_ai_goal):
+class EntityAIRandomSitting(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_sitting"
 
     def __init__(self, cooldown_time: float = 0, min_sit_time: float = 10, start_chance: float = 0.1, stop_chance: float = 0.3) -> None:
@@ -4444,7 +4623,7 @@ class EntityAIRandomSitting(_ai_goal):
             self._add_field("stop_chance", clamp(stop_chance, 0, 1))
 
 
-class EntityAIStayWhileSitting(_ai_goal):
+class EntityAIStayWhileSitting(_BaseAIGoal):
     _identifier = "minecraft:behavior.stay_while_sitting"
 
     def __init__(self) -> None:
@@ -4455,7 +4634,7 @@ class EntityAIStayWhileSitting(_ai_goal):
         super().__init__("behavior.stay_while_sitting")
 
 
-class EntityAIRandomSwim(_ai_goal):
+class EntityAIRandomSwim(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_swim"
 
     def __init__(
@@ -4492,7 +4671,7 @@ class EntityAIRandomSwim(_ai_goal):
             self._add_field("y_dist", max(1, y_dist))
 
 
-class EntityAIRandomBreach(_ai_goal):
+class EntityAIRandomBreach(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_breach"
 
     def __init__(
@@ -4529,7 +4708,7 @@ class EntityAIRandomBreach(_ai_goal):
             self._add_field("y_dist", max(1, y_dist))
 
 
-class EntityAIMoveToWater(_ai_goal):
+class EntityAIMoveToWater(_BaseAIGoal):
     _identifier = "minecraft:behavior.move_to_water"
 
     def __init__(
@@ -4565,7 +4744,7 @@ class EntityAIMoveToWater(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAIMoveToLand(_ai_goal):
+class EntityAIMoveToLand(_BaseAIGoal):
     _identifier = "minecraft:behavior.move_to_land"
 
     def __init__(
@@ -4601,7 +4780,7 @@ class EntityAIMoveToLand(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAIMoveToLava(_ai_goal):
+class EntityAIMoveToLava(_BaseAIGoal):
     _identifier = "minecraft:behavior.move_to_lava"
 
     def __init__(
@@ -4637,7 +4816,7 @@ class EntityAIMoveToLava(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAILookAtTarget(_ai_goal):
+class EntityAILookAtTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.look_at_target"
 
     def __init__(
@@ -4665,7 +4844,7 @@ class EntityAILookAtTarget(_ai_goal):
             self._add_field("target_distance", target_distance)
 
 
-class EntityAIFollowParent(_ai_goal):
+class EntityAIFollowParent(_BaseAIGoal):
     _identifier = "minecraft:behavior.follow_parent"
 
     def __init__(
@@ -4678,7 +4857,7 @@ class EntityAIFollowParent(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAIPlayerRideTamed(_ai_goal):
+class EntityAIPlayerRideTamed(_BaseAIGoal):
     _identifier = "minecraft:behavior.player_ride_tamed"
 
     def __init__(self) -> None:
@@ -4686,7 +4865,7 @@ class EntityAIPlayerRideTamed(_ai_goal):
         super().__init__("behavior.player_ride_tamed")
 
 
-class EntityAIFollowOwner(_ai_goal):
+class EntityAIFollowOwner(_BaseAIGoal):
     _identifier = "minecraft:behavior.follow_owner"
 
     def __init__(
@@ -4719,7 +4898,7 @@ class EntityAIFollowOwner(_ai_goal):
             self._add_field("post_teleport_distance", post_teleport_distance)
 
 
-class EntityAIPanic(_ai_goal):
+class EntityAIPanic(_BaseAIGoal):
     _identifier = "minecraft:behavior.panic"
 
     def __init__(
@@ -4750,7 +4929,7 @@ class EntityAIPanic(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAIChargeAttack(_ai_goal):
+class EntityAIChargeAttack(_BaseAIGoal):
     _identifier = "minecraft:behavior.charge_attack"
 
     def __init__(
@@ -4781,7 +4960,7 @@ class EntityAIChargeAttack(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAIRamAttack(_ai_goal):
+class EntityAIRamAttack(_BaseAIGoal):
     _identifier = "minecraft:behavior.ram_attack"
 
     def __init__(
@@ -4840,7 +5019,7 @@ class EntityAIRamAttack(_ai_goal):
         return self
 
 
-class EntityAIAvoidMobType(_ai_goal):
+class EntityAIAvoidMobType(_BaseAIGoal):
     _identifier = "minecraft:behavior.avoid_mob_type"
 
     def __init__(
@@ -4937,7 +5116,7 @@ class EntityAIAvoidMobType(_ai_goal):
         return self
 
 
-class EntityAILeapAtTarget(_ai_goal):
+class EntityAILeapAtTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.leap_at_target"
 
     def __init__(
@@ -4969,7 +5148,7 @@ class EntityAILeapAtTarget(_ai_goal):
             self._add_field("yd", yd)
 
 
-class EntityAIOcelotAttack(_ai_goal):
+class EntityAIOcelotAttack(_BaseAIGoal):
     _identifier = "minecraft:behavior.ocelotattack"
 
     def __init__(
@@ -5024,7 +5203,7 @@ class EntityAIOcelotAttack(_ai_goal):
             self._add_field("walk_speed_multiplier", walk_speed_multiplier)
 
 
-class EntityAIOwnerHurtByTarget(_ai_goal):
+class EntityAIOwnerHurtByTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.owner_hurt_by_target"
 
     def __init__(
@@ -5076,7 +5255,7 @@ class EntityAIOwnerHurtByTarget(_ai_goal):
             self._add_field("walk_speed_multiplier", walk_speed_multiplier)
 
 
-class EntityAIOwnerHurtTarget(_ai_goal):
+class EntityAIOwnerHurtTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.owner_hurt_target"
 
     def __init__(
@@ -5128,7 +5307,7 @@ class EntityAIOwnerHurtTarget(_ai_goal):
             self._add_field("walk_speed_multiplier", walk_speed_multiplier)
 
 
-class EntityAIRandomSearchAndDig(_ai_goal):
+class EntityAIRandomSearchAndDig(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_search_and_dig"
 
     def __init__(
@@ -5216,7 +5395,7 @@ class EntityAIRandomSearchAndDig(_ai_goal):
         return self
 
 
-class EntityAIStompAttack(_ai_goal):
+class EntityAIStompAttack(_BaseAIGoal):
     _identifier = "minecraft:behavior.stomp_attack"
 
     def __init__(
@@ -5320,7 +5499,7 @@ class EntityAIStompAttack(_ai_goal):
         return self
 
 
-class EntityAIFollowMob(_ai_goal):
+class EntityAIFollowMob(_BaseAIGoal):
     _identifier = "minecraft:behavior.follow_mob"
 
     def __init__(
@@ -5347,7 +5526,7 @@ class EntityAIFollowMob(_ai_goal):
             self._add_field("stop_distance", stop_distance)
 
 
-class EntityAIRandomSwim(_ai_goal):
+class EntityAIRandomSwim(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_swim"
 
     def __init__(
@@ -5383,7 +5562,7 @@ class EntityAIRandomSwim(_ai_goal):
             self._add_field("y_dist", y_dist)
 
 
-class EntityAIRandomBreach(_ai_goal):
+class EntityAIRandomBreach(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_breach"
 
     def __init__(
@@ -5419,7 +5598,7 @@ class EntityAIRandomBreach(_ai_goal):
             self._add_field("cooldown_time", cooldown_time)
 
 
-class EntityAIRandomHover(_ai_goal):
+class EntityAIRandomHover(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_hover"
 
     def __init__(
@@ -5459,7 +5638,7 @@ class EntityAIRandomHover(_ai_goal):
             self._add_field("y_offset", y_offset)
 
 
-class EntityAIRoar(_ai_goal):
+class EntityAIRoar(_BaseAIGoal):
     _identifier = "minecraft:behavior.roar"
 
     def __init__(
@@ -5479,7 +5658,7 @@ class EntityAIRoar(_ai_goal):
             self._add_field("duration", duration)
 
 
-class EntityAIFloatWander(_ai_goal):
+class EntityAIFloatWander(_BaseAIGoal):
     _identifier = "minecraft:behavior.float_wander"
 
     def __init__(
@@ -5521,7 +5700,7 @@ class EntityAIFloatWander(_ai_goal):
             self._add_field("y_dist", y_dist)
 
 
-class EntityAILayDown(_ai_goal):
+class EntityAILayDown(_BaseAIGoal):
     _identifier = "minecraft:behavior.lay_down"
 
     def __init__(
@@ -5545,7 +5724,7 @@ class EntityAILayDown(_ai_goal):
             self._add_field("random_stop_interval", random_stop_interval)
 
 
-class EntityAIMeleeBoxAttack(_ai_goal):
+class EntityAIMeleeBoxAttack(_BaseAIGoal):
     _identifier = "minecraft:behavior.melee_box_attack"
 
     def __init__(
@@ -5650,7 +5829,7 @@ class EntityAIMeleeBoxAttack(_ai_goal):
         return self
 
 
-class EntityAITimerFlag1(_ai_goal):
+class EntityAITimerFlag1(_BaseAIGoal):
     _identifier = "minecraft:behavior.timer_flag_1"
 
     def __init__(
@@ -5685,7 +5864,7 @@ class EntityAITimerFlag1(_ai_goal):
         return self
 
 
-class EntityAITimerFlag2(_ai_goal):
+class EntityAITimerFlag2(_BaseAIGoal):
     _identifier = "minecraft:behavior.timer_flag_2"
 
     def __init__(
@@ -5720,7 +5899,7 @@ class EntityAITimerFlag2(_ai_goal):
         return self
 
 
-class EntityAITimerFlag3(_ai_goal):
+class EntityAITimerFlag3(_BaseAIGoal):
     _identifier = "minecraft:behavior.timer_flag_3"
 
     def __init__(
@@ -5755,7 +5934,7 @@ class EntityAITimerFlag3(_ai_goal):
         return self
 
 
-class EntityAIRunAroundLikeCrazy(_ai_goal):
+class EntityAIRunAroundLikeCrazy(_BaseAIGoal):
     _identifier = "minecraft:behavior.run_around_like_crazy"
 
     def __init__(
@@ -5776,7 +5955,7 @@ class EntityAIRunAroundLikeCrazy(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAISlimeKeepOnJumping(_ai_goal):
+class EntityAISlimeKeepOnJumping(_BaseAIGoal):
     _identifier = "minecraft:behavior.slime_keep_on_jumping"
 
     def __init__(
@@ -5796,7 +5975,7 @@ class EntityAISlimeKeepOnJumping(_ai_goal):
             self._add_field("speed_multiplier", speed_multiplier)
 
 
-class EntityAIRiseToLiquidLevel(_ai_goal):
+class EntityAIRiseToLiquidLevel(_BaseAIGoal):
     _identifier = "minecraft:behavior.rise_to_liquid_level"
 
     def __init__(
@@ -5824,7 +6003,7 @@ class EntityAIRiseToLiquidLevel(_ai_goal):
             self._add_field("sink_delta", sink_delta)
 
 
-class EntityAITakeBlock(_ai_goal):
+class EntityAITakeBlock(_BaseAIGoal):
     _identifier = "minecraft:behavior.take_block"
 
     def __init__(
@@ -5882,7 +6061,7 @@ class EntityAITakeBlock(_ai_goal):
         return self
 
 
-class EntityAIPlaceBlock(_ai_goal):
+class EntityAIPlaceBlock(_BaseAIGoal):
     _identifier = "minecraft:behavior.place_block"
 
     def __init__(
@@ -5953,7 +6132,7 @@ class EntityAIPlaceBlock(_ai_goal):
         return self
 
 
-class EntityAIMoveToRandomBlock(_ai_goal):
+class EntityAIMoveToRandomBlock(_BaseAIGoal):
     _identifier = "minecraft:behavior.move_to_random_block"
 
     def __init__(

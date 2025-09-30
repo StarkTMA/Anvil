@@ -8,12 +8,13 @@ from anvil.api.blocks.components import (BlockDefault, BlockDisplayName,
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.enums import (BlockVanillaTags, ItemCategory, ItemGroups,
+from anvil.lib.enums import (ItemCategory, ItemGroups,
                              PlacementDirectionTrait, PlacementPositionTrait)
 from anvil.lib.lib import IMAGE_EXTENSIONS_PRIORITY, CopyFiles
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (AddonObject, BlockDescriptor, JsonSchemes,
                                MinecraftDescription, _BaseComponent)
+from anvil.api.vanilla.blocks import MinecraftBlockTags
 
 __all__ = ["Block"]
 
@@ -24,11 +25,11 @@ class _tag:
     Handles the creation and management of Minecraft block tags
     with associated dependencies and clashes.
     """
-    def __init__(self, tag: BlockVanillaTags):
+    def __init__(self, tag: MinecraftBlockTags):
         """Initializes a block tag component.
         
         Args:
-            tag (BlockVanillaTags): The vanilla tag to assign to the block.
+            tag (MinecraftBlockTags): The vanilla tag to assign to the block.
         """
         self._dependencies: List["_BaseComponent"] = []
         self._clashes: List["_BaseComponent"] = []
@@ -58,11 +59,11 @@ class _PermutationComponents(_Components):
         self._component_group_name = "components"
         self._condition = condition
 
-    def tag(self, *tags: BlockVanillaTags):
+    def tag(self, *tags: MinecraftBlockTags):
         """The tags for the block.
 
         Args:
-            *tags (BlockVanillaTags): The tags for the block.
+            *tags (MinecraftBlockTags): The tags for the block.
 
         [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
         """

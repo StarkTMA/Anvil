@@ -4,7 +4,7 @@
 		{
 			"type": "minecraft-js",
 			"request": "attach",
-			"name": "Debug with Minecraft",
+			"name": "Debug {{ project_name }}",
 			"mode": "listen",
 			"targetModuleUuid": "{{ script_uuid }}",
 			"localRoot": "{{ wkspc|path }}",

@@ -1,7 +1,7 @@
 from anvil import CONFIG
 from anvil.api.actors.components import Filter
-from anvil.lib.enums import Vibrations
-from anvil.lib.types import Event
+from anvil.lib.enums import FilterSubject, Vibrations
+from anvil.lib.types import Event, Target
 
 
 class _BaseEvent:

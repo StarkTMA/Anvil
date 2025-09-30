@@ -10,11 +10,12 @@ from packaging.version import Version
 
 from anvil import CONFIG
 from anvil.lib.config import ConfigPackageTarget
-from anvil.lib.enums import ComponentTarget
+from anvil.lib.enums import ComponentTarget, FilterSubject
+from anvil.lib.filters import Filter
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA, File, salt_from_str
 from anvil.lib.templater import load_file
-from anvil.lib.types import Identifier
+from anvil.lib.types import Event, Identifier
 
 
 class JsonSchemes:
@@ -238,7 +239,8 @@ class JsonSchemes:
 
     @staticmethod
     def geometry(model_name: str, texture_size: list[int], visible_box: list[int], visible_offset: list[int]):
-        return load_file("geometry.jsont",
+        return load_file(
+            "geometry.jsont",
             {
                 "format_version": GEOMETRY_VERSION,
                 "namespace": CONFIG.NAMESPACE,
@@ -322,13 +324,17 @@ class JsonSchemes:
     @staticmethod
     def camera_preset(identifier, inherit_from):
         return load_file(
-            "camera_preset.jsont", {"format_version": CAMERA_PRESET_VERSION, "identifier": identifier, "inherit_from": inherit_from}, is_json=True
+            "camera_preset.jsont",
+            {"format_version": CAMERA_PRESET_VERSION, "identifier": identifier, "inherit_from": inherit_from},
+            is_json=True,
         )
 
     @staticmethod
     def package_json(project_name, version, description, author):
         return load_file(
-            "package_json.jsont", {"project_name": project_name, "version": version, "description": description, "author": author}, is_json=True
+            "package_json.jsont",
+            {"project_name": project_name, "version": version, "description": description, "author": author},
+            is_json=True,
         )
 
     @staticmethod
@@ -385,24 +391,32 @@ class JsonSchemes:
 
     @staticmethod
     def recipe_smelting(identifier: str, tags: list[str]):
-        return load_file("recipe_smelting.jsont", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True)
+        return load_file(
+            "recipe_smelting.jsont", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+        )
 
     @staticmethod
     def recipe_smithing_table(identifier: str, tags: list[str]):
         return load_file(
-            "recipe_smithing_table.jsont", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_smithing_table.jsont",
+            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags},
+            is_json=True,
         )
 
     @staticmethod
     def recipe_smithing_table_trim(identifier: str, tags: list[str]):
         return load_file(
-            "recipe_smithing_table_trim.jsont", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_smithing_table_trim.jsont",
+            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags},
+            is_json=True,
         )
 
     @staticmethod
     def recipe_shapeless_crafting(identifier: str, tags: list[str]):
         return load_file(
-            "recipe_shapeless_crafting.jsont", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_shapeless_crafting.jsont",
+            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags},
+            is_json=True,
         )
 
     @staticmethod
@@ -412,13 +426,15 @@ class JsonSchemes:
             {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags, "assume_symmetry": assume_symmetry},
             is_json=True,
         )
-    
+
     @staticmethod
     def recipe_brewing_container(identifier: str, tags: list[str]):
         return load_file(
-            "recipe_brewing_container.jsont", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_brewing_container.jsont",
+            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags},
+            is_json=True,
         )
-    
+
     @staticmethod
     def recipe_brewing_mix(identifier: str, tags: list[str]):
         return load_file(
@@ -543,8 +559,10 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def vscode(path, wkspc, script_uuid):
-        return load_file("vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path}, is_json=True)
+    def vscode(path, wkspc, script_uuid, project_name):
+        return load_file(
+            "vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path, "project_name": project_name}, is_json=True
+        )
 
     @staticmethod
     def biome_server():
@@ -557,6 +575,7 @@ class JsonSchemes:
     @staticmethod
     def block_culling_rules(identifier: Identifier):
         return load_file("block_culling.jsont", {"format_version": BLOCK_CULLING_VERSION, "identifier": identifier}, is_json=True)
+
 
 class AddonDescriptor:
     """An object representing an addon descriptor with validation for names and namespaces."""
@@ -585,7 +604,9 @@ class AddonDescriptor:
             raise ValueError(f"Namespaces cannot start with a digit. {self._object_type}[{name}]")
 
         if CONFIG._TARGET == ConfigPackageTarget.ADDON and is_vanilla and not is_vanilla_allowed:
-            raise RuntimeError(f"Overriding vanilla features is not allowed for packages of type '{CONFIG._TARGET}'. {self._object_type}[{name}]")
+            raise RuntimeError(
+                f"Overriding vanilla features is not allowed for packages of type '{CONFIG._TARGET}'. {self._object_type}[{name}]"
+            )
 
         if is_vanilla and object_namespace != "minecraft":
             raise ValueError(f"Invalid namespace '{object_namespace}' overriding Vanilla for. {self._object_type}[{name}]")
@@ -831,7 +852,9 @@ class EntityDescriptor(MinecraftEntityDescriptor):
 
 
 class BlockDescriptor(MinecraftBlockDescriptor):
-    def __init__(self, name: str, is_vanilla: bool = False, states: Mapping[str, str | int | float | bool] = None, tags: set[str] = None) -> None:
+    def __init__(
+        self, name: str, is_vanilla: bool = False, states: Mapping[str, str | int | float | bool] = None, tags: set[str] = None
+    ) -> None:
         super().__init__(name, is_vanilla, states, tags, False)
 
 
@@ -880,7 +903,7 @@ class _BaseComponent(AddonDescriptor):
     def __iter__(self):
         """Iterates over the component's fields."""
         return iter({self.identifier: self._component}.items())
-    
+
     def _export(self) -> Dict[str, Any]:
         """Exports the component as a dictionary.
 
@@ -888,3 +911,32 @@ class _BaseComponent(AddonDescriptor):
             dict: The exported component.
         """
         return {self.identifier: self._component}
+
+
+class _BaseAIGoal(_BaseComponent):
+    def __init__(self, component_name: str) -> None:
+        super().__init__(component_name)
+
+    def priority(self, priority: int):
+        """The higher the priority, the sooner this behavior will be executed as a goal.
+
+        Parameters:
+            priority (int): The higher the priority, the sooner this behavior will be executed as a goal.
+        """
+        self._add_field("priority", priority)
+        return self
+
+
+class _BaseEventTrigger(_BaseComponent):
+    _identifier = "minecraft:on_event"
+
+    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+        super().__init__(self._identifier)
+        self._add_dict(
+            {
+                "event": event,
+                "filters": filters if filters is not None else {},
+                "target": target.value,
+            }
+        )
+        return self

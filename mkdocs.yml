@@ -4,7 +4,7 @@ site_author: StarkTMA
 site_url: https://anvil.starktma.net
 repo_url: https://github.com/StarkTMA/Anvil
 remote_branch: generated
-copyright: Copyright © 2024 StarkTMA
+copyright: Copyright © 2025 StarkTMA
 
 theme:
   name: material
@@ -68,6 +68,10 @@ nav:
     - Anvil: anvil.md
   - Docs:
       - Config: guide/config.md
+      - Adding a Custom Entity: guide/adding_entity.md
+      - Adding a Custom Block: guide/adding_block.md
+      - Adding a Custom Item: guide/adding_item.md
+      - Localization: guide/localization.md
   - API Reference:
       - Overview: api/index.md
       - Actors:

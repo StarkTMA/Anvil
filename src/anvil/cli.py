@@ -50,18 +50,19 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def vscode(path, wkspc, script_uuid):
+    def vscode(path, wkspc, script_uuid, project_name):
         """Generates a VSCode configuration template.
 
         Args:
             path (str): The project path.
             wkspc (str): The workspace path.
             script_uuid (str): The script UUID.
+            project_name (str): The project name.
 
         Returns:
             dict: The VSCode configuration data.
         """
-        return load_file("vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path}, is_json=True)
+        return load_file("vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path, "project_name": project_name}, is_json=True)
 
     @staticmethod
     def gitignore():
@@ -277,6 +278,7 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
             os.path.join(DEV_BEH_DIR, "scripts"),
             os.path.join(WORKING_DIR, "scripts", "javascript"),
             script_uuid,
+            project_name
         ),
         ".vscode",
         "w",

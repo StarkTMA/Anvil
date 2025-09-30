@@ -2606,13 +2606,13 @@ class Query(Molang):
         return self._query(self, self.handle, "is_spectator")
 
     @classmethod
-    def IsCooldownType(self, cooldown_name: str, slot: Slots, slot_id: int = 0):
-        """Returns 1.0 if the specified held or worn item has the specified cooldown type name, otherwise returns 0.0. First argument is the cooldown name to check for, second argument is the equipment slot name, and if required third argument is the numerical slot id. For second and third arguments, uses the same name and id tha tthe replaceitem command takes when querying entities.
+    def IsCooldownCategory(self, cooldown_name: str, slot: Slots, slot_id: int = 0):
+        """Returns 1.0 if the specified held or worn item has the specified cooldown category name, otherwise returns 0.0. First argument is the cooldown name to check for, second argument is the equipment slot name, and if required third argument is the numerical slot id. For second and third arguments, uses the same name and id that the replaceitem command takes when querying entities.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_cooldown_type", cooldown_name, slot, slot_id)
+        return self._query(self, self.handle, "is_cooldown_category", cooldown_name, slot, slot_id)
 
     @classmethod
     def CooldownTime(self, slot: Slots, slot_id: int = 0):

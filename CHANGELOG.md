@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.4.1**](#version-0941)
+- [**Version 0.9.4.2**](#version-0942)
+- [Version 0.9.4.1](#version-0941)
 - [Version 0.9.4](#version-094)
 - [Version 0.9.3.1](#version-0931)
 - [Version 0.9.3](#version-093)
@@ -71,17 +72,42 @@
 
 ---
 
+## Version 0.9.4.2
+
+### Documentation
+- Added Entity tutorial.
+- Added Block tutorial.
+- Added Item tutorial.
+- Added Localization guide.
+
+### Anvil
+
+- Updated format versions.
+
+### Biomes
+
+- Biomes no longer require experimental features to be enabled.
+
+### Actors
+
+- Renamed `EntityInputAirControlled` to `EntityFreeCameraControlled`.
+- Renamed `EntityDash` to `EntityDashAction`.
+- Added `EntityVerticalMovementAction`, `EntityOnDeath`, `EntityOnFriendlyAnger`, `EntityOnHurt`, `EntityOnHurtByPlayer`, `EntityOnIgnite`, `EntityOnStartLanding`, `EntityOnStartTakeoff`, `EntityOnTargetAcquired`, `EntityOnTargetEscaped`, `EntityOnWakeWithOwner` components.
+- Updated the `EntityExperienceReward` component.
+
 ## Version 0.9.4.1
 
 ### Anvil
+
 - Added a new cli command `anvil export-world` to export the world from the `.mcworld` file to the `world` directory. this works exactly like the `extract_world` argument in the `Anvil.compile()` method.
 
 ### Actors
+
 - Added `EntityPersistent`, `EntityAIMoveToRandomBlock` components.
 
 ### Blocks
-- Added `block_culling` method to the `BlockGeometry` component.
 
+- Added `block_culling` method to the `BlockGeometry` component.
 
 ## Version 0.9.4
 
@@ -98,14 +124,17 @@
 - Moved BiomeCustomization class to the Biomes api, the customization options are now more accessible through the Biome Client property, similar to Entities and Blocks.
 
 ### Recipes
+
 - Added support for Potion Brewing Recipes.
 - Added support for Shapeless, Shaped, and Stonecutter custom block tags.
 
 ## Loot Tables
+
 - The loot table classes are now up to date with the current Anvil API architecture.
 - Added missing loot table functions.
 
 ## Actors
+
 - Separated the Spawn Rule classes from the actors classes, now you can write spawn rules without needing to create an entity.
 
 ## Version 0.9.3.1

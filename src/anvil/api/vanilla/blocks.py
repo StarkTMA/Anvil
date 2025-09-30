@@ -571,6 +571,45 @@ class _BlockStateKeys(StrEnum):
     WoodType = "wood_type"
 
 
+class MinecraftBlockTags(StrEnum):
+    Wood = "wood"
+    Pumpkin = "pumpkin"
+    Plant = "plant"
+    Stone = "stone"
+    Metal = "metal"
+    DiamondPickDiggable = "diamond_pick_diggable"
+    GoldPickDiggable = "gold_pick_diggable"
+    IronPickDiggable = "iron_pick_diggable"
+    StonePickDiggable = "stone_pick_diggable"
+    WoodPickDiggable = "wood_pick_diggable"
+    Dirt = "dirt"
+    Sand = "sand"
+    Gravel = "gravel"
+    Grass = "grass"
+    Snow = "snow"
+    Rail = "rail"
+    Water = "water"
+    MobSpawner = "mob_spawner"
+    LushPlantsReplaceable = "lush_plants_replaceable"
+    AzaleaLogReplaceable = "azalea_log_replaceable"
+    NotFeatureReplaceable = "not_feature_replaceable"
+    TextSign = "text_sign"
+    Crop = "minecraft:crop"
+    FertilizeArea = "fertilize_area"
+
+    DiamondTierDestructible = "minecraft:diamond_tier_destructible"
+    IronTierDestructible = "minecraft:iron_tier_destructible"
+    IsAxeItemDestructible = "minecraft:is_axe_item_destructible"
+    IsHoeItemDestructible = "minecraft:is_hoe_item_destructible"
+    IsMaceItemDestructible = "minecraft:is_mace_item_destructible"
+    IsPickaxeItemDestructible = "minecraft:is_pickaxe_item_destructible"
+    IsShearsItemDestructible = "minecraft:is_shears_item_destructible"
+    IsShovelItemDestructible = "minecraft:is_shovel_item_destructible"
+    IsSwordItemDestructible = "minecraft:is_sword_item_destructible"
+    NetheriteTierDestructible = "minecraft:netherite_tier_destructible"
+    StoneTierDestructible = "minecraft:stone_tier_destructible"
+
+
 class MinecraftBlockTypes:
     @staticmethod
     def AcaciaButton(button_pressed_bit: ButtonPressedBit, facing_direction: FacingDirection) -> MinecraftBlockDescriptor:

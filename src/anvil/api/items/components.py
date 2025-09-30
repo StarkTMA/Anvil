@@ -1,12 +1,28 @@
 from math import inf
 
 from anvil import ANVIL, CONFIG
-from anvil.lib.enums import Effects, EnchantsSlots, ItemCategory, ItemGroups, ItemRarity, ItemVanillaTags, Slots
+from anvil.lib.enums import Effects, EnchantsSlots, ItemCategory, ItemGroups, ItemRarity, Slots
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import clamp, process_color
 from anvil.lib.schemas import ItemDescriptor, _BaseComponent
 from anvil.lib.types import RGB, RGBA, Identifier, Seconds
+from anvil.api.vanilla.items import MinecraftItemTags
 
+# Require ITEM_SERVER_VERSION >= 1.21.111
+class ItemFireResistant(_BaseComponent):
+    _identifier = "minecraft:fire_resistant"
+
+    def __init__(self, value: bool = True) -> None:
+        """Determines whether the item is immune to burning when dropped in fire or lava.
+
+        Parameters:
+            value (bool): Determines whether the item is immune to burning when dropped in fire or lava. Defaults to True.
+
+        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fire_resistant
+        """
+        super().__init__("fire_resistant")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.111")
+        self._set_value(value)
 
 # Require ITEM_SERVER_VERSION >= 1.21.40
 class ItemStorageItem(_BaseComponent):
@@ -137,7 +153,7 @@ class ItemCustomComponents(_BaseComponent):
 class ItemTags(_BaseComponent):
     _identifier = "minecraft:tags"
 
-    def __init__(self, *tags: ItemVanillaTags | str) -> None:
+    def __init__(self, *tags: MinecraftItemTags | str) -> None:
         super().__init__("tags")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
         self._add_field("tags", tags)
@@ -159,8 +175,7 @@ class ItemUseModifiers(_BaseComponent):
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
 
         self._add_field("use_duration", clamp(use_duration, 0, inf))
-        if not movement_modifier == 1.0:
-            self._add_field("movement_modifier", movement_modifier)
+        self._add_field("movement_modifier", movement_modifier)
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.30
@@ -186,7 +201,9 @@ class ItemEnchantable(_BaseComponent):
 class ItemFood(_BaseComponent):
     _identifier = "minecraft:food"
 
-    def __init__(self, can_always_eat: bool = False, nutrition: int = 0, saturation_modifier: float = 0, using_converts_to: str = None) -> None:
+    def __init__(
+        self, can_always_eat: bool = False, nutrition: int = 0, saturation_modifier: float = 0, using_converts_to: str = None
+    ) -> None:
         """Sets the item as a food component, allowing it to be edible to the player.
 
         Parameters:
@@ -620,7 +637,9 @@ class ItemShooter(_BaseComponent):
         if scale_power_by_draw_duration:
             self._add_field("scale_power_by_draw_duration", scale_power_by_draw_duration)
 
-    def add_ammunition(self, ammunition: Identifier, search_inventory: bool = True, use_in_creative: bool = False, use_offhand: bool = False):
+    def add_ammunition(
+        self, ammunition: Identifier, search_inventory: bool = True, use_in_creative: bool = False, use_offhand: bool = False
+    ):
         self._component["ammunition"].append(
             {
                 "item": ammunition,

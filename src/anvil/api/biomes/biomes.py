@@ -120,7 +120,8 @@ class _BiomeClient(AddonObject):
 
     def biome_music(
         self,
-        music_reference: MusicCategory | str,
+        music_reference: MusicCategory | str = None,
+        underwater_music: MusicCategory | str = None,
         volume_multiplier: float = 1.0,
     ):
         """
@@ -128,12 +129,14 @@ class _BiomeClient(AddonObject):
 
         Parameters:
             music_reference (str): Music to be played when inside this biome. If left off or not found the default music will be determined by the dimension. Empty string will result in no music.
+            underwater_music (str, optional): Music to be played when underwater in this biome. If left off or not found the default music will be determined by the dimension. Empty string will result in no music.
             volume_multiplier (float, optional): Multiplier temporarily and gradually applied to music volume when within this biome. Must be a value between 0 and 1, inclusive.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_biome_music)
         """
         self._content["minecraft:client_biome"]["components"]["minecraft:biome_music"] = {
             "music_definition": music_reference,
+            "underwater_music": underwater_music,
             "volume_multiplier": clamp(volume_multiplier, 0, 1),
         }
 
@@ -288,14 +291,13 @@ class _BiomeClient(AddonObject):
         return super().queue()
 
 
-
-
 class Biome(BiomeDescriptor):
     _object_type = "Biome"
 
     def __init__(self, name, is_vanilla=False):
-        if not CONFIG._EXPERIMENTAL:
-            raise RuntimeError("Biome support is experimental and must be enabled in the config.")
+        # Released in 1.21.111
+        # if not CONFIG._EXPERIMENTAL:
+        #    raise RuntimeError("Biome support is experimental and must be enabled in the config.")
 
         if CONFIG.TARGET == ConfigPackageTarget.ADDON and is_vanilla:
             raise ValueError("Vanilla biomes overrides cannot be used in addons, use Partial overrides instead.")
