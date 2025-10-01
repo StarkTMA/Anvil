@@ -66,12 +66,11 @@ nav:
   - Home: 
     - Overview: index.md
     - Anvil: anvil.md
-  - Docs:
-      - Config: guide/config.md
-      - Adding a Custom Entity: guide/adding_entity.md
-      - Adding a Custom Block: guide/adding_block.md
-      - Adding a Custom Item: guide/adding_item.md
-      - Localization: guide/localization.md
+    - Config: guide/config.md
+    - Adding a Custom Entity: guide/adding_entity.md
+    - Adding a Custom Block: guide/adding_block.md
+    - Adding a Custom Item: guide/adding_item.md
+    - Localization: guide/localization.md
   - API Reference:
       - Overview: api/index.md
       - Actors:

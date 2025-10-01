@@ -309,11 +309,13 @@ class InputPermissions(StrEnum):
 
 
 class CameraPresets(StrEnum):
+    ControlSchemeCamera = "minecraft:control_scheme_camera"
     FirstPerson = "minecraft:first_person"
+    FixedBoom = "minecraft:fixed_boom"
+    FollowOrbit = "minecraft:follow_orbit"
+    Free = "minecraft:free"
     ThirdPerson = "minecraft:third_person"
     ThirdPersonFront = "minecraft:third_person_front"
-    Free = "minecraft:free"
-    FollowOrbit = "minecraft:follow_orbit"
 
 
 class CameraEasing(StrEnum):
@@ -1189,56 +1191,6 @@ class ItemRarity(StrEnum):
     Epic = "epic"
 
 
-class PotionId(StrEnum):
-    Water = "water"
-    Mundane = "mundane"
-    LongMundane = "long_mundane"
-    Thick = "thick"
-    Awkward = "awkward"
-    NightVision = "nightvision"
-    LongNightVision = "long_nightvision"
-    Invisibility = "invisibility"
-    LongInvisibility = "long_invisibility"
-    Leaping = "leaping"
-    LongLeaping = "long_leaping"
-    StrongLeaping = "strong_leaping"
-    FireResistance = "fire_resistance"
-    LongFireResistance = "long_fire_resistance"
-    Swiftness = "swiftness"
-    LongSwiftness = "long_swiftness"
-    StrongSwiftness = "strong_swiftness"
-    Slowness = "slowness"
-    LongSlowness = "long_slowness"
-    StrongSlowness = "strong_slowness"
-    WaterBreathing = "water_breathing"
-    LongWaterBreathing = "long_water_breathing"
-    Healing = "healing"
-    StrongHealing = "strong_healing"
-    Harming = "harming"
-    StrongHarming = "strong_harming"
-    Poison = "poison"
-    LongPoison = "long_poison"
-    StrongPoison = "strong_poison"
-    Regeneration = "regeneration"
-    LongRegeneration = "long_regeneration"
-    StrongRegeneration = "strong_regeneration"
-    Strength = "strength"
-    LongStrength = "long_strength"
-    StrongStrength = "strong_strength"
-    Weakness = "weakness"
-    LongWeakness = "long_weakness"
-    Wither = "wither"
-    TurtleMaster = "turtle_master"
-    LongTurtleMaster = "long_turtle_master"
-    StrongTurtleMaster = "strong_turtle_master"
-    SlowFalling = "slow_falling"
-    LongSlowFalling = "long_slow_falling"
-    WindCharged = "wind_charged"
-    Weaving = "weaving"
-    Oozing = "oozing"
-    Infested = "infested"
-
-
 class ExplosionParticleEffect(StrEnum):
     Explosion = "explosion"
     WindBurst = "wind_burst"
@@ -1388,215 +1340,7 @@ class EnchantmentTypes(StrEnum):
     Unbreaking = "minecraft:unbreaking"
     Vanishing = "minecraft:vanishing"
     WindBurst = "minecraft:wind_burst"
-
-
-class StructureTypes(StrEnum):
-    AncientCity = "minecraft:ancient_city",
-    BastionRemnant = "minecraft:bastion_remnant",
-    BuriedTreasure = "minecraft:buried_treasure",
-    EndCity = "minecraft:end_city",
-    Fortress = "minecraft:fortress",
-    Mansion = "minecraft:mansion",
-    Mineshaft = "minecraft:mineshaft",
-    Monument = "minecraft:monument",
-    PillagerOutpost = "minecraft:pillager_outpost",
-    RuinedPortal = "minecraft:ruined_portal",
-    Ruins = "minecraft:ruins",
-    Shipwreck = "minecraft:shipwreck",
-    Stronghold = "minecraft:stronghold",
-    Temple = "minecraft:temple",
-    TrailRuins = "minecraft:trail_ruins",
-    TrialChambers = "minecraft:trial_chambers",
-    Village = "minecraft:village"
-
-
-class MinecraftPotionEffectTypes(StrEnum):
-    FireResistance = "FireResistance",
-    Harming = "Harming",
-    Healing = "Healing",
-    Infested = "Infested",
-    Invisibility = "Invisibility",
-    Leaping = "Leaping",
-    NightVision = "NightVision",
-    NoEffect = "None",
-    Oozing = "Oozing",
-    Poison = "Poison",
-    SlowFalling = "SlowFalling",
-    Slowing = "Slowing",
-    Strength = "Strength",
-    Swiftness = "Swiftness",
-    TurtleMaster = "TurtleMaster",
-    WaterBreath = "WaterBreath",
-    Weakness = "Weakness",
-    Weaving = "Weaving",
-    WindCharged = "WindCharged",
-    Wither = "Wither"
-
-
-class MinecraftPotionLiquidTypes(StrEnum):
-    Lingering = "Lingering",
-    Regular = "Regular",
-    Splash = "Splash"
-
-
-class MinecraftBiomeTypes(StrEnum):
-    BambooJungle = "minecraft:bamboo_jungle"
-    BambooJungleHills = "minecraft:bamboo_jungle_hills"
-    BasaltDeltas = "minecraft:basalt_deltas"
-    Beach = "minecraft:beach"
-    BirchForest = "minecraft:birch_forest"
-    BirchForestHills = "minecraft:birch_forest_hills"
-    BirchForestHillsMutated = "minecraft:birch_forest_hills_mutated"
-    BirchForestMutated = "minecraft:birch_forest_mutated"
-    CherryGrove = "minecraft:cherry_grove"
-    ColdBeach = "minecraft:cold_beach"
-    ColdOcean = "minecraft:cold_ocean"
-    ColdTaiga = "minecraft:cold_taiga"
-    ColdTaigaHills = "minecraft:cold_taiga_hills"
-    ColdTaigaMutated = "minecraft:cold_taiga_mutated"
-    CrimsonForest = "minecraft:crimson_forest"
-    DeepColdOcean = "minecraft:deep_cold_ocean"
-    DeepDark = "minecraft:deep_dark"
-    DeepFrozenOcean = "minecraft:deep_frozen_ocean"
-    DeepLukewarmOcean = "minecraft:deep_lukewarm_ocean"
-    DeepOcean = "minecraft:deep_ocean"
-    DeepWarmOcean = "minecraft:deep_warm_ocean"
-    Desert = "minecraft:desert"
-    DesertHills = "minecraft:desert_hills"
-    DesertMutated = "minecraft:desert_mutated"
-    DripstoneCaves = "minecraft:dripstone_caves"
-    ExtremeHills = "minecraft:extreme_hills"
-    ExtremeHillsEdge = "minecraft:extreme_hills_edge"
-    ExtremeHillsMutated = "minecraft:extreme_hills_mutated"
-    ExtremeHillsPlusTrees = "minecraft:extreme_hills_plus_trees"
-    ExtremeHillsPlusTreesMutated = "minecraft:extreme_hills_plus_trees_mutated"
-    FlowerForest = "minecraft:flower_forest"
-    Forest = "minecraft:forest"
-    ForestHills = "minecraft:forest_hills"
-    FrozenOcean = "minecraft:frozen_ocean"
-    FrozenPeaks = "minecraft:frozen_peaks"
-    FrozenRiver = "minecraft:frozen_river"
-    Grove = "minecraft:grove"
-    Hell = "minecraft:hell"
-    IceMountains = "minecraft:ice_mountains"
-    IcePlains = "minecraft:ice_plains"
-    IcePlainsSpikes = "minecraft:ice_plains_spikes"
-    JaggedPeaks = "minecraft:jagged_peaks"
-    Jungle = "minecraft:jungle"
-    JungleEdge = "minecraft:jungle_edge"
-    JungleEdgeMutated = "minecraft:jungle_edge_mutated"
-    JungleHills = "minecraft:jungle_hills"
-    JungleMutated = "minecraft:jungle_mutated"
-    LegacyFrozenOcean = "minecraft:legacy_frozen_ocean"
-    LukewarmOcean = "minecraft:lukewarm_ocean"
-    LushCaves = "minecraft:lush_caves"
-    MangroveSwamp = "minecraft:mangrove_swamp"
-    Meadow = "minecraft:meadow"
-    MegaTaiga = "minecraft:mega_taiga"
-    MegaTaigaHills = "minecraft:mega_taiga_hills"
-    Mesa = "minecraft:mesa"
-    MesaBryce = "minecraft:mesa_bryce"
-    MesaPlateau = "minecraft:mesa_plateau"
-    MesaPlateauMutated = "minecraft:mesa_plateau_mutated"
-    MesaPlateauStone = "minecraft:mesa_plateau_stone"
-    MesaPlateauStoneMutated = "minecraft:mesa_plateau_stone_mutated"
-    MushroomIsland = "minecraft:mushroom_island"
-    MushroomIslandShore = "minecraft:mushroom_island_shore"
-    Ocean = "minecraft:ocean"
-    PaleGarden = "minecraft:pale_garden"
-    Plains = "minecraft:plains"
-    RedwoodTaigaHillsMutated = "minecraft:redwood_taiga_hills_mutated"
-    RedwoodTaigaMutated = "minecraft:redwood_taiga_mutated"
-    River = "minecraft:river"
-    RoofedForest = "minecraft:roofed_forest"
-    RoofedForestMutated = "minecraft:roofed_forest_mutated"
-    Savanna = "minecraft:savanna"
-    SavannaMutated = "minecraft:savanna_mutated"
-    SavannaPlateau = "minecraft:savanna_plateau"
-    SavannaPlateauMutated = "minecraft:savanna_plateau_mutated"
-    SnowySlopes = "minecraft:snowy_slopes"
-    SoulsandValley = "minecraft:soulsand_valley"
-    StoneBeach = "minecraft:stone_beach"
-    StonyPeaks = "minecraft:stony_peaks"
-    SunflowerPlains = "minecraft:sunflower_plains"
-    Swampland = "minecraft:swampland"
-    SwamplandMutated = "minecraft:swampland_mutated"
-    Taiga = "minecraft:taiga"
-    TaigaHills = "minecraft:taiga_hills"
-    TaigaMutated = "minecraft:taiga_mutated"
-    TheEnd = "minecraft:the_end"
-    WarmOcean = "minecraft:warm_ocean"
-    WarpedForest = "minecraft:warped_forest"
-
-
-class MinecraftBiomeTags(StrEnum):
-    Animal = "animal"
-    BasaltDeltas = "basalt_deltas"
-    Beach = "beach"
-    BeeHabitat = "bee_habitat"
-    Birch = "birch"
-    Caves = "caves"
-    CherryGrove = "cherry_grove"
-    Cold = "cold"
-    CrimsonForest = "crimson_forest"
-    DarkOak = "dark_oak"
-    Deep = "deep"
-    DeepDark = "deep_dark"
-    Desert = "desert"
-    DripstoneCaves = "dripstone_caves"
-    Edge = "edge"
-    ExtremeHills = "extreme_hills"
-    FlowerForest = "flower_forest"
-    Forest = "forest"
-    Frozen = "frozen"
-    FrozenPeaks = "frozen_peaks"
-    Grove = "grove"
-    Hills = "hills"
-    Ice = "ice"
-    IcePlains = "ice_plains"
-    JaggedPeaks = "jagged_peaks"
-    Jungle = "jungle"
-    Lakes = "lakes"
-    Lukewarm = "lukewarm"
-    LushCaves = "lush_caves"
-    MangroveSwamp = "mangrove_swamp"
-    Mega = "mega"
-    Mesa = "mesa"
-    Monster = "monster"
-    MooshroomIsland = "mooshroom_island"
-    Mountain = "mountain"
-    Mutated = "mutated"
-    Nether = "nether"
-    NetherWastes = "nether_wastes"
-    NetherwartForest = "netherwart_forest"
-    NoLegacyWorldgen = "no_legacy_worldgen"
-    Ocean = "ocean"
-    Overworld = "overworld"
-    OverworldGeneration = "overworld_generation"
-    Plains = "plains"
-    Plateau = "plateau"
-    Rare = "rare"
-    River = "river"
-    Roofed = "roofed"
-    Savanna = "savanna"
-    Shore = "shore"
-    SnowySlopes = "snowy_slopes"
-    SoulsandValley = "soulsand_valley"
-    SpawnEndermen = "spawn_endermen"
-    SpawnFewPiglins = "spawn_few_piglins"
-    SpawnFewZombifiedPiglins = "spawn_few_zombified_piglins"
-    SpawnGhast = "spawn_ghast"
-    SpawnMagmaCubes = "spawn_magma_cubes"
-    SpawnManyMagmaCubes = "spawn_many_magma_cubes"
-    SpawnPiglin = "spawn_piglin"
-    SpawnZombifiedPiglin = "spawn_zombified_piglin"
-    Stone = "stone"
-    Swamp = "swamp"
-    Taiga = "taiga"
-    TheEnd = "the_end"
-    Warm = "warm"
-    WarpedForest = "warped_forest"
-
+    
 
 class BlockMovementType(StrEnum):
     """

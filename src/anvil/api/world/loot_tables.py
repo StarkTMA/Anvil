@@ -2,8 +2,9 @@ import os
 from typing import overload
 
 from anvil import CONFIG
+from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
 from anvil.lib.enums import (ExplorationMapDestinations, LootPoolType,
-                             PotionId, RawTextConstructor)
+                             RawTextConstructor)
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import (AddonObject, BlockDescriptor, EntityDescriptor,
                                ItemDescriptor, JsonSchemes)
@@ -112,11 +113,11 @@ class _LootPoolEntryFunctions:
         )
         return self
 
-    def SetPotion(self, id: PotionId):
+    def SetPotion(self, id: MinecraftPotionEffectTypes):
         """Sets the potion type of compatible items (potions, splash potions, lingering potions).
 
         Parameters:
-            id (PotionId): The potion effect identifier.
+            id (MinecraftPotionEffectTypes): The potion effect identifier.
 
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.

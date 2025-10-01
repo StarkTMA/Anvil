@@ -1,5 +1,8 @@
 from enum import StrEnum
 
+from anvil.lib.schemas import MinecraftItemDescriptor
+
+item_factory = lambda identifier: MinecraftItemDescriptor(identifier)
 
 class MinecraftItemTags(StrEnum):
     Arrow = "minecraft:arrow"
@@ -60,1399 +63,1420 @@ class MinecraftItemTags(StrEnum):
     Wool = "minecraft:wool"
 
 
-class MinecraftItemTypes(StrEnum):
-    AcaciaBoat = "minecraft:acacia_boat"
-    AcaciaButton = "minecraft:acacia_button"
-    AcaciaChestBoat = "minecraft:acacia_chest_boat"
-    AcaciaDoor = "minecraft:acacia_door"
-    AcaciaFence = "minecraft:acacia_fence"
-    AcaciaFenceGate = "minecraft:acacia_fence_gate"
-    AcaciaHangingSign = "minecraft:acacia_hanging_sign"
-    AcaciaLeaves = "minecraft:acacia_leaves"
-    AcaciaLog = "minecraft:acacia_log"
-    AcaciaPlanks = "minecraft:acacia_planks"
-    AcaciaPressurePlate = "minecraft:acacia_pressure_plate"
-    AcaciaSapling = "minecraft:acacia_sapling"
-    AcaciaSign = "minecraft:acacia_sign"
-    AcaciaSlab = "minecraft:acacia_slab"
-    AcaciaStairs = "minecraft:acacia_stairs"
-    AcaciaTrapdoor = "minecraft:acacia_trapdoor"
-    AcaciaWood = "minecraft:acacia_wood"
-    ActivatorRail = "minecraft:activator_rail"
-    AllaySpawnEgg = "minecraft:allay_spawn_egg"
-    Allium = "minecraft:allium"
-    Allow = "minecraft:allow"
-    AmethystBlock = "minecraft:amethyst_block"
-    AmethystCluster = "minecraft:amethyst_cluster"
-    AmethystShard = "minecraft:amethyst_shard"
-    AncientDebris = "minecraft:ancient_debris"
-    Andesite = "minecraft:andesite"
-    AndesiteSlab = "minecraft:andesite_slab"
-    AndesiteStairs = "minecraft:andesite_stairs"
-    AndesiteWall = "minecraft:andesite_wall"
-    AnglerPotterySherd = "minecraft:angler_pottery_sherd"
-    Anvil = "minecraft:anvil"
-    Apple = "minecraft:apple"
-    ArcherPotterySherd = "minecraft:archer_pottery_sherd"
-    ArmadilloScute = "minecraft:armadillo_scute"
-    ArmadilloSpawnEgg = "minecraft:armadillo_spawn_egg"
-    ArmorStand = "minecraft:armor_stand"
-    ArmsUpPotterySherd = "minecraft:arms_up_pottery_sherd"
-    Arrow = "minecraft:arrow"
-    AxolotlBucket = "minecraft:axolotl_bucket"
-    AxolotlSpawnEgg = "minecraft:axolotl_spawn_egg"
-    Azalea = "minecraft:azalea"
-    AzaleaLeaves = "minecraft:azalea_leaves"
-    AzaleaLeavesFlowered = "minecraft:azalea_leaves_flowered"
-    AzureBluet = "minecraft:azure_bluet"
-    BakedPotato = "minecraft:baked_potato"
-    Bamboo = "minecraft:bamboo"
-    BambooBlock = "minecraft:bamboo_block"
-    BambooButton = "minecraft:bamboo_button"
-    BambooChestRaft = "minecraft:bamboo_chest_raft"
-    BambooDoor = "minecraft:bamboo_door"
-    BambooFence = "minecraft:bamboo_fence"
-    BambooFenceGate = "minecraft:bamboo_fence_gate"
-    BambooHangingSign = "minecraft:bamboo_hanging_sign"
-    BambooMosaic = "minecraft:bamboo_mosaic"
-    BambooMosaicSlab = "minecraft:bamboo_mosaic_slab"
-    BambooMosaicStairs = "minecraft:bamboo_mosaic_stairs"
-    BambooPlanks = "minecraft:bamboo_planks"
-    BambooPressurePlate = "minecraft:bamboo_pressure_plate"
-    BambooRaft = "minecraft:bamboo_raft"
-    BambooSign = "minecraft:bamboo_sign"
-    BambooSlab = "minecraft:bamboo_slab"
-    BambooStairs = "minecraft:bamboo_stairs"
-    BambooTrapdoor = "minecraft:bamboo_trapdoor"
-    Banner = "minecraft:banner"
-    Barrel = "minecraft:barrel"
-    Barrier = "minecraft:barrier"
-    Basalt = "minecraft:basalt"
-    BatSpawnEgg = "minecraft:bat_spawn_egg"
-    Beacon = "minecraft:beacon"
-    Bed = "minecraft:bed"
-    Bedrock = "minecraft:bedrock"
-    BeeNest = "minecraft:bee_nest"
-    BeeSpawnEgg = "minecraft:bee_spawn_egg"
-    Beef = "minecraft:beef"
-    Beehive = "minecraft:beehive"
-    Beetroot = "minecraft:beetroot"
-    BeetrootSeeds = "minecraft:beetroot_seeds"
-    BeetrootSoup = "minecraft:beetroot_soup"
-    Bell = "minecraft:bell"
-    BigDripleaf = "minecraft:big_dripleaf"
-    BirchBoat = "minecraft:birch_boat"
-    BirchButton = "minecraft:birch_button"
-    BirchChestBoat = "minecraft:birch_chest_boat"
-    BirchDoor = "minecraft:birch_door"
-    BirchFence = "minecraft:birch_fence"
-    BirchFenceGate = "minecraft:birch_fence_gate"
-    BirchHangingSign = "minecraft:birch_hanging_sign"
-    BirchLeaves = "minecraft:birch_leaves"
-    BirchLog = "minecraft:birch_log"
-    BirchPlanks = "minecraft:birch_planks"
-    BirchPressurePlate = "minecraft:birch_pressure_plate"
-    BirchSapling = "minecraft:birch_sapling"
-    BirchSign = "minecraft:birch_sign"
-    BirchSlab = "minecraft:birch_slab"
-    BirchStairs = "minecraft:birch_stairs"
-    BirchTrapdoor = "minecraft:birch_trapdoor"
-    BirchWood = "minecraft:birch_wood"
-    BlackBundle = "minecraft:black_bundle"
-    BlackCandle = "minecraft:black_candle"
-    BlackCarpet = "minecraft:black_carpet"
-    BlackConcrete = "minecraft:black_concrete"
-    BlackConcretePowder = "minecraft:black_concrete_powder"
-    BlackDye = "minecraft:black_dye"
-    BlackGlazedTerracotta = "minecraft:black_glazed_terracotta"
-    BlackHarness = "minecraft:black_harness"
-    BlackShulkerBox = "minecraft:black_shulker_box"
-    BlackStainedGlass = "minecraft:black_stained_glass"
-    BlackStainedGlassPane = "minecraft:black_stained_glass_pane"
-    BlackTerracotta = "minecraft:black_terracotta"
-    BlackWool = "minecraft:black_wool"
-    Blackstone = "minecraft:blackstone"
-    BlackstoneSlab = "minecraft:blackstone_slab"
-    BlackstoneStairs = "minecraft:blackstone_stairs"
-    BlackstoneWall = "minecraft:blackstone_wall"
-    BladePotterySherd = "minecraft:blade_pottery_sherd"
-    BlastFurnace = "minecraft:blast_furnace"
-    BlazePowder = "minecraft:blaze_powder"
-    BlazeRod = "minecraft:blaze_rod"
-    BlazeSpawnEgg = "minecraft:blaze_spawn_egg"
-    BlueBundle = "minecraft:blue_bundle"
-    BlueCandle = "minecraft:blue_candle"
-    BlueCarpet = "minecraft:blue_carpet"
-    BlueConcrete = "minecraft:blue_concrete"
-    BlueConcretePowder = "minecraft:blue_concrete_powder"
-    BlueDye = "minecraft:blue_dye"
-    BlueEgg = "minecraft:blue_egg"
-    BlueGlazedTerracotta = "minecraft:blue_glazed_terracotta"
-    BlueHarness = "minecraft:blue_harness"
-    BlueIce = "minecraft:blue_ice"
-    BlueOrchid = "minecraft:blue_orchid"
-    BlueShulkerBox = "minecraft:blue_shulker_box"
-    BlueStainedGlass = "minecraft:blue_stained_glass"
-    BlueStainedGlassPane = "minecraft:blue_stained_glass_pane"
-    BlueTerracotta = "minecraft:blue_terracotta"
-    BlueWool = "minecraft:blue_wool"
-    BoggedSpawnEgg = "minecraft:bogged_spawn_egg"
-    BoltArmorTrimSmithingTemplate = "minecraft:bolt_armor_trim_smithing_template"
-    Bone = "minecraft:bone"
-    BoneBlock = "minecraft:bone_block"
-    BoneMeal = "minecraft:bone_meal"
-    Book = "minecraft:book"
-    Bookshelf = "minecraft:bookshelf"
-    BorderBlock = "minecraft:border_block"
-    BordureIndentedBannerPattern = "minecraft:bordure_indented_banner_pattern"
-    Bow = "minecraft:bow"
-    Bowl = "minecraft:bowl"
-    BrainCoral = "minecraft:brain_coral"
-    BrainCoralBlock = "minecraft:brain_coral_block"
-    BrainCoralFan = "minecraft:brain_coral_fan"
-    Bread = "minecraft:bread"
-    BreezeRod = "minecraft:breeze_rod"
-    BreezeSpawnEgg = "minecraft:breeze_spawn_egg"
-    BrewerPotterySherd = "minecraft:brewer_pottery_sherd"
-    BrewingStand = "minecraft:brewing_stand"
-    Brick = "minecraft:brick"
-    BrickBlock = "minecraft:brick_block"
-    BrickSlab = "minecraft:brick_slab"
-    BrickStairs = "minecraft:brick_stairs"
-    BrickWall = "minecraft:brick_wall"
-    BrownBundle = "minecraft:brown_bundle"
-    BrownCandle = "minecraft:brown_candle"
-    BrownCarpet = "minecraft:brown_carpet"
-    BrownConcrete = "minecraft:brown_concrete"
-    BrownConcretePowder = "minecraft:brown_concrete_powder"
-    BrownDye = "minecraft:brown_dye"
-    BrownEgg = "minecraft:brown_egg"
-    BrownGlazedTerracotta = "minecraft:brown_glazed_terracotta"
-    BrownHarness = "minecraft:brown_harness"
-    BrownMushroom = "minecraft:brown_mushroom"
-    BrownMushroomBlock = "minecraft:brown_mushroom_block"
-    BrownShulkerBox = "minecraft:brown_shulker_box"
-    BrownStainedGlass = "minecraft:brown_stained_glass"
-    BrownStainedGlassPane = "minecraft:brown_stained_glass_pane"
-    BrownTerracotta = "minecraft:brown_terracotta"
-    BrownWool = "minecraft:brown_wool"
-    Brush = "minecraft:brush"
-    BubbleCoral = "minecraft:bubble_coral"
-    BubbleCoralBlock = "minecraft:bubble_coral_block"
-    BubbleCoralFan = "minecraft:bubble_coral_fan"
-    Bucket = "minecraft:bucket"
-    BuddingAmethyst = "minecraft:budding_amethyst"
-    Bundle = "minecraft:bundle"
-    BurnPotterySherd = "minecraft:burn_pottery_sherd"
-    Bush = "minecraft:bush"
-    Cactus = "minecraft:cactus"
-    CactusFlower = "minecraft:cactus_flower"
-    Cake = "minecraft:cake"
-    Calcite = "minecraft:calcite"
-    CalibratedSculkSensor = "minecraft:calibrated_sculk_sensor"
-    CamelSpawnEgg = "minecraft:camel_spawn_egg"
-    Campfire = "minecraft:campfire"
-    Candle = "minecraft:candle"
-    Carrot = "minecraft:carrot"
-    CarrotOnAStick = "minecraft:carrot_on_a_stick"
-    CartographyTable = "minecraft:cartography_table"
-    CarvedPumpkin = "minecraft:carved_pumpkin"
-    CatSpawnEgg = "minecraft:cat_spawn_egg"
-    Cauldron = "minecraft:cauldron"
-    CaveSpiderSpawnEgg = "minecraft:cave_spider_spawn_egg"
-    Chain = "minecraft:chain"
-    ChainCommandBlock = "minecraft:chain_command_block"
-    ChainmailBoots = "minecraft:chainmail_boots"
-    ChainmailChestplate = "minecraft:chainmail_chestplate"
-    ChainmailHelmet = "minecraft:chainmail_helmet"
-    ChainmailLeggings = "minecraft:chainmail_leggings"
-    Charcoal = "minecraft:charcoal"
-    CherryBoat = "minecraft:cherry_boat"
-    CherryButton = "minecraft:cherry_button"
-    CherryChestBoat = "minecraft:cherry_chest_boat"
-    CherryDoor = "minecraft:cherry_door"
-    CherryFence = "minecraft:cherry_fence"
-    CherryFenceGate = "minecraft:cherry_fence_gate"
-    CherryHangingSign = "minecraft:cherry_hanging_sign"
-    CherryLeaves = "minecraft:cherry_leaves"
-    CherryLog = "minecraft:cherry_log"
-    CherryPlanks = "minecraft:cherry_planks"
-    CherryPressurePlate = "minecraft:cherry_pressure_plate"
-    CherrySapling = "minecraft:cherry_sapling"
-    CherrySign = "minecraft:cherry_sign"
-    CherrySlab = "minecraft:cherry_slab"
-    CherryStairs = "minecraft:cherry_stairs"
-    CherryTrapdoor = "minecraft:cherry_trapdoor"
-    CherryWood = "minecraft:cherry_wood"
-    Chest = "minecraft:chest"
-    ChestMinecart = "minecraft:chest_minecart"
-    Chicken = "minecraft:chicken"
-    ChickenSpawnEgg = "minecraft:chicken_spawn_egg"
-    ChippedAnvil = "minecraft:chipped_anvil"
-    ChiseledBookshelf = "minecraft:chiseled_bookshelf"
-    ChiseledCopper = "minecraft:chiseled_copper"
-    ChiseledDeepslate = "minecraft:chiseled_deepslate"
-    ChiseledNetherBricks = "minecraft:chiseled_nether_bricks"
-    ChiseledPolishedBlackstone = "minecraft:chiseled_polished_blackstone"
-    ChiseledQuartzBlock = "minecraft:chiseled_quartz_block"
-    ChiseledRedSandstone = "minecraft:chiseled_red_sandstone"
-    ChiseledResinBricks = "minecraft:chiseled_resin_bricks"
-    ChiseledSandstone = "minecraft:chiseled_sandstone"
-    ChiseledStoneBricks = "minecraft:chiseled_stone_bricks"
-    ChiseledTuff = "minecraft:chiseled_tuff"
-    ChiseledTuffBricks = "minecraft:chiseled_tuff_bricks"
-    ChorusFlower = "minecraft:chorus_flower"
-    ChorusFruit = "minecraft:chorus_fruit"
-    ChorusPlant = "minecraft:chorus_plant"
-    Clay = "minecraft:clay"
-    ClayBall = "minecraft:clay_ball"
-    Clock = "minecraft:clock"
-    ClosedEyeblossom = "minecraft:closed_eyeblossom"
-    Coal = "minecraft:coal"
-    CoalBlock = "minecraft:coal_block"
-    CoalOre = "minecraft:coal_ore"
-    CoarseDirt = "minecraft:coarse_dirt"
-    CoastArmorTrimSmithingTemplate = "minecraft:coast_armor_trim_smithing_template"
-    CobbledDeepslate = "minecraft:cobbled_deepslate"
-    CobbledDeepslateSlab = "minecraft:cobbled_deepslate_slab"
-    CobbledDeepslateStairs = "minecraft:cobbled_deepslate_stairs"
-    CobbledDeepslateWall = "minecraft:cobbled_deepslate_wall"
-    Cobblestone = "minecraft:cobblestone"
-    CobblestoneSlab = "minecraft:cobblestone_slab"
-    CobblestoneWall = "minecraft:cobblestone_wall"
-    CocoaBeans = "minecraft:cocoa_beans"
-    Cod = "minecraft:cod"
-    CodBucket = "minecraft:cod_bucket"
-    CodSpawnEgg = "minecraft:cod_spawn_egg"
-    CommandBlock = "minecraft:command_block"
-    CommandBlockMinecart = "minecraft:command_block_minecart"
-    Comparator = "minecraft:comparator"
-    Compass = "minecraft:compass"
-    Composter = "minecraft:composter"
-    Conduit = "minecraft:conduit"
-    CookedBeef = "minecraft:cooked_beef"
-    CookedChicken = "minecraft:cooked_chicken"
-    CookedCod = "minecraft:cooked_cod"
-    CookedMutton = "minecraft:cooked_mutton"
-    CookedPorkchop = "minecraft:cooked_porkchop"
-    CookedRabbit = "minecraft:cooked_rabbit"
-    CookedSalmon = "minecraft:cooked_salmon"
-    Cookie = "minecraft:cookie"
-    CopperBlock = "minecraft:copper_block"
-    CopperBulb = "minecraft:copper_bulb"
-    CopperDoor = "minecraft:copper_door"
-    CopperGrate = "minecraft:copper_grate"
-    CopperIngot = "minecraft:copper_ingot"
-    CopperOre = "minecraft:copper_ore"
-    CopperTrapdoor = "minecraft:copper_trapdoor"
-    Cornflower = "minecraft:cornflower"
-    CowSpawnEgg = "minecraft:cow_spawn_egg"
-    CrackedDeepslateBricks = "minecraft:cracked_deepslate_bricks"
-    CrackedDeepslateTiles = "minecraft:cracked_deepslate_tiles"
-    CrackedNetherBricks = "minecraft:cracked_nether_bricks"
-    CrackedPolishedBlackstoneBricks = "minecraft:cracked_polished_blackstone_bricks"
-    CrackedStoneBricks = "minecraft:cracked_stone_bricks"
-    Crafter = "minecraft:crafter"
-    CraftingTable = "minecraft:crafting_table"
-    CreakingHeart = "minecraft:creaking_heart"
-    CreakingSpawnEgg = "minecraft:creaking_spawn_egg"
-    CreeperBannerPattern = "minecraft:creeper_banner_pattern"
-    CreeperHead = "minecraft:creeper_head"
-    CreeperSpawnEgg = "minecraft:creeper_spawn_egg"
-    CrimsonButton = "minecraft:crimson_button"
-    CrimsonDoor = "minecraft:crimson_door"
-    CrimsonFence = "minecraft:crimson_fence"
-    CrimsonFenceGate = "minecraft:crimson_fence_gate"
-    CrimsonFungus = "minecraft:crimson_fungus"
-    CrimsonHangingSign = "minecraft:crimson_hanging_sign"
-    CrimsonHyphae = "minecraft:crimson_hyphae"
-    CrimsonNylium = "minecraft:crimson_nylium"
-    CrimsonPlanks = "minecraft:crimson_planks"
-    CrimsonPressurePlate = "minecraft:crimson_pressure_plate"
-    CrimsonRoots = "minecraft:crimson_roots"
-    CrimsonSign = "minecraft:crimson_sign"
-    CrimsonSlab = "minecraft:crimson_slab"
-    CrimsonStairs = "minecraft:crimson_stairs"
-    CrimsonStem = "minecraft:crimson_stem"
-    CrimsonTrapdoor = "minecraft:crimson_trapdoor"
-    Crossbow = "minecraft:crossbow"
-    CryingObsidian = "minecraft:crying_obsidian"
-    CutCopper = "minecraft:cut_copper"
-    CutCopperSlab = "minecraft:cut_copper_slab"
-    CutCopperStairs = "minecraft:cut_copper_stairs"
-    CutRedSandstone = "minecraft:cut_red_sandstone"
-    CutRedSandstoneSlab = "minecraft:cut_red_sandstone_slab"
-    CutSandstone = "minecraft:cut_sandstone"
-    CutSandstoneSlab = "minecraft:cut_sandstone_slab"
-    CyanBundle = "minecraft:cyan_bundle"
-    CyanCandle = "minecraft:cyan_candle"
-    CyanCarpet = "minecraft:cyan_carpet"
-    CyanConcrete = "minecraft:cyan_concrete"
-    CyanConcretePowder = "minecraft:cyan_concrete_powder"
-    CyanDye = "minecraft:cyan_dye"
-    CyanGlazedTerracotta = "minecraft:cyan_glazed_terracotta"
-    CyanHarness = "minecraft:cyan_harness"
-    CyanShulkerBox = "minecraft:cyan_shulker_box"
-    CyanStainedGlass = "minecraft:cyan_stained_glass"
-    CyanStainedGlassPane = "minecraft:cyan_stained_glass_pane"
-    CyanTerracotta = "minecraft:cyan_terracotta"
-    CyanWool = "minecraft:cyan_wool"
-    DamagedAnvil = "minecraft:damaged_anvil"
-    Dandelion = "minecraft:dandelion"
-    DangerPotterySherd = "minecraft:danger_pottery_sherd"
-    DarkOakBoat = "minecraft:dark_oak_boat"
-    DarkOakButton = "minecraft:dark_oak_button"
-    DarkOakChestBoat = "minecraft:dark_oak_chest_boat"
-    DarkOakDoor = "minecraft:dark_oak_door"
-    DarkOakFence = "minecraft:dark_oak_fence"
-    DarkOakFenceGate = "minecraft:dark_oak_fence_gate"
-    DarkOakHangingSign = "minecraft:dark_oak_hanging_sign"
-    DarkOakLeaves = "minecraft:dark_oak_leaves"
-    DarkOakLog = "minecraft:dark_oak_log"
-    DarkOakPlanks = "minecraft:dark_oak_planks"
-    DarkOakPressurePlate = "minecraft:dark_oak_pressure_plate"
-    DarkOakSapling = "minecraft:dark_oak_sapling"
-    DarkOakSign = "minecraft:dark_oak_sign"
-    DarkOakSlab = "minecraft:dark_oak_slab"
-    DarkOakStairs = "minecraft:dark_oak_stairs"
-    DarkOakTrapdoor = "minecraft:dark_oak_trapdoor"
-    DarkOakWood = "minecraft:dark_oak_wood"
-    DarkPrismarine = "minecraft:dark_prismarine"
-    DarkPrismarineSlab = "minecraft:dark_prismarine_slab"
-    DarkPrismarineStairs = "minecraft:dark_prismarine_stairs"
-    DaylightDetector = "minecraft:daylight_detector"
-    DeadBrainCoral = "minecraft:dead_brain_coral"
-    DeadBrainCoralBlock = "minecraft:dead_brain_coral_block"
-    DeadBrainCoralFan = "minecraft:dead_brain_coral_fan"
-    DeadBubbleCoral = "minecraft:dead_bubble_coral"
-    DeadBubbleCoralBlock = "minecraft:dead_bubble_coral_block"
-    DeadBubbleCoralFan = "minecraft:dead_bubble_coral_fan"
-    DeadFireCoral = "minecraft:dead_fire_coral"
-    DeadFireCoralBlock = "minecraft:dead_fire_coral_block"
-    DeadFireCoralFan = "minecraft:dead_fire_coral_fan"
-    DeadHornCoral = "minecraft:dead_horn_coral"
-    DeadHornCoralBlock = "minecraft:dead_horn_coral_block"
-    DeadHornCoralFan = "minecraft:dead_horn_coral_fan"
-    DeadTubeCoral = "minecraft:dead_tube_coral"
-    DeadTubeCoralBlock = "minecraft:dead_tube_coral_block"
-    DeadTubeCoralFan = "minecraft:dead_tube_coral_fan"
-    Deadbush = "minecraft:deadbush"
-    DecoratedPot = "minecraft:decorated_pot"
-    Deepslate = "minecraft:deepslate"
-    DeepslateBrickSlab = "minecraft:deepslate_brick_slab"
-    DeepslateBrickStairs = "minecraft:deepslate_brick_stairs"
-    DeepslateBrickWall = "minecraft:deepslate_brick_wall"
-    DeepslateBricks = "minecraft:deepslate_bricks"
-    DeepslateCoalOre = "minecraft:deepslate_coal_ore"
-    DeepslateCopperOre = "minecraft:deepslate_copper_ore"
-    DeepslateDiamondOre = "minecraft:deepslate_diamond_ore"
-    DeepslateEmeraldOre = "minecraft:deepslate_emerald_ore"
-    DeepslateGoldOre = "minecraft:deepslate_gold_ore"
-    DeepslateIronOre = "minecraft:deepslate_iron_ore"
-    DeepslateLapisOre = "minecraft:deepslate_lapis_ore"
-    DeepslateRedstoneOre = "minecraft:deepslate_redstone_ore"
-    DeepslateTileSlab = "minecraft:deepslate_tile_slab"
-    DeepslateTileStairs = "minecraft:deepslate_tile_stairs"
-    DeepslateTileWall = "minecraft:deepslate_tile_wall"
-    DeepslateTiles = "minecraft:deepslate_tiles"
-    Deny = "minecraft:deny"
-    DetectorRail = "minecraft:detector_rail"
-    Diamond = "minecraft:diamond"
-    DiamondAxe = "minecraft:diamond_axe"
-    DiamondBlock = "minecraft:diamond_block"
-    DiamondBoots = "minecraft:diamond_boots"
-    DiamondChestplate = "minecraft:diamond_chestplate"
-    DiamondHelmet = "minecraft:diamond_helmet"
-    DiamondHoe = "minecraft:diamond_hoe"
-    DiamondHorseArmor = "minecraft:diamond_horse_armor"
-    DiamondLeggings = "minecraft:diamond_leggings"
-    DiamondOre = "minecraft:diamond_ore"
-    DiamondPickaxe = "minecraft:diamond_pickaxe"
-    DiamondShovel = "minecraft:diamond_shovel"
-    DiamondSword = "minecraft:diamond_sword"
-    Diorite = "minecraft:diorite"
-    DioriteSlab = "minecraft:diorite_slab"
-    DioriteStairs = "minecraft:diorite_stairs"
-    DioriteWall = "minecraft:diorite_wall"
-    Dirt = "minecraft:dirt"
-    DirtWithRoots = "minecraft:dirt_with_roots"
-    DiscFragment5 = "minecraft:disc_fragment_5"
-    Dispenser = "minecraft:dispenser"
-    DolphinSpawnEgg = "minecraft:dolphin_spawn_egg"
-    DonkeySpawnEgg = "minecraft:donkey_spawn_egg"
-    DragonBreath = "minecraft:dragon_breath"
-    DragonEgg = "minecraft:dragon_egg"
-    DragonHead = "minecraft:dragon_head"
-    DriedGhast = "minecraft:dried_ghast"
-    DriedKelp = "minecraft:dried_kelp"
-    DriedKelpBlock = "minecraft:dried_kelp_block"
-    DripstoneBlock = "minecraft:dripstone_block"
-    Dropper = "minecraft:dropper"
-    DrownedSpawnEgg = "minecraft:drowned_spawn_egg"
-    DuneArmorTrimSmithingTemplate = "minecraft:dune_armor_trim_smithing_template"
-    EchoShard = "minecraft:echo_shard"
-    Egg = "minecraft:egg"
-    ElderGuardianSpawnEgg = "minecraft:elder_guardian_spawn_egg"
-    Elytra = "minecraft:elytra"
-    Emerald = "minecraft:emerald"
-    EmeraldBlock = "minecraft:emerald_block"
-    EmeraldOre = "minecraft:emerald_ore"
-    EmptyMap = "minecraft:empty_map"
-    EnchantedBook = "minecraft:enchanted_book"
-    EnchantedGoldenApple = "minecraft:enchanted_golden_apple"
-    EnchantingTable = "minecraft:enchanting_table"
-    EndBrickStairs = "minecraft:end_brick_stairs"
-    EndBricks = "minecraft:end_bricks"
-    EndCrystal = "minecraft:end_crystal"
-    EndPortalFrame = "minecraft:end_portal_frame"
-    EndRod = "minecraft:end_rod"
-    EndStone = "minecraft:end_stone"
-    EndStoneBrickSlab = "minecraft:end_stone_brick_slab"
-    EndStoneBrickWall = "minecraft:end_stone_brick_wall"
-    EnderChest = "minecraft:ender_chest"
-    EnderDragonSpawnEgg = "minecraft:ender_dragon_spawn_egg"
-    EnderEye = "minecraft:ender_eye"
-    EnderPearl = "minecraft:ender_pearl"
-    EndermanSpawnEgg = "minecraft:enderman_spawn_egg"
-    EndermiteSpawnEgg = "minecraft:endermite_spawn_egg"
-    EvokerSpawnEgg = "minecraft:evoker_spawn_egg"
-    ExperienceBottle = "minecraft:experience_bottle"
-    ExplorerPotterySherd = "minecraft:explorer_pottery_sherd"
-    ExposedChiseledCopper = "minecraft:exposed_chiseled_copper"
-    ExposedCopper = "minecraft:exposed_copper"
-    ExposedCopperBulb = "minecraft:exposed_copper_bulb"
-    ExposedCopperDoor = "minecraft:exposed_copper_door"
-    ExposedCopperGrate = "minecraft:exposed_copper_grate"
-    ExposedCopperTrapdoor = "minecraft:exposed_copper_trapdoor"
-    ExposedCutCopper = "minecraft:exposed_cut_copper"
-    ExposedCutCopperSlab = "minecraft:exposed_cut_copper_slab"
-    ExposedCutCopperStairs = "minecraft:exposed_cut_copper_stairs"
-    EyeArmorTrimSmithingTemplate = "minecraft:eye_armor_trim_smithing_template"
-    Farmland = "minecraft:farmland"
-    Feather = "minecraft:feather"
-    FenceGate = "minecraft:fence_gate"
-    FermentedSpiderEye = "minecraft:fermented_spider_eye"
-    Fern = "minecraft:fern"
-    FieldMasonedBannerPattern = "minecraft:field_masoned_banner_pattern"
-    FilledMap = "minecraft:filled_map"
-    FireCharge = "minecraft:fire_charge"
-    FireCoral = "minecraft:fire_coral"
-    FireCoralBlock = "minecraft:fire_coral_block"
-    FireCoralFan = "minecraft:fire_coral_fan"
-    FireflyBush = "minecraft:firefly_bush"
-    FireworkRocket = "minecraft:firework_rocket"
-    FireworkStar = "minecraft:firework_star"
-    FishingRod = "minecraft:fishing_rod"
-    FletchingTable = "minecraft:fletching_table"
-    Flint = "minecraft:flint"
-    FlintAndSteel = "minecraft:flint_and_steel"
-    FlowArmorTrimSmithingTemplate = "minecraft:flow_armor_trim_smithing_template"
-    FlowBannerPattern = "minecraft:flow_banner_pattern"
-    FlowPotterySherd = "minecraft:flow_pottery_sherd"
-    FlowerBannerPattern = "minecraft:flower_banner_pattern"
-    FlowerPot = "minecraft:flower_pot"
-    FloweringAzalea = "minecraft:flowering_azalea"
-    FoxSpawnEgg = "minecraft:fox_spawn_egg"
-    Frame = "minecraft:frame"
-    FriendPotterySherd = "minecraft:friend_pottery_sherd"
-    FrogSpawn = "minecraft:frog_spawn"
-    FrogSpawnEgg = "minecraft:frog_spawn_egg"
-    FrostedIce = "minecraft:frosted_ice"
-    Furnace = "minecraft:furnace"
-    GhastSpawnEgg = "minecraft:ghast_spawn_egg"
-    GhastTear = "minecraft:ghast_tear"
-    GildedBlackstone = "minecraft:gilded_blackstone"
-    Glass = "minecraft:glass"
-    GlassBottle = "minecraft:glass_bottle"
-    GlassPane = "minecraft:glass_pane"
-    GlisteringMelonSlice = "minecraft:glistering_melon_slice"
-    GlobeBannerPattern = "minecraft:globe_banner_pattern"
-    GlowBerries = "minecraft:glow_berries"
-    GlowFrame = "minecraft:glow_frame"
-    GlowInkSac = "minecraft:glow_ink_sac"
-    GlowLichen = "minecraft:glow_lichen"
-    GlowSquidSpawnEgg = "minecraft:glow_squid_spawn_egg"
-    Glowstone = "minecraft:glowstone"
-    GlowstoneDust = "minecraft:glowstone_dust"
-    GoatHorn = "minecraft:goat_horn"
-    GoatSpawnEgg = "minecraft:goat_spawn_egg"
-    GoldBlock = "minecraft:gold_block"
-    GoldIngot = "minecraft:gold_ingot"
-    GoldNugget = "minecraft:gold_nugget"
-    GoldOre = "minecraft:gold_ore"
-    GoldenApple = "minecraft:golden_apple"
-    GoldenAxe = "minecraft:golden_axe"
-    GoldenBoots = "minecraft:golden_boots"
-    GoldenCarrot = "minecraft:golden_carrot"
-    GoldenChestplate = "minecraft:golden_chestplate"
-    GoldenHelmet = "minecraft:golden_helmet"
-    GoldenHoe = "minecraft:golden_hoe"
-    GoldenHorseArmor = "minecraft:golden_horse_armor"
-    GoldenLeggings = "minecraft:golden_leggings"
-    GoldenPickaxe = "minecraft:golden_pickaxe"
-    GoldenRail = "minecraft:golden_rail"
-    GoldenShovel = "minecraft:golden_shovel"
-    GoldenSword = "minecraft:golden_sword"
-    Granite = "minecraft:granite"
-    GraniteSlab = "minecraft:granite_slab"
-    GraniteStairs = "minecraft:granite_stairs"
-    GraniteWall = "minecraft:granite_wall"
-    GrassBlock = "minecraft:grass_block"
-    GrassPath = "minecraft:grass_path"
-    Gravel = "minecraft:gravel"
-    GrayBundle = "minecraft:gray_bundle"
-    GrayCandle = "minecraft:gray_candle"
-    GrayCarpet = "minecraft:gray_carpet"
-    GrayConcrete = "minecraft:gray_concrete"
-    GrayConcretePowder = "minecraft:gray_concrete_powder"
-    GrayDye = "minecraft:gray_dye"
-    GrayGlazedTerracotta = "minecraft:gray_glazed_terracotta"
-    GrayHarness = "minecraft:gray_harness"
-    GrayShulkerBox = "minecraft:gray_shulker_box"
-    GrayStainedGlass = "minecraft:gray_stained_glass"
-    GrayStainedGlassPane = "minecraft:gray_stained_glass_pane"
-    GrayTerracotta = "minecraft:gray_terracotta"
-    GrayWool = "minecraft:gray_wool"
-    GreenBundle = "minecraft:green_bundle"
-    GreenCandle = "minecraft:green_candle"
-    GreenCarpet = "minecraft:green_carpet"
-    GreenConcrete = "minecraft:green_concrete"
-    GreenConcretePowder = "minecraft:green_concrete_powder"
-    GreenDye = "minecraft:green_dye"
-    GreenGlazedTerracotta = "minecraft:green_glazed_terracotta"
-    GreenHarness = "minecraft:green_harness"
-    GreenShulkerBox = "minecraft:green_shulker_box"
-    GreenStainedGlass = "minecraft:green_stained_glass"
-    GreenStainedGlassPane = "minecraft:green_stained_glass_pane"
-    GreenTerracotta = "minecraft:green_terracotta"
-    GreenWool = "minecraft:green_wool"
-    Grindstone = "minecraft:grindstone"
-    GuardianSpawnEgg = "minecraft:guardian_spawn_egg"
-    Gunpowder = "minecraft:gunpowder"
-    GusterBannerPattern = "minecraft:guster_banner_pattern"
-    GusterPotterySherd = "minecraft:guster_pottery_sherd"
-    HangingRoots = "minecraft:hanging_roots"
-    HappyGhastSpawnEgg = "minecraft:happy_ghast_spawn_egg"
-    HardenedClay = "minecraft:hardened_clay"
-    HayBlock = "minecraft:hay_block"
-    HeartOfTheSea = "minecraft:heart_of_the_sea"
-    HeartPotterySherd = "minecraft:heart_pottery_sherd"
-    HeartbreakPotterySherd = "minecraft:heartbreak_pottery_sherd"
-    HeavyCore = "minecraft:heavy_core"
-    HeavyWeightedPressurePlate = "minecraft:heavy_weighted_pressure_plate"
-    HoglinSpawnEgg = "minecraft:hoglin_spawn_egg"
-    HoneyBlock = "minecraft:honey_block"
-    HoneyBottle = "minecraft:honey_bottle"
-    Honeycomb = "minecraft:honeycomb"
-    HoneycombBlock = "minecraft:honeycomb_block"
-    Hopper = "minecraft:hopper"
-    HopperMinecart = "minecraft:hopper_minecart"
-    HornCoral = "minecraft:horn_coral"
-    HornCoralBlock = "minecraft:horn_coral_block"
-    HornCoralFan = "minecraft:horn_coral_fan"
-    HorseSpawnEgg = "minecraft:horse_spawn_egg"
-    HostArmorTrimSmithingTemplate = "minecraft:host_armor_trim_smithing_template"
-    HowlPotterySherd = "minecraft:howl_pottery_sherd"
-    HuskSpawnEgg = "minecraft:husk_spawn_egg"
-    Ice = "minecraft:ice"
-    InfestedChiseledStoneBricks = "minecraft:infested_chiseled_stone_bricks"
-    InfestedCobblestone = "minecraft:infested_cobblestone"
-    InfestedCrackedStoneBricks = "minecraft:infested_cracked_stone_bricks"
-    InfestedDeepslate = "minecraft:infested_deepslate"
-    InfestedMossyStoneBricks = "minecraft:infested_mossy_stone_bricks"
-    InfestedStone = "minecraft:infested_stone"
-    InfestedStoneBricks = "minecraft:infested_stone_bricks"
-    InkSac = "minecraft:ink_sac"
-    IronAxe = "minecraft:iron_axe"
-    IronBars = "minecraft:iron_bars"
-    IronBlock = "minecraft:iron_block"
-    IronBoots = "minecraft:iron_boots"
-    IronChestplate = "minecraft:iron_chestplate"
-    IronDoor = "minecraft:iron_door"
-    IronGolemSpawnEgg = "minecraft:iron_golem_spawn_egg"
-    IronHelmet = "minecraft:iron_helmet"
-    IronHoe = "minecraft:iron_hoe"
-    IronHorseArmor = "minecraft:iron_horse_armor"
-    IronIngot = "minecraft:iron_ingot"
-    IronLeggings = "minecraft:iron_leggings"
-    IronNugget = "minecraft:iron_nugget"
-    IronOre = "minecraft:iron_ore"
-    IronPickaxe = "minecraft:iron_pickaxe"
-    IronShovel = "minecraft:iron_shovel"
-    IronSword = "minecraft:iron_sword"
-    IronTrapdoor = "minecraft:iron_trapdoor"
-    Jigsaw = "minecraft:jigsaw"
-    Jukebox = "minecraft:jukebox"
-    JungleBoat = "minecraft:jungle_boat"
-    JungleButton = "minecraft:jungle_button"
-    JungleChestBoat = "minecraft:jungle_chest_boat"
-    JungleDoor = "minecraft:jungle_door"
-    JungleFence = "minecraft:jungle_fence"
-    JungleFenceGate = "minecraft:jungle_fence_gate"
-    JungleHangingSign = "minecraft:jungle_hanging_sign"
-    JungleLeaves = "minecraft:jungle_leaves"
-    JungleLog = "minecraft:jungle_log"
-    JunglePlanks = "minecraft:jungle_planks"
-    JunglePressurePlate = "minecraft:jungle_pressure_plate"
-    JungleSapling = "minecraft:jungle_sapling"
-    JungleSign = "minecraft:jungle_sign"
-    JungleSlab = "minecraft:jungle_slab"
-    JungleStairs = "minecraft:jungle_stairs"
-    JungleTrapdoor = "minecraft:jungle_trapdoor"
-    JungleWood = "minecraft:jungle_wood"
-    Kelp = "minecraft:kelp"
-    Ladder = "minecraft:ladder"
-    Lantern = "minecraft:lantern"
-    LapisBlock = "minecraft:lapis_block"
-    LapisLazuli = "minecraft:lapis_lazuli"
-    LapisOre = "minecraft:lapis_ore"
-    LargeAmethystBud = "minecraft:large_amethyst_bud"
-    LargeFern = "minecraft:large_fern"
-    LavaBucket = "minecraft:lava_bucket"
-    Lead = "minecraft:lead"
-    LeafLitter = "minecraft:leaf_litter"
-    Leather = "minecraft:leather"
-    LeatherBoots = "minecraft:leather_boots"
-    LeatherChestplate = "minecraft:leather_chestplate"
-    LeatherHelmet = "minecraft:leather_helmet"
-    LeatherHorseArmor = "minecraft:leather_horse_armor"
-    LeatherLeggings = "minecraft:leather_leggings"
-    Lectern = "minecraft:lectern"
-    Lever = "minecraft:lever"
-    LightBlock0 = "minecraft:light_block_0"
-    LightBlock1 = "minecraft:light_block_1"
-    LightBlock10 = "minecraft:light_block_10"
-    LightBlock11 = "minecraft:light_block_11"
-    LightBlock12 = "minecraft:light_block_12"
-    LightBlock13 = "minecraft:light_block_13"
-    LightBlock14 = "minecraft:light_block_14"
-    LightBlock15 = "minecraft:light_block_15"
-    LightBlock2 = "minecraft:light_block_2"
-    LightBlock3 = "minecraft:light_block_3"
-    LightBlock4 = "minecraft:light_block_4"
-    LightBlock5 = "minecraft:light_block_5"
-    LightBlock6 = "minecraft:light_block_6"
-    LightBlock7 = "minecraft:light_block_7"
-    LightBlock8 = "minecraft:light_block_8"
-    LightBlock9 = "minecraft:light_block_9"
-    LightBlueBundle = "minecraft:light_blue_bundle"
-    LightBlueCandle = "minecraft:light_blue_candle"
-    LightBlueCarpet = "minecraft:light_blue_carpet"
-    LightBlueConcrete = "minecraft:light_blue_concrete"
-    LightBlueConcretePowder = "minecraft:light_blue_concrete_powder"
-    LightBlueDye = "minecraft:light_blue_dye"
-    LightBlueGlazedTerracotta = "minecraft:light_blue_glazed_terracotta"
-    LightBlueHarness = "minecraft:light_blue_harness"
-    LightBlueShulkerBox = "minecraft:light_blue_shulker_box"
-    LightBlueStainedGlass = "minecraft:light_blue_stained_glass"
-    LightBlueStainedGlassPane = "minecraft:light_blue_stained_glass_pane"
-    LightBlueTerracotta = "minecraft:light_blue_terracotta"
-    LightBlueWool = "minecraft:light_blue_wool"
-    LightGrayBundle = "minecraft:light_gray_bundle"
-    LightGrayCandle = "minecraft:light_gray_candle"
-    LightGrayCarpet = "minecraft:light_gray_carpet"
-    LightGrayConcrete = "minecraft:light_gray_concrete"
-    LightGrayConcretePowder = "minecraft:light_gray_concrete_powder"
-    LightGrayDye = "minecraft:light_gray_dye"
-    LightGrayHarness = "minecraft:light_gray_harness"
-    LightGrayShulkerBox = "minecraft:light_gray_shulker_box"
-    LightGrayStainedGlass = "minecraft:light_gray_stained_glass"
-    LightGrayStainedGlassPane = "minecraft:light_gray_stained_glass_pane"
-    LightGrayTerracotta = "minecraft:light_gray_terracotta"
-    LightGrayWool = "minecraft:light_gray_wool"
-    LightWeightedPressurePlate = "minecraft:light_weighted_pressure_plate"
-    LightningRod = "minecraft:lightning_rod"
-    Lilac = "minecraft:lilac"
-    LilyOfTheValley = "minecraft:lily_of_the_valley"
-    LimeBundle = "minecraft:lime_bundle"
-    LimeCandle = "minecraft:lime_candle"
-    LimeCarpet = "minecraft:lime_carpet"
-    LimeConcrete = "minecraft:lime_concrete"
-    LimeConcretePowder = "minecraft:lime_concrete_powder"
-    LimeDye = "minecraft:lime_dye"
-    LimeGlazedTerracotta = "minecraft:lime_glazed_terracotta"
-    LimeHarness = "minecraft:lime_harness"
-    LimeShulkerBox = "minecraft:lime_shulker_box"
-    LimeStainedGlass = "minecraft:lime_stained_glass"
-    LimeStainedGlassPane = "minecraft:lime_stained_glass_pane"
-    LimeTerracotta = "minecraft:lime_terracotta"
-    LimeWool = "minecraft:lime_wool"
-    LingeringPotion = "minecraft:lingering_potion"
-    LitPumpkin = "minecraft:lit_pumpkin"
-    LlamaSpawnEgg = "minecraft:llama_spawn_egg"
-    Lodestone = "minecraft:lodestone"
-    LodestoneCompass = "minecraft:lodestone_compass"
-    Loom = "minecraft:loom"
-    Mace = "minecraft:mace"
-    MagentaBundle = "minecraft:magenta_bundle"
-    MagentaCandle = "minecraft:magenta_candle"
-    MagentaCarpet = "minecraft:magenta_carpet"
-    MagentaConcrete = "minecraft:magenta_concrete"
-    MagentaConcretePowder = "minecraft:magenta_concrete_powder"
-    MagentaDye = "minecraft:magenta_dye"
-    MagentaGlazedTerracotta = "minecraft:magenta_glazed_terracotta"
-    MagentaHarness = "minecraft:magenta_harness"
-    MagentaShulkerBox = "minecraft:magenta_shulker_box"
-    MagentaStainedGlass = "minecraft:magenta_stained_glass"
-    MagentaStainedGlassPane = "minecraft:magenta_stained_glass_pane"
-    MagentaTerracotta = "minecraft:magenta_terracotta"
-    MagentaWool = "minecraft:magenta_wool"
-    Magma = "minecraft:magma"
-    MagmaCream = "minecraft:magma_cream"
-    MagmaCubeSpawnEgg = "minecraft:magma_cube_spawn_egg"
-    MangroveBoat = "minecraft:mangrove_boat"
-    MangroveButton = "minecraft:mangrove_button"
-    MangroveChestBoat = "minecraft:mangrove_chest_boat"
-    MangroveDoor = "minecraft:mangrove_door"
-    MangroveFence = "minecraft:mangrove_fence"
-    MangroveFenceGate = "minecraft:mangrove_fence_gate"
-    MangroveHangingSign = "minecraft:mangrove_hanging_sign"
-    MangroveLeaves = "minecraft:mangrove_leaves"
-    MangroveLog = "minecraft:mangrove_log"
-    MangrovePlanks = "minecraft:mangrove_planks"
-    MangrovePressurePlate = "minecraft:mangrove_pressure_plate"
-    MangrovePropagule = "minecraft:mangrove_propagule"
-    MangroveRoots = "minecraft:mangrove_roots"
-    MangroveSign = "minecraft:mangrove_sign"
-    MangroveSlab = "minecraft:mangrove_slab"
-    MangroveStairs = "minecraft:mangrove_stairs"
-    MangroveTrapdoor = "minecraft:mangrove_trapdoor"
-    MangroveWood = "minecraft:mangrove_wood"
-    MediumAmethystBud = "minecraft:medium_amethyst_bud"
-    MelonBlock = "minecraft:melon_block"
-    MelonSeeds = "minecraft:melon_seeds"
-    MelonSlice = "minecraft:melon_slice"
-    MilkBucket = "minecraft:milk_bucket"
-    Minecart = "minecraft:minecart"
-    MinerPotterySherd = "minecraft:miner_pottery_sherd"
-    MobSpawner = "minecraft:mob_spawner"
-    MojangBannerPattern = "minecraft:mojang_banner_pattern"
-    MooshroomSpawnEgg = "minecraft:mooshroom_spawn_egg"
-    MossBlock = "minecraft:moss_block"
-    MossCarpet = "minecraft:moss_carpet"
-    MossyCobblestone = "minecraft:mossy_cobblestone"
-    MossyCobblestoneSlab = "minecraft:mossy_cobblestone_slab"
-    MossyCobblestoneStairs = "minecraft:mossy_cobblestone_stairs"
-    MossyCobblestoneWall = "minecraft:mossy_cobblestone_wall"
-    MossyStoneBrickSlab = "minecraft:mossy_stone_brick_slab"
-    MossyStoneBrickStairs = "minecraft:mossy_stone_brick_stairs"
-    MossyStoneBrickWall = "minecraft:mossy_stone_brick_wall"
-    MossyStoneBricks = "minecraft:mossy_stone_bricks"
-    MournerPotterySherd = "minecraft:mourner_pottery_sherd"
-    Mud = "minecraft:mud"
-    MudBrickSlab = "minecraft:mud_brick_slab"
-    MudBrickStairs = "minecraft:mud_brick_stairs"
-    MudBrickWall = "minecraft:mud_brick_wall"
-    MudBricks = "minecraft:mud_bricks"
-    MuddyMangroveRoots = "minecraft:muddy_mangrove_roots"
-    MuleSpawnEgg = "minecraft:mule_spawn_egg"
-    MushroomStem = "minecraft:mushroom_stem"
-    MushroomStew = "minecraft:mushroom_stew"
-    MusicDisc11 = "minecraft:music_disc_11"
-    MusicDisc13 = "minecraft:music_disc_13"
-    MusicDisc5 = "minecraft:music_disc_5"
-    MusicDiscBlocks = "minecraft:music_disc_blocks"
-    MusicDiscCat = "minecraft:music_disc_cat"
-    MusicDiscChirp = "minecraft:music_disc_chirp"
-    MusicDiscCreator = "minecraft:music_disc_creator"
-    MusicDiscCreatorMusicBox = "minecraft:music_disc_creator_music_box"
-    MusicDiscFar = "minecraft:music_disc_far"
-    MusicDiscMall = "minecraft:music_disc_mall"
-    MusicDiscMellohi = "minecraft:music_disc_mellohi"
-    MusicDiscOtherside = "minecraft:music_disc_otherside"
-    MusicDiscPigstep = "minecraft:music_disc_pigstep"
-    MusicDiscPrecipice = "minecraft:music_disc_precipice"
-    MusicDiscRelic = "minecraft:music_disc_relic"
-    MusicDiscStal = "minecraft:music_disc_stal"
-    MusicDiscStrad = "minecraft:music_disc_strad"
-    MusicDiscWait = "minecraft:music_disc_wait"
-    MusicDiscWard = "minecraft:music_disc_ward"
-    Mutton = "minecraft:mutton"
-    Mycelium = "minecraft:mycelium"
-    NameTag = "minecraft:name_tag"
-    NautilusShell = "minecraft:nautilus_shell"
-    NetherBrick = "minecraft:nether_brick"
-    NetherBrickFence = "minecraft:nether_brick_fence"
-    NetherBrickSlab = "minecraft:nether_brick_slab"
-    NetherBrickStairs = "minecraft:nether_brick_stairs"
-    NetherBrickWall = "minecraft:nether_brick_wall"
-    NetherGoldOre = "minecraft:nether_gold_ore"
-    NetherSprouts = "minecraft:nether_sprouts"
-    NetherStar = "minecraft:nether_star"
-    NetherWart = "minecraft:nether_wart"
-    NetherWartBlock = "minecraft:nether_wart_block"
-    Netherbrick = "minecraft:netherbrick"
-    NetheriteAxe = "minecraft:netherite_axe"
-    NetheriteBlock = "minecraft:netherite_block"
-    NetheriteBoots = "minecraft:netherite_boots"
-    NetheriteChestplate = "minecraft:netherite_chestplate"
-    NetheriteHelmet = "minecraft:netherite_helmet"
-    NetheriteHoe = "minecraft:netherite_hoe"
-    NetheriteIngot = "minecraft:netherite_ingot"
-    NetheriteLeggings = "minecraft:netherite_leggings"
-    NetheritePickaxe = "minecraft:netherite_pickaxe"
-    NetheriteScrap = "minecraft:netherite_scrap"
-    NetheriteShovel = "minecraft:netherite_shovel"
-    NetheriteSword = "minecraft:netherite_sword"
-    NetheriteUpgradeSmithingTemplate = "minecraft:netherite_upgrade_smithing_template"
-    Netherrack = "minecraft:netherrack"
-    NormalStoneSlab = "minecraft:normal_stone_slab"
-    NormalStoneStairs = "minecraft:normal_stone_stairs"
-    Noteblock = "minecraft:noteblock"
-    OakBoat = "minecraft:oak_boat"
-    OakChestBoat = "minecraft:oak_chest_boat"
-    OakFence = "minecraft:oak_fence"
-    OakHangingSign = "minecraft:oak_hanging_sign"
-    OakLeaves = "minecraft:oak_leaves"
-    OakLog = "minecraft:oak_log"
-    OakPlanks = "minecraft:oak_planks"
-    OakSapling = "minecraft:oak_sapling"
-    OakSign = "minecraft:oak_sign"
-    OakSlab = "minecraft:oak_slab"
-    OakStairs = "minecraft:oak_stairs"
-    OakWood = "minecraft:oak_wood"
-    Observer = "minecraft:observer"
-    Obsidian = "minecraft:obsidian"
-    OcelotSpawnEgg = "minecraft:ocelot_spawn_egg"
-    OchreFroglight = "minecraft:ochre_froglight"
-    OminousBottle = "minecraft:ominous_bottle"
-    OminousTrialKey = "minecraft:ominous_trial_key"
-    OpenEyeblossom = "minecraft:open_eyeblossom"
-    OrangeBundle = "minecraft:orange_bundle"
-    OrangeCandle = "minecraft:orange_candle"
-    OrangeCarpet = "minecraft:orange_carpet"
-    OrangeConcrete = "minecraft:orange_concrete"
-    OrangeConcretePowder = "minecraft:orange_concrete_powder"
-    OrangeDye = "minecraft:orange_dye"
-    OrangeGlazedTerracotta = "minecraft:orange_glazed_terracotta"
-    OrangeHarness = "minecraft:orange_harness"
-    OrangeShulkerBox = "minecraft:orange_shulker_box"
-    OrangeStainedGlass = "minecraft:orange_stained_glass"
-    OrangeStainedGlassPane = "minecraft:orange_stained_glass_pane"
-    OrangeTerracotta = "minecraft:orange_terracotta"
-    OrangeTulip = "minecraft:orange_tulip"
-    OrangeWool = "minecraft:orange_wool"
-    OxeyeDaisy = "minecraft:oxeye_daisy"
-    OxidizedChiseledCopper = "minecraft:oxidized_chiseled_copper"
-    OxidizedCopper = "minecraft:oxidized_copper"
-    OxidizedCopperBulb = "minecraft:oxidized_copper_bulb"
-    OxidizedCopperDoor = "minecraft:oxidized_copper_door"
-    OxidizedCopperGrate = "minecraft:oxidized_copper_grate"
-    OxidizedCopperTrapdoor = "minecraft:oxidized_copper_trapdoor"
-    OxidizedCutCopper = "minecraft:oxidized_cut_copper"
-    OxidizedCutCopperSlab = "minecraft:oxidized_cut_copper_slab"
-    OxidizedCutCopperStairs = "minecraft:oxidized_cut_copper_stairs"
-    PackedIce = "minecraft:packed_ice"
-    PackedMud = "minecraft:packed_mud"
-    Painting = "minecraft:painting"
-    PaleHangingMoss = "minecraft:pale_hanging_moss"
-    PaleMossBlock = "minecraft:pale_moss_block"
-    PaleMossCarpet = "minecraft:pale_moss_carpet"
-    PaleOakBoat = "minecraft:pale_oak_boat"
-    PaleOakButton = "minecraft:pale_oak_button"
-    PaleOakChestBoat = "minecraft:pale_oak_chest_boat"
-    PaleOakDoor = "minecraft:pale_oak_door"
-    PaleOakFence = "minecraft:pale_oak_fence"
-    PaleOakFenceGate = "minecraft:pale_oak_fence_gate"
-    PaleOakHangingSign = "minecraft:pale_oak_hanging_sign"
-    PaleOakLeaves = "minecraft:pale_oak_leaves"
-    PaleOakLog = "minecraft:pale_oak_log"
-    PaleOakPlanks = "minecraft:pale_oak_planks"
-    PaleOakPressurePlate = "minecraft:pale_oak_pressure_plate"
-    PaleOakSapling = "minecraft:pale_oak_sapling"
-    PaleOakSign = "minecraft:pale_oak_sign"
-    PaleOakSlab = "minecraft:pale_oak_slab"
-    PaleOakStairs = "minecraft:pale_oak_stairs"
-    PaleOakTrapdoor = "minecraft:pale_oak_trapdoor"
-    PaleOakWood = "minecraft:pale_oak_wood"
-    PandaSpawnEgg = "minecraft:panda_spawn_egg"
-    Paper = "minecraft:paper"
-    ParrotSpawnEgg = "minecraft:parrot_spawn_egg"
-    PearlescentFroglight = "minecraft:pearlescent_froglight"
-    Peony = "minecraft:peony"
-    PetrifiedOakSlab = "minecraft:petrified_oak_slab"
-    PhantomMembrane = "minecraft:phantom_membrane"
-    PhantomSpawnEgg = "minecraft:phantom_spawn_egg"
-    PigSpawnEgg = "minecraft:pig_spawn_egg"
-    PiglinBannerPattern = "minecraft:piglin_banner_pattern"
-    PiglinBruteSpawnEgg = "minecraft:piglin_brute_spawn_egg"
-    PiglinHead = "minecraft:piglin_head"
-    PiglinSpawnEgg = "minecraft:piglin_spawn_egg"
-    PillagerSpawnEgg = "minecraft:pillager_spawn_egg"
-    PinkBundle = "minecraft:pink_bundle"
-    PinkCandle = "minecraft:pink_candle"
-    PinkCarpet = "minecraft:pink_carpet"
-    PinkConcrete = "minecraft:pink_concrete"
-    PinkConcretePowder = "minecraft:pink_concrete_powder"
-    PinkDye = "minecraft:pink_dye"
-    PinkGlazedTerracotta = "minecraft:pink_glazed_terracotta"
-    PinkHarness = "minecraft:pink_harness"
-    PinkPetals = "minecraft:pink_petals"
-    PinkShulkerBox = "minecraft:pink_shulker_box"
-    PinkStainedGlass = "minecraft:pink_stained_glass"
-    PinkStainedGlassPane = "minecraft:pink_stained_glass_pane"
-    PinkTerracotta = "minecraft:pink_terracotta"
-    PinkTulip = "minecraft:pink_tulip"
-    PinkWool = "minecraft:pink_wool"
-    Piston = "minecraft:piston"
-    PitcherPlant = "minecraft:pitcher_plant"
-    PitcherPod = "minecraft:pitcher_pod"
-    PlayerHead = "minecraft:player_head"
-    PlentyPotterySherd = "minecraft:plenty_pottery_sherd"
-    Podzol = "minecraft:podzol"
-    PointedDripstone = "minecraft:pointed_dripstone"
-    PoisonousPotato = "minecraft:poisonous_potato"
-    PolarBearSpawnEgg = "minecraft:polar_bear_spawn_egg"
-    PolishedAndesite = "minecraft:polished_andesite"
-    PolishedAndesiteSlab = "minecraft:polished_andesite_slab"
-    PolishedAndesiteStairs = "minecraft:polished_andesite_stairs"
-    PolishedBasalt = "minecraft:polished_basalt"
-    PolishedBlackstone = "minecraft:polished_blackstone"
-    PolishedBlackstoneBrickSlab = "minecraft:polished_blackstone_brick_slab"
-    PolishedBlackstoneBrickStairs = "minecraft:polished_blackstone_brick_stairs"
-    PolishedBlackstoneBrickWall = "minecraft:polished_blackstone_brick_wall"
-    PolishedBlackstoneBricks = "minecraft:polished_blackstone_bricks"
-    PolishedBlackstoneButton = "minecraft:polished_blackstone_button"
-    PolishedBlackstonePressurePlate = "minecraft:polished_blackstone_pressure_plate"
-    PolishedBlackstoneSlab = "minecraft:polished_blackstone_slab"
-    PolishedBlackstoneStairs = "minecraft:polished_blackstone_stairs"
-    PolishedBlackstoneWall = "minecraft:polished_blackstone_wall"
-    PolishedDeepslate = "minecraft:polished_deepslate"
-    PolishedDeepslateSlab = "minecraft:polished_deepslate_slab"
-    PolishedDeepslateStairs = "minecraft:polished_deepslate_stairs"
-    PolishedDeepslateWall = "minecraft:polished_deepslate_wall"
-    PolishedDiorite = "minecraft:polished_diorite"
-    PolishedDioriteSlab = "minecraft:polished_diorite_slab"
-    PolishedDioriteStairs = "minecraft:polished_diorite_stairs"
-    PolishedGranite = "minecraft:polished_granite"
-    PolishedGraniteSlab = "minecraft:polished_granite_slab"
-    PolishedGraniteStairs = "minecraft:polished_granite_stairs"
-    PolishedTuff = "minecraft:polished_tuff"
-    PolishedTuffSlab = "minecraft:polished_tuff_slab"
-    PolishedTuffStairs = "minecraft:polished_tuff_stairs"
-    PolishedTuffWall = "minecraft:polished_tuff_wall"
-    PoppedChorusFruit = "minecraft:popped_chorus_fruit"
-    Poppy = "minecraft:poppy"
-    Porkchop = "minecraft:porkchop"
-    Potato = "minecraft:potato"
-    Potion = "minecraft:potion"
-    PowderSnowBucket = "minecraft:powder_snow_bucket"
-    Prismarine = "minecraft:prismarine"
-    PrismarineBrickSlab = "minecraft:prismarine_brick_slab"
-    PrismarineBricks = "minecraft:prismarine_bricks"
-    PrismarineBricksStairs = "minecraft:prismarine_bricks_stairs"
-    PrismarineCrystals = "minecraft:prismarine_crystals"
-    PrismarineShard = "minecraft:prismarine_shard"
-    PrismarineSlab = "minecraft:prismarine_slab"
-    PrismarineStairs = "minecraft:prismarine_stairs"
-    PrismarineWall = "minecraft:prismarine_wall"
-    PrizePotterySherd = "minecraft:prize_pottery_sherd"
-    Pufferfish = "minecraft:pufferfish"
-    PufferfishBucket = "minecraft:pufferfish_bucket"
-    PufferfishSpawnEgg = "minecraft:pufferfish_spawn_egg"
-    Pumpkin = "minecraft:pumpkin"
-    PumpkinPie = "minecraft:pumpkin_pie"
-    PumpkinSeeds = "minecraft:pumpkin_seeds"
-    PurpleBundle = "minecraft:purple_bundle"
-    PurpleCandle = "minecraft:purple_candle"
-    PurpleCarpet = "minecraft:purple_carpet"
-    PurpleConcrete = "minecraft:purple_concrete"
-    PurpleConcretePowder = "minecraft:purple_concrete_powder"
-    PurpleDye = "minecraft:purple_dye"
-    PurpleGlazedTerracotta = "minecraft:purple_glazed_terracotta"
-    PurpleHarness = "minecraft:purple_harness"
-    PurpleShulkerBox = "minecraft:purple_shulker_box"
-    PurpleStainedGlass = "minecraft:purple_stained_glass"
-    PurpleStainedGlassPane = "minecraft:purple_stained_glass_pane"
-    PurpleTerracotta = "minecraft:purple_terracotta"
-    PurpleWool = "minecraft:purple_wool"
-    PurpurBlock = "minecraft:purpur_block"
-    PurpurPillar = "minecraft:purpur_pillar"
-    PurpurSlab = "minecraft:purpur_slab"
-    PurpurStairs = "minecraft:purpur_stairs"
-    Quartz = "minecraft:quartz"
-    QuartzBlock = "minecraft:quartz_block"
-    QuartzBricks = "minecraft:quartz_bricks"
-    QuartzOre = "minecraft:quartz_ore"
-    QuartzPillar = "minecraft:quartz_pillar"
-    QuartzSlab = "minecraft:quartz_slab"
-    QuartzStairs = "minecraft:quartz_stairs"
-    Rabbit = "minecraft:rabbit"
-    RabbitFoot = "minecraft:rabbit_foot"
-    RabbitHide = "minecraft:rabbit_hide"
-    RabbitSpawnEgg = "minecraft:rabbit_spawn_egg"
-    RabbitStew = "minecraft:rabbit_stew"
-    Rail = "minecraft:rail"
-    RaiserArmorTrimSmithingTemplate = "minecraft:raiser_armor_trim_smithing_template"
-    RavagerSpawnEgg = "minecraft:ravager_spawn_egg"
-    RawCopper = "minecraft:raw_copper"
-    RawCopperBlock = "minecraft:raw_copper_block"
-    RawGold = "minecraft:raw_gold"
-    RawGoldBlock = "minecraft:raw_gold_block"
-    RawIron = "minecraft:raw_iron"
-    RawIronBlock = "minecraft:raw_iron_block"
-    RecoveryCompass = "minecraft:recovery_compass"
-    RedBundle = "minecraft:red_bundle"
-    RedCandle = "minecraft:red_candle"
-    RedCarpet = "minecraft:red_carpet"
-    RedConcrete = "minecraft:red_concrete"
-    RedConcretePowder = "minecraft:red_concrete_powder"
-    RedDye = "minecraft:red_dye"
-    RedGlazedTerracotta = "minecraft:red_glazed_terracotta"
-    RedHarness = "minecraft:red_harness"
-    RedMushroom = "minecraft:red_mushroom"
-    RedMushroomBlock = "minecraft:red_mushroom_block"
-    RedNetherBrick = "minecraft:red_nether_brick"
-    RedNetherBrickSlab = "minecraft:red_nether_brick_slab"
-    RedNetherBrickStairs = "minecraft:red_nether_brick_stairs"
-    RedNetherBrickWall = "minecraft:red_nether_brick_wall"
-    RedSand = "minecraft:red_sand"
-    RedSandstone = "minecraft:red_sandstone"
-    RedSandstoneSlab = "minecraft:red_sandstone_slab"
-    RedSandstoneStairs = "minecraft:red_sandstone_stairs"
-    RedSandstoneWall = "minecraft:red_sandstone_wall"
-    RedShulkerBox = "minecraft:red_shulker_box"
-    RedStainedGlass = "minecraft:red_stained_glass"
-    RedStainedGlassPane = "minecraft:red_stained_glass_pane"
-    RedTerracotta = "minecraft:red_terracotta"
-    RedTulip = "minecraft:red_tulip"
-    RedWool = "minecraft:red_wool"
-    Redstone = "minecraft:redstone"
-    RedstoneBlock = "minecraft:redstone_block"
-    RedstoneLamp = "minecraft:redstone_lamp"
-    RedstoneOre = "minecraft:redstone_ore"
-    RedstoneTorch = "minecraft:redstone_torch"
-    ReinforcedDeepslate = "minecraft:reinforced_deepslate"
-    Repeater = "minecraft:repeater"
-    RepeatingCommandBlock = "minecraft:repeating_command_block"
-    ResinBlock = "minecraft:resin_block"
-    ResinBrick = "minecraft:resin_brick"
-    ResinBrickSlab = "minecraft:resin_brick_slab"
-    ResinBrickStairs = "minecraft:resin_brick_stairs"
-    ResinBrickWall = "minecraft:resin_brick_wall"
-    ResinBricks = "minecraft:resin_bricks"
-    ResinClump = "minecraft:resin_clump"
-    RespawnAnchor = "minecraft:respawn_anchor"
-    RibArmorTrimSmithingTemplate = "minecraft:rib_armor_trim_smithing_template"
-    RoseBush = "minecraft:rose_bush"
-    RottenFlesh = "minecraft:rotten_flesh"
-    Saddle = "minecraft:saddle"
-    Salmon = "minecraft:salmon"
-    SalmonBucket = "minecraft:salmon_bucket"
-    SalmonSpawnEgg = "minecraft:salmon_spawn_egg"
-    Sand = "minecraft:sand"
-    Sandstone = "minecraft:sandstone"
-    SandstoneSlab = "minecraft:sandstone_slab"
-    SandstoneStairs = "minecraft:sandstone_stairs"
-    SandstoneWall = "minecraft:sandstone_wall"
-    Scaffolding = "minecraft:scaffolding"
-    ScrapePotterySherd = "minecraft:scrape_pottery_sherd"
-    Sculk = "minecraft:sculk"
-    SculkCatalyst = "minecraft:sculk_catalyst"
-    SculkSensor = "minecraft:sculk_sensor"
-    SculkShrieker = "minecraft:sculk_shrieker"
-    SculkVein = "minecraft:sculk_vein"
-    SeaLantern = "minecraft:sea_lantern"
-    SeaPickle = "minecraft:sea_pickle"
-    Seagrass = "minecraft:seagrass"
-    SentryArmorTrimSmithingTemplate = "minecraft:sentry_armor_trim_smithing_template"
-    ShaperArmorTrimSmithingTemplate = "minecraft:shaper_armor_trim_smithing_template"
-    SheafPotterySherd = "minecraft:sheaf_pottery_sherd"
-    Shears = "minecraft:shears"
-    SheepSpawnEgg = "minecraft:sheep_spawn_egg"
-    ShelterPotterySherd = "minecraft:shelter_pottery_sherd"
-    Shield = "minecraft:shield"
-    ShortDryGrass = "minecraft:short_dry_grass"
-    ShortGrass = "minecraft:short_grass"
-    Shroomlight = "minecraft:shroomlight"
-    ShulkerShell = "minecraft:shulker_shell"
-    ShulkerSpawnEgg = "minecraft:shulker_spawn_egg"
-    SilenceArmorTrimSmithingTemplate = "minecraft:silence_armor_trim_smithing_template"
-    SilverGlazedTerracotta = "minecraft:silver_glazed_terracotta"
-    SilverfishSpawnEgg = "minecraft:silverfish_spawn_egg"
-    SkeletonHorseSpawnEgg = "minecraft:skeleton_horse_spawn_egg"
-    SkeletonSkull = "minecraft:skeleton_skull"
-    SkeletonSpawnEgg = "minecraft:skeleton_spawn_egg"
-    SkullBannerPattern = "minecraft:skull_banner_pattern"
-    SkullPotterySherd = "minecraft:skull_pottery_sherd"
-    Slime = "minecraft:slime"
-    SlimeBall = "minecraft:slime_ball"
-    SlimeSpawnEgg = "minecraft:slime_spawn_egg"
-    SmallAmethystBud = "minecraft:small_amethyst_bud"
-    SmallDripleafBlock = "minecraft:small_dripleaf_block"
-    SmithingTable = "minecraft:smithing_table"
-    Smoker = "minecraft:smoker"
-    SmoothBasalt = "minecraft:smooth_basalt"
-    SmoothQuartz = "minecraft:smooth_quartz"
-    SmoothQuartzSlab = "minecraft:smooth_quartz_slab"
-    SmoothQuartzStairs = "minecraft:smooth_quartz_stairs"
-    SmoothRedSandstone = "minecraft:smooth_red_sandstone"
-    SmoothRedSandstoneSlab = "minecraft:smooth_red_sandstone_slab"
-    SmoothRedSandstoneStairs = "minecraft:smooth_red_sandstone_stairs"
-    SmoothSandstone = "minecraft:smooth_sandstone"
-    SmoothSandstoneSlab = "minecraft:smooth_sandstone_slab"
-    SmoothSandstoneStairs = "minecraft:smooth_sandstone_stairs"
-    SmoothStone = "minecraft:smooth_stone"
-    SmoothStoneSlab = "minecraft:smooth_stone_slab"
-    SnifferEgg = "minecraft:sniffer_egg"
-    SnifferSpawnEgg = "minecraft:sniffer_spawn_egg"
-    SnortPotterySherd = "minecraft:snort_pottery_sherd"
-    SnoutArmorTrimSmithingTemplate = "minecraft:snout_armor_trim_smithing_template"
-    Snow = "minecraft:snow"
-    SnowGolemSpawnEgg = "minecraft:snow_golem_spawn_egg"
-    SnowLayer = "minecraft:snow_layer"
-    Snowball = "minecraft:snowball"
-    SoulCampfire = "minecraft:soul_campfire"
-    SoulLantern = "minecraft:soul_lantern"
-    SoulSand = "minecraft:soul_sand"
-    SoulSoil = "minecraft:soul_soil"
-    SoulTorch = "minecraft:soul_torch"
-    SpiderEye = "minecraft:spider_eye"
-    SpiderSpawnEgg = "minecraft:spider_spawn_egg"
-    SpireArmorTrimSmithingTemplate = "minecraft:spire_armor_trim_smithing_template"
-    SplashPotion = "minecraft:splash_potion"
-    Sponge = "minecraft:sponge"
-    SporeBlossom = "minecraft:spore_blossom"
-    SpruceBoat = "minecraft:spruce_boat"
-    SpruceButton = "minecraft:spruce_button"
-    SpruceChestBoat = "minecraft:spruce_chest_boat"
-    SpruceDoor = "minecraft:spruce_door"
-    SpruceFence = "minecraft:spruce_fence"
-    SpruceFenceGate = "minecraft:spruce_fence_gate"
-    SpruceHangingSign = "minecraft:spruce_hanging_sign"
-    SpruceLeaves = "minecraft:spruce_leaves"
-    SpruceLog = "minecraft:spruce_log"
-    SprucePlanks = "minecraft:spruce_planks"
-    SprucePressurePlate = "minecraft:spruce_pressure_plate"
-    SpruceSapling = "minecraft:spruce_sapling"
-    SpruceSign = "minecraft:spruce_sign"
-    SpruceSlab = "minecraft:spruce_slab"
-    SpruceStairs = "minecraft:spruce_stairs"
-    SpruceTrapdoor = "minecraft:spruce_trapdoor"
-    SpruceWood = "minecraft:spruce_wood"
-    Spyglass = "minecraft:spyglass"
-    SquidSpawnEgg = "minecraft:squid_spawn_egg"
-    Stick = "minecraft:stick"
-    StickyPiston = "minecraft:sticky_piston"
-    Stone = "minecraft:stone"
-    StoneAxe = "minecraft:stone_axe"
-    StoneBrickSlab = "minecraft:stone_brick_slab"
-    StoneBrickStairs = "minecraft:stone_brick_stairs"
-    StoneBrickWall = "minecraft:stone_brick_wall"
-    StoneBricks = "minecraft:stone_bricks"
-    StoneButton = "minecraft:stone_button"
-    StoneHoe = "minecraft:stone_hoe"
-    StonePickaxe = "minecraft:stone_pickaxe"
-    StonePressurePlate = "minecraft:stone_pressure_plate"
-    StoneShovel = "minecraft:stone_shovel"
-    StoneStairs = "minecraft:stone_stairs"
-    StoneSword = "minecraft:stone_sword"
-    StonecutterBlock = "minecraft:stonecutter_block"
-    StraySpawnEgg = "minecraft:stray_spawn_egg"
-    StriderSpawnEgg = "minecraft:strider_spawn_egg"
-    String = "minecraft:string"
-    StrippedAcaciaLog = "minecraft:stripped_acacia_log"
-    StrippedAcaciaWood = "minecraft:stripped_acacia_wood"
-    StrippedBambooBlock = "minecraft:stripped_bamboo_block"
-    StrippedBirchLog = "minecraft:stripped_birch_log"
-    StrippedBirchWood = "minecraft:stripped_birch_wood"
-    StrippedCherryLog = "minecraft:stripped_cherry_log"
-    StrippedCherryWood = "minecraft:stripped_cherry_wood"
-    StrippedCrimsonHyphae = "minecraft:stripped_crimson_hyphae"
-    StrippedCrimsonStem = "minecraft:stripped_crimson_stem"
-    StrippedDarkOakLog = "minecraft:stripped_dark_oak_log"
-    StrippedDarkOakWood = "minecraft:stripped_dark_oak_wood"
-    StrippedJungleLog = "minecraft:stripped_jungle_log"
-    StrippedJungleWood = "minecraft:stripped_jungle_wood"
-    StrippedMangroveLog = "minecraft:stripped_mangrove_log"
-    StrippedMangroveWood = "minecraft:stripped_mangrove_wood"
-    StrippedOakLog = "minecraft:stripped_oak_log"
-    StrippedOakWood = "minecraft:stripped_oak_wood"
-    StrippedPaleOakLog = "minecraft:stripped_pale_oak_log"
-    StrippedPaleOakWood = "minecraft:stripped_pale_oak_wood"
-    StrippedSpruceLog = "minecraft:stripped_spruce_log"
-    StrippedSpruceWood = "minecraft:stripped_spruce_wood"
-    StrippedWarpedHyphae = "minecraft:stripped_warped_hyphae"
-    StrippedWarpedStem = "minecraft:stripped_warped_stem"
-    StructureBlock = "minecraft:structure_block"
-    StructureVoid = "minecraft:structure_void"
-    Sugar = "minecraft:sugar"
-    SugarCane = "minecraft:sugar_cane"
-    Sunflower = "minecraft:sunflower"
-    SuspiciousGravel = "minecraft:suspicious_gravel"
-    SuspiciousSand = "minecraft:suspicious_sand"
-    SuspiciousStew = "minecraft:suspicious_stew"
-    SweetBerries = "minecraft:sweet_berries"
-    TadpoleBucket = "minecraft:tadpole_bucket"
-    TadpoleSpawnEgg = "minecraft:tadpole_spawn_egg"
-    TallDryGrass = "minecraft:tall_dry_grass"
-    TallGrass = "minecraft:tall_grass"
-    Target = "minecraft:target"
-    TideArmorTrimSmithingTemplate = "minecraft:tide_armor_trim_smithing_template"
-    TintedGlass = "minecraft:tinted_glass"
-    Tnt = "minecraft:tnt"
-    TntMinecart = "minecraft:tnt_minecart"
-    Torch = "minecraft:torch"
-    Torchflower = "minecraft:torchflower"
-    TorchflowerSeeds = "minecraft:torchflower_seeds"
-    TotemOfUndying = "minecraft:totem_of_undying"
-    TraderLlamaSpawnEgg = "minecraft:trader_llama_spawn_egg"
-    Trapdoor = "minecraft:trapdoor"
-    TrappedChest = "minecraft:trapped_chest"
-    TrialKey = "minecraft:trial_key"
-    TrialSpawner = "minecraft:trial_spawner"
-    Trident = "minecraft:trident"
-    TripwireHook = "minecraft:tripwire_hook"
-    TropicalFish = "minecraft:tropical_fish"
-    TropicalFishBucket = "minecraft:tropical_fish_bucket"
-    TropicalFishSpawnEgg = "minecraft:tropical_fish_spawn_egg"
-    TubeCoral = "minecraft:tube_coral"
-    TubeCoralBlock = "minecraft:tube_coral_block"
-    TubeCoralFan = "minecraft:tube_coral_fan"
-    Tuff = "minecraft:tuff"
-    TuffBrickSlab = "minecraft:tuff_brick_slab"
-    TuffBrickStairs = "minecraft:tuff_brick_stairs"
-    TuffBrickWall = "minecraft:tuff_brick_wall"
-    TuffBricks = "minecraft:tuff_bricks"
-    TuffSlab = "minecraft:tuff_slab"
-    TuffStairs = "minecraft:tuff_stairs"
-    TuffWall = "minecraft:tuff_wall"
-    TurtleEgg = "minecraft:turtle_egg"
-    TurtleHelmet = "minecraft:turtle_helmet"
-    TurtleScute = "minecraft:turtle_scute"
-    TurtleSpawnEgg = "minecraft:turtle_spawn_egg"
-    TwistingVines = "minecraft:twisting_vines"
-    UndyedShulkerBox = "minecraft:undyed_shulker_box"
-    Vault = "minecraft:vault"
-    VerdantFroglight = "minecraft:verdant_froglight"
-    VexArmorTrimSmithingTemplate = "minecraft:vex_armor_trim_smithing_template"
-    VexSpawnEgg = "minecraft:vex_spawn_egg"
-    VillagerSpawnEgg = "minecraft:villager_spawn_egg"
-    VindicatorSpawnEgg = "minecraft:vindicator_spawn_egg"
-    Vine = "minecraft:vine"
-    WanderingTraderSpawnEgg = "minecraft:wandering_trader_spawn_egg"
-    WardArmorTrimSmithingTemplate = "minecraft:ward_armor_trim_smithing_template"
-    WardenSpawnEgg = "minecraft:warden_spawn_egg"
-    WarpedButton = "minecraft:warped_button"
-    WarpedDoor = "minecraft:warped_door"
-    WarpedFence = "minecraft:warped_fence"
-    WarpedFenceGate = "minecraft:warped_fence_gate"
-    WarpedFungus = "minecraft:warped_fungus"
-    WarpedFungusOnAStick = "minecraft:warped_fungus_on_a_stick"
-    WarpedHangingSign = "minecraft:warped_hanging_sign"
-    WarpedHyphae = "minecraft:warped_hyphae"
-    WarpedNylium = "minecraft:warped_nylium"
-    WarpedPlanks = "minecraft:warped_planks"
-    WarpedPressurePlate = "minecraft:warped_pressure_plate"
-    WarpedRoots = "minecraft:warped_roots"
-    WarpedSign = "minecraft:warped_sign"
-    WarpedSlab = "minecraft:warped_slab"
-    WarpedStairs = "minecraft:warped_stairs"
-    WarpedStem = "minecraft:warped_stem"
-    WarpedTrapdoor = "minecraft:warped_trapdoor"
-    WarpedWartBlock = "minecraft:warped_wart_block"
-    WaterBucket = "minecraft:water_bucket"
-    Waterlily = "minecraft:waterlily"
-    WaxedChiseledCopper = "minecraft:waxed_chiseled_copper"
-    WaxedCopper = "minecraft:waxed_copper"
-    WaxedCopperBulb = "minecraft:waxed_copper_bulb"
-    WaxedCopperDoor = "minecraft:waxed_copper_door"
-    WaxedCopperGrate = "minecraft:waxed_copper_grate"
-    WaxedCopperTrapdoor = "minecraft:waxed_copper_trapdoor"
-    WaxedCutCopper = "minecraft:waxed_cut_copper"
-    WaxedCutCopperSlab = "minecraft:waxed_cut_copper_slab"
-    WaxedCutCopperStairs = "minecraft:waxed_cut_copper_stairs"
-    WaxedExposedChiseledCopper = "minecraft:waxed_exposed_chiseled_copper"
-    WaxedExposedCopper = "minecraft:waxed_exposed_copper"
-    WaxedExposedCopperBulb = "minecraft:waxed_exposed_copper_bulb"
-    WaxedExposedCopperDoor = "minecraft:waxed_exposed_copper_door"
-    WaxedExposedCopperGrate = "minecraft:waxed_exposed_copper_grate"
-    WaxedExposedCopperTrapdoor = "minecraft:waxed_exposed_copper_trapdoor"
-    WaxedExposedCutCopper = "minecraft:waxed_exposed_cut_copper"
-    WaxedExposedCutCopperSlab = "minecraft:waxed_exposed_cut_copper_slab"
-    WaxedExposedCutCopperStairs = "minecraft:waxed_exposed_cut_copper_stairs"
-    WaxedOxidizedChiseledCopper = "minecraft:waxed_oxidized_chiseled_copper"
-    WaxedOxidizedCopper = "minecraft:waxed_oxidized_copper"
-    WaxedOxidizedCopperBulb = "minecraft:waxed_oxidized_copper_bulb"
-    WaxedOxidizedCopperDoor = "minecraft:waxed_oxidized_copper_door"
-    WaxedOxidizedCopperGrate = "minecraft:waxed_oxidized_copper_grate"
-    WaxedOxidizedCopperTrapdoor = "minecraft:waxed_oxidized_copper_trapdoor"
-    WaxedOxidizedCutCopper = "minecraft:waxed_oxidized_cut_copper"
-    WaxedOxidizedCutCopperSlab = "minecraft:waxed_oxidized_cut_copper_slab"
-    WaxedOxidizedCutCopperStairs = "minecraft:waxed_oxidized_cut_copper_stairs"
-    WaxedWeatheredChiseledCopper = "minecraft:waxed_weathered_chiseled_copper"
-    WaxedWeatheredCopper = "minecraft:waxed_weathered_copper"
-    WaxedWeatheredCopperBulb = "minecraft:waxed_weathered_copper_bulb"
-    WaxedWeatheredCopperDoor = "minecraft:waxed_weathered_copper_door"
-    WaxedWeatheredCopperGrate = "minecraft:waxed_weathered_copper_grate"
-    WaxedWeatheredCopperTrapdoor = "minecraft:waxed_weathered_copper_trapdoor"
-    WaxedWeatheredCutCopper = "minecraft:waxed_weathered_cut_copper"
-    WaxedWeatheredCutCopperSlab = "minecraft:waxed_weathered_cut_copper_slab"
-    WaxedWeatheredCutCopperStairs = "minecraft:waxed_weathered_cut_copper_stairs"
-    WayfinderArmorTrimSmithingTemplate = "minecraft:wayfinder_armor_trim_smithing_template"
-    WeatheredChiseledCopper = "minecraft:weathered_chiseled_copper"
-    WeatheredCopper = "minecraft:weathered_copper"
-    WeatheredCopperBulb = "minecraft:weathered_copper_bulb"
-    WeatheredCopperDoor = "minecraft:weathered_copper_door"
-    WeatheredCopperGrate = "minecraft:weathered_copper_grate"
-    WeatheredCopperTrapdoor = "minecraft:weathered_copper_trapdoor"
-    WeatheredCutCopper = "minecraft:weathered_cut_copper"
-    WeatheredCutCopperSlab = "minecraft:weathered_cut_copper_slab"
-    WeatheredCutCopperStairs = "minecraft:weathered_cut_copper_stairs"
-    Web = "minecraft:web"
-    WeepingVines = "minecraft:weeping_vines"
-    WetSponge = "minecraft:wet_sponge"
-    Wheat = "minecraft:wheat"
-    WheatSeeds = "minecraft:wheat_seeds"
-    WhiteBundle = "minecraft:white_bundle"
-    WhiteCandle = "minecraft:white_candle"
-    WhiteCarpet = "minecraft:white_carpet"
-    WhiteConcrete = "minecraft:white_concrete"
-    WhiteConcretePowder = "minecraft:white_concrete_powder"
-    WhiteDye = "minecraft:white_dye"
-    WhiteGlazedTerracotta = "minecraft:white_glazed_terracotta"
-    WhiteHarness = "minecraft:white_harness"
-    WhiteShulkerBox = "minecraft:white_shulker_box"
-    WhiteStainedGlass = "minecraft:white_stained_glass"
-    WhiteStainedGlassPane = "minecraft:white_stained_glass_pane"
-    WhiteTerracotta = "minecraft:white_terracotta"
-    WhiteTulip = "minecraft:white_tulip"
-    WhiteWool = "minecraft:white_wool"
-    WildArmorTrimSmithingTemplate = "minecraft:wild_armor_trim_smithing_template"
-    Wildflowers = "minecraft:wildflowers"
-    WindCharge = "minecraft:wind_charge"
-    WitchSpawnEgg = "minecraft:witch_spawn_egg"
-    WitherRose = "minecraft:wither_rose"
-    WitherSkeletonSkull = "minecraft:wither_skeleton_skull"
-    WitherSkeletonSpawnEgg = "minecraft:wither_skeleton_spawn_egg"
-    WitherSpawnEgg = "minecraft:wither_spawn_egg"
-    WolfArmor = "minecraft:wolf_armor"
-    WolfSpawnEgg = "minecraft:wolf_spawn_egg"
-    WoodenAxe = "minecraft:wooden_axe"
-    WoodenButton = "minecraft:wooden_button"
-    WoodenDoor = "minecraft:wooden_door"
-    WoodenHoe = "minecraft:wooden_hoe"
-    WoodenPickaxe = "minecraft:wooden_pickaxe"
-    WoodenPressurePlate = "minecraft:wooden_pressure_plate"
-    WoodenShovel = "minecraft:wooden_shovel"
-    WoodenSword = "minecraft:wooden_sword"
-    WritableBook = "minecraft:writable_book"
-    YellowBundle = "minecraft:yellow_bundle"
-    YellowCandle = "minecraft:yellow_candle"
-    YellowCarpet = "minecraft:yellow_carpet"
-    YellowConcrete = "minecraft:yellow_concrete"
-    YellowConcretePowder = "minecraft:yellow_concrete_powder"
-    YellowDye = "minecraft:yellow_dye"
-    YellowGlazedTerracotta = "minecraft:yellow_glazed_terracotta"
-    YellowHarness = "minecraft:yellow_harness"
-    YellowShulkerBox = "minecraft:yellow_shulker_box"
-    YellowStainedGlass = "minecraft:yellow_stained_glass"
-    YellowStainedGlassPane = "minecraft:yellow_stained_glass_pane"
-    YellowTerracotta = "minecraft:yellow_terracotta"
-    YellowWool = "minecraft:yellow_wool"
-    ZoglinSpawnEgg = "minecraft:zoglin_spawn_egg"
-    ZombieHead = "minecraft:zombie_head"
-    ZombieHorseSpawnEgg = "minecraft:zombie_horse_spawn_egg"
-    ZombiePigmanSpawnEgg = "minecraft:zombie_pigman_spawn_egg"
-    ZombieSpawnEgg = "minecraft:zombie_spawn_egg"
-    ZombieVillagerSpawnEgg = "minecraft:zombie_villager_spawn_egg"
+class MinecraftItemTypes:
+    def AcaciaBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_boat")
+    def AcaciaButton() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_button")
+    def AcaciaChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_chest_boat")
+    def AcaciaDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_door")
+    def AcaciaFence() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_fence")
+    def AcaciaFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_fence_gate")
+    def AcaciaHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_hanging_sign")
+    def AcaciaLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_leaves")
+    def AcaciaLog() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_log")
+    def AcaciaPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_planks")
+    def AcaciaPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_pressure_plate")
+    def AcaciaSapling() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_sapling")
+    def AcaciaSign() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_sign")
+    def AcaciaSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_slab")
+    def AcaciaStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_stairs")
+    def AcaciaTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_trapdoor")
+    def AcaciaWood() -> MinecraftItemDescriptor: return item_factory("minecraft:acacia_wood")
+    def ActivatorRail() -> MinecraftItemDescriptor: return item_factory("minecraft:activator_rail")
+    def AllaySpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:allay_spawn_egg")
+    def Allium() -> MinecraftItemDescriptor: return item_factory("minecraft:allium")
+    def Allow() -> MinecraftItemDescriptor: return item_factory("minecraft:allow")
+    def AmethystBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:amethyst_block")
+    def AmethystCluster() -> MinecraftItemDescriptor: return item_factory("minecraft:amethyst_cluster")
+    def AmethystShard() -> MinecraftItemDescriptor: return item_factory("minecraft:amethyst_shard")
+    def AncientDebris() -> MinecraftItemDescriptor: return item_factory("minecraft:ancient_debris")
+    def Andesite() -> MinecraftItemDescriptor: return item_factory("minecraft:andesite")
+    def AndesiteSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:andesite_slab")
+    def AndesiteStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:andesite_stairs")
+    def AndesiteWall() -> MinecraftItemDescriptor: return item_factory("minecraft:andesite_wall")
+    def AnglerPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:angler_pottery_sherd")
+    def Anvil() -> MinecraftItemDescriptor: return item_factory("minecraft:anvil")
+    def Apple() -> MinecraftItemDescriptor: return item_factory("minecraft:apple")
+    def ArcherPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:archer_pottery_sherd")
+    def ArmadilloScute() -> MinecraftItemDescriptor: return item_factory("minecraft:armadillo_scute")
+    def ArmadilloSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:armadillo_spawn_egg")
+    def ArmorStand() -> MinecraftItemDescriptor: return item_factory("minecraft:armor_stand")
+    def ArmsUpPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:arms_up_pottery_sherd")
+    def Arrow() -> MinecraftItemDescriptor: return item_factory("minecraft:arrow")
+    def AxolotlBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:axolotl_bucket")
+    def AxolotlSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:axolotl_spawn_egg")
+    def Azalea() -> MinecraftItemDescriptor: return item_factory("minecraft:azalea")
+    def AzaleaLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:azalea_leaves")
+    def AzaleaLeavesFlowered() -> MinecraftItemDescriptor: return item_factory("minecraft:azalea_leaves_flowered")
+    def AzureBluet() -> MinecraftItemDescriptor: return item_factory("minecraft:azure_bluet")
+    def BakedPotato() -> MinecraftItemDescriptor: return item_factory("minecraft:baked_potato")
+    def Bamboo() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo")
+    def BambooBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_block")
+    def BambooButton() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_button")
+    def BambooChestRaft() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_chest_raft")
+    def BambooDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_door")
+    def BambooFence() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_fence")
+    def BambooFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_fence_gate")
+    def BambooHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_hanging_sign")
+    def BambooMosaic() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_mosaic")
+    def BambooMosaicSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_mosaic_slab")
+    def BambooMosaicStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_mosaic_stairs")
+    def BambooPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_planks")
+    def BambooPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_pressure_plate")
+    def BambooRaft() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_raft")
+    def BambooSign() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_sign")
+    def BambooSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_slab")
+    def BambooStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_stairs")
+    def BambooTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:bamboo_trapdoor")
+    def Banner() -> MinecraftItemDescriptor: return item_factory("minecraft:banner")
+    def Barrel() -> MinecraftItemDescriptor: return item_factory("minecraft:barrel")
+    def Barrier() -> MinecraftItemDescriptor: return item_factory("minecraft:barrier")
+    def Basalt() -> MinecraftItemDescriptor: return item_factory("minecraft:basalt")
+    def BatSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:bat_spawn_egg")
+    def Beacon() -> MinecraftItemDescriptor: return item_factory("minecraft:beacon")
+    def Bed() -> MinecraftItemDescriptor: return item_factory("minecraft:bed")
+    def Bedrock() -> MinecraftItemDescriptor: return item_factory("minecraft:bedrock")
+    def BeeNest() -> MinecraftItemDescriptor: return item_factory("minecraft:bee_nest")
+    def BeeSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:bee_spawn_egg")
+    def Beef() -> MinecraftItemDescriptor: return item_factory("minecraft:beef")
+    def Beehive() -> MinecraftItemDescriptor: return item_factory("minecraft:beehive")
+    def Beetroot() -> MinecraftItemDescriptor: return item_factory("minecraft:beetroot")
+    def BeetrootSeeds() -> MinecraftItemDescriptor: return item_factory("minecraft:beetroot_seeds")
+    def BeetrootSoup() -> MinecraftItemDescriptor: return item_factory("minecraft:beetroot_soup")
+    def Bell() -> MinecraftItemDescriptor: return item_factory("minecraft:bell")
+    def BigDripleaf() -> MinecraftItemDescriptor: return item_factory("minecraft:big_dripleaf")
+    def BirchBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_boat")
+    def BirchButton() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_button")
+    def BirchChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_chest_boat")
+    def BirchDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_door")
+    def BirchFence() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_fence")
+    def BirchFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_fence_gate")
+    def BirchHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_hanging_sign")
+    def BirchLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_leaves")
+    def BirchLog() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_log")
+    def BirchPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_planks")
+    def BirchPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_pressure_plate")
+    def BirchSapling() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_sapling")
+    def BirchSign() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_sign")
+    def BirchSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_slab")
+    def BirchStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_stairs")
+    def BirchTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_trapdoor")
+    def BirchWood() -> MinecraftItemDescriptor: return item_factory("minecraft:birch_wood")
+    def BlackBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:black_bundle")
+    def BlackCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:black_candle")
+    def BlackCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:black_carpet")
+    def BlackConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:black_concrete")
+    def BlackConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:black_concrete_powder")
+    def BlackDye() -> MinecraftItemDescriptor: return item_factory("minecraft:black_dye")
+    def BlackGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:black_glazed_terracotta")
+    def BlackHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:black_harness")
+    def BlackShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:black_shulker_box")
+    def BlackStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:black_stained_glass")
+    def BlackStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:black_stained_glass_pane")
+    def BlackTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:black_terracotta")
+    def BlackWool() -> MinecraftItemDescriptor: return item_factory("minecraft:black_wool")
+    def Blackstone() -> MinecraftItemDescriptor: return item_factory("minecraft:blackstone")
+    def BlackstoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:blackstone_slab")
+    def BlackstoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:blackstone_stairs")
+    def BlackstoneWall() -> MinecraftItemDescriptor: return item_factory("minecraft:blackstone_wall")
+    def BladePotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:blade_pottery_sherd")
+    def BlastFurnace() -> MinecraftItemDescriptor: return item_factory("minecraft:blast_furnace")
+    def BlazePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:blaze_powder")
+    def BlazeRod() -> MinecraftItemDescriptor: return item_factory("minecraft:blaze_rod")
+    def BlazeSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:blaze_spawn_egg")
+    def BlueBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_bundle")
+    def BlueCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_candle")
+    def BlueCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_carpet")
+    def BlueConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_concrete")
+    def BlueConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_concrete_powder")
+    def BlueDye() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_dye")
+    def BlueEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_egg")
+    def BlueGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_glazed_terracotta")
+    def BlueHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_harness")
+    def BlueIce() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_ice")
+    def BlueOrchid() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_orchid")
+    def BlueShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_shulker_box")
+    def BlueStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_stained_glass")
+    def BlueStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_stained_glass_pane")
+    def BlueTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_terracotta")
+    def BlueWool() -> MinecraftItemDescriptor: return item_factory("minecraft:blue_wool")
+    def BoggedSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:bogged_spawn_egg")
+    def BoltArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:bolt_armor_trim_smithing_template")
+    def Bone() -> MinecraftItemDescriptor: return item_factory("minecraft:bone")
+    def BoneBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:bone_block")
+    def BoneMeal() -> MinecraftItemDescriptor: return item_factory("minecraft:bone_meal")
+    def Book() -> MinecraftItemDescriptor: return item_factory("minecraft:book")
+    def Bookshelf() -> MinecraftItemDescriptor: return item_factory("minecraft:bookshelf")
+    def BorderBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:border_block")
+    def BordureIndentedBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:bordure_indented_banner_pattern")
+    def Bow() -> MinecraftItemDescriptor: return item_factory("minecraft:bow")
+    def Bowl() -> MinecraftItemDescriptor: return item_factory("minecraft:bowl")
+    def BrainCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:brain_coral")
+    def BrainCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:brain_coral_block")
+    def BrainCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:brain_coral_fan")
+    def Bread() -> MinecraftItemDescriptor: return item_factory("minecraft:bread")
+    def BreezeRod() -> MinecraftItemDescriptor: return item_factory("minecraft:breeze_rod")
+    def BreezeSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:breeze_spawn_egg")
+    def BrewerPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:brewer_pottery_sherd")
+    def BrewingStand() -> MinecraftItemDescriptor: return item_factory("minecraft:brewing_stand")
+    def Brick() -> MinecraftItemDescriptor: return item_factory("minecraft:brick")
+    def BrickBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:brick_block")
+    def BrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:brick_slab")
+    def BrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:brick_stairs")
+    def BrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:brick_wall")
+    def BrownBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_bundle")
+    def BrownCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_candle")
+    def BrownCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_carpet")
+    def BrownConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_concrete")
+    def BrownConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_concrete_powder")
+    def BrownDye() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_dye")
+    def BrownEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_egg")
+    def BrownGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_glazed_terracotta")
+    def BrownHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_harness")
+    def BrownMushroom() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_mushroom")
+    def BrownMushroomBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_mushroom_block")
+    def BrownShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_shulker_box")
+    def BrownStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_stained_glass")
+    def BrownStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_stained_glass_pane")
+    def BrownTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_terracotta")
+    def BrownWool() -> MinecraftItemDescriptor: return item_factory("minecraft:brown_wool")
+    def Brush() -> MinecraftItemDescriptor: return item_factory("minecraft:brush")
+    def BubbleCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:bubble_coral")
+    def BubbleCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:bubble_coral_block")
+    def BubbleCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:bubble_coral_fan")
+    def Bucket() -> MinecraftItemDescriptor: return item_factory("minecraft:bucket")
+    def BuddingAmethyst() -> MinecraftItemDescriptor: return item_factory("minecraft:budding_amethyst")
+    def Bundle() -> MinecraftItemDescriptor: return item_factory("minecraft:bundle")
+    def BurnPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:burn_pottery_sherd")
+    def Bush() -> MinecraftItemDescriptor: return item_factory("minecraft:bush")
+    def Cactus() -> MinecraftItemDescriptor: return item_factory("minecraft:cactus")
+    def CactusFlower() -> MinecraftItemDescriptor: return item_factory("minecraft:cactus_flower")
+    def Cake() -> MinecraftItemDescriptor: return item_factory("minecraft:cake")
+    def Calcite() -> MinecraftItemDescriptor: return item_factory("minecraft:calcite")
+    def CalibratedSculkSensor() -> MinecraftItemDescriptor: return item_factory("minecraft:calibrated_sculk_sensor")
+    def CamelSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:camel_spawn_egg")
+    def Campfire() -> MinecraftItemDescriptor: return item_factory("minecraft:campfire")
+    def Candle() -> MinecraftItemDescriptor: return item_factory("minecraft:candle")
+    def Carrot() -> MinecraftItemDescriptor: return item_factory("minecraft:carrot")
+    def CarrotOnAStick() -> MinecraftItemDescriptor: return item_factory("minecraft:carrot_on_a_stick")
+    def CartographyTable() -> MinecraftItemDescriptor: return item_factory("minecraft:cartography_table")
+    def CarvedPumpkin() -> MinecraftItemDescriptor: return item_factory("minecraft:carved_pumpkin")
+    def CatSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:cat_spawn_egg")
+    def Cauldron() -> MinecraftItemDescriptor: return item_factory("minecraft:cauldron")
+    def CaveSpiderSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:cave_spider_spawn_egg")
+    def Chain() -> MinecraftItemDescriptor: return item_factory("minecraft:chain")
+    def ChainCommandBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:chain_command_block")
+    def ChainmailBoots() -> MinecraftItemDescriptor: return item_factory("minecraft:chainmail_boots")
+    def ChainmailChestplate() -> MinecraftItemDescriptor: return item_factory("minecraft:chainmail_chestplate")
+    def ChainmailHelmet() -> MinecraftItemDescriptor: return item_factory("minecraft:chainmail_helmet")
+    def ChainmailLeggings() -> MinecraftItemDescriptor: return item_factory("minecraft:chainmail_leggings")
+    def Charcoal() -> MinecraftItemDescriptor: return item_factory("minecraft:charcoal")
+    def CherryBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_boat")
+    def CherryButton() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_button")
+    def CherryChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_chest_boat")
+    def CherryDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_door")
+    def CherryFence() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_fence")
+    def CherryFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_fence_gate")
+    def CherryHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_hanging_sign")
+    def CherryLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_leaves")
+    def CherryLog() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_log")
+    def CherryPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_planks")
+    def CherryPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_pressure_plate")
+    def CherrySapling() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_sapling")
+    def CherrySign() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_sign")
+    def CherrySlab() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_slab")
+    def CherryStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_stairs")
+    def CherryTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_trapdoor")
+    def CherryWood() -> MinecraftItemDescriptor: return item_factory("minecraft:cherry_wood")
+    def Chest() -> MinecraftItemDescriptor: return item_factory("minecraft:chest")
+    def ChestMinecart() -> MinecraftItemDescriptor: return item_factory("minecraft:chest_minecart")
+    def Chicken() -> MinecraftItemDescriptor: return item_factory("minecraft:chicken")
+    def ChickenSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:chicken_spawn_egg")
+    def ChippedAnvil() -> MinecraftItemDescriptor: return item_factory("minecraft:chipped_anvil")
+    def ChiseledBookshelf() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_bookshelf")
+    def ChiseledCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_copper")
+    def ChiseledDeepslate() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_deepslate")
+    def ChiseledNetherBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_nether_bricks")
+    def ChiseledPolishedBlackstone() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_polished_blackstone")
+    def ChiseledQuartzBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_quartz_block")
+    def ChiseledRedSandstone() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_red_sandstone")
+    def ChiseledResinBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_resin_bricks")
+    def ChiseledSandstone() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_sandstone")
+    def ChiseledStoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_stone_bricks")
+    def ChiseledTuff() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_tuff")
+    def ChiseledTuffBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:chiseled_tuff_bricks")
+    def ChorusFlower() -> MinecraftItemDescriptor: return item_factory("minecraft:chorus_flower")
+    def ChorusFruit() -> MinecraftItemDescriptor: return item_factory("minecraft:chorus_fruit")
+    def ChorusPlant() -> MinecraftItemDescriptor: return item_factory("minecraft:chorus_plant")
+    def Clay() -> MinecraftItemDescriptor: return item_factory("minecraft:clay")
+    def ClayBall() -> MinecraftItemDescriptor: return item_factory("minecraft:clay_ball")
+    def Clock() -> MinecraftItemDescriptor: return item_factory("minecraft:clock")
+    def ClosedEyeblossom() -> MinecraftItemDescriptor: return item_factory("minecraft:closed_eyeblossom")
+    def Coal() -> MinecraftItemDescriptor: return item_factory("minecraft:coal")
+    def CoalBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:coal_block")
+    def CoalOre() -> MinecraftItemDescriptor: return item_factory("minecraft:coal_ore")
+    def CoarseDirt() -> MinecraftItemDescriptor: return item_factory("minecraft:coarse_dirt")
+    def CoastArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:coast_armor_trim_smithing_template")
+    def CobbledDeepslate() -> MinecraftItemDescriptor: return item_factory("minecraft:cobbled_deepslate")
+    def CobbledDeepslateSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:cobbled_deepslate_slab")
+    def CobbledDeepslateStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:cobbled_deepslate_stairs")
+    def CobbledDeepslateWall() -> MinecraftItemDescriptor: return item_factory("minecraft:cobbled_deepslate_wall")
+    def Cobblestone() -> MinecraftItemDescriptor: return item_factory("minecraft:cobblestone")
+    def CobblestoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:cobblestone_slab")
+    def CobblestoneWall() -> MinecraftItemDescriptor: return item_factory("minecraft:cobblestone_wall")
+    def CocoaBeans() -> MinecraftItemDescriptor: return item_factory("minecraft:cocoa_beans")
+    def Cod() -> MinecraftItemDescriptor: return item_factory("minecraft:cod")
+    def CodBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:cod_bucket")
+    def CodSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:cod_spawn_egg")
+    def CommandBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:command_block")
+    def CommandBlockMinecart() -> MinecraftItemDescriptor: return item_factory("minecraft:command_block_minecart")
+    def Comparator() -> MinecraftItemDescriptor: return item_factory("minecraft:comparator")
+    def Compass() -> MinecraftItemDescriptor: return item_factory("minecraft:compass")
+    def Composter() -> MinecraftItemDescriptor: return item_factory("minecraft:composter")
+    def Conduit() -> MinecraftItemDescriptor: return item_factory("minecraft:conduit")
+    def CookedBeef() -> MinecraftItemDescriptor: return item_factory("minecraft:cooked_beef")
+    def CookedChicken() -> MinecraftItemDescriptor: return item_factory("minecraft:cooked_chicken")
+    def CookedCod() -> MinecraftItemDescriptor: return item_factory("minecraft:cooked_cod")
+    def CookedMutton() -> MinecraftItemDescriptor: return item_factory("minecraft:cooked_mutton")
+    def CookedPorkchop() -> MinecraftItemDescriptor: return item_factory("minecraft:cooked_porkchop")
+    def CookedRabbit() -> MinecraftItemDescriptor: return item_factory("minecraft:cooked_rabbit")
+    def CookedSalmon() -> MinecraftItemDescriptor: return item_factory("minecraft:cooked_salmon")
+    def Cookie() -> MinecraftItemDescriptor: return item_factory("minecraft:cookie")
+    def CopperAxe() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_axe")
+    def CopperBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_block")
+    def CopperBoots() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_boots")
+    def CopperBulb() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_bulb")
+    def CopperChest() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_chest")
+    def CopperChestplate() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_chestplate")
+    def CopperDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_door")
+    def CopperGolemSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_golem_spawn_egg")
+    def CopperGrate() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_grate")
+    def CopperHelmet() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_helmet")
+    def CopperHoe() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_hoe")
+    def CopperIngot() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_ingot")
+    def CopperLeggings() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_leggings")
+    def CopperNugget() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_nugget")
+    def CopperOre() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_ore")
+    def CopperPickaxe() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_pickaxe")
+    def CopperShovel() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_shovel")
+    def CopperSword() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_sword")
+    def CopperTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:copper_trapdoor")
+    def Cornflower() -> MinecraftItemDescriptor: return item_factory("minecraft:cornflower")
+    def CowSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:cow_spawn_egg")
+    def CrackedDeepslateBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:cracked_deepslate_bricks")
+    def CrackedDeepslateTiles() -> MinecraftItemDescriptor: return item_factory("minecraft:cracked_deepslate_tiles")
+    def CrackedNetherBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:cracked_nether_bricks")
+    def CrackedPolishedBlackstoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:cracked_polished_blackstone_bricks")
+    def CrackedStoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:cracked_stone_bricks")
+    def Crafter() -> MinecraftItemDescriptor: return item_factory("minecraft:crafter")
+    def CraftingTable() -> MinecraftItemDescriptor: return item_factory("minecraft:crafting_table")
+    def CreakingHeart() -> MinecraftItemDescriptor: return item_factory("minecraft:creaking_heart")
+    def CreakingSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:creaking_spawn_egg")
+    def CreeperBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:creeper_banner_pattern")
+    def CreeperHead() -> MinecraftItemDescriptor: return item_factory("minecraft:creeper_head")
+    def CreeperSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:creeper_spawn_egg")
+    def CrimsonButton() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_button")
+    def CrimsonDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_door")
+    def CrimsonFence() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_fence")
+    def CrimsonFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_fence_gate")
+    def CrimsonFungus() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_fungus")
+    def CrimsonHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_hanging_sign")
+    def CrimsonHyphae() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_hyphae")
+    def CrimsonNylium() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_nylium")
+    def CrimsonPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_planks")
+    def CrimsonPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_pressure_plate")
+    def CrimsonRoots() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_roots")
+    def CrimsonSign() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_sign")
+    def CrimsonSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_slab")
+    def CrimsonStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_stairs")
+    def CrimsonStem() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_stem")
+    def CrimsonTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:crimson_trapdoor")
+    def Crossbow() -> MinecraftItemDescriptor: return item_factory("minecraft:crossbow")
+    def CryingObsidian() -> MinecraftItemDescriptor: return item_factory("minecraft:crying_obsidian")
+    def CutCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:cut_copper")
+    def CutCopperSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:cut_copper_slab")
+    def CutCopperStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:cut_copper_stairs")
+    def CutRedSandstone() -> MinecraftItemDescriptor: return item_factory("minecraft:cut_red_sandstone")
+    def CutRedSandstoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:cut_red_sandstone_slab")
+    def CutSandstone() -> MinecraftItemDescriptor: return item_factory("minecraft:cut_sandstone")
+    def CutSandstoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:cut_sandstone_slab")
+    def CyanBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_bundle")
+    def CyanCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_candle")
+    def CyanCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_carpet")
+    def CyanConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_concrete")
+    def CyanConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_concrete_powder")
+    def CyanDye() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_dye")
+    def CyanGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_glazed_terracotta")
+    def CyanHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_harness")
+    def CyanShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_shulker_box")
+    def CyanStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_stained_glass")
+    def CyanStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_stained_glass_pane")
+    def CyanTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_terracotta")
+    def CyanWool() -> MinecraftItemDescriptor: return item_factory("minecraft:cyan_wool")
+    def DamagedAnvil() -> MinecraftItemDescriptor: return item_factory("minecraft:damaged_anvil")
+    def Dandelion() -> MinecraftItemDescriptor: return item_factory("minecraft:dandelion")
+    def DangerPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:danger_pottery_sherd")
+    def DarkOakBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_boat")
+    def DarkOakButton() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_button")
+    def DarkOakChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_chest_boat")
+    def DarkOakDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_door")
+    def DarkOakFence() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_fence")
+    def DarkOakFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_fence_gate")
+    def DarkOakHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_hanging_sign")
+    def DarkOakLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_leaves")
+    def DarkOakLog() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_log")
+    def DarkOakPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_planks")
+    def DarkOakPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_pressure_plate")
+    def DarkOakSapling() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_sapling")
+    def DarkOakSign() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_sign")
+    def DarkOakSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_slab")
+    def DarkOakStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_stairs")
+    def DarkOakTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_trapdoor")
+    def DarkOakWood() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_oak_wood")
+    def DarkPrismarine() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_prismarine")
+    def DarkPrismarineSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_prismarine_slab")
+    def DarkPrismarineStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:dark_prismarine_stairs")
+    def DaylightDetector() -> MinecraftItemDescriptor: return item_factory("minecraft:daylight_detector")
+    def DeadBrainCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_brain_coral")
+    def DeadBrainCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_brain_coral_block")
+    def DeadBrainCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_brain_coral_fan")
+    def DeadBubbleCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_bubble_coral")
+    def DeadBubbleCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_bubble_coral_block")
+    def DeadBubbleCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_bubble_coral_fan")
+    def DeadFireCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_fire_coral")
+    def DeadFireCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_fire_coral_block")
+    def DeadFireCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_fire_coral_fan")
+    def DeadHornCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_horn_coral")
+    def DeadHornCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_horn_coral_block")
+    def DeadHornCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_horn_coral_fan")
+    def DeadTubeCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_tube_coral")
+    def DeadTubeCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_tube_coral_block")
+    def DeadTubeCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:dead_tube_coral_fan")
+    def Deadbush() -> MinecraftItemDescriptor: return item_factory("minecraft:deadbush")
+    def DecoratedPot() -> MinecraftItemDescriptor: return item_factory("minecraft:decorated_pot")
+    def Deepslate() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate")
+    def DeepslateBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_brick_slab")
+    def DeepslateBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_brick_stairs")
+    def DeepslateBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_brick_wall")
+    def DeepslateBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_bricks")
+    def DeepslateCoalOre() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_coal_ore")
+    def DeepslateCopperOre() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_copper_ore")
+    def DeepslateDiamondOre() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_diamond_ore")
+    def DeepslateEmeraldOre() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_emerald_ore")
+    def DeepslateGoldOre() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_gold_ore")
+    def DeepslateIronOre() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_iron_ore")
+    def DeepslateLapisOre() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_lapis_ore")
+    def DeepslateRedstoneOre() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_redstone_ore")
+    def DeepslateTileSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_tile_slab")
+    def DeepslateTileStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_tile_stairs")
+    def DeepslateTileWall() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_tile_wall")
+    def DeepslateTiles() -> MinecraftItemDescriptor: return item_factory("minecraft:deepslate_tiles")
+    def Deny() -> MinecraftItemDescriptor: return item_factory("minecraft:deny")
+    def DetectorRail() -> MinecraftItemDescriptor: return item_factory("minecraft:detector_rail")
+    def Diamond() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond")
+    def DiamondAxe() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_axe")
+    def DiamondBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_block")
+    def DiamondBoots() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_boots")
+    def DiamondChestplate() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_chestplate")
+    def DiamondHelmet() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_helmet")
+    def DiamondHoe() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_hoe")
+    def DiamondHorseArmor() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_horse_armor")
+    def DiamondLeggings() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_leggings")
+    def DiamondOre() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_ore")
+    def DiamondPickaxe() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_pickaxe")
+    def DiamondShovel() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_shovel")
+    def DiamondSword() -> MinecraftItemDescriptor: return item_factory("minecraft:diamond_sword")
+    def Diorite() -> MinecraftItemDescriptor: return item_factory("minecraft:diorite")
+    def DioriteSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:diorite_slab")
+    def DioriteStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:diorite_stairs")
+    def DioriteWall() -> MinecraftItemDescriptor: return item_factory("minecraft:diorite_wall")
+    def Dirt() -> MinecraftItemDescriptor: return item_factory("minecraft:dirt")
+    def DirtWithRoots() -> MinecraftItemDescriptor: return item_factory("minecraft:dirt_with_roots")
+    def DiscFragment5() -> MinecraftItemDescriptor: return item_factory("minecraft:disc_fragment_5")
+    def Dispenser() -> MinecraftItemDescriptor: return item_factory("minecraft:dispenser")
+    def DolphinSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:dolphin_spawn_egg")
+    def DonkeySpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:donkey_spawn_egg")
+    def DragonBreath() -> MinecraftItemDescriptor: return item_factory("minecraft:dragon_breath")
+    def DragonEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:dragon_egg")
+    def DragonHead() -> MinecraftItemDescriptor: return item_factory("minecraft:dragon_head")
+    def DriedGhast() -> MinecraftItemDescriptor: return item_factory("minecraft:dried_ghast")
+    def DriedKelp() -> MinecraftItemDescriptor: return item_factory("minecraft:dried_kelp")
+    def DriedKelpBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:dried_kelp_block")
+    def DripstoneBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:dripstone_block")
+    def Dropper() -> MinecraftItemDescriptor: return item_factory("minecraft:dropper")
+    def DrownedSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:drowned_spawn_egg")
+    def DuneArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:dune_armor_trim_smithing_template")
+    def EchoShard() -> MinecraftItemDescriptor: return item_factory("minecraft:echo_shard")
+    def Egg() -> MinecraftItemDescriptor: return item_factory("minecraft:egg")
+    def ElderGuardianSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:elder_guardian_spawn_egg")
+    def Elytra() -> MinecraftItemDescriptor: return item_factory("minecraft:elytra")
+    def Emerald() -> MinecraftItemDescriptor: return item_factory("minecraft:emerald")
+    def EmeraldBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:emerald_block")
+    def EmeraldOre() -> MinecraftItemDescriptor: return item_factory("minecraft:emerald_ore")
+    def EmptyMap() -> MinecraftItemDescriptor: return item_factory("minecraft:empty_map")
+    def EnchantedBook() -> MinecraftItemDescriptor: return item_factory("minecraft:enchanted_book")
+    def EnchantedGoldenApple() -> MinecraftItemDescriptor: return item_factory("minecraft:enchanted_golden_apple")
+    def EnchantingTable() -> MinecraftItemDescriptor: return item_factory("minecraft:enchanting_table")
+    def EndBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:end_brick_stairs")
+    def EndBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:end_bricks")
+    def EndCrystal() -> MinecraftItemDescriptor: return item_factory("minecraft:end_crystal")
+    def EndPortalFrame() -> MinecraftItemDescriptor: return item_factory("minecraft:end_portal_frame")
+    def EndRod() -> MinecraftItemDescriptor: return item_factory("minecraft:end_rod")
+    def EndStone() -> MinecraftItemDescriptor: return item_factory("minecraft:end_stone")
+    def EndStoneBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:end_stone_brick_slab")
+    def EndStoneBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:end_stone_brick_wall")
+    def EnderChest() -> MinecraftItemDescriptor: return item_factory("minecraft:ender_chest")
+    def EnderDragonSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:ender_dragon_spawn_egg")
+    def EnderEye() -> MinecraftItemDescriptor: return item_factory("minecraft:ender_eye")
+    def EnderPearl() -> MinecraftItemDescriptor: return item_factory("minecraft:ender_pearl")
+    def EndermanSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:enderman_spawn_egg")
+    def EndermiteSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:endermite_spawn_egg")
+    def EvokerSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:evoker_spawn_egg")
+    def ExperienceBottle() -> MinecraftItemDescriptor: return item_factory("minecraft:experience_bottle")
+    def ExplorerPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:explorer_pottery_sherd")
+    def ExposedChiseledCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_chiseled_copper")
+    def ExposedCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_copper")
+    def ExposedCopperBulb() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_copper_bulb")
+    def ExposedCopperChest() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_copper_chest")
+    def ExposedCopperDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_copper_door")
+    def ExposedCopperGrate() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_copper_grate")
+    def ExposedCopperTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_copper_trapdoor")
+    def ExposedCutCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_cut_copper")
+    def ExposedCutCopperSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_cut_copper_slab")
+    def ExposedCutCopperStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:exposed_cut_copper_stairs")
+    def EyeArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:eye_armor_trim_smithing_template")
+    def Farmland() -> MinecraftItemDescriptor: return item_factory("minecraft:farmland")
+    def Feather() -> MinecraftItemDescriptor: return item_factory("minecraft:feather")
+    def FenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:fence_gate")
+    def FermentedSpiderEye() -> MinecraftItemDescriptor: return item_factory("minecraft:fermented_spider_eye")
+    def Fern() -> MinecraftItemDescriptor: return item_factory("minecraft:fern")
+    def FieldMasonedBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:field_masoned_banner_pattern")
+    def FilledMap() -> MinecraftItemDescriptor: return item_factory("minecraft:filled_map")
+    def FireCharge() -> MinecraftItemDescriptor: return item_factory("minecraft:fire_charge")
+    def FireCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:fire_coral")
+    def FireCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:fire_coral_block")
+    def FireCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:fire_coral_fan")
+    def FireflyBush() -> MinecraftItemDescriptor: return item_factory("minecraft:firefly_bush")
+    def FireworkRocket() -> MinecraftItemDescriptor: return item_factory("minecraft:firework_rocket")
+    def FireworkStar() -> MinecraftItemDescriptor: return item_factory("minecraft:firework_star")
+    def FishingRod() -> MinecraftItemDescriptor: return item_factory("minecraft:fishing_rod")
+    def FletchingTable() -> MinecraftItemDescriptor: return item_factory("minecraft:fletching_table")
+    def Flint() -> MinecraftItemDescriptor: return item_factory("minecraft:flint")
+    def FlintAndSteel() -> MinecraftItemDescriptor: return item_factory("minecraft:flint_and_steel")
+    def FlowArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:flow_armor_trim_smithing_template")
+    def FlowBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:flow_banner_pattern")
+    def FlowPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:flow_pottery_sherd")
+    def FlowerBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:flower_banner_pattern")
+    def FlowerPot() -> MinecraftItemDescriptor: return item_factory("minecraft:flower_pot")
+    def FloweringAzalea() -> MinecraftItemDescriptor: return item_factory("minecraft:flowering_azalea")
+    def FoxSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:fox_spawn_egg")
+    def Frame() -> MinecraftItemDescriptor: return item_factory("minecraft:frame")
+    def FriendPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:friend_pottery_sherd")
+    def FrogSpawn() -> MinecraftItemDescriptor: return item_factory("minecraft:frog_spawn")
+    def FrogSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:frog_spawn_egg")
+    def FrostedIce() -> MinecraftItemDescriptor: return item_factory("minecraft:frosted_ice")
+    def Furnace() -> MinecraftItemDescriptor: return item_factory("minecraft:furnace")
+    def GhastSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:ghast_spawn_egg")
+    def GhastTear() -> MinecraftItemDescriptor: return item_factory("minecraft:ghast_tear")
+    def GildedBlackstone() -> MinecraftItemDescriptor: return item_factory("minecraft:gilded_blackstone")
+    def Glass() -> MinecraftItemDescriptor: return item_factory("minecraft:glass")
+    def GlassBottle() -> MinecraftItemDescriptor: return item_factory("minecraft:glass_bottle")
+    def GlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:glass_pane")
+    def GlisteringMelonSlice() -> MinecraftItemDescriptor: return item_factory("minecraft:glistering_melon_slice")
+    def GlobeBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:globe_banner_pattern")
+    def GlowBerries() -> MinecraftItemDescriptor: return item_factory("minecraft:glow_berries")
+    def GlowFrame() -> MinecraftItemDescriptor: return item_factory("minecraft:glow_frame")
+    def GlowInkSac() -> MinecraftItemDescriptor: return item_factory("minecraft:glow_ink_sac")
+    def GlowLichen() -> MinecraftItemDescriptor: return item_factory("minecraft:glow_lichen")
+    def GlowSquidSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:glow_squid_spawn_egg")
+    def Glowstone() -> MinecraftItemDescriptor: return item_factory("minecraft:glowstone")
+    def GlowstoneDust() -> MinecraftItemDescriptor: return item_factory("minecraft:glowstone_dust")
+    def GoatHorn() -> MinecraftItemDescriptor: return item_factory("minecraft:goat_horn")
+    def GoatSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:goat_spawn_egg")
+    def GoldBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:gold_block")
+    def GoldIngot() -> MinecraftItemDescriptor: return item_factory("minecraft:gold_ingot")
+    def GoldNugget() -> MinecraftItemDescriptor: return item_factory("minecraft:gold_nugget")
+    def GoldOre() -> MinecraftItemDescriptor: return item_factory("minecraft:gold_ore")
+    def GoldenApple() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_apple")
+    def GoldenAxe() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_axe")
+    def GoldenBoots() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_boots")
+    def GoldenCarrot() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_carrot")
+    def GoldenChestplate() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_chestplate")
+    def GoldenHelmet() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_helmet")
+    def GoldenHoe() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_hoe")
+    def GoldenHorseArmor() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_horse_armor")
+    def GoldenLeggings() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_leggings")
+    def GoldenPickaxe() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_pickaxe")
+    def GoldenRail() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_rail")
+    def GoldenShovel() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_shovel")
+    def GoldenSword() -> MinecraftItemDescriptor: return item_factory("minecraft:golden_sword")
+    def Granite() -> MinecraftItemDescriptor: return item_factory("minecraft:granite")
+    def GraniteSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:granite_slab")
+    def GraniteStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:granite_stairs")
+    def GraniteWall() -> MinecraftItemDescriptor: return item_factory("minecraft:granite_wall")
+    def GrassBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:grass_block")
+    def GrassPath() -> MinecraftItemDescriptor: return item_factory("minecraft:grass_path")
+    def Gravel() -> MinecraftItemDescriptor: return item_factory("minecraft:gravel")
+    def GrayBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_bundle")
+    def GrayCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_candle")
+    def GrayCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_carpet")
+    def GrayConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_concrete")
+    def GrayConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_concrete_powder")
+    def GrayDye() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_dye")
+    def GrayGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_glazed_terracotta")
+    def GrayHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_harness")
+    def GrayShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_shulker_box")
+    def GrayStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_stained_glass")
+    def GrayStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_stained_glass_pane")
+    def GrayTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_terracotta")
+    def GrayWool() -> MinecraftItemDescriptor: return item_factory("minecraft:gray_wool")
+    def GreenBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:green_bundle")
+    def GreenCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:green_candle")
+    def GreenCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:green_carpet")
+    def GreenConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:green_concrete")
+    def GreenConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:green_concrete_powder")
+    def GreenDye() -> MinecraftItemDescriptor: return item_factory("minecraft:green_dye")
+    def GreenGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:green_glazed_terracotta")
+    def GreenHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:green_harness")
+    def GreenShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:green_shulker_box")
+    def GreenStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:green_stained_glass")
+    def GreenStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:green_stained_glass_pane")
+    def GreenTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:green_terracotta")
+    def GreenWool() -> MinecraftItemDescriptor: return item_factory("minecraft:green_wool")
+    def Grindstone() -> MinecraftItemDescriptor: return item_factory("minecraft:grindstone")
+    def GuardianSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:guardian_spawn_egg")
+    def Gunpowder() -> MinecraftItemDescriptor: return item_factory("minecraft:gunpowder")
+    def GusterBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:guster_banner_pattern")
+    def GusterPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:guster_pottery_sherd")
+    def HangingRoots() -> MinecraftItemDescriptor: return item_factory("minecraft:hanging_roots")
+    def HappyGhastSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:happy_ghast_spawn_egg")
+    def HardenedClay() -> MinecraftItemDescriptor: return item_factory("minecraft:hardened_clay")
+    def HayBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:hay_block")
+    def HeartOfTheSea() -> MinecraftItemDescriptor: return item_factory("minecraft:heart_of_the_sea")
+    def HeartPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:heart_pottery_sherd")
+    def HeartbreakPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:heartbreak_pottery_sherd")
+    def HeavyCore() -> MinecraftItemDescriptor: return item_factory("minecraft:heavy_core")
+    def HeavyWeightedPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:heavy_weighted_pressure_plate")
+    def HoglinSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:hoglin_spawn_egg")
+    def HoneyBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:honey_block")
+    def HoneyBottle() -> MinecraftItemDescriptor: return item_factory("minecraft:honey_bottle")
+    def Honeycomb() -> MinecraftItemDescriptor: return item_factory("minecraft:honeycomb")
+    def HoneycombBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:honeycomb_block")
+    def Hopper() -> MinecraftItemDescriptor: return item_factory("minecraft:hopper")
+    def HopperMinecart() -> MinecraftItemDescriptor: return item_factory("minecraft:hopper_minecart")
+    def HornCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:horn_coral")
+    def HornCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:horn_coral_block")
+    def HornCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:horn_coral_fan")
+    def HorseSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:horse_spawn_egg")
+    def HostArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:host_armor_trim_smithing_template")
+    def HowlPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:howl_pottery_sherd")
+    def HuskSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:husk_spawn_egg")
+    def Ice() -> MinecraftItemDescriptor: return item_factory("minecraft:ice")
+    def InfestedChiseledStoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:infested_chiseled_stone_bricks")
+    def InfestedCobblestone() -> MinecraftItemDescriptor: return item_factory("minecraft:infested_cobblestone")
+    def InfestedCrackedStoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:infested_cracked_stone_bricks")
+    def InfestedDeepslate() -> MinecraftItemDescriptor: return item_factory("minecraft:infested_deepslate")
+    def InfestedMossyStoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:infested_mossy_stone_bricks")
+    def InfestedStone() -> MinecraftItemDescriptor: return item_factory("minecraft:infested_stone")
+    def InfestedStoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:infested_stone_bricks")
+    def InkSac() -> MinecraftItemDescriptor: return item_factory("minecraft:ink_sac")
+    def IronAxe() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_axe")
+    def IronBars() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_bars")
+    def IronBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_block")
+    def IronBoots() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_boots")
+    def IronChestplate() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_chestplate")
+    def IronDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_door")
+    def IronGolemSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_golem_spawn_egg")
+    def IronHelmet() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_helmet")
+    def IronHoe() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_hoe")
+    def IronHorseArmor() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_horse_armor")
+    def IronIngot() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_ingot")
+    def IronLeggings() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_leggings")
+    def IronNugget() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_nugget")
+    def IronOre() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_ore")
+    def IronPickaxe() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_pickaxe")
+    def IronShovel() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_shovel")
+    def IronSword() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_sword")
+    def IronTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:iron_trapdoor")
+    def Jigsaw() -> MinecraftItemDescriptor: return item_factory("minecraft:jigsaw")
+    def Jukebox() -> MinecraftItemDescriptor: return item_factory("minecraft:jukebox")
+    def JungleBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_boat")
+    def JungleButton() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_button")
+    def JungleChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_chest_boat")
+    def JungleDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_door")
+    def JungleFence() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_fence")
+    def JungleFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_fence_gate")
+    def JungleHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_hanging_sign")
+    def JungleLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_leaves")
+    def JungleLog() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_log")
+    def JunglePlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_planks")
+    def JunglePressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_pressure_plate")
+    def JungleSapling() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_sapling")
+    def JungleSign() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_sign")
+    def JungleSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_slab")
+    def JungleStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_stairs")
+    def JungleTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_trapdoor")
+    def JungleWood() -> MinecraftItemDescriptor: return item_factory("minecraft:jungle_wood")
+    def Kelp() -> MinecraftItemDescriptor: return item_factory("minecraft:kelp")
+    def Ladder() -> MinecraftItemDescriptor: return item_factory("minecraft:ladder")
+    def Lantern() -> MinecraftItemDescriptor: return item_factory("minecraft:lantern")
+    def LapisBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:lapis_block")
+    def LapisLazuli() -> MinecraftItemDescriptor: return item_factory("minecraft:lapis_lazuli")
+    def LapisOre() -> MinecraftItemDescriptor: return item_factory("minecraft:lapis_ore")
+    def LargeAmethystBud() -> MinecraftItemDescriptor: return item_factory("minecraft:large_amethyst_bud")
+    def LargeFern() -> MinecraftItemDescriptor: return item_factory("minecraft:large_fern")
+    def LavaBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:lava_bucket")
+    def Lead() -> MinecraftItemDescriptor: return item_factory("minecraft:lead")
+    def LeafLitter() -> MinecraftItemDescriptor: return item_factory("minecraft:leaf_litter")
+    def Leather() -> MinecraftItemDescriptor: return item_factory("minecraft:leather")
+    def LeatherBoots() -> MinecraftItemDescriptor: return item_factory("minecraft:leather_boots")
+    def LeatherChestplate() -> MinecraftItemDescriptor: return item_factory("minecraft:leather_chestplate")
+    def LeatherHelmet() -> MinecraftItemDescriptor: return item_factory("minecraft:leather_helmet")
+    def LeatherHorseArmor() -> MinecraftItemDescriptor: return item_factory("minecraft:leather_horse_armor")
+    def LeatherLeggings() -> MinecraftItemDescriptor: return item_factory("minecraft:leather_leggings")
+    def Lectern() -> MinecraftItemDescriptor: return item_factory("minecraft:lectern")
+    def Lever() -> MinecraftItemDescriptor: return item_factory("minecraft:lever")
+    def LightBlock0() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_0")
+    def LightBlock1() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_1")
+    def LightBlock10() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_10")
+    def LightBlock11() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_11")
+    def LightBlock12() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_12")
+    def LightBlock13() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_13")
+    def LightBlock14() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_14")
+    def LightBlock15() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_15")
+    def LightBlock2() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_2")
+    def LightBlock3() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_3")
+    def LightBlock4() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_4")
+    def LightBlock5() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_5")
+    def LightBlock6() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_6")
+    def LightBlock7() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_7")
+    def LightBlock8() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_8")
+    def LightBlock9() -> MinecraftItemDescriptor: return item_factory("minecraft:light_block_9")
+    def LightBlueBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_bundle")
+    def LightBlueCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_candle")
+    def LightBlueCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_carpet")
+    def LightBlueConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_concrete")
+    def LightBlueConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_concrete_powder")
+    def LightBlueDye() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_dye")
+    def LightBlueGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_glazed_terracotta")
+    def LightBlueHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_harness")
+    def LightBlueShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_shulker_box")
+    def LightBlueStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_stained_glass")
+    def LightBlueStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_stained_glass_pane")
+    def LightBlueTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_terracotta")
+    def LightBlueWool() -> MinecraftItemDescriptor: return item_factory("minecraft:light_blue_wool")
+    def LightGrayBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_bundle")
+    def LightGrayCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_candle")
+    def LightGrayCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_carpet")
+    def LightGrayConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_concrete")
+    def LightGrayConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_concrete_powder")
+    def LightGrayDye() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_dye")
+    def LightGrayHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_harness")
+    def LightGrayShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_shulker_box")
+    def LightGrayStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_stained_glass")
+    def LightGrayStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_stained_glass_pane")
+    def LightGrayTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_terracotta")
+    def LightGrayWool() -> MinecraftItemDescriptor: return item_factory("minecraft:light_gray_wool")
+    def LightWeightedPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:light_weighted_pressure_plate")
+    def LightningRod() -> MinecraftItemDescriptor: return item_factory("minecraft:lightning_rod")
+    def Lilac() -> MinecraftItemDescriptor: return item_factory("minecraft:lilac")
+    def LilyOfTheValley() -> MinecraftItemDescriptor: return item_factory("minecraft:lily_of_the_valley")
+    def LimeBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_bundle")
+    def LimeCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_candle")
+    def LimeCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_carpet")
+    def LimeConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_concrete")
+    def LimeConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_concrete_powder")
+    def LimeDye() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_dye")
+    def LimeGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_glazed_terracotta")
+    def LimeHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_harness")
+    def LimeShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_shulker_box")
+    def LimeStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_stained_glass")
+    def LimeStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_stained_glass_pane")
+    def LimeTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_terracotta")
+    def LimeWool() -> MinecraftItemDescriptor: return item_factory("minecraft:lime_wool")
+    def LingeringPotion() -> MinecraftItemDescriptor: return item_factory("minecraft:lingering_potion")
+    def LitPumpkin() -> MinecraftItemDescriptor: return item_factory("minecraft:lit_pumpkin")
+    def LlamaSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:llama_spawn_egg")
+    def Lodestone() -> MinecraftItemDescriptor: return item_factory("minecraft:lodestone")
+    def LodestoneCompass() -> MinecraftItemDescriptor: return item_factory("minecraft:lodestone_compass")
+    def Loom() -> MinecraftItemDescriptor: return item_factory("minecraft:loom")
+    def Mace() -> MinecraftItemDescriptor: return item_factory("minecraft:mace")
+    def MagentaBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_bundle")
+    def MagentaCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_candle")
+    def MagentaCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_carpet")
+    def MagentaConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_concrete")
+    def MagentaConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_concrete_powder")
+    def MagentaDye() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_dye")
+    def MagentaGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_glazed_terracotta")
+    def MagentaHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_harness")
+    def MagentaShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_shulker_box")
+    def MagentaStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_stained_glass")
+    def MagentaStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_stained_glass_pane")
+    def MagentaTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_terracotta")
+    def MagentaWool() -> MinecraftItemDescriptor: return item_factory("minecraft:magenta_wool")
+    def Magma() -> MinecraftItemDescriptor: return item_factory("minecraft:magma")
+    def MagmaCream() -> MinecraftItemDescriptor: return item_factory("minecraft:magma_cream")
+    def MagmaCubeSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:magma_cube_spawn_egg")
+    def MangroveBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_boat")
+    def MangroveButton() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_button")
+    def MangroveChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_chest_boat")
+    def MangroveDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_door")
+    def MangroveFence() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_fence")
+    def MangroveFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_fence_gate")
+    def MangroveHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_hanging_sign")
+    def MangroveLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_leaves")
+    def MangroveLog() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_log")
+    def MangrovePlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_planks")
+    def MangrovePressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_pressure_plate")
+    def MangrovePropagule() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_propagule")
+    def MangroveRoots() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_roots")
+    def MangroveSign() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_sign")
+    def MangroveSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_slab")
+    def MangroveStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_stairs")
+    def MangroveTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_trapdoor")
+    def MangroveWood() -> MinecraftItemDescriptor: return item_factory("minecraft:mangrove_wood")
+    def MediumAmethystBud() -> MinecraftItemDescriptor: return item_factory("minecraft:medium_amethyst_bud")
+    def MelonBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:melon_block")
+    def MelonSeeds() -> MinecraftItemDescriptor: return item_factory("minecraft:melon_seeds")
+    def MelonSlice() -> MinecraftItemDescriptor: return item_factory("minecraft:melon_slice")
+    def MilkBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:milk_bucket")
+    def Minecart() -> MinecraftItemDescriptor: return item_factory("minecraft:minecart")
+    def MinerPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:miner_pottery_sherd")
+    def MobSpawner() -> MinecraftItemDescriptor: return item_factory("minecraft:mob_spawner")
+    def MojangBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:mojang_banner_pattern")
+    def MooshroomSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:mooshroom_spawn_egg")
+    def MossBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:moss_block")
+    def MossCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:moss_carpet")
+    def MossyCobblestone() -> MinecraftItemDescriptor: return item_factory("minecraft:mossy_cobblestone")
+    def MossyCobblestoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:mossy_cobblestone_slab")
+    def MossyCobblestoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:mossy_cobblestone_stairs")
+    def MossyCobblestoneWall() -> MinecraftItemDescriptor: return item_factory("minecraft:mossy_cobblestone_wall")
+    def MossyStoneBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:mossy_stone_brick_slab")
+    def MossyStoneBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:mossy_stone_brick_stairs")
+    def MossyStoneBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:mossy_stone_brick_wall")
+    def MossyStoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:mossy_stone_bricks")
+    def MournerPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:mourner_pottery_sherd")
+    def Mud() -> MinecraftItemDescriptor: return item_factory("minecraft:mud")
+    def MudBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:mud_brick_slab")
+    def MudBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:mud_brick_stairs")
+    def MudBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:mud_brick_wall")
+    def MudBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:mud_bricks")
+    def MuddyMangroveRoots() -> MinecraftItemDescriptor: return item_factory("minecraft:muddy_mangrove_roots")
+    def MuleSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:mule_spawn_egg")
+    def MushroomStem() -> MinecraftItemDescriptor: return item_factory("minecraft:mushroom_stem")
+    def MushroomStew() -> MinecraftItemDescriptor: return item_factory("minecraft:mushroom_stew")
+    def MusicDisc11() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_11")
+    def MusicDisc13() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_13")
+    def MusicDisc5() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_5")
+    def MusicDiscBlocks() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_blocks")
+    def MusicDiscCat() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_cat")
+    def MusicDiscChirp() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_chirp")
+    def MusicDiscCreator() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_creator")
+    def MusicDiscCreatorMusicBox() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_creator_music_box")
+    def MusicDiscFar() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_far")
+    def MusicDiscLavaChicken() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_lava_chicken")
+    def MusicDiscMall() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_mall")
+    def MusicDiscMellohi() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_mellohi")
+    def MusicDiscOtherside() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_otherside")
+    def MusicDiscPigstep() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_pigstep")
+    def MusicDiscPrecipice() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_precipice")
+    def MusicDiscRelic() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_relic")
+    def MusicDiscStal() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_stal")
+    def MusicDiscStrad() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_strad")
+    def MusicDiscTears() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_tears")
+    def MusicDiscWait() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_wait")
+    def MusicDiscWard() -> MinecraftItemDescriptor: return item_factory("minecraft:music_disc_ward")
+    def Mutton() -> MinecraftItemDescriptor: return item_factory("minecraft:mutton")
+    def Mycelium() -> MinecraftItemDescriptor: return item_factory("minecraft:mycelium")
+    def NameTag() -> MinecraftItemDescriptor: return item_factory("minecraft:name_tag")
+    def NautilusShell() -> MinecraftItemDescriptor: return item_factory("minecraft:nautilus_shell")
+    def NetherBrick() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_brick")
+    def NetherBrickFence() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_brick_fence")
+    def NetherBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_brick_slab")
+    def NetherBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_brick_stairs")
+    def NetherBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_brick_wall")
+    def NetherGoldOre() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_gold_ore")
+    def NetherSprouts() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_sprouts")
+    def NetherStar() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_star")
+    def NetherWart() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_wart")
+    def NetherWartBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:nether_wart_block")
+    def Netherbrick() -> MinecraftItemDescriptor: return item_factory("minecraft:netherbrick")
+    def NetheriteAxe() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_axe")
+    def NetheriteBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_block")
+    def NetheriteBoots() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_boots")
+    def NetheriteChestplate() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_chestplate")
+    def NetheriteHelmet() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_helmet")
+    def NetheriteHoe() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_hoe")
+    def NetheriteIngot() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_ingot")
+    def NetheriteLeggings() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_leggings")
+    def NetheritePickaxe() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_pickaxe")
+    def NetheriteScrap() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_scrap")
+    def NetheriteShovel() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_shovel")
+    def NetheriteSword() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_sword")
+    def NetheriteUpgradeSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:netherite_upgrade_smithing_template")
+    def Netherrack() -> MinecraftItemDescriptor: return item_factory("minecraft:netherrack")
+    def NormalStoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:normal_stone_slab")
+    def NormalStoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:normal_stone_stairs")
+    def Noteblock() -> MinecraftItemDescriptor: return item_factory("minecraft:noteblock")
+    def OakBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_boat")
+    def OakChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_chest_boat")
+    def OakFence() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_fence")
+    def OakHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_hanging_sign")
+    def OakLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_leaves")
+    def OakLog() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_log")
+    def OakPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_planks")
+    def OakSapling() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_sapling")
+    def OakSign() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_sign")
+    def OakSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_slab")
+    def OakStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_stairs")
+    def OakWood() -> MinecraftItemDescriptor: return item_factory("minecraft:oak_wood")
+    def Observer() -> MinecraftItemDescriptor: return item_factory("minecraft:observer")
+    def Obsidian() -> MinecraftItemDescriptor: return item_factory("minecraft:obsidian")
+    def OcelotSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:ocelot_spawn_egg")
+    def OchreFroglight() -> MinecraftItemDescriptor: return item_factory("minecraft:ochre_froglight")
+    def OminousBottle() -> MinecraftItemDescriptor: return item_factory("minecraft:ominous_bottle")
+    def OminousTrialKey() -> MinecraftItemDescriptor: return item_factory("minecraft:ominous_trial_key")
+    def OpenEyeblossom() -> MinecraftItemDescriptor: return item_factory("minecraft:open_eyeblossom")
+    def OrangeBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_bundle")
+    def OrangeCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_candle")
+    def OrangeCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_carpet")
+    def OrangeConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_concrete")
+    def OrangeConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_concrete_powder")
+    def OrangeDye() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_dye")
+    def OrangeGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_glazed_terracotta")
+    def OrangeHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_harness")
+    def OrangeShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_shulker_box")
+    def OrangeStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_stained_glass")
+    def OrangeStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_stained_glass_pane")
+    def OrangeTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_terracotta")
+    def OrangeTulip() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_tulip")
+    def OrangeWool() -> MinecraftItemDescriptor: return item_factory("minecraft:orange_wool")
+    def OxeyeDaisy() -> MinecraftItemDescriptor: return item_factory("minecraft:oxeye_daisy")
+    def OxidizedChiseledCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_chiseled_copper")
+    def OxidizedCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_copper")
+    def OxidizedCopperBulb() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_copper_bulb")
+    def OxidizedCopperChest() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_copper_chest")
+    def OxidizedCopperDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_copper_door")
+    def OxidizedCopperGrate() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_copper_grate")
+    def OxidizedCopperTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_copper_trapdoor")
+    def OxidizedCutCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_cut_copper")
+    def OxidizedCutCopperSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_cut_copper_slab")
+    def OxidizedCutCopperStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:oxidized_cut_copper_stairs")
+    def PackedIce() -> MinecraftItemDescriptor: return item_factory("minecraft:packed_ice")
+    def PackedMud() -> MinecraftItemDescriptor: return item_factory("minecraft:packed_mud")
+    def Painting() -> MinecraftItemDescriptor: return item_factory("minecraft:painting")
+    def PaleHangingMoss() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_hanging_moss")
+    def PaleMossBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_moss_block")
+    def PaleMossCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_moss_carpet")
+    def PaleOakBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_boat")
+    def PaleOakButton() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_button")
+    def PaleOakChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_chest_boat")
+    def PaleOakDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_door")
+    def PaleOakFence() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_fence")
+    def PaleOakFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_fence_gate")
+    def PaleOakHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_hanging_sign")
+    def PaleOakLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_leaves")
+    def PaleOakLog() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_log")
+    def PaleOakPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_planks")
+    def PaleOakPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_pressure_plate")
+    def PaleOakSapling() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_sapling")
+    def PaleOakSign() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_sign")
+    def PaleOakSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_slab")
+    def PaleOakStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_stairs")
+    def PaleOakTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_trapdoor")
+    def PaleOakWood() -> MinecraftItemDescriptor: return item_factory("minecraft:pale_oak_wood")
+    def PandaSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:panda_spawn_egg")
+    def Paper() -> MinecraftItemDescriptor: return item_factory("minecraft:paper")
+    def ParrotSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:parrot_spawn_egg")
+    def PearlescentFroglight() -> MinecraftItemDescriptor: return item_factory("minecraft:pearlescent_froglight")
+    def Peony() -> MinecraftItemDescriptor: return item_factory("minecraft:peony")
+    def PetrifiedOakSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:petrified_oak_slab")
+    def PhantomMembrane() -> MinecraftItemDescriptor: return item_factory("minecraft:phantom_membrane")
+    def PhantomSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:phantom_spawn_egg")
+    def PigSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:pig_spawn_egg")
+    def PiglinBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:piglin_banner_pattern")
+    def PiglinBruteSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:piglin_brute_spawn_egg")
+    def PiglinHead() -> MinecraftItemDescriptor: return item_factory("minecraft:piglin_head")
+    def PiglinSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:piglin_spawn_egg")
+    def PillagerSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:pillager_spawn_egg")
+    def PinkBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_bundle")
+    def PinkCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_candle")
+    def PinkCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_carpet")
+    def PinkConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_concrete")
+    def PinkConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_concrete_powder")
+    def PinkDye() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_dye")
+    def PinkGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_glazed_terracotta")
+    def PinkHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_harness")
+    def PinkPetals() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_petals")
+    def PinkShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_shulker_box")
+    def PinkStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_stained_glass")
+    def PinkStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_stained_glass_pane")
+    def PinkTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_terracotta")
+    def PinkTulip() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_tulip")
+    def PinkWool() -> MinecraftItemDescriptor: return item_factory("minecraft:pink_wool")
+    def Piston() -> MinecraftItemDescriptor: return item_factory("minecraft:piston")
+    def PitcherPlant() -> MinecraftItemDescriptor: return item_factory("minecraft:pitcher_plant")
+    def PitcherPod() -> MinecraftItemDescriptor: return item_factory("minecraft:pitcher_pod")
+    def PlayerHead() -> MinecraftItemDescriptor: return item_factory("minecraft:player_head")
+    def PlentyPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:plenty_pottery_sherd")
+    def Podzol() -> MinecraftItemDescriptor: return item_factory("minecraft:podzol")
+    def PointedDripstone() -> MinecraftItemDescriptor: return item_factory("minecraft:pointed_dripstone")
+    def PoisonousPotato() -> MinecraftItemDescriptor: return item_factory("minecraft:poisonous_potato")
+    def PolarBearSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:polar_bear_spawn_egg")
+    def PolishedAndesite() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_andesite")
+    def PolishedAndesiteSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_andesite_slab")
+    def PolishedAndesiteStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_andesite_stairs")
+    def PolishedBasalt() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_basalt")
+    def PolishedBlackstone() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone")
+    def PolishedBlackstoneBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_brick_slab")
+    def PolishedBlackstoneBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_brick_stairs")
+    def PolishedBlackstoneBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_brick_wall")
+    def PolishedBlackstoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_bricks")
+    def PolishedBlackstoneButton() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_button")
+    def PolishedBlackstonePressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_pressure_plate")
+    def PolishedBlackstoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_slab")
+    def PolishedBlackstoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_stairs")
+    def PolishedBlackstoneWall() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_blackstone_wall")
+    def PolishedDeepslate() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_deepslate")
+    def PolishedDeepslateSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_deepslate_slab")
+    def PolishedDeepslateStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_deepslate_stairs")
+    def PolishedDeepslateWall() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_deepslate_wall")
+    def PolishedDiorite() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_diorite")
+    def PolishedDioriteSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_diorite_slab")
+    def PolishedDioriteStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_diorite_stairs")
+    def PolishedGranite() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_granite")
+    def PolishedGraniteSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_granite_slab")
+    def PolishedGraniteStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_granite_stairs")
+    def PolishedTuff() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_tuff")
+    def PolishedTuffSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_tuff_slab")
+    def PolishedTuffStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_tuff_stairs")
+    def PolishedTuffWall() -> MinecraftItemDescriptor: return item_factory("minecraft:polished_tuff_wall")
+    def PoppedChorusFruit() -> MinecraftItemDescriptor: return item_factory("minecraft:popped_chorus_fruit")
+    def Poppy() -> MinecraftItemDescriptor: return item_factory("minecraft:poppy")
+    def Porkchop() -> MinecraftItemDescriptor: return item_factory("minecraft:porkchop")
+    def Potato() -> MinecraftItemDescriptor: return item_factory("minecraft:potato")
+    def Potion() -> MinecraftItemDescriptor: return item_factory("minecraft:potion")
+    def PowderSnowBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:powder_snow_bucket")
+    def Prismarine() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine")
+    def PrismarineBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine_brick_slab")
+    def PrismarineBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine_bricks")
+    def PrismarineBricksStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine_bricks_stairs")
+    def PrismarineCrystals() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine_crystals")
+    def PrismarineShard() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine_shard")
+    def PrismarineSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine_slab")
+    def PrismarineStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine_stairs")
+    def PrismarineWall() -> MinecraftItemDescriptor: return item_factory("minecraft:prismarine_wall")
+    def PrizePotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:prize_pottery_sherd")
+    def Pufferfish() -> MinecraftItemDescriptor: return item_factory("minecraft:pufferfish")
+    def PufferfishBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:pufferfish_bucket")
+    def PufferfishSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:pufferfish_spawn_egg")
+    def Pumpkin() -> MinecraftItemDescriptor: return item_factory("minecraft:pumpkin")
+    def PumpkinPie() -> MinecraftItemDescriptor: return item_factory("minecraft:pumpkin_pie")
+    def PumpkinSeeds() -> MinecraftItemDescriptor: return item_factory("minecraft:pumpkin_seeds")
+    def PurpleBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_bundle")
+    def PurpleCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_candle")
+    def PurpleCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_carpet")
+    def PurpleConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_concrete")
+    def PurpleConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_concrete_powder")
+    def PurpleDye() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_dye")
+    def PurpleGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_glazed_terracotta")
+    def PurpleHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_harness")
+    def PurpleShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_shulker_box")
+    def PurpleStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_stained_glass")
+    def PurpleStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_stained_glass_pane")
+    def PurpleTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_terracotta")
+    def PurpleWool() -> MinecraftItemDescriptor: return item_factory("minecraft:purple_wool")
+    def PurpurBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:purpur_block")
+    def PurpurPillar() -> MinecraftItemDescriptor: return item_factory("minecraft:purpur_pillar")
+    def PurpurSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:purpur_slab")
+    def PurpurStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:purpur_stairs")
+    def Quartz() -> MinecraftItemDescriptor: return item_factory("minecraft:quartz")
+    def QuartzBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:quartz_block")
+    def QuartzBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:quartz_bricks")
+    def QuartzOre() -> MinecraftItemDescriptor: return item_factory("minecraft:quartz_ore")
+    def QuartzPillar() -> MinecraftItemDescriptor: return item_factory("minecraft:quartz_pillar")
+    def QuartzSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:quartz_slab")
+    def QuartzStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:quartz_stairs")
+    def Rabbit() -> MinecraftItemDescriptor: return item_factory("minecraft:rabbit")
+    def RabbitFoot() -> MinecraftItemDescriptor: return item_factory("minecraft:rabbit_foot")
+    def RabbitHide() -> MinecraftItemDescriptor: return item_factory("minecraft:rabbit_hide")
+    def RabbitSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:rabbit_spawn_egg")
+    def RabbitStew() -> MinecraftItemDescriptor: return item_factory("minecraft:rabbit_stew")
+    def Rail() -> MinecraftItemDescriptor: return item_factory("minecraft:rail")
+    def RaiserArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:raiser_armor_trim_smithing_template")
+    def RavagerSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:ravager_spawn_egg")
+    def RawCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:raw_copper")
+    def RawCopperBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:raw_copper_block")
+    def RawGold() -> MinecraftItemDescriptor: return item_factory("minecraft:raw_gold")
+    def RawGoldBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:raw_gold_block")
+    def RawIron() -> MinecraftItemDescriptor: return item_factory("minecraft:raw_iron")
+    def RawIronBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:raw_iron_block")
+    def RecoveryCompass() -> MinecraftItemDescriptor: return item_factory("minecraft:recovery_compass")
+    def RedBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:red_bundle")
+    def RedCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:red_candle")
+    def RedCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:red_carpet")
+    def RedConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:red_concrete")
+    def RedConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:red_concrete_powder")
+    def RedDye() -> MinecraftItemDescriptor: return item_factory("minecraft:red_dye")
+    def RedGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:red_glazed_terracotta")
+    def RedHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:red_harness")
+    def RedMushroom() -> MinecraftItemDescriptor: return item_factory("minecraft:red_mushroom")
+    def RedMushroomBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:red_mushroom_block")
+    def RedNetherBrick() -> MinecraftItemDescriptor: return item_factory("minecraft:red_nether_brick")
+    def RedNetherBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:red_nether_brick_slab")
+    def RedNetherBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:red_nether_brick_stairs")
+    def RedNetherBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:red_nether_brick_wall")
+    def RedSand() -> MinecraftItemDescriptor: return item_factory("minecraft:red_sand")
+    def RedSandstone() -> MinecraftItemDescriptor: return item_factory("minecraft:red_sandstone")
+    def RedSandstoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:red_sandstone_slab")
+    def RedSandstoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:red_sandstone_stairs")
+    def RedSandstoneWall() -> MinecraftItemDescriptor: return item_factory("minecraft:red_sandstone_wall")
+    def RedShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:red_shulker_box")
+    def RedStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:red_stained_glass")
+    def RedStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:red_stained_glass_pane")
+    def RedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:red_terracotta")
+    def RedTulip() -> MinecraftItemDescriptor: return item_factory("minecraft:red_tulip")
+    def RedWool() -> MinecraftItemDescriptor: return item_factory("minecraft:red_wool")
+    def Redstone() -> MinecraftItemDescriptor: return item_factory("minecraft:redstone")
+    def RedstoneBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:redstone_block")
+    def RedstoneLamp() -> MinecraftItemDescriptor: return item_factory("minecraft:redstone_lamp")
+    def RedstoneOre() -> MinecraftItemDescriptor: return item_factory("minecraft:redstone_ore")
+    def RedstoneTorch() -> MinecraftItemDescriptor: return item_factory("minecraft:redstone_torch")
+    def ReinforcedDeepslate() -> MinecraftItemDescriptor: return item_factory("minecraft:reinforced_deepslate")
+    def Repeater() -> MinecraftItemDescriptor: return item_factory("minecraft:repeater")
+    def RepeatingCommandBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:repeating_command_block")
+    def ResinBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:resin_block")
+    def ResinBrick() -> MinecraftItemDescriptor: return item_factory("minecraft:resin_brick")
+    def ResinBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:resin_brick_slab")
+    def ResinBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:resin_brick_stairs")
+    def ResinBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:resin_brick_wall")
+    def ResinBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:resin_bricks")
+    def ResinClump() -> MinecraftItemDescriptor: return item_factory("minecraft:resin_clump")
+    def RespawnAnchor() -> MinecraftItemDescriptor: return item_factory("minecraft:respawn_anchor")
+    def RibArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:rib_armor_trim_smithing_template")
+    def RoseBush() -> MinecraftItemDescriptor: return item_factory("minecraft:rose_bush")
+    def RottenFlesh() -> MinecraftItemDescriptor: return item_factory("minecraft:rotten_flesh")
+    def Saddle() -> MinecraftItemDescriptor: return item_factory("minecraft:saddle")
+    def Salmon() -> MinecraftItemDescriptor: return item_factory("minecraft:salmon")
+    def SalmonBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:salmon_bucket")
+    def SalmonSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:salmon_spawn_egg")
+    def Sand() -> MinecraftItemDescriptor: return item_factory("minecraft:sand")
+    def Sandstone() -> MinecraftItemDescriptor: return item_factory("minecraft:sandstone")
+    def SandstoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:sandstone_slab")
+    def SandstoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:sandstone_stairs")
+    def SandstoneWall() -> MinecraftItemDescriptor: return item_factory("minecraft:sandstone_wall")
+    def Scaffolding() -> MinecraftItemDescriptor: return item_factory("minecraft:scaffolding")
+    def ScrapePotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:scrape_pottery_sherd")
+    def Sculk() -> MinecraftItemDescriptor: return item_factory("minecraft:sculk")
+    def SculkCatalyst() -> MinecraftItemDescriptor: return item_factory("minecraft:sculk_catalyst")
+    def SculkSensor() -> MinecraftItemDescriptor: return item_factory("minecraft:sculk_sensor")
+    def SculkShrieker() -> MinecraftItemDescriptor: return item_factory("minecraft:sculk_shrieker")
+    def SculkVein() -> MinecraftItemDescriptor: return item_factory("minecraft:sculk_vein")
+    def SeaLantern() -> MinecraftItemDescriptor: return item_factory("minecraft:sea_lantern")
+    def SeaPickle() -> MinecraftItemDescriptor: return item_factory("minecraft:sea_pickle")
+    def Seagrass() -> MinecraftItemDescriptor: return item_factory("minecraft:seagrass")
+    def SentryArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:sentry_armor_trim_smithing_template")
+    def ShaperArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:shaper_armor_trim_smithing_template")
+    def SheafPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:sheaf_pottery_sherd")
+    def Shears() -> MinecraftItemDescriptor: return item_factory("minecraft:shears")
+    def SheepSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:sheep_spawn_egg")
+    def ShelterPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:shelter_pottery_sherd")
+    def Shield() -> MinecraftItemDescriptor: return item_factory("minecraft:shield")
+    def ShortDryGrass() -> MinecraftItemDescriptor: return item_factory("minecraft:short_dry_grass")
+    def ShortGrass() -> MinecraftItemDescriptor: return item_factory("minecraft:short_grass")
+    def Shroomlight() -> MinecraftItemDescriptor: return item_factory("minecraft:shroomlight")
+    def ShulkerShell() -> MinecraftItemDescriptor: return item_factory("minecraft:shulker_shell")
+    def ShulkerSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:shulker_spawn_egg")
+    def SilenceArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:silence_armor_trim_smithing_template")
+    def SilverGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:silver_glazed_terracotta")
+    def SilverfishSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:silverfish_spawn_egg")
+    def SkeletonHorseSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:skeleton_horse_spawn_egg")
+    def SkeletonSkull() -> MinecraftItemDescriptor: return item_factory("minecraft:skeleton_skull")
+    def SkeletonSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:skeleton_spawn_egg")
+    def SkullBannerPattern() -> MinecraftItemDescriptor: return item_factory("minecraft:skull_banner_pattern")
+    def SkullPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:skull_pottery_sherd")
+    def Slime() -> MinecraftItemDescriptor: return item_factory("minecraft:slime")
+    def SlimeBall() -> MinecraftItemDescriptor: return item_factory("minecraft:slime_ball")
+    def SlimeSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:slime_spawn_egg")
+    def SmallAmethystBud() -> MinecraftItemDescriptor: return item_factory("minecraft:small_amethyst_bud")
+    def SmallDripleafBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:small_dripleaf_block")
+    def SmithingTable() -> MinecraftItemDescriptor: return item_factory("minecraft:smithing_table")
+    def Smoker() -> MinecraftItemDescriptor: return item_factory("minecraft:smoker")
+    def SmoothBasalt() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_basalt")
+    def SmoothQuartz() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_quartz")
+    def SmoothQuartzSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_quartz_slab")
+    def SmoothQuartzStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_quartz_stairs")
+    def SmoothRedSandstone() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_red_sandstone")
+    def SmoothRedSandstoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_red_sandstone_slab")
+    def SmoothRedSandstoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_red_sandstone_stairs")
+    def SmoothSandstone() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_sandstone")
+    def SmoothSandstoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_sandstone_slab")
+    def SmoothSandstoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_sandstone_stairs")
+    def SmoothStone() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_stone")
+    def SmoothStoneSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:smooth_stone_slab")
+    def SnifferEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:sniffer_egg")
+    def SnifferSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:sniffer_spawn_egg")
+    def SnortPotterySherd() -> MinecraftItemDescriptor: return item_factory("minecraft:snort_pottery_sherd")
+    def SnoutArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:snout_armor_trim_smithing_template")
+    def Snow() -> MinecraftItemDescriptor: return item_factory("minecraft:snow")
+    def SnowGolemSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:snow_golem_spawn_egg")
+    def SnowLayer() -> MinecraftItemDescriptor: return item_factory("minecraft:snow_layer")
+    def Snowball() -> MinecraftItemDescriptor: return item_factory("minecraft:snowball")
+    def SoulCampfire() -> MinecraftItemDescriptor: return item_factory("minecraft:soul_campfire")
+    def SoulLantern() -> MinecraftItemDescriptor: return item_factory("minecraft:soul_lantern")
+    def SoulSand() -> MinecraftItemDescriptor: return item_factory("minecraft:soul_sand")
+    def SoulSoil() -> MinecraftItemDescriptor: return item_factory("minecraft:soul_soil")
+    def SoulTorch() -> MinecraftItemDescriptor: return item_factory("minecraft:soul_torch")
+    def SpiderEye() -> MinecraftItemDescriptor: return item_factory("minecraft:spider_eye")
+    def SpiderSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:spider_spawn_egg")
+    def SpireArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:spire_armor_trim_smithing_template")
+    def SplashPotion() -> MinecraftItemDescriptor: return item_factory("minecraft:splash_potion")
+    def Sponge() -> MinecraftItemDescriptor: return item_factory("minecraft:sponge")
+    def SporeBlossom() -> MinecraftItemDescriptor: return item_factory("minecraft:spore_blossom")
+    def SpruceBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_boat")
+    def SpruceButton() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_button")
+    def SpruceChestBoat() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_chest_boat")
+    def SpruceDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_door")
+    def SpruceFence() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_fence")
+    def SpruceFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_fence_gate")
+    def SpruceHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_hanging_sign")
+    def SpruceLeaves() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_leaves")
+    def SpruceLog() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_log")
+    def SprucePlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_planks")
+    def SprucePressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_pressure_plate")
+    def SpruceSapling() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_sapling")
+    def SpruceSign() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_sign")
+    def SpruceSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_slab")
+    def SpruceStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_stairs")
+    def SpruceTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_trapdoor")
+    def SpruceWood() -> MinecraftItemDescriptor: return item_factory("minecraft:spruce_wood")
+    def Spyglass() -> MinecraftItemDescriptor: return item_factory("minecraft:spyglass")
+    def SquidSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:squid_spawn_egg")
+    def Stick() -> MinecraftItemDescriptor: return item_factory("minecraft:stick")
+    def StickyPiston() -> MinecraftItemDescriptor: return item_factory("minecraft:sticky_piston")
+    def Stone() -> MinecraftItemDescriptor: return item_factory("minecraft:stone")
+    def StoneAxe() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_axe")
+    def StoneBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_brick_slab")
+    def StoneBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_brick_stairs")
+    def StoneBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_brick_wall")
+    def StoneBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_bricks")
+    def StoneButton() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_button")
+    def StoneHoe() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_hoe")
+    def StonePickaxe() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_pickaxe")
+    def StonePressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_pressure_plate")
+    def StoneShovel() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_shovel")
+    def StoneStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_stairs")
+    def StoneSword() -> MinecraftItemDescriptor: return item_factory("minecraft:stone_sword")
+    def StonecutterBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:stonecutter_block")
+    def StraySpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:stray_spawn_egg")
+    def StriderSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:strider_spawn_egg")
+    def String() -> MinecraftItemDescriptor: return item_factory("minecraft:string")
+    def StrippedAcaciaLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_acacia_log")
+    def StrippedAcaciaWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_acacia_wood")
+    def StrippedBambooBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_bamboo_block")
+    def StrippedBirchLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_birch_log")
+    def StrippedBirchWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_birch_wood")
+    def StrippedCherryLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_cherry_log")
+    def StrippedCherryWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_cherry_wood")
+    def StrippedCrimsonHyphae() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_crimson_hyphae")
+    def StrippedCrimsonStem() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_crimson_stem")
+    def StrippedDarkOakLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_dark_oak_log")
+    def StrippedDarkOakWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_dark_oak_wood")
+    def StrippedJungleLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_jungle_log")
+    def StrippedJungleWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_jungle_wood")
+    def StrippedMangroveLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_mangrove_log")
+    def StrippedMangroveWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_mangrove_wood")
+    def StrippedOakLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_oak_log")
+    def StrippedOakWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_oak_wood")
+    def StrippedPaleOakLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_pale_oak_log")
+    def StrippedPaleOakWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_pale_oak_wood")
+    def StrippedSpruceLog() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_spruce_log")
+    def StrippedSpruceWood() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_spruce_wood")
+    def StrippedWarpedHyphae() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_warped_hyphae")
+    def StrippedWarpedStem() -> MinecraftItemDescriptor: return item_factory("minecraft:stripped_warped_stem")
+    def StructureBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:structure_block")
+    def StructureVoid() -> MinecraftItemDescriptor: return item_factory("minecraft:structure_void")
+    def Sugar() -> MinecraftItemDescriptor: return item_factory("minecraft:sugar")
+    def SugarCane() -> MinecraftItemDescriptor: return item_factory("minecraft:sugar_cane")
+    def Sunflower() -> MinecraftItemDescriptor: return item_factory("minecraft:sunflower")
+    def SuspiciousGravel() -> MinecraftItemDescriptor: return item_factory("minecraft:suspicious_gravel")
+    def SuspiciousSand() -> MinecraftItemDescriptor: return item_factory("minecraft:suspicious_sand")
+    def SuspiciousStew() -> MinecraftItemDescriptor: return item_factory("minecraft:suspicious_stew")
+    def SweetBerries() -> MinecraftItemDescriptor: return item_factory("minecraft:sweet_berries")
+    def TadpoleBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:tadpole_bucket")
+    def TadpoleSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:tadpole_spawn_egg")
+    def TallDryGrass() -> MinecraftItemDescriptor: return item_factory("minecraft:tall_dry_grass")
+    def TallGrass() -> MinecraftItemDescriptor: return item_factory("minecraft:tall_grass")
+    def Target() -> MinecraftItemDescriptor: return item_factory("minecraft:target")
+    def TideArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:tide_armor_trim_smithing_template")
+    def TintedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:tinted_glass")
+    def Tnt() -> MinecraftItemDescriptor: return item_factory("minecraft:tnt")
+    def TntMinecart() -> MinecraftItemDescriptor: return item_factory("minecraft:tnt_minecart")
+    def Torch() -> MinecraftItemDescriptor: return item_factory("minecraft:torch")
+    def Torchflower() -> MinecraftItemDescriptor: return item_factory("minecraft:torchflower")
+    def TorchflowerSeeds() -> MinecraftItemDescriptor: return item_factory("minecraft:torchflower_seeds")
+    def TotemOfUndying() -> MinecraftItemDescriptor: return item_factory("minecraft:totem_of_undying")
+    def TraderLlamaSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:trader_llama_spawn_egg")
+    def Trapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:trapdoor")
+    def TrappedChest() -> MinecraftItemDescriptor: return item_factory("minecraft:trapped_chest")
+    def TrialKey() -> MinecraftItemDescriptor: return item_factory("minecraft:trial_key")
+    def TrialSpawner() -> MinecraftItemDescriptor: return item_factory("minecraft:trial_spawner")
+    def Trident() -> MinecraftItemDescriptor: return item_factory("minecraft:trident")
+    def TripwireHook() -> MinecraftItemDescriptor: return item_factory("minecraft:tripwire_hook")
+    def TropicalFish() -> MinecraftItemDescriptor: return item_factory("minecraft:tropical_fish")
+    def TropicalFishBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:tropical_fish_bucket")
+    def TropicalFishSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:tropical_fish_spawn_egg")
+    def TubeCoral() -> MinecraftItemDescriptor: return item_factory("minecraft:tube_coral")
+    def TubeCoralBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:tube_coral_block")
+    def TubeCoralFan() -> MinecraftItemDescriptor: return item_factory("minecraft:tube_coral_fan")
+    def Tuff() -> MinecraftItemDescriptor: return item_factory("minecraft:tuff")
+    def TuffBrickSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:tuff_brick_slab")
+    def TuffBrickStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:tuff_brick_stairs")
+    def TuffBrickWall() -> MinecraftItemDescriptor: return item_factory("minecraft:tuff_brick_wall")
+    def TuffBricks() -> MinecraftItemDescriptor: return item_factory("minecraft:tuff_bricks")
+    def TuffSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:tuff_slab")
+    def TuffStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:tuff_stairs")
+    def TuffWall() -> MinecraftItemDescriptor: return item_factory("minecraft:tuff_wall")
+    def TurtleEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:turtle_egg")
+    def TurtleHelmet() -> MinecraftItemDescriptor: return item_factory("minecraft:turtle_helmet")
+    def TurtleScute() -> MinecraftItemDescriptor: return item_factory("minecraft:turtle_scute")
+    def TurtleSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:turtle_spawn_egg")
+    def TwistingVines() -> MinecraftItemDescriptor: return item_factory("minecraft:twisting_vines")
+    def UndyedShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:undyed_shulker_box")
+    def Vault() -> MinecraftItemDescriptor: return item_factory("minecraft:vault")
+    def VerdantFroglight() -> MinecraftItemDescriptor: return item_factory("minecraft:verdant_froglight")
+    def VexArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:vex_armor_trim_smithing_template")
+    def VexSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:vex_spawn_egg")
+    def VillagerSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:villager_spawn_egg")
+    def VindicatorSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:vindicator_spawn_egg")
+    def Vine() -> MinecraftItemDescriptor: return item_factory("minecraft:vine")
+    def WanderingTraderSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:wandering_trader_spawn_egg")
+    def WardArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:ward_armor_trim_smithing_template")
+    def WardenSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:warden_spawn_egg")
+    def WarpedButton() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_button")
+    def WarpedDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_door")
+    def WarpedFence() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_fence")
+    def WarpedFenceGate() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_fence_gate")
+    def WarpedFungus() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_fungus")
+    def WarpedFungusOnAStick() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_fungus_on_a_stick")
+    def WarpedHangingSign() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_hanging_sign")
+    def WarpedHyphae() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_hyphae")
+    def WarpedNylium() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_nylium")
+    def WarpedPlanks() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_planks")
+    def WarpedPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_pressure_plate")
+    def WarpedRoots() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_roots")
+    def WarpedSign() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_sign")
+    def WarpedSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_slab")
+    def WarpedStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_stairs")
+    def WarpedStem() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_stem")
+    def WarpedTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_trapdoor")
+    def WarpedWartBlock() -> MinecraftItemDescriptor: return item_factory("minecraft:warped_wart_block")
+    def WaterBucket() -> MinecraftItemDescriptor: return item_factory("minecraft:water_bucket")
+    def Waterlily() -> MinecraftItemDescriptor: return item_factory("minecraft:waterlily")
+    def WaxedChiseledCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_chiseled_copper")
+    def WaxedCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_copper")
+    def WaxedCopperBulb() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_copper_bulb")
+    def WaxedCopperChest() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_copper_chest")
+    def WaxedCopperDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_copper_door")
+    def WaxedCopperGrate() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_copper_grate")
+    def WaxedCopperTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_copper_trapdoor")
+    def WaxedCutCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_cut_copper")
+    def WaxedCutCopperSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_cut_copper_slab")
+    def WaxedCutCopperStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_cut_copper_stairs")
+    def WaxedExposedChiseledCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_chiseled_copper")
+    def WaxedExposedCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_copper")
+    def WaxedExposedCopperBulb() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_copper_bulb")
+    def WaxedExposedCopperChest() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_copper_chest")
+    def WaxedExposedCopperDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_copper_door")
+    def WaxedExposedCopperGrate() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_copper_grate")
+    def WaxedExposedCopperTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_copper_trapdoor")
+    def WaxedExposedCutCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_cut_copper")
+    def WaxedExposedCutCopperSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_cut_copper_slab")
+    def WaxedExposedCutCopperStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_exposed_cut_copper_stairs")
+    def WaxedOxidizedChiseledCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_chiseled_copper")
+    def WaxedOxidizedCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_copper")
+    def WaxedOxidizedCopperBulb() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_copper_bulb")
+    def WaxedOxidizedCopperChest() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_copper_chest")
+    def WaxedOxidizedCopperDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_copper_door")
+    def WaxedOxidizedCopperGrate() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_copper_grate")
+    def WaxedOxidizedCopperTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_copper_trapdoor")
+    def WaxedOxidizedCutCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_cut_copper")
+    def WaxedOxidizedCutCopperSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_cut_copper_slab")
+    def WaxedOxidizedCutCopperStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_oxidized_cut_copper_stairs")
+    def WaxedWeatheredChiseledCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_chiseled_copper")
+    def WaxedWeatheredCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_copper")
+    def WaxedWeatheredCopperBulb() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_copper_bulb")
+    def WaxedWeatheredCopperChest() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_copper_chest")
+    def WaxedWeatheredCopperDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_copper_door")
+    def WaxedWeatheredCopperGrate() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_copper_grate")
+    def WaxedWeatheredCopperTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_copper_trapdoor")
+    def WaxedWeatheredCutCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_cut_copper")
+    def WaxedWeatheredCutCopperSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_cut_copper_slab")
+    def WaxedWeatheredCutCopperStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:waxed_weathered_cut_copper_stairs")
+    def WayfinderArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:wayfinder_armor_trim_smithing_template")
+    def WeatheredChiseledCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_chiseled_copper")
+    def WeatheredCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_copper")
+    def WeatheredCopperBulb() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_copper_bulb")
+    def WeatheredCopperChest() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_copper_chest")
+    def WeatheredCopperDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_copper_door")
+    def WeatheredCopperGrate() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_copper_grate")
+    def WeatheredCopperTrapdoor() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_copper_trapdoor")
+    def WeatheredCutCopper() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_cut_copper")
+    def WeatheredCutCopperSlab() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_cut_copper_slab")
+    def WeatheredCutCopperStairs() -> MinecraftItemDescriptor: return item_factory("minecraft:weathered_cut_copper_stairs")
+    def Web() -> MinecraftItemDescriptor: return item_factory("minecraft:web")
+    def WeepingVines() -> MinecraftItemDescriptor: return item_factory("minecraft:weeping_vines")
+    def WetSponge() -> MinecraftItemDescriptor: return item_factory("minecraft:wet_sponge")
+    def Wheat() -> MinecraftItemDescriptor: return item_factory("minecraft:wheat")
+    def WheatSeeds() -> MinecraftItemDescriptor: return item_factory("minecraft:wheat_seeds")
+    def WhiteBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:white_bundle")
+    def WhiteCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:white_candle")
+    def WhiteCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:white_carpet")
+    def WhiteConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:white_concrete")
+    def WhiteConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:white_concrete_powder")
+    def WhiteDye() -> MinecraftItemDescriptor: return item_factory("minecraft:white_dye")
+    def WhiteGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:white_glazed_terracotta")
+    def WhiteHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:white_harness")
+    def WhiteShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:white_shulker_box")
+    def WhiteStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:white_stained_glass")
+    def WhiteStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:white_stained_glass_pane")
+    def WhiteTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:white_terracotta")
+    def WhiteTulip() -> MinecraftItemDescriptor: return item_factory("minecraft:white_tulip")
+    def WhiteWool() -> MinecraftItemDescriptor: return item_factory("minecraft:white_wool")
+    def WildArmorTrimSmithingTemplate() -> MinecraftItemDescriptor: return item_factory("minecraft:wild_armor_trim_smithing_template")
+    def Wildflowers() -> MinecraftItemDescriptor: return item_factory("minecraft:wildflowers")
+    def WindCharge() -> MinecraftItemDescriptor: return item_factory("minecraft:wind_charge")
+    def WitchSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:witch_spawn_egg")
+    def WitherRose() -> MinecraftItemDescriptor: return item_factory("minecraft:wither_rose")
+    def WitherSkeletonSkull() -> MinecraftItemDescriptor: return item_factory("minecraft:wither_skeleton_skull")
+    def WitherSkeletonSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:wither_skeleton_spawn_egg")
+    def WitherSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:wither_spawn_egg")
+    def WolfArmor() -> MinecraftItemDescriptor: return item_factory("minecraft:wolf_armor")
+    def WolfSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:wolf_spawn_egg")
+    def WoodenAxe() -> MinecraftItemDescriptor: return item_factory("minecraft:wooden_axe")
+    def WoodenButton() -> MinecraftItemDescriptor: return item_factory("minecraft:wooden_button")
+    def WoodenDoor() -> MinecraftItemDescriptor: return item_factory("minecraft:wooden_door")
+    def WoodenHoe() -> MinecraftItemDescriptor: return item_factory("minecraft:wooden_hoe")
+    def WoodenPickaxe() -> MinecraftItemDescriptor: return item_factory("minecraft:wooden_pickaxe")
+    def WoodenPressurePlate() -> MinecraftItemDescriptor: return item_factory("minecraft:wooden_pressure_plate")
+    def WoodenShovel() -> MinecraftItemDescriptor: return item_factory("minecraft:wooden_shovel")
+    def WoodenSword() -> MinecraftItemDescriptor: return item_factory("minecraft:wooden_sword")
+    def WritableBook() -> MinecraftItemDescriptor: return item_factory("minecraft:writable_book")
+    def YellowBundle() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_bundle")
+    def YellowCandle() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_candle")
+    def YellowCarpet() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_carpet")
+    def YellowConcrete() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_concrete")
+    def YellowConcretePowder() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_concrete_powder")
+    def YellowDye() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_dye")
+    def YellowGlazedTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_glazed_terracotta")
+    def YellowHarness() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_harness")
+    def YellowShulkerBox() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_shulker_box")
+    def YellowStainedGlass() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_stained_glass")
+    def YellowStainedGlassPane() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_stained_glass_pane")
+    def YellowTerracotta() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_terracotta")
+    def YellowWool() -> MinecraftItemDescriptor: return item_factory("minecraft:yellow_wool")
+    def ZoglinSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:zoglin_spawn_egg")
+    def ZombieHead() -> MinecraftItemDescriptor: return item_factory("minecraft:zombie_head")
+    def ZombieHorseSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:zombie_horse_spawn_egg")
+    def ZombiePigmanSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:zombie_pigman_spawn_egg")
+    def ZombieSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:zombie_spawn_egg")
+    def ZombieVillagerSpawnEgg() -> MinecraftItemDescriptor: return item_factory("minecraft:zombie_villager_spawn_egg")

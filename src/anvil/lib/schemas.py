@@ -619,6 +619,8 @@ class AddonDescriptor:
 
         Parameters:
             name (str): The name of the addon object.
+            is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
+            is_vanilla_allowed (bool, optional): If overriding vanilla objects is allowed. Defaults to False.
         """
 
         self._is_vanilla = is_vanilla
@@ -781,14 +783,6 @@ class MinecraftAddonObject(AddonDescriptor):
         super().__init__(name, is_vanilla, is_vanilla_allowed)
 
 
-class MinecraftEntityDescriptor(MinecraftAddonObject):
-    _object_type = "Entity Descriptor"
-
-    def __init__(self, name, is_vanilla=False, allow_runtime: bool = True, is_vanilla_allowed=True):
-        super().__init__(name, is_vanilla, is_vanilla_allowed)
-        self._allow_runtime = allow_runtime
-
-
 class MinecraftBlockDescriptor(AddonDescriptor):
     _object_type = "Block Descriptor"
 
@@ -844,6 +838,14 @@ class MinecraftBiomeDescriptor(AddonDescriptor):
 
     def __str__(self) -> Identifier:
         return self.identifier
+
+
+class MinecraftEntityDescriptor(MinecraftAddonObject):
+    _object_type = "Entity Descriptor"
+
+    def __init__(self, name, is_vanilla=False, allow_runtime: bool = True, is_vanilla_allowed=True):
+        super().__init__(name, is_vanilla, is_vanilla_allowed)
+        self._allow_runtime = allow_runtime
 
 
 class EntityDescriptor(MinecraftEntityDescriptor):

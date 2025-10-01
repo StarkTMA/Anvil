@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.4.2**](#version-0942)
+- [**Version 0.9.4.3**](#version-0943)
+- [Version 0.9.4.2](#version-0942)
 - [Version 0.9.4.1](#version-0941)
 - [Version 0.9.4](#version-094)
 - [Version 0.9.3.1](#version-0931)
@@ -71,6 +72,11 @@
 - [Version 0.0.0 → 0.1.0](#version-000--010)
 
 ---
+
+## Version 0.9.4.3
+
+### Vanilla
+- Updated Minecraft vanilla definitions to 1.21.111
 
 ## Version 0.9.4.2
 
