@@ -6,15 +6,14 @@ from anvil.api.actors.actors import _Components
 from anvil.api.blocks.components import (BlockDefault, BlockDisplayName,
                                          BlockGeometry, BlockMaterialInstance)
 from anvil.api.logic.molang import Molang
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
-from anvil.lib.blockbench import _Blockbench
-from anvil.lib.enums import (ItemCategory, ItemGroups,
-                             PlacementDirectionTrait, PlacementPositionTrait)
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.lib.components import _BaseComponent
+from anvil.lib.enums import (ItemCategory, ItemGroups, PlacementDirectionTrait,
+                             PlacementPositionTrait)
 from anvil.lib.lib import IMAGE_EXTENSIONS_PRIORITY, CopyFiles
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (AddonObject, BlockDescriptor, JsonSchemes,
-                               MinecraftDescription, _BaseComponent)
-from anvil.api.vanilla.blocks import MinecraftBlockTags
+                               MinecraftDescription)
 
 __all__ = ["Block"]
 

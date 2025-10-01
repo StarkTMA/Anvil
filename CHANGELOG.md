@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.4.3**](#version-0943)
+- [**Version 0.9.4.4**](#version-0944)
+- [Version 0.9.4.3](#version-0943)
 - [Version 0.9.4.2](#version-0942)
 - [Version 0.9.4.1](#version-0941)
 - [Version 0.9.4](#version-094)
@@ -72,6 +73,12 @@
 - [Version 0.0.0 → 0.1.0](#version-000--010)
 
 ---
+
+## Version 0.9.4.4
+
+### Anvil
+- Fixed circular import issue.
+- Anvil now supports Minecraft Preview GDK migration from UWP, current Minecraft release still uses old UWP paths.
 
 ## Version 0.9.4.3
 

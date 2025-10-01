@@ -1,22 +1,20 @@
 import math
-from typing import Any, Dict, List, TypedDict
+from typing import Any
 
 from anvil import ANVIL, CONFIG
 from anvil.api.logic.molang import Molang
+from anvil.lib.components import _BaseAIGoal, _BaseComponent, _BaseEventTrigger
 from anvil.lib.enums import (BreedingMutationStrategy, ContainerType,
-                             ControlFlags, DamageCause, DamageSensor,
-                             Difficulty, Effects, ExplosionParticleEffect,
-                             FilterEquipmentDomain, FilterOperation,
-                             FilterSubject, LeashSpringType,
-                             LineOfSightObstructionType, LookAtLocation,
-                             LootedAtSetTarget, MinecraftBiomeTags,
+                             ControlFlags, DamageCause, DamageSensor, Effects,
+                             ExplosionParticleEffect, FilterSubject,
+                             LeashSpringType, LineOfSightObstructionType,
+                             LookAtLocation, LootedAtSetTarget,
                              RideableDismountMode, Slots, Vibrations)
 from anvil.lib.filters import Filter
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import (BlockDescriptor, ItemDescriptor,
-                               MinecraftBlockDescriptor, _BaseAIGoal,
-                               _BaseComponent, _BaseEventTrigger)
+                               MinecraftBlockDescriptor)
 from anvil.lib.types import *
 
 __all__ = [

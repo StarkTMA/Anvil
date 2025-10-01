@@ -14,8 +14,13 @@ from anvil.lib.types import Color
 
 from ..__version__ import __version__
 
-APPDATA: str = os.getenv("APPDATA").rstrip("Roaming")  # type: ignore
-DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")  # type: ignore
+APPDATA: str = os.getenv("APPDATA")
+APPDATA_LOCAL: str = os.getenv("LOCALAPPDATA")
+
+RELEASE_COM_MOJANG = os.path.join(APPDATA_LOCAL, "Packages", "Microsoft.MinecraftUWP_8wekyb3d8bbwe", "LocalState", "games", "com.mojang")
+PREVIEW_COM_MOJANG = os.path.join(APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang")
+
+DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")
 MOLANG_PREFIXES = ("q.", "v.", "c.", "t.", "query.", "variable.", "context.", "temp.", "math.")
 IMAGE_EXTENSIONS_PRIORITY = [".tga", ".png", ".jpg", ".jpeg"]
 

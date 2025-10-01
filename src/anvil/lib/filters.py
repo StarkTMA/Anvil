@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from anvil import CONFIG
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.enums import (Difficulty, FilterEquipmentDomain,

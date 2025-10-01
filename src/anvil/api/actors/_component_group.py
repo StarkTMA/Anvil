@@ -1,7 +1,7 @@
 from typing import List
 
 from anvil import CONFIG
-from anvil.api.actors.components import _BaseComponent
+from anvil.lib.components import _BaseComponent
 
 
 class _Components:

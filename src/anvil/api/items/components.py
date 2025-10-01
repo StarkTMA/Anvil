@@ -1,12 +1,14 @@
 from math import inf
 
 from anvil import ANVIL, CONFIG
-from anvil.lib.enums import Effects, EnchantsSlots, ItemCategory, ItemGroups, ItemRarity, Slots
+from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.components import _BaseComponent
+from anvil.lib.enums import Effects, EnchantsSlots, ItemRarity, Slots
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import clamp, process_color
-from anvil.lib.schemas import ItemDescriptor, _BaseComponent
+from anvil.lib.schemas import ItemDescriptor
 from anvil.lib.types import RGB, RGBA, Identifier, Seconds
-from anvil.api.vanilla.items import MinecraftItemTags
+
 
 # Require ITEM_SERVER_VERSION >= 1.21.111
 class ItemFireResistant(_BaseComponent):

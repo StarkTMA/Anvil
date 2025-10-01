@@ -10,7 +10,8 @@ from packaging.version import Version
 
 from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
-from anvil.lib.lib import APPDATA, FileExists, validate_namespace_project_name
+from anvil.lib.lib import (APPDATA, PREVIEW_COM_MOJANG, RELEASE_COM_MOJANG,
+                           FileExists, validate_namespace_project_name)
 from anvil.lib.reports import ReportCollector
 
 
@@ -297,18 +298,11 @@ class _AnvilConfig:
         self.Report.add_headers()
 
         self._load_configs()
-
-        self._COM_MOJANG = os.path.join(
-            APPDATA,
-            "Local",
-            "Packages",
-            f"Microsoft.Minecraft{'WindowsBeta' if self._PREVIEW else 'UWP'}_8wekyb3d8bbwe",
-            "LocalState",
-            "games",
-            "com.mojang",
-        )
+        
+        # GDK Setup preparation
+        self._COM_MOJANG = PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
         self._WORLD_PATH = os.path.join(self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME)
-
+        
         self.RP_PATH = os.path.join(self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}")
         self.BP_PATH = os.path.join(self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}")
 

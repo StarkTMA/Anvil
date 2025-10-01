@@ -11,6 +11,14 @@
         {
             "name": "Dev behavior Packs",
             "path": "{{ dev_beh_path|path }}"
+        },
+        {
+            "name": "Dev Preview Resource Packs",
+            "path": "{{ dev_prev_res_path|path }}"
+        },
+        {
+            "name": "Dev Preview behavior Packs",
+            "path": "{{ dev_prev_beh_path|path }}"
         }
     ]
 }

@@ -4,13 +4,13 @@ from anvil import ANVIL, CONFIG
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import __TextureSet
 from anvil.lib.blockbench import _Blockbench
+from anvil.lib.components import _BaseComponent
 from anvil.lib.enums import (BlockFaces, BlockLiquidDetectionTouching,
                              BlockMaterial, BlockMovementType, TintMethod)
 from anvil.lib.format_versions import (BLOCK_JSON_FORMAT_VERSION,
                                        BLOCK_SERVER_VERSION,
                                        ITEM_SERVER_VERSION)
 from anvil.lib.lib import CopyFiles, FileExists, clamp
-from anvil.lib.schemas import _BaseComponent
 from anvil.lib.types import RGB, RGBA
 
 

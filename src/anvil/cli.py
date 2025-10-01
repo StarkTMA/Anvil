@@ -10,8 +10,9 @@ from packaging.version import Version
 
 from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.format_versions import MANIFEST_BUILD
-from anvil.lib.lib import (APPDATA, DESKTOP, CreateDirectory, File, FileExists,
-                           RemoveDirectory, process_subcommand,
+from anvil.lib.lib import (APPDATA, APPDATA_LOCAL, DESKTOP, PREVIEW_COM_MOJANG,
+                           RELEASE_COM_MOJANG, CreateDirectory, File,
+                           FileExists, RemoveDirectory, process_subcommand,
                            validate_namespace_project_name)
 from anvil.lib.templater import load_file
 
@@ -62,7 +63,9 @@ class JsonSchemes:
         Returns:
             dict: The VSCode configuration data.
         """
-        return load_file("vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path, "project_name": project_name}, is_json=True)
+        return load_file(
+            "vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path, "project_name": project_name}, is_json=True
+        )
 
     @staticmethod
     def gitignore():
@@ -86,31 +89,21 @@ class JsonSchemes:
         Returns:
             dict: The workspace configuration data.
         """
+        DEV_RES_DIR = os.path.join(RELEASE_COM_MOJANG, "development_resource_packs")
+        DEV_BEH_DIR = os.path.join(RELEASE_COM_MOJANG, "development_behavior_packs")
+
+        DEV_PREV_RES_DIR = os.path.join(PREVIEW_COM_MOJANG, "development_resource_packs")
+        DEV_PREV_BEH_DIR = os.path.join(PREVIEW_COM_MOJANG, "development_behavior_packs")
+
         return load_file(
             "code_workspace.jsont",
             {
                 "name": name,
                 "path": os.path.join(path1, path2),
-                "dev_res_path": os.path.join(
-                    APPDATA,
-                    "Local",
-                    "Packages",
-                    f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
-                    "LocalState",
-                    "games",
-                    "com.mojang",
-                    "development_resource_packs",
-                ),
-                "dev_beh_path": os.path.join(
-                    APPDATA,
-                    "Local",
-                    "Packages",
-                    f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe",
-                    "LocalState",
-                    "games",
-                    "com.mojang",
-                    "development_behavior_packs",
-                ),
+                "dev_res_path": DEV_RES_DIR,
+                "dev_beh_path": DEV_BEH_DIR,
+                "dev_prev_res_path": DEV_PREV_RES_DIR,
+                "dev_prev_beh_path": DEV_PREV_BEH_DIR,
             },
             is_json=True,
         )
@@ -275,10 +268,7 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
     File(
         "launch.json",
         JsonSchemes.vscode(
-            os.path.join(DEV_BEH_DIR, "scripts"),
-            os.path.join(WORKING_DIR, "scripts", "javascript"),
-            script_uuid,
-            project_name
+            os.path.join(DEV_BEH_DIR, "scripts"), os.path.join(WORKING_DIR, "scripts", "javascript"), script_uuid, project_name
         ),
         ".vscode",
         "w",
@@ -373,9 +363,7 @@ def create(
     config.save()
 
     WORKING_DIR = os.getcwd()
-    MINECRAFT_BUILD = f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe"
-    APP_PACKAGES = os.path.join(APPDATA, "Local", "Packages")
-    COM_MOJANG = os.path.join(APP_PACKAGES, MINECRAFT_BUILD, "LocalState", "games", "com.mojang")
+    COM_MOJANG = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
     DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
     DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
 
@@ -428,9 +416,7 @@ def export_world(world_name: str) -> None:
             preview = data.get(ConfigSection.ANVIL).get(ConfigOption.PREVIEW)
             project_name = data.get(ConfigSection.PACKAGE).get(ConfigOption.PROJECT_NAME)
 
-        MINECRAFT_BUILD = f"Microsoft.Minecraft{'WindowsBeta' if preview else 'UWP'}_8wekyb3d8bbwe"
-        APP_PACKAGES = os.path.join(APPDATA, "Local", "Packages")
-        COM_MOJANG = os.path.join(APP_PACKAGES, MINECRAFT_BUILD, "LocalState", "games", "com.mojang")
+        COM_MOJANG = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
         WORLD_PATH = os.path.join(COM_MOJANG, "minecraftWorlds", project_name)
 
         RemoveDirectory(WORLD_PATH)
