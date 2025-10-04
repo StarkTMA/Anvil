@@ -10,10 +10,19 @@ from packaging.version import Version
 
 from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.format_versions import MANIFEST_BUILD
-from anvil.lib.lib import (APPDATA, APPDATA_LOCAL, DESKTOP, PREVIEW_COM_MOJANG,
-                           RELEASE_COM_MOJANG, CreateDirectory, File,
-                           FileExists, RemoveDirectory, process_subcommand,
-                           validate_namespace_project_name)
+from anvil.lib.lib import (
+    APPDATA,
+    APPDATA_LOCAL,
+    DESKTOP,
+    PREVIEW_COM_MOJANG,
+    RELEASE_COM_MOJANG,
+    CreateDirectory,
+    File,
+    FileExists,
+    RemoveDirectory,
+    process_subcommand,
+    validate_namespace_project_name,
+)
 from anvil.lib.templater import load_file
 
 from .__version__ import __version__
@@ -46,7 +55,12 @@ class JsonSchemes:
         """
         return load_file(
             "package_json.jsont",
-            {"project_name": project_name, "version": version, "description": description, "author": author},
+            {
+                "project_name": project_name,
+                "version": version,
+                "description": description,
+                "author": author,
+            },
             is_json=True,
         )
 
@@ -64,7 +78,14 @@ class JsonSchemes:
             dict: The VSCode configuration data.
         """
         return load_file(
-            "vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path, "project_name": project_name}, is_json=True
+            "vscode.jsont",
+            {
+                "script_uuid": script_uuid,
+                "wkspc": wkspc,
+                "path": path,
+                "project_name": project_name,
+            },
+            is_json=True,
         )
 
     @staticmethod
@@ -77,7 +98,7 @@ class JsonSchemes:
         return load_file("gitignore.jsont")
 
     @staticmethod
-    def code_workspace(name, path1, path2, preview=False):
+    def code_workspace(name, path, preview=False):
         """Generates a VS Code workspace configuration.
 
         Args:
@@ -92,14 +113,18 @@ class JsonSchemes:
         DEV_RES_DIR = os.path.join(RELEASE_COM_MOJANG, "development_resource_packs")
         DEV_BEH_DIR = os.path.join(RELEASE_COM_MOJANG, "development_behavior_packs")
 
-        DEV_PREV_RES_DIR = os.path.join(PREVIEW_COM_MOJANG, "development_resource_packs")
-        DEV_PREV_BEH_DIR = os.path.join(PREVIEW_COM_MOJANG, "development_behavior_packs")
+        DEV_PREV_RES_DIR = os.path.join(
+            PREVIEW_COM_MOJANG, "development_resource_packs"
+        )
+        DEV_PREV_BEH_DIR = os.path.join(
+            PREVIEW_COM_MOJANG, "development_behavior_packs"
+        )
 
         return load_file(
             "code_workspace.jsont",
             {
                 "name": name,
-                "path": os.path.join(path1, path2),
+                "path": path,
                 "dev_res_path": DEV_RES_DIR,
                 "dev_beh_path": DEV_BEH_DIR,
                 "dev_prev_res_path": DEV_PREV_RES_DIR,
@@ -110,18 +135,27 @@ class JsonSchemes:
 
     @staticmethod
     def tsconfig(out_dir):
-        return load_file("tsconfig.jsont", {"out_dir": os.path.join(out_dir, "scripts")}, is_json=True)
+        return load_file(
+            "tsconfig.jsont",
+            {"out_dir": os.path.join(out_dir, "scripts")},
+            is_json=True,
+        )
 
     @staticmethod
     def esbuild_config_js(outDir):
         return load_file(
             "esbuild.jsont",
-            {"out_dir": os.path.join(outDir, "scripts"), "minify": Config().get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)},
+            {
+                "out_dir": os.path.join(outDir, "scripts"),
+                "minify": Config().get_option(ConfigSection.ANVIL, ConfigOption.MINIFY),
+            },
         )
 
     @staticmethod
     def tsconstants(namespace: str, project_name: str):
-        return load_file("tsconstants.jsont", {"namespace": namespace, "project_name": project_name})
+        return load_file(
+            "tsconstants.jsont", {"namespace": namespace, "project_name": project_name}
+        )
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -160,38 +194,71 @@ def CreateDirectoriesFromTree(tree: dict) -> None:
 
 
 def handle_configuration(
-    namespace: str, project_name: str, display_name: str, preview: bool, scriptapi: bool, pbr: bool, random_seed: bool, addon: bool
+    namespace: str,
+    project_name: str,
+    display_name: str,
+    preview: bool,
+    scriptapi: bool,
+    pbr: bool,
+    random_seed: bool,
+    addon: bool,
 ):
     config = Config()
 
-    config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
+    config.add_option(
+        ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
+    )
 
     config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
     config.add_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, display_name)
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs")
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION, f"{display_name} behavior Pack")
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, f"{display_name} Resource Pack")
-    config.add_option(ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world")
+    config.add_option(
+        ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs"
+    )
+    config.add_option(
+        ConfigSection.PACKAGE,
+        ConfigOption.BEHAVIOUR_DESCRIPTION,
+        f"{display_name} behavior Pack",
+    )
+    config.add_option(
+        ConfigSection.PACKAGE,
+        ConfigOption.RESOURCE_DESCRIPTION,
+        f"{display_name} Resource Pack",
+    )
+    config.add_option(
+        ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world"
+    )
 
     config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in project_name.split("_")).upper())
-    config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    config.add_option(
+        ConfigSection.ANVIL,
+        ConfigOption.PASCAL_PROJECT_NAME,
+        "".join(x[0] for x in project_name.split("_")).upper(),
+    )
+    config.add_option(
+        ConfigSection.ANVIL,
+        ConfigOption.LAST_CHECK,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    )
     config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, scriptapi)
     config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, pbr)
     config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, random_seed)
     config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.PREVIEW, preview)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py")
+    config.add_option(
+        ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
+    )
     config.add_option(ConfigSection.ANVIL, ConfigOption.MINIFY, False)
 
     config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
     config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
     config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
     config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
-    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
+    config.add_option(
+        ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4())
+    )
 
     config.add_section(namespace)
 
@@ -230,7 +297,11 @@ def check_version() -> None:
     """
     try:
         latest_build: str = (
-            requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py").split("=")[-1].strip()
+            requests.get(
+                "https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py"
+            )
+            .split("=")[-1]
+            .strip()
         )
     except:
         latest_build = __version__
@@ -244,14 +315,25 @@ def check_version() -> None:
         )
 
 
-def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR, WORKING_DIR) -> None:
+def handle_script(
+    config: Config, namespace: str, project_name: str, DEV_BEH_DIR, WORKING_DIR
+) -> None:
     click.echo("Initiating ScriptingAPI modules")
-    install_dependencies = ["@minecraft/server", "@minecraft/server-ui", "typescript", "esbuild"]
+    install_dependencies = [
+        "@minecraft/server",
+        "@minecraft/server-ui",
+        "typescript",
+        "esbuild",
+    ]
 
     script_uuid = str(uuid.uuid4())
     config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, script_uuid)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js")
-    DEV_BEH_DIR = os.path.join(DEV_BEH_DIR, f"BP_{config.get_option('anvil', 'pascal_project_name')}")
+    config.add_option(
+        ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
+    )
+    DEV_BEH_DIR = os.path.join(
+        DEV_BEH_DIR, f"BP_{config.get_option('anvil', 'pascal_project_name')}"
+    )
 
     File(
         "package.json",
@@ -268,7 +350,10 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
     File(
         "launch.json",
         JsonSchemes.vscode(
-            os.path.join(DEV_BEH_DIR, "scripts"), os.path.join(WORKING_DIR, "scripts", "javascript"), script_uuid, project_name
+            os.path.join(DEV_BEH_DIR, "scripts"),
+            os.path.join(WORKING_DIR, "scripts", "javascript"),
+            script_uuid,
+            project_name,
         ),
         ".vscode",
         "w",
@@ -282,8 +367,20 @@ def handle_script(config: Config, namespace: str, project_name: str, DEV_BEH_DIR
         "w",
         False,
     )
-    File("constants.ts", JsonSchemes.tsconstants(namespace, project_name), os.path.join("scripts", "javascript"), "w", False)
-    File("main.ts", 'import { world, system } from "@minecraft/server";\n', os.path.join("scripts", "javascript"), "w", False)
+    File(
+        "constants.ts",
+        JsonSchemes.tsconstants(namespace, project_name),
+        os.path.join("scripts", "javascript"),
+        "w",
+        False,
+    )
+    File(
+        "main.ts",
+        'import { world, system } from "@minecraft/server";\n',
+        os.path.join("scripts", "javascript"),
+        "w",
+        False,
+    )
 
     print(f"Installing npm packages... [{', '.join(install_dependencies)}]")
     process_subcommand(
@@ -306,12 +403,40 @@ def cli() -> None:
 @cli.command(help="Initiate an Anvil project")
 @click.argument("namespace")
 @click.argument("project_name")
-@click.option("--preview", is_flag=True, default=False, show_default=True, help="Generates the project in Minecraft Preview com.mojang.")
-@click.option("--scriptapi", is_flag=True, default=False, show_default=True, help="Adds dependencies support of ScriptAPI.")
-@click.option("--pbr", is_flag=True, default=False, show_default=True, help="Adds capabilities support of Physically based rendering.")
-@click.option("--random_seed", is_flag=True, default=False, show_default=True, help="Adds support of Random Seed Worlds.")
 @click.option(
-    "--addon", is_flag=True, default=False, show_default=True, help="Sets this package as an addon, comes with many restrictions."
+    "--preview",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Generates the project in Minecraft Preview com.mojang.",
+)
+@click.option(
+    "--scriptapi",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Adds dependencies support of ScriptAPI.",
+)
+@click.option(
+    "--pbr",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Adds capabilities support of Physically based rendering.",
+)
+@click.option(
+    "--random_seed",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Adds support of Random Seed Worlds.",
+)
+@click.option(
+    "--addon",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Sets this package as an addon, comes with many restrictions.",
 )
 def create(
     namespace: str,
@@ -339,7 +464,16 @@ def create(
     display_name = project_name.title().replace("-", " ").replace("_", " ")
     display_welcome_message(display_name)
 
-    config = handle_configuration(namespace, project_name, display_name, preview, scriptapi, pbr, random_seed, addon)
+    config = handle_configuration(
+        namespace,
+        project_name,
+        display_name,
+        preview,
+        scriptapi,
+        pbr,
+        random_seed,
+        addon,
+    )
 
     CreateDirectoriesFromTree(
         {
@@ -375,12 +509,17 @@ def create(
     File("CHANGELOG.md", "", "", "w")
     File(
         f"{project_name}.code-workspace",
-        JsonSchemes.code_workspace(config.get_option("package", "company"), WORKING_DIR, project_name, preview),
+        JsonSchemes.code_workspace(
+            config.get_option("package", "company"), WORKING_DIR, preview
+        ),
         DESKTOP,
         "w",
     )
 
-    process_subcommand(f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}", "Unable to start the project vscode workspace")
+    process_subcommand(
+        f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}",
+        "Unable to start the project vscode workspace",
+    )
     check_version()
 
 
@@ -390,7 +529,9 @@ def run() -> None:
     Runs an Anvil Project
     """
     if not FileExists("anvilconfig.json"):
-        click.echo("No valid Anvil project found, to create a new project run: `anvil create --help`")
+        click.echo(
+            "No valid Anvil project found, to create a new project run: `anvil create --help`"
+        )
     else:
         with open("./anvilconfig.json", "r") as file:
             data: dict = json.loads(file.read())
@@ -399,7 +540,10 @@ def run() -> None:
                 click.echo("No entry point found in the Anvil project configuration.")
                 return
 
-        process_subcommand(f"py {os.path.join(*entry_point.split('/'))}", "Unable to run the anvil project.")
+        process_subcommand(
+            f"py {os.path.join(*entry_point.split('/'))}",
+            "Unable to run the anvil project.",
+        )
 
 
 @cli.command(help="Export an mcworld to the Minecraft worlds")
@@ -409,16 +553,22 @@ def export_world(world_name: str) -> None:
     Runs an Anvil Project
     """
     if not FileExists("anvilconfig.json"):
-        click.echo("No valid Anvil project found, to create a new project run: `anvil create --help`")
+        click.echo(
+            "No valid Anvil project found, to create a new project run: `anvil create --help`"
+        )
     else:
         with open("./anvilconfig.json", "r") as file:
             data: dict = json.loads(file.read())
             preview = data.get(ConfigSection.ANVIL).get(ConfigOption.PREVIEW)
-            project_name = data.get(ConfigSection.PACKAGE).get(ConfigOption.PROJECT_NAME)
+            project_name = data.get(ConfigSection.PACKAGE).get(
+                ConfigOption.PROJECT_NAME
+            )
 
         COM_MOJANG = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
         WORLD_PATH = os.path.join(COM_MOJANG, "minecraftWorlds", project_name)
 
         RemoveDirectory(WORLD_PATH)
-        with zipfile.ZipFile(os.path.join("world", f"{world_name}.mcworld"), "r") as zip_ref:
+        with zipfile.ZipFile(
+            os.path.join("world", f"{world_name}.mcworld"), "r"
+        ) as zip_ref:
             zip_ref.extractall(WORLD_PATH)

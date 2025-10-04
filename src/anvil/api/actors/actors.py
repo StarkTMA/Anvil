@@ -3,8 +3,7 @@ from typing import overload
 
 from anvil import ANVIL, CONFIG
 from anvil.api.actors._animations import _BPAnimations
-from anvil.api.actors._component_group import (_ComponentGroup, _Components,
-                                               _Properties)
+from anvil.api.actors._component_group import _ComponentGroup, _Components, _Properties
 from anvil.api.actors._events import _Event
 from anvil.api.actors._render_controller import _RenderControllers
 from anvil.api.actors.components import EntityInstantDespawn, EntityRideable
@@ -12,14 +11,19 @@ from anvil.api.actors.spawn_rules import SpawnRule
 from anvil.api.logic.molang import Molang, Variable
 from anvil.api.pbr.pbr import __TextureSet
 from anvil.api.vanilla.entities import MinecraftEntityTypes
-from anvil.api.vanilla.items import MinecraftItemTypes
+from anvil.api.vanilla.items import MinecraftItemTypes, all_minecraft_items_identifiers
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.enums import DamageSensor, Target
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (AddonObject, EntityDescriptor, JsonSchemes,
-                               MinecraftDescription, MinecraftEntityDescriptor)
+from anvil.lib.schemas import (
+    AddonObject,
+    EntityDescriptor,
+    JsonSchemes,
+    MinecraftDescription,
+    MinecraftEntityDescriptor,
+)
 from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
 from anvil.lib.types import RGB, RGBA, Vector2D
 
@@ -29,7 +33,9 @@ __all__ = ["Entity", "Attachable"]
 class _BP_ControllerState:
     def __init__(self, state_name):
         self._state_name = state_name
-        self._controller_state: dict = JsonSchemes.animation_controller_state(self._state_name)
+        self._controller_state: dict = JsonSchemes.animation_controller_state(
+            self._state_name
+        )
         self._default = True
 
     def on_entry(self, *commands: str):
@@ -45,9 +51,13 @@ class _BP_ControllerState:
             if str(command).startswith(Target.S):
                 self._controller_state[self._state_name]["on_entry"].append(command)
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                self._controller_state[self._state_name]["on_entry"].append(f"{command};")
+                self._controller_state[self._state_name]["on_entry"].append(
+                    f"{command};"
+                )
             else:
-                self._controller_state[self._state_name]["on_entry"].append(f"/{command}")
+                self._controller_state[self._state_name]["on_entry"].append(
+                    f"/{command}"
+                )
         self._default = False
         return self
 
@@ -64,9 +74,13 @@ class _BP_ControllerState:
             if str(command).startswith(Target.S.value):
                 self._controller_state[self._state_name]["on_exit"].append(f"{command}")
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                self._controller_state[self._state_name]["on_exit"].append(f"{command};")
+                self._controller_state[self._state_name]["on_exit"].append(
+                    f"{command};"
+                )
             else:
-                self._controller_state[self._state_name]["on_exit"].append(f"/{command}")
+                self._controller_state[self._state_name]["on_exit"].append(
+                    f"/{command}"
+                )
         self._default = False
         return self
 
@@ -83,7 +97,9 @@ class _BP_ControllerState:
         if condition is None:
             self._controller_state[self._state_name]["animations"].append(animation)
         else:
-            self._controller_state[self._state_name]["animations"].append({animation: condition})
+            self._controller_state[self._state_name]["animations"].append(
+                {animation: condition}
+            )
         self._default = False
         return self
 
@@ -102,7 +118,9 @@ class _BP_ControllerState:
             This state.
 
         """
-        self._controller_state[self._state_name]["transitions"].append({state: str(condition)})
+        self._controller_state[self._state_name]["transitions"].append(
+            {state: str(condition)}
+        )
         self._default = False
         return self
 
@@ -115,7 +133,9 @@ class _RP_ControllerState:
     def __init__(self, actor: "_ActorClientDescription", state_name):
         self._actor = actor
         self._state_name = state_name
-        self._controller_state = JsonSchemes.animation_controller_state(self._state_name)
+        self._controller_state = JsonSchemes.animation_controller_state(
+            self._state_name
+        )
         self._controller_state[self._state_name]["particle_effects"] = []
         self._controller_state[self._state_name]["sound_effects"] = []
         self._default = True
@@ -124,7 +144,9 @@ class _RP_ControllerState:
     def on_entry(self, *commands: str | Molang) -> "_RP_ControllerState": ...
 
     @overload
-    def on_entry(self, variable: Molang | str, value: Molang | str | int | float) -> "_RP_ControllerState": ...
+    def on_entry(
+        self, variable: Molang | str, value: Molang | str | int | float
+    ) -> "_RP_ControllerState": ...
 
     def on_entry(self, *args, **kwargs) -> "_RP_ControllerState":
         """molang to preform on entry of this state.
@@ -144,7 +166,9 @@ class _RP_ControllerState:
             variable, value = args
             command = f"{variable}={value}"
             if any(command.startswith(v) for v in MOLANG_PREFIXES):
-                self._controller_state[self._state_name]["on_entry"].append(f"{command};")
+                self._controller_state[self._state_name]["on_entry"].append(
+                    f"{command};"
+                )
             else:
                 raise RuntimeError(
                     f"Invalid variable assignment for on_entry: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
@@ -153,7 +177,9 @@ class _RP_ControllerState:
         else:
             for command in args:
                 if any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                    self._controller_state[self._state_name]["on_entry"].append(f"{command};")
+                    self._controller_state[self._state_name]["on_entry"].append(
+                        f"{command};"
+                    )
                 else:
                     raise RuntimeError(
                         f"Invalid command for on_entry: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
@@ -166,7 +192,9 @@ class _RP_ControllerState:
     def on_exit(self, *commands: str | Molang) -> "_RP_ControllerState": ...
 
     @overload
-    def on_exit(self, variable: Molang | str, value: Molang | str | int | float) -> "_RP_ControllerState": ...
+    def on_exit(
+        self, variable: Molang | str, value: Molang | str | int | float
+    ) -> "_RP_ControllerState": ...
 
     def on_exit(self, *args, **kwargs) -> "_RP_ControllerState":
         """molang to preform on entry of this state.
@@ -186,7 +214,9 @@ class _RP_ControllerState:
             variable, value = args
             command = f"{variable}={value}"
             if any(command.startswith(v) for v in MOLANG_PREFIXES):
-                self._controller_state[self._state_name]["on_exit"].append(f"{command};")
+                self._controller_state[self._state_name]["on_exit"].append(
+                    f"{command};"
+                )
             else:
                 raise RuntimeError(
                     f"Invalid variable assignment for on_exit: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
@@ -195,7 +225,9 @@ class _RP_ControllerState:
         else:
             for command in args:
                 if any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                    self._controller_state[self._state_name]["on_exit"].append(f"{command};")
+                    self._controller_state[self._state_name]["on_exit"].append(
+                        f"{command};"
+                    )
                 else:
                     raise RuntimeError(
                         f"Invalid command for on_exit: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
@@ -222,7 +254,9 @@ class _RP_ControllerState:
         if condition is None:
             self._controller_state[self._state_name]["animations"].append(animation)
         else:
-            self._controller_state[self._state_name]["animations"].append({animation: condition})
+            self._controller_state[self._state_name]["animations"].append(
+                {animation: condition}
+            )
         self._default = False
         return self
 
@@ -241,7 +275,9 @@ class _RP_ControllerState:
             This state.
 
         """
-        self._controller_state[self._state_name]["transitions"].append({state: str(condition)})
+        self._controller_state[self._state_name]["transitions"].append(
+            {state: str(condition)}
+        )
         self._default = False
         return self
 
@@ -271,10 +307,14 @@ class _RP_ControllerState:
 
         """
         if not self._actor._description["description"]["particle_effects"].get(effect):
-            raise RuntimeError(f"Particle effect '{effect}' is not defined in the Client Entity for Actor '{self._actor.name}'.")
+            raise RuntimeError(
+                f"Particle effect '{effect}' is not defined in the Client Entity for Actor '{self._actor.name}'."
+            )
         particle = {"effect": effect, "locator": locator}
         if pre_anim_script is not None:
-            particle.update({"pre_effect_script": f"{pre_anim_script};".replace(";;", ";")})
+            particle.update(
+                {"pre_effect_script": f"{pre_anim_script};".replace(";;", ";")}
+            )
         if bind_to_actor is False:
             particle.update({"bind_to_actor": False})
         self._controller_state[self._state_name]["particle_effects"].append(particle)
@@ -298,7 +338,9 @@ class _RP_ControllerState:
             This state.
 
         """
-        self._controller_state[self._state_name]["sound_effects"].append({"effect": effect, "locator": locator})
+        self._controller_state[self._state_name]["sound_effects"].append(
+            {"effect": effect, "locator": locator}
+        )
         self._default = False
         return self
 
@@ -341,7 +383,9 @@ class _BP_Controller:
     def __init__(self, identifier, controller_shortname):
         self._identifier = identifier
         self._controller_shortname = controller_shortname
-        self._controllers = JsonSchemes.animation_controller(self._identifier, self._controller_shortname)
+        self._controllers = JsonSchemes.animation_controller(
+            self._identifier, self._controller_shortname
+        )
         self._controller_states: list[_BP_ControllerState] = []
         self._controller_namespace = f"controller.animation.{self._identifier.replace(':', '.')}.{self._controller_shortname}"
         self._states_names = []
@@ -370,7 +414,9 @@ class _BP_Controller:
         collected_states = []
         for state in self._controller_states:
             if not state._default:
-                self._controllers[self._controller_namespace]["states"].update(state._export)
+                self._controllers[self._controller_namespace]["states"].update(
+                    state._export
+                )
                 for tr in state._export.values():
                     if "transitions" in tr:
                         for st in tr["transitions"]:
@@ -434,7 +480,9 @@ class _BP_AnimationControllers(AddonObject):
     def queue(self, directory: str = None):
         if len(self._controllers_list) > 0:
             for controller in self._controllers_list:
-                self._animation_controllers["animation_controllers"].update(controller._export)
+                self._animation_controllers["animation_controllers"].update(
+                    controller._export
+                )
             self.content(self._animation_controllers)
             return super().queue(directory=directory)
 
@@ -463,17 +511,23 @@ class _RP_AnimationControllers(AddonObject):
             Animation controller.
 
         """
-        self._animation_controller = _RP_Controller(self._actor, self.identifier, controller_shortname)
+        self._animation_controller = _RP_Controller(
+            self._actor, self.identifier, controller_shortname
+        )
         self._controllers_list.append(self._animation_controller)
         return self._animation_controller
 
     def _is_populated(self):
-        return len(self._controllers_list) > 0 and any([len(t._controller_states) > 0 for t in [c for c in self._controllers_list]])
+        return len(self._controllers_list) > 0 and any(
+            [len(t._controller_states) > 0 for t in [c for c in self._controllers_list]]
+        )
 
     def queue(self, directory: str = None):
         if self._is_populated():
             for controller in self._controllers_list:
-                self._animation_controllers["animation_controllers"].update(controller._export)
+                self._animation_controllers["animation_controllers"].update(
+                    controller._export
+                )
             self.content(self._animation_controllers)
             return super().queue(directory=directory)
 
@@ -482,44 +536,75 @@ class _ActorReuseAssets:
     def __init__(self, client: "_ActorClientDescription") -> None:
         self.client = client
 
-    def animation(self, shortname: str, animation_name: str, animate: bool = False, condition: str | Molang = None):
+    def animation(
+        self,
+        shortname: str,
+        animation_name: str,
+        animate: bool = False,
+        condition: str | Molang = None,
+    ):
         if animate is True:
             if condition is None:
                 self.client._animate_append(shortname)
             else:
                 self.client._animate_append({shortname: condition})
 
-        self.client._description["description"]["animations"].update({shortname: animation_name})
+        self.client._description["description"]["animations"].update(
+            {shortname: animation_name}
+        )
 
-    def animation_controller(self, shortname: str, animation_controller_name: str, animate: bool = False, condition: str | Molang = None):
+    def animation_controller(
+        self,
+        shortname: str,
+        animation_controller_name: str,
+        animate: bool = False,
+        condition: str | Molang = None,
+    ):
         if animate is True:
             if condition is None:
                 self.client._animate_append(shortname)
             else:
                 self.client._animate_append({shortname: condition})
 
-        self.client._description["description"]["animations"].update({shortname: animation_controller_name})
+        self.client._description["description"]["animations"].update(
+            {shortname: animation_controller_name}
+        )
 
     def texture(self, shortname: str, texture_name: str):
-        self.client._description["description"]["textures"].update({shortname: texture_name})
+        self.client._description["description"]["textures"].update(
+            {shortname: texture_name}
+        )
 
     def geometry(self, shortname: str, geometry_name: str):
-        self.client._description["description"]["geometry"].update({shortname: geometry_name})
+        self.client._description["description"]["geometry"].update(
+            {shortname: geometry_name}
+        )
 
     def particle_effect(self, shortname: str, particle_name: str):
-        self.client["description"]["particle_effects"].update({shortname: particle_name})
+        self.client["description"]["particle_effects"].update(
+            {shortname: particle_name}
+        )
 
     def sound_effect(self, shortname: str, sound_name: str):
-        self.client._description["description"]["sound_effects"].update({shortname: sound_name})
+        self.client._description["description"]["sound_effects"].update(
+            {shortname: sound_name}
+        )
 
     def spawn_egg(self, item_sprite: str, texture_index: int = 0):
-        self.client._description["description"]["spawn_egg"] = {"texture": item_sprite, "texture_index": texture_index}
+        self.client._description["description"]["spawn_egg"] = {
+            "texture": item_sprite,
+            "texture_index": texture_index,
+        }
 
     def render_controller(self, controller_name: str, condition: str = None):
         if condition is None:
-            self.client._description["description"]["render_controllers"].append(controller_name)
+            self.client._description["description"]["render_controllers"].append(
+                controller_name
+            )
         else:
-            self.client._description["description"]["render_controllers"].append({controller_name: condition})
+            self.client._description["description"]["render_controllers"].append(
+                {controller_name: condition}
+            )
 
 
 class _ActorDescription(MinecraftDescription):
@@ -534,7 +619,9 @@ class _ActorDescription(MinecraftDescription):
         """
         super().__init__(name, is_vanilla)
         self._animation_controllers: _RP_AnimationControllers
-        self._description["description"].update({"animations": {}, "scripts": {"animate": []}})
+        self._description["description"].update(
+            {"animations": {}, "scripts": {"animate": []}}
+        )
 
     def _animate_append(self, key: str | dict):
         """Appends a key to the animate list."""
@@ -542,7 +629,9 @@ class _ActorDescription(MinecraftDescription):
         if key not in self._description["description"]["scripts"]["animate"]:
             self._description["description"]["scripts"]["animate"].append(key)
 
-    def _animation_controller(self, controller_shortname: str, animate: bool = False, condition: str = None):
+    def _animation_controller(
+        self, controller_shortname: str, animate: bool = False, condition: str = None
+    ):
         """Sets the mapping of internal animation controller references to actual animations.
 
         Parameters
@@ -563,10 +652,18 @@ class _ActorDescription(MinecraftDescription):
                 self._animate_append({controller_shortname: condition})
 
         self._description["description"]["animations"].update(
-            {controller_shortname: f"controller.animation.{CONFIG.NAMESPACE}.{self.name}.{controller_shortname}"}
+            {
+                controller_shortname: f"controller.animation.{CONFIG.NAMESPACE}.{self.name}.{controller_shortname}"
+            }
         )
 
-    def _animations(self, geometry_name: str, animation_shortname: str, animate: bool = False, condition: str = None):
+    def _animations(
+        self,
+        geometry_name: str,
+        animation_shortname: str,
+        animate: bool = False,
+        condition: str = None,
+    ):
         """Sets the mapping of internal animation references to actual animations.
 
         Parameters
@@ -587,7 +684,9 @@ class _ActorDescription(MinecraftDescription):
                 self._animate_append({animation_shortname: condition})
 
         self._description["description"]["animations"].update(
-            {animation_shortname: f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}"}
+            {
+                animation_shortname: f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}"
+            }
         )
 
 
@@ -613,7 +712,9 @@ class _ActorClientDescription(_ActorDescription):
                 f"Invalid type '{self._type}' for actor description. Expected 'entity' or 'attachables'. Actor [{self.identifier}]"
             )
 
-        if is_vanilla and self.identifier not in list(map(str, MinecraftEntityTypes.__dict__.values())):
+        if is_vanilla and self.identifier not in list(
+            map(str, MinecraftEntityTypes.__dict__.values())
+        ):
             raise RuntimeError(
                 f"Invalid vanilla entity '{self.identifier}'. Please use a valid vanilla entity from MinecraftEntityTypes. Actor [{self.identifier}]"
             )
@@ -626,7 +727,12 @@ class _ActorClientDescription(_ActorDescription):
 
         self._description["description"].update(JsonSchemes.client_description())
 
-    def animation_controller(self, controller_shortname: str, animate: bool = False, condition: str | Molang = None):
+    def animation_controller(
+        self,
+        controller_shortname: str,
+        animate: bool = False,
+        condition: str | Molang = None,
+    ):
         """Sets the mapping of internal animation controller references to actual animations.
 
         Parameters:
@@ -638,7 +744,13 @@ class _ActorClientDescription(_ActorDescription):
         self._animation_controller(controller_shortname, animate, condition)
         return self._animation_controllers.add_controller(controller_shortname)
 
-    def animation(self, blockbench_name: str, animation_name: str, animate: bool = False, condition: str | Molang = None):
+    def animation(
+        self,
+        blockbench_name: str,
+        animation_name: str,
+        animate: bool = False,
+        condition: str | Molang = None,
+    ):
         """Sets the mapping of internal animation references to actual animations.
 
         Parameters:
@@ -662,7 +774,9 @@ class _ActorClientDescription(_ActorDescription):
             material_name (str): The name of the material.
 
         """
-        self._description["description"]["materials"].update({str(material_id): str(material_name)})
+        self._description["description"]["materials"].update(
+            {str(material_id): str(material_name)}
+        )
         return self
 
     def geometry(self, geometry_name: str, override_bounding_box: Vector2D = None):
@@ -682,7 +796,9 @@ class _ActorClientDescription(_ActorDescription):
             bb.override_bounding_box(override_bounding_box)
         bb.model.queue_model()
 
-        self._description["description"]["geometry"].update({geometry_name: f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"})
+        self._description["description"]["geometry"].update(
+            {geometry_name: f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"}
+        )
 
         return self
 
@@ -724,7 +840,16 @@ class _ActorClientDescription(_ActorDescription):
         bb.textures.queue_texture(color_texture)
 
         self._description["description"]["textures"].update(
-            {color_texture: os.path.join("textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, "actors", blockbench_name, color_texture)}
+            {
+                color_texture: os.path.join(
+                    "textures",
+                    CONFIG.NAMESPACE,
+                    CONFIG.PROJECT_NAME,
+                    "actors",
+                    blockbench_name,
+                    color_texture,
+                )
+            }
         )
 
         if any(
@@ -748,12 +873,16 @@ class _ActorClientDescription(_ActorDescription):
 
     def script(self, variable: Variable | str, script: Molang | str):
         """This method manages the scripts for an entity."""
-        self._description["description"]["scripts"]["pre_animation"].append(f"{variable}={script};".replace(";;", ";"))
+        self._description["description"]["scripts"]["pre_animation"].append(
+            f"{variable}={script};".replace(";;", ";")
+        )
         return self
 
     def parent_setup(self, variable: Variable | str, script: Molang | str):
         """This method manages the scripts for an entity."""
-        self._description["description"]["scripts"]["parent_setup"].append(f"{variable}={script};".replace(";;", ";"))
+        self._description["description"]["scripts"]["parent_setup"].append(
+            f"{variable}={script};".replace(";;", ";")
+        )
         return self
 
     def init_vars(self, **vars):
@@ -764,7 +893,9 @@ class _ActorClientDescription(_ActorDescription):
         """
         for k, v in vars.items():
             Variable._set_var(k)
-            self._description["description"]["scripts"]["initialize"].append(f"v.{k}={v};")
+            self._description["description"]["scripts"]["initialize"].append(
+                f"v.{k}={v};"
+            )
         return self
 
     def scale(self, scale: Molang | str = "1"):
@@ -782,7 +913,9 @@ class _ActorClientDescription(_ActorDescription):
         Parameters:
             bool (bool, optional): Whether or not the entity should update bones and effects offscreen. Defaults to False.
         """
-        self._description["description"]["scripts"]["should_update_bones_and_effects_offscreen"] = str(int(bool))
+        self._description["description"]["scripts"][
+            "should_update_bones_and_effects_offscreen"
+        ] = str(int(bool))
 
     def should_update_effects_offscreen(self, bool: bool = False):
         """Sets whether or not the entity should update effects offscreen.
@@ -790,9 +923,13 @@ class _ActorClientDescription(_ActorDescription):
         Parameters:
             bool (bool, optional): Whether or not the entity should update effects offscreen. Defaults to False.
         """
-        self._description["description"]["scripts"]["should_update_effects_offscreen"] = str(int(bool))
+        self._description["description"]["scripts"][
+            "should_update_effects_offscreen"
+        ] = str(int(bool))
 
-    def scaleXYZ(self, x: Molang | str = "1", y: Molang | str = "1", z: Molang | str = "1"):
+    def scaleXYZ(
+        self, x: Molang | str = "1", y: Molang | str = "1", z: Molang | str = "1"
+    ):
         """Sets the scale of the entity.
 
         Parameters:
@@ -814,9 +951,15 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         if condition is None:
-            self._render_append(f"controller.render.{CONFIG.NAMESPACE}.{self.name}.{controller_name}")
+            self._render_append(
+                f"controller.render.{CONFIG.NAMESPACE}.{self.name}.{controller_name}"
+            )
         else:
-            self._render_append({f"controller.render.{CONFIG.NAMESPACE}.{self.name}.{controller_name}": condition})
+            self._render_append(
+                {
+                    f"controller.render.{CONFIG.NAMESPACE}.{self.name}.{controller_name}": condition
+                }
+            )
 
         return self._render_controllers.add_controller(controller_name)
 
@@ -830,7 +973,9 @@ class _ActorClientDescription(_ActorDescription):
         from anvil.api.world.particles import Particle
 
         self._particle_name = particle_name
-        self._description["description"]["particle_effects"].update({self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"})
+        self._description["description"]["particle_effects"].update(
+            {self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"}
+        )
         Particle(self._particle_name, use_vanilla_texture).queue()
         return self
 
@@ -850,7 +995,9 @@ class _ActorClientDescription(_ActorDescription):
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
 
         """
-        self._description["description"]["sound_effects"].update({sound_name: f"{CONFIG.NAMESPACE}:{sound_path}"})
+        self._description["description"]["sound_effects"].update(
+            {sound_name: f"{CONFIG.NAMESPACE}:{sound_path}"}
+        )
         sound: SoundDescription = ANVIL.definitions.register_sound_definition(
             sound_path, category, max_distance=max_distance, min_distance=min_distance
         )
@@ -908,13 +1055,19 @@ class _ActorClientDescription(_ActorDescription):
         """
         if not self._is_dummy:
             if len(self._description["description"]["geometry"]) == 0:
-                raise RuntimeError(f"Entity {self.identifier} missing at least one geometry. Entity [{self.identifier}]")
+                raise RuntimeError(
+                    f"Entity {self.identifier} missing at least one geometry. Entity [{self.identifier}]"
+                )
 
             if len(self._description["description"]["textures"]) == 0:
-                raise RuntimeError(f"Entity {self.identifier} missing at least one texture. Entity [{self.identifier}]")
+                raise RuntimeError(
+                    f"Entity {self.identifier} missing at least one texture. Entity [{self.identifier}]"
+                )
 
             if len(self._description["description"]["render_controllers"]) == 0:
-                raise RuntimeError(f"Entity {self.identifier} missing at least one render controller. Entity [{self.identifier}]")
+                raise RuntimeError(
+                    f"Entity {self.identifier} missing at least one render controller. Entity [{self.identifier}]"
+                )
 
             for controller in self._render_controllers._controllers:
                 controller._validate(
@@ -939,13 +1092,21 @@ class _ActorClientDescription(_ActorDescription):
 
         for controller in self._animation_controllers._controllers_list:
             if controller._export == {}:
-                self._description["description"]["animations"].pop(controller._controller_shortname)
-                anims: list[str | dict] = self._description["description"]["scripts"]["animate"]
+                self._description["description"]["animations"].pop(
+                    controller._controller_shortname
+                )
+                anims: list[str | dict] = self._description["description"]["scripts"][
+                    "animate"
+                ]
 
                 if controller._controller_shortname in anims:
                     anims.remove(controller._controller_shortname)
                 else:
-                    d = next(d for d in anims if isinstance(d, dict) and controller._controller_shortname in d)
+                    d = next(
+                        d
+                        for d in anims
+                        if isinstance(d, dict) and controller._controller_shortname in d
+                    )
                     anims.remove(d)
 
         return super()._export()
@@ -1001,7 +1162,10 @@ class _EntityClientDescription(_ActorClientDescription):
             base_color (str): The base color of the spawn egg.
             overlay_color (str): The overlay color of the spawn egg.
         """
-        self._description["description"]["spawn_egg"] = {"base_color": base_color, "overlay_color": overlay_color}
+        self._description["description"]["spawn_egg"] = {
+            "base_color": base_color,
+            "overlay_color": overlay_color,
+        }
 
     def _export(self, directory: str):
         """Queues the entity for export.
@@ -1093,7 +1257,9 @@ class _EntityServerDescription(_ActorDescription):
         """
         if CONFIG._EXPERIMENTAL:
             if CONFIG._TARGET == "addon":
-                raise RuntimeError(f"Experimental entities are not allowed for packages of type 'addon'. Entity [{self.identifier}].")
+                raise RuntimeError(
+                    f"Experimental entities are not allowed for packages of type 'addon'. Entity [{self.identifier}]."
+                )
 
         self._description["description"]["is_experimental"] = True
         return self
@@ -1107,13 +1273,21 @@ class _EntityServerDescription(_ActorDescription):
         if CONFIG._TARGET != ConfigPackageTarget.ADDON:
             if type(entity) is MinecraftEntityDescriptor:
                 if entity._allow_runtime:
-                    self._description["description"]["runtime_identifier"] = entity.identifier
+                    self._description["description"][
+                        "runtime_identifier"
+                    ] = entity.identifier
                 else:
-                    raise RuntimeError(f"Entity {entity.identifier} does not allow runtime identifier usage. Entity [{self.identifier}].")
+                    raise RuntimeError(
+                        f"Entity {entity.identifier} does not allow runtime identifier usage. Entity [{self.identifier}]."
+                    )
             else:
-                raise TypeError(f"Expected Entity, got {type(entity).__name__}. Entity [{self.identifier}]")
+                raise TypeError(
+                    f"Expected Entity, got {type(entity).__name__}. Entity [{self.identifier}]"
+                )
         else:
-            raise RuntimeError(f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]")
+            raise RuntimeError(
+                f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]"
+            )
 
     @property
     def add_property(self):
@@ -1172,7 +1346,12 @@ class _EntityServer(AddonObject):
         """Returns the spawn rule of the entity."""
         return self._spawn_rule
 
-    def animation_controller(self, controller_shortname: str, animate: bool = False, condition: str | Molang = None):
+    def animation_controller(
+        self,
+        controller_shortname: str,
+        animate: bool = False,
+        condition: str | Molang = None,
+    ):
         """Sets the mapping of internal animation controller references to actual animations.
 
         Parameters:
@@ -1181,7 +1360,9 @@ class _EntityServer(AddonObject):
             condition (str | Molang, optional): The condition to animate the animation controller. Defaults to None.
 
         """
-        self._description._animation_controller(controller_shortname, animate, condition)
+        self._description._animation_controller(
+            controller_shortname, animate, condition
+        )
         return self._animation_controllers.add_controller(controller_shortname)
 
     def animation(
@@ -1252,17 +1433,20 @@ class _EntityServer(AddonObject):
             - `EntityPushable`
             - `EntityPushThrough`
         """
-        from anvil.api.actors.components import (EntityBreathable,
-                                                 EntityCollisionBox,
-                                                 EntityDamageSensor,
-                                                 EntityHealth,
-                                                 EntityJumpStatic,
-                                                 EntityKnockbackResistance,
-                                                 EntityMovement,
-                                                 EntityMovementType,
-                                                 EntityNavigationType,
-                                                 EntityPhysics, EntityPushable,
-                                                 EntityPushThrough)
+        from anvil.api.actors.components import (
+            EntityBreathable,
+            EntityCollisionBox,
+            EntityDamageSensor,
+            EntityHealth,
+            EntityJumpStatic,
+            EntityKnockbackResistance,
+            EntityMovement,
+            EntityMovementType,
+            EntityNavigationType,
+            EntityPhysics,
+            EntityPushable,
+            EntityPushThrough,
+        )
         from anvil.api.logic.commands import DamageCause
 
         self.components.add(
@@ -1287,32 +1471,48 @@ class _EntityServer(AddonObject):
             directory (str, optional): The directory to export the entity to. Defaults to None.
         """
         if len(self._vars) > 0:
-            self.animation_controller("variables", True).add_state("default").on_entry(*self._vars)
+            self.animation_controller("variables", True).add_state("default").on_entry(
+                *self._vars
+            )
         self._animations.queue(directory=directory)
         self._animation_controllers.queue(directory=directory)
         self._spawn_rule.queue(directory=directory)
 
         self._server_entity["minecraft:entity"].update(self.description._export)
-        self._server_entity["minecraft:entity"]["components"].update(self._components._export()["components"])
+        self._server_entity["minecraft:entity"]["components"].update(
+            self._components._export()["components"]
+        )
 
         for event in self._events:
             self._server_entity["minecraft:entity"]["events"].update(event._export)
         for component_group in self._component_groups:
-            self._server_entity["minecraft:entity"]["component_groups"].update(component_group._export())
+            self._server_entity["minecraft:entity"]["component_groups"].update(
+                component_group._export()
+            )
 
         self.content(self._server_entity)
 
-        controllers = list(self._animation_controllers._animation_controllers["animation_controllers"].keys())
+        controllers = list(
+            self._animation_controllers._animation_controllers[
+                "animation_controllers"
+            ].keys()
+        )
         cleared_items = []
-        for key, controller in self._description._description["description"]["animations"].items():
+        for key, controller in self._description._description["description"][
+            "animations"
+        ].items():
             if controller.startswith("controller.") and controller not in controllers:
                 cleared_items.append(key)
 
         for item in cleared_items:
             self._description._description["description"]["animations"].pop(item)
 
-        if self._components._has(EntityRideable) or any(c._has(EntityRideable) for c in self._component_groups):
-            ANVIL.definitions.register_lang(f"action.hint.exit.{self.identifier}", "Sneak to exit")
+        if self._components._has(EntityRideable) or any(
+            c._has(EntityRideable) for c in self._component_groups
+        ):
+            ANVIL.definitions.register_lang(
+                f"action.hint.exit.{self.identifier}", "Sneak to exit"
+            )
 
         super().queue(directory=directory)
 
@@ -1351,7 +1551,9 @@ class _EntityClient(AddonObject):
         Parameters:
             directory (str, optional): The directory to export the entity to. Defaults to None.
         """
-        self._client_entity["minecraft:client_entity"].update(self._description._export(directory))
+        self._client_entity["minecraft:client_entity"].update(
+            self._description._export(directory)
+        )
 
         self.content(self._client_entity)
         super().queue(directory=directory)
@@ -1371,12 +1573,16 @@ class Entity(EntityDescriptor):
         spawn_egg_name: str = None,
     ):
         display_name = self._display_name if display_name is None else display_name
-        spawn_egg_name = f"Spawn {display_name}" if spawn_egg_name is None else spawn_egg_name
+        spawn_egg_name = (
+            f"Spawn {display_name}" if spawn_egg_name is None else spawn_egg_name
+        )
         if self._is_vanilla:
             directory = "vanilla"
 
         ANVIL.definitions.register_lang(f"entity.{self.identifier}.name", display_name)
-        ANVIL.definitions.register_lang(f"entity.{self.identifier}<>.name", display_name)
+        ANVIL.definitions.register_lang(
+            f"entity.{self.identifier}<>.name", display_name
+        )
         ANVIL.definitions.register_lang(
             f"item.spawn_egg.entity.{self.identifier}.name",
             spawn_egg_name,
@@ -1405,8 +1611,9 @@ class Attachable(AddonObject):
             name (str): The name of the attachable.
         """
         super().__init__(name, is_vanilla)
-        if not is_vanilla:
-            self._is_vanilla = self.identifier in MinecraftItemTypes
+        if is_vanilla:
+            print(all_minecraft_items_identifiers)
+            self._is_vanilla = self.identifier in all_minecraft_items_identifiers
 
         self._attachable = JsonSchemes.attachable()
         self._description = _AttachableClientDescription(self.identifier, False)

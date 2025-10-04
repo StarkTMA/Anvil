@@ -16,7 +16,7 @@ def enchanting_plus_table():
 ```
 
 !!! warning
-    Declare a `Block` with a **unique name** (e.g., `"enchanting_plus_table"`). Namespace comes from **anvilconfig**.
+Declare a `Block` with a **unique name** (e.g., `"enchanting_plus_table"`). Namespace comes from **anvilconfig**.
 
 ---
 
@@ -31,7 +31,7 @@ block.server.description.add_state("is_awesome", (False, True))
 ```
 
 !!! note
-    Server‑side states are **optional**. If you don't define any, the block still exports and works.
+Server‑side states are **optional**. If you don't define any, the block still exports and works.
 
 ---
 
@@ -59,10 +59,10 @@ block.server.components.add(
 ```
 
 !!! info "Blockbench references"
-    The identifier passed to `BlockGeometry(...)` must map to a **Blockbench file** under `assets/blockbench`, and its **internal geometry/material names must match**. Mismatches raise an export error.
+The identifier passed to `BlockGeometry(...)` must map to a **Blockbench file** under `assets/blockbench`, and its **internal geometry/material names must match**. Mismatches raise an export error.
 
 !!! failure
-    **Visuals are mandatory.** Without a `BlockGeometry` and at least one material instance, the block won't export.
+**Visuals are mandatory.** Without a `BlockGeometry` and at least one material instance, the block won't export.
 
 ![Enchanting Plus Table Blockbench preview](/assets/enchanting_plus_table_blockbench.png)
 
@@ -90,7 +90,7 @@ recipe.queue()
 ```
 
 !!! note
-    Recipes are **optional**. If omitted, the block can still be obtained via creative inventory or commands.
+Recipes are **optional**. If omitted, the block can still be obtained via creative inventory or commands.
 
 ---
 
@@ -111,7 +111,7 @@ item.server.components.add(
 ```
 
 !!! tip
-    The block's **item** is available as `block.item`. Accessing it auto‑creates a corresponding item.
+The block's **item** is available as `block.item`. Accessing it auto‑creates a corresponding item.
 
 ---
 
@@ -123,11 +123,11 @@ return block
 ```
 
 !!! success
-    **Queuing is mandatory.** If you don't call `block.queue()`, the framework will **not export** the block.
-    Queuing the block will also queue any associated item.
+**Queuing is mandatory.** If you don't call `block.queue()`, the framework will **not export** the block.
+Queuing the block will also queue any associated item.
 
 !!! tip "Queue groups"
-    You can also group exports by calling `block.queue("group")` if you prefer a structured output directory.
+You can also group exports by calling `block.queue("group")` if you prefer a structured output directory.
 
 ---
 
@@ -197,7 +197,5 @@ def enchanting_plus_table():
 
 EnchantingPlusTable = enchanting_plus_table()
 ```
-
-![Enchanting Plus Table in‑game placeholder](/assets/enchanting_plus_table_ingame.png)
 
 ---

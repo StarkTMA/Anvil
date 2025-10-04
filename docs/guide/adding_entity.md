@@ -16,10 +16,10 @@ def redstone_golem():
 ```
 
 !!! warning
-    Declare an `Entity` with a **unique name** (e.g., `"redstone_golem"`). The namespace comes from **anvilconfig**.
+Declare an `Entity` with a **unique name** (e.g., `"redstone_golem"`). The namespace comes from **anvilconfig**.
 
 !!! warning "Export rule"
-    You **must** queue the entity later with `entity.queue(...)`. If you skip this, the framework **will not export** the entity.
+You **must** queue the entity later with `entity.queue(...)`. If you skip this, the framework **will not export** the entity.
 
 ---
 
@@ -32,16 +32,16 @@ entity.client.description.texture(entity.name, "redstone_golem")
 ```
 
 !!! info "Blockbench references"
-    The first argument in `description.geometry`, `description.texture`, and `description.animation` points to a **Blockbench file** under `assets/blockbench`. The **geometry/texture names inside that file must match what's being referenced** or Anvil raises an error.
+The first argument in `description.geometry`, `description.texture`, and `description.animation` points to a **Blockbench file** under `assets/blockbench`. The **geometry/texture names inside that file must match what's being referenced** or Anvil raises an error.
 
 !!! tip "Material defaults"
-    Anvil automatically adds a default material named `entity_alphatest`. You can define additional materials as needed.
+Anvil automatically adds a default material named `entity_alphatest`. You can define additional materials as needed.
 
 !!! failure
-    **Visuals are mandatory.** Without a geometry + texture defined on the client description, nothing is renderable and the export is skipped.
+**Visuals are mandatory.** Without a geometry + texture defined on the client description, nothing is renderable and the export is skipped.
 
 !!! question "What if I want an invisible entity?"
-    Use `entity.client.description.dummy()` for a non‑rendered, logic‑only entity.
+Use `entity.client.description.dummy()` for a non‑rendered, logic‑only entity.
 
 ![Redstone Golem Blockbench preview](/assets/redstone_golem_blockbench.png)
 
@@ -52,14 +52,14 @@ entity.client.description.texture(entity.name, "redstone_golem")
 ```py title="render controller"
 rc = entity.client.description.render_controller("default")
 rc.geometry(entity.name)
-rc.textures("golem")
+rc.textures("redstone_golem")
 ```
 
 !!! warning
-    A render controller is **required** for the model to **appear in‑game**.
+A render controller is **required** for the model to **appear in‑game**.
 
 !!! note "Optional tuning"
-    You can later add per‑part visibility, hurt/on‑fire colors, or other visual tweaks. These are **optional**.
+You can later add per‑part visibility, hurt/on‑fire colors, or other visual tweaks. These are **optional**.
 
 ---
 
@@ -82,7 +82,7 @@ entity.server.components.add(
 ```
 
 !!! note
-    There are **no minimum required server components**. With none, the entity has **no attributes** (no collision, physics, etc.). Add components only for the behaviors you need.
+There are **no minimum required server components**. With none, the entity has **no attributes** (no collision, physics, etc.). Add components only for the behaviors you need.
 
 ![Hitbox diagram placeholder](/assets/redstone_golem_hitbox.png)
 
@@ -95,7 +95,7 @@ entity.server.description.Summonable
 ```
 
 !!! note
-    Marking the entity **Summonable** lets you it with commands `/summon namespace:redstone_golem`.
+Marking the entity **Summonable** lets you it with commands `/summon namespace:redstone_golem`.
 
 ---
 
@@ -107,10 +107,10 @@ return entity
 ```
 
 !!! success
-    **Queuing is mandatory.** If you don't call `entity.queue(...)`, the framework will **not export** the entity.
+**Queuing is mandatory.** If you don't call `entity.queue(...)`, the framework will **not export** the entity.
 
 !!! tip "Queue groups"
-    The argument to `queue(...)` is an export **group**. Anvil places generated files under `<group>/`. Choose any grouping string that fits your project layout.
+The argument to `queue(...)` is an export **group**. Anvil places generated files under `<group>/`. Choose any grouping string that fits your project layout.
 
 ---
 
@@ -131,12 +131,12 @@ def redstone_golem():
 
     # Client visuals (mandatory)
     entity.client.description.geometry(entity.name)
-    entity.client.description.texture(entity.name, "golem")
+    entity.client.description.texture(entity.name, "redstone_golem")
 
     # Render (mandatory)
     rc = entity.client.description.render_controller("default")
     rc.geometry(entity.name)
-    rc.textures("golem")
+    rc.textures("redstone_golem")
 
     # Server (optional)
     entity.server.description.Summonable

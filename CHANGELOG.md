@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.4.4**](#version-0944)
+- [**Version 0.9.4.5**](#version-0945)
+- [Version 0.9.4.4](#version-0944)
 - [Version 0.9.4.3](#version-0943)
 - [Version 0.9.4.2](#version-0942)
 - [Version 0.9.4.1](#version-0941)
@@ -74,20 +75,29 @@
 
 ---
 
+## Version 0.9.4.5
+
+### Anvil
+
+- Minor tweaks to the documentation and code formatting
+
 ## Version 0.9.4.4
 
 ### Anvil
+
 - Fixed circular import issue.
 - Anvil now supports Minecraft Preview GDK migration from UWP, current Minecraft release still uses old UWP paths.
 
 ## Version 0.9.4.3
 
 ### Vanilla
+
 - Updated Minecraft vanilla definitions to 1.21.111
 
 ## Version 0.9.4.2
 
 ### Documentation
+
 - Added Entity tutorial.
 - Added Block tutorial.
 - Added Item tutorial.

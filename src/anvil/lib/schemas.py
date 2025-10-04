@@ -7,6 +7,7 @@ import uuid
 from typing import Dict, Mapping
 
 from anvil import CONFIG
+from anvil.api.vanilla.blocks import BLOCK_IDS
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA, File, salt_from_str
@@ -583,6 +584,8 @@ class AddonDescriptor:
 
         Parameters:
             name (str): The name of the Minecraft object.
+            is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
+            is_vanilla_allowed (bool, optional): If overriding vanilla objects is allowed, used for vanilla definitions. Defaults to False.
         """
         object_name: str
         object_namespace: str
@@ -791,6 +794,7 @@ class MinecraftBlockDescriptor(AddonDescriptor):
         is_vanilla_allowed=True,
     ) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
+
         self._states = {}
         if states:
             for k, v in states.items():
@@ -821,9 +825,6 @@ class MinecraftItemDescriptor(AddonDescriptor):
 
     def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
-
-    def __str__(self) -> Identifier:
-        return self.identifier
 
 
 class MinecraftBiomeDescriptor(AddonDescriptor):

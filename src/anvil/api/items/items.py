@@ -5,8 +5,12 @@ from anvil.api.actors._component_group import _Components
 from anvil.api.actors.actors import Attachable
 from anvil.lib.enums import ItemCategory, ItemGroups
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (AddonObject, ItemDescriptor, JsonSchemes,
-                               MinecraftDescription)
+from anvil.lib.schemas import (
+    AddonObject,
+    ItemDescriptor,
+    JsonSchemes,
+    MinecraftDescription,
+)
 
 __all__ = ["Item"]
 
@@ -18,7 +22,9 @@ class _ItemServerDescription(MinecraftDescription):
         self._description["description"].update({"properties": {}, "menu_category": {}})
 
     def group(self, group: ItemGroups):
-        self._description["description"]["menu_category"]["group"] = f"{CONFIG.NAMESPACE}:{group}"
+        self._description["description"]["menu_category"][
+            "group"
+        ] = f"{CONFIG.NAMESPACE}:{group}"
         return self
 
     def category(self, category: ItemCategory):
@@ -27,7 +33,9 @@ class _ItemServerDescription(MinecraftDescription):
 
     @property
     def is_hidden_in_commands(self):
-        self._description["description"]["menu_category"]["is_hidden_in_commands"] = True
+        self._description["description"]["menu_category"][
+            "is_hidden_in_commands"
+        ] = True
         return self
 
     def _export(self):
@@ -57,12 +65,14 @@ class _ItemServer(AddonObject):
         from anvil.api.items.components import ItemDisplayName
 
         self._server_item["minecraft:item"].update(self.description._export())
-        self._server_item["minecraft:item"]["components"].update(self._components._export()["components"])
+        self._server_item["minecraft:item"]["components"].update(
+            self._components._export()["components"]
+        )
 
         if not self._components._has(ItemDisplayName):
-            self._server_item["minecraft:item"]["components"][ItemDisplayName._identifier] = {
-                "value": self._display_name
-            }
+            self._server_item["minecraft:item"]["components"][
+                ItemDisplayName._identifier
+            ] = {"value": self._display_name}
 
         self.content(self._server_item)
 
@@ -87,13 +97,9 @@ class Item(ItemDescriptor):
         if self._attachable:
             self._attachable.queue()
 
-        if self.server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"].startswith("item."):
-            display_name = ANVIL.definitions._language[
-                self.server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
-            ]
-
-        else:
-            display_name = self.server._server_item["minecraft:item"]["components"]["minecraft:display_name"]["value"]
+        display_name = self.server._server_item["minecraft:item"]["components"][
+            "minecraft:display_name"
+        ]["value"]
         ANVIL.definitions.register_lang(
             f"item.{self.identifier}.name",
             display_name,
