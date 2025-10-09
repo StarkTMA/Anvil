@@ -11,7 +11,7 @@ from anvil.api.actors.spawn_rules import SpawnRule
 from anvil.api.logic.molang import Molang, Variable
 from anvil.api.pbr.pbr import __TextureSet
 from anvil.api.vanilla.entities import MinecraftEntityTypes
-from anvil.api.vanilla.items import MinecraftItemTypes, all_minecraft_items_identifiers
+from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.enums import DamageSensor, Target
@@ -712,9 +712,14 @@ class _ActorClientDescription(_ActorDescription):
                 f"Invalid type '{self._type}' for actor description. Expected 'entity' or 'attachables'. Actor [{self.identifier}]"
             )
 
-        if is_vanilla and self.identifier not in list(
-            map(str, MinecraftEntityTypes.__dict__.values())
-        ):
+        vanilla_entity_ids = [
+            getattr(MinecraftEntityTypes, method)().identifier
+            for method in dir(MinecraftEntityTypes)
+            if callable(getattr(MinecraftEntityTypes, method))
+            and not method.startswith("_")
+        ]
+
+        if is_vanilla and self.identifier not in vanilla_entity_ids:
             raise RuntimeError(
                 f"Invalid vanilla entity '{self.identifier}'. Please use a valid vanilla entity from MinecraftEntityTypes. Actor [{self.identifier}]"
             )
@@ -871,10 +876,16 @@ class _ActorClientDescription(_ActorDescription):
             )
         return self
 
-    def script(self, variable: Variable | str, script: Molang | str):
-        """This method manages the scripts for an entity."""
+    def script(self, variable: Variable | str, *script: Molang | str):
+        """This method manages the scripts for an entity.
+        Parameters:
+            variable (Variable | str): The variable to set the script to.
+            *script (Molang | str): The script to set the variable to.
+        """
+        chained_scripts = "; ".join(map(str, script))
+
         self._description["description"]["scripts"]["pre_animation"].append(
-            f"{variable}={script};".replace(";;", ";")
+            f"{variable}={chained_scripts};".replace(";;", ";")
         )
         return self
 
@@ -1611,9 +1622,6 @@ class Attachable(AddonObject):
             name (str): The name of the attachable.
         """
         super().__init__(name, is_vanilla)
-        if is_vanilla:
-            print(all_minecraft_items_identifiers)
-            self._is_vanilla = self.identifier in all_minecraft_items_identifiers
 
         self._attachable = JsonSchemes.attachable()
         self._description = _AttachableClientDescription(self.identifier, False)

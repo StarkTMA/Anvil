@@ -1,32 +1,49 @@
 import os
 from typing import Any, Dict, List
+from warnings import warn
+
+import click
 
 from anvil import ANVIL, CONFIG
 from anvil.api.actors.actors import _Components
-from anvil.api.blocks.components import (BlockDefault, BlockDisplayName,
-                                         BlockGeometry, BlockMaterialInstance)
+from anvil.api.blocks.components import (
+    BlockDefault,
+    BlockDisplayName,
+    BlockGeometry,
+    BlockMaterialInstance,
+)
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.lib.components import _BaseComponent
-from anvil.lib.enums import (ItemCategory, ItemGroups, PlacementDirectionTrait,
-                             PlacementPositionTrait)
+from anvil.lib.core import ConfigPackageTarget
+from anvil.lib.enums import (
+    ItemCategory,
+    ItemGroups,
+    PlacementDirectionTrait,
+    PlacementPositionTrait,
+)
 from anvil.lib.lib import IMAGE_EXTENSIONS_PRIORITY, CopyFiles
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (AddonObject, BlockDescriptor, JsonSchemes,
-                               MinecraftDescription)
+from anvil.lib.schemas import (
+    AddonObject,
+    BlockDescriptor,
+    JsonSchemes,
+    MinecraftDescription,
+)
 
 __all__ = ["Block"]
 
 
 class _tag:
     """Represents a block tag component.
-    
+
     Handles the creation and management of Minecraft block tags
     with associated dependencies and clashes.
     """
+
     def __init__(self, tag: MinecraftBlockTags):
         """Initializes a block tag component.
-        
+
         Args:
             tag (MinecraftBlockTags): The vanilla tag to assign to the block.
         """
@@ -36,7 +53,7 @@ class _tag:
 
     def __iter__(self):
         """Iterates over the tag component items.
-        
+
         Returns:
             iterator: An iterator over the component dictionary items.
         """
@@ -83,7 +100,9 @@ class _BlockTraits:
     def __init__(self) -> None:
         self._traits = {}
 
-    def placement_direction(self, y_rotation_offset: float = 0, *traits: PlacementDirectionTrait):
+    def placement_direction(
+        self, y_rotation_offset: float = 0, *traits: PlacementDirectionTrait
+    ):
         """can add states containing information about the player's rotation when the block is placed.
 
         Parameters:
@@ -139,7 +158,9 @@ class _BlockServerDescription(MinecraftDescription):
 
         """
         if len(range) > 16:
-            raise ValueError(f"A block state can only have up to 16 values. {self._object_type}[{self.name}].")
+            raise ValueError(
+                f"A block state can only have up to 16 values. {self._object_type}[{self.name}]."
+            )
 
         self._description["description"]["states"][f"{CONFIG.NAMESPACE}:{name}"] = range
         return self
@@ -230,19 +251,32 @@ class _BlockServer(AddonObject):
         self._server_block["minecraft:block"].update(self.description._export())
         self._server_block["minecraft:block"].update(self._components._export())
         comps: dict = self._server_block["minecraft:block"]["components"]
-        self._server_block["minecraft:block"]["permutations"] = [permutation._export() for permutation in self._permutations]
+        self._server_block["minecraft:block"]["permutations"] = [
+            permutation._export() for permutation in self._permutations
+        ]
 
         if not BlockDefault._identifier in comps:
             if not BlockMaterialInstance._identifier in comps:
-                raise RuntimeError(f"Block {self.identifier} missing default component. Block [{self.identifier}]")
+                raise RuntimeError(
+                    f"Block {self.identifier} missing default component. Block [{self.identifier}]"
+                )
             if not BlockGeometry._identifier in comps:
-                raise RuntimeError(f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]")
+                raise RuntimeError(
+                    f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]"
+                )
         else:
-            ANVIL.definitions.register_block(self.description.identifier, comps[BlockDefault._identifier])
+            ANVIL.definitions.register_block(
+                self.description.identifier, comps[BlockDefault._identifier]
+            )
             comps.pop(BlockDefault._identifier)
 
-        if not BlockDisplayName._identifier in self._server_block["minecraft:block"]["components"]:
-            self._server_block["minecraft:block"]["components"][BlockDisplayName._identifier] = self._display_name
+        if (
+            not BlockDisplayName._identifier
+            in self._server_block["minecraft:block"]["components"]
+        ):
+            self._server_block["minecraft:block"]["components"][
+                BlockDisplayName._identifier
+            ] = self._display_name
 
         self.content(self._server_block)
         super().queue()
@@ -253,10 +287,12 @@ class _BlockClient:
         self._name = name.split(":")[-1]
         self._is_vanilla = is_vanilla
         self._textures: Dict[str:str] = {}
-    
+
     def replace_vanilla_texture(self, texture_name: str, directory: str = ""):
         if not self._is_vanilla:
-            raise RuntimeError("The Block Client property is only accessible to vanilla block types.")
+            raise RuntimeError(
+                "The Block Client property is only accessible to vanilla block types."
+            )
 
         self._textures[texture_name] = directory
 
@@ -268,7 +304,9 @@ class _BlockClient:
     def _export(self):
         for texture, directory in self._textures.items():
             for i in IMAGE_EXTENSIONS_PRIORITY:
-                if os.path.exists(os.path.join("assets", "textures", "blocks", f"{texture}{i}")):
+                if os.path.exists(
+                    os.path.join("assets", "textures", "blocks", f"{texture}{i}")
+                ):
                     CopyFiles(
                         os.path.join("assets", "textures", "blocks"),
                         os.path.join(CONFIG.RP_PATH, "textures", "blocks", directory),
@@ -276,7 +314,9 @@ class _BlockClient:
                     )
                     break
             else:
-                raise RuntimeError(f"Texture {texture} not found in assets/textures/blocks.")
+                raise RuntimeError(
+                    f"Texture {texture} not found in assets/textures/blocks."
+                )
 
 
 # ===========================================
@@ -310,9 +350,13 @@ class Block(BlockDescriptor):
         if self._item:
             self._item.queue()
 
-        block_name_comp = self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier]
+        block_name_comp = self.server._server_block["minecraft:block"]["components"][
+            BlockDisplayName._identifier
+        ]
         if block_name_comp.startswith("tile."):
-            display_name = ANVIL.definitions._translator.get_localization_value(block_name_comp)
+            display_name = ANVIL.definitions._translator.get_localization_value(
+                block_name_comp
+            )
         else:
             display_name = block_name_comp
 
@@ -323,6 +367,8 @@ class Block(BlockDescriptor):
             col1=self.identifier,
             col2=[
                 f"{key}: {[', '.join(str(v) for v in value)]}"
-                for key, value in self.server.description._description["description"]["states"].items()
+                for key, value in self.server.description._description["description"][
+                    "states"
+                ].items()
             ],
         )

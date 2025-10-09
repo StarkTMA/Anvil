@@ -4,11 +4,10 @@ import os
 import amulet
 from amulet.api.block import Block as amuletBlock
 from amulet.api.block import StringTag
-from halo import Halo
-
 from anvil import CONFIG
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.lib.format_versions import MANIFEST_BUILD
+from halo import Halo
 
 
 # Requires Amulet core to build the world
@@ -62,7 +61,7 @@ class LDtk:
                 level_data = level["layerInstances"]
 
             else:
-                with open(os.path.join("assets", "world", level["externalRelPath"]), "r") as File:
+                with open(os.path.join("world", "ldtk", level["externalRelPath"]), "r") as File:
                     level_data = json.load(File)["layerInstances"]
 
             # Level Layers
@@ -115,7 +114,7 @@ class LDtk:
             json.dump(self.dictionary, File)
 
     def _prepare_level(self):
-        world = amulet.load_level(CONFIG.WORLD_PATH)
+        world = amulet.load_level(CONFIG._WORLD_PATH)
 
         # The following deletes EVERYTHING, DO NOT USE IF YOU HAVE HAND BUILT STRUCTURES
         if self._clear_chunks:
@@ -137,7 +136,7 @@ class LDtk:
             filename (str): filename of the map, no extension.
             clear_chunks (bool, optional): If chunks should be cleared before writing to the map. Defaults to False.
         """
-        self._file = os.path.join("assets", "world", filename + ".ldtk")
+        self._file = os.path.join("world", "ldtk", filename + ".ldtk")
         self.dictionary = {"tilesets": {}, "levels": {}, "entities": {}, "enums": []}
         self._clear_chunks = clear_chunks
         self._default_origin_block = default_origin_block
@@ -191,7 +190,7 @@ class LDtk:
                 world.set_version_block(*mapped_coords, "minecraft:overworld", game_version, origin_block)
                 world.set_version_block(*mapped_coords, "minecraft:overworld", game_version, block)
 
-        with open(os.path.join("assets", "javascript", "entities.ts"), "w") as File:
+        with open(os.path.join("scripts", "javascript", "entities.ts"), "w") as File:
             entities = {}
             if export_entities:
                 for level_name, level in self.dictionary["levels"].items():

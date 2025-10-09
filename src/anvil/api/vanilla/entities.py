@@ -375,3 +375,4 @@ class MinecraftEntityTypes:
         return entity_factory("minecraft:zombie_villager_v2")
 
 #ENTITY_IDS: set[str] = extract_ids_from_factory_class(MinecraftEntityTypes)
+

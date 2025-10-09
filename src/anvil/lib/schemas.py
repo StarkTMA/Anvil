@@ -7,7 +7,6 @@ import uuid
 from typing import Dict, Mapping
 
 from anvil import CONFIG
-from anvil.api.vanilla.blocks import BLOCK_IDS
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA, File, salt_from_str

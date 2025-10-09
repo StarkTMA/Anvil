@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.4.5**](#version-0945)
+- [**Version 0.9.4.6**](#version-0946)
+- [Version 0.9.4.5](#version-0945)
 - [Version 0.9.4.4](#version-0944)
 - [Version 0.9.4.3](#version-0943)
 - [Version 0.9.4.2](#version-0942)
@@ -75,11 +76,17 @@
 
 ---
 
+## Version 0.9.4.6
+
+### Anvil
+
+- Fixed missing templates and kit folders from built package.
+
 ## Version 0.9.4.5
 
 ### Anvil
 
-- Minor tweaks to the documentation and code formatting
+- Minor tweaks to the documentation and code formatting.
 
 ## Version 0.9.4.4
 

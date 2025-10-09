@@ -10,16 +10,22 @@ from packaging.version import Version
 
 from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
-from anvil.lib.lib import (APPDATA, PREVIEW_COM_MOJANG, RELEASE_COM_MOJANG,
-                           FileExists, validate_namespace_project_name)
+from anvil.lib.lib import (
+    APPDATA,
+    PREVIEW_COM_MOJANG,
+    RELEASE_COM_MOJANG,
+    FileExists,
+    validate_namespace_project_name,
+)
 from anvil.lib.reports import ReportCollector
 
 
 class ConfigSection(StrEnum):
     """Configuration sections for the anvil config file.
-    
+
     Defines the main sections that can be present in the configuration file.
     """
+
     ANVIL = "anvil"
     BUILD = "build"
     PACKAGE = "package"
@@ -28,10 +34,11 @@ class ConfigSection(StrEnum):
 
 class ConfigOption(StrEnum):
     """Configuration options available in the anvil config file.
-    
+
     Defines all the configuration keys that can be set in various sections
     of the configuration file.
     """
+
     VANILLA_VERSION = "vanilla_version"
     COMPANY = "company"
     NAMESPACE = "namespace"
@@ -66,9 +73,10 @@ class ConfigOption(StrEnum):
 
 class ConfigPackageTarget(StrEnum):
     """Package target types for anvil projects.
-    
+
     Defines the types of packages that can be created.
     """
+
     WORLD = "world"
     ADDON = "addon"
 
@@ -148,10 +156,11 @@ class Config:
 
 class _AnvilConfig:
     """Main configuration class for Anvil instances.
-    
+
     Manages all configuration settings, paths, and initialization
     for an Anvil project instance.
     """
+
     COMPANY: str
     NAMESPACE: str
     PROJECT_NAME: str
@@ -181,7 +190,9 @@ class _AnvilConfig:
     _SCRIPT_MODULE_UUID: str
     _MINIFY: bool
 
-    def _handle_config(self, section: ConfigSection, option: ConfigOption, prompt) -> None:
+    def _handle_config(
+        self, section: ConfigSection, option: ConfigOption, prompt
+    ) -> None:
         """Handles the config of the Anvil instance.
 
         Parameters:
@@ -198,83 +209,157 @@ class _AnvilConfig:
 
     def _load_configs(self) -> None:
         """Loads and validates all configuration settings for the Anvil instance.
-        
+
         Handles loading configuration values from the config file, prompting for
         missing values, and setting up all necessary project configurations.
         """
-        self.NAMESPACE = self._handle_config(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, "input")
-        self.PROJECT_NAME = self._handle_config(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, "input")
-
-        self.COMPANY = self._handle_config(ConfigSection.PACKAGE, ConfigOption.COMPANY, "input")
-        self.DISPLAY_NAME = self._handle_config(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, "input")
-        self.PROJECT_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, "input")
-        self.BEHAVIOUR_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION, "input")
-        self.RESOURCE_DESCRIPTION = self._handle_config(ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, "input")
-        self._DEBUG = self._handle_config(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
-        self._PASCAL_PROJECT_NAME = self._handle_config(
-            ConfigSection.ANVIL, ConfigOption.PASCAL_PROJECT_NAME, "".join(x[0] for x in self.PROJECT_NAME.split("_")).upper()
+        self.NAMESPACE = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.NAMESPACE, "input"
+        )
+        self.PROJECT_NAME = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, "input"
         )
 
-        self._VANILLA_VERSION = self._handle_config(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
-        self._TARGET = self._handle_config(ConfigSection.PACKAGE, ConfigOption.TARGET, "world")
+        self.COMPANY = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.COMPANY, "input"
+        )
+        self.DISPLAY_NAME = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, "input"
+        )
+        self.PROJECT_DESCRIPTION = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, "input"
+        )
+        self.BEHAVIOUR_DESCRIPTION = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.BEHAVIOUR_DESCRIPTION, "input"
+        )
+        self.RESOURCE_DESCRIPTION = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, "input"
+        )
+        self._DEBUG = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.DEBUG, False
+        )
+        self._PASCAL_PROJECT_NAME = self._handle_config(
+            ConfigSection.ANVIL,
+            ConfigOption.PASCAL_PROJECT_NAME,
+            "".join(x[0] for x in self.PROJECT_NAME.split("_")).upper(),
+        )
 
-        self._RELEASE = self._handle_config(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
-        self._LAST_CHECK = self._handle_config(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        self._VANILLA_VERSION = self._handle_config(
+            ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
+        )
+        self._TARGET = self._handle_config(
+            ConfigSection.PACKAGE, ConfigOption.TARGET, "world"
+        )
 
-        self._SCRIPT_API = self._handle_config(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, False)
-        self._SCRIPT_UI = self._handle_config(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False)
+        self._RELEASE = self._handle_config(
+            ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0"
+        )
+        self._LAST_CHECK = self._handle_config(
+            ConfigSection.ANVIL,
+            ConfigOption.LAST_CHECK,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )
+
+        self._SCRIPT_API = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.SCRIPT_API, False
+        )
+        self._SCRIPT_UI = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False
+        )
         self._PBR = self._handle_config(ConfigSection.ANVIL, ConfigOption.PBR, False)
-        self._RANDOM_SEED = self._handle_config(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False)
-        self._EXPERIMENTAL = self._handle_config(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
-        self._PREVIEW = self._handle_config(ConfigSection.ANVIL, ConfigOption.PREVIEW, False)
-        self._ENTRY_POINT = self._handle_config(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py")
+        self._RANDOM_SEED = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False
+        )
+        self._EXPERIMENTAL = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False
+        )
+        self._PREVIEW = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.PREVIEW, False
+        )
+        self._ENTRY_POINT = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
+        )
 
-        self._RP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
-        self._BP_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
-        self._PACK_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
-        self._DATA_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
+        self._RP_UUID = self._handle_config(
+            ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())]
+        )
+        self._BP_UUID = self._handle_config(
+            ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())]
+        )
+        self._PACK_UUID = self._handle_config(
+            ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4())
+        )
+        self._DATA_MODULE_UUID = self._handle_config(
+            ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4())
+        )
         if self._SCRIPT_API:
-            self._SCRIPT_MODULE_UUID = self._handle_config(ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4()))
-            self._SCRIPT_BUNDLE_SCRIPT = self._handle_config(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js")
+            self._SCRIPT_MODULE_UUID = self._handle_config(
+                ConfigSection.BUILD, ConfigOption.SCRIPT_MODULE_UUID, str(uuid.uuid4())
+            )
+            self._SCRIPT_BUNDLE_SCRIPT = self._handle_config(
+                ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
+            )
 
         if self._TARGET not in ConfigPackageTarget:
-            raise ValueError(f"Invalid package target '{self._TARGET}'. Must be one of {list(ConfigPackageTarget)}.")
+            raise ValueError(
+                f"Invalid package target '{self._TARGET}'. Must be one of {list(ConfigPackageTarget)}."
+            )
 
-        self._MINIFY = self._handle_config(ConfigSection.ANVIL, ConfigOption.MINIFY, False)
+        self._MINIFY = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.MINIFY, False
+        )
 
-        validate_namespace_project_name(self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon")
+        validate_namespace_project_name(
+            self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon"
+        )
 
     def _check_new_versions(self):
         """Checks for updates to both Anvil and Minecraft versions.
-        
+
         Compares current versions with the latest available versions
         and updates the configuration with the latest Minecraft version.
         """
         click.echo(click.style("Checking for package updates...", fg="cyan"))
 
         try:
-            vanilla_latest_build: str = json.loads(requests.get("https://raw.githubusercontent.com/Mojang/bedrock-samples/version.json"))["latest"][
-                "version"
-            ]
+            vanilla_latest_build: str = json.loads(
+                requests.get(
+                    "https://raw.githubusercontent.com/Mojang/bedrock-samples/version.json"
+                )
+            )["latest"]["version"]
         except:
             vanilla_latest_build = MANIFEST_BUILD
 
         try:
-            latest_build: str = requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py").split("=")[-1].strip()
+            latest_build: str = (
+                requests.get(
+                    "https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py"
+                )
+                .split("=")[-1]
+                .strip()
+            )
         except:
             latest_build = __version__
 
         if Version(__version__) < Version(latest_build):
-            click.echo(f"A newer anvil build were found: [{latest_build}].", color="cyan")
+            click.echo(
+                f"A newer anvil build were found: [{latest_build}].", color="cyan"
+            )
         else:
             click.echo("Anvil is up to date.", color="green")
 
-        self.Config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, vanilla_latest_build)
-        self.Config.add_option(ConfigSection.ANVIL, ConfigOption.LAST_CHECK, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        self.Config.add_option(
+            ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, vanilla_latest_build
+        )
+        self.Config.add_option(
+            ConfigSection.ANVIL,
+            ConfigOption.LAST_CHECK,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )
 
     def __init__(self) -> None:
         """Initializes a new Anvil configuration instance.
-        
+
         Sets up the configuration, displays version information,
         loads all settings, and establishes project paths.
         """
@@ -298,13 +383,21 @@ class _AnvilConfig:
         self.Report.add_headers()
 
         self._load_configs()
-        
+
         # GDK Setup preparation
         self._COM_MOJANG = PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
-        self._WORLD_PATH = os.path.join(self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME)
-        
-        self.RP_PATH = os.path.join(self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}")
-        self.BP_PATH = os.path.join(self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}")
+        self._WORLD_PATH = os.path.join(
+            self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME
+        )
 
-        if datetime.now() - datetime.strptime(self._LAST_CHECK, "%Y-%m-%d %H:%M:%S") > timedelta(hours=24):
+        self.RP_PATH = os.path.join(
+            self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}"
+        )
+        self.BP_PATH = os.path.join(
+            self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}"
+        )
+
+        if datetime.now() - datetime.strptime(
+            self._LAST_CHECK, "%Y-%m-%d %H:%M:%S"
+        ) > timedelta(hours=24):
             self._check_new_versions()

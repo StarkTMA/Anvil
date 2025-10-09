@@ -4,23 +4,40 @@ from datetime import datetime
 from typing import Optional
 
 import click
+from halo import Halo
+from PIL import Image
+
 from anvil.api.actors.materials import _MaterialsObject
 from anvil.api.logic.molang import Molang
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import ConfigPackageTarget, _AnvilConfig
-from anvil.lib.lib import (CreateDirectory, File, FileExists, RemoveDirectory,
-                           process_subcommand, validate_namespace_project_name,
-                           zipit)
+from anvil.lib.lib import (
+    CreateDirectory,
+    File,
+    FileExists,
+    RemoveDirectory,
+    process_subcommand,
+    validate_namespace_project_name,
+    zipit,
+)
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.sounds import (EntitySoundEvent, MusicCategory, MusicDefinition,
-                              SoundCategory, SoundDefinition, SoundEvent)
-from anvil.lib.textures import (BlocksJSONObject, ItemTexturesObject,
-                                TerrainTexturesObject, UITexturesObject)
+from anvil.lib.sounds import (
+    EntitySoundEvent,
+    MusicCategory,
+    MusicDefinition,
+    SoundCategory,
+    SoundDefinition,
+    SoundEvent,
+)
+from anvil.lib.textures import (
+    BlocksJSONObject,
+    ItemTexturesObject,
+    TerrainTexturesObject,
+    UITexturesObject,
+)
 from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import Identifier
-from halo import Halo
-from PIL import Image
 
 from ..__version__ import __version__
 
@@ -53,18 +70,27 @@ class _AnvilSkinPack(AddonObject):
             free (bool, optional): Whether the skin is free. Defaults to False.
         """
         if not FileExists(os.path.join(self._path, f"{filename}.png")):
-            raise FileNotFoundError(f"{filename}.png not found in {self._path}. Please ensure the file exists.")
+            raise FileNotFoundError(
+                f"{filename}.png not found in {self._path}. Please ensure the file exists."
+            )
         self._skins.append(JsonSchemes.skin_json(filename, is_slim, free))
         self._languages[f"skin.{self._config.PROJECT_NAME}.{filename}"] = display_name
 
     def _export(self):
         """Exports the SkinPack to the file system."""
         self._content["skins"] = self._skins
-        l = JsonSchemes.skin_pack_name_lang(self._config.PROJECT_NAME, self._config.PROJECT_NAME + " Skin Pack")
+        l = JsonSchemes.skin_pack_name_lang(
+            self._config.PROJECT_NAME, self._config.PROJECT_NAME + " Skin Pack"
+        )
         l.extend([f"{k}={v}" for k, v in self._languages.items()])
 
         File("languages.json", JsonSchemes.languages(), self._path, "w")
-        File("manifest.json", JsonSchemes.manifest_skins(self._config._RELEASE), self._path, "w")
+        File(
+            "manifest.json",
+            JsonSchemes.manifest_skins(self._config._RELEASE),
+            self._path,
+            "w",
+        )
         File("en_US.lang", "\n".join(l), os.path.join(self._path, "texts"), "w")
 
         super()._export()
@@ -136,8 +162,21 @@ class _AnvilDefinitions:
         if self._sound_definition_object is None:
             self._sound_definition_object = SoundDefinition()
 
-        self._sound_event_object.add_entity_event(entity_identifier, sound_reference, sound_event, volume, pitch, variant_query, variant_map)
-        return self._sound_definition_object.sound_reference(sound_reference, category, max_distance=max_distance, min_distance=min_distance)
+        self._sound_event_object.add_entity_event(
+            entity_identifier,
+            sound_reference,
+            sound_event,
+            volume,
+            pitch,
+            variant_query,
+            variant_map,
+        )
+        return self._sound_definition_object.sound_reference(
+            sound_reference,
+            category,
+            max_distance=max_distance,
+            min_distance=min_distance,
+        )
 
     def register_individual_named_sounds(
         self,
@@ -157,7 +196,9 @@ class _AnvilDefinitions:
         Registers a block sound event."""
         pass
 
-    def register_item_textures(self, item_name: str, directory: str, *item_sprites: str):
+    def register_item_textures(
+        self, item_name: str, directory: str, *item_sprites: str
+    ):
         if self._item_textures_object is None:
             self._item_textures_object = ItemTexturesObject()
         return self._item_textures_object.add_item(item_name, directory, *item_sprites)
@@ -167,7 +208,12 @@ class _AnvilDefinitions:
             self._ui_textures_object = UITexturesObject()
         return self._ui_textures_object.add_item(item_name, directory, *item_sprites)
 
-    def register_music(self, music_reference: MusicCategory | str, min_delay: int = 60, max_delay: int = 180):
+    def register_music(
+        self,
+        music_reference: MusicCategory | str,
+        min_delay: int = 60,
+        max_delay: int = 180,
+    ):
         """Adds a music to the music definition.
 
         Parameters:
@@ -180,8 +226,12 @@ class _AnvilDefinitions:
             self._music_definition_object = MusicDefinition()
         if self._sound_definition_object is None:
             self._sound_definition_object = SoundDefinition()
-        self._music_definition_object.music_definition(music_reference, min_delay, max_delay)
-        return self._sound_definition_object.sound_reference(f"music.{music_reference}", SoundCategory.Music)
+        self._music_definition_object.music_definition(
+            music_reference, min_delay, max_delay
+        )
+        return self._sound_definition_object.sound_reference(
+            f"music.{music_reference}", SoundCategory.Music
+        )
 
     def register_scores(self, **score_id_value: dict[str, int]):
         """
@@ -200,11 +250,18 @@ class _AnvilDefinitions:
         """
         for score_id, score_value in score_id_value.items():
             if len(score_id) > 16:
-                raise ValueError(f"Score objective must be 16 characters or less. Error at {score_id}.")
+                raise ValueError(
+                    f"Score objective must be 16 characters or less. Error at {score_id}."
+                )
 
             start = f"{self.config.NAMESPACE}."
-            if not score_id.startswith(start) and self.config._TARGET == ConfigPackageTarget.ADDON:
-                raise ValueError(f"Scores must start with the namespace [{start}]. Error at {score_id}.")
+            if (
+                not score_id.startswith(start)
+                and self.config._TARGET == ConfigPackageTarget.ADDON
+            ):
+                raise ValueError(
+                    f"Scores must start with the namespace [{start}]. Error at {score_id}."
+                )
 
             if not score_id in self._scores.keys():
                 self._scores[score_id] = score_value
@@ -222,8 +279,13 @@ class _AnvilDefinitions:
         for tag in tags:
 
             start = f"{self.config.NAMESPACE}."
-            if not tag.startswith(start) and self.config._TARGET == ConfigPackageTarget.ADDON:
-                raise ValueError(f"Tags must start with the namespace [{start}]. Error at {tag}.")
+            if (
+                not tag.startswith(start)
+                and self.config._TARGET == ConfigPackageTarget.ADDON
+            ):
+                raise ValueError(
+                    f"Tags must start with the namespace [{start}]. Error at {tag}."
+                )
 
             if not tag in self._tags:
                 self._tags.add(tags)
@@ -239,7 +301,9 @@ class _AnvilDefinitions:
 
         self._blocks_object.add_block(block_identifier, block_data)
 
-    def register_terrain_texture(self, texture_name: str, texture_path: str, *block_textures):
+    def register_terrain_texture(
+        self, texture_name: str, texture_path: str, *block_textures
+    ):
         """Registers a terrain texture.
 
         Parameters:
@@ -248,7 +312,9 @@ class _AnvilDefinitions:
         """
         if self._terrain_texture_object is None:
             self._terrain_texture_object = TerrainTexturesObject()
-        self._terrain_texture_object.add_block(texture_name, texture_path, *block_textures)
+        self._terrain_texture_object.add_block(
+            texture_name, texture_path, *block_textures
+        )
 
     def register_skin_pack(self):
         """Registers a skin pack."""
@@ -273,10 +339,25 @@ class _AnvilDefinitions:
     def _export_manifest(self, extract_world: bool = False):
         release_list = [int(i) for i in self.config._RELEASE.split(".")]
 
-        File("manifest.json", JsonSchemes.manifest_rp(version=self.config._RELEASE), self.config.RP_PATH, "w")
-        File("manifest.json", JsonSchemes.manifest_bp(version=self.config._RELEASE), self.config.BP_PATH, "w")
+        File(
+            "manifest.json",
+            JsonSchemes.manifest_rp(version=self.config._RELEASE),
+            self.config.RP_PATH,
+            "w",
+        )
+        File(
+            "manifest.json",
+            JsonSchemes.manifest_bp(version=self.config._RELEASE),
+            self.config.BP_PATH,
+            "w",
+        )
         if extract_world:
-            File("manifest.json", JsonSchemes.manifest_world(version=release_list), self.config._WORLD_PATH, "w")
+            File(
+                "manifest.json",
+                JsonSchemes.manifest_world(version=release_list),
+                self.config._WORLD_PATH,
+                "w",
+            )
 
             File(
                 "world_resource_packs.json",
@@ -293,21 +374,46 @@ class _AnvilDefinitions:
 
     def _export_scripts(self):
         if not FileExists("tsconfig.json"):
-            File("tsconfig.json", JsonSchemes.tsconfig(self.config.BP_PATH), "", "w", False)
-        if not FileExists("esbuild.js") and "esbuild" in self.config._SCRIPT_BUNDLE_SCRIPT:
-            File("esbuild.js", JsonSchemes.esbuild_config_js(self.config.BP_PATH, self.config._MINIFY), "", "w", False)
+            File(
+                "tsconfig.json",
+                JsonSchemes.tsconfig(self.config.BP_PATH),
+                "",
+                "w",
+                False,
+            )
+        if (
+            not FileExists("esbuild.js")
+            and "esbuild" in self.config._SCRIPT_BUNDLE_SCRIPT
+        ):
+            File(
+                "esbuild.js",
+                JsonSchemes.esbuild_config_js(self.config.BP_PATH, self.config._MINIFY),
+                "",
+                "w",
+                False,
+            )
         if not FileExists("package.json"):
             File(
                 "package.json",
-                JsonSchemes.package_json(self.config.PROJECT_NAME, self.config._RELEASE, self.config.PROJECT_DESCRIPTION, self.config.COMPANY),
+                JsonSchemes.package_json(
+                    self.config.PROJECT_NAME,
+                    self.config._RELEASE,
+                    self.config.PROJECT_DESCRIPTION,
+                    self.config.COMPANY,
+                ),
                 "",
                 "w",
                 True,
             )
 
     def _export_helper_functions(self):
-        from anvil.api.logic.commands import (Scoreboard, ScriptEvent, Tag,
-                                              Target, Tellraw)
+        from anvil.api.logic.commands import (
+            Scoreboard,
+            ScriptEvent,
+            Tag,
+            Target,
+            Tellraw,
+        )
         from anvil.api.logic.functions import Function, Tick
 
         self._setup_function = Function("setup")
@@ -323,9 +429,15 @@ class _AnvilDefinitions:
 
         Function("version").add(
             Tellraw(Target.A).text.text("[Anvil Debug Message]"),
-            Tellraw(Target.A).text.text("This message contains information about the creating of this pack."),
-            Tellraw(Target.A).text.text(f"Last compiled on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"),
-            Tellraw(Target.A).text.text(f"Minecraft Version: {self.config._VANILLA_VERSION}"),
+            Tellraw(Target.A).text.text(
+                "This message contains information about the creating of this pack."
+            ),
+            Tellraw(Target.A).text.text(
+                f"Last compiled on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            ),
+            Tellraw(Target.A).text.text(
+                f"Minecraft Version: {self.config._VANILLA_VERSION}"
+            ),
             Tellraw(Target.A).text.text(f"Pack Version: {self.config._RELEASE}"),
         ).queue()
 
@@ -390,7 +502,6 @@ class _Anvil:
 
         Parameters:
             config (_Config): The config of the Anvil instance.
-            logger (Logger): The logger of the Anvil instance.
         """
         if _Anvil._instance is None:
             _Anvil._instance = self
@@ -421,7 +532,9 @@ class _Anvil:
 
         if extract_world != None and type(extract_world) is str:
             RemoveDirectory(self.config._WORLD_PATH)
-            with zipfile.ZipFile(os.path.join("world", f"{extract_world}.mcworld"), "r") as zip_ref:
+            with zipfile.ZipFile(
+                os.path.join("world", f"{extract_world}.mcworld"), "r"
+            ) as zip_ref:
                 zip_ref.extractall(self.config._WORLD_PATH)
 
         self._definitions.queue(extract_world != None)
@@ -432,22 +545,37 @@ class _Anvil:
                 object._export()
             except Exception as e:
                 traceback = f"<{object.__class__.__name__} created from:\n{''.join(object.__created_from)}>"
-                click.echo(f"\rError exporting {object._name}: {e}", err=True, color="red")
+                click.echo(
+                    f"\rError exporting {object._name}: {e}", err=True, color="red"
+                )
                 click.echo(f"\rTraceback: {traceback}", err=True, color="red")
 
         from anvil.api.blocks.blocks import _PermutationComponents
 
         if _PermutationComponents._count > 10000:
             if self.config._TARGET == ConfigPackageTarget.ADDON:
-                raise RuntimeError(f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons cannot exceed this limit.")
-            else:
                 raise RuntimeError(
+                    f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons must not exceed this limit."
+                )
+            else:
+                click.echo(
                     f"\rTotal Block permutations exceeded 10000 ({_PermutationComponents._count}). For minimal performance impact, consider reducing the number of permutations."
                 )
 
-        if self.config._SCRIPT_API:
+        if self.config._TARGET == ConfigPackageTarget.ADDON:
+            if len(self.config._RP_UUID) > 1:
+                raise RuntimeError(
+                    "Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack."
+                )
+            if len(self.config._BP_UUID) > 1:
+                raise RuntimeError(
+                    "Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack."
+                )
 
-            process_subcommand(self.config._SCRIPT_BUNDLE_SCRIPT, "Typescript compilation error")
+        if self.config._SCRIPT_API:
+            process_subcommand(
+                self.config._SCRIPT_BUNDLE_SCRIPT, "Building scripts error"
+            )
 
         self._compiled = True
 
@@ -456,7 +584,11 @@ class _Anvil:
         self,
         apply_overlay: bool = False,
     ) -> None:
-        """Packages the project into a zip file for Marketplace."""
+        """Packages the project into a zip file for Marketplace.
+
+        Parameters:
+            apply_overlay (bool, optional): Whether to apply the overlay to the marketing art. Defaults to False.
+        """
         if not self._compiled:
             raise RuntimeError("Project must be compiled before packaging.")
 
@@ -468,36 +600,65 @@ class _Anvil:
         }
 
         if self.config._TARGET == ConfigPackageTarget.ADDON:
-            if len(self.config._RP_UUID) > 1:
-                raise RuntimeError("Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack.")
-            if len(self.config._BP_UUID) > 1:
-                raise RuntimeError("Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack.")
-
             content_structure.update(
                 {
-                    self.config.RP_PATH: os.path.join("Content", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
-                    self.config.BP_PATH: os.path.join("Content", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
+                    self.config.RP_PATH: os.path.join(
+                        "Content",
+                        "resource_packs",
+                        f"RP_{self.config._PASCAL_PROJECT_NAME}",
+                    ),
+                    self.config.BP_PATH: os.path.join(
+                        "Content",
+                        "behavior_packs",
+                        f"BP_{self.config._PASCAL_PROJECT_NAME}",
+                    ),
                 }
             )
 
         else:
             content_structure.update(
                 {
-                    self.config.RP_PATH: os.path.join("Content", "world_template", "resource_packs", f"RP_{self.config._PASCAL_PROJECT_NAME}"),
-                    self.config.BP_PATH: os.path.join("Content", "world_template", "behavior_packs", f"BP_{self.config._PASCAL_PROJECT_NAME}"),
-                    os.path.join(self.config._WORLD_PATH, "texts"): os.path.join("Content", "world_template", "texts"),
-                    os.path.join(self.config._WORLD_PATH, "level.dat"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "levelname.txt"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "manifest.json"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "world_icon.jpeg"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "world_behavior_packs.json"): os.path.join("Content", "world_template"),
-                    os.path.join(self.config._WORLD_PATH, "world_resource_packs.json"): os.path.join("Content", "world_template"),
+                    self.config.RP_PATH: os.path.join(
+                        "Content",
+                        "world_template",
+                        "resource_packs",
+                        f"RP_{self.config._PASCAL_PROJECT_NAME}",
+                    ),
+                    self.config.BP_PATH: os.path.join(
+                        "Content",
+                        "world_template",
+                        "behavior_packs",
+                        f"BP_{self.config._PASCAL_PROJECT_NAME}",
+                    ),
+                    os.path.join(self.config._WORLD_PATH, "texts"): os.path.join(
+                        "Content", "world_template", "texts"
+                    ),
+                    os.path.join(self.config._WORLD_PATH, "level.dat"): os.path.join(
+                        "Content", "world_template"
+                    ),
+                    os.path.join(
+                        self.config._WORLD_PATH, "levelname.txt"
+                    ): os.path.join("Content", "world_template"),
+                    os.path.join(
+                        self.config._WORLD_PATH, "manifest.json"
+                    ): os.path.join("Content", "world_template"),
+                    os.path.join(
+                        self.config._WORLD_PATH, "world_icon.jpeg"
+                    ): os.path.join("Content", "world_template"),
+                    os.path.join(
+                        self.config._WORLD_PATH, "world_behavior_packs.json"
+                    ): os.path.join("Content", "world_template"),
+                    os.path.join(
+                        self.config._WORLD_PATH, "world_resource_packs.json"
+                    ): os.path.join("Content", "world_template"),
                 }
             )
             if not self.config._RANDOM_SEED:
                 content_structure.update(
                     {
-                        os.path.join(self.config._WORLD_PATH, "db"): os.path.join("Content", "world_template", "db"),
+                        os.path.join(self.config._WORLD_PATH, "db"): os.path.join(
+                            "Content", "world_template", "db"
+                        ),
                     }
                 )
 
@@ -522,7 +683,10 @@ class _Anvil:
             self.config.BP_PATH: f"BP_{self.config.PROJECT_NAME}",
         }
 
-        zipit(os.path.join("output", f"{self.config.PROJECT_NAME}.mcaddon"), content_structure)
+        zipit(
+            os.path.join("output", f"{self.config.PROJECT_NAME}.mcaddon"),
+            content_structure,
+        )
 
     @Halo(text="Packaging mcworld", spinner="dots")
     def mcworld(self):
@@ -533,8 +697,12 @@ class _Anvil:
         self._process_art(False, False)
 
         content_structure = {
-            self.config.RP_PATH: os.path.join("resource_packs", f"RP_{self.config.PROJECT_NAME}"),
-            self.config.BP_PATH: os.path.join("behavior_packs", f"BP_{self.config.PROJECT_NAME}"),
+            self.config.RP_PATH: os.path.join(
+                "resource_packs", f"RP_{self.config.PROJECT_NAME}"
+            ),
+            self.config.BP_PATH: os.path.join(
+                "behavior_packs", f"BP_{self.config.PROJECT_NAME}"
+            ),
             os.path.join(self.config._WORLD_PATH, "texts"): "texts",
             os.path.join(self.config._WORLD_PATH, "level.dat"): "",
             os.path.join(self.config._WORLD_PATH, "levelname.txt"): "",
@@ -556,8 +724,13 @@ class _Anvil:
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet
         from reportlab.lib.units import cm
-        from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer,
-                                        Table, TableStyle)
+        from reportlab.platypus import (
+            Paragraph,
+            SimpleDocTemplate,
+            Spacer,
+            Table,
+            TableStyle,
+        )
 
         def add_table(section_name: str, data: dict[bool, set[str]]):
             title_style.spaceBefore = 0
@@ -578,7 +751,11 @@ class _Anvil:
                         vanilla_true_rows.append(idx)
                 converted_data.append([Paragraph(row, styles["Normal"]), *vals])
 
-            table = Table(converted_data, hAlign="LEFT", colWidths=doc.width / len(converted_data[0]))
+            table = Table(
+                converted_data,
+                hAlign="LEFT",
+                colWidths=doc.width / len(converted_data[0]),
+            )
 
             style_commands = [
                 ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
@@ -592,7 +769,9 @@ class _Anvil:
                 ("GRID", (0, 0), (-1, -1), 1, colors.black),
             ]
             for row in vanilla_true_rows:
-                style_commands.append(("BACKGROUND", (0, row), (-1, row), colors.lightgreen))
+                style_commands.append(
+                    ("BACKGROUND", (0, row), (-1, row), colors.lightgreen)
+                )
             table.setStyle(TableStyle(style_commands))
 
             return title, Spacer(1, 0.3 * cm), table, Spacer(1, 1 * cm)
@@ -620,8 +799,15 @@ class _Anvil:
             Paragraph(f"Generated with StarkTMA/Anvil {__version__}", body_style),
             Spacer(1, 1 * cm),
             Paragraph("General information:", title_style),
-            Paragraph("The following technical notes have been entirely generated from source code using Anvil.", body_style),
-            Paragraph("Features overwriting vanilla defaults will be highlighted in green.", bullet_style, "*"),
+            Paragraph(
+                "The following technical notes have been entirely generated from source code using Anvil.",
+                body_style,
+            ),
+            Paragraph(
+                "Features overwriting vanilla defaults will be highlighted in green.",
+                bullet_style,
+                "*",
+            ),
             Spacer(1, 1 * cm),
             *add_table("Entities:", self.config.Report.dict[ReportType.ENTITY]),
             *add_table("Attachables:", self.config.Report.dict[ReportType.ATTACHABLE]),
@@ -639,7 +825,15 @@ class _Anvil:
 
     @Halo(text="Processing Art", spinner="dots")
     def _process_art(self, apply_overlay: bool = False, zip: bool = True):
-        def resize(image: Image.Image, name: str, output: str, size, quality=95, dpi=72, overlay: Image.Image = None):
+        def resize(
+            image: Image.Image,
+            name: str,
+            output: str,
+            size,
+            quality=95,
+            dpi=72,
+            overlay: Image.Image = None,
+        ):
             resized = image.resize(size)
 
             if overlay:
@@ -666,7 +860,9 @@ class _Anvil:
             resize(original, "pack_icon.png", self.config.RP_PATH, pack_icon_size)
 
         else:
-            raise FileNotFoundError("pack_icon.png not found in marketing directory. Please ensure the file exists.")
+            raise FileNotFoundError(
+                "pack_icon.png not found in marketing directory. Please ensure the file exists."
+            )
 
         if zip:
             CreateDirectory(output_store)
@@ -679,8 +875,24 @@ class _Anvil:
                 if apply_overlay:
                     overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
 
-                resize(original, "world_icon.jpeg", self.config._WORLD_PATH, store_screenshot_size, 95, 72, overlay)
-                resize(original, f"{self.config.PROJECT_NAME}_Thumbnail_0.jpg", output_store, store_screenshot_size, 95, 72, overlay)
+                resize(
+                    original,
+                    "world_icon.jpeg",
+                    self.config._WORLD_PATH,
+                    store_screenshot_size,
+                    95,
+                    72,
+                    overlay,
+                )
+                resize(
+                    original,
+                    f"{self.config.PROJECT_NAME}_Thumbnail_0.jpg",
+                    output_store,
+                    store_screenshot_size,
+                    95,
+                    72,
+                    overlay,
+                )
                 resize(
                     original,
                     f"{self.config.PROJECT_NAME}_MarketingKeyArt.jpg",
@@ -692,7 +904,9 @@ class _Anvil:
                 )
 
             else:
-                raise FileNotFoundError("keyart.png not found in marketing directory. Please ensure the file exists.")
+                raise FileNotFoundError(
+                    "keyart.png not found in marketing directory. Please ensure the file exists."
+                )
 
             if FileExists(os.path.join(source, "panorama.png")):
                 original = Image.open(os.path.join(source, "panorama.png"))
@@ -708,12 +922,17 @@ class _Anvil:
                 )
 
             else:
-                click.echo(f"\rpanorama.png does not exist. It is optional but might have been left out unintentionally.", color="yellow")
+                click.echo(
+                    f"\rpanorama.png does not exist. It is optional but might have been left out unintentionally.",
+                    color="yellow",
+                )
 
             for i in range(999):
                 if not FileExists(os.path.join(source, f"{i}.png")):
                     if i < 5:
-                        raise FileNotFoundError(f"{i}.png not found in marketing directory. Please ensure the file exists.")
+                        raise FileNotFoundError(
+                            f"{i}.png not found in marketing directory. Please ensure the file exists."
+                        )
                     break
                 else:
                     original = Image.open(os.path.join(source, f"{i}.png"))
@@ -747,10 +966,19 @@ class _Anvil:
                 )
 
             else:
-                raise FileNotFoundError("partner_art.png not found in marketing directory. Please ensure the file exists.")
+                raise FileNotFoundError(
+                    "partner_art.png not found in marketing directory. Please ensure the file exists."
+                )
 
             if FileExists(os.path.join(source, "pack_icon.png")):
                 original = Image.open(os.path.join(source, "pack_icon.png"))
-                resize(original, f"{self.config.PROJECT_NAME}_packicon_0.jpg", output_store, pack_icon_size)
+                resize(
+                    original,
+                    f"{self.config.PROJECT_NAME}_packicon_0.jpg",
+                    output_store,
+                    pack_icon_size,
+                )
             else:
-                raise FileNotFoundError("pack_icon.png not found in marketing directory. Please ensure the file exists.")
+                raise FileNotFoundError(
+                    "pack_icon.png not found in marketing directory. Please ensure the file exists."
+                )

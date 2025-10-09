@@ -96,7 +96,9 @@ class Molang(str):
             Parameters = ", ".join(
                 (
                     f"'{arg}'"
-                    if isinstance(arg, (str, StrEnum)) and not isinstance(arg, Molang) and not arg.startswith(MOLANG_PREFIXES)
+                    if isinstance(arg, (str, StrEnum))
+                    and not isinstance(arg, Molang)
+                    and not arg.startswith(MOLANG_PREFIXES)
                     else f"{arg}"
                 )
                 for arg in arguments
@@ -278,7 +280,13 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "armor_color_slot", clamp(index, 0, 3), clamp(colorChannel, 0, 3))
+        return self._query(
+            self,
+            self.handle,
+            "armor_color_slot",
+            clamp(index, 0, 3),
+            clamp(colorChannel, 0, 3),
+        )
 
     @classmethod
     def ArmorMaterialSlot(self, index: int):
@@ -342,7 +350,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        state = f"{state}" if isinstance(state, StrEnum) else f"{CONFIG.NAMESPACE}:{state}"
+        state = (
+            f"{state}" if isinstance(state, StrEnum) else f"{CONFIG.NAMESPACE}:{state}"
+        )
         return self._query(self, self.handle, "block_state", state)
 
     @classmethod
@@ -356,7 +366,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "property", f"{CONFIG.NAMESPACE}:{property}")
+        return self._query(
+            self, self.handle, "property", f"{CONFIG.NAMESPACE}:{property}"
+        )
 
     @classmethod
     def HasProperty(self, property: str):
@@ -368,7 +380,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_property", f"{CONFIG.NAMESPACE}:{property}")
+        return self._query(
+            self, self.handle, "has_property", f"{CONFIG.NAMESPACE}:{property}"
+        )
 
     @classmethod
     def Blocking(self):
@@ -702,7 +716,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "equipped_item_is_attachable", clamp(hand, 0, 1))
+        return self._query(
+            self, self.handle, "equipped_item_is_attachable", clamp(hand, 0, 1)
+        )
 
     @classmethod
     def EyeTargetXRotation(self):
@@ -775,7 +791,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_equipped_item_name", clamp(hand_slot, 0, 1), index)
+        return self._query(
+            self, self.handle, "get_equipped_item_name", clamp(hand_slot, 0, 1), index
+        )
 
     # More info needed
     @classmethod
@@ -863,7 +881,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_block_state", f"{CONFIG.NAMESPACE}:{state}")
+        return self._query(
+            self, self.handle, "has_block_state", f"{CONFIG.NAMESPACE}:{state}"
+        )
 
     @classmethod
     def HasCape(self):
@@ -1417,7 +1437,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_item_name_any", slot, index, *item_identifiers)
+        return self._query(
+            self, self.handle, "is_item_name_any", slot, index, *item_identifiers
+        )
 
     @classmethod
     def IsJumping(self):
@@ -1894,7 +1916,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "item_remaining_use_duration", clamp(hand, 0, 1))
+        return self._query(
+            self, self.handle, "item_remaining_use_duration", clamp(hand, 0, 1)
+        )
 
     @classmethod
     def ItemSlotToBoneName(self, slot: Slots):
@@ -2612,7 +2636,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_cooldown_category", cooldown_name, slot, slot_id)
+        return self._query(
+            self, self.handle, "is_cooldown_category", cooldown_name, slot, slot_id
+        )
 
     @classmethod
     def CooldownTime(self, slot: Slots, slot_id: int = 0):
@@ -2639,7 +2665,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "relative_block_has_any_tags", x, y, z, *tags)
+        return self._query(
+            self, self.handle, "relative_block_has_any_tags", x, y, z, *tags
+        )
 
     @classmethod
     def RelativeBlockHasAllTags(self, x: int, y: int, z: int, *tags: str):
@@ -2648,7 +2676,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "relative_block_has_all_tags", x, y, z, *tags)
+        return self._query(
+            self, self.handle, "relative_block_has_all_tags", x, y, z, *tags
+        )
 
     @classmethod
     def BlockNeighborHasAnyTags(self, x: int, y: int, z: int, *tags: str):
@@ -2657,7 +2687,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "block_neighbor_has_any_tags", x, y, z, *tags)
+        return self._query(
+            self, self.handle, "block_neighbor_has_any_tags", x, y, z, *tags
+        )
 
     @classmethod
     def BlockNeighborHasAllTags(self, x: int, y: int, z: int, *tags: str):
@@ -2666,7 +2698,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "block_neighbor_has_all_tags", x, y, z, *tags)
+        return self._query(
+            self, self.handle, "block_neighbor_has_all_tags", x, y, z, *tags
+        )
 
     @classmethod
     def BlockHasAllTags(self, x: int, y: int, z: int, *tags: str):
@@ -2874,7 +2908,9 @@ class Context(Query):
     @classmethod
     def OwningEntity(self, molang: Optional[Molang]):
         if molang:
-            return Molang(f"({self._query(self, self.handle, "owning_entity")} -> {molang})")
+            return Molang(
+                f"({self._query(self, self.handle, "owning_entity")} -> {molang})"
+            )
         return Molang._query(self, self.handle, "owning_entity")
 
 
@@ -2955,12 +2991,26 @@ class Math(Molang):
         return self._query(self, self.handle, "hermite_blend", value)
 
     @classmethod
-    def lerp(self, start, end):
-        return self._query(self, self.handle, "lerp", start, end, "0_to_1")
+    def lerp(self, start, end, factor):
+        return self._query(
+            self,
+            self.handle,
+            "lerp",
+            start,
+            end,
+            clamp(factor, 0, 1) if type(factor) in (int, float) else factor,
+        )
 
     @classmethod
-    def lerprotate(self, start, end):
-        return self._query(self, self.handle, "lerprotate", start, end, "0_to_1")
+    def lerprotate(self, start, end, factor):
+        return self._query(
+            self,
+            self.handle,
+            "lerprotate",
+            start,
+            end,
+            clamp(factor, 0, 1) if type(factor) in (int, float) else factor,
+        )
 
     @classmethod
     def ln(self, value):
@@ -3016,7 +3066,7 @@ class Math(Molang):
 
 
 def molang_conditions(condition, expression, expression2):
-    return f"{condition} ? {expression} : ({expression2})"
+    return Molang(f"{condition} ? {expression} : ({expression2})")
 
 
 def arrow_operator(left, right):
