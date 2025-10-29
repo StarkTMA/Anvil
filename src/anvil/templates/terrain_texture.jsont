@@ -1,6 +1,6 @@
 {
     "texture_name": "atlas.terrain",
-    "num_mip_levels": 4,
+    "num_mip_levels": 1,
     "padding": 8,
     "resource_pack_name": "{{ resource_pack_name }}",
     "texture_data": {}

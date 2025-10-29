@@ -2,10 +2,14 @@ import os
 from typing import Literal
 
 from anvil import CONFIG
-from anvil.lib.filters import Filter
 from anvil.lib.enums import Difficulty, Population
-from anvil.lib.schemas import (AddonObject, BlockDescriptor, JsonSchemes,
-                               MinecraftDescription)
+from anvil.lib.filters import Filter
+from anvil.lib.schemas import (
+    AddonObject,
+    BlockDescriptor,
+    JsonSchemes,
+    MinecraftDescription,
+)
 
 __all__ = ["SpawnRule"]
 
@@ -42,7 +46,8 @@ class _SpawnRuleDescription(MinecraftDescription):
         Returns:
             SpawnRule: The parent spawn rule for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/cliententitydocumentation/datadrivenspawning?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/cliententitydocumentation/datadrivenspawning?view=minecraft-bedrock-stable
         """
         self._description["description"]["population_control"] = population.value
         return self._spawn_rule_obj
@@ -80,7 +85,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/biome_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/biome_filter?view=minecraft-bedrock-stable
         """
         if "minecraft:biome_filter" not in self._condition:
             self._condition.update({"minecraft:biome_filter": []})
@@ -108,7 +114,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/brightness_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/brightness_filter?view=minecraft-bedrock-stable
         """
         min_brightness = max(0, min_brightness)
         max_brightness = min(15, max_brightness)
@@ -123,7 +130,9 @@ class _SpawnRuleCondition:
         )
         return self
 
-    def DelayFilter(self, minimum: int, maximum: int, identifier: str, spawn_chance: int):
+    def DelayFilter(
+        self, minimum: int, maximum: int, identifier: str, spawn_chance: int
+    ):
         """Sets specific time delays before entities will spawn.
 
         This creates a delay mechanism where the entity specified by identifier
@@ -138,7 +147,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/delay_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/delay_filter?view=minecraft-bedrock-stable
         """
         self._condition.update(
             {
@@ -168,7 +178,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/density_limit?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/density_limit?view=minecraft-bedrock-stable
         """
         density = {"minecraft:density_limit": {}}
         if surface != -1:
@@ -192,7 +203,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/distance_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/distance_filter?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:distance_filter": {"min": min, "max": max}})
         return self
@@ -216,7 +228,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/difficulty_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/difficulty_filter?view=minecraft-bedrock-stable
         """
         self._condition.update(
             {
@@ -253,7 +266,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/entity_types?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/entity_types?view=minecraft-bedrock-stable
         """
         entity_types = {
             "max_dist": max_dist,
@@ -282,7 +296,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/height_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/height_filter?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:height_filter": {"min": min, "max": max}})
         return self
@@ -309,18 +324,26 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/herd?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/herd?view=minecraft-bedrock-stable
         """
         if "minecraft:herd" not in self._condition:
             self._condition.update({"minecraft:herd": []})
         self_herd = {"min_size": min_size, "max_size": max_size}
         if spawn_event != None:
-            self_herd.update({"event": spawn_event, "event_skip_count": event_skip_count})
+            self_herd.update(
+                {"event": spawn_event, "event_skip_count": event_skip_count}
+            )
         self._condition["minecraft:herd"].append(self_herd)
         return self
 
     def MobEventFilter(
-        self, event: Literal["minecraft:pillager_patrols_event", "minecraft:wandering_trader_event", "minecraft:ender_dragon_event"]
+        self,
+        event: Literal[
+            "minecraft:pillager_patrols_event",
+            "minecraft:wandering_trader_event",
+            "minecraft:ender_dragon_event",
+        ],
     ):
         """Restricts spawning to specific mob events.
 
@@ -336,7 +359,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/mob_event_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/mob_event_filter?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:mob_event_filter": {"event": event}})
 
@@ -378,7 +402,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/player_in_village_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/player_in_village_filter?view=minecraft-bedrock-stable
         """
         self._condition.update(
             {
@@ -400,7 +425,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_lava?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_lava?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:spawns_lava": {}})
         return self
@@ -417,11 +443,14 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_block_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_block_filter?view=minecraft-bedrock-stable
         """
         if "minecraft:spawns_on_block_filter" not in self._condition:
             self._condition.update({"minecraft:spawns_on_block_filter": []})
-        self._condition["minecraft:spawns_on_block_filter"] = [block.identifier for block in blocks]
+        self._condition["minecraft:spawns_on_block_filter"] = [
+            block.identifier for block in blocks
+        ]
         return self
 
     def SpawnsOnBlockPreventedFilter(self, blocks: tuple[BlockDescriptor]):
@@ -438,7 +467,9 @@ class _SpawnRuleCondition:
         """
         if "minecraft:spawns_on_block_prevented_filter" not in self._condition:
             self._condition.update({"minecraft:spawns_on_block_prevented_filter": []})
-        self._condition["minecraft:spawns_on_block_prevented_filter"] = [block.identifier for block in blocks]
+        self._condition["minecraft:spawns_on_block_prevented_filter"] = [
+            block.identifier for block in blocks
+        ]
         return self
 
     @property
@@ -451,7 +482,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_surface?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_surface?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:spawns_on_surface": {}})
         return self
@@ -466,7 +498,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underground?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underground?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:spawns_underground": {}})
         return self
@@ -481,7 +514,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underwater?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underwater?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:spawns_underwater": {}})
         return self
@@ -500,7 +534,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/weight?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/weight?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:weight": {"default": weight}})
         return self
@@ -517,7 +552,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/world_age_filter?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/world_age_filter?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:world_age_filter": {"min": min}})
 
@@ -533,7 +569,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/disallow_spawns_in_bubble?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/disallow_spawns_in_bubble?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:disallow_spawns_in_bubble": {}})
         return self
@@ -551,7 +588,8 @@ class _SpawnRuleCondition:
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawn_event?view=minecraft-bedrock-stable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawn_event?view=minecraft-bedrock-stable
         """
         self._condition.update({"minecraft:spawn_event": {"event": event}})
         return self
@@ -578,7 +616,9 @@ class SpawnRule(AddonObject):
             is_vanilla (bool): Whether this is a vanilla Minecraft entity.
         """
         super().__init__(identifier, is_vanilla)
-        self._description = _SpawnRuleDescription(self, self.identifier, self._is_vanilla)
+        self._description = _SpawnRuleDescription(
+            self, self.identifier, self._is_vanilla
+        )
         self._spawn_rule = JsonSchemes.spawn_rules()
         self._conditions: list[_SpawnRuleCondition] = []
 
@@ -618,7 +658,11 @@ class SpawnRule(AddonObject):
             SpawnRule: Self for method chaining, or None if no conditions exist.
         """
         if len(self._conditions) > 0:
-            self._spawn_rule["minecraft:spawn_rules"].update(self._description._export())
-            self._spawn_rule["minecraft:spawn_rules"]["conditions"] = [condition.export() for condition in self._conditions]
+            self._spawn_rule["minecraft:spawn_rules"].update(
+                self._description._export()
+            )
+            self._spawn_rule["minecraft:spawn_rules"]["conditions"] = [
+                condition.export() for condition in self._conditions
+            ]
             self.content(self._spawn_rule)
             return super().queue(directory=directory)

@@ -3,17 +3,47 @@ from math import inf
 
 from anvil import CONFIG
 from anvil.api.blocks.blocks import Block
-from anvil.lib.enums import (Anchor, CameraEasing, CameraPresets,
-                             CameraShakeType, CloneMode, DamageCause,
-                             Dimension, Effects, FillMode, Gamemodes,
-                             HudElement, HudVisibility, InputPermissions,
-                             MaskMode, MusicRepeatMode, RawTextConstructor,
-                             ScoreboardOperation, ScoreboardOperator, Selector,
-                             Slots, Target, TimeSpec)
+from anvil.lib.enums import (
+    Anchor,
+    CameraEasing,
+    CameraPresets,
+    CameraShakeType,
+    CloneMode,
+    DamageCause,
+    Dimension,
+    Effects,
+    FillMode,
+    Gamemodes,
+    HudElement,
+    HudVisibility,
+    InputPermissions,
+    MaskMode,
+    MusicRepeatMode,
+    RawTextConstructor,
+    ScoreboardOperation,
+    ScoreboardOperator,
+    Selector,
+    Slots,
+    Target,
+    TimeSpec,
+)
 from anvil.lib.lib import clamp, normalize_180
-from anvil.lib.types import (Color, Coordinates, Event, Identifier,
-                             RelativePosition, RelativeRotation, Seconds, Tick)
-from anvil.lib.schemas import BlockDescriptor, MinecraftBlockDescriptor, MinecraftItemDescriptor
+from anvil.lib.schemas import (
+    BlockDescriptor,
+    MinecraftBlockDescriptor,
+    MinecraftItemDescriptor,
+)
+from anvil.lib.types import (
+    Color,
+    Coordinates,
+    Event,
+    Identifier,
+    RelativePosition,
+    RelativeRotation,
+    Seconds,
+    Tick,
+)
+
 
 class Command:
     def __init__(self, prefix: str, *commands) -> None:
@@ -52,7 +82,13 @@ class ItemComponents(Command):
 
     def item_lock(self, *, lock_in_slot: bool = False, lock_in_inventory: bool = False):
         if lock_in_slot or lock_in_inventory:
-            self._add_nbt_component({"minecraft:item_lock": {"mode": "lock_in_slot" if lock_in_slot else "lock_in_inventory"}})
+            self._add_nbt_component(
+                {
+                    "minecraft:item_lock": {
+                        "mode": "lock_in_slot" if lock_in_slot else "lock_in_inventory"
+                    }
+                }
+            )
         return self
 
     @property
@@ -113,8 +149,10 @@ class Execute(Command):
             self._parent._append_cmd(self._condition, "entity", target)
             return self._parent
 
-        def Block(self, block_position: Coordinates, tile: Block | Identifier, **properties):
-            
+        def Block(
+            self, block_position: Coordinates, tile: Block | Identifier, **properties
+        ):
+
             if isinstance(tile, Block):
                 name = tile.identifier
                 states = tile.states
@@ -122,27 +160,67 @@ class Execute(Command):
                 name = tile
                 states = ""
             else:
-                raise TypeError(f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}].")
-
+                raise TypeError(
+                    f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}]."
+                )
 
             for k, v in properties.items():
                 states.append(f'"{k}" : "{v}"')
 
-            self._parent._append_cmd(self._condition, "block", *block_position, name, f'[{", ".join(states)}]')
+            self._parent._append_cmd(
+                self._condition,
+                "block",
+                *block_position,
+                name,
+                f'[{", ".join(states)}]',
+            )
             return self._parent
 
-        def Blocks(self, begin: Coordinates, end: Coordinates, destination: Coordinates, masked: bool = False):
-            self._parent._append_cmd(self._condition, "blocks", *begin, *end, *destination, masked if masked == True else "")
+        def Blocks(
+            self,
+            begin: Coordinates,
+            end: Coordinates,
+            destination: Coordinates,
+            masked: bool = False,
+        ):
+            self._parent._append_cmd(
+                self._condition,
+                "blocks",
+                *begin,
+                *end,
+                *destination,
+                masked if masked == True else "",
+            )
             return self._parent
 
         def ScoreMatches(self, target: str, objective: str, matches: range):
             self._parent._append_cmd(
-                self._condition, "score", target, objective, "matches", round(matches) if isinstance(matches, float) else matches
+                self._condition,
+                "score",
+                target,
+                objective,
+                "matches",
+                round(matches) if isinstance(matches, float) else matches,
             )
             return self._parent
 
-        def Score(self, target: str, target_objective: str, operator: ScoreboardOperator, source: str, source_objective: str):
-            self._parent._append_cmd(self._condition, "score", target, target_objective, operator, source, source_objective)
+        def Score(
+            self,
+            target: str,
+            target_objective: str,
+            operator: ScoreboardOperator,
+            source: str,
+            source_objective: str,
+        ):
+            self._parent._append_cmd(
+                self._condition,
+                "score",
+                target,
+                target_objective,
+                operator,
+                source,
+                source_objective,
+            )
             return self._parent
 
     def __init__(self) -> None:
@@ -214,7 +292,9 @@ class CameraShake(Command):
     def __init__(self) -> None:
         super().__init__("camerashake")
 
-    def add(self, target: str, intensity: float, seconds: float, shakeType: CameraShakeType):
+    def add(
+        self, target: str, intensity: float, seconds: float, shakeType: CameraShakeType
+    ):
         super()._append_cmd("add", target, intensity, seconds, shakeType)
         return self
 
@@ -259,7 +339,11 @@ class Summon(Command):
         rots = sum(
             [
                 x is not None
-                for x in (self.argument.get("lookAtEntity"), self.argument.get("lookAtPosition"), self.argument.get("rotation"))
+                for x in (
+                    self.argument.get("lookAtEntity"),
+                    self.argument.get("lookAtPosition"),
+                    self.argument.get("rotation"),
+                )
             ]
         )
         nameTag = self.argument.get("nameTag")
@@ -284,7 +368,9 @@ class Summon(Command):
                 self._append_cmd("facing", self.argument.get("lookAtEntity"))
 
             elif self.argument.get("lookAtPosition") != None:
-                self._append_cmd("facing", " ".join(self.argument.get("lookAtPosition")))
+                self._append_cmd(
+                    "facing", " ".join(self.argument.get("lookAtPosition"))
+                )
 
             else:
                 self._append_cmd(" ".join(self.argument.get("rotation")))
@@ -358,7 +444,12 @@ class Clone(Command):
     ):
         """Clones a region of blocks."""
         super().__init__(
-            "clone", " ".join(map(str, begin)), " ".join(map(str, end)), " ".join(map(str, destination)), cloneMode, maskMode
+            "clone",
+            " ".join(map(str, begin)),
+            " ".join(map(str, end)),
+            " ".join(map(str, destination)),
+            cloneMode,
+            maskMode,
         )
 
 
@@ -434,8 +525,16 @@ class Tag(Command):
 
 
 class Clear(Command):
-    def __init__(self, target: Target, itemname: str = "", date: int = -1, max_count: int = -1) -> None:
-        super().__init__("clear", target, itemname, date if not date == -1 else "", max_count if not max_count == -1 else "")
+    def __init__(
+        self, target: Target, itemname: str = "", date: int = -1, max_count: int = -1
+    ) -> None:
+        super().__init__(
+            "clear",
+            target,
+            itemname,
+            date if not date == -1 else "",
+            max_count if not max_count == -1 else "",
+        )
 
 
 class Effect(Command):
@@ -448,7 +547,13 @@ class Effect(Command):
             self._append_cmd(effect)
         return self
 
-    def give(self, effect: Effects, seconds: int = "infinite", amplifier: int = 1, hide_particles: bool = False):
+    def give(
+        self,
+        effect: Effects,
+        seconds: int = "infinite",
+        amplifier: int = 1,
+        hide_particles: bool = False,
+    ):
         self._append_cmd(effect, seconds, amplifier)
         if amplifier != 1:
             self._append_cmd(amplifier)
@@ -463,12 +568,21 @@ class Gamemode(Command):
 
 
 class Teleport(Command):
-    def __init__(self, target, destination: Coordinates | Target | Selector, rotation: RelativeRotation = ("~", "~")) -> None:
+    def __init__(
+        self,
+        target,
+        destination: Coordinates | Target | Selector,
+        rotation: RelativeRotation = ("~", "~"),
+    ) -> None:
         super().__init__("teleport", target)
         if isinstance(destination, tuple):
             self._append_cmd(
                 " ".join(map(str, destination)),
-                " ".join(map(str, (normalize_180(rotation[0]), rotation[1]))) if not rotation == ("~", "~") else "",
+                (
+                    " ".join(map(str, (normalize_180(rotation[0]), rotation[1])))
+                    if not rotation == ("~", "~")
+                    else ""
+                ),
             )
         elif isinstance(destination, Target | Selector):
             self._append_cmd(destination)
@@ -493,7 +607,9 @@ class Function(Command):
 
 
 class Give(ItemComponents):
-    def __init__(self, target: Selector | Target | str, item: str, amount: int = 1, data: int = 0) -> None:
+    def __init__(
+        self, target: Selector | Target | str, item: str, amount: int = 1, data: int = 0
+    ) -> None:
         super().__init__("give", target, item, amount, data)
 
 
@@ -501,17 +617,36 @@ class ReplaceItem(ItemComponents):
     def __init__(self) -> None:
         super().__init__("replaceitem")
 
-    def block(self, poistion: Coordinates, slot_id: int, item_name: str, amount: int = 1, data: int = 0):
-        super()._new_cmd("block", *poistion, Slots.Container, slot_id, item_name, amount, data)
+    def block(
+        self,
+        poistion: Coordinates,
+        slot_id: int,
+        item_name: str,
+        amount: int = 1,
+        data: int = 0,
+    ):
+        super()._new_cmd(
+            "block", *poistion, Slots.Container, slot_id, item_name, amount, data
+        )
         return self
 
-    def entity(self, target: Selector | Target | str, slot: Slots, slot_id: int, item_name: str, amount: int = 1, data: int = 0):
+    def entity(
+        self,
+        target: Selector | Target | str,
+        slot: Slots,
+        slot_id: int,
+        item_name: str,
+        amount: int = 1,
+        data: int = 0,
+    ):
         super()._new_cmd("entity", target, slot, slot_id, item_name, amount, data)
         return self
 
 
 class Damage(ItemComponents):
-    def __init__(self, target: Selector | Target | str, amount: int, cause: DamageCause) -> None:
+    def __init__(
+        self, target: Selector | Target | str, amount: int, cause: DamageCause
+    ) -> None:
         super().__init__("damage", target, amount, cause.value)
 
     def damager(self, damager: Selector | Target) -> None:
@@ -539,11 +674,15 @@ class InputPermission(Command):
     def __init__(self) -> None:
         super().__init__("inputpermission", "set")
 
-    def enable(self, permission: InputPermissions, target: Selector | Target = Target.S):
+    def enable(
+        self, permission: InputPermissions, target: Selector | Target = Target.S
+    ):
         self._append_cmd(target, permission, "enabled")
         return self
 
-    def disable(self, permission: InputPermissions, target: Selector | Target = Target.S):
+    def disable(
+        self, permission: InputPermissions, target: Selector | Target = Target.S
+    ):
         self._append_cmd(target, permission, "disabled")
         return self
 
@@ -555,11 +694,15 @@ class Scoreboard(Command):
                 self.parent = parent
 
             def list(self, objective, ascending: bool = True):
-                self.parent._append_cmd("list", objective, "ascending" if ascending else "descending")
+                self.parent._append_cmd(
+                    "list", objective, "ascending" if ascending else "descending"
+                )
                 return self.parent
 
             def sidebar(self, objective: str, ascending: bool = True):
-                self.parent._append_cmd("sidebar", objective, "ascending" if ascending else "descending")
+                self.parent._append_cmd(
+                    "sidebar", objective, "ascending" if ascending else "descending"
+                )
                 return self.parent
 
             def belowName(self, objective):
@@ -611,12 +754,21 @@ class Scoreboard(Command):
             return self.parent
 
         def operation(
-            self, target: Selector | Target | str, objective1: str, operation: ScoreboardOperation, source: str, objective2: str
+            self,
+            target: Selector | Target | str,
+            objective1: str,
+            operation: ScoreboardOperation,
+            source: str,
+            objective2: str,
         ):
-            self.parent._append_cmd("operation", target, objective1, operation, source, objective2)
+            self.parent._append_cmd(
+                "operation", target, objective1, operation, source, objective2
+            )
             return self.parent
 
-        def random(self, target: Selector | Target | str, objective: str, min: int, max: int):
+        def random(
+            self, target: Selector | Target | str, objective: str, min: int, max: int
+        ):
             self.parent._append_cmd("random", target, objective, min, max)
             return self.parent
 
@@ -654,13 +806,14 @@ class Setblock(Command):
             name = tile
             states = ""
         else:
-            raise TypeError(f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}].")
+            raise TypeError(
+                f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}]."
+            )
 
         for k, v in properties.items():
             states.append(f'"{k}" = "{v}"')
 
         self._append_cmd(" ".join(map(str, position)), name, f'[{", ".join(states)}]')
-
 
 
 class Fill(Command):
@@ -681,13 +834,19 @@ class Fill(Command):
             name = tile
             states = ""
         else:
-            raise TypeError(f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}].")
+            raise TypeError(
+                f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}]."
+            )
 
         for k, v in properties.items():
             states.append(f'"{k}" = "{v}"')
 
         self._append_cmd(
-            *start, *end, name, f'[{", ".join(states)}]', old_block_handling if old_block_handling != FillMode.Replace else ""
+            *start,
+            *end,
+            name,
+            f'[{", ".join(states)}]',
+            old_block_handling if old_block_handling != FillMode.Replace else "",
         )
 
     def replace(
@@ -702,7 +861,9 @@ class Fill(Command):
             name = tile
             states = ""
         else:
-            raise TypeError(f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}].")
+            raise TypeError(
+                f"Unsupported block type: {type(tile).__name__}. Command [{self._prefix}]."
+            )
 
         for k, v in properties.items():
             states.append(f'"{k}" = "{v}"')
@@ -715,7 +876,11 @@ class Music(Command):
         super().__init__("music")
 
     def _base(
-        self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once
+        self,
+        track_name: str,
+        volume: float = 1,
+        fade_seconds: float = 1,
+        repeat_mode: MusicRepeatMode = MusicRepeatMode.Once,
     ):
         self._append_cmd(track_name)
         if volume != 1:
@@ -730,13 +895,21 @@ class Music(Command):
         return self
 
     def queue(
-        self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once
+        self,
+        track_name: str,
+        volume: float = 1,
+        fade_seconds: float = 1,
+        repeat_mode: MusicRepeatMode = MusicRepeatMode.Once,
     ):
         self._append_cmd("queue")
         return self._base(track_name, volume, fade_seconds, repeat_mode)
 
     def play(
-        self, track_name: str, volume: float = 1, fade_seconds: float = 1, repeat_mode: MusicRepeatMode = MusicRepeatMode.Once
+        self,
+        track_name: str,
+        volume: float = 1,
+        fade_seconds: float = 1,
+        repeat_mode: MusicRepeatMode = MusicRepeatMode.Once,
     ):
         self._append_cmd("play")
         return self._base(track_name, volume, fade_seconds, repeat_mode)
@@ -763,7 +936,8 @@ class ScriptEvent(Command):
             message_id (str): identifier of the message to send. This is custom and dependent on the kinds of behavior packs and content you may have installed within the world.
             message (str): Data component of the message to send. This is custom and dependent on the kinds of behavior packs and content you may have installed within the world.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/scriptevent
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/scriptevent
         """
         super().__init__("scriptevent", message_id, message if message != None else "")
 
@@ -808,13 +982,18 @@ class Camera(Command):
             facing_target = self.argument["facing_target"]
             facing_position = self.argument["facing_position"]
 
-            if sum([x is not None for x in (facing_target, facing_position, rotation)]) > 1:
+            if (
+                sum([x is not None for x in (facing_target, facing_position, rotation)])
+                > 1
+            ):
                 raise ValueError(
                     f"Only one of 'facing_target', 'facing_position', or 'rotation' can be set at a time. Found {sum([x is not None for x in (facing_target, facing_position, rotation)])} set."
                 )
 
             if self.argument["easing"] != None:
-                self._append_cmd("ease", self.argument["easing_time"], self.argument["easing"])
+                self._append_cmd(
+                    "ease", self.argument["easing_time"], self.argument["easing"]
+                )
 
             if self.argument["position"] != None:
                 self._append_cmd("pos", *self.argument["position"])
@@ -845,7 +1024,9 @@ class Camera(Command):
                 "color": None,
             }
 
-        def time(self, fade_in_time: Seconds, hold_time: Seconds, fade_out_time: Seconds):
+        def time(
+            self, fade_in_time: Seconds, hold_time: Seconds, fade_out_time: Seconds
+        ):
             self.argument["fade_in_time"] = fade_in_time
             self.argument["hold_time"] = hold_time
             self.argument["fade_out_time"] = fade_out_time
@@ -857,7 +1038,11 @@ class Camera(Command):
 
         def __str__(self):
             if self.argument["fade_in_time"] != None:
-                self._append_cmd(self.argument["fade_in_time"], self.argument["hold_time"], self.argument["fade_out_time"])
+                self._append_cmd(
+                    self.argument["fade_in_time"],
+                    self.argument["hold_time"],
+                    self.argument["fade_out_time"],
+                )
 
             if self.argument["color"] != None:
                 self._append_cmd(self.argument["color"])
@@ -884,7 +1069,8 @@ class Time(Command):
     def __init__(self) -> None:
         """Changes the world's game time.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/time
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/time
         """
         super().__init__("time")
 
@@ -915,7 +1101,8 @@ class Stopsound(Command):
             target (Target): A player name string or Target to identify the player.
             sound (str, optional): A string from the sound enum of the sound to stop. Defaults to "".
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/stopsound
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/stopsound
         """
         super().__init__("stopsound", target)
 
@@ -925,7 +1112,10 @@ class Stopsound(Command):
 
 class Hud(Command):
     def __init__(
-        self, target: Selector | Target, visible: HudVisibility = HudVisibility.Reset, hud_element: HudElement = HudElement.All
+        self,
+        target: Selector | Target,
+        visible: HudVisibility = HudVisibility.Reset,
+        hud_element: HudElement = HudElement.All,
     ):
         """Changes the visibility of HUD elements for a player.
 
@@ -934,7 +1124,8 @@ class Hud(Command):
             visible (HudVisibility, optional): The visibility state to set. Defaults to HudVisibility.Reset.
             hud_element (HudElement, optional): The HUD element to change the visibility of. Defaults to HudElement.All.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/hud
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/commands/commands/hud
         """
 
         super().__init__("hud", target, visible, hud_element)

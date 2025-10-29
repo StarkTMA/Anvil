@@ -647,7 +647,7 @@ class MinecraftBlockTags(StrEnum):
     StoneTierDestructible = "minecraft:stone_tier_destructible"
 
 
-class MinecraftBlockTypes:
+class MinecraftBlockTypes:    
     @staticmethod
     def AcaciaButton(
         button_pressed_bit: ButtonPressedBit, facing_direction: FacingDirection

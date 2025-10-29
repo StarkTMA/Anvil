@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.4.6**](#version-0946)
+- [**Version 0.9.5**](#version-095)
+- [Version 0.9.4.6](#version-0946)
 - [Version 0.9.4.5](#version-0945)
 - [Version 0.9.4.4](#version-0944)
 - [Version 0.9.4.3](#version-0943)
@@ -76,11 +77,53 @@
 
 ---
 
+## Version 0.9.5
+
+### Anvil
+
+- Updated Anvil to support Minecraft `1.21.120`
+- Anvil now display better console errors and warnings.
+- Anvil now targets the new Minecraft GDK builds, this is handled automatically and does not require any changes on your side except for the typescript bundling script and the vscode launch configuration if you are using vscode.
+- All color fields in anvil now use the new `anvil.lib.convert_color` function, which allows you to support any type of color `[RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA]` and convert them to any of those formats. All Minecraft components handle conversion automatically so you can use your favourite type (HexRGBA) everywhere with no worries about the type.
+- Removed `pbr` and `random_seed` from the cli create tool. The flags are still available in anvilconfig.json.
+- Added `--vscode` flag to the cli create tool to generate a vscode launch configuration and code workspace file.
+
+### Actors
+
+- Added `EntityAIDig`, `EntityAIDrinkMilk`, `EntityAIAvoidBlock` components.
+
+### Blocks
+
+- Rewrote `BlockMaterialInstance` completely, this is a **BREAKING** change and will require updating.
+- `BlockMaterialInstance` is easier to use with builtin support for `flipbook textures`, `texture sets` and `texture variations`.
+- Updated `BlockGeometry` class, the geometry name is now optional. The default minecraft full_block geometry will be used if blockbench is referenced.
+- Updated `BlockItemVisual` class, the geometry name is now optional. The default minecraft full_block geometry will be used if blockbench is referenced.
+
+### Items
+
+- Added `ItemSwingDuration` and `ItemCompostable` components.
+
+### Loot Tables
+
+- Added missing loot table functions.
+
+### Molang
+
+- Added the new Math easing functions.
+
+### Blockbench
+
+- Updated the blockbench api to support Blockbench 5.0.0, this is not a versioned update. All of your models must be updated to Blockbench^5.0.0.
+
+---
+
 ## Version 0.9.4.6
 
 ### Anvil
 
 - Fixed missing templates and kit folders from built package.
+
+---
 
 ## Version 0.9.4.5
 
@@ -88,12 +131,16 @@
 
 - Minor tweaks to the documentation and code formatting.
 
+---
+
 ## Version 0.9.4.4
 
 ### Anvil
 
 - Fixed circular import issue.
 - Anvil now supports Minecraft Preview GDK migration from UWP, current Minecraft release still uses old UWP paths.
+
+---
 
 ## Version 0.9.4.3
 
@@ -125,6 +172,8 @@
 - Added `EntityVerticalMovementAction`, `EntityOnDeath`, `EntityOnFriendlyAnger`, `EntityOnHurt`, `EntityOnHurtByPlayer`, `EntityOnIgnite`, `EntityOnStartLanding`, `EntityOnStartTakeoff`, `EntityOnTargetAcquired`, `EntityOnTargetEscaped`, `EntityOnWakeWithOwner` components.
 - Updated the `EntityExperienceReward` component.
 
+---
+
 ## Version 0.9.4.1
 
 ### Anvil
@@ -138,6 +187,8 @@
 ### Blocks
 
 - Added `block_culling` method to the `BlockGeometry` component.
+
+---
 
 ## Version 0.9.4
 
@@ -158,20 +209,24 @@
 - Added support for Potion Brewing Recipes.
 - Added support for Shapeless, Shaped, and Stonecutter custom block tags.
 
-## Loot Tables
+### Loot Tables
 
 - The loot table classes are now up to date with the current Anvil API architecture.
 - Added missing loot table functions.
 
-## Actors
+### Actors
 
 - Separated the Spawn Rule classes from the actors classes, now you can write spawn rules without needing to create an entity.
+
+---
 
 ## Version 0.9.3.1
 
 - Fixed some templates.
 - Fixed "en_US" lang files not exporting.
 - Cleaned up some CLI print statements during compilation.
+
+---
 
 ## Version 0.9.3
 
@@ -250,6 +305,8 @@
 
 - Added `BlockMovable()`, `BlockDestructionParticles()` component.
 
+---
+
 ## Version 0.9.1
 
 ### Anvil
@@ -260,6 +317,8 @@
 - Exposed the `CustomComponent` from the `anvil.lib.schemas` module, enabling users to define custom components with support for inheritance.
 - Relocated many classes for better organization and modularity, your code should be minimally affected by this change.
 - Component Groups now validates component dependencies and clashes within the same group or permutation.
+
+---
 
 ## Version 0.9.0 - Modular Architecture
 
@@ -283,6 +342,8 @@
 
 - Blockbench no longer exports cube faces that have texture disabled.
 
+---
+
 ## Version 0.8.4
 
 ### Anvil
@@ -292,6 +353,8 @@
 ### Blocks
 
 - Added `BlockTick()` component.
+
+---
 
 ## Version 0.8.3
 
@@ -321,6 +384,8 @@
 
 - Added `LastInputModeIsAny()` and `TouchOnlyAffectsHotbar()` queries.
 
+---
+
 ## Version 0.8.2
 
 ### Anvil
@@ -348,6 +413,8 @@
 ### Molang
 
 - Added `ClientMemoryTier`, `ServerMemoryTier` and `ClientMaxRenderDistance` queries.
+
+---
 
 ## Version 0.8.1
 
@@ -381,6 +448,8 @@
 ### Items
 
 - Added `ItemCustomComponents()`, `ItemRarity()` components.
+
+---
 
 ## Version 0.8.0 - The Blockbench Update
 
@@ -416,6 +485,8 @@
 ### Blocks
 
 - Added Block tag to Components and Permutations. `block.server.components.tag()` or `block.server.permutation("permutation_name").tag()`.
+
+---
 
 ## Version 0.7.3
 
@@ -458,6 +529,8 @@
 
 - Added `ArmorSlotDamage()` query.
 - `BoneOrientationTrs()` and `BoneOrientationMatrix()` queries now return an object with `position`, `rotation` and `scale` properties.
+
+---
 
 ## Version 0.7.2
 
@@ -503,6 +576,8 @@
 - Due to the deprecation of class properties in Python 3.13, all class properties are now converted to methods.
 - Added `IsAttached()`, `HasPlayerRider()`, `Scoreboard()`, `RideBodyXRotation()`, `RideBodyYRotation()`, `RideHeadXRotation()`, `RideHeadYRotation()`, `RiderBodyXRotation()`, `RiderBodyYRotation()`, `RiderHeadXRotation()` and `RiderHeadYRotation()` queries.
 
+---
+
 ## Version 0.7.1
 
 ### Anvil
@@ -526,6 +601,8 @@
 ### Molang
 
 - Added `IsCooldownType`, `CooldownTime`, `CooldownTimeRemaining`, `RelativeBlockHasAnyTags`, `RelativeBlockHasAllTags`, `BlockNeighborHasAnyTags`, `BlockNeighborHasAllTags`, `BlockHasAllTags`, `BlockHasAnyTags`, `BoneOrientationTrs` and `BoneOrientationMatrix` queries.
+
+---
 
 ## Version 0.7.0 - Guidelines & Addon Support
 
@@ -590,6 +667,8 @@
 
 - Added `Tameable()` component.
 
+---
+
 ## Version 0.6.0 - Configuration Overhaul
 
 ### Anvil
@@ -632,6 +711,8 @@
 
 - Added `timer_flag_1`, `timer_flag_2`, `timer_flag_3` queries.
 
+---
+
 ## Version 0.5.4
 
 ### Anvil
@@ -648,6 +729,8 @@
 - Added `MovementMeters()` component that takes speed in m/s instead of whatever Minecraft is using.
 - Added `MovementMeters()`, `FollowParent()`, `PlayerRideTamed()`, `InputGroundControlled()`, `FollowOwner()`, `WaterMovement()`, `Panic()`, `ChargeAttack()`, `RamAttack()`, `AvoidMobType()`, `LeapAtTarget()`, `OcelotAttack()`, `Angry()`, `OwnerHurtByTarget()`, `OwnerHurtTarget()`, `RandomSearchAndDig()`, `StompAttack()`, `FollowMob()`, `RandomSwim()`, `RandomBreach()` components.
 - Added `has_damage()`, `is_daytime()`, `rider_count()` filters.
+
+---
 
 ## Version 0.5.3
 
@@ -692,6 +775,8 @@
 
 - `StateMachine()`:
   - `active_player` counter now runs all the time regardless of the max player count.
+
+---
 
 ## Version 0.5.2
 
@@ -760,6 +845,8 @@
 
 - Exposed more APIs.
 
+---
+
 ## Version 0.5.1
 
 ### Anvil
@@ -813,6 +900,8 @@
 - Added a documentation for adding a block.
 - Added a tutorial for creating a One Block SkyBlock map.
 
+---
+
 ## Version 0.4.2 - 0.4.2.6
 
 ### Anvil
@@ -834,6 +923,8 @@
 ### UI
 
 - Rewrote the UI trigger mechanic to allow for more complex ui elements.
+
+---
 
 ## Version 0.4.1
 
@@ -871,6 +962,8 @@
 
 - Added the rest of the molang queries.
   - Some queries need more information to properly implement therefore they may not work.
+
+---
 
 ## Version 0.4.0 - ScriptAPI & PBR Support
 
@@ -936,6 +1029,8 @@
 
 - New UI screen will automatically populate the `_ui_defs.json` file.
 - Added an `anvil_common` screen to host common elements.
+
+---
 
 ## Version 0.3.5
 
@@ -1023,6 +1118,8 @@
 - Added `GetEquippedItemName`, `Position`, `PositionDelta`, `ItemIsCharged`, `ItemInUseDuration`, `IsRiding`, `ModifiedMoveSpeed`, `IsDelayedAttacking`, `IsCharged`, `IsCasting`, `IsRoaring`, `MarkVariant`
 - Fixed some bugs with arithmetic operations.
 
+---
+
 ## Version 0.3.3
 
 ### Anvil
@@ -1060,6 +1157,8 @@
   - Rounded value: **round(a)** → **math.round(a)**
 - Added `BlockProperty`.
 
+---
+
 ## Version 0.3.2
 
 ### Anvil
@@ -1084,6 +1183,8 @@
 
 - Added new components: `BlockCollisionBox`, `BlockCraftingTable`, `BlockPlacementFilter`.
 
+---
+
 ## Version 0.3.1
 
 ### New
@@ -1101,6 +1202,8 @@
 - Fixed the cli tool not creating the config and .gitignore files.
 - The workspace no longer lists the Minecraft logs folder, it generally has too many files which makes the IDE slow.
 
+---
+
 ## Version 0.3.0 - Materials System
 
 ### New
@@ -1112,6 +1215,8 @@
 ### Bug Fixes
 
 - 'enum' properties use the 'values' key instead of 'range'.
+
+---
 
 ## Version 0.2.6
 
@@ -1130,10 +1235,14 @@
 - Sounds `load_on_low_memory` is set to `False` by default.
 - UI `text_alignment` use `UITextAlignment` now instead of `UIAnchor`.
 
+---
+
 ## Version 0.2.4
 
 - Expanded Molang queries.
 - Some improvements to the structure.
+
+---
 
 ## Version 0.2.3
 
@@ -1143,6 +1252,8 @@
 - Added a Score to clock function.
 - Added some queries.
 
+---
+
 ## Version 0.2.2
 
 - Updated to Python 3.11.
@@ -1151,6 +1262,8 @@
 - Added Fog class.
 - Added Fog command.
 - Updated commands classes.
+
+---
 
 ## Version 0.2.1
 
@@ -1176,6 +1289,8 @@
 - `get_vanilla` method of entities now pulls directly from GitHub instead of relying on a local copy of Vanilla assets.
 - Exposed more Minecraft entity components.
 
+---
+
 ## Version 0.1.0 - Core Foundation
 
 - Fixed incorrect names for White Dye, Black Dye,
@@ -1190,6 +1305,8 @@
 - Reformatted Tellraw and Titleraw to support text, selector, score and translate of the rawtext components.
 - Updated the Exported class to use the os.path.join function.
 - Integrated AddDespawnMechanic and OptimizeEntity to the NewEntity class, now included with all entities.
+
+---
 
 ## Version 0.0.0 -> 0.1.0
 

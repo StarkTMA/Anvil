@@ -19,15 +19,23 @@ class JsonSchemes:
 
     @staticmethod
     def pack_name_lang(name, description):
-        return load_file("pack_name_lang.jsont", {"name": name, "description": description}).splitlines()
+        return load_file(
+            "pack_name_lang.jsont", {"name": name, "description": description}
+        ).splitlines()
 
     @staticmethod
     def skin_pack_name_lang(name, display_name):
-        return load_file("skin_pack_name_lang.jsont", {"name": name, "display_name": display_name}).splitlines()
+        return load_file(
+            "skin_pack_name_lang.jsont", {"name": name, "display_name": display_name}
+        ).splitlines()
 
     @staticmethod
     def esbuild_config_js(outDir, minify):
-        return load_file("esbuild.jsont", {"out_dir": os.path.join(outDir, "scripts"), "minify": json.dumps(minify)}, is_json=False)
+        return load_file(
+            "esbuild.jsont",
+            {"out_dir": os.path.join(outDir, "scripts"), "minify": json.dumps(minify)},
+            is_json=False,
+        )
 
     @staticmethod
     def manifest_bp(version):
@@ -118,7 +126,9 @@ class JsonSchemes:
 
     @staticmethod
     def skin_pack(serialize_name):
-        return load_file("skin_pack.jsont", {"serialize_name": serialize_name}, is_json=True)
+        return load_file(
+            "skin_pack.jsont", {"serialize_name": serialize_name}, is_json=True
+        )
 
     @staticmethod
     def skin_json(filename: str, is_slim: bool, free: bool):
@@ -150,11 +160,19 @@ class JsonSchemes:
 
     @staticmethod
     def item_texture(resource_pack_name):
-        return load_file("item_texture.jsont", {"resource_pack_name": resource_pack_name}, is_json=True)
+        return load_file(
+            "item_texture.jsont",
+            {"resource_pack_name": resource_pack_name},
+            is_json=True,
+        )
 
     @staticmethod
     def sound_definitions():
-        return load_file("sound_definitions.jsont", {"format_version": SOUND_DEFINITIONS_VERSION}, is_json=True)
+        return load_file(
+            "sound_definitions.jsont",
+            {"format_version": SOUND_DEFINITIONS_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def music_definitions():
@@ -166,7 +184,9 @@ class JsonSchemes:
 
     @staticmethod
     def materials():
-        return load_file("materials.jsont", {"version": MATERIALS_VERSION}, is_json=True)
+        return load_file(
+            "materials.jsont", {"version": MATERIALS_VERSION}, is_json=True
+        )
 
     @staticmethod
     def languages() -> Dict:
@@ -176,7 +196,12 @@ class JsonSchemes:
     def client_description():
         return {
             "materials": {"default": "entity_alphatest"},
-            "scripts": {"pre_animation": [], "initialize": [], "animate": [], "parent_setup": []},
+            "scripts": {
+                "pre_animation": [],
+                "initialize": [],
+                "animate": [],
+                "parent_setup": [],
+            },
             "textures": {},
             "geometry": {},
             "particle_effects": {},
@@ -186,15 +211,27 @@ class JsonSchemes:
 
     @staticmethod
     def entity_client():
-        return load_file("entity_client.jsont", {"format_version": ENTITY_CLIENT_VERSION}, is_json=True)
+        return load_file(
+            "entity_client.jsont",
+            {"format_version": ENTITY_CLIENT_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def entity_server():
-        return load_file("entity_server.jsont", {"format_version": ENTITY_SERVER_VERSION}, is_json=True)
+        return load_file(
+            "entity_server.jsont",
+            {"format_version": ENTITY_SERVER_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def animations_bp():
-        return load_file("animations_bp.jsont", {"format_version": BP_ANIMATION_VERSION}, is_json=True)
+        return load_file(
+            "animations_bp.jsont",
+            {"format_version": BP_ANIMATION_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def bp_animation(identifier, animation_short_name, loop):
@@ -207,7 +244,11 @@ class JsonSchemes:
 
     @staticmethod
     def animations_rp():
-        return load_file("animations_rp.jsont", {"format_version": RP_ANIMATION_VERSION}, is_json=True)
+        return load_file(
+            "animations_rp.jsont",
+            {"format_version": RP_ANIMATION_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def animation_controller_state(state):
@@ -231,10 +272,19 @@ class JsonSchemes:
 
     @staticmethod
     def animation_controllers():
-        return load_file("animation_controllers.jsont", {"format_version": ANIMATION_CONTROLLERS_VERSION}, is_json=True)
+        return load_file(
+            "animation_controllers.jsont",
+            {"format_version": ANIMATION_CONTROLLERS_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
-    def geometry(model_name: str, texture_size: list[int], visible_box: list[int], visible_offset: list[int]):
+    def geometry(
+        model_name: str,
+        texture_size: list[int],
+        visible_box: list[int],
+        visible_offset: list[int],
+    ):
         return load_file(
             "geometry.jsont",
             {
@@ -264,23 +314,37 @@ class JsonSchemes:
 
     @staticmethod
     def render_controllers():
-        return load_file("render_controllers.jsont", {"format_version": RENDER_CONTROLLER_VERSION}, is_json=True)
+        return load_file(
+            "render_controllers.jsont",
+            {"format_version": RENDER_CONTROLLER_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def attachable():
-        return load_file("attachable.jsont", {"format_version": ENTITY_CLIENT_VERSION}, is_json=True)
+        return load_file(
+            "attachable.jsont", {"format_version": ENTITY_CLIENT_VERSION}, is_json=True
+        )
 
     @staticmethod
     def spawn_rules():
-        return load_file("spawn_rules.jsont", {"format_version": SPAWN_RULES_VERSION}, is_json=True)
+        return load_file(
+            "spawn_rules.jsont", {"format_version": SPAWN_RULES_VERSION}, is_json=True
+        )
 
     @staticmethod
     def server_block():
-        return load_file("server_block.jsont", {"format_version": BLOCK_SERVER_VERSION}, is_json=True)
+        return load_file(
+            "server_block.jsont", {"format_version": BLOCK_SERVER_VERSION}, is_json=True
+        )
 
     @staticmethod
     def terrain_texture(resource_pack_name):
-        return load_file("terrain_texture.jsont", {"resource_pack_name": resource_pack_name}, is_json=True)
+        return load_file(
+            "terrain_texture.jsont",
+            {"resource_pack_name": resource_pack_name},
+            is_json=True,
+        )
 
     @staticmethod
     def flipbook_textures():
@@ -288,7 +352,9 @@ class JsonSchemes:
 
     @staticmethod
     def font(font_name, font_file):
-        return load_file("font.jsont", {"font_name": font_name, "font_file": font_file}, is_json=True)
+        return load_file(
+            "font.jsont", {"font_name": font_name, "font_file": font_file}, is_json=True
+        )
 
     @staticmethod
     def fog():
@@ -296,10 +362,14 @@ class JsonSchemes:
 
     @staticmethod
     def dialogues():
-        return load_file("dialogues_json.jsont", {"format_version": DIALOGUE_VERSION}, is_json=True)
+        return load_file(
+            "dialogues_json.jsont", {"format_version": DIALOGUE_VERSION}, is_json=True
+        )
 
     @staticmethod
-    def dialogue_scene(scene_tag, npc_name, text, on_open_commands, on_close_commands, buttons):
+    def dialogue_scene(
+        scene_tag, npc_name, text, on_open_commands, on_close_commands, buttons
+    ):
         return {
             "scene_tag": scene_tag,
             "npc_name": npc_name,
@@ -315,13 +385,19 @@ class JsonSchemes:
 
     @staticmethod
     def server_item():
-        return load_file("server_item.jsont", {"format_version": ITEM_SERVER_VERSION}, is_json=True)
+        return load_file(
+            "server_item.jsont", {"format_version": ITEM_SERVER_VERSION}, is_json=True
+        )
 
     @staticmethod
     def camera_preset(identifier, inherit_from):
         return load_file(
             "camera_preset.jsont",
-            {"format_version": CAMERA_PRESET_VERSION, "identifier": identifier, "inherit_from": inherit_from},
+            {
+                "format_version": CAMERA_PRESET_VERSION,
+                "identifier": identifier,
+                "inherit_from": inherit_from,
+            },
             is_json=True,
         )
 
@@ -329,21 +405,36 @@ class JsonSchemes:
     def package_json(project_name, version, description, author):
         return load_file(
             "package_json.jsont",
-            {"project_name": project_name, "version": version, "description": description, "author": author},
+            {
+                "project_name": project_name,
+                "version": version,
+                "description": description,
+                "author": author,
+            },
             is_json=True,
         )
 
     @staticmethod
     def tsconstants(namespace: str, project_name: str):
-        return load_file("tsconstants.jsont", {"namespace": namespace, "project_name": project_name})
+        return load_file(
+            "tsconstants.jsont", {"namespace": namespace, "project_name": project_name}
+        )
 
     @staticmethod
     def tsconfig(out_dir):
-        return load_file("tsconfig.jsont", {"out_dir": os.path.join(out_dir, "scripts")}, is_json=True)
+        return load_file(
+            "tsconfig.jsont",
+            {"out_dir": os.path.join(out_dir, "scripts")},
+            is_json=True,
+        )
 
     @staticmethod
     def blocks_json():
-        return load_file("blocks_json.jsont", {"format_version": [int(i) for i in BLOCK_JSON_FORMAT_VERSION.split(".")]}, is_json=True)
+        return load_file(
+            "blocks_json.jsont",
+            {"format_version": [int(i) for i in BLOCK_JSON_FORMAT_VERSION.split(".")]},
+            is_json=True,
+        )
 
     @staticmethod
     def sounds_json():
@@ -351,35 +442,67 @@ class JsonSchemes:
 
     @staticmethod
     def atmosphere_settings(identifier: str):
-        return load_file("atmosphere_settings.jsont", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
+        return load_file(
+            "atmosphere_settings.jsont",
+            {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
+            is_json=True,
+        )
 
     @staticmethod
     def fog_settings(identifier: str):
-        return load_file("fog_settings.jsont", {"format_version": FOG_VERSION, "identifier": identifier}, is_json=True)
+        return load_file(
+            "fog_settings.jsont",
+            {"format_version": FOG_VERSION, "identifier": identifier},
+            is_json=True,
+        )
 
     @staticmethod
     def shadow_settings():
-        return load_file("shadow_settings.jsont", {"format_version": PBR_SETTINGS_VERSION}, is_json=True)
+        return load_file(
+            "shadow_settings.jsont",
+            {"format_version": PBR_SETTINGS_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def water_settings(identifier: str):
-        return load_file("water_settings.jsont", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
+        return load_file(
+            "water_settings.jsont",
+            {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
+            is_json=True,
+        )
 
     @staticmethod
     def color_grading_settings(identifier: str):
-        return load_file("color_grading_settings.jsont", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
+        return load_file(
+            "color_grading_settings.jsont",
+            {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
+            is_json=True,
+        )
 
     @staticmethod
     def lighting_settings(identifier: str):
-        return load_file("lighting_settings.jsont", {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier}, is_json=True)
+        return load_file(
+            "lighting_settings.jsont",
+            {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
+            is_json=True,
+        )
 
     @staticmethod
-    def point_lights():
-        return load_file("point_lights.jsont", {"format_version": PBR_SETTINGS_VERSION}, is_json=True)
+    def local_lighting():
+        return load_file(
+            "local_lighting.jsont",
+            {"format_version": PBR_SETTINGS_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def pbr_fallback_settings():
-        return load_file("pbr_fallback_settings.jsont", {"format_version": PBR_SETTINGS_VERSION}, is_json=True)
+        return load_file(
+            "pbr_fallback_settings.jsont",
+            {"format_version": PBR_SETTINGS_VERSION},
+            is_json=True,
+        )
 
     @staticmethod
     def loot_table():
@@ -388,14 +511,24 @@ class JsonSchemes:
     @staticmethod
     def recipe_smelting(identifier: str, tags: list[str]):
         return load_file(
-            "recipe_smelting.jsont", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_smelting.jsont",
+            {
+                "format_version": RECIPE_JSON_FORMAT_VERSION,
+                "identifier": identifier,
+                "tags": tags,
+            },
+            is_json=True,
         )
 
     @staticmethod
     def recipe_smithing_table(identifier: str, tags: list[str]):
         return load_file(
             "recipe_smithing_table.jsont",
-            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags},
+            {
+                "format_version": RECIPE_JSON_FORMAT_VERSION,
+                "identifier": identifier,
+                "tags": tags,
+            },
             is_json=True,
         )
 
@@ -403,7 +536,11 @@ class JsonSchemes:
     def recipe_smithing_table_trim(identifier: str, tags: list[str]):
         return load_file(
             "recipe_smithing_table_trim.jsont",
-            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags},
+            {
+                "format_version": RECIPE_JSON_FORMAT_VERSION,
+                "identifier": identifier,
+                "tags": tags,
+            },
             is_json=True,
         )
 
@@ -411,7 +548,11 @@ class JsonSchemes:
     def recipe_shapeless_crafting(identifier: str, tags: list[str]):
         return load_file(
             "recipe_shapeless_crafting.jsont",
-            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags},
+            {
+                "format_version": RECIPE_JSON_FORMAT_VERSION,
+                "identifier": identifier,
+                "tags": tags,
+            },
             is_json=True,
         )
 
@@ -419,7 +560,12 @@ class JsonSchemes:
     def recipe_shaped_crafting(identifier: str, assume_symmetry: bool, tags: list[str]):
         return load_file(
             "recipe_shaped_crafting.jsont",
-            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags, "assume_symmetry": assume_symmetry},
+            {
+                "format_version": RECIPE_JSON_FORMAT_VERSION,
+                "identifier": identifier,
+                "tags": tags,
+                "assume_symmetry": assume_symmetry,
+            },
             is_json=True,
         )
 
@@ -427,23 +573,39 @@ class JsonSchemes:
     def recipe_brewing_container(identifier: str, tags: list[str]):
         return load_file(
             "recipe_brewing_container.jsont",
-            {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags},
+            {
+                "format_version": RECIPE_JSON_FORMAT_VERSION,
+                "identifier": identifier,
+                "tags": tags,
+            },
             is_json=True,
         )
 
     @staticmethod
     def recipe_brewing_mix(identifier: str, tags: list[str]):
         return load_file(
-            "recipe_brewing_mix.jsont", {"format_version": RECIPE_JSON_FORMAT_VERSION, "identifier": identifier, "tags": tags}, is_json=True
+            "recipe_brewing_mix.jsont",
+            {
+                "format_version": RECIPE_JSON_FORMAT_VERSION,
+                "identifier": identifier,
+                "tags": tags,
+            },
+            is_json=True,
         )
 
     @staticmethod
     def crafting_items_catalog():
-        return load_file("crafting_items_catalog.jsont", {"format_version": CRAFTING_ITEMS_CATALOG}, is_json=True)
+        return load_file(
+            "crafting_items_catalog.jsont",
+            {"format_version": CRAFTING_ITEMS_CATALOG},
+            is_json=True,
+        )
 
     @staticmethod
     def aim_assist_preset(identifier: str):
-        return load_file("aim_assist_preset.jsont", {"identifier": identifier}, is_json=True)
+        return load_file(
+            "aim_assist_preset.jsont", {"identifier": identifier}, is_json=True
+        )
 
     @staticmethod
     def aim_assist_categories():
@@ -451,7 +613,11 @@ class JsonSchemes:
 
     @staticmethod
     def jigsaw_structure_process(identifier: str):
-        return load_file("jigsaw_structure_process.jsont", {"format_version": JIGSAW_VERSION, "identifier": identifier}, is_json=True)
+        return load_file(
+            "jigsaw_structure_process.jsont",
+            {"format_version": JIGSAW_VERSION, "identifier": identifier},
+            is_json=True,
+        )
 
     @staticmethod
     def jigsaw_structures(
@@ -470,7 +636,9 @@ class JsonSchemes:
                 "identifier": identifier,
                 "placement_step": placement_step,
                 "start_pool_identifier": start_pool_identifier,
-                "start_jigsaw_name": start_jigsaw_name if start_jigsaw_name is not None else {},
+                "start_jigsaw_name": (
+                    start_jigsaw_name if start_jigsaw_name is not None else {}
+                ),
                 "max_depth": max_depth,
                 "start_height": start_height,
                 "liquid_settings": liquid_settings,
@@ -485,13 +653,17 @@ class JsonSchemes:
             {
                 "format_version": JIGSAW_VERSION,
                 "identifier": identifier,
-                "fallback_identifier": fallback_identifier if fallback_identifier else {},
+                "fallback_identifier": (
+                    fallback_identifier if fallback_identifier else {}
+                ),
             },
             is_json=True,
         )
 
     @staticmethod
-    def jigsaw_structure_set(identifier: str, separation: int, spacing: int, spread_type, placement_type):
+    def jigsaw_structure_set(
+        identifier: str, separation: int, spacing: int, spread_type, placement_type
+    ):
         return load_file(
             "jigsaw_structure_set.jsont",
             {
@@ -510,7 +682,7 @@ class JsonSchemes:
         return load_file(
             "texture_set.jsont",
             {
-                "format_version": PBR_SETTINGS_VERSION,
+                "format_version": TEXTURE_SET_VERSION,
             },
             is_json=True,
         )
@@ -557,20 +729,35 @@ class JsonSchemes:
     @staticmethod
     def vscode(path, wkspc, script_uuid, project_name):
         return load_file(
-            "vscode.jsont", {"script_uuid": script_uuid, "wkspc": wkspc, "path": path, "project_name": project_name}, is_json=True
+            "vscode.jsont",
+            {
+                "script_uuid": script_uuid,
+                "wkspc": wkspc,
+                "path": path,
+                "project_name": project_name,
+            },
+            is_json=True,
         )
 
     @staticmethod
     def biome_server():
-        return load_file("biome_server.jsont", {"format_version": BIOME_SERVER_VERSION}, is_json=True)
+        return load_file(
+            "biome_server.jsont", {"format_version": BIOME_SERVER_VERSION}, is_json=True
+        )
 
     @staticmethod
     def biome_client():
-        return load_file("biome_client.jsont", {"format_version": BIOME_CLIENT_VERSION}, is_json=True)
+        return load_file(
+            "biome_client.jsont", {"format_version": BIOME_CLIENT_VERSION}, is_json=True
+        )
 
     @staticmethod
     def block_culling_rules(identifier: Identifier):
-        return load_file("block_culling.jsont", {"format_version": BLOCK_CULLING_VERSION, "identifier": identifier}, is_json=True)
+        return load_file(
+            "block_culling.jsont",
+            {"format_version": BLOCK_CULLING_VERSION, "identifier": identifier},
+            is_json=True,
+        )
 
 
 class AddonDescriptor:
@@ -578,7 +765,9 @@ class AddonDescriptor:
 
     _object_type = "addon_descriptor"
 
-    def _validate_name(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False) -> tuple[str, str]:
+    def _validate_name(
+        self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False
+    ) -> tuple[str, str]:
         """Validates the name of the Minecraft object.
 
         Parameters:
@@ -596,22 +785,34 @@ class AddonDescriptor:
             object_name = name
 
         if str(object_name)[0].isdigit():
-            raise ValueError(f"Names cannot start with a digit. {object_name} at {self._object_type}[{name}]")
+            raise ValueError(
+                f"Names cannot start with a digit. {object_name} at {self._object_type}[{name}]"
+            )
 
         if not str(object_namespace)[0].isalpha():
-            raise ValueError(f"Namespaces cannot start with a digit. {self._object_type}[{name}]")
+            raise ValueError(
+                f"Namespaces cannot start with a digit. {self._object_type}[{name}]"
+            )
 
-        if CONFIG._TARGET == ConfigPackageTarget.ADDON and is_vanilla and not is_vanilla_allowed:
+        if (
+            CONFIG._TARGET == ConfigPackageTarget.ADDON
+            and is_vanilla
+            and not is_vanilla_allowed
+        ):
             raise RuntimeError(
                 f"Overriding vanilla features is not allowed for packages of type '{CONFIG._TARGET}'. {self._object_type}[{name}]"
             )
 
         if is_vanilla and object_namespace != "minecraft":
-            raise ValueError(f"Invalid namespace '{object_namespace}' overriding Vanilla for. {self._object_type}[{name}]")
+            raise ValueError(
+                f"Invalid namespace '{object_namespace}' overriding Vanilla component with a different namespace. {self._object_type}[{name}]"
+            )
 
         return object_name, object_namespace
 
-    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False) -> None:
+    def __init__(
+        self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False
+    ) -> None:
         """
         Constructs all the necessary attributes for the AddonObject object.
 
@@ -622,9 +823,12 @@ class AddonDescriptor:
         """
 
         self._is_vanilla = is_vanilla
-        self._name, self._namespace = self._validate_name(str(name), is_vanilla, is_vanilla_allowed)
+        self._name, self._namespace = self._validate_name(
+            str(name), is_vanilla, is_vanilla_allowed
+        )
+        self._data = None
         self._display_name = self._name.replace("_", " ").title()
-        self.__created_from = traceback.format_stack()[:-1]
+        self._created_from = traceback.format_stack()[:-1]
 
     @property
     def identifier(self) -> Identifier:
@@ -634,6 +838,8 @@ class AddonDescriptor:
         Returns:
             str: The identifier of the addon object.
         """
+        if self._data:
+            return f"{self._namespace}:{self._name}:{self._data}"
         return f"{self._namespace}:{self._name}"
 
     @property
@@ -648,6 +854,16 @@ class AddonDescriptor:
 
     def __str__(self):
         return self.identifier
+
+    def set_identifier_data(self, data: str):
+        """
+        Sets the data of the addon object.
+
+        Parameters:
+            data (any): The data to be set for the addon object.
+        """
+        self._data = data
+        return self
 
 
 # For the description property of json files
@@ -746,7 +962,9 @@ class AddonObject(AddonDescriptor):
                 return {
                     k: (v if v != {"do_not_shorten": True} else {})
                     for k, v in ((k, _shorten_dict(v)) for k, v in d.items())
-                    if (v != {} and v != [] and v != None) or str(k).startswith("minecraft:") or v == {"do_not_shorten": True}
+                    if (v != {} and v != [] and v != None)
+                    or str(k).startswith("minecraft:")
+                    or v == {"do_not_shorten": True}
                 }
 
             elif isinstance(d, list):
@@ -756,7 +974,9 @@ class AddonObject(AddonDescriptor):
 
         def _replace_backslashes(obj):
             if isinstance(obj, str):
-                return obj.replace('"/n"', '"\\n"').replace("/n", "\n").replace("\\", "/")
+                return (
+                    obj.replace('"/n"', '"\\n"').replace("/n", "\n").replace("\\", "/")
+                )
             elif isinstance(obj, list):
                 return [_replace_backslashes(item) for item in obj]
             elif isinstance(obj, dict):
@@ -767,7 +987,9 @@ class AddonObject(AddonDescriptor):
         path = self._path.removeprefix(CONFIG.RP_PATH).removeprefix(CONFIG.BP_PATH)
         path = os.path.join(path, f"{self._name}{self._extension}")
         if len(path) > 80:
-            raise ValueError(f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters.")
+            raise ValueError(
+                f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters."
+            )
 
         if self._shorten and type(self._content) is dict:
             self._content = _shorten_dict(self._content)
@@ -814,22 +1036,30 @@ class MinecraftBlockDescriptor(AddonDescriptor):
         return ""
 
     def __str__(self) -> Identifier:
-        if self.states:
-            return f"{self.identifier} [{self.states}]"
+        if self.states or self._tags:
+            return {
+                "name": self.identifier,
+                "states": self.states if self.states else {},
+                "tags": self.tags if self.tags else {},
+            }
         return self.identifier
 
 
 class MinecraftItemDescriptor(AddonDescriptor):
     _object_type = "Item Descriptor"
 
-    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True) -> None:
+    def __init__(
+        self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True
+    ) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
 
 
 class MinecraftBiomeDescriptor(AddonDescriptor):
     _object_type = "Biome Descriptor"
 
-    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True) -> None:
+    def __init__(
+        self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True
+    ) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
 
     def __str__(self) -> Identifier:
@@ -839,19 +1069,31 @@ class MinecraftBiomeDescriptor(AddonDescriptor):
 class MinecraftEntityDescriptor(MinecraftAddonObject):
     _object_type = "Entity Descriptor"
 
-    def __init__(self, name, is_vanilla=False, allow_runtime: bool = True, is_vanilla_allowed=True):
+    def __init__(
+        self,
+        name,
+        is_vanilla=False,
+        allow_runtime: bool = True,
+        is_vanilla_allowed=True,
+    ):
         super().__init__(name, is_vanilla, is_vanilla_allowed)
         self._allow_runtime = allow_runtime
 
 
 class EntityDescriptor(MinecraftEntityDescriptor):
-    def __init__(self, name: str, is_vanilla: bool = False, allow_runtime: bool = True) -> None:
+    def __init__(
+        self, name: str, is_vanilla: bool = False, allow_runtime: bool = True
+    ) -> None:
         super().__init__(name, is_vanilla, allow_runtime, False)
 
 
 class BlockDescriptor(MinecraftBlockDescriptor):
     def __init__(
-        self, name: str, is_vanilla: bool = False, states: Mapping[str, str | int | float | bool] = None, tags: set[str] = None
+        self,
+        name: str,
+        is_vanilla: bool = False,
+        states: Mapping[str, str | int | float | bool] = None,
+        tags: set[str] = None,
     ) -> None:
         super().__init__(name, is_vanilla, states, tags, False)
 

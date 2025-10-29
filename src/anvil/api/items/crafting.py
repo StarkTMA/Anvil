@@ -24,7 +24,11 @@ class CraftingItemCatalog(AddonObject):
         self._initialized = True
 
     def add_group(
-        self, category_name: ItemCategory, group_name: str, group_icon: ItemDescriptor | BlockDescriptor, items_list: list[ItemDescriptor | BlockDescriptor] = []
+        self,
+        category_name: ItemCategory,
+        group_name: str,
+        group_icon: ItemDescriptor | BlockDescriptor,
+        items_list: list[ItemDescriptor | BlockDescriptor] = [],
     ) -> "CraftingItemCatalog":
         """
         Adds a group to an existing category.
@@ -35,13 +39,13 @@ class CraftingItemCatalog(AddonObject):
             group_icon (ItemDescriptor | BlockDescriptor): The item to use as the icon for the group.
             items_list (list[ItemDescriptor | BlockDescriptor], optional): List of items to add to the group. Defaults to an empty list.
         """
-        group_id = f"{CONFIG.NAMESPACE}:{group_name.replace(" ", "_").lower()}"
-        ANVIL.definitions.register_lang(group_id, group_name)
+        localized_key = f"tag.{CONFIG.NAMESPACE}:{group_name.replace(" ", "_").lower()}"
+        ANVIL.definitions.register_lang(localized_key, group_name)
 
         group = {
             "group_identifier": {
                 "icon": group_icon.identifier,
-                "name": group_id,
+                "name": localized_key,
             },
             "items": [item.identifier for item in items_list],
         }
@@ -51,8 +55,10 @@ class CraftingItemCatalog(AddonObject):
                 if "groups" not in cat:
                     cat["groups"] = []
                 for existing_group in cat["groups"]:
-                    if existing_group["group_identifier"]["name"] == group_id:
-                        existing_group.setdefault("items", existing_group.get("items", [])).extend([item.identifier for item in items_list])
+                    if existing_group["group_identifier"]["name"] == localized_key:
+                        existing_group.setdefault(
+                            "items", existing_group.get("items", [])
+                        ).extend([item.identifier for item in items_list])
                     continue
                 else:
                     cat["groups"].append(group)
@@ -66,7 +72,9 @@ class CraftingItemCatalog(AddonObject):
             )
         return self
 
-    def add_loose_items(self, category_name: ItemCategory, items: list[ItemDescriptor | BlockDescriptor]) -> "CraftingItemCatalog":
+    def add_loose_items(
+        self, category_name: ItemCategory, items: list[ItemDescriptor | BlockDescriptor]
+    ) -> "CraftingItemCatalog":
         """Adds loose items to a category.
 
         Parameters:
@@ -111,7 +119,9 @@ class _BaseRecipe(AddonObject):
         return self
 
     def unlock_items(self, unlock_items: list[Identifier]):
-        self._content[self._type]["unlock"] = [{"item": str(item)} for item in unlock_items]
+        self._content[self._type]["unlock"] = [
+            {"item": str(item)} for item in unlock_items
+        ]
         return self
 
     def queue(self):
@@ -174,7 +184,9 @@ class ShapelessRecipe(_BaseRecipe):
 
     def ingredients(self, items: list[tuple[Identifier, int]]):
         if len(items) > 9:
-            raise ValueError(f"Too many items in shapeless recipe, maximum is 9. {self._object_type}[{self._name}]")
+            raise ValueError(
+                f"Too many items in shapeless recipe, maximum is 9. {self._object_type}[{self._name}]"
+            )
 
         for i, item in enumerate(items):
             if not item is None:
@@ -185,7 +197,12 @@ class ShapelessRecipe(_BaseRecipe):
                 self._content["minecraft:recipe_shapeless"]["ingredients"].append(data)
         return self
 
-    def result(self, item: ItemDescriptor | BlockDescriptor | Identifier, count: int = 1, data: int = 0):
+    def result(
+        self,
+        item: ItemDescriptor | BlockDescriptor | Identifier,
+        count: int = 1,
+        data: int = 0,
+    ):
         self._content["minecraft:recipe_shapeless"]["result"] = {
             "item": str(item),
             "count": count,
@@ -204,7 +221,9 @@ class StoneCutterRecipe(ShapelessRecipe):
         super().__init__(name)
         self.content(JsonSchemes.recipe_shapeless_crafting(self.identifier, tags))
 
-    def ingredient(self, item: ItemDescriptor | BlockDescriptor | Identifier, data: int = 0):
+    def ingredient(
+        self, item: ItemDescriptor | BlockDescriptor | Identifier, data: int = 0
+    ):
         return super().ingredient([(item, data)])
 
     def queue(self):
@@ -215,17 +234,28 @@ class ShapedCraftingRecipe(_BaseRecipe):
     _object_type = "Shaped Crafting Recipe"
     _type = "minecraft:recipe_shaped"
 
-    def __init__(self, name: str, assume_symmetry: bool = True, tags: list[str] = ["crafting_table"]):
+    def __init__(
+        self,
+        name: str,
+        assume_symmetry: bool = True,
+        tags: list[str] = ["crafting_table"],
+    ):
         self._recipe_exactly = False
         super().__init__(name)
-        self.content(JsonSchemes.recipe_shaped_crafting(self.identifier, assume_symmetry, tags))
+        self.content(
+            JsonSchemes.recipe_shaped_crafting(self.identifier, assume_symmetry, tags)
+        )
 
     def ingredients(
-        self, items: list[list[tuple[ItemDescriptor | BlockDescriptor | Identifier, int]]], keep_empty_slots: bool = False
+        self,
+        items: list[list[tuple[ItemDescriptor | BlockDescriptor | Identifier, int]]],
+        keep_empty_slots: bool = False,
     ) -> None:
         max_items = 9
         if len(items) > max_items:
-            raise ValueError(f"Too many items in shaped recipe, maximum is {max_items}. {self._object_type}[{self.identifier}]")
+            raise ValueError(
+                f"Too many items in shaped recipe, maximum is {max_items}. {self._object_type}[{self.identifier}]"
+            )
 
         keys = "abcdefghijklmnopqrstuvwxyz"
         pattern = ["   ", "   ", "   "]
@@ -262,7 +292,12 @@ class ShapedCraftingRecipe(_BaseRecipe):
         self._content["minecraft:recipe_shaped"]["pattern"] = pattern
         return self
 
-    def result(self, item: ItemDescriptor | BlockDescriptor | Identifier, count: int = 1, data: int = 0):
+    def result(
+        self,
+        item: ItemDescriptor | BlockDescriptor | Identifier,
+        count: int = 1,
+        data: int = 0,
+    ):
         self._content["minecraft:recipe_shaped"]["result"] = {
             "item": str(item),
             "count": count,
@@ -312,7 +347,12 @@ class PotionBrewingRecipe(_BaseRecipe):
         super().__init__(name)
         self.content(JsonSchemes.recipe_brewing_container(self.identifier, tags))
 
-    def recipe(self, item: ItemDescriptor | BlockDescriptor | Identifier, reagent: ItemDescriptor | BlockDescriptor | Identifier, output: ItemDescriptor | BlockDescriptor | Identifier):
+    def recipe(
+        self,
+        item: ItemDescriptor | BlockDescriptor | Identifier,
+        reagent: ItemDescriptor | BlockDescriptor | Identifier,
+        output: ItemDescriptor | BlockDescriptor | Identifier,
+    ):
         """Sets the recipe for the potion brewing container.
 
         Args:
@@ -349,7 +389,12 @@ class PotionMixingRecipe(_BaseRecipe):
         super().__init__(name)
         self.content(JsonSchemes.recipe_brewing_mix(self.identifier, tags))
 
-    def recipe(self, item: ItemDescriptor | BlockDescriptor | Identifier, reagent: ItemDescriptor | BlockDescriptor | Identifier, output: ItemDescriptor | BlockDescriptor | Identifier):
+    def recipe(
+        self,
+        item: ItemDescriptor | BlockDescriptor | Identifier,
+        reagent: ItemDescriptor | BlockDescriptor | Identifier,
+        output: ItemDescriptor | BlockDescriptor | Identifier,
+    ):
         """Sets the recipe for the potion mixing.
 
         Args:

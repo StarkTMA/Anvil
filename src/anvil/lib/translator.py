@@ -232,7 +232,10 @@ class AnvilTranslator:
                         translated_values.extend(translator.translate_batch(batch))
                     except Exception as e:
                         click.echo(
-                            f"Translation error for {target_lang}: {e}", color="red"
+                            click.style(
+                                f"[INFO]: Translation error for {target_lang}: {e}",
+                                fg="red",
+                            )
                         )
                         translated_values.extend(batch)
 
@@ -329,8 +332,10 @@ class AnvilTranslator:
 
         if skipped:
             click.echo(
-                f"\rSkipping [{', '.join(skipped)}] - contains empty values",
-                color="yellow",
+                click.style(
+                    f"\r[INFO]: Skipping [{', '.join(skipped)}] - contains empty values",
+                    fg="yellow",
+                )
             )
         File("languages.json", languages, os.path.join(CONFIG.BP_PATH, "texts"), "w")
         File("languages.json", languages, os.path.join(CONFIG.RP_PATH, "texts"), "w")

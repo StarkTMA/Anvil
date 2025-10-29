@@ -19,7 +19,10 @@ class _Components:
 
     def _has(self, component: _BaseComponent):
         """Checks if the component is already set."""
-        return component in self._components
+        return component._identifier in self._components_list()
+
+    def _components_list(self):
+        return [cmp._identifier for cmp in self._components]
 
     def add(self, *components: _BaseComponent):
         for component in components:
@@ -35,8 +38,14 @@ class _Components:
         component_classes = {component.__class__ for component in self._components}
         cmp_dict = {}
         for component in self._components:
-            missing_dependencies = [dep.__name__ for dep in component._dependencies if dep not in component_classes]
-            conflicting = [cla.__name__ for cla in component._clashes if cla in component_classes]
+            missing_dependencies = [
+                dep.__name__
+                for dep in component._dependencies
+                if dep not in component_classes
+            ]
+            conflicting = [
+                cla.__name__ for cla in component._clashes if cla in component_classes
+            ]
 
             if missing_dependencies:
                 raise RuntimeError(
@@ -64,7 +73,9 @@ class _Properties:
     def __init__(self):
         self._properties = {}
 
-    def enum(self, name: str, values: tuple[str], default: str, *, client_sync: bool = False):
+    def enum(
+        self, name: str, values: tuple[str], default: str, *, client_sync: bool = False
+    ):
         self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
             "type": "enum",
             "default": default,

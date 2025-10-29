@@ -29,24 +29,25 @@ Example:
     ```python
     # Create a new UI system
     ui = UI()
-    
+
     # Add a custom screen
     my_screen = ui.add_ui_screen("my_screen", "my_namespace")
-    
+
     # Add elements to the screen
     panel = my_screen.add_element("my_panel")
     panel.type(UIElementType.Panel).size(("100%", "50px"))
-    
+
     # Queue the UI for generation
     ui.queue()
     ```
 """
 
-from PIL import Image
-
+import click
 from anvil import ANVIL, CONFIG
+from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.lib import *
 from anvil.lib.schemas import AddonObject
+from PIL import Image
 
 __all__ = [
     "UIBindingType",
@@ -63,10 +64,10 @@ __all__ = [
 
 class UIBindingType(StrEnum):
     """Enumeration of UI binding types for data connections.
-    
+
     Binding types determine how UI elements connect to data sources
     and how they respond to data changes.
-    
+
     Attributes:
         View: Binds to view-level data (element properties)
         Global: Binds to global game data
@@ -74,6 +75,7 @@ class UIBindingType(StrEnum):
         CollectionDetails: Binds to specific collection item details
         NONE: No binding applied
     """
+
     View = "view"
     Global = "global"
     Collection = "collection"
@@ -83,10 +85,10 @@ class UIBindingType(StrEnum):
 
 class UIElementType(StrEnum):
     """Enumeration of UI element types.
-    
+
     Defines the different types of UI elements that can be created
     within the framework.
-    
+
     Attributes:
         Image: Image element for displaying textures
         Panel: Container element for grouping other elements
@@ -98,6 +100,7 @@ class UIElementType(StrEnum):
         Custom: Custom renderer element
         Button: Interactive button element
     """
+
     Image = "image"
     Panel = "panel"
     Label = "label"
@@ -111,10 +114,10 @@ class UIElementType(StrEnum):
 
 class UIAnchor(StrEnum):
     """Enumeration of anchor positions for UI element layout.
-    
+
     Anchors determine how elements are positioned relative to their
     parent containers.
-    
+
     Attributes:
         Center: Center position
         TopLeft: Top-left corner
@@ -126,6 +129,7 @@ class UIAnchor(StrEnum):
         BottomMiddle: Bottom center
         BottomRight: Bottom-right corner
     """
+
     Center = "center"
     TopLeft = "top_left"
     TopMiddle = "top_middle"
@@ -139,14 +143,15 @@ class UIAnchor(StrEnum):
 
 class UITextAlignment(StrEnum):
     """Enumeration of text alignment options.
-    
+
     Defines how text content is aligned within text elements.
-    
+
     Attributes:
         Center: Center-aligned text
         Left: Left-aligned text
         Right: Right-aligned text
     """
+
     Center = "center"
     Left = "left"
     Right = "right"
@@ -154,10 +159,10 @@ class UITextAlignment(StrEnum):
 
 class UIAnimType(StrEnum):
     """Enumeration of animation types.
-    
+
     Defines the different types of animations that can be applied
     to UI elements.
-    
+
     Attributes:
         Alpha: Transparency/opacity animation
         Clip: Clipping animation
@@ -169,6 +174,7 @@ class UIAnimType(StrEnum):
         Wait: Pause/delay animation
         Aseprite_flip_book: Aseprite-based flipbook animation
     """
+
     Alpha = "alpha"
     Clip = "clip"
     Color = "color"
@@ -182,10 +188,10 @@ class UIAnimType(StrEnum):
 
 class UIEasing(StrEnum):
     """Enumeration of easing functions for animations.
-    
+
     Easing functions control the rate of change in animations,
     providing smooth transitions and natural motion effects.
-    
+
     Attributes:
         Linear: Constant rate of change
         Spring: Spring-like motion
@@ -200,6 +206,7 @@ class UIEasing(StrEnum):
         InBack, OutBack, InOutBack: Back easing variations
         InElastic, OutElastic, InOutElastic: Elastic easing variations
     """
+
     Linear = "linear"
     Spring = "spring"
     InQuad = "in_quad"
@@ -236,14 +243,15 @@ class UIEasing(StrEnum):
 
 class UIElementTrigger(StrEnum):
     """Enumeration of trigger types for UI element activation.
-    
+
     Defines when and how UI elements are triggered to appear or activate.
-    
+
     Attributes:
         Title: Triggered by title/subtitle display
         Actionbar: Triggered by actionbar message display
         NONE: No trigger (always active or manually controlled)
     """
+
     Title = "title"
     Actionbar = "actionbar"
     NONE = "None"
@@ -251,15 +259,16 @@ class UIElementTrigger(StrEnum):
 
 class UIFontSize(StrEnum):
     """Enumeration of font size options.
-    
+
     Defines the available font sizes for text elements.
-    
+
     Attributes:
         Normal: Standard font size
         Small: Smaller font size
         Large: Larger font size
         ExtraLarge: Extra large font size
     """
+
     Normal = "normal"
     Small = "small"
     Large = "large"
@@ -271,24 +280,24 @@ class UIFontSize(StrEnum):
 
 class _UIBinding:
     """Manages data binding configuration for UI elements.
-    
+
     This class handles the configuration of data bindings that connect
     UI elements to data sources, allowing dynamic content updates.
-    
+
     Attributes:
         _content (dict): Internal storage for binding configuration
     """
-    
+
     def __init__(self) -> None:
         """Initialize a new UI binding configuration."""
         self._content = {}
 
     def binding_name(self, binding_name: str):
         """Set the binding name for the data source.
-        
+
         Args:
             binding_name (str): Name of the binding property
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -297,10 +306,10 @@ class _UIBinding:
 
     def binding_name_override(self, binding_name_override: str):
         """Set an override for the binding name.
-        
+
         Args:
             binding_name_override (str): Override name for the binding
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -309,10 +318,10 @@ class _UIBinding:
 
     def binding_type(self, binding_type: UIBindingType = UIBindingType.View):
         """Set the type of binding.
-        
+
         Args:
             binding_type (UIBindingType): Type of binding to use
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -321,10 +330,10 @@ class _UIBinding:
 
     def binding_collection_name(self, binding_collection_name: str):
         """Set the collection name for collection bindings.
-        
+
         Args:
             binding_collection_name (str): Name of the collection
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -333,10 +342,10 @@ class _UIBinding:
 
     def binding_collection_prefix(self, binding_collection_prefix: str):
         """Set the collection prefix for collection bindings.
-        
+
         Args:
             binding_collection_prefix (str): Prefix for collection items
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -345,10 +354,10 @@ class _UIBinding:
 
     def source_control_name(self, source_control_name: str):
         """Set the source control name for the binding.
-        
+
         Args:
             source_control_name (str): Name of the source control
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -357,10 +366,10 @@ class _UIBinding:
 
     def source_property_name(self, source_property_name: str):
         """Set the source property name for the binding.
-        
+
         Args:
             source_property_name (str): Name of the source property
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -369,10 +378,10 @@ class _UIBinding:
 
     def target_property_name(self, target_property_name: str):
         """Set the target property name for the binding.
-        
+
         Args:
             target_property_name (str): Name of the target property
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -382,7 +391,7 @@ class _UIBinding:
     @property
     def resolve_sibling_scope(self):
         """Enable sibling scope resolution for the binding.
-        
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -391,10 +400,10 @@ class _UIBinding:
 
     def binding_condition(self, binding_condition: str):
         """Set a condition for the binding activation.
-        
+
         Args:
             binding_condition (str): Condition expression
-            
+
         Returns:
             _UIBinding: Self for method chaining
         """
@@ -404,24 +413,24 @@ class _UIBinding:
 
 class _UIButtonMapping:
     """Manages button mapping configuration for UI elements.
-    
+
     This class handles the configuration of button mappings that
     define how controller/keyboard inputs are handled by UI elements.
-    
+
     Attributes:
         _content (dict): Internal storage for button mapping configuration
     """
-    
+
     def __init__(self) -> None:
         """Initialize a new button mapping configuration."""
         self._content = {}
 
     def from_button_id(self, from_button_id: str):
         """Set the source button ID for the mapping.
-        
+
         Args:
             from_button_id (str): ID of the source button
-            
+
         Returns:
             _UIButtonMapping: Self for method chaining
         """
@@ -430,10 +439,10 @@ class _UIButtonMapping:
 
     def to_button_id(self, to_button_id: str):
         """Set the target button ID for the mapping.
-        
+
         Args:
             to_button_id (str): ID of the target button
-            
+
         Returns:
             _UIButtonMapping: Self for method chaining
         """
@@ -442,10 +451,10 @@ class _UIButtonMapping:
 
     def mapping_type(self, mapping_type: str):
         """Set the type of button mapping.
-        
+
         Args:
             mapping_type (str): Type of the mapping
-            
+
         Returns:
             _UIButtonMapping: Self for method chaining
         """
@@ -454,10 +463,10 @@ class _UIButtonMapping:
 
     def ignored(self, ignored: bool):
         """Set whether the button mapping should be ignored.
-        
+
         Args:
             ignored (bool): Whether to ignore this mapping
-            
+
         Returns:
             _UIButtonMapping: Self for method chaining
         """
@@ -467,7 +476,7 @@ class _UIButtonMapping:
     @property
     def button_up_right_of_first_refusal(self):
         """Enable button up right of first refusal.
-        
+
         Returns:
             _UIButtonMapping: Self for method chaining
         """
@@ -477,24 +486,24 @@ class _UIButtonMapping:
 
 class _UIModifications:
     """Manages UI element modifications for existing elements.
-    
+
     This class handles modifications to existing UI elements,
     such as removing or inserting new elements.
-    
+
     Attributes:
         _content (dict): Internal storage for modification configuration
     """
-    
+
     def __init__(self) -> None:
         """Initialize a new UI modification configuration."""
         self._content = {}
 
     def remove(self, control_name: str):
         """Remove a control from the UI.
-        
+
         Args:
             control_name (str): Name of the control to remove
-            
+
         Returns:
             _UIModifications: Self for method chaining
         """
@@ -504,10 +513,10 @@ class _UIModifications:
 
     def insert_front(self, control_name: str):
         """Insert a new control at the front of the controls list.
-        
+
         Args:
             control_name (str): Name of the control to insert
-            
+
         Returns:
             _UIElement: New UI element for further configuration
         """
@@ -520,11 +529,11 @@ class _UIModifications:
 
 class _UIElement:
     """Represents a UI element with properties, bindings, and child elements.
-    
+
     This is the core class for building UI elements. It provides a fluent
     interface for configuring element properties, managing child elements,
     setting up data bindings, and handling animations.
-    
+
     Attributes:
         _element_name (str): Name identifier for the element
         _textures (list): List of textures used by this element
@@ -533,23 +542,23 @@ class _UIElement:
         _bindings (list[_UIBinding]): List of data bindings
         _controls (list[_UIElement]): List of child elements
         _modifications (list[_UIModifications]): List of modifications
-    
+
     Example:
         ```python
         element = _UIElement("my_panel")
         element.type(UIElementType.Panel)
         element.size(("100%", "50px"))
         element.anchor(UIAnchor.Center, UIAnchor.Center)
-        
+
         # Add child element
         child = element.controls("my_label")
         child.type(UIElementType.Label).text("Hello World")
         ```
     """
-    
+
     def __init__(self, element_name: str) -> None:
         """Initialize a new UI element.
-        
+
         Args:
             element_name (str): Unique name for the element
         """
@@ -561,13 +570,24 @@ class _UIElement:
         self._controls: list[_UIElement] = []
         self._modifications: list[_UIModifications] = []
 
+    def inherit(self, element_name: str):
+        """Inherit properties from an existing element.
+
+        Args:
+            element_name (str): Name of the element to inherit from
+        Returns:
+            _UIElement: Self for method chaining
+        """
+        self._element_name = f"{self._element_name}@{element_name}"
+        return self
+    
     @property
     def should_steal_mouse(self):
         """Enable mouse stealing for this element.
-        
+
         When enabled, this element will capture mouse events
         and prevent them from reaching elements behind it.
-        
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -577,10 +597,10 @@ class _UIElement:
     @property
     def absorbs_input(self):
         """Enable input absorption for this element.
-        
+
         When enabled, this element will absorb input events
         and prevent them from propagating to other elements.
-        
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -589,10 +609,10 @@ class _UIElement:
 
     def visible(self, visible: bool | str):
         """Set the visibility of the element.
-        
+
         Args:
             visible (bool | str): Visibility state or binding expression
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -601,10 +621,10 @@ class _UIElement:
 
     def fill(self, fill: bool | str):
         """Set whether the element should fill available space.
-        
+
         Args:
             fill (bool | str): Fill state or binding expression
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -613,10 +633,10 @@ class _UIElement:
 
     def ignored(self, ignored: bool | str):
         """Set whether the element should be ignored for input.
-        
+
         Args:
             ignored (bool | str): Ignored state or binding expression
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -625,10 +645,10 @@ class _UIElement:
 
     def enabled(self, enabled: bool | str):
         """Set the enabled state of the element.
-        
+
         Args:
             enabled (bool | str): Enabled state or binding expression
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -637,10 +657,10 @@ class _UIElement:
 
     def text(self, text: str):
         """Set the text content of the element.
-        
+
         Args:
             text (str): Text content or binding expression
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -649,10 +669,10 @@ class _UIElement:
 
     def localize(self, localize: bool):
         """Set whether the text should be localized.
-        
+
         Args:
             localize (bool): Whether to apply localization
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -661,10 +681,10 @@ class _UIElement:
 
     def renderer(self, renderer: str):
         """Set the custom renderer for the element.
-        
+
         Args:
             renderer (str): Name of the custom renderer
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -673,10 +693,10 @@ class _UIElement:
 
     def type(self, type: UIElementType):
         """Set the type of the UI element.
-        
+
         Args:
             type (UIElementType): Type of the element
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -685,10 +705,10 @@ class _UIElement:
 
     def orientation(self, orientation: str):
         """Set the orientation for container elements.
-        
+
         Args:
             orientation (str): Orientation ("horizontal" or "vertical")
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -697,28 +717,24 @@ class _UIElement:
 
     def anchor(self, anchor_from: UIAnchor, anchor_to: UIAnchor):
         """Set the anchor points for element positioning.
-        
+
         Args:
             anchor_from (UIAnchor): Source anchor point on the element
             anchor_to (UIAnchor): Target anchor point on the parent
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
-        self.element["anchor_from"] = (
-            anchor_from.value if isinstance(anchor_from, UIAnchor) else anchor_from
-        )
-        self.element["anchor_to"] = (
-            anchor_to.value if isinstance(anchor_to, UIAnchor) else anchor_to
-        )
+        self.element["anchor_from"] = anchor_from.value if isinstance(anchor_from, UIAnchor) else anchor_from
+        self.element["anchor_to"] = anchor_to.value if isinstance(anchor_to, UIAnchor) else anchor_to
         return self
 
     def text_alignment(self, text_alignment: UITextAlignment):
         """Set the text alignment for text elements.
-        
+
         Args:
             text_alignment (UITextAlignment): Text alignment option
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -727,10 +743,10 @@ class _UIElement:
 
     def color(self, color: tuple[float, float, float]):
         """Set the color of the element.
-        
+
         Args:
             color (tuple[float, float, float]): RGB color values (0.0-1.0)
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -739,10 +755,10 @@ class _UIElement:
 
     def font_size(self, font_size: UIFontSize):
         """Set the font size for text elements.
-        
+
         Args:
             font_size (UIFontSize): Font size option
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -751,12 +767,12 @@ class _UIElement:
 
     def layer(self, layer: int):
         """Set the rendering layer for the element.
-        
+
         Higher layer numbers render on top of lower numbers.
-        
+
         Args:
             layer (int): Layer number for rendering order
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -765,10 +781,10 @@ class _UIElement:
 
     def locked_control(self, locked_control: str):
         """Set a locked control reference.
-        
+
         Args:
             locked_control (str): Name of the locked control
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -777,10 +793,10 @@ class _UIElement:
 
     def font_scale_factor(self, font_scale_factor: int):
         """Set the font scaling factor.
-        
+
         Args:
             font_scale_factor (int): Scale factor for font size
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -789,16 +805,16 @@ class _UIElement:
 
     def texture(self, texture: str, scale_factor: int = 1, *nineslice_size: int):
         """Set the texture for image elements with optional scaling and nineslice.
-        
+
         Args:
             texture (str): Name of the texture file (without .png extension)
                          or binding expression starting with $
             scale_factor (int, optional): Scale factor for texture. Defaults to 1.
             *nineslice_size (int): Nineslice border sizes for scalable textures
-            
+
         Returns:
             _UIElement: Self for method chaining
-            
+
         Raises:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
@@ -818,36 +834,27 @@ class _UIElement:
                 f"{texture}.json",
                 {
                     "nineslice_size": (
-                        nineslice_size[0] * scale_factor
-                        if len(nineslice_size) == 1
-                        else [i * scale_factor for i in nineslice_size]
+                        nineslice_size[0] * scale_factor if len(nineslice_size) == 1 else [i * scale_factor for i in nineslice_size]
                     ),
-                    "base_size": [
-                        i * scale_factor
-                        for i in Image.open(
-                            os.path.join("assets", "textures", "ui", f"{texture}.png")
-                        ).size
-                    ],
+                    "base_size": [i * scale_factor for i in Image.open(os.path.join("assets", "textures", "ui", f"{texture}.png")).size],
                 },
                 os.path.join(CONFIG.RP_PATH, "textures", "ui"),
                 "w",
             )
         return self
 
-    def texture_key(
-        self, key: str, texture: str, scale_factor: int = 1, *nineslice_size: int
-    ):
+    def texture_key(self, key: str, texture: str, scale_factor: int = 1, *nineslice_size: int):
         """Set a texture using a custom key for variable substitution.
-        
+
         Args:
             key (str): Variable key name for the texture
             texture (str): Name of the texture file (without .png extension)
             scale_factor (int, optional): Scale factor for texture. Defaults to 1.
             *nineslice_size (int): Nineslice border sizes for scalable textures
-            
+
         Returns:
             _UIElement: Self for method chaining
-            
+
         Raises:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
@@ -860,12 +867,7 @@ class _UIElement:
                     {
                         "nineslice_size": nineslice_size,
                         "base_size": [
-                            i * scale_factor
-                            for i in Image.open(
-                                os.path.join(
-                                    "assets", "textures", "ui", f"{texture}.png"
-                                )
-                            ).size
+                            i * scale_factor for i in Image.open(os.path.join("assets", "textures", "ui", f"{texture}.png")).size
                         ],
                     },
                     os.path.join(CONFIG.RP_PATH, "textures", "ui"),
@@ -879,16 +881,16 @@ class _UIElement:
 
     def aseprite_texture(self, texture: str):
         """Set an Aseprite texture with animation data.
-        
+
         This method sets up a texture that includes Aseprite animation
         metadata from a corresponding .json file.
-        
+
         Args:
             texture (str): Name of the Aseprite texture file (without .png extension)
-            
+
         Returns:
             _UIElement: Self for method chaining
-            
+
         Raises:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
@@ -907,14 +909,14 @@ class _UIElement:
 
     def aseprite_key(self, key: str, texture: str):
         """Set an Aseprite texture using a custom key.
-        
+
         Args:
             key (str): Variable key name for the texture
             texture (str): Name of the Aseprite texture file (without .png extension)
-            
+
         Returns:
             _UIElement: Self for method chaining
-            
+
         Raises:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
@@ -934,23 +936,23 @@ class _UIElement:
 
     def keys(self, key, value):
         """Set a custom key-value pair for the element.
-        
+
         Args:
             key (str): Key name (will be prefixed with $)
             value: Value to assign (StrEnum values will be converted)
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
-        self.element[f"${key}"] = value.value if isinstance(value, StrEnum) else value
+        self.element[f"${key}".replace("$$", "$")] = value.value if isinstance(value, StrEnum) else value
         return self
 
     def property_bag(self, **properties):
         """Set multiple properties in the element's property bag.
-        
+
         Args:
             **properties: Key-value pairs to add to the property bag
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -962,7 +964,7 @@ class _UIElement:
     @property
     def binding(self):
         """Create and return a new data binding for this element.
-        
+
         Returns:
             _UIBinding: New binding configuration object
         """
@@ -975,7 +977,7 @@ class _UIElement:
     @property
     def button_mapping(self):
         """Create and return a new button mapping for this element.
-        
+
         Returns:
             _UIButtonMapping: New button mapping configuration object
         """
@@ -988,7 +990,7 @@ class _UIElement:
     @property
     def modification(self):
         """Create and return a new modification for this element.
-        
+
         Returns:
             _UIModifications: New modification configuration object
         """
@@ -1000,11 +1002,11 @@ class _UIElement:
 
     def control_ids(self, id: str, element: str):
         """Set control IDs for factory elements.
-        
+
         Args:
             id (str): Control ID key
             element (str): Element name
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1015,10 +1017,10 @@ class _UIElement:
 
     def controls(self, element_name: str):
         """Add a child control element.
-        
+
         Args:
             element_name (str): Name of the child element
-            
+
         Returns:
             _UIElement: New child element for further configuration
         """
@@ -1031,12 +1033,12 @@ class _UIElement:
 
     def factory(self, name, id, element):
         """Configure this element as a factory.
-        
+
         Args:
             name (str): Factory name
             id (str): Control ID or "control_name"
             element (str): Element reference
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1048,11 +1050,11 @@ class _UIElement:
 
     def size(self, size: str | tuple):
         """Set the size of the element.
-        
+
         Args:
-            size (str | tuple): Size specification as string (e.g., "100%", "50px") 
+            size (str | tuple): Size specification as string (e.g., "100%", "50px")
                                or tuple (width, height)
-                               
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1061,10 +1063,10 @@ class _UIElement:
 
     def tiled(self, bool: bool | str):
         """Set whether the texture should be tiled.
-        
+
         Args:
             bool (bool | str): Tiling state or binding expression
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1073,10 +1075,10 @@ class _UIElement:
 
     def max_size(self, max_size: str | tuple):
         """Set the maximum size constraint for the element.
-        
+
         Args:
             max_size (str | tuple): Maximum size specification
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1085,10 +1087,10 @@ class _UIElement:
 
     def min_size(self, min_size: str | tuple):
         """Set the minimum size constraint for the element.
-        
+
         Args:
             min_size (str | tuple): Minimum size specification
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1097,10 +1099,10 @@ class _UIElement:
 
     def clip_ratio(self, clip_ratio: float | str):
         """Set the clipping ratio for the element.
-        
+
         Args:
             clip_ratio (float | str): Ratio for clipping (0.0-1.0) or binding
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1109,10 +1111,10 @@ class _UIElement:
 
     def clip_direction(self, clip_direction: float | str):
         """Set the clipping direction for the element.
-        
+
         Args:
             clip_direction (float | str): Direction for clipping or binding
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1121,10 +1123,10 @@ class _UIElement:
 
     def clip_pixelperfect(self, clip_pixelperfect: bool):
         """Set whether clipping should be pixel-perfect.
-        
+
         Args:
             clip_pixelperfect (bool): Whether to use pixel-perfect clipping
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1133,10 +1135,10 @@ class _UIElement:
 
     def maximum_grid_items(self, maximum_grid_items: int):
         """Set the maximum number of items in a grid.
-        
+
         Args:
             maximum_grid_items (int): Maximum number of grid items
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1145,10 +1147,10 @@ class _UIElement:
 
     def line_padding(self, line_padding: int):
         """Set the padding between lines for text elements.
-        
+
         Args:
             line_padding (int): Padding between lines in pixels
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1157,10 +1159,10 @@ class _UIElement:
 
     def uv(self, uv: tuple | str):
         """Set the UV coordinates for texture mapping.
-        
+
         Args:
             uv (tuple | str): UV coordinates as tuple (u, v) or binding
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1169,10 +1171,10 @@ class _UIElement:
 
     def uv_size(self, uv_size: tuple):
         """Set the UV size for texture mapping.
-        
+
         Args:
             uv_size (tuple): UV size as tuple (width, height)
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1181,10 +1183,10 @@ class _UIElement:
 
     def alpha(self, alpha: str | tuple):
         """Set the alpha (transparency) of the element.
-        
+
         Args:
             alpha (str | tuple): Alpha value (0.0-1.0), binding, or animation reference
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1193,10 +1195,10 @@ class _UIElement:
 
     def offset(self, offset: str | tuple):
         """Set the positional offset of the element.
-        
+
         Args:
             offset (str | tuple): Offset as string, tuple (x, y), or animation reference
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1205,10 +1207,10 @@ class _UIElement:
 
     def clip_offset(self, clip_offset: tuple):
         """Set the clipping offset for the element.
-        
+
         Args:
             clip_offset (tuple): Clip offset as tuple (x, y)
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1217,10 +1219,10 @@ class _UIElement:
 
     def keep_ratio(self, keep_ratio: bool):
         """Set whether to maintain aspect ratio when scaling.
-        
+
         Args:
             keep_ratio (bool): Whether to maintain aspect ratio
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1229,10 +1231,10 @@ class _UIElement:
 
     def allow_clipping(self, allow_clipping: bool):
         """Set whether the element allows clipping.
-        
+
         Args:
             allow_clipping (bool): Whether clipping is allowed
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1241,10 +1243,10 @@ class _UIElement:
 
     def grid_item_template(self, grid_item_template: bool):
         """Set whether this element is a grid item template.
-        
+
         Args:
             grid_item_template (bool): Whether this is a grid item template
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1253,10 +1255,10 @@ class _UIElement:
 
     def grid_dimension_binding(self, grid_dimension_binding: bool):
         """Set grid dimension binding.
-        
+
         Args:
             grid_dimension_binding (bool): Whether to use grid dimension binding
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1265,10 +1267,10 @@ class _UIElement:
 
     def grid_dimensions(self, grid_dimensions: tuple):
         """Set the grid dimensions.
-        
+
         Args:
             grid_dimensions (tuple): Grid dimensions as tuple (columns, rows)
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1277,10 +1279,10 @@ class _UIElement:
 
     def grid_position(self, grid_position: tuple):
         """Set the position within a grid.
-        
+
         Args:
             grid_position (tuple): Grid position as tuple (column, row)
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1289,10 +1291,10 @@ class _UIElement:
 
     def grid_rescaling_type(self, grid_rescaling_type: str):
         """Set the grid rescaling type.
-        
+
         Args:
             grid_rescaling_type (str): Type of grid rescaling
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1301,10 +1303,10 @@ class _UIElement:
 
     def grid_fill_direction(self, grid_fill_direction: str):
         """Set the grid fill direction.
-        
+
         Args:
             grid_fill_direction (str): Direction to fill grid items
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1313,10 +1315,10 @@ class _UIElement:
 
     def collection_index(self, collection_index: int):
         """Set the collection index for collection bindings.
-        
+
         Args:
             collection_index (int): Index within the collection
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1325,10 +1327,10 @@ class _UIElement:
 
     def collection_name(self, collection_name: bool):
         """Set the collection name binding.
-        
+
         Args:
             collection_name (bool): Collection name binding state
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1337,10 +1339,10 @@ class _UIElement:
 
     def shadow(self, shadow: bool = False):
         """Set whether text should have a shadow effect.
-        
+
         Args:
             shadow (bool, optional): Whether to enable text shadow. Defaults to False.
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1349,10 +1351,10 @@ class _UIElement:
 
     def use_anchored_offset(self, use_anchored_offset: bool = False):
         """Set whether to use anchored offset positioning.
-        
+
         Args:
             use_anchored_offset (bool, optional): Whether to use anchored offset. Defaults to False.
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1361,10 +1363,10 @@ class _UIElement:
 
     def clips_children(self, clips_children: bool):
         """Set whether this element clips its children.
-        
+
         Args:
             clips_children (bool): Whether to clip child elements
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1374,7 +1376,7 @@ class _UIElement:
     @property
     def enable_scissor_test(self):
         """Enable scissor testing for clipping.
-        
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1384,7 +1386,7 @@ class _UIElement:
     @property
     def focus_enabled(self):
         """Enable focus capability for this element.
-        
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1394,7 +1396,7 @@ class _UIElement:
     @property
     def propagate_alpha(self):
         """Enable alpha propagation to child elements.
-        
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1403,11 +1405,11 @@ class _UIElement:
 
     def variables(self, requires: str, **kwParameters):
         """Add conditional variables to the element.
-        
+
         Args:
             requires (str): Condition expression for variable activation
             **kwParameters: Variable key-value pairs
-            
+
         Returns:
             _UIElement: Self for method chaining
         """
@@ -1422,11 +1424,11 @@ class _UIElement:
     @property
     def queue(self):
         """Process and queue the element for generation.
-        
+
         This method processes all textures, bindings, button mappings,
         modifications, and child controls, preparing the element
         for final UI generation.
-        
+
         Returns:
             dict: Processed element data ready for JSON serialization
         """
@@ -1456,15 +1458,15 @@ class _UIElement:
 
 class _UIAnimationElement:
     """Represents a UI animation with timing, easing, and property changes.
-    
+
     This class configures individual animations that can be applied to UI elements.
     It supports various animation types like alpha fading, size scaling, position
     offset, and timing controls.
-    
+
     Attributes:
         _animation_name (str): Name identifier for the animation
         animation (dict): Dictionary containing animation properties
-    
+
     Example:
         ```python
         anim = _UIAnimationElement("fade_in")
@@ -1474,10 +1476,10 @@ class _UIAnimationElement:
         anim.easing(UIEasing.InOutSine)
         ```
     """
-    
+
     def __init__(self, animation_name: str) -> None:
         """Initialize a new animation element.
-        
+
         Args:
             animation_name (str): Unique name for the animation
         """
@@ -1486,10 +1488,10 @@ class _UIAnimationElement:
 
     def anim_type(self, anim_type: UIAnimType):
         """Set the type of animation.
-        
+
         Args:
             anim_type (UIAnimType): Type of animation to perform
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1498,10 +1500,10 @@ class _UIAnimationElement:
 
     def duration(self, duration: int | str):
         """Set the duration of the animation.
-        
+
         Args:
             duration (int | str): Duration in seconds or variable reference
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1510,10 +1512,10 @@ class _UIAnimationElement:
 
     def next(self, next: str):
         """Set the next animation to play after this one completes.
-        
+
         Args:
             next (str): Reference to the next animation
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1522,10 +1524,10 @@ class _UIAnimationElement:
 
     def destroy_at_end(self, destroy_at_end: str):
         """Set an element to destroy when the animation ends.
-        
+
         Args:
             destroy_at_end (str): Element name to destroy
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1534,10 +1536,10 @@ class _UIAnimationElement:
 
     def play_event(self, play_event: str):
         """Set an event to trigger when the animation starts playing.
-        
+
         Args:
             play_event (str): Event name to trigger
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1546,10 +1548,10 @@ class _UIAnimationElement:
 
     def end_event(self, end_event: str):
         """Set an event to trigger when the animation ends.
-        
+
         Args:
             end_event (str): Event name to trigger
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1558,10 +1560,10 @@ class _UIAnimationElement:
 
     def start_event(self, start_event: str):
         """Set an event to trigger when the animation starts.
-        
+
         Args:
             start_event (str): Event name to trigger
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1570,10 +1572,10 @@ class _UIAnimationElement:
 
     def reset_event(self, reset_event: str):
         """Set an event to trigger when the animation resets.
-        
+
         Args:
             reset_event (str): Event name to trigger
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1582,10 +1584,10 @@ class _UIAnimationElement:
 
     def easing(self, easing: UIEasing):
         """Set the easing function for the animation.
-        
+
         Args:
             easing (UIEasing): Easing function to use
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1594,10 +1596,10 @@ class _UIAnimationElement:
 
     def from_(self, from_: str | tuple):
         """Set the starting value for the animation.
-        
+
         Args:
             from_ (str | tuple): Starting value or coordinate
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1606,10 +1608,10 @@ class _UIAnimationElement:
 
     def to(self, to: str | tuple):
         """Set the ending value for the animation.
-        
+
         Args:
             to (str | tuple): Ending value or coordinate
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1618,10 +1620,10 @@ class _UIAnimationElement:
 
     def initial_uv(self, initial_uv: tuple = (0, 0)):
         """Set the initial UV coordinates for texture animations.
-        
+
         Args:
             initial_uv (tuple, optional): Starting UV coordinates. Defaults to (0, 0).
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1630,10 +1632,10 @@ class _UIAnimationElement:
 
     def fps(self, fps: int):
         """Set the frames per second for flipbook animations.
-        
+
         Args:
             fps (int): Frames per second
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1642,10 +1644,10 @@ class _UIAnimationElement:
 
     def frame_count(self, frame_count: int):
         """Set the number of frames in a flipbook animation.
-        
+
         Args:
             frame_count (int): Total number of frames
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1654,10 +1656,10 @@ class _UIAnimationElement:
 
     def frame_step(self, frame_step: int):
         """Set the frame step size for flipbook animations.
-        
+
         Args:
             frame_step (int): Number of frames to step per update
-            
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1667,7 +1669,7 @@ class _UIAnimationElement:
     @property
     def reversible(self):
         """Make the animation reversible.
-        
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1677,7 +1679,7 @@ class _UIAnimationElement:
     @property
     def resettable(self):
         """Make the animation resettable.
-        
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1687,7 +1689,7 @@ class _UIAnimationElement:
     @property
     def scale_from_starting_alpha(self):
         """Scale animation values from the starting alpha value.
-        
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1697,7 +1699,7 @@ class _UIAnimationElement:
     @property
     def activated(self):
         """Mark the animation as activated.
-        
+
         Returns:
             _UIAnimationElement: Self for method chaining
         """
@@ -1707,7 +1709,7 @@ class _UIAnimationElement:
     @property
     def queue(self):
         """Get the processed animation data.
-        
+
         Returns:
             dict: Animation data ready for JSON serialization
         """
@@ -1715,7 +1717,7 @@ class _UIAnimationElement:
 
     def __str__(self) -> str:
         """Get the animation name as string.
-        
+
         Returns:
             str: Animation name
         """
@@ -1724,27 +1726,27 @@ class _UIAnimationElement:
 
 class _UICreditsConstructor:
     """Constructor for creating animated credits screens.
-    
+
     This class provides a convenient interface for building scrolling credits
     screens with various content types including images, titles, sections, and
     spacing. It automatically handles the scrolling animation and layout.
-    
+
     Attributes:
         _hud_screen (_UIScreen): Reference to the HUD screen
         _credits_panel (_UIElement): Main credits panel element
         _element_count (int): Counter for unique element naming
-    
+
     Example:
         ```python
         credits = hud_screen.credits_screen_constructor(duration=45)
         credits.add_title("My Game Credits", UIFontSize.ExtraLarge)
         credits.add_space(20)
-        credits.add_section("Programming", ["Alice", "Bob"], 
+        credits.add_section("Programming", ["Alice", "Bob"],
                           title_font_size=UIFontSize.Large)
         credits.add_image("studio_logo", scale_factor=2)
         ```
     """
-    
+
     def __init__(
         self,
         hud_screen: "_UIScreen",
@@ -1752,7 +1754,7 @@ class _UICreditsConstructor:
         credits_duration: int = 30,
     ) -> None:
         """Initialize the credits constructor.
-        
+
         Args:
             hud_screen (_UIScreen): HUD screen to add animations to
             credits_panel (_UIElement): Panel element to contain credits
@@ -1766,9 +1768,7 @@ class _UICreditsConstructor:
         anim.from_((0, "160%")).to((0, "-160%"))
         anim.destroy_at_end("hud_title_text")
 
-        self._credits_panel = credits_panel.controls(
-            "credits_text@anvil_common.stack_panel"
-        )
+        self._credits_panel = credits_panel.controls("credits_text@anvil_common.stack_panel")
         self._credits_panel.offset("@anvil_animations.credits_scroll")
 
         self._element_count = 0
@@ -1791,9 +1791,7 @@ class _UICreditsConstructor:
             _UICreditsConstructor: The credits constructor.
         """
         image = (
-            self._credits_panel.controls(
-                f"panel_{self._element_count}@anvil_common.panel"
-            )
+            self._credits_panel.controls(f"panel_{self._element_count}@anvil_common.panel")
             .size(("100%", "100%c"))
             .controls(f"image_{self._element_count}@anvil_common.image")
         )
@@ -1824,9 +1822,7 @@ class _UICreditsConstructor:
             _UICreditsConstructor: The credits constructor.
         """
         title = (
-            self._credits_panel.controls(
-                f"panel_{self._element_count}@anvil_common.panel"
-            )
+            self._credits_panel.controls(f"panel_{self._element_count}@anvil_common.panel")
             .size(("100%", "100%c"))
             .controls(f"title_{self._element_count}@anvil_common.label")
         )
@@ -1851,9 +1847,7 @@ class _UICreditsConstructor:
         Returns:
             _UICreditsConstructor: The credits constructor.
         """
-        space = self._credits_panel.controls(
-            f"space_{self._element_count}@anvil_common.panel"
-        )
+        space = self._credits_panel.controls(f"space_{self._element_count}@anvil_common.panel")
         space.size((0, size))
         self._element_count += 1
         return self
@@ -1868,11 +1862,11 @@ class _UICreditsConstructor:
         names_color: tuple[float] = (1, 1, 1),
     ):
         """Add a credits section with a title and list of names.
-        
+
         Creates a horizontal layout with the section title on the left
         and a list of names on the right, commonly used for credits
         like "Programming: Alice, Bob, Charlie".
-        
+
         Args:
             section_title (str): Title for the section (e.g., "Programming")
             section_names (list[str]): List of names to display
@@ -1880,14 +1874,12 @@ class _UICreditsConstructor:
             title_color (tuple[float], optional): RGB color for title. Defaults to (1, 1, 1).
             names_font_size (UIFontSize, optional): Font size for names. Defaults to UIFontSize.Normal.
             names_color (tuple[float], optional): RGB color for names. Defaults to (1, 1, 1).
-            
+
         Returns:
             _UICreditsConstructor: Self for method chaining
         """
         # Section Setup
-        section = self._credits_panel.controls(
-            f"credits_section_{self._element_count}@anvil_common.stack_panel"
-        )
+        section = self._credits_panel.controls(f"credits_section_{self._element_count}@anvil_common.stack_panel")
         section.orientation("horizontal")
         section.size(("100%", "100%c"))
 
@@ -1906,14 +1898,10 @@ class _UICreditsConstructor:
             title.color(title_color)
 
         # Section separator
-        section.controls(f"section_sep_{self._element_count}@anvil_common.panel").size(
-            ("10%", 0)
-        )
+        section.controls(f"section_sep_{self._element_count}@anvil_common.panel").size(("10%", 0))
 
         ## Section names
-        names = section.controls(
-            f"names_{self._element_count}@anvil_common.stack_panel"
-        )
+        names = section.controls(f"names_{self._element_count}@anvil_common.stack_panel")
         names.size(("45%", "100%c"))
         for i, n in enumerate(section_names):
             name = names.controls(f"name_{i}_{self._element_count}@anvil_common.label")
@@ -1930,14 +1918,14 @@ class _UICreditsConstructor:
 # UI files ============================================================
 class _UIVariables(AddonObject):
     """Manages global UI variables for the resource pack.
-    
+
     This class handles the creation and management of global variables
     that can be used throughout the UI system for dynamic content and
     conditional logic.
-    
+
     Inherits from AddonObject to provide file generation capabilities.
     """
-    
+
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "ui")
     _object_type = "UI Variables"
@@ -1949,7 +1937,7 @@ class _UIVariables(AddonObject):
 
     def add_variable(self, variable, value):
         """Add a global variable.
-        
+
         Args:
             variable (str): Variable name (should start with $)
             value: Variable value (string, number, boolean, or expression)
@@ -1959,13 +1947,13 @@ class _UIVariables(AddonObject):
 
 class _UIDefs(AddonObject):
     """Manages UI definition files list for the resource pack.
-    
+
     This class maintains a list of UI files that should be loaded
     by the game's UI system.
-    
+
     Inherits from AddonObject to provide file generation capabilities.
     """
-    
+
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH)
     _object_type = "UI Definitions"
@@ -1978,7 +1966,7 @@ class _UIDefs(AddonObject):
 
     def add_file(self, path: str):
         """Add a UI file to the definitions list.
-        
+
         Args:
             path (str): Relative path to the UI file
         """
@@ -1987,7 +1975,7 @@ class _UIDefs(AddonObject):
     @property
     def queue(self):
         """Process and generate the UI definitions file.
-        
+
         Returns:
             Generated file content
         """
@@ -1997,25 +1985,25 @@ class _UIDefs(AddonObject):
 
 class _UIAnimation(AddonObject):
     """Manages UI animations for a specific namespace.
-    
+
     This class handles the creation and management of animations
     that can be applied to UI elements. It maintains a collection
     of animation elements and generates the final animation file.
-    
+
     Inherits from AddonObject to provide file generation capabilities.
-    
+
     Attributes:
         _defs (_UIDefs): Reference to UI definitions manager
         _animations (list[_UIAnimationElement]): List of animation elements
     """
-    
+
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "ui")
     _object_type = "UI Animation"
 
     def __init__(self, name: str, namespace: str, defs: _UIDefs) -> None:
         """Initialize the animation manager.
-        
+
         Args:
             name (str): Name of the animation file
             namespace (str): Namespace for the animations
@@ -2031,10 +2019,10 @@ class _UIAnimation(AddonObject):
 
     def add_animation(self, animation_name: str):
         """Add a new animation to the collection.
-        
+
         Args:
             animation_name (str): Name of the animation
-            
+
         Returns:
             _UIAnimationElement: New animation element for configuration
         """
@@ -2043,31 +2031,29 @@ class _UIAnimation(AddonObject):
 
     def queue(self, directory: str = ""):
         """Process and generate the animation file.
-        
+
         Args:
             directory (str, optional): Subdirectory for the file. Defaults to "".
-            
+
         Returns:
             Generated file content
         """
         for anim in self._animations:
             self._content.update(anim.queue)
 
-        self._defs.add_file(
-            os.path.join("ui", directory, f"{self.name}{_UIScreen._extension}")
-        )
+        self._defs.add_file(os.path.join("ui", directory, f"{self.name}{_UIScreen._extension}"))
         return super().queue(directory)
 
 
 class _UIScreen(AddonObject):
     """Manages a UI screen with elements, animations, and bindings.
-    
+
     This is the base class for creating UI screens. It handles element
     management, trigger systems, and integration with the broader UI
     framework.
-    
+
     Inherits from AddonObject to provide file generation capabilities.
-    
+
     Attributes:
         _namespace (str): Namespace for the screen
         _elements (list[_UIElement]): List of UI elements in the screen
@@ -2078,7 +2064,7 @@ class _UIScreen(AddonObject):
         _ignored_actionbar_texts (list): List of actionbar texts to ignore
         _hides_hud (list): List of conditions that hide the HUD
     """
-    
+
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "ui")
     _object_type = "UI Screen"
@@ -2092,7 +2078,7 @@ class _UIScreen(AddonObject):
         defs: _UIDefs,
     ) -> None:
         """Initialize the UI screen.
-        
+
         Args:
             name (str): Name of the screen file
             namespace (str): Namespace for the screen
@@ -2122,19 +2108,19 @@ class _UIScreen(AddonObject):
         hides_hud: bool = False,
     ):
         """Add a new UI element to the screen.
-        
+
         This method creates a new UI element and configures it based on the
         trigger type. It can set up elements that respond to title/subtitle
         displays or actionbar messages.
-        
+
         Args:
             element_name (str): Name of the element
-            trigger (UIElementTrigger, optional): Trigger type for activation. 
+            trigger (UIElementTrigger, optional): Trigger type for activation.
                                                 Defaults to UIElementTrigger.NONE.
             keyword (str, optional): Keyword for trigger matching. Defaults to None.
-            hides_hud (bool, optional): Whether this element hides the HUD. 
+            hides_hud (bool, optional): Whether this element hides the HUD.
                                       Defaults to False.
-                                      
+
         Returns:
             _UIElement: New UI element for further configuration
         """
@@ -2144,9 +2130,7 @@ class _UIScreen(AddonObject):
         match trigger:
             case UIElementTrigger.Title:
                 if not keyword is None:
-                    self._variables.add_variable(
-                        f"$anvil.{element_name}.text", f"{CONFIG.NAMESPACE}:{keyword}"
-                    )
+                    self._variables.add_variable(f"$anvil.{element_name}.text", f"{CONFIG.NAMESPACE}:{keyword}")
                     self._variables.add_variable(
                         f"$anvil.{element_name}.bool",
                         f"(not ((#title_text - $anvil.{element_name}.text) = #title_text))",
@@ -2155,9 +2139,7 @@ class _UIScreen(AddonObject):
                     if hides_hud:
                         self._hides_hud.append(f"$anvil.{element_name}.text")
 
-                    new_element = _UIElement(
-                        f"{element_name}@anvil_common.title_binding"
-                    )
+                    new_element = _UIElement(f"{element_name}@anvil_common.title_binding")
                     new_element.keys("binding_text", f"$anvil.{element_name}.bool")
 
                 factory = self.add_element(f"{element_name}_factory")
@@ -2171,18 +2153,14 @@ class _UIScreen(AddonObject):
 
             case UIElementTrigger.Actionbar:
                 if not keyword is None:
-                    self._variables.add_variable(
-                        f"$anvil.{element_name}.text", f"{CONFIG.NAMESPACE}:{keyword}"
-                    )
+                    self._variables.add_variable(f"$anvil.{element_name}.text", f"{CONFIG.NAMESPACE}:{keyword}")
                     self._variables.add_variable(
                         f"$anvil.{element_name}.bool",
                         f"(not(($text - $anvil.{element_name}.text) = $text))",
                     )
                     self._ignored_actionbar_texts.append(f"$anvil.{element_name}.text")
 
-                    new_element = _UIElement(
-                        f"{element_name}@anvil_common.actionbar_binding"
-                    )
+                    new_element = _UIElement(f"{element_name}@anvil_common.actionbar_binding")
                     new_element.keys("binding_text", f"$anvil.{element_name}.bool")
 
                 factory: _UIElement = self.add_element(f"{element_name}_factory")
@@ -2198,10 +2176,10 @@ class _UIScreen(AddonObject):
 
     def queue(self, directory: str = ""):
         """Process and generate the screen file.
-        
+
         Args:
             directory (str, optional): Subdirectory for the file. Defaults to "".
-            
+
         Returns:
             Generated file content or None if screen is empty
         """
@@ -2209,32 +2187,22 @@ class _UIScreen(AddonObject):
             self._content.update(element.queue)
 
         if self._content != {"namespace": self._namespace}:
-            self._defs.add_file(
-                os.path.join("ui", directory, f"{self.name}{_UIScreen._extension}")
-            )
+            self._defs.add_file(os.path.join("ui", directory, f"{self.name}{_UIScreen._extension}"))
             return super().queue(directory)
 
 
 # UI Screens ==========================================================
 # Vanilla
 class _HUDScreen(_UIScreen):
-    def __init__(
-        self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
-    ) -> None:
+    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
         super().__init__("hud_screen", "hud", anvil_animation, variables, defs)
         # Disable HUD
         self.root_panel = self.add_element("root_panel")
-        self.anvil_element = self.root_panel.modification.insert_front(
-            "anvil@anvil_hud.anvil_hud"
-        )
+        self.anvil_element = self.root_panel.modification.insert_front("anvil@anvil_hud.anvil_hud")
 
         self.hud_title_text = self.add_element("hud_title_text")
-        self.hud_title_text.binding.binding_name(
-            "#hud_title_text_string"
-        ).binding_name_override("#text")
-        self.hud_title_text.binding.binding_name(
-            "#hud_subtitle_text_string"
-        ).binding_name_override("#subtext")
+        self.hud_title_text.binding.binding_name("#hud_title_text_string").binding_name_override("#text")
+        self.hud_title_text.binding.binding_name("#hud_subtitle_text_string").binding_name_override("#subtext")
 
         self.hud_actionbar_text = self.add_element("hud_actionbar_text")
         self.hud_actionbar_text.keys("text", "$actionbar_text")
@@ -2246,9 +2214,7 @@ class _HUDScreen(_UIScreen):
         self._hides_hud = ["$anvil.hide.text"]
 
     def disable_mouse(self):
-        self.add_element(
-            "hud_screen@common.base_screen"
-        ).should_steal_mouse.absorbs_input
+        self.add_element("hud_screen@common.base_screen").should_steal_mouse.absorbs_input
         self.root_panel.modification.remove("curor_rend")
         return self
 
@@ -2280,15 +2246,9 @@ class _HUDScreen(_UIScreen):
 
 
 class _NPCScreen(_UIScreen):
-    def __init__(
-        self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
-    ) -> None:
-        super().__init__(
-            "npc_interact_screen", "npc_interact", anvil_animation, variables, defs
-        )
-        self._npc_screen = self.add_element("npc_screen@common.base_screen").keys(
-            "screen_content", "anvil_npc.npc_screen_chooser"
-        )
+    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
+        super().__init__("npc_interact_screen", "npc_interact", anvil_animation, variables, defs)
+        self._npc_screen = self.add_element("npc_screen@common.base_screen").keys("screen_content", "anvil_npc.npc_screen_chooser")
 
     def add_element(
         self,
@@ -2304,9 +2264,7 @@ class _NPCScreen(_UIScreen):
 
 # Anvil
 class _AnvilHUDScreen(_UIScreen):
-    def __init__(
-        self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
-    ) -> None:
+    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
         super().__init__("hud", "anvil_hud", anvil_animation, variables, defs)
         self.anvil_hud: _UIElement = super().add_element("anvil_hud")
         self.anvil_hud.type(UIElementType.Panel)
@@ -2319,9 +2277,7 @@ class _AnvilHUDScreen(_UIScreen):
         hides_hud: bool = False,
     ):
         if not trigger is UIElementTrigger.NONE:
-            self.anvil_hud.controls(
-                f"{element_name}_instance@anvil_hud.{element_name}_factory"
-            )
+            self.anvil_hud.controls(f"{element_name}_instance@anvil_hud.{element_name}_factory")
 
         return super().add_element(element_name, trigger, keyword, hides_hud)
 
@@ -2360,9 +2316,7 @@ class _AnvilHUDScreen(_UIScreen):
         tip.size(("80%", "default"))
         tip.offset((0, "100px"))
         tip.text("#text").shadow(True).font_size(UIFontSize.Large)
-        tip.binding.binding_name("#hud_subtitle_text_string").binding_name_override(
-            "#text"
-        )
+        tip.binding.binding_name("#hud_subtitle_text_string").binding_name_override("#text")
 
         zoom_steps = []
         if direction_out:
@@ -2378,9 +2332,7 @@ class _AnvilHUDScreen(_UIScreen):
         image_zoom_in = self._anvil_animation.add_animation(f"{name}_zoom_in")
         image_zoom_in.anim_type(UIAnimType.Size)
         image_zoom_in.easing(UIEasing.Linear)
-        image_zoom_in.from_((zoom_steps[0], zoom_steps[0])).to(
-            (zoom_steps[1], zoom_steps[1])
-        )
+        image_zoom_in.from_((zoom_steps[0], zoom_steps[0])).to((zoom_steps[1], zoom_steps[1]))
         image_zoom_in.duration(f"$anvil.image.{name}_in")
         image_zoom_in.next(f"@anvil_animations.{name}_zoom_wait")
 
@@ -2392,9 +2344,7 @@ class _AnvilHUDScreen(_UIScreen):
 
         image_zoom_out.anim_type(UIAnimType.Size)
         image_zoom_out.easing(UIEasing.Linear)
-        image_zoom_out.from_((zoom_steps[1], zoom_steps[1])).to(
-            (zoom_steps[2], zoom_steps[2])
-        )
+        image_zoom_out.from_((zoom_steps[1], zoom_steps[1])).to((zoom_steps[2], zoom_steps[2]))
         image_zoom_out.duration(f"$anvil.image.{name}_out")
 
         image_alpha_in = self._anvil_animation.add_animation(f"{name}_alpha_in")
@@ -2416,9 +2366,7 @@ class _AnvilHUDScreen(_UIScreen):
         image_alpha_out.duration(f"$anvil.image.{name}_out")
         image_alpha_out.destroy_at_end("hud_title_text")
 
-        image.size(
-            f"@anvil_animations.{name}_zoom_in" if zoom_in > 0 else ("50%", "50%")
-        )
+        image.size(f"@anvil_animations.{name}_zoom_in" if zoom_in > 0 else ("50%", "50%"))
         image.alpha(f"@anvil_animations.{name}_alpha_in" if zoom_in > 0 else 1)
 
         return image_element
@@ -2452,9 +2400,7 @@ class _AnvilHUDScreen(_UIScreen):
         blink_fade_out.duration("$anvil.blink.fade_out")
         # blink_fade_out.destroy_at_end('hud_title_text')
         # element
-        blink_element = self.add_element(
-            "blink_element", UIElementTrigger.Title, "blink"
-        )
+        blink_element = self.add_element("blink_element", UIElementTrigger.Title, "blink")
         blink_element.type(UIElementType.Image)
         blink_element.layer(101)
         blink_element.texture("black_element")
@@ -2504,18 +2450,10 @@ class _AnvilHUDScreen(_UIScreen):
         )
         black_bars.size("$anim_size")
 
-        self._variables.add_variable(
-            f"$anvil.black_bars_in.text", f"{CONFIG.NAMESPACE}:bars_in"
-        )
-        self._variables.add_variable(
-            f"$anvil.black_bars_in.bool", f"($text = $anvil.black_bars_in.text)"
-        )
-        self._variables.add_variable(
-            f"$anvil.black_bars_out.text", f"{CONFIG.NAMESPACE}:bars_out"
-        )
-        self._variables.add_variable(
-            f"$anvil.black_bars_out.bool", f"($text = $anvil.black_bars_out.text)"
-        )
+        self._variables.add_variable(f"$anvil.black_bars_in.text", f"{CONFIG.NAMESPACE}:bars_in")
+        self._variables.add_variable(f"$anvil.black_bars_in.bool", f"($text = $anvil.black_bars_in.text)")
+        self._variables.add_variable(f"$anvil.black_bars_out.text", f"{CONFIG.NAMESPACE}:bars_out")
+        self._variables.add_variable(f"$anvil.black_bars_out.bool", f"($text = $anvil.black_bars_out.text)")
 
         self._ignored_actionbar_texts.extend(
             [
@@ -2542,47 +2480,43 @@ class _AnvilHUDScreen(_UIScreen):
 
 
 class _AnvilNPCScreen(_UIScreen):
-    def __init__(
-        self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
-    ) -> None:
+    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
         super().__init__("npc", "anvil_npc", anvil_animation, variables, defs)
         self._ignored_panel_texts = []
 
-        self._npc_screen_chooser = self.add_element("npc_screen_chooser").type(
-            UIElementType.Panel
-        )
-        vanilla = self._npc_screen_chooser.controls(
-            "vanilla@npc_interact.npc_screen_contents"
-        ).layer(500)
-        vanilla.binding.binding_type(UIBindingType.Global).binding_name(
-            "#title_text"
-        ).binding_name_override("#title_text")
-        vanilla.binding.binding_type(UIBindingType.Global).binding_name(
-            "#dialogtext"
-        ).binding_name_override("#dialogtext")
-        vanilla.binding.binding_type(UIBindingType.View).source_property_name(
-            "$anvil.npc_screen.vanilla"
-        ).target_property_name("#visible")
+        self._npc_screen_chooser = super().add_element("npc_screen_chooser", True).type(UIElementType.Panel)
+        vanilla = self._npc_screen_chooser.controls("vanilla@npc_interact.npc_screen_contents")
+        vanilla.binding.binding_type(UIBindingType.Global).binding_name("#title_text").binding_name_override("#title_text")
+        vanilla.binding.binding_type(UIBindingType.Global).binding_name("#dialogtext").binding_name_override("#dialogtext")
+        vanilla.binding.binding_type(UIBindingType.View).source_property_name("$anvil.npc_screen.vanilla").target_property_name("#visible")
 
     def add_element(
         self,
         element_name: str,
-        trigger: UIElementTrigger = UIElementTrigger.NONE,
         keyword: str = None,
     ):
-        return super().add_element(element_name, trigger, keyword, False)
+        if keyword:
+            self._ignored_panel_texts.append(f"$anvil.npc_screen.{element_name}.text")
+            self._variables.add_variable(f"$anvil.npc_screen.{element_name}.text", keyword)
+            self._variables.add_variable(f"$anvil.npc_screen.{element_name}.bool", f"(#dialogtext = $anvil.npc_screen.{element_name}.text)")
+            custom_panel = self._npc_screen_chooser.controls(f"{element_name}_instance@anvil_npc.{element_name}")
+            custom_panel.binding.binding_type(UIBindingType.Global).binding_name("#dialogtext").binding_name_override("#dialogtext")
+            custom_panel.binding.binding_type(UIBindingType.View).source_property_name(
+                f"$anvil.npc_screen.{element_name}.bool"
+            ).target_property_name("#visible")
+
+        return super().add_element(element_name, UIElementTrigger.NONE, keyword, False)
 
     def queue(self, directory: str = ""):
         self._variables.add_variable(
-            "$anvil.npc_screen.vanilla", f'({" and ".join(self._ignored_panel_texts)})'
+            "$anvil.npc_screen.vanilla",
+            f"({'(' * len(self._ignored_panel_texts)}#dialogtext - " + " - ".join(f"{var})" for var in self._ignored_panel_texts) + " = #dialogtext)",
         )
         return super().queue("anvil")
 
 
 class _AnvilCommon(_UIScreen):
-    def __init__(
-        self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
-    ) -> None:
+    def __init__(self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs) -> None:
         super().__init__("common", "anvil_common", anvil_animation, variables, defs)
         self.basic_components()
         self.image_label()
@@ -2638,9 +2572,7 @@ class _AnvilCommon(_UIScreen):
         npc_model.renderer("actor_portrait_renderer")
         npc_model.size(("120%", "120%"))
         npc_model.enable_scissor_test
-        npc_model.binding.binding_type(
-            UIBindingType.Collection
-        ).binding_collection_name("skins_collection").binding_name("#skin_index")
+        npc_model.binding.binding_type(UIBindingType.Collection).binding_collection_name("skins_collection").binding_name("#skin_index")
 
         # player model renderer
         player_renderer = self.add_element("player_renderer")
@@ -2678,22 +2610,16 @@ class _AnvilCommon(_UIScreen):
         label_binding = image_label_binding.controls("text@anvil_common.label")
         label_binding.text("#text")
         label_binding.layer(1)
-        label_binding.binding.binding_type(UIBindingType.View).source_control_name(
-            "$control_name"
-        ).source_property_name("#text").target_property_name("#text")
+        label_binding.binding.binding_type(UIBindingType.View).source_control_name("$control_name").source_property_name(
+            "#text"
+        ).target_property_name("#text")
 
     def title_actionbar(self):
         title_binding = self.add_element("title_binding")
         title_binding.property_bag(title_text="", subtitle_text="")
-        title_binding.binding.binding_name(
-            "#hud_title_text_string"
-        ).binding_name_override("#title_text")
-        title_binding.binding.binding_name(
-            "#hud_subtitle_text_string"
-        ).binding_name_override("#subtitle_text")
-        title_binding.binding.binding_type(UIBindingType.View).source_property_name(
-            "$binding_text"
-        ).target_property_name("#visible")
+        title_binding.binding.binding_name("#hud_title_text_string").binding_name_override("#title_text")
+        title_binding.binding.binding_name("#hud_subtitle_text_string").binding_name_override("#subtitle_text")
+        title_binding.binding.binding_type(UIBindingType.View).source_property_name("$binding_text").target_property_name("#visible")
 
         actionbar_binding = self.add_element("actionbar_binding")
         actionbar_binding.keys("text", "$actionbar_text")
@@ -2707,16 +2633,14 @@ class _AnvilCommon(_UIScreen):
         - score_offset: the number to subtract from the score.
         - color [optional]: The RGB tuple color of the text.
         """
-        scoreboard_score = self.add_element(
-            "scoreboard_score_element@anvil_common.label"
-        )
+        scoreboard_score = self.add_element("scoreboard_score_element@anvil_common.label")
         scoreboard_score.text("#text")
         scoreboard_score.color("$color")
         scoreboard_score.shadow("$shadow")
         scoreboard_score.layer(1)
-        scoreboard_score.binding.binding_name("#player_score_sidebar").binding_type(
-            UIBindingType.Collection
-        ).binding_collection_name("scoreboard_scores")
+        scoreboard_score.binding.binding_name("#player_score_sidebar").binding_type(UIBindingType.Collection).binding_collection_name(
+            "scoreboard_scores"
+        )
         scoreboard_score.binding.binding_type(UIBindingType.View).source_property_name(
             "('§z' + ((#player_score_sidebar * 1) - $score_offset))"
         ).target_property_name("#text")
@@ -2732,16 +2656,14 @@ class _AnvilCommon(_UIScreen):
         retrieve_score.keys("color", (1, 1, 1))
         retrieve_score.keys("name", "('score_text_' + $index)")
         retrieve_score.collection_name("scoreboard_scores")
-        retrieve_score.controls("$name@scoreboard_score_element").collection_index(
-            "$index"
-        )
+        retrieve_score.controls("$name@scoreboard_score_element").collection_index("$index")
         retrieve_score.visible(False)
-        retrieve_score.binding.binding_type(UIBindingType.View).source_control_name(
-            "$name"
-        ).source_property_name("#text").target_property_name("#text")
-        retrieve_score.binding.binding_type(UIBindingType.View).source_control_name(
-            "$name"
-        ).source_property_name("#score").target_property_name("#score")
+        retrieve_score.binding.binding_type(UIBindingType.View).source_control_name("$name").source_property_name(
+            "#text"
+        ).target_property_name("#text")
+        retrieve_score.binding.binding_type(UIBindingType.View).source_control_name("$name").source_property_name(
+            "#score"
+        ).target_property_name("#score")
 
     def queue(self, directory: str = ""):
         return super().queue("anvil")
@@ -2758,15 +2680,15 @@ class _AnvilAnimations(_UIAnimation):
 
 class UI:
     """Main UI framework class for creating Minecraft Bedrock Edition interfaces.
-    
+
     This is the primary entry point for the Anvil UI framework. It manages
     all UI screens, animations, variables, and provides a high-level interface
     for creating complex user interfaces.
-    
+
     The UI class automatically sets up core screens like HUD, NPC interactions,
     and common components. It handles the integration between different UI
     systems and manages the final generation of UI files.
-    
+
     Attributes:
         _defs (_UIDefs): UI definitions manager
         variables (_UIVariables): Global variables manager
@@ -2777,46 +2699,47 @@ class UI:
         anvil_npc_screen (_AnvilNPCScreen): Custom Anvil NPC screen
         anvil_common (_AnvilCommon): Common UI components
         _screens (list[_UIScreen]): List of all UI screens
-    
+
     Example:
         ```python
         # Create UI system
         ui = UI()
-        
+
         # Configure HUD
         ui.hud_screen.disable_hotbar()
         ui.anvil_hud_screen.add_logo()
-        
+
         # Add custom screen
         custom_screen = ui.add_ui_screen("my_screen", "my_namespace")
         panel = custom_screen.add_element("main_panel")
         panel.type(UIElementType.Panel).size(("100%", "100%"))
-        
+
         # Generate all UI files
         ui.queue()
         ```
     """
-    
+
     def __init__(self) -> None:
         """Initialize the UI framework with core screens and managers."""
+        if CONFIG._TARGET == ConfigPackageTarget.ADDON:
+            raise RuntimeError(f"UI is not allowed for packages of type '{CONFIG._TARGET}'.")
+
+        click.echo(
+            "\r[Info]: UI is supported by Anvil but is not officially supported by Mojang. Code will very likely break in future versions of Minecraft Bedrock Edition.",
+        )
+
         self._defs = _UIDefs()
         self.variables = _UIVariables()
 
         self.animations_screen = _AnvilAnimations(self._defs)
 
         self.hud_screen = _HUDScreen(self.animations_screen, self.variables, self._defs)
-        self.anvil_hud_screen = _AnvilHUDScreen(
-            self.animations_screen, self.variables, self._defs
-        )
+        self.anvil_hud_screen = _AnvilHUDScreen(self.animations_screen, self.variables, self._defs)
 
         self.npc_screen = _NPCScreen(self.animations_screen, self.variables, self._defs)
-        self.anvil_npc_screen = _AnvilNPCScreen(
-            self.animations_screen, self.variables, self._defs
-        )
+        self.anvil_npc_screen = _AnvilNPCScreen(self.animations_screen, self.variables, self._defs)
 
-        self.anvil_common = _AnvilCommon(
-            self.animations_screen, self.variables, self._defs
-        )
+        self.anvil_common = _AnvilCommon(self.animations_screen, self.variables, self._defs)
 
         self._screens: list[_UIScreen] = [
             self.hud_screen,
@@ -2828,28 +2751,24 @@ class UI:
 
     def add_ui_screen(self, filename, namespace):
         """Add a new custom UI screen to the framework.
-        
+
         Args:
             filename (str): Name of the screen file
             namespace (str): Namespace for the screen
-            
+
         Returns:
             _UIScreen: New screen instance for configuration
         """
-        self._screens.append(
-            _UIScreen(
-                filename, namespace, self.animations_screen, self.variables, self._defs
-            )
-        )
+        self._screens.append(_UIScreen(filename, namespace, self.animations_screen, self.variables, self._defs))
         return self._screens[-1]
 
     def queue(self):
         """Process and generate all UI files.
-        
+
         This method orchestrates the final generation of all UI components,
         manages text filtering for titles and actionbars, sets up HUD visibility
         logic, and outputs all necessary files to the resource pack.
-        
+
         The method handles:
         - Title and actionbar text filtering
         - HUD visibility management
@@ -2877,37 +2796,25 @@ class UI:
 
         self.anvil_hud_screen._variables.add_variable(
             f"$anvil.title_visible.bool",
-            f"({'(' * len(ignored_title_texts)}#text - "
-            + " - ".join(f"{var})" for var in ignored_title_texts)
-            + " = #text)",
+            f"({'(' * len(ignored_title_texts)}#text - " + " - ".join(f"{var})" for var in ignored_title_texts) + " = #text)",
         )
         self.anvil_hud_screen._variables.add_variable(
             f"$anvil.actionbar_visible.bool",
-            f"({'(' * len(ignored_actionbar_texts)}$text - "
-            + " - ".join(f"{var})" for var in ignored_actionbar_texts)
-            + " = $text)",
+            f"({'(' * len(ignored_actionbar_texts)}$text - " + " - ".join(f"{var})" for var in ignored_actionbar_texts) + " = $text)",
         )
 
-        self.hud_screen.hud_title_text.binding.binding_type(
-            UIBindingType.View
-        ).source_property_name(f"$anvil.title_visible.bool").target_property_name(
-            "#visible"
-        )
+        self.hud_screen.hud_title_text.binding.binding_type(UIBindingType.View).source_property_name(
+            f"$anvil.title_visible.bool"
+        ).target_property_name("#visible")
         self.hud_screen.hud_actionbar_text.visible(f"$anvil.actionbar_visible.bool")
 
-        source_prop = (
-            f"(#hud_visible and ({'(' * len(hides_hud)}#text - "
-            + " - ".join(f"{var})" for var in hides_hud)
-            + " = #text))"
-        )
+        source_prop = f"(#hud_visible and ({'(' * len(hides_hud)}#text - " + " - ".join(f"{var})" for var in hides_hud) + " = #text))"
 
         self.hud_screen.root_panel.binding.binding_name("#hud_visible")
-        self.hud_screen.root_panel.binding.binding_name(
-            "#hud_title_text_string"
-        ).binding_name_override("#text")
-        self.hud_screen.root_panel.binding.binding_type(
-            UIBindingType.View
-        ).source_property_name(source_prop).target_property_name("#visible")
+        self.hud_screen.root_panel.binding.binding_name("#hud_title_text_string").binding_name_override("#text")
+        self.hud_screen.root_panel.binding.binding_type(UIBindingType.View).source_property_name(source_prop).target_property_name(
+            "#visible"
+        )
 
         for screen in self._screens:
             screen.queue("anvil")

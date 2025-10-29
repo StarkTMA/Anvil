@@ -1,6 +1,6 @@
 {
-    "format_version": "{{ format_version }}",
-    "minecraft:item": {
-        "components": {}
-    }
+	"format_version": "{{ format_version }}",
+	"minecraft:item": {
+		"components": {}
+	}
 }

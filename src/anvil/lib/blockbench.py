@@ -5,6 +5,9 @@ from collections import defaultdict
 from typing import Dict, List, Union
 from warnings import warn
 
+import click
+from packaging.version import Version
+
 from anvil import CONFIG
 from anvil.lib.enums import BlockFaces
 from anvil.lib.lib import FileExists
@@ -53,13 +56,38 @@ class _AnimationsManager:
         "hold": "hold_on_last_frame",
     }
 
+    def adjust_keyframe_sign(self, points: List[Dict[str, str]]) -> List[str]:
+        return [
+            (
+                (-float(x) + 0.0 if i < 2 else float(x))
+                if x.replace("-", "").replace(".", "").isnumeric()
+                else (f"-({x})" if i < 2 else x)
+            )
+            for i, x in enumerate(points)
+        ]
+
+    def adjust_keyframe_type(self, points: List[Dict[str, str]]) -> List[str]:
+        return [
+            (float(x) if x.replace("-", "").replace(".", "").isnumeric() else str(x))
+            for x in points
+        ]
+
     def _process_animation(self, animation_dict: dict) -> dict:
         animation = {}
         animation_length = animation_dict.get("length")
+        anim_time_update = animation_dict.get("anim_time_update")
+        override = animation_dict.get("override")
         loop = self._loop_map.get(animation_dict.get("loop", "once"))
 
         if animation_length:
             animation["animation_length"] = animation_length
+
+        if anim_time_update:
+            animation["anim_time_update"] = anim_time_update
+
+        if override:
+            animation["override_previous_animation"] = override
+
         if loop:
             animation["loop"] = loop
 
@@ -76,46 +104,75 @@ class _AnimationsManager:
                     "rotation": {},
                     "scale": {},
                 }
-                for channel_name, channel in _keyframes_mapper(animator.get("keyframes", [])).items():
+                for channel_name, channel in _keyframes_mapper(
+                    animator.get("keyframes", [])
+                ).items():
                     if channel_name not in ["particle", "sound", "timeline"]:
                         is_step = False
-                        for keyframe_index, (time, value) in enumerate(list(channel.items())):
+                        channel_points = list(channel.values())
+                        for keyframe_index, (time, value) in enumerate(
+                            list(channel.items())
+                        ):
                             interpolation = value["interpolation"]
-                            points = value["data_points"]
+                            points: list[Dict[str, str]] = value["data_points"]
+                            previous_points = channel_points[keyframe_index - 1][
+                                "data_points"
+                            ]
+
                             if len(points) == 1:
-                                points = list(points[0].values())
+                                if channel_name == "rotation":
+                                    points = self.adjust_keyframe_sign(
+                                        points[0].values()
+                                    )
+                                else:
+                                    points = self.adjust_keyframe_type(
+                                        points[0].values()
+                                    )
 
                             if interpolation == "linear" or interpolation == "bezier":
                                 if is_step:
                                     bones[bone_name][channel_name][time] = {
-                                        "pre": list(list(channel.values())[keyframe_index - 1]["data_points"][0].values()),
+                                        "pre": self.adjust_keyframe_type(
+                                            previous_points[0].values()
+                                        ),
                                         "post": points,
                                     }
                                     is_step = False
                                 elif len(points) == 2:
                                     bones[bone_name][channel_name][time] = {
-                                        "pre": [float(x) for x in list(points[0].values())],
-                                        "post": [float(x) for x in list(points[1].values())],
+                                        "pre": self.adjust_keyframe_type(
+                                            points[0].values()
+                                        ),
+                                        "post": self.adjust_keyframe_type(
+                                            points[1].values()
+                                        ),
                                     }
                                     is_step = False
                                 else:
                                     bones[bone_name][channel_name][time] = points
                                     is_step = False
+
                             elif interpolation == "catmullrom":
                                 bones[bone_name][channel_name][time] = {
                                     "post": points,
                                     "lerp_mode": interpolation,
                                 }
                                 is_step = False
+
                             elif interpolation == "step":
                                 if is_step:
                                     bones[bone_name][channel_name][time] = {
-                                        "pre": list(list(channel.values())[keyframe_index - 1]["data_points"][0].values()),
-                                        "post": points,
+                                        "pre": self.adjust_keyframe_type(
+                                            previous_points[0].values()
+                                        ),
+                                        "post": self.adjust_keyframe_type(
+                                            value["data_points"][0].values()
+                                        ),
                                     }
                                 else:
                                     bones[bone_name][channel_name][time] = points
                                 is_step = True
+
                     elif channel_name == "particle":
                         for time, value in channel.items():
                             particles[time] = {
@@ -123,11 +180,15 @@ class _AnimationsManager:
                                 "locator": value["data_points"][0]["locator"],
                             }
                             if value["data_points"][0]["script"] != "":
-                                particles[time]["pre_effect_script"] = (value["data_points"][0]["script"] + ";").replace(";;", ";")
+                                particles[time]["pre_effect_script"] = (
+                                    value["data_points"][0]["script"] + ";"
+                                ).replace(";;", ";")
+
                     elif channel_name == "sound":
                         for keyframe in list(channel.items()):
                             time, value = keyframe
                             sounds[time] = {"effect": value["data_points"][0]["effect"]}
+
                     elif channel_name == "timeline":
                         for keyframe in list(channel.items()):
                             time, value = keyframe
@@ -138,9 +199,15 @@ class _AnimationsManager:
                     if len(keys) == 0:
                         del bones[bone_name][channel]
                     elif len(keys) == 1:
-                        bones[bone_name][channel] = list(bones[bone_name][channel].values())[0]
+                        bones[bone_name][channel] = list(
+                            bones[bone_name][channel].values()
+                        )[0]
 
-                    if channel == "scale" and isinstance(bones[bone_name].get("scale"), list) and len(set(bones[bone_name]["scale"])) == 1:
+                    if (
+                        channel == "scale"
+                        and isinstance(bones[bone_name].get("scale"), list)
+                        and len(set(bones[bone_name]["scale"])) == 1
+                    ):
                         bones[bone_name]["scale"] = bones[bone_name]["scale"][0]
 
                 if animator.get("rotation_global", False):
@@ -155,7 +222,9 @@ class _AnimationsManager:
             if timeline != {}:
                 animation["timeline"] = timeline
 
-        return {f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation_dict.get("name")}": animation}
+        return {
+            f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation_dict.get("name")}": animation
+        }
         # return { animation_dict.get("name"): animation}
 
     def __init__(self, name: str, source: str, bbmodel: dict) -> None:
@@ -166,13 +235,23 @@ class _AnimationsManager:
         self._source = "actors"
 
     def queue_animation(self, animation_name: str):
-        animation_dict = next((anim for anim in self._bbanimations if anim.get("name") == animation_name), None)
+        animation_dict = next(
+            (anim for anim in self._bbanimations if anim.get("name") == animation_name),
+            None,
+        )
         if animation_dict:
-            if not f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation_dict.get('name')}" in self._content["animations"]:
-                self._content["animations"].update(self._process_animation(animation_dict))
+            if (
+                not f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation_dict.get('name')}"
+                in self._content["animations"]
+            ):
+                self._content["animations"].update(
+                    self._process_animation(animation_dict)
+                )
                 self._queued = True
         else:
-            raise ValueError(f"Animation '{animation_name}' not found in blockbench model '{self._name}'.")
+            raise ValueError(
+                f"Animation '{animation_name}' not found in blockbench model '{self._name}'."
+            )
 
     def _export(self) -> None:
         if self._queued:
@@ -183,20 +262,36 @@ class _TexturesManager:
     def __init__(self, filename: str, source: str, bbmodel: dict) -> None:
         self._name = filename
         self._bbmodel = bbmodel
-        self._path = os.path.join(CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME, source, filename)
-        self._textures = {texture.get("name").split(".")[0]: texture for texture in self._bbmodel["textures"]}
+        self._path = os.path.join(
+            CONFIG.RP_PATH,
+            "textures",
+            CONFIG.NAMESPACE,
+            CONFIG.PROJECT_NAME,
+            source,
+            filename,
+        )
+        self._textures = {
+            texture.get("name").split(".")[0]: texture
+            for texture in self._bbmodel["textures"]
+        }
         self._queued_textures: set[str] = set()
 
     def queue_texture(self, texture: str) -> None:
         if texture in self._textures:
             self._queued_textures.add(texture)
         else:
-            raise ValueError(f"Texture '{texture}' not found in blockbench model '{self._bbmodel['model_identifier']}'.")
+            raise ValueError(
+                f"Texture '{texture}' not found in blockbench model '{self._bbmodel['model_identifier']}'."
+            )
 
     def _export(self) -> None:
         os.makedirs(self._path, exist_ok=True)
         for texture in self._queued_textures:
-            image_data = base64.b64decode(self._textures[texture].get("source").replace("data:image/png;base64,", ""))
+            image_data = base64.b64decode(
+                self._textures[texture]
+                .get("source")
+                .replace("data:image/png;base64,", "")
+            )
             with open(os.path.join(self._path, f"{texture}.png"), "wb") as file:
                 file.write(image_data)
 
@@ -237,16 +332,21 @@ class _Cube:
             self.uv = {}
             for face, face_data in self.cube.get("faces", {}).items():
                 if face_data.get("texture") is not None:
-                    uv_map = face_data["uv"]
+                    uv_map = face_data.get("uv", [])
                     rotation = face_data.get("rotation", 0)
+                    material_instance = face_data.get("material_name", {})
                     if face == "up" or face == "down":
                         uv_map = [uv_map[2], uv_map[3], uv_map[0], uv_map[1]]
 
-                    uv_size = [round(uv_map[2] - uv_map[0], 2), round(uv_map[3] - uv_map[1], 2)]
+                    uv_size = [
+                        round(uv_map[2] - uv_map[0], 2),
+                        round(uv_map[3] - uv_map[1], 2),
+                    ]
                     if uv_size[0] != 0 and uv_size[1] != 0:
                         self.uv[face] = {
                             "uv": [uv_map[0], uv_map[1]],
                             "uv_size": uv_size,
+                            "material_instance": material_instance,
                         }
                         if rotation != 0:
                             self.uv[face]["uv_rotation"] = rotation
@@ -284,7 +384,12 @@ class _Locator:
 class _Mesh:
     mesh_texture_multiplier = 64
 
-    def __init__(self, mesh_dict: dict, parent: str = "root", model_center_offset: List[float] = None) -> None:
+    def __init__(
+        self,
+        mesh_dict: dict,
+        parent: str = "root",
+        model_center_offset: List[float] = None,
+    ) -> None:
         self.mesh = mesh_dict
         self.parent = parent
         self.vertices = self.mesh.get("vertices", [])
@@ -351,7 +456,11 @@ class _Mesh:
 
                     coords = [self.vertices[vid] for vid in new_verts]
                     xs, ys, zs = zip(*coords)
-                    if max(xs) - min(xs) > 24 or max(ys) - min(ys) > 24 or max(zs) - min(zs) > 24:
+                    if (
+                        max(xs) - min(xs) > 24
+                        or max(ys) - min(ys) > 24
+                        or max(zs) - min(zs) > 24
+                    ):
                         continue
 
                     # All constraints passed, add face
@@ -460,7 +569,9 @@ class _Mesh:
             cuboids = self.extract_cuboids()
 
             for cube in cuboids:
-                meshes.append(_Mesh(cube, self.parent, self.model_center_offset).compile()[0])
+                meshes.append(
+                    _Mesh(cube, self.parent, self.model_center_offset).compile()[0]
+                )
             return meshes
 
 
@@ -472,7 +583,10 @@ class _Bone:
         self.binding = self.bone.get("bedrock_binding", None)
         self.pivot = self.bone.get("origin", [0, 0, 0])
         self.pivot[0] = -self.pivot[0]
-        self.rotation = [-x if i != 2 else x for i, x in enumerate(self.bone.get("rotation", [0, 0, 0]))]
+        self.rotation = [
+            -x if i != 2 else x
+            for i, x in enumerate(self.bone.get("rotation", [0, 0, 0]))
+        ]
         self.mirror = self.bone.get("mirror_uv", False)
         self.cubes: List[_Cube] = []
         self.locators: List[_Locator] = []
@@ -500,7 +614,11 @@ class _Bone:
         if self.cubes:
             bone["cubes"] = [cube.compile() for cube in self.cubes]
         if self.locators:
-            bone["locators"] = {k: v for _Locator in self.locators for k, v in _Locator.compile().items()}
+            bone["locators"] = {
+                k: v
+                for _Locator in self.locators
+                for k, v in _Locator.compile().items()
+            }
         if self.meshes:
             for mesh in self.meshes:
                 bone["cubes"].extend(mesh.compile())
@@ -511,10 +629,24 @@ class _BlockCulling(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "block_culling")
 
+    def _build_bones_dict(self, tree: dict) -> None:
+        for bone in tree:
+            if isinstance(bone, dict):
+                bone_group = self._groups[bone["uuid"]]
+                bone_name = bone_group["name"]
+                self.bones[bone_name] = len(bone.get("children", []))
+                if bone.get("children"):
+                    self._build_bones_dict(bone.get("children"))
+
     def __init__(self, name: str, bbmodel: dict) -> None:
         super().__init__(name)
         self._bbmodel = bbmodel
-        self.bones = {bone["name"]: len(bone["children"]) for bone in self._bbmodel["outliner"] if isinstance(bone, dict)}
+        self._groups = {g["uuid"]: g for g in self._bbmodel["groups"]}
+        # self._elements = {e["uuid"]: e for e in self._bbmodel["elements"]}
+
+        self.bones = {}
+        self._build_bones_dict(self._bbmodel["outliner"])
+
         self.content(JsonSchemes.block_culling_rules(self.identifier))
 
     def add_rule(
@@ -523,21 +655,33 @@ class _BlockCulling(AddonObject):
         bone: str,
         face: BlockFaces = None,
         cube_index: int = None,
-        #condition: Literal["same_block", "same_block_permutation", "same_culling_layer"] = "",
-        #cull_against_full_and_opaque: bool = False,
+        # condition: Literal["same_block", "same_block_permutation", "same_culling_layer"] = "",
+        # cull_against_full_and_opaque: bool = False,
     ) -> None:
-        if bone not in self.bones:
-            raise ValueError(f"Bone '{bone}' not found in blockbench model '{self._bbmodel['model_identifier']}'.")
-        if cube_index is not None and (cube_index < 0 or cube_index >= self.bones[bone]):
-            raise ValueError(f"Cube index '{cube_index}' out of range for bone '{bone}' in blockbench model '{self._bbmodel['model_identifier']}'.")
-        
+        if bone not in list(map(lambda g: g["name"], self._groups.values())):
+            raise ValueError(
+                f"Bone '{bone}' not found in blockbench model '{self._bbmodel['model_identifier']}'."
+            )
+        if cube_index is not None and (
+            cube_index < 0 or cube_index >= self.bones[bone]
+        ):
+            raise ValueError(
+                f"Cube index '{cube_index}' out of range for bone '{bone}' in blockbench model '{self._bbmodel['model_identifier']}'."
+            )
+
         if direction == BlockFaces.All or direction == BlockFaces.Side:
-            raise ValueError("Direction cannot be 'all' or 'side'. Please specify a single direction.")
+            raise ValueError(
+                "Direction cannot be 'all' or 'side'. Please specify a single direction."
+            )
         if face == BlockFaces.All or face == BlockFaces.Side:
-            raise ValueError("Face cannot be 'all' or 'side'. Please specify a single face.")
+            raise ValueError(
+                "Face cannot be 'all' or 'side'. Please specify a single face."
+            )
         if face is not None and cube_index is None:
-            raise ValueError("Face specified without cube_index. Please specify cube_index when using face.")
-        
+            raise ValueError(
+                "Face specified without cube_index. Please specify cube_index when using face."
+            )
+
         rule = {
             "direction": direction.value,
             "geometry_part": {
@@ -548,9 +692,9 @@ class _BlockCulling(AddonObject):
             rule["geometry_part"]["face"] = face.value
         if cube_index is not None:
             rule["geometry_part"]["cube"] = cube_index
-        #if condition:
+        # if condition:
         #    rule["condition"] = condition
-        #if cull_against_full_and_opaque:
+        # if cull_against_full_and_opaque:
         #    rule["cull_against_full_and_opaque"] = cull_against_full_and_opaque
         self._content["minecraft:block_culling_rules"]["rules"].append(rule)
 
@@ -606,7 +750,9 @@ class _ModelManager:
 
         self._model_center_offset = [center_x, min_y, center_z]
 
-    def process_bones(self, bones: List[Union[str, dict]], parent: str = "root") -> None:
+    def process_bones(
+        self, bones: List[Union[str, dict]], parent: str = "root"
+    ) -> None:
         for bone in bones:
             if isinstance(bone, str):
                 bone_dict = self._cubes[bone]
@@ -615,15 +761,20 @@ class _ModelManager:
                 elif bone_dict["type"] == "locator":
                     self._bones[parent].add_locator(_Locator(bone_dict, parent))
                 elif bone_dict["type"] == "mesh" and self._is_wavefront:
-                    self._bones[parent].add_mesh(_Mesh(bone_dict, parent, self._model_center_offset))
+                    self._bones[parent].add_mesh(
+                        _Mesh(bone_dict, parent, self._model_center_offset)
+                    )
             elif isinstance(bone, dict):
-                bone_name = bone["name"]
-                self._bones[bone_name] = _Bone(bone, parent if self._bones else None)
-                self.process_bones(bone["children"], bone_name)
+                bone_group = self._groups[bone["uuid"]]
+                self._bones[bone_group["name"]] = _Bone(
+                    bone_group, parent if self._bones else None
+                )
+                self.process_bones(bone["children"], bone_group["name"])
 
     def queue_model(self) -> None:
         if not self._queued:
             self._cubes = {d["uuid"]: d for d in self._bbmodel["elements"]}
+            self._groups = {d["uuid"]: d for d in self._bbmodel["groups"]}
             self._bones: Dict[str, _Bone] = {}
 
             # Calculate model center offset for mesh models
@@ -641,14 +792,34 @@ class _ModelManager:
                     self._bbmodel["resolution"]["height"] * texture_multiplier,
                 ],
                 [
-                    self._bounding_box[0] if self._bounding_box else self._bbmodel["visible_box"][0] if not self._is_wavefront else 1024,
-                    self._bounding_box[1] if self._bounding_box else self._bbmodel["visible_box"][1] if not self._is_wavefront else 1024,
+                    (
+                        self._bounding_box[0]
+                        if self._bounding_box
+                        else (
+                            self._bbmodel["visible_box"][0]
+                            if not self._is_wavefront
+                            else 1024
+                        )
+                    ),
+                    (
+                        self._bounding_box[1]
+                        if self._bounding_box
+                        else (
+                            self._bbmodel["visible_box"][1]
+                            if not self._is_wavefront
+                            else 1024
+                        )
+                    ),
                 ],
                 [0, self._bbmodel["visible_box"][2], 0],
             )
-            self._content["minecraft:geometry"][0]["bones"] = [bone.compile() for bone in self._bones.values()]
+            self._content["minecraft:geometry"][0]["bones"] = [
+                bone.compile() for bone in self._bones.values()
+            ]
             if self._source == "block":
-                self._content["minecraft:geometry"][0]["item_display_transforms"] = self._bbmodel["display"]
+                self._content["minecraft:geometry"][0]["item_display_transforms"] = (
+                    self._bbmodel["display"]
+                )
             self._queued = True
 
     def block_culling(self) -> _BlockCulling:
@@ -658,7 +829,9 @@ class _ModelManager:
 
     def _export(self) -> None:
         if self._queued:
-            _Geometry(self._bbmodel["model_identifier"], self._content).queue(self._source)
+            _Geometry(self._bbmodel["model_identifier"], self._content).queue(
+                self._source
+            )
             if self._culling:
                 self._culling.queue()
 
@@ -668,7 +841,9 @@ class _Blockbench:
 
     def __new__(cls, filename, source: str = "actors"):
         if filename not in _Blockbench._loaded_blockbench_models:
-            _Blockbench._loaded_blockbench_models[filename] = super(_Blockbench, cls).__new__(cls)
+            _Blockbench._loaded_blockbench_models[filename] = super(
+                _Blockbench, cls
+            ).__new__(cls)
         return _Blockbench._loaded_blockbench_models[filename]
 
     def __init__(self, filename: str, source: str = "actors") -> None:
@@ -694,8 +869,15 @@ class _Blockbench:
                     raise ValueError(
                         f"Blockbench model identifier mismatch: expected '{filename}', found '{self.bbmodel['model_identifier']}'."
                     )
+
+                if Version(self.bbmodel["meta"]["format_version"]) < Version("5.0"):
+                    raise ValueError(
+                        f"'{filename}.bbmodel' Blockbench model format version '{self.bbmodel['meta']['format_version']}' is not supported. Please update your models with Blockbench 5.0 or higher to export the model."
+                    )
         else:
-            raise FileNotFoundError(f"{filename}.bbmodel not found in {os.path.join('assets', 'bbmodels')}. Please ensure the file exists.")
+            raise FileNotFoundError(
+                f"{filename}.bbmodel not found in {os.path.join('assets', 'bbmodels')}. Please ensure the file exists."
+            )
 
         self.model = _ModelManager(filename, source, self.bbmodel)
         self.animations = _AnimationsManager(filename, source, self.bbmodel)
@@ -714,7 +896,9 @@ class _Blockbench:
             if bb.model._is_wavefront:
                 meshes.append(bb.model._name)
         if len(meshes) > 0:
-            warn(
-                f"Some Blockbench models are using a Wavefront format. This is not fully supported and it may not work correctly.",
-                UserWarning,
+            click.echo(
+                click.style(
+                    f"\r[INFO]: Some Blockbench models are using a Wavefront format. This is not fully supported and it may not work correctly.",
+                    fg="yellow",
+                )
             )

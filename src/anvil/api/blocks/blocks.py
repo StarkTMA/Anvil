@@ -81,7 +81,8 @@ class _PermutationComponents(_Components):
         Args:
             *tags (MinecraftBlockTags): The tags for the block.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
         """
         for tag in tags:
 
@@ -109,7 +110,8 @@ class _BlockTraits:
             y_rotation_offset (float, optional): The y rotation offset. Defaults to 0.
             traits (PlacementDirectionTrait): The traits for the block.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_direction-example
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_direction-example
         """
 
         self._traits["minecraft:placement_direction"] = {
@@ -123,7 +125,8 @@ class _BlockTraits:
         Parameters:
             traits (PlacementPositionTrait): The traits for the block.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_position-example
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_position-example
         """
         self._traits["minecraft:placement_position"] = {"enabled_states": traits}
 
@@ -176,7 +179,8 @@ class _BlockServerDescription(MinecraftDescription):
             category (ItemCategory, optional): The category of the block. Defaults to ItemCategory.none.
             group (str, optional): The group of the block. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
 
         """
         self._description["description"]["menu_category"] = {
@@ -188,7 +192,8 @@ class _BlockServerDescription(MinecraftDescription):
     @property
     def is_hidden_in_commands(self):
         """Sets the block to be hidden in commands.
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
         """
         self._description["description"]["is_hidden_in_commands"] = True
         return self
@@ -197,7 +202,8 @@ class _BlockServerDescription(MinecraftDescription):
     def traits(self):
         """Sets the traits for the block.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits
         """
         return self._traits
 
@@ -246,7 +252,7 @@ class _BlockServer(AddonObject):
         self._permutations.append(self._permutation)
         return self._permutation
 
-    def queue(self):
+    def _export(self):
         """Queues the block to be exported."""
         self._server_block["minecraft:block"].update(self.description._export())
         self._server_block["minecraft:block"].update(self._components._export())
@@ -279,7 +285,7 @@ class _BlockServer(AddonObject):
             ] = self._display_name
 
         self.content(self._server_block)
-        super().queue()
+        super()._export()
 
 
 class _BlockClient:
@@ -350,6 +356,7 @@ class Block(BlockDescriptor):
         if self._item:
             self._item.queue()
 
+    def _export(self):
         block_name_comp = self.server._server_block["minecraft:block"]["components"][
             BlockDisplayName._identifier
         ]

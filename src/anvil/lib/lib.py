@@ -8,11 +8,10 @@ import shutil
 import subprocess
 import zipfile
 from datetime import datetime
-from enum import StrEnum
 
 import commentjson as commentjson
 
-from anvil.lib.types import Color
+from anvil.lib.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 
 from ..__version__ import __version__
 
@@ -20,12 +19,7 @@ APPDATA: str = os.getenv("APPDATA")
 APPDATA_LOCAL: str = os.getenv("LOCALAPPDATA")
 
 RELEASE_COM_MOJANG = os.path.join(
-    APPDATA_LOCAL,
-    "Packages",
-    "Microsoft.MinecraftUWP_8wekyb3d8bbwe",
-    "LocalState",
-    "games",
-    "com.mojang",
+    APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang"
 )
 PREVIEW_COM_MOJANG = os.path.join(
     APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang"
@@ -106,40 +100,6 @@ def frange(start: int, stop: int, num: float = 1):
     step = (stop - start) / (num - 1)
     values = [round(start + i * step, 2) for i in range(num)]
     return values
-
-
-def process_color(Color: Color, add_alpha: bool = False) -> str | list[float]:
-    """Processes color values from different formats.
-
-    Args:
-        Color (Color): The color to process, can be tuple or hex string.
-        add_alpha (bool, optional): Whether to add alpha channel if missing. Defaults to False.
-
-    Returns:
-        str | list[float]: Processed color in the appropriate format.
-
-    Raises:
-        ValueError: If color format is invalid.
-        TypeError: If color type is not supported.
-    """
-    if isinstance(Color, tuple):
-        if len(Color) not in [3, 4]:
-            raise ValueError("Color tuple must have 3 or 4 elements.")
-        if len(Color) == 3 and add_alpha:
-            Color = (*Color, 255)
-        return (clamp(c, 0.0, 255.0) for c in Color)
-    elif isinstance(Color, str):
-        if Color[0] != "#" or len(Color) not in [7, 9]:
-            raise ValueError(
-                "Invalid Color string. Must be a hexadecimal string of 7 (RGB) or 9 (RGBA) characters including '#'."
-            )
-        if len(Color) == 7 and add_alpha:
-            Color += "ff"
-        return Color
-    else:
-        raise TypeError(
-            "Color must be either a tuple of 3 or 4 integers or a hexadecimal string."
-        )
 
 
 def RemoveDirectory(path: str) -> None:
@@ -402,3 +362,133 @@ def extract_ids_from_factory_class(cls) -> set[str]:
             continue
         ids.update(m.group(1) for m in _IDENT_RE.finditer(src))
     return ids
+
+
+def convert_color(
+    color: Color,
+    target: RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA | None = None,
+) -> RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA:
+    """Converts a color from any supported format to the target format.
+
+    Supported input formats:
+    - Hex string: "#RRGGBB", "#RRGGBBAA", "#RGB", or "#RGBA" (short format)
+    - RGB/RGBA (0-1): tuple of 3 or 4 floats in range [0, 1]
+    - RGB255/RGBA255 (0-255): tuple of 3 or 4 floats in range [0, 255]
+
+    Args:
+        color (Color): The input color in any supported format.
+        target: The target color type (RGB, RGBA, RGB255, RGBA255, HexRGB, or HexRGBA).
+                If None, returns normalized version of input format.
+
+    Returns:
+        Color: The color converted to the target format.
+
+    Raises:
+        ValueError: If the color format is invalid or cannot be determined.
+        TypeError: If the color type is not supported.
+
+    Examples:
+        >>> convert_color("#FF0000", RGB)
+        (1.0, 0.0, 0.0)
+        >>> convert_color("#F00", RGB)
+        (1.0, 0.0, 0.0)
+        >>> convert_color("#F00")  # No target, normalizes to full hex
+        "#ff0000"
+        >>> convert_color((1.0, 0.0, 0.0), HexRGB)
+        "#ff0000"
+        >>> convert_color((1.0, 0.0, 0.0), HexRGBA)
+        "#ff0000ff"
+        >>> convert_color((255, 0, 0), RGB)
+        (1.0, 0.0, 0.0)
+        >>> convert_color((0.5, 0.5, 0.5), RGBA)
+        (0.5, 0.5, 0.5, 1.0)
+        >>> convert_color((128, 64, 32))  # No target, normalizes to RGB255
+        (128.0, 64.0, 32.0)
+    """
+    # Type validation first
+    if isinstance(color, str):
+        if not color.startswith("#"):
+            raise ValueError("Hex color must start with '#'")
+        hex_color = color.lstrip("#")
+        if len(hex_color) not in [3, 4, 6, 8]:
+            raise ValueError(
+                "Hex color must be 3 (#RGB), 4 (#RGBA), 6 (#RRGGBB), or 8 (#RRGGBBAA) characters after '#'"
+            )
+        is_str = True
+    elif isinstance(color, (tuple, list)):
+        if len(color) not in [3, 4]:
+            raise ValueError("Color tuple/list must have 3 (RGB) or 4 (RGBA) elements")
+        is_str = False
+    else:
+        raise TypeError(
+            f"Unsupported color type: {type(color).__name__}. Expected str, tuple, or list."
+        )
+
+    # Determine target from source if not specified
+    if target is None:
+        if is_str:
+            target = HexRGBA if len(hex_color) in [4, 8] else HexRGB
+        else:
+            max_val = max(color[:3])
+            has_alpha = len(color) == 4
+            target = (
+                RGBA255
+                if has_alpha and max_val > 1.0
+                else RGB255 if max_val > 1.0 else RGBA if has_alpha else RGB
+            )
+
+    # Parse input color to normalized RGBA (0-1 range with alpha)
+    if is_str:
+        # Expand short hex format (#RGB or #RGBA) to full format
+        if len(hex_color) in [3, 4]:
+            hex_color = "".join([c * 2 for c in hex_color])
+
+        r = int(hex_color[0:2], 16) / 255.0
+        g = int(hex_color[2:4], 16) / 255.0
+        b = int(hex_color[4:6], 16) / 255.0
+        a = int(hex_color[6:8], 16) / 255.0 if len(hex_color) == 8 else 1.0
+    else:
+        # Determine if values are in 0-1 or 0-255 range
+        max_val = max(color[:3])
+
+        if max_val > 1.0:
+            # Assume 0-255 range
+            r = clamp(color[0], 0.0, 255.0) / 255.0
+            g = clamp(color[1], 0.0, 255.0) / 255.0
+            b = clamp(color[2], 0.0, 255.0) / 255.0
+            a = clamp(color[3], 0.0, 255.0) / 255.0 if len(color) == 4 else 1.0
+        else:
+            # Assume 0-1 range
+            r = clamp(color[0], 0.0, 1.0)
+            g = clamp(color[1], 0.0, 1.0)
+            b = clamp(color[2], 0.0, 1.0)
+            a = clamp(color[3], 0.0, 1.0) if len(color) == 4 else 1.0
+
+    # Convert to target format
+    if target in (HexRGB, HexRGBA):
+        # Convert to hex (pre-compute once)
+        hex_r = int(round(r * 255))
+        hex_g = int(round(g * 255))
+        hex_b = int(round(b * 255))
+        hex_a = int(round(a * 255))
+
+        return (
+            f"#{hex_r:02x}{hex_g:02x}{hex_b:02x}{hex_a:02x}"
+            if target is HexRGBA
+            else f"#{hex_r:02x}{hex_g:02x}{hex_b:02x}"
+        )
+
+    elif target is RGB:
+        return (r, g, b)
+
+    elif target is RGBA:
+        return (r, g, b, a)
+
+    elif target is RGB255:
+        return (r * 255.0, g * 255.0, b * 255.0)
+
+    elif target is RGBA255:
+        return (r * 255.0, g * 255.0, b * 255.0, a * 255.0)
+
+    else:
+        raise ValueError(f"Unsupported target format: {target}")

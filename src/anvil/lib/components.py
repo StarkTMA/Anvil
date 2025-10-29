@@ -2,18 +2,18 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from packaging.version import Version
-
 from anvil.lib.enums import ComponentTarget, FilterSubject
 from anvil.lib.filters import Filter
 from anvil.lib.format_versions import *
 from anvil.lib.schemas import AddonDescriptor
 from anvil.lib.types import Event
+from packaging.version import Version
 
 
 class _BaseComponent(AddonDescriptor):
     _object_type = "Base Component"
     _target: ComponentTarget = ComponentTarget.Any
+    _identifier: str = "base_component"
 
     def _require_components(self, *components: "_BaseComponent") -> None:
         self._dependencies.extend(components)
@@ -73,7 +73,12 @@ class _BaseAIGoal(_BaseComponent):
 class _BaseEventTrigger(_BaseComponent):
     _identifier = "minecraft:on_event"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         super().__init__(self._identifier)
         self._add_dict(
             {

@@ -1,13 +1,17 @@
 import os
-from typing import overload
+from typing import Union, overload
 
 from anvil import CONFIG
 from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
-from anvil.lib.enums import (ExplorationMapDestinations, LootPoolType,
-                             RawTextConstructor)
+from anvil.lib.enums import ExplorationMapDestinations, LootPoolType, RawTextConstructor
 from anvil.lib.lib import clamp
-from anvil.lib.schemas import (AddonObject, BlockDescriptor, EntityDescriptor,
-                               ItemDescriptor, JsonSchemes)
+from anvil.lib.schemas import (
+    AddonObject,
+    BlockDescriptor,
+    EntityDescriptor,
+    ItemDescriptor,
+    JsonSchemes,
+)
 from anvil.lib.types import Identifier
 
 __all__ = ["LootTable"]
@@ -26,7 +30,13 @@ class _LootPoolEntryFunctions:
         self._function = []
 
     # Enchantment Functions
-    def EnchantBookForTrading(self, base_cost: int, base_random_cost: int, per_level_random_cost: int, per_level_cost: int):
+    def EnchantBookForTrading(
+        self,
+        base_cost: int,
+        base_random_cost: int,
+        per_level_random_cost: int,
+        per_level_cost: int,
+    ):
         """Enchants a book using the algorithm for enchanting items sold by villagers.
 
         Only works in trade tables. The total cost is calculated as:
@@ -41,7 +51,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_book_for_trading-trade-table-only
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_book_for_trading-trade-table-only
         """
         self._function.append(
             {
@@ -67,7 +78,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_random_gear
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_random_gear
         """
         self._function.append(
             {
@@ -87,7 +99,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_randomly
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_randomly
         """
         self._function.append({"function": "enchant_randomly", "treasure": treasure})
         return self
@@ -102,7 +115,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_with_levels
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_with_levels
         """
         self._function.append(
             {
@@ -122,50 +136,75 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#set_potion
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#set_potion
         """
         self._function.append({"function": "set_potion", "id": id})
         return self
 
     @overload
-    def SpecificEnchants(self, enchants: tuple[str]):
+    def SpecificEnchants(self, enchants: tuple[str, ...]) -> "_LootPoolEntryFunctions":
         """Apply specific enchantments to an item by name only (default levels).
 
         Parameters:
-            enchants (tuple[str]): Tuple of enchantment names.
+            enchants (tuple[str, ...]): Tuple of enchantment names.
 
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
         """
-        self._function.append(
-            {
-                "function": "specific_enchants",
-                "enchants": enchants,
-            }
-        )
-        return self
+        ...
 
     @overload
-    def SpecificEnchants(self, enchants: tuple[tuple[str, int]]):
+    def SpecificEnchants(
+        self, enchants: tuple[tuple[str, int], ...]
+    ) -> "_LootPoolEntryFunctions":
         """Apply specific enchantments to an item with custom levels.
 
         Note: Maximum enchantment levels are hard-coded and cannot be overridden.
         Can apply enchantments to items that wouldn't normally be enchantable.
 
         Parameters:
-            enchants (tuple[tuple[str, int]]): Tuple of (enchantment_name, level) pairs.
+            enchants (tuple[tuple[str, int], ...]): Tuple of (enchantment_name, level) pairs.
 
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants
         """
-        self._function.append(
-            {
-                "function": "specific_enchants",
-                "enchants": [{"id": enchant[0], "level": enchant[1]} for enchant in enchants],
-            }
-        )
+        ...
+
+    def SpecificEnchants(self, enchants):
+        """Apply specific enchantments to an item.
+
+        Parameters:
+            enchants (tuple[str, ...] | tuple[tuple[str, int], ...]): Either a tuple of enchantment names
+                for default levels, or a tuple of (enchantment_name, level) pairs for custom levels.
+
+        Returns:
+            _LootPoolEntryFunctions: Self for method chaining.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants
+        """
+        if enchants and isinstance(enchants[0], str):
+            # Simple enchantment names only
+            self._function.append(
+                {
+                    "function": "specific_enchants",
+                    "enchants": enchants,
+                }
+            )
+        else:
+            # Enchantment name and level pairs
+            self._function.append(
+                {
+                    "function": "specific_enchants",
+                    "enchants": [
+                        {"id": enchant[0], "level": enchant[1]} for enchant in enchants
+                    ],
+                }
+            )
         return self
 
     # Item Mod Functions
@@ -180,7 +219,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#looting_enchant-loot-table-only
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#looting_enchant-loot-table-only
         """
         self._function.append(
             {
@@ -199,7 +239,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_aux_value
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_aux_value
         """
         self._function.append(
             {
@@ -218,7 +259,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_block_state
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_block_state
         """
         self._function.append(
             {
@@ -234,7 +276,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_dye
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_dye
         """
         self._function.append(
             {
@@ -257,7 +300,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_actor_id
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_actor_id
         """
         self._function.append(
             {
@@ -276,7 +320,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_banner_details
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_banner_details
         """
         self._function.append(
             {
@@ -286,7 +331,9 @@ class _LootPoolEntryFunctions:
         )
         return self
 
-    def SetBookContent(self, author: str, title: str, pages: list[str | RawTextConstructor]):
+    def SetBookContent(
+        self, author: str, title: str, pages: list[str | RawTextConstructor]
+    ):
         """Sets the contents of a book including author, title, and pages.
 
         Can use rawtext for localization on pages only (not author/title).
@@ -300,7 +347,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_book_contents
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_book_contents
         """
         self._function.append(
             {
@@ -314,7 +362,7 @@ class _LootPoolEntryFunctions:
 
     @overload
     def SetCount(self, count: int):
-        """Sets the exact quantity of items returned.
+        """Sets the quantity of items returned to an exact number.
 
         Parameters:
             count (int): Exact number of items to return.
@@ -322,37 +370,51 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
         """
-        self._function.append(
-            {
-                "function": "set_count",
-                "count": count,
-            }
-        )
-        return self
+        ...
 
     @overload
     def SetCount(self, count: tuple[int, int]):
-        """Sets the quantity of items returned within a min/max range.
+        """Sets the quantity of items returned to a random number within a range.
 
         Parameters:
-            count (tuple[int, int]): Min and max number of items to return.
+            count (tuple[int, int]): Min/max range of items to return.
+
+        Returns:
+            _LootPoolEntryFunctions: Self for method chaining.
+        """
+        ...
+
+    def SetCount(self, count):
+        """Sets the quantity of items returned.
+
+        Parameters:
+            count (int | tuple[int, int]): Exact number or min/max range of items to return.
 
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_count
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_count
         """
-        self._function.append(
-            {
-                "function": "set_count",
-                "count": {"min": min(count), "max": max(count)},
-            }
-        )
+        if isinstance(count, int):
+            self._function.append(
+                {
+                    "function": "set_count",
+                    "count": count,
+                }
+            )
+        elif isinstance(count, (list, tuple)):
+            self._function.append(
+                {
+                    "function": "set_count",
+                    "count": {"min": min(count), "max": max(count)},
+                }
+            )
         return self
 
     @overload
     def SetDamage(self, damage: float):
-        """Sets the exact percentage of durability remaining for items with durability.
+        """Sets the percentage of durability remaining for items with durability to an exact value.
 
         Parameters:
             damage (float): Durability percentage (1.0 = 100% undamaged, 0.0 = no durability).
@@ -360,35 +422,50 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
         """
-        self._function.append(
-            {
-                "function": "set_damage",
-                "damage": clamp(damage, 0, 1),
-            }
-        )
-        return self
+        ...
 
     @overload
     def SetDamage(self, damage: tuple[float, float]):
-        """Sets the percentage of durability remaining within a min/max range.
+        """Sets the percentage of durability remaining for items with durability to a random value within a range.
 
         Parameters:
-            damage (tuple[float, float]): Min and max durability percentages (0.0-1.0).
+            damage (tuple[float, float]): Min/max range of durability percentages (0.0-1.0).
+
+        Returns:
+            _LootPoolEntryFunctions: Self for method chaining.
+        """
+        ...
+
+    def SetDamage(self, damage):
+        """Sets the percentage of durability remaining for items with durability.
+
+        Parameters:
+            damage (float | tuple[float, float]): Durability percentage (1.0 = 100% undamaged, 0.0 = no durability)
+                or min/max range of durability percentages (0.0-1.0).
 
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_damage
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_damage
         """
-        self._function.append(
-            {
-                "function": "set_damage",
-                "damage": {
-                    "min": clamp(min(damage), 0, 1),
-                    "max": clamp(max(damage), 0, 1),
-                },
-            }
-        )
+        if isinstance(damage, (int, float)):
+            self._function.append(
+                {
+                    "function": "set_damage",
+                    "damage": clamp(damage, 0, 1),
+                }
+            )
+        elif isinstance(damage, tuple):
+            self._function.append(
+                {
+                    "function": "set_damage",
+                    "damage": {
+                        "min": clamp(min(damage), 0, 1),
+                        "max": clamp(max(damage), 0, 1),
+                    },
+                }
+            )
         return self
 
     def SetData(self, data: int):
@@ -400,7 +477,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data
         """
         self._function.append(
             {
@@ -419,7 +497,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data_from_color_index
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data_from_color_index
         """
         self._function.append(
             {
@@ -439,7 +518,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_lore
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_lore
         """
         self._function.append(
             {
@@ -460,7 +540,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_name
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_name
         """
         self._function.append(
             {
@@ -482,7 +563,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#exploration_map
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#exploration_map
         """
         self._function.append(
             {
@@ -503,7 +585,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#fill_container
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#fill_container
         """
         self._function.append(
             {
@@ -522,12 +605,19 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#furnace_smelt-loot-table-only
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#furnace_smelt-loot-table-only
         """
         self._function.append(
             {
                 "function": "furnace_smelt",
-                "conditions": [{"condition": "entity_properties", "entity": "this", "properties": {"on_fire": True}}],
+                "conditions": [
+                    {
+                        "condition": "entity_properties",
+                        "entity": "this",
+                        "properties": {"on_fire": True},
+                    }
+                ],
             }
         )
         return self
@@ -538,7 +628,8 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#trader_material_type
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#trader_material_type
         """
         self._function.append(
             {
@@ -563,7 +654,12 @@ class _LootPoolEntry:
     applied to modify the resulting loot.
     """
 
-    def __init__(self, entry: BlockDescriptor | ItemDescriptor | Identifier | "LootTable" | None, count: int = 1, weight: int = 1) -> None:
+    def __init__(
+        self,
+        entry: Union[BlockDescriptor, ItemDescriptor, Identifier, "LootTable", None],
+        count: int = 1,
+        weight: int = 1,
+    ) -> None:
         """Initialize a loot pool entry.
 
         Parameters:
@@ -573,14 +669,19 @@ class _LootPoolEntry:
             weight (int, optional): Selection weight in the pool. Defaults to 1.
         """
         self._functions: _LootPoolEntryFunctions = None
-        self._LootPoolEntry = {"name": entry, "count": count, "weight": weight, "functions": []}
+        self._LootPoolEntry = {
+            "name": str(entry),
+            "count": count,
+            "weight": weight,
+            "functions": [],
+        }
 
-        if isinstance(entry, (BlockDescriptor, ItemDescriptor, Identifier)):
+        if entry is None:
+            self._LootPoolEntry["type"] = LootPoolType.Empty
+        elif isinstance(entry, (BlockDescriptor, ItemDescriptor, Identifier)):
             self._LootPoolEntry["type"] = LootPoolType.Item
         elif isinstance(entry, "LootTable"):
             self._LootPoolEntry["type"] = LootPoolType.LootTable
-        else:
-            self._LootPoolEntry["type"] = LootPoolType.Empty
 
     def quality(self, quality: int):
         """Sets the quality value for this entry.
@@ -639,7 +740,9 @@ class _LootPool:
         elif isinstance(rolls, tuple):
             self._pool["rolls"] = {"min": min(rolls), "max": max(rolls)}
 
-    def tiers(self, bonus_chance: float = 0.0, bonus_rolls: int = 0, initial_range: int = 0):
+    def tiers(
+        self, bonus_chance: float = 0.0, bonus_rolls: int = 0, initial_range: int = 0
+    ):
         """Configure tier-based bonus mechanics for this pool.
 
         Parameters:
@@ -661,7 +764,7 @@ class _LootPool:
 
     def entry(
         self,
-        entry: BlockDescriptor | ItemDescriptor | Identifier | "LootTable" | None,
+        entry: Union[BlockDescriptor, ItemDescriptor, Identifier, "LootTable", None],
         count: int = 1,
         weight: int = 1,
     ):
@@ -706,7 +809,8 @@ class LootTable(AddonObject):
     Each loot table contains one or more pools, and each pool contains weighted entries
     that can have functions applied to modify the resulting items.
 
-    [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitionlist?view=minecraft-bedrock-stable
+    ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitionlist?view=minecraft-bedrock-stable
     """
 
     _extension = ".loot_table.json"
@@ -722,7 +826,6 @@ class LootTable(AddonObject):
         super().__init__(name)
         self._content = JsonSchemes.loot_table()
         self._pools: list[_LootPool] = []
-        self._path = os.path.join(CONFIG.BP_PATH, "loot_tables", CONFIG.NAMESPACE, self._name + self._extension)
 
     def pool(
         self,
@@ -745,13 +848,17 @@ class LootTable(AddonObject):
         return pool
 
     @property
-    def path(self):
+    def table_path(self):
         """Get the relative path of this loot table for referencing.
 
         Returns:
             str: Relative path from behavior pack root.
         """
-        return self._path.removeprefix(os.path.join(CONFIG.BP_PATH, ""))
+        return os.path.join(
+            "loot_tables",
+            CONFIG.NAMESPACE,
+            self._name + self._extension,
+        )
 
     def queue(self):
         """Queue this loot table for generation in the behavior pack.
@@ -766,11 +873,3 @@ class LootTable(AddonObject):
             self._content["pools"].append(pool._export())
         self.content(self._content)
         return super().queue()
-
-    def __str__(self):
-        """Return the loot table path for string representation.
-
-        Returns:
-            str: The relative path of this loot table.
-        """
-        return self.path

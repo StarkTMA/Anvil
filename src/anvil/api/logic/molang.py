@@ -332,6 +332,15 @@ class Query(Molang):
         return self._query(self, self.handle, "average_frame_time", clamp(frame, 0, 30))
 
     @classmethod
+    def BaseSwingDuration(self):
+        """Returns the base swing duration of the entity if it makes sense, else it returns 0.0.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "base_swing_duration")
+    
+    @classmethod
     def BlockFace(self):
         """Returns the block face for this (only valid for certain triggers such as placing blocks, or interacting with block) (Down=0.0, Up=1.0, North=2.0, South=3.0, West=4.0, East=5.0, Undefined=6.0).
 
@@ -2127,6 +2136,15 @@ class Query(Molang):
         return self._query(self, self.handle, "modified_move_speed")
 
     @classmethod
+    def ModifierSwingDuration(self):
+        """Returns the duration of the entity's swing modifier.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "modifier_swing_duration")
+    
+    @classmethod
     def MoonBrightness(self):
         """Returns the brightness of the moon
 
@@ -3063,6 +3081,130 @@ class Math(Molang):
     @classmethod
     def trunc(self, value):
         return self._query(self, self.handle, "trunc", value)
+
+    @classmethod
+    def inverse_lerp(self, start, end, factor):
+        return self._query(self, self.handle, "inverse_lerp", start, end, factor)
+
+    @classmethod
+    def ease_in_quad(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_quad", start, end, factor)
+
+    @classmethod
+    def ease_out_quad(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_quad", start, end, factor)
+
+    @classmethod
+    def ease_in_out_quad(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_quad", start, end, factor)
+
+    @classmethod
+    def ease_in_cubic(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_cubic", start, end, factor)
+
+    @classmethod
+    def ease_out_cubic(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_cubic", start, end, factor)
+
+    @classmethod
+    def ease_in_out_cubic(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_cubic", start, end, factor)
+
+    @classmethod
+    def ease_in_quart(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_quart", start, end, factor)
+
+    @classmethod
+    def ease_out_quart(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_quart", start, end, factor)
+
+    @classmethod
+    def ease_in_out_quart(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_quart", start, end, factor)
+
+    @classmethod
+    def ease_in_quint(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_quint", start, end, factor)
+
+    @classmethod
+    def ease_out_quint(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_quint", start, end, factor)
+
+    @classmethod
+    def ease_in_out_quint(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_quint", start, end, factor)
+
+    @classmethod
+    def ease_in_sine(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_sine", start, end, factor)
+
+    @classmethod
+    def ease_out_sine(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_sine", start, end, factor)
+
+    @classmethod
+    def ease_in_out_sine(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_sine", start, end, factor)
+
+    @classmethod
+    def ease_in_expo(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_expo", start, end, factor)
+
+    @classmethod
+    def ease_out_expo(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_expo", start, end, factor)
+
+    @classmethod
+    def ease_in_out_expo(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_expo", start, end, factor)
+
+    @classmethod
+    def ease_in_circ(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_circ", start, end, factor)
+
+    @classmethod
+    def ease_out_circ(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_circ", start, end, factor)
+
+    @classmethod
+    def ease_in_out_circ(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_circ", start, end, factor)
+
+    @classmethod
+    def ease_in_bounce(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_bounce", start, end, factor)
+
+    @classmethod
+    def ease_out_bounce(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_bounce", start, end, factor)
+
+    @classmethod
+    def ease_in_out_bounce(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_bounce", start, end, factor)
+
+    @classmethod
+    def ease_in_back(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_back", start, end, factor)
+
+    @classmethod
+    def ease_out_back(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_back", start, end, factor)
+
+    @classmethod
+    def ease_in_out_back(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_back", start, end, factor)
+
+    @classmethod
+    def ease_in_elastic(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_elastic", start, end, factor)
+
+    @classmethod
+    def ease_out_elastic(self, start, end, factor):
+        return self._query(self, self.handle, "ease_out_elastic", start, end, factor)
+
+    @classmethod
+    def ease_in_out_elastic(self, start, end, factor):
+        return self._query(self, self.handle, "ease_in_out_elastic", start, end, factor)
 
 
 def molang_conditions(condition, expression, expression2):

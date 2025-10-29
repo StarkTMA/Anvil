@@ -1,18 +1,23 @@
 from warnings import deprecated
 
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
-from anvil.lib.components import _BaseAIGoal, _BaseComponent, _BaseEventTrigger
+from anvil.lib.components import _BaseComponent
 from anvil.lib.enums import Dimension
 from anvil.lib.format_versions import BIOME_SERVER_VERSION
-from anvil.lib.lib import process_color
+from anvil.lib.lib import convert_color
 from anvil.lib.schemas import BlockDescriptor
-from anvil.lib.types import Color
+from anvil.lib.types import Color, HexRGB
 
 
 class BiomeClimate(_BaseComponent):
     _identifier = "minecraft:climate"
 
-    def __init__(self, temperature: float = None, downfall: float = None, snow_accumulation: list[float] = None) -> None:
+    def __init__(
+        self,
+        temperature: float = None,
+        downfall: float = None,
+        snow_accumulation: list[float] = None,
+    ) -> None:
         """Sets the climate properties of the biome.
 
         Parameters:
@@ -20,7 +25,8 @@ class BiomeClimate(_BaseComponent):
             downfall (float, optional): Amount that precipitation affects colors and block changes. Setting to 0 will stop rain from falling in the biome. Defaults to None.
             snow_accumulation (list[float], optional): Minimum and maximum snow level, each multiple of 0.125 is another snow layer Value must have at least 2 items. Value must have at most 2 items. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_climate
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_climate
         """
         super().__init__("climate")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -40,7 +46,9 @@ class BiomeClimate(_BaseComponent):
                 raise ValueError("Snow accumulation must be a list of two values.")
             for val in snow_accumulation:
                 if not (0.0 <= val <= 1.0):
-                    raise ValueError("Snow accumulation values must be between 0.0 and 1.0")
+                    raise ValueError(
+                        "Snow accumulation values must be between 0.0 and 1.0"
+                    )
             self._add_field("snow_accumulation", snow_accumulation)
 
 
@@ -53,7 +61,8 @@ class BiomeCreatureSpawnProbability(_BaseComponent):
         Parameters:
             probability (float, optional): Probability between 0.0 and 0.75 of creatures spawning within the biome on chunk generation. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_creature_spawn_probability
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_creature_spawn_probability
         """
         super().__init__("creature_spawn_probability")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -73,7 +82,8 @@ class BiomeHumidity(_BaseComponent):
         Parameters:
             is_humid (bool, optional): Whether the biome is humid or not. Affects fire spread mechanics. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_humidity
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_humidity
         """
         super().__init__("humidity")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -91,16 +101,17 @@ class BiomeMapTints(_BaseComponent):
         """Sets the color grass and foliage will be tinted by in this biome on the map.
 
         Parameters:
-            foliage (str | list[float], optional): Sets the color foliage will be tinted by in this biome on the map. Can be a string or array of numbers. Defaults to None.
+            foliage (Color, optional): Sets the color foliage will be tinted by in this biome on the map. Can be a string or array of numbers. Defaults to None.
             grass (dict, optional): Controls whether the grass will use a custom tint color or a noise based tint color. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_map_tints
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_map_tints
         """
         super().__init__("map_tints")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
 
         if foliage is not None:
-            self._add_field("foliage", process_color(foliage))
+            self._add_field("foliage", convert_color(foliage, HexRGB))
 
         if grass is not None:
             if not isinstance(grass, dict):
@@ -127,7 +138,8 @@ class BiomeMountainParameters(_BaseComponent):
             south_slopes (bool, optional): Enable for south-facing slopes. Defaults to None.
             east_slopes (bool, optional): Enable for east-facing slopes. Defaults to None.
             west_slopes (bool, optional): Enable for west-facing slopes. Defaults to None.
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_mountain_parameters
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_mountain_parameters
         """
         super().__init__("mountain_parameters")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -155,7 +167,14 @@ class BiomeMountainParameters(_BaseComponent):
         if not isinstance(block, BlockDescriptor):
             raise ValueError("Material name must be a BlockDescriptor instance")
 
-        self._add_dict({"material": {"name": block.identifier, "states": block.states if block.states != "" else {}}})
+        self._add_dict(
+            {
+                "material": {
+                    "name": block.identifier,
+                    "states": block.states if block.states != "" else {},
+                }
+            }
+        )
 
     def steep_material_adjustment(
         self,
@@ -199,7 +218,10 @@ class BiomeMountainParameters(_BaseComponent):
         if not isinstance(block, BlockDescriptor):
             raise ValueError("Material name must be a BlockDescriptor instance")
 
-        self["steep_material_adjustment"]["material"] = {"name": block.identifier, "states": block.states if block.states != "" else {}}
+        self["steep_material_adjustment"]["material"] = {
+            "name": block.identifier,
+            "states": block.states if block.states != "" else {},
+        }
 
     def set_top_slide(self, enabled: bool):
         """Enable or disable top slide generation."""
@@ -223,7 +245,8 @@ class BiomeMultiNoiseGenerationRules(_BaseComponent):
             target_weirdness (float, optional): Weirdness with which this biome should be generated, relative to other biomes. Defaults to None.
             weight (float, optional): Weight with which this biome should be generated, relative to other biomes. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_multinoise_generation_rules
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_multinoise_generation_rules
         """
         super().__init__("multinoise_generation_rules")
 
@@ -235,23 +258,29 @@ class BiomeOverworldGenerationRules(_BaseComponent):
     def __init__(self) -> None:
         """Controls how this biome is instantiated (and then potentially modified) during world generation of the overworld.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_generation_rules
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_generation_rules
         """
         super().__init__("overworld_generation_rules")
 
 
-@deprecated("This is a pre-Caves and Cliffs component. It does not change overworld height, and currently only affects map item rendering.")
+@deprecated(
+    "This is a pre-Caves and Cliffs component. It does not change overworld height, and currently only affects map item rendering."
+)
 class BiomeOverworldHeight(_BaseComponent):
     _identifier = "minecraft:overworld_height"
 
-    def __init__(self, noise_params: list[float] = None, noise_type: str = None) -> None:
+    def __init__(
+        self, noise_params: list[float] = None, noise_type: str = None
+    ) -> None:
         """Noise parameters used to drive terrain height in the Overworld.
 
         Parameters:
             noise_params (list[float], optional): First value is depth - more negative means deeper underwater, while more positive means higher. Second value is scale, which affects how much noise changes as it moves from the surface. Value must have at least 2 items. Value must have at most 2 items. Defaults to None.
             noise_type (str, optional): Specifies a preset based on a built-in setting rather than manually using noise_params. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height
         """
         super().__init__("overworld_height")
 
@@ -277,7 +306,8 @@ class BiomeReplaceBiomes(_BaseComponent):
     def __init__(self) -> None:
         """Replaces a specified portion of one or more Minecraft biomes.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_replace_biomes
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_replace_biomes
         """
         super().__init__("replace_biomes")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -329,7 +359,12 @@ class BiomeReplaceBiomes(_BaseComponent):
         if dimension != Dimension.Overworld:
             raise ValueError("Dimension must be 'minecraft:overworld'")
 
-        replacement = {"targets": targets, "amount": amount, "noise_frequency_scale": noise_frequency_scale, "dimension": dimension}
+        replacement = {
+            "targets": targets,
+            "amount": amount,
+            "noise_frequency_scale": noise_frequency_scale,
+            "dimension": dimension,
+        }
 
         self._replacements.append(replacement)
         self._add_field("replacements", self._replacements)
@@ -343,7 +378,8 @@ class BiomeSurfaceMaterialAdjustments(_BaseComponent):
     def __init__(self):
         """Specify fine-detail changes to blocks used in terrain generation (based on a noise function).
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_material_adjustments
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_material_adjustments
         """
         super().__init__("minecraft:surface_material_adjustments")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -388,7 +424,13 @@ class BiomeSurfaceMaterialAdjustments(_BaseComponent):
             if not isinstance(val, (int, float)):
                 raise ValueError("All noise range values must be numbers")
 
-        for material in [foundation_material, mid_material, sea_floor_material, sea_material, top_material]:
+        for material in [
+            foundation_material,
+            mid_material,
+            sea_floor_material,
+            sea_material,
+            top_material,
+        ]:
             if not isinstance(material, BlockDescriptor):
                 raise ValueError("All materials must be BlockDescriptor instances")
 
@@ -399,15 +441,32 @@ class BiomeSurfaceMaterialAdjustments(_BaseComponent):
             "materials": {
                 "foundation_material": {
                     "name": foundation_material.identifier,
-                    "states": foundation_material.states if foundation_material.states != "" else {},
+                    "states": (
+                        foundation_material.states
+                        if foundation_material.states != ""
+                        else {}
+                    ),
                 },
-                "mid_material": {"name": mid_material.identifier, "states": mid_material.states if mid_material.states != "" else {}},
+                "mid_material": {
+                    "name": mid_material.identifier,
+                    "states": mid_material.states if mid_material.states != "" else {},
+                },
                 "sea_floor_material": {
                     "name": sea_floor_material.identifier,
-                    "states": sea_floor_material.states if sea_floor_material.states != "" else {},
+                    "states": (
+                        sea_floor_material.states
+                        if sea_floor_material.states != ""
+                        else {}
+                    ),
                 },
-                "sea_material": {"name": sea_material.identifier, "states": sea_material.states if sea_material.states != "" else {}},
-                "top_material": {"name": top_material.identifier, "states": top_material.states if top_material.states != "" else {}},
+                "sea_material": {
+                    "name": sea_material.identifier,
+                    "states": sea_material.states if sea_material.states != "" else {},
+                },
+                "top_material": {
+                    "name": top_material.identifier,
+                    "states": top_material.states if top_material.states != "" else {},
+                },
             },
         }
 
@@ -423,7 +482,8 @@ class BiomeSurfaceBuilder(_BaseComponent):
     def __init__(self):
         """Controls the materials used for terrain generation.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_builder
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_builder
         """
         super().__init__("surface_builder")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -452,7 +512,13 @@ class BiomeSurfaceBuilder(_BaseComponent):
         if not isinstance(surface_type, str):
             raise ValueError("Surface type must be a string")
 
-        for material in [foundation_material, mid_material, top_material, sea_floor_material, sea_material]:
+        for material in [
+            foundation_material,
+            mid_material,
+            top_material,
+            sea_floor_material,
+            sea_material,
+        ]:
             if not isinstance(material, BlockDescriptor):
                 raise ValueError("All materials must be BlockDescriptor instances")
 
@@ -466,7 +532,11 @@ class BiomeSurfaceBuilder(_BaseComponent):
             "type": surface_type,
             "foundation_material": {
                 "name": foundation_material.identifier,
-                "states": foundation_material.states if foundation_material.states != "" else {},
+                "states": (
+                    foundation_material.states
+                    if foundation_material.states != ""
+                    else {}
+                ),
             },
             "mid_material": {
                 "name": mid_material.identifier,
@@ -478,7 +548,9 @@ class BiomeSurfaceBuilder(_BaseComponent):
             },
             "sea_floor_material": {
                 "name": sea_floor_material.identifier,
-                "states": sea_floor_material.states if sea_floor_material.states != "" else {},
+                "states": (
+                    sea_floor_material.states if sea_floor_material.states != "" else {}
+                ),
             },
             "sea_material": {
                 "name": sea_material.identifier,
@@ -516,7 +588,13 @@ class BiomeSurfaceBuilder(_BaseComponent):
         if not isinstance(surface_type, str):
             raise ValueError("Surface type must be a string")
 
-        for material in [foundation_material, mid_material, top_material, sea_floor_material, sea_material]:
+        for material in [
+            foundation_material,
+            mid_material,
+            top_material,
+            sea_floor_material,
+            sea_material,
+        ]:
             if not isinstance(material, BlockDescriptor):
                 raise ValueError("All materials must be BlockDescriptor instances")
 
@@ -530,7 +608,11 @@ class BiomeSurfaceBuilder(_BaseComponent):
             "type": surface_type,
             "foundation_material": {
                 "name": foundation_material.identifier,
-                "states": foundation_material.states if foundation_material.states != "" else {},
+                "states": (
+                    foundation_material.states
+                    if foundation_material.states != ""
+                    else {}
+                ),
             },
             "mid_material": {
                 "name": mid_material.identifier,
@@ -542,7 +624,9 @@ class BiomeSurfaceBuilder(_BaseComponent):
             },
             "sea_floor_material": {
                 "name": sea_floor_material.identifier,
-                "states": sea_floor_material.states if sea_floor_material.states != "" else {},
+                "states": (
+                    sea_floor_material.states if sea_floor_material.states != "" else {}
+                ),
             },
             "sea_material": {
                 "name": sea_material.identifier,
@@ -616,7 +700,11 @@ class BiomeSurfaceBuilder(_BaseComponent):
             "type": surface_type,
             "foundation_material": {
                 "name": foundation_material.identifier,
-                "states": foundation_material.states if foundation_material.states != "" else {},
+                "states": (
+                    foundation_material.states
+                    if foundation_material.states != ""
+                    else {}
+                ),
             },
             "mid_material": {
                 "name": mid_material.identifier,
@@ -628,7 +716,9 @@ class BiomeSurfaceBuilder(_BaseComponent):
             },
             "sea_floor_material": {
                 "name": sea_floor_material.identifier,
-                "states": sea_floor_material.states if sea_floor_material.states != "" else {},
+                "states": (
+                    sea_floor_material.states if sea_floor_material.states != "" else {}
+                ),
             },
             "sea_material": {
                 "name": sea_material.identifier,
@@ -640,7 +730,9 @@ class BiomeSurfaceBuilder(_BaseComponent):
             },
             "hard_clay_material": {
                 "name": hard_clay_material.identifier,
-                "states": hard_clay_material.states if hard_clay_material.states != "" else {},
+                "states": (
+                    hard_clay_material.states if hard_clay_material.states != "" else {}
+                ),
             },
         }
 
@@ -682,7 +774,13 @@ class BiomeSurfaceBuilder(_BaseComponent):
         if not isinstance(surface_type, str):
             raise ValueError("Surface type must be a string")
 
-        for material in [foundation_material, mid_material, top_material, sea_floor_material, sea_material]:
+        for material in [
+            foundation_material,
+            mid_material,
+            top_material,
+            sea_floor_material,
+            sea_material,
+        ]:
             if not isinstance(material, BlockDescriptor):
                 raise ValueError("All materials must be BlockDescriptor instances")
 
@@ -702,7 +800,11 @@ class BiomeSurfaceBuilder(_BaseComponent):
             "type": surface_type,
             "foundation_material": {
                 "name": foundation_material.identifier,
-                "states": foundation_material.states if foundation_material.states != "" else {},
+                "states": (
+                    foundation_material.states
+                    if foundation_material.states != ""
+                    else {}
+                ),
             },
             "mid_material": {
                 "name": mid_material.identifier,
@@ -714,7 +816,9 @@ class BiomeSurfaceBuilder(_BaseComponent):
             },
             "sea_floor_material": {
                 "name": sea_floor_material.identifier,
-                "states": sea_floor_material.states if sea_floor_material.states != "" else {},
+                "states": (
+                    sea_floor_material.states if sea_floor_material.states != "" else {}
+                ),
             },
             "sea_material": {
                 "name": sea_material.identifier,
@@ -726,7 +830,9 @@ class BiomeSurfaceBuilder(_BaseComponent):
             builder["sea_floor_depth"] = sea_floor_depth
 
         if max_puddle_depth_below_sea_level is not None:
-            builder["max_puddle_depth_below_sea_level"] = max_puddle_depth_below_sea_level
+            builder["max_puddle_depth_below_sea_level"] = (
+                max_puddle_depth_below_sea_level
+            )
 
         self._add_field("builder", builder)
         return self
@@ -771,7 +877,11 @@ class BiomeSurfaceBuilder(_BaseComponent):
             "type": surface_type,
             "foundation_material": {
                 "name": foundation_material.identifier,
-                "states": foundation_material.states if foundation_material.states != "" else {},
+                "states": (
+                    foundation_material.states
+                    if foundation_material.states != ""
+                    else {}
+                ),
             },
             "sea_material": {
                 "name": sea_material.identifier,
@@ -782,10 +892,18 @@ class BiomeSurfaceBuilder(_BaseComponent):
                 "states": beach_material.states if beach_material.states != "" else {},
             },
             "ceiling_materials": [
-                {"name": material.identifier, "states": material.states if material.states != "" else {}} for material in ceiling_materials
+                {
+                    "name": material.identifier,
+                    "states": material.states if material.states != "" else {},
+                }
+                for material in ceiling_materials
             ],
             "floor_materials": [
-                {"name": material.identifier, "states": material.states if material.states != "" else {}} for material in floor_materials
+                {
+                    "name": material.identifier,
+                    "states": material.states if material.states != "" else {},
+                }
+                for material in floor_materials
             ],
         }
 
@@ -816,7 +934,8 @@ class BiomeTags(_BaseComponent):
         Parameters:
             tags (list[str | MinecraftBiomeTags], optional): Array of string tags used by other systems such as entity spawning. Common tags include: birch, cold, deep, desert, extreme_hills, flower_forest, forest, forest_generation, frozen, ice, ice_plains, jungle, hills, meadow, mesa, mountain, mutated, no_legacy_worldgen, ocean, pale_garden, plains, rare, swamp, taiga. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_tags
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_tags
         """
         super().__init__("tags")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -827,6 +946,8 @@ class BiomeTags(_BaseComponent):
 
             for tag in tags:
                 if not isinstance(tag, (str, MinecraftBiomeTags)):
-                    raise ValueError("All tags must be strings or MinecraftBiomeTags enum values")
+                    raise ValueError(
+                        "All tags must be strings or MinecraftBiomeTags enum values"
+                    )
 
             self._add_field("tags", tags)

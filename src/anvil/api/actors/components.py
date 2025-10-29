@@ -1,192 +1,33 @@
 import math
+from os import path
 from typing import Any
 
 from anvil import ANVIL, CONFIG
+from anvil.api.blocks.components import LootTable
 from anvil.api.logic.molang import Molang
 from anvil.lib.components import _BaseAIGoal, _BaseComponent, _BaseEventTrigger
-from anvil.lib.enums import (BreedingMutationStrategy, ContainerType,
-                             ControlFlags, DamageCause, DamageSensor, Effects,
-                             ExplosionParticleEffect, FilterSubject,
-                             LeashSpringType, LineOfSightObstructionType,
-                             LookAtLocation, LootedAtSetTarget,
-                             RideableDismountMode, Slots, Vibrations)
+from anvil.lib.enums import (
+    BreedingMutationStrategy,
+    ContainerType,
+    ControlFlags,
+    DamageCause,
+    DamageSensor,
+    Effects,
+    ExplosionParticleEffect,
+    FilterSubject,
+    LeashSpringType,
+    LineOfSightObstructionType,
+    LookAtLocation,
+    LootedAtSetTarget,
+    RideableDismountMode,
+    Slots,
+    Vibrations,
+)
 from anvil.lib.filters import Filter
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
-from anvil.lib.schemas import (BlockDescriptor, ItemDescriptor,
-                               MinecraftBlockDescriptor)
+from anvil.lib.schemas import BlockDescriptor, ItemDescriptor, MinecraftBlockDescriptor
 from anvil.lib.types import *
-
-__all__ = [
-    "EntityAddRider",
-    "EntityAdmireItem",
-    "EntityCollisionBox",
-    "EntityTypeFamily",
-    "EntityInstantDespawn",
-    "EntityHealth",
-    "EntityPhysics",
-    "EntityKnockbackResistance",
-    "EntityPushable",
-    "EntityPushThrough",
-    "EntityMovement",
-    "EntityTickWorld",
-    "EntityCustomHitTest",
-    "EntityCanClimb",
-    "EntityAttack",
-    "EntityJumpStatic",
-    "EntityHorseJumpStrength",
-    "EntitySpellEffects",
-    "EntityFrictionModifier",
-    "EntityVariant",
-    "EntityMarkVariant",
-    "EntitySkinID",
-    "EntityScale",
-    "EntityScaleByAge",
-    "EntityAreaAttack",
-    "EntityIsStackable",
-    "EntityIsIllagerCaptain",
-    "EntityIsBaby",
-    "EntityIsIgnited",
-    "EntityIsTamed",
-    "EntityIsCharged",
-    "EntityIsStunned",
-    "EntityIsSaddled",
-    "EntityIsSheared",
-    "EntityCanFly",
-    "EntityCanPowerJump",
-    "EntityIsChested",
-    "EntityOutOfControl",
-    "EntityDamageSensor",
-    "EntityFollowRange",
-    "EntityMovementType",
-    "EntityNavigationType",
-    "EntityEnvironmentSensor",
-    "EntityPreferredPath",
-    "EntityTargetNearbySensor",
-    "EntityNearestAttackableTarget",
-    "EntityNearestPrioritizedAttackableTarget",
-    "EntityTimer",
-    "EntityRideable",
-    "EntityProjectile",
-    "EntityExplode",
-    "EntityKnockbackRoar",
-    "EntityMobEffect",
-    "EntitySpawnEntity",
-    "EntityLoot",
-    "EntityFloat",
-    "EntityRandomStroll",
-    "EntityLookAtPlayer",
-    "EntityRandomLookAround",
-    "EntityHurtByTarget",
-    "EntityMeleeAttack",
-    "EntityRangedAttack",
-    "EntityShooter",
-    "EntitySummonEntity",
-    "EntityDelayedAttack",
-    "EntityMoveToBlock",
-    "EntityInsideBlockNotifier",
-    "EntityTransformation",
-    "EntityNPC",
-    "EntityEquipment",
-    "EntityEquipItem",
-    "EntityAIEquipItem",
-    "EntityFireImmune",
-    "EntitySendEvent",
-    "EntityMoveTowardsTarget",
-    "EntitySensor",
-    "EntityAmbientSoundInterval",
-    "EntityRandomSitting",
-    "EntityStayWhileSitting",
-    "EntityUnderwaterMovement",
-    "EntityRandomSwim",
-    "EntityRandomBreach",
-    "EntityMoveToWater",
-    "EntityMoveToLand",
-    "EntityMoveToLava",
-    "EntityLookAtTarget",
-    "EntityMovementMeters",
-    "EntityFollowParent",
-    "EntityPlayerRideTamed",
-    "EntityInputGroundControlled",
-    "EntityFollowOwner",
-    "EntityWaterMovement",
-    "EntityPanic",
-    "EntityChargeAttack",
-    "EntityRamAttack",
-    "EntityAvoidMobType",
-    "EntityLeapAtTarget",
-    "EntityOcelotAttack",
-    "EntityAngry",
-    "EntityOwnerHurtByTarget",
-    "EntityOwnerHurtTarget",
-    "EntityRandomSearchAndDig",
-    "EntityStompAttack",
-    "EntityFollowMob",
-    "EntityRandomSwim",  # duplicate if defined again
-    "EntityRandomBreach",  # duplicate if defined again
-    "EntityFlyingSpeed",
-    "EntityRandomHover",
-    "EntityInteract",
-    "EntityAngerLevel",
-    "EntityRoar",
-    "EntityFloatWander",
-    "EntityLayDown",
-    "EntityMeleeBoxAttack",
-    "EntityCanJoinRaid",
-    "EntityAITimerFlag1",
-    "EntityAITimerFlag2",
-    "EntityAITimerFlag3",
-    "EntityTameable",
-    "EntityRunAroundLikeCrazy",
-    "EntitySlimeKeepOnJumping",
-    "EntityAgeable",
-    "EntityInventory",
-    "EntityDashAction",
-    "EntityBreathable",
-    "EntityVariableMaxAutoStep",
-    "EntityRiseToLiquidLevel",
-    "EntityBuoyant",
-    "EntityLavaMovement",
-    "EntityExperienceReward",
-    "EntityEquippable",
-    "EntityColor",
-    "EntityColor2",
-    "EntityBurnsInDaylight",
-    "EntityBoss",
-    "EntitySittable",
-    "EntityFlyingSpeedMeters",
-    "EntityConditionalBandwidthOptimization",
-    "EntityItemHopper",
-    "EntityBodyRotationBlocked",
-    "EntityDamageAbsorption",
-    "EntityDimensionBound",
-    "EntityTransient",
-    "EntityCannotBeAttacked",
-    "EntityIgnoreCannotBeAttacked",
-    "EntityLookedAt",
-    "EntityMovementSoundDistanceOffset",
-    "EntityRendersWhenInvisible",
-    "EntityBreedable",
-    "EntityIsCollidable",
-    "EntityRotationAxisAligned",
-    "EntityFreeCameraControlled",
-    "EntityLeashable",
-    "EntityBodyRotationAlwaysFollowsHead",
-    "EntityAITakeBlock",
-    "EntityAIPlaceBlock",
-    "EntityAIMoveToRandomBlock",
-    "EntityVerticalMovementAction",
-    "EntityOnDeath",
-    "EntityOnFriendlyAnger",
-    "EntityOnHurt",
-    "EntityOnHurtByPlayer",
-    "EntityOnIgnite",
-    "EntityOnStartLanding",
-    "EntityOnStartTakeoff",
-    "EntityOnTargetAcquired",
-    "EntityOnTargetEscaped",
-    "EntityOnWakeWithOwner",
-]
 
 # Components ==========================================================================
 # Attributes ==========================================================================
@@ -215,7 +56,9 @@ class EntityAddRider(_BaseComponent):
 class EntityAdmireItem(_BaseComponent):
     _identifier = "minecraft:admire_item"
 
-    def __init__(self, cooldown_after_being_attacked: Seconds, duration: Seconds = 10) -> None:
+    def __init__(
+        self, cooldown_after_being_attacked: Seconds, duration: Seconds = 10
+    ) -> None:
         """Causes the mob to ignore attackable targets for a given duration.
 
         Parameters
@@ -277,7 +120,12 @@ class EntityHealth(_BaseComponent):
 class EntityPhysics(_BaseComponent):
     _identifier = "minecraft:physics"
 
-    def __init__(self, has_collision: bool = True, has_gravity: bool = True, push_towards_closest_space: bool = False) -> None:
+    def __init__(
+        self,
+        has_collision: bool = True,
+        has_gravity: bool = True,
+        push_towards_closest_space: bool = False,
+    ) -> None:
         """Defines physics properties of an actor, including if it is affected by gravity or if it collides with objects."""
         super().__init__("physics")
         if not has_collision:
@@ -300,7 +148,9 @@ class EntityKnockbackResistance(_BaseComponent):
 class EntityPushable(_BaseComponent):
     _identifier = "minecraft:pushable"
 
-    def __init__(self, is_pushable: bool = True, is_pushable_by_piston: bool = True) -> None:
+    def __init__(
+        self, is_pushable: bool = True, is_pushable_by_piston: bool = True
+    ) -> None:
         """Defines what can push an entity between other entities and pistons."""
         super().__init__("pushable")
         self._add_field("is_pushable", is_pushable)
@@ -362,13 +212,21 @@ class EntityTickWorld(_BaseComponent):
 class EntityCustomHitTest(_BaseComponent):
     _identifier = "minecraft:custom_hit_test"
 
-    def __init__(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]) -> None:
+    def __init__(
+        self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]
+    ) -> None:
         """List of hitboxes for melee and ranged hits against the entity."""
         super().__init__("custom_hit_test")
-        self._add_field("hitboxes", [{"width": width, "height": height, "pivot": pivot}])
+        self._add_field(
+            "hitboxes", [{"width": width, "height": height, "pivot": pivot}]
+        )
 
-    def add_hitbox(self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]):
-        self._component["hitboxes"].append({"width": width, "height": height, "pivot": pivot})
+    def add_hitbox(
+        self, height: float, width: float, pivot: list[float, float, float] = [0, 1, 0]
+    ):
+        self._component["hitboxes"].append(
+            {"width": width, "height": height, "pivot": pivot}
+        )
         return self
 
 
@@ -383,7 +241,9 @@ class EntityCanClimb(_BaseComponent):
 class EntityAttack(_BaseComponent):
     _identifier = "minecraft:attack"
 
-    def __init__(self, damage: int, effect_duration: int = None, effect_name: str = None) -> None:
+    def __init__(
+        self, damage: int, effect_duration: int = None, effect_name: str = None
+    ) -> None:
         """Defines an entity's melee attack and any additional effects on it."""
         super().__init__("attack")
         self._add_field("damage", damage)
@@ -507,7 +367,9 @@ class EntityScaleByAge(_BaseComponent):
 class EntityAreaAttack(_BaseComponent):
     _identifier = "minecraft:area_attack"
 
-    def __init__(self, cause: DamageCause, damage_per_tick: int = 2, damage_range: float = 0.2) -> None:
+    def __init__(
+        self, cause: DamageCause, damage_per_tick: int = 2, damage_range: float = 0.2
+    ) -> None:
         """Is a component that does damage to entities that get within range."""
         super().__init__("area_attack")
 
@@ -638,12 +500,15 @@ class EntityDamageSensor(_BaseComponent):
     def add_trigger(
         self,
         cause: DamageCause,
-        deals_damage: DamageSensor = DamageSensor.Yes,
+        deals_damage: DamageSensor | bool = DamageSensor.Yes,
         on_damage_event: str = None,
         on_damage_filter: Filter = None,
         damage_multiplier: int = 1,
         damage_modifier: float = 0,
     ):
+        if isinstance(deals_damage, bool):
+            deals_damage = DamageSensor.Yes if deals_damage else DamageSensor.No
+
         damage = {"deals_damage": deals_damage, "on_damage": {}}
         if not cause is DamageCause.All:
             damage["cause"] = cause.value
@@ -840,7 +705,10 @@ class EntityNavigationType:
         if is_amphibious:
             cls._add_field("is_amphibious", is_amphibious)
         if len(blocks_to_avoid) > 0:
-            if not all(isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks_to_avoid):
+            if not all(
+                isinstance(block, (MinecraftBlockDescriptor, str))
+                for block in blocks_to_avoid
+            ):
                 raise TypeError(
                     f"blocks_to_avoid must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{cls._identifier}]."
                 )
@@ -1219,7 +1087,9 @@ class EntityEnvironmentSensor(_BaseComponent):
 class EntityPreferredPath(_BaseComponent):
     _identifier = "minecraft:preferred_path"
 
-    def __init__(self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks: int = 3) -> None:
+    def __init__(
+        self, default_block_cost: int = 0, jump_cost: int = 0, max_fall_blocks: int = 3
+    ) -> None:
         """Specifies costing information for mobs that prefer to walk on preferred paths."""
         super().__init__("preferred_path")
         self._add_field("default_block_cost", default_block_cost)
@@ -1228,8 +1098,12 @@ class EntityPreferredPath(_BaseComponent):
         self._add_field("preferred_path_blocks", [])
 
     def add_blocks(self, cost: int, *blocks: list[Block | Identifier]):
-        if not all(isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks):
-            raise TypeError(f"blocks must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{self._identifier}].")
+        if not all(
+            isinstance(block, (MinecraftBlockDescriptor, str)) for block in blocks
+        ):
+            raise TypeError(
+                f"blocks must be a list of MinecraftBlockDescriptor or Identifier instances. Component [{self._identifier}]."
+            )
 
         self._component["preferred_path_blocks"].append(
             {
@@ -1243,7 +1117,9 @@ class EntityPreferredPath(_BaseComponent):
 class EntityTargetNearbySensor(_BaseComponent):
     _identifier = "minecraft:target_nearby_sensor"
 
-    def __init__(self, inside_range: int = 1, outside_range: int = 5, must_see: bool = False) -> None:
+    def __init__(
+        self, inside_range: int = 1, outside_range: int = 5, must_see: bool = False
+    ) -> None:
         """Defines the entity's range within which it can see or sense other entities to target them."""
         super().__init__("target_nearby_sensor")
         self._add_field("inside_range", inside_range)
@@ -1259,7 +1135,9 @@ class EntityTargetNearbySensor(_BaseComponent):
         return self
 
     def on_vision_lost_inside_range(self, event: Event, target: FilterSubject):
-        self._add_field("on_vision_lost_inside_range", {"event": event, "target": target.value})
+        self._add_field(
+            "on_vision_lost_inside_range", {"event": event, "target": target.value}
+        )
         return self
 
 
@@ -1320,11 +1198,21 @@ class EntityRideable(_BaseComponent):
             {
                 "max_rider_count": max_rider_count,
                 "position": position,
-                "lock_rider_rotation": lock_rider_rotation if not lock_rider_rotation == 181 else {},
+                "lock_rider_rotation": (
+                    lock_rider_rotation if not lock_rider_rotation == 181 else {}
+                ),
                 "min_rider_count": min_rider_count if not min_rider_count == 0 else {},
                 "rotate_rider_by": rotate_rider_by if not rotate_rider_by == 0 else {},
-                "third_person_camera_radius": third_person_camera_radius if not third_person_camera_radius == 1.0 else {},
-                "camera_relax_distance_smoothing": (camera_relax_distance_smoothing if not camera_relax_distance_smoothing == 1.0 else {}),
+                "third_person_camera_radius": (
+                    third_person_camera_radius
+                    if not third_person_camera_radius == 1.0
+                    else {}
+                ),
+                "camera_relax_distance_smoothing": (
+                    camera_relax_distance_smoothing
+                    if not camera_relax_distance_smoothing == 1.0
+                    else {}
+                ),
             }
         )
 
@@ -1349,28 +1237,66 @@ class EntityProjectile(_BaseComponent):
         gravity: float = 0.05,
         hit_sound: str = "",
         hit_ground_sound: str = "",
+        hit_water: bool = False,
         homing: bool = False,
-        inertia: float = 0.9,
+        inertia: float = 0.99,
         is_dangerous: bool = False,
         knockback: bool = True,
         lightning: bool = False,
         liquid_inertia: float = 0.6,
         multiple_targets: bool = True,
-        offset: Coordinates = (0, 0, 0),
-        on_fire_timer: float = 0.0,
-        # particle: str = 'particle', Not used in game
+        offset: Coordinates = (0, 0.5, 0),
+        on_fire_time: float = 5.0,
+        particle: str = "iconcrack",
+        potion_effect: int = -1,
         power: float = 1.3,
         reflect_on_hurt: bool = False,
+        semi_random_diff_damage: bool = False,
         shoot_sound: str = "",
         shoot_target: bool = True,
         should_bounce: bool = False,
         splash_potion: bool = False,
-        splash_range: int = 4,
-        stop_on_hurt: bool = False,  # Determines if the projectile stops when the target is hurt.
-        uncertainty_base: int = 0,  # Decimal The base accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier.
-        uncertainty_multiplier: int = 0,  # Determines how much difficulty affects accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier.
+        splash_range: float = 4.0,
+        stop_on_hurt: bool = False,
+        uncertainty_base: float = 0.0,
+        uncertainty_multiplier: float = 0.0,
     ) -> None:
-        """Allows the entity to be a thrown entity."""
+        """Allows the entity to be a thrown entity.
+
+        Args:
+            anchor: Integer anchor value. Default is 0.
+            angle_offset: Determines the angle at which the projectile is thrown. Default is 0.
+            catch_fire: If true, the entity hit will be set on fire. Default is False.
+            crit_particle_on_hurt: If true, the projectile will produce critical hit particles when it happens. Default is False.
+            destroy_on_hurt: If true, this entity will be destroyed when hit. Default is False.
+            fire_affected_by_griefing: If true, whether the projectile causes fire is affected by the mob griefing game rule. Default is False.
+            gravity: The gravity applied to this entity when thrown. The higher the value, the faster the entity falls. Default is 0.05.
+            hit_sound: The sound that plays when the projectile hits an entity. Default is "".
+            hit_ground_sound: The sound that plays when the projectile hits ground. Default is "".
+            hit_water: If true, liquid blocks will be treated as solid. Requires "Education Edition" toggle active. Default is False.
+            homing: If true, the projectile homes in to the nearest entity. Does not work on 1.18.2. Default is False.
+            inertia: The fraction of the projectile's speed maintained every frame while traveling in air. Default is 0.99.
+            is_dangerous: If true, the projectile will be treated as dangerous to the players. Default is False.
+            knockback: If true, the projectile will knock back the entity it hits. Default is True.
+            lightning: If true, the entity hit will be struck by lightning. Default is False.
+            liquid_inertia: The fraction of the projectile's speed maintained every frame while traveling in water. Default is 0.6.
+            multiple_targets: If true, the projectile can hit multiple entities per flight. Default is True.
+            offset: The offset from the entity's anchor where the projectile will spawn. Default is (0, 0.5, 0).
+            on_fire_time: Time in seconds that the entity hit will be on fire for. Default is 5.0.
+            particle: Particle to use upon collision. Default is "iconcrack".
+            potion_effect: Defines the effect the arrow will apply to the entity it hits. Default is -1.
+            power: Determines the velocity of the projectile. Default is 1.3.
+            reflect_on_hurt: If true, this entity will be reflected back when hit. Default is False.
+            semi_random_diff_damage: If true, damage will be randomized based on damage and speed. Default is False.
+            shoot_sound: The sound that plays when the projectile is shot. Default is "".
+            shoot_target: If true, the projectile will be shot towards the target of the entity firing it. Default is True.
+            should_bounce: If true, the projectile will bounce upon hit. Default is False.
+            splash_potion: If true, the projectile will be treated like a splash potion. Default is False.
+            splash_range: Radius in blocks of the 'splash' effect. Default is 4.0.
+            stop_on_hurt: If true, the projectile stops when the target is hurt. Default is False.
+            uncertainty_base: The base accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier. Default is 0.0.
+            uncertainty_multiplier: Determines how much difficulty affects accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier. Default is 0.0.
+        """
         super().__init__("projectile")
         if anchor != 0:
             self._add_field("anchor", anchor)
@@ -1390,9 +1316,11 @@ class EntityProjectile(_BaseComponent):
             self._add_field("hit_sound", hit_sound)
         if hit_ground_sound != "":
             self._add_field("hit_ground_sound", hit_ground_sound)
+        if hit_water:
+            self._add_field("hit_water", hit_water)
         if homing:
             self._add_field("homing", homing)
-        if inertia != 0.9:
+        if inertia != 0.99:
             self._add_field("inertia", inertia)
         if is_dangerous:
             self._add_field("is_dangerous", is_dangerous)
@@ -1404,16 +1332,20 @@ class EntityProjectile(_BaseComponent):
             self._add_field("liquid_inertia", liquid_inertia)
         if not multiple_targets:
             self._add_field("multiple_targets", multiple_targets)
-        if offset != (0, 0, 0):
+        if offset != (0, 0.5, 0):
             self._add_field("offset", offset)
-        if on_fire_timer != 0.0:
-            self._add_field("on_fire_timer", on_fire_timer)
-        # if particle != 'particle':
-        #    self._add_field('particle', particle)
+        if on_fire_time != 5.0:
+            self._add_field("on_fire_time", on_fire_time)
+        if particle != "iconcrack":
+            self._add_field("particle", particle)
+        if potion_effect != -1:
+            self._add_field("potion_effect", potion_effect)
         if power != 1.3:
             self._add_field("power", power)
         if reflect_on_hurt:
             self._add_field("reflect_on_hurt", reflect_on_hurt)
+        if semi_random_diff_damage:
+            self._add_field("semi_random_diff_damage", semi_random_diff_damage)
         if shoot_sound != "":
             self._add_field("shoot_sound", shoot_sound)
         if not shoot_target:
@@ -1422,79 +1354,220 @@ class EntityProjectile(_BaseComponent):
             self._add_field("should_bounce", should_bounce)
         if splash_potion:
             self._add_field("splash_potion", splash_potion)
-        if splash_range != 4:
+        if splash_range != 4.0:
             self._add_field("splash_range", splash_range)
         if stop_on_hurt:
             self._add_field("stop_on_hurt", stop_on_hurt)
-        if uncertainty_base != 0:
+        if uncertainty_base != 0.0:
             self._add_field("uncertainty_base", uncertainty_base)
-        if uncertainty_multiplier != 0:
+        if uncertainty_multiplier != 0.0:
             self._add_field("uncertainty_multiplier", uncertainty_multiplier)
 
+        # Initialize on_hit dictionary to avoid checks in methods
+        self._add_field("on_hit", {})
+
+    def arrow_effect(self):
+        """Enable arrow effect on hit.
+
+        Note:
+            Exact behavior unknown according to Bedrock Wiki.
+
+        Returns:
+            Self for method chaining.
+        """
+        self._component["on_hit"]["arrow_effect"] = {}
+        return self
+
+    def definition_event(
+        self,
+        event: Event,
+        target: FilterSubject,
+        affect_projectile: bool = False,
+        affect_shooter: bool = False,
+        affect_splash_area: bool = False,
+        splash_area: float = 0,
+        affect_target: bool = False,
+    ):
+        """Call an event on hit.
+
+        Args:
+            event: Event to trigger.
+            target: Target of the event.
+            affect_projectile: Event will be triggered for projectile entity. Default is False.
+            affect_shooter: Event will be triggered for shooter entity. Default is False.
+            affect_splash_area: Event will be triggered for all entities in an area. Default is False.
+            splash_area: Area of entities to affect. Default is 0.
+            affect_target: Event will be triggered for hit entity. Default is False.
+
+        Returns:
+            Self for method chaining.
+        """
+        self._component["on_hit"]["definition_event"] = {
+            "event_trigger": {"event": event, "target": target.value}
+        }
+
+        if affect_projectile:
+            self._component["on_hit"]["definition_event"][
+                "affect_projectile"
+            ] = affect_projectile
+        if affect_shooter:
+            self._component["on_hit"]["definition_event"][
+                "affect_shooter"
+            ] = affect_shooter
+        if affect_splash_area:
+            self._component["on_hit"]["definition_event"][
+                "affect_splash_area"
+            ] = affect_splash_area
+        if splash_area:
+            self._component["on_hit"]["definition_event"]["splash_area"] = splash_area
+        if affect_target:
+            self._component["on_hit"]["definition_event"][
+                "affect_target"
+            ] = affect_target
+
+        return self
+
     def filter(self, filter: Filter):
+        """Set entity filter for the projectile.
+
+        Args:
+            filter: The filter to apply.
+
+        Returns:
+            Self for method chaining.
+        """
         self._add_field("filter", filter)
         return self
 
-    def on_hit(
+    def freeze_on_hit(
         self,
-        catch_fire: bool = False,
-        douse_fire: bool = False,
-        ignite: bool = False,
-        on_fire_time: float = 0,
-        potion_effect: int = -1,
-        spawn_aoe_cloud: bool = False,
-        teleport_owner: bool = False,
+        size: int,
+        snap_to_block: bool,
+        shape: str = "sphere",
     ):
-        """_summary_
+        """Freeze water on hit.
 
-        Parameters:
-            catch_fire (bool, optional): Determines if the struck object is set on fire. Defaults to False.
-            douse_fire (bool, optional): If the target is on fire, then douse the fire. Defaults to False.
-            ignite (bool, optional): Determines if a fire may be started on a flammable target. Defaults to False.
-            on_fire_time (float, optional): The amount of time a target will remain on fire. Defaults to 0.
-            potion_effect (int, optional): Defines the effect the arrow will apply to the entity it hits. Defaults to -1.
-            spawn_aoe_cloud (bool, optional): Potion spawns an area of effect cloud. See the table below for all spawn_aoe_cloud parameters. Defaults to False.
-            teleport_owner (bool, optional): Determines if the owner is transported on hit. Defaults to False.
+        Args:
+            size: The size of the freeze effect.
+            snap_to_block: Whether to snap to block.
+            shape: Shape of the freeze effect. Must be "sphere" or "cube". Default is "sphere".
+
+        Returns:
+            Self for method chaining.
+
+        Note:
+            Requires Education Edition toggle to be enabled.
+            According to Bedrock Wiki, exact behavior is unknown.
+
+        Raises:
+            RuntimeError: If shape is not "sphere" or "cube".
         """
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
-        if catch_fire:
-            self._component["on_hit"]["catch_fire"] = catch_fire
-        if douse_fire:
-            self._component["on_hit"]["douse_fire"] = douse_fire
+        self._component["on_hit"]["freeze_on_hit"] = {
+            "size": size,
+            "snap_to_block": snap_to_block,
+        }
+        if shape not in ["sphere", "cube"]:
+            raise RuntimeError("Unknown shape, must be sphere or cube")
+        self._component["on_hit"]["freeze_on_hit"]["shape"] = shape
+
+        return self
+
+    def grant_xp(self, xp: int | tuple[int, int]):
+        """Grant experience points on hit.
+
+        Args:
+            xp: Experience to grant. If int, grants constant amount. If tuple, grants random amount between min and max.
+
+        Returns:
+            Self for method chaining.
+
+        Note:
+            Despite the name, this actually spawns a number of experience orbs, being worth the amount stated.
+
+        Raises:
+            ValueError: If xp is not an int or tuple of two ints.
+        """
+        if isinstance(xp, int):
+            self._component["on_hit"]["grant_xp"] = {"xp": xp}
+        elif isinstance(xp, tuple) and len(xp) == 2:
+            if xp[0] == xp[1]:
+                self._component["on_hit"]["grant_xp"] = {"xp": xp[0]}
+            else:
+                self._component["on_hit"]["grant_xp"] = {
+                    "minXP": min(xp),
+                    "maxXP": max(xp),
+                }
+        else:
+            raise ValueError("xp must be an int or tuple of two ints")
+
+        return self
+
+    def hurt_owner(
+        self,
+        owner_damage: int = 0,
+        knockback: bool = False,
+        ignite: bool = False,
+    ):
+        """Configure projectile to potentially hurt its owner on hit.
+
+        Args:
+            owner_damage: Damage dealt to the owner. Default is 0.
+            knockback: Whether to apply knockback to owner. Default is False.
+            ignite: Whether to ignite the owner. Default is False.
+
+        Returns:
+            Self for method chaining.
+
+        Note:
+            According to Bedrock Wiki, exact behavior is unknown and this may crash Minecraft with wrong parameters.
+        """
+        self._component["on_hit"]["hurt_owner"] = {}
+
+        if owner_damage != 0:
+            self._component["on_hit"]["hurt_owner"]["owner_damage"] = owner_damage
+        if knockback:
+            self._component["on_hit"]["hurt_owner"]["knockback"] = knockback
         if ignite:
-            self._component["on_hit"]["ignite"] = ignite
-        if on_fire_time != 0:
-            self._component["on_hit"]["on_fire_time"] = on_fire_time
-        if potion_effect != -1:
-            self._component["on_hit"]["potion_effect"] = potion_effect
-        if spawn_aoe_cloud:
-            self._component["on_hit"]["spawn_aoe_cloud"] = spawn_aoe_cloud
-        if teleport_owner:
-            self._component["on_hit"]["teleport_owner"] = teleport_owner
+            self._component["on_hit"]["hurt_owner"]["ignite"] = ignite
+
         return self
 
     def impact_damage(
         self,
-        filter: str = None,  # The identifier of an entity that can be hit.
-        catch_fire: bool = False,  # Determines if the struck object is set on fire.
-        channeling: bool = True,  # Whether lightning can be channeled through the weapon.
-        damage: int = 1,  # The damage dealt on impact.
-        destroy_on_hit: bool = False,  # Projectile is removed on hit.
-        destroy_on_hit_requires_damage: bool = True,  # If true, then the hit must cause damage to destroy the projectile.
-        knockback: bool = True,  # If true, the projectile will knock back the entity it hits.
-        max_critical_damage: int = 5,  # Maximum critical damage.
-        min_critical_damage: int = 0,  # Minimum critical damage.
-        power_multiplier: float = 2,  # How much the base damage is multiplied.
-        semi_random_diff_damage: bool = False,  # If true, damage will be randomized based on damage and speed
-        set_last_hurt_requires_damage: bool = False,  # If true, then the hit must cause damage to update the last hurt property.
+        filter: str = None,
+        catch_fire: bool = False,
+        channeling: bool = True,
+        damage: int = 1,
+        destroy_on_hit: bool = False,
+        destroy_on_hit_requires_damage: bool = True,
+        knockback: bool = True,
+        max_critical_damage: int = 5,
+        min_critical_damage: int = 0,
+        power_multiplier: float = 2,
+        semi_random_diff_damage: bool = False,
+        set_last_hurt_requires_damage: bool = False,
+        apply_knockback_to_blocking_targets: bool = False,
     ):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
+        """Deal damage on impact.
+
+        Args:
+            filter: Entity identifier to affect. Much more primitive than filters used elsewhere, as it cannot "test" for anything other than an identifier. Default is None.
+            catch_fire: Whether targets will be engulfed in flames. Default is False.
+            channeling: Whether lightning can be channeled through the weapon. Default is True.
+            damage: Damage dealt to entity on hit. Default is 1.
+            destroy_on_hit: Whether projectile is removed on hit. Default is False.
+            destroy_on_hit_requires_damage: If true, hit must cause damage to destroy the projectile. Default is True.
+            knockback: Whether the projectile will knock back the entity it hits. Default is True.
+            max_critical_damage: Maximum critical damage. Default is 5.
+            min_critical_damage: Minimum critical damage. Default is 0.
+            power_multiplier: How much the base damage is multiplied. Default is 2.
+            semi_random_diff_damage: If true, damage will be randomized based on damage and speed. Default is False.
+            set_last_hurt_requires_damage: If true, hit must cause damage to update the last hurt property. Default is False.
+            apply_knockback_to_blocking_targets: If true, knockback will be applied to any blocking targets. Default is False.
+
+        Returns:
+            Self for method chaining.
+        """
         self._component["on_hit"]["impact_damage"] = {}
         if not filter is None:
             self._component["on_hit"]["impact_damage"]["filter"] = filter
@@ -1505,139 +1578,40 @@ class EntityProjectile(_BaseComponent):
         if damage != 1:
             self._component["on_hit"]["impact_damage"]["damage"] = damage
         if destroy_on_hit:
-            self._component["on_hit"]["impact_damage"]["destroy_on_hit"] = destroy_on_hit
+            self._component["on_hit"]["impact_damage"][
+                "destroy_on_hit"
+            ] = destroy_on_hit
         if not destroy_on_hit_requires_damage:
-            self._component["on_hit"]["impact_damage"]["destroy_on_hit_requires_damage"] = destroy_on_hit_requires_damage
+            self._component["on_hit"]["impact_damage"][
+                "destroy_on_hit_requires_damage"
+            ] = destroy_on_hit_requires_damage
         if not knockback:
             self._component["on_hit"]["impact_damage"]["knockback"] = knockback
         if max_critical_damage != 5:
-            self._component["on_hit"]["impact_damage"]["max_critical_damage"] = max_critical_damage
+            self._component["on_hit"]["impact_damage"][
+                "max_critical_damage"
+            ] = max_critical_damage
         if min_critical_damage != 0:
-            self._component["on_hit"]["impact_damage"]["min_critical_damage"] = min_critical_damage
+            self._component["on_hit"]["impact_damage"][
+                "min_critical_damage"
+            ] = min_critical_damage
         if power_multiplier != 2:
-            self._component["on_hit"]["impact_damage"]["power_multiplier"] = power_multiplier
+            self._component["on_hit"]["impact_damage"][
+                "power_multiplier"
+            ] = power_multiplier
         if semi_random_diff_damage:
-            self._component["on_hit"]["impact_damage"]["semi_random_diff_damage"] = semi_random_diff_damage
+            self._component["on_hit"]["impact_damage"][
+                "semi_random_diff_damage"
+            ] = semi_random_diff_damage
         if set_last_hurt_requires_damage:
-            self._component["on_hit"]["impact_damage"]["set_last_hurt_requires_damage"] = set_last_hurt_requires_damage
-
-        return self
-
-    def definition_event(
-        self,
-        event: Event,
-        target: FilterSubject,
-        affect_projectile: bool = False,  # The projectile that will be affected by this event.
-        affect_shooter: bool = False,  # The shooter that will be affected by this event.
-        affect_splash_area: bool = False,  # All entities in the splash area will be affected by this event.
-        splash_area: float = 0,  # The splash area that will be affected.
-        affect_target: bool = False,  # The target will be affected by this event.
-    ):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
-        self._component["on_hit"]["definition_event"] = {"event_trigger": {"event": event, "target": target.value}}
-
-        if affect_projectile:
-            self._component["on_hit"]["definition_event"]["affect_projectile"] = affect_projectile
-        if affect_shooter:
-            self._component["on_hit"]["definition_event"]["affect_shooter"] = affect_shooter
-        if affect_splash_area:
-            self._component["on_hit"]["definition_event"]["affect_splash_area"] = affect_splash_area
-        if splash_area:
-            self._component["on_hit"]["definition_event"]["splash_area"] = splash_area
-        if affect_target:
-            self._component["on_hit"]["definition_event"]["affect_target"] = affect_target
-
-        return self
-
-    def spawn_aoe_cloud(
-        self,
-        affect_owner: bool = True,
-        color: tuple[int, int, int] = (1, 1, 1),
-        duration: int = 0,
-        particle: int = 0,
-        potion: int = -1,
-        radius: int = 0,
-        radius_on_use: int = -1,
-        reapplication_delay: int = 0,
-    ):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
-
-        self._component["on_hit"]["spawn_aoe_cloud"] = {}
-
-        if not affect_owner:
-            self._component["on_hit"]["spawn_aoe_cloud"]["affect_owner"] = affect_owner
-        if color != (1, 1, 1):
-            self._component["on_hit"]["spawn_aoe_cloud"]["color"] = color
-        if duration != 0:
-            self._component["on_hit"]["spawn_aoe_cloud"]["duration"] = duration
-        if particle != 0:
-            self._component["on_hit"]["spawn_aoe_cloud"]["particle"] = particle
-        if potion != -1:
-            self._component["on_hit"]["spawn_aoe_cloud"]["potion"] = potion
-        if radius != 0:
-            self._component["on_hit"]["spawn_aoe_cloud"]["radius"] = radius
-        if radius_on_use != -1:
-            self._component["on_hit"]["spawn_aoe_cloud"]["radius_on_use"] = radius_on_use
-        if reapplication_delay != 0:
-            self._component["on_hit"]["spawn_aoe_cloud"]["reapplication_delay"] = reapplication_delay
-
-        return self
-
-    def spawn_chance(
-        self,
-        spawn_definition: str,
-        spawn_baby: bool = False,
-        first_spawn_count: int = 0,
-        first_spawn_percent_chance: int = 0,
-        second_spawn_chance: int = 32,
-        second_spawn_count: int = 0,
-    ):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
-
-        self._component["on_hit"]["spawn_chance"] = {"spawn_definition": spawn_definition}
-
-        if spawn_baby:
-            self._component["on_hit"]["spawn_chance"]["spawn_baby"] = spawn_baby
-        if first_spawn_count:
-            self._component["on_hit"]["spawn_chance"]["first_spawn_count"] = first_spawn_count
-        if first_spawn_percent_chance:
-            self._component["on_hit"]["spawn_chance"]["first_spawn_percent_chance"] = first_spawn_percent_chance
-        if second_spawn_chance:
-            self._component["on_hit"]["spawn_chance"]["second_spawn_chance"] = second_spawn_chance
-        if second_spawn_count:
-            self._component["on_hit"]["spawn_chance"]["second_spawn_count"] = second_spawn_count
-
-        return self
-
-    def particle_on_hit(
-        self,
-        particle_type: str,
-        on_other_hit: bool = False,
-        on_entity_hit: bool = False,
-        num_particles: int = 0,
-    ):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
-
-        self._component["on_hit"]["particle_on_hit"] = {"particle_type": f"{particle_type}"}
-
-        if on_other_hit:
-            self._component["on_hit"]["particle_on_hit"]["on_other_hit"] = on_other_hit
-        if on_entity_hit:
-            self._component["on_hit"]["particle_on_hit"]["on_entity_hit"] = on_entity_hit
-        if num_particles != 0:
-            self._component["on_hit"]["particle_on_hit"]["num_particles"] = num_particles
+            self._component["on_hit"]["impact_damage"][
+                "set_last_hurt_requires_damage"
+            ] = set_last_hurt_requires_damage
+        if apply_knockback_to_blocking_targets:
+            self._component["on_hit"]["impact_damage"][
+                "apply_knockback_to_blocking_targets"
+            ] = apply_knockback_to_blocking_targets
+            
         return self
 
     def mob_effect(
@@ -1648,14 +1622,24 @@ class EntityProjectile(_BaseComponent):
         visible: bool = False,
         duration: int = 1,
         durationeasy: int = 0,
-        durationheard: int = 800,
+        durationhard: int = 800,
         durationnormal: int = 200,
     ):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
+        """Apply a mob effect to the target on hit.
 
+        Args:
+            effect: The effect to apply.
+            amplifier: Effect amplifier. Default is 1.
+            ambient: Whether the effect is ambient. Default is False.
+            visible: Whether the effect is visible. Default is False.
+            duration: Duration of the effect. Default is 1.
+            durationeasy: Duration of the effect on easy difficulty. Default is 0.
+            durationhard: Duration of the effect on hard difficulty. Default is 800.
+            durationnormal: Duration of the effect on normal difficulty. Default is 200.
+
+        Returns:
+            Self for method chaining.
+        """
         self._component["on_hit"]["mob_effect"] = {"effect": effect.value}
 
         if amplifier != 1:
@@ -1668,102 +1652,204 @@ class EntityProjectile(_BaseComponent):
             self._component["on_hit"]["mob_effect"]["duration"] = duration
         if durationeasy != 0:
             self._component["on_hit"]["mob_effect"]["durationeasy"] = durationeasy
-        if durationheard != 800:
-            self._component["on_hit"]["mob_effect"]["durationheard"] = durationheard
+        if durationhard != 800:
+            self._component["on_hit"]["mob_effect"]["durationhard"] = durationhard
         if durationnormal != 200:
             self._component["on_hit"]["mob_effect"]["durationnormal"] = durationnormal
 
         return self
 
-    def freeze_on_hit(
+    def on_hit(
         self,
-        size: int,
-        snap_to_block: bool,
-        shape: str = "sphere",
-    ):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
-
-        self._component["on_hit"]["freeze_on_hit"] = {
-            "size": size,
-            "snap_to_block": snap_to_block,
-        }
-        if shape not in ["sphere", "cube"]:
-            raise RuntimeError("Unknown shape, must be sphere or cube")
-        self._component["on_hit"]["freeze_on_hit"]["shape"] = shape
-
-        return self
-
-    def grant_xp(self, xp: tuple[int, int]):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
-
-        if xp[0] == xp[1]:
-            self._component["on_hit"]["grant_xp"] = {"xp": xp}
-        else:
-            self._component["on_hit"]["grant_xp"] = {
-                "minXP": min(xp),
-                "maxXP": max(xp),
-            }
-
-        return self
-
-    def hurt_owner(
-        self,
-        owner_damage: int = 0,
-        knockback: bool = False,
+        catch_fire: bool = False,
+        douse_fire: bool = False,
         ignite: bool = False,
+        teleport_owner: bool = False,
     ):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
+        """Configure basic on_hit behaviors for the projectile.
 
-        self._component["on_hit"]["hurt_owner"] = {}
+        Args:
+            catch_fire: Determines if the struck object is set on fire. Default is False.
+            douse_fire: If the target is on fire, then douse the fire. Default is False.
+            ignite: Determines if a fire may be started on a flammable target. Default is False.
+            teleport_owner: Determines if the owner is transported on hit. Default is False.
 
-        if owner_damage != 0:
-            self._component["on_hit"]["hurt_owner"]["owner_damage"] = owner_damage
-        if knockback:
-            self._component["on_hit"]["hurt_owner"]["knockback"] = knockback
+        Returns:
+            Self for method chaining.
+        """
+        if catch_fire:
+            self._component["on_hit"]["catch_fire"] = catch_fire
+        if douse_fire:
+            self._component["on_hit"]["douse_fire"] = douse_fire
         if ignite:
-            self._component["on_hit"]["hurt_owner"]["ignite"] = ignite
+            self._component["on_hit"]["ignite"] = ignite
+        if teleport_owner:
+            self._component["on_hit"]["teleport_owner"] = teleport_owner
+        return self
 
+    def particle_on_hit(
+        self,
+        particle_type: str,
+        on_other_hit: bool = False,
+        on_entity_hit: bool = False,
+        num_particles: int = 0,
+    ):
+        """Spawn particles on hit.
+
+        Args:
+            particle_type: Vanilla particle type to use.
+            on_other_hit: Whether it should spawn particles on non-entity hit. Default is False.
+            on_entity_hit: Whether it should spawn particles on entity hit. Default is False.
+            num_particles: Number of particles to spawn. Default is 0.
+
+        Returns:
+            Self for method chaining.
+        """
+        self._component["on_hit"]["particle_on_hit"] = {"particle_type": particle_type}
+
+        if on_other_hit:
+            self._component["on_hit"]["particle_on_hit"]["on_other_hit"] = on_other_hit
+        if on_entity_hit:
+            self._component["on_hit"]["particle_on_hit"][
+                "on_entity_hit"
+            ] = on_entity_hit
+        if num_particles != 0:
+            self._component["on_hit"]["particle_on_hit"][
+                "num_particles"
+            ] = num_particles
         return self
 
     @property
     def remove_on_hit(self):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
+        """Remove the projectile when it hits something.
 
+        Returns:
+            Self for method chaining.
+        """
         self._component["on_hit"]["remove_on_hit"] = {"remove": True}
+        return self
+
+    def spawn_aoe_cloud(
+        self,
+        affect_owner: bool = True,
+        color: tuple[int, int, int] = (1, 1, 1),
+        duration: int = 0,
+        particle: str = "",
+        potion: int = -1,
+        radius: float = 0.0,
+        radius_on_use: float = -1.0,
+        reapplication_delay: int = 0,
+    ):
+        """Spawn an area of effect cloud of potion effect on hit.
+
+        Args:
+            affect_owner: Whether potion effect affects the shooter. Does not appear to apply to the player. Default is True.
+            color: RGB color of the particles. Default is (1, 1, 1).
+            duration: Duration of the cloud in seconds. Default is 0.
+            particle: Vanilla particle emitter of the cloud. Only accepts Vanilla Particles. 'dragonbreath' enables the usage of Bottles to obtain Dragon's Breath. Default is "".
+            potion: Lingering Potion ID. Default is -1.
+            radius: Radius of the cloud. Default is 0.0.
+            radius_on_use: Radius change on use. Default is -1.0.
+            reapplication_delay: Delay in ticks between application of the potion effect. Default is 0.
+
+        Returns:
+            Self for method chaining.
+        """
+        self._component["on_hit"]["spawn_aoe_cloud"] = {}
+
+        if not affect_owner:
+            self._component["on_hit"]["spawn_aoe_cloud"]["affect_owner"] = affect_owner
+        if color != (1, 1, 1):
+            self._component["on_hit"]["spawn_aoe_cloud"]["color"] = color
+        if duration != 0:
+            self._component["on_hit"]["spawn_aoe_cloud"]["duration"] = duration
+        if particle != "":
+            self._component["on_hit"]["spawn_aoe_cloud"]["particle"] = particle
+        if potion != -1:
+            self._component["on_hit"]["spawn_aoe_cloud"]["potion"] = potion
+        if radius != 0.0:
+            self._component["on_hit"]["spawn_aoe_cloud"]["radius"] = radius
+        if radius_on_use != -1.0:
+            self._component["on_hit"]["spawn_aoe_cloud"][
+                "radius_on_use"
+            ] = radius_on_use
+        if reapplication_delay != 0:
+            self._component["on_hit"]["spawn_aoe_cloud"][
+                "reapplication_delay"
+            ] = reapplication_delay
+
+        return self
+
+    def spawn_chance(
+        self,
+        spawn_definition: str,
+        spawn_baby: bool = False,
+        first_spawn_count: int = 0,
+        first_spawn_percent_chance: int = 0,
+        second_spawn_percent_chance: int = 32,
+        second_spawn_count: int = 0,
+    ):
+        """Spawn an entity on hit with specified chances.
+
+        Args:
+            spawn_definition: ID of the entity to spawn.
+            spawn_baby: Whether the spawned entity should be a baby. Default is False.
+            first_spawn_count: Number of entities to spawn in first spawn. Default is 0.
+            first_spawn_percent_chance: Percentage chance for first spawn. Default is 0.
+            second_spawn_percent_chance: Percentage chance for second spawn. Default is 32.
+            second_spawn_count: Number of entities to spawn in second spawn. Default is 0.
+
+        Returns:
+            Self for method chaining.
+        """
+        self._component["on_hit"]["spawn_chance"] = {
+            "spawn_definition": spawn_definition
+        }
+
+        if spawn_baby:
+            self._component["on_hit"]["spawn_chance"]["spawn_baby"] = spawn_baby
+        if first_spawn_count:
+            self._component["on_hit"]["spawn_chance"][
+                "first_spawn_count"
+            ] = first_spawn_count
+        if first_spawn_percent_chance:
+            self._component["on_hit"]["spawn_chance"][
+                "first_spawn_percent_chance"
+            ] = first_spawn_percent_chance
+        if second_spawn_percent_chance:
+            self._component["on_hit"]["spawn_chance"][
+                "second_spawn_percent_chance"
+            ] = second_spawn_percent_chance
+        if second_spawn_count:
+            self._component["on_hit"]["spawn_chance"][
+                "second_spawn_count"
+            ] = second_spawn_count
 
         return self
 
     def stick_in_ground(self, shake_time: float):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
+        """Configure projectile to stick into the ground on hit.
 
+        Args:
+            shake_time: Time in seconds the projectile shakes when stuck in ground.
+
+        Returns:
+            Self for method chaining.
+        """
         self._component["on_hit"]["stick_in_ground"] = {"shake_time": shake_time}
-
         return self
 
     @property
     def thrown_potion_effect(self):
-        try:
-            self._component["on_hit"]
-        except KeyError:
-            self._add_field("on_hit", {})
+        """Enable thrown potion effect.
 
+        Returns:
+            Self for method chaining.
+
+        Note:
+            According to Bedrock Wiki, exact behavior is unknown and this may crash Minecraft as it's probably only valid for thrown potions.
+        """
         self._component["on_hit"]["thrown_potion_effect"] = {}
-
         return self
 
 
@@ -1796,7 +1882,9 @@ class EntityExplode(_BaseComponent):
         if causes_fire:
             self._add_field("causes_fire", causes_fire)
         if destroy_affected_by_griefing:
-            self._add_field("destroy_affected_by_griefing", destroy_affected_by_griefing)
+            self._add_field(
+                "destroy_affected_by_griefing", destroy_affected_by_griefing
+            )
         if fire_affected_by_griefing:
             self._add_field("fire_affected_by_griefing", fire_affected_by_griefing)
         if fuse_length != [0.0, 0.0]:
@@ -1872,7 +1960,9 @@ class EntitySpawnEntity(_BaseComponent):
         self._component["entities"].append(
             {
                 spawn_type: identifier,
-                "spawn_event": spawn_event if spawn_event != "minecraft:entity_born" else {},
+                "spawn_event": (
+                    spawn_event if spawn_event != "minecraft:entity_born" else {}
+                ),
                 "spawn_method": spawn_method if spawn_method != "born" else {},
                 "spawn_sound": spawn_sound if spawn_sound != "plop" else {},
                 "filters": filters if not filters is None else {},
@@ -1943,10 +2033,17 @@ class EntitySpawnEntity(_BaseComponent):
 class EntityLoot(_BaseComponent):
     _identifier = "minecraft:loot"
 
-    def __init__(self, path) -> None:
-        """Sets the loot table for what items this entity drops upon death."""
+    def __init__(self, loot_table: LootTable | str) -> None:
+        """Sets the loot table for what items this entity drops upon death.
+
+        Parameters:
+            loot_table (LootTable | str): The loot table to use for this block.
+        """
         super().__init__("loot")
-        self._add_field("table", path)
+        self._add_field(
+            "table",
+            loot_table.table_path if isinstance(loot_table, LootTable) else loot_table,
+        )
 
 
 class EntityShooter(_BaseComponent):
@@ -1993,7 +2090,12 @@ class EntityInsideBlockNotifier(_BaseComponent):
             {
                 "block": {
                     "name": (str(block_name)),
-                    "states": block_name.states if isinstance(block_name, MinecraftBlockDescriptor) and block_name.states != "" else {},
+                    "states": (
+                        block_name.states
+                        if isinstance(block_name, MinecraftBlockDescriptor)
+                        and block_name.states != ""
+                        else {}
+                    ),
                 }
             }
         )
@@ -2075,9 +2177,13 @@ class EntityTransformation(_BaseComponent):
             self._component["delay"]["value"] = value
         if len(block_type) > 0:
             if not all(isinstance(block, (Block, Identifier)) for block in block_type):
-                raise TypeError(f"block_type must be a list of Block or Identifier instances. Component [{self._identifier}].")
+                raise TypeError(
+                    f"block_type must be a list of Block or Identifier instances. Component [{self._identifier}]."
+                )
 
-            self._component["delay"]["block_type"] = [str(block) for block in block_type]
+            self._component["delay"]["block_type"] = [
+                str(block) for block in block_type
+            ]
 
         return self
 
@@ -2117,14 +2223,18 @@ class EntityEquipment(_BaseComponent):
 class EntityEquipItem(_BaseComponent):
     _identifier = "minecraft:equip_item"
 
-    def __init__(self, can_wear_armor: bool = False, excluded_items: list[ItemDescriptor] = []) -> None:
+    def __init__(
+        self, can_wear_armor: bool = False, excluded_items: list[ItemDescriptor] = []
+    ) -> None:
         """Compels the entity to equip desired equipment."""
         super().__init__("equip_item")
         if can_wear_armor:
             self._add_field("can_wear_armor", can_wear_armor)
         if excluded_items:
             if not all(isinstance(item, ItemDescriptor) for item in excluded_items):
-                raise TypeError(f"excluded_items must be a list of ItemDescriptor instances. Component [{self._identifier}].")
+                raise TypeError(
+                    f"excluded_items must be a list of ItemDescriptor instances. Component [{self._identifier}]."
+                )
             self._add_field("excluded_items", excluded_items)
 
 
@@ -2139,7 +2249,9 @@ class EntityFireImmune(_BaseComponent):
 class EntitySensor(_BaseComponent):
     _identifier = "minecraft:entity_sensor"
 
-    def __init__(self, relative_range: bool = True, find_players_only: bool = False) -> None:
+    def __init__(
+        self, relative_range: bool = True, find_players_only: bool = False
+    ) -> None:
         super().__init__("entity_sensor")
         self._add_field("subsensors", [])
         if not relative_range:
@@ -2171,7 +2283,8 @@ class EntitySensor(_BaseComponent):
             cooldown (int, optional): How many seconds should elapse before the subsensor can once again sense for entities. The cooldown is applied on top of the base 1 tick (0.05 seconds) delay. Negative values will result in no cooldown being used. Defaults to -1.
             y_offset (float, optional): Vertical offset applied to the entity's position when computing the distance from other entities.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor
         """
         sensor = {}
         sensor["event"] = event
@@ -2183,7 +2296,9 @@ class EntitySensor(_BaseComponent):
         if require_all:
             sensor["require_all"] = require_all
         if range != (10, 10):
-            sensor["range"] = range if isinstance(range, (tuple, list)) else (range, range)
+            sensor["range"] = (
+                range if isinstance(range, (tuple, list)) else (range, range)
+            )
         if cooldown != -1:
             sensor["cooldown"] = cooldown
         if y_offset != 0.0:
@@ -2204,7 +2319,8 @@ class EntityAmbientSoundInterval(_BaseComponent):
             range (float, optional): Maximum time in seconds to randomly add to the ambient sound delay time. Defaults to 16.
             value (float, optional): Minimum time in seconds before the entity plays its ambient sound again. Defaults to 8.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ambient_sound_interval
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ambient_sound_interval
         """
         super().__init__("ambient_sound_interval")
 
@@ -2294,7 +2410,8 @@ class EntityAngry(_BaseComponent):
             filters (Filter, optional): Filter out mob types that should not be attacked while the entity is angry (other Piglins). Defaults to None.
             sound_interval (list[Seconds], optional): The range of time in seconds to wait before playing the angry_sound again. Defaults to [0, 0].
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_angry
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_angry
         """
         super().__init__("angry")
         if not angry_sound is None:
@@ -2304,7 +2421,9 @@ class EntityAngry(_BaseComponent):
         if broadcast_anger_on_attack:
             self._add_field("broadcast_anger_on_attack", broadcast_anger_on_attack)
         if broadcast_anger_on_being_attacked:
-            self._add_field("broadcast_anger_on_being_attacked", broadcast_anger_on_being_attacked)
+            self._add_field(
+                "broadcast_anger_on_being_attacked", broadcast_anger_on_being_attacked
+            )
         if not broadcast_filters is None:
             self._add_field("broadcast_filters", broadcast_filters)
         if broadcast_range != 10:
@@ -2344,7 +2463,8 @@ class EntityInteract(_BaseComponent):
     def __init__(self) -> None:
         """Defines the interactions that can be used with an entity.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact
         """
         super().__init__("interact")
         self._add_field("interactions", [])
@@ -2393,7 +2513,8 @@ class EntityInteract(_BaseComponent):
             vibration (str, optional): Vibration to emit when the interaction occurs. Admitted values are entity_interact (used by default), shear, and none (no vibration emitted). Defaults to None.
             repair_entity_item (tuple[Slots, int], optional): Slot and amount to repair the item used to interact with this entity. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#parameter
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#parameter
         """
 
         interaction = {
@@ -2454,7 +2575,8 @@ class EntityInteract(_BaseComponent):
             particle_offset_towards_interactor (bool, optional): Whether or not the particle will appear closer to who performed the interaction. Defaults to False.
             particle_y_offset (float, optional): Vertical offset of the particle system. Defaults to 0.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#particle_on_start
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#particle_on_start
         """
 
         # add this to the last interaction, if none exists, raise an error
@@ -2496,7 +2618,8 @@ class EntityAngerLevel(_BaseComponent):
             on_increase_sounds (list[dict[str, str]], optional): Sounds to play when the entity is getting provoked. Evaluated in order; the first matching condition wins. Defaults to [].
             remove_targets_below_angry_threshold (bool, optional): Defines if the entity should remove target if it falls below 'angry' threshold. Defaults to True.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_anger_level
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_anger_level
         """
         super().__init__("anger_level")
 
@@ -2509,7 +2632,9 @@ class EntityAngerLevel(_BaseComponent):
         if default_annoyingness != 0:
             self._add_field("default_annoyingness", default_annoyingness)
         if default_projectile_annoyingness != 0:
-            self._add_field("default_projectile_annoyingness", default_projectile_annoyingness)
+            self._add_field(
+                "default_projectile_annoyingness", default_projectile_annoyingness
+            )
         if max_anger != 100:
             self._add_field("max_anger", max_anger)
         if not nuisance_filter is None:
@@ -2517,7 +2642,10 @@ class EntityAngerLevel(_BaseComponent):
         if not on_increase_sounds == []:
             self._add_field("on_increase_sounds", on_increase_sounds)
         if not remove_targets_below_angry_threshold:
-            self._add_field("remove_targets_below_angry_threshold", remove_targets_below_angry_threshold)
+            self._add_field(
+                "remove_targets_below_angry_threshold",
+                remove_targets_below_angry_threshold,
+            )
 
 
 class EntityCanJoinRaid(_BaseComponent):
@@ -2545,7 +2673,8 @@ class EntityTameable(_BaseComponent):
             tame_event (dict[str, str], optional): Event to initiate when the entity becomes tamed. Defaults to None.
             tame_items (str, optional): The list of items that can be used to tame the entity. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tameable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tameable
         """
         super().__init__("tameable")
 
@@ -2576,7 +2705,8 @@ class EntityAgeable(_BaseComponent):
             interact_filters (Filter, optional): A list of conditions to meet for the entity to be fed. Defaults to None.
             transform_to_item (str, optional): The feed item used will transform into this item upon successful interaction. Format: itemName:auxValue. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ageable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ageable
         """
         super().__init__("ageable")
         self._component["feed_items"] = []
@@ -2584,7 +2714,9 @@ class EntityAgeable(_BaseComponent):
         if duration != 1200.0:
             self._add_field("duration", duration)
         if not grow_up_event is None:
-            self._add_field("grow_up", {"event": grow_up_event, "target": grow_up_target})
+            self._add_field(
+                "grow_up", {"event": grow_up_event, "target": grow_up_target}
+            )
         if not interact_filters is None:
             self._add_field("interact_filters", interact_filters)
         if not transform_to_item is None:
@@ -2624,7 +2756,9 @@ class EntityAgeable(_BaseComponent):
             Returns:
                 Ageable: Returns the Ageable component to allow for method chaining.
         """
-        self._component["feed_items"].append({"item": str(item), "growth": clamp(growth, 0, 1)})
+        self._component["feed_items"].append(
+            {"item": str(item), "growth": clamp(growth, 0, 1)}
+        )
         return self
 
 
@@ -2650,13 +2784,16 @@ class EntityInventory(_BaseComponent):
             private (bool, optional): If true, the entity will not drop its inventory on death. Defaults to False.
             restrict_to_owner (bool, optional): If true, the entity's inventory can only be accessed by its owner or itself. Defaults to False.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_inventory
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_inventory
         """
         super().__init__("inventory")
 
         self._add_field("container_type", container_type)
         if additional_slots_per_strength != 0:
-            self._add_field("additional_slots_per_strength", additional_slots_per_strength)
+            self._add_field(
+                "additional_slots_per_strength", additional_slots_per_strength
+            )
         if can_be_siphoned_from:
             self._add_field("can_be_siphoned_from", can_be_siphoned_from)
         if inventory_size != 5:
@@ -2685,7 +2822,8 @@ class EntityDashAction(_BaseComponent):
             horizontal_momentum (float, optional): Horizontal momentum of the dash. Defaults to 1.0.
             vertical_momentum (float, optional): Vertical momentum of the dash. Defaults to 1.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash
         """
         super().__init__("dash_action")
 
@@ -2729,7 +2867,8 @@ class EntityBreathable(_BaseComponent):
             suffocate_time (int, optional): Time in seconds between suffocation damage. Defaults to -20.
             total_supply (int, optional): Time in seconds the entity can hold its breath. Defaults to 15.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breathable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breathable
         """
         super().__init__("breathable")
 
@@ -2771,7 +2910,8 @@ class EntityVariableMaxAutoStep(_BaseComponent):
             controlled_value (float, optional): The maximum auto step height when on any other block and controlled by the player. Defaults to 0.5625.
             jump_prevented_value (float, optional): The maximum auto step height when on a block that prevents jumping. Defaults to 0.5625.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_variable_max_auto_step
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_variable_max_auto_step
         """
         super().__init__("variable_max_auto_step")
 
@@ -2807,7 +2947,8 @@ class EntityBuoyant(_BaseComponent):
             drag_down_on_buoyancy_removed (float, optional): How much an entity will be dragged down when the buoyancy component is removed. Defaults to 0.0.
             simulate_waves (bool, optional): If true, the movement simulates waves going through. Defaults to True.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_buoyant
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_buoyant
         """
         super().__init__("buoyant")
 
@@ -2821,7 +2962,9 @@ class EntityBuoyant(_BaseComponent):
         if big_wave_speed != 10.0:
             self._add_field("big_wave_speed", big_wave_speed)
         if drag_down_on_buoyancy_removed != 0.0:
-            self._add_field("drag_down_on_buoyancy_removed", drag_down_on_buoyancy_removed)
+            self._add_field(
+                "drag_down_on_buoyancy_removed", drag_down_on_buoyancy_removed
+            )
         if not simulate_waves:
             self._add_field("simulate_waves", simulate_waves)
 
@@ -2840,8 +2983,8 @@ class EntityExperienceReward(_BaseComponent):
 
     def __init__(
         self,
-        on_bred: int |float | Molang = 0,
-        on_death: int |float | Molang = 0,
+        on_bred: int | float | Molang = 0,
+        on_death: int | float | Molang = 0,
     ) -> None:
         """Defines the amount of experience rewarded when the entity dies or is successfully bred.
 
@@ -2849,7 +2992,8 @@ class EntityExperienceReward(_BaseComponent):
             on_bred (int | float | Molang, optional): A Molang expression defining the amount of experience rewarded when this entity is successfully bred. Defaults to 0.
             on_death (int | float | Molang, optional): A Molang expression defining the amount of experience rewarded when this entity dies. Defaults to 0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_experience_reward
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_experience_reward
         """
         super().__init__("experience_reward")
         if not on_bred == 0:
@@ -2915,7 +3059,8 @@ class EntityColor(_BaseComponent):
         Parameters:
             value (int): The Palette Color value of the entity.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color
         """
         super().__init__("color")
         self._add_field("value", value)
@@ -2930,7 +3075,8 @@ class EntityColor2(_BaseComponent):
         Parameters:
             value (int): The Palette Color value of the entity.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color2
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color2
         """
         super().__init__("color2")
         self._add_field("value", value)
@@ -2942,7 +3088,8 @@ class EntityBurnsInDaylight(_BaseComponent):
     def __init__(self) -> None:
         """Compels an entity to burn when it's daylight.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_burns_in_daylight
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_burns_in_daylight
         """
         super().__init__("burns_in_daylight")
 
@@ -2963,7 +3110,8 @@ class EntityBoss(_BaseComponent):
             hud_range (int, optional): The max distance from the boss at which the boss's health bar appears on the screen. Defaults to 55.
             should_darken_sky (bool, optional): Whether the sky should darken in the presence of the boss. Defaults to False.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_boss
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_boss
         """
         super().__init__("boss")
 
@@ -2988,7 +3136,8 @@ class EntitySittable(_BaseComponent):
             sit_event (str, optional): Event to run when the entity enters the 'sit' state. Defaults to None.
             stand_event (str, optional): Event to run when the entity exits the 'sit' state. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_sittable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_sittable
         """
         super().__init__("sittable")
 
@@ -3008,7 +3157,8 @@ class EntityFlyingSpeedMeters(_BaseComponent):
             value (float): Flying movement speed of the entity in meters per second.
             max (float, optional): Maximum flying movement speed of the entity in meters per second. Defaults to None.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flying_speed
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flying_speed
         """
         super().__init__("flying_speed")
         self._add_field("value", round(0.152 * math.sqrt(value), 2))
@@ -3032,7 +3182,8 @@ class EntityConditionalBandwidthOptimization(_BaseComponent):
             max_optimized_distance (int): The maximum distance considered during bandwidth optimizations. Any value below the max is interpolated to find optimization, and any value greater than or equal to the max results in max optimization.
             use_motion_prediction_hints (bool): When set to true, smaller motion packets will be sent during drop packet intervals, resulting in the same amount of packets being sent as without optimizations but with less data being sent. This should be used to prevent visual oddities when entities are traveling quickly or teleporting.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_conditional_bandwidth_optimization
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_conditional_bandwidth_optimization
         """
         super().__init__("conditional_bandwidth_optimization")
         a = {}
@@ -3080,7 +3231,8 @@ class EntityItemHopper(_BaseComponent):
     ) -> None:
         """Allows an entity to function like a hopper block.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_hopper
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_hopper
         """
         super().__init__("item_hopper")
 
@@ -3093,7 +3245,8 @@ class EntityBodyRotationBlocked(_BaseComponent):
     ) -> None:
         """When set, the entity will no longer visually rotate their body to match their facing direction.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_blocked
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_blocked
         """
         super().__init__("body_rotation_blocked")
 
@@ -3101,13 +3254,16 @@ class EntityBodyRotationBlocked(_BaseComponent):
 class EntityDamageAbsorption(_BaseComponent):
     _identifier = "minecraft:damage_absorption"
 
-    def __init__(self, absorbable_causes: list[DamageCause] = DamageCause.Nothing) -> None:
+    def __init__(
+        self, absorbable_causes: list[DamageCause] = DamageCause.Nothing
+    ) -> None:
         """Allows an item to absorb damage that would otherwise be dealt to its wearer. The item must be equipped in an armor slot for this to happen. The absorbed damage reduces the item's durability, with any excess damage being ignored. The item must also have a minecraft:durability component.
 
         Parameters:
             absorbable_causes (list[str], optional): A list of damage causes that can be absorbed by the item. By default, no damage cause is absorbed.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_absorption
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_absorption
         """
         super().__init__("damage_absorption")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.20")
@@ -3124,7 +3280,8 @@ class EntityDimensionBound(_BaseComponent):
     ) -> None:
         """Prevents the entity from changing dimension through portals.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dimension_bound
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dimension_bound
         """
         super().__init__("dimension_bound")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.40")
@@ -3138,7 +3295,8 @@ class EntityTransient(_BaseComponent):
     ) -> None:
         """An entity with this component will NEVER persist, and will forever disappear when unloaded.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_transient
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_transient
         """
         super().__init__("transient")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.40")
@@ -3152,7 +3310,8 @@ class EntityCannotBeAttacked(_BaseComponent):
     ) -> None:
         """An entity with this component will NEVER be attacked by other entities.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_cannot_be_attacked
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_cannot_be_attacked
         """
         super().__init__("cannot_be_attacked")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.51")
@@ -3167,7 +3326,8 @@ class EntityIgnoreCannotBeAttacked(_BaseComponent):
         Parameters:
             filters (Filter, optional): Defines which entities are exceptions and are allowed to be attacked by the owner entity, potentially attacked entity is subject "other". If this is not specified then all attacks by the owner are allowed.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ignore_cannot_be_attacked
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ignore_cannot_be_attacked
         """
         super().__init__("ignore_cannot_be_attacked")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.51")
@@ -3208,7 +3368,8 @@ class EntityLookedAt(_BaseComponent):
             search_radius (float, optional): The radius in blocks to search for entities. Defaults to 10.
             set_target (LootedAtSetTarget, optional): The target selection strategy. Defaults to LootedAtSetTarget.OnceAndStopScanning.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_looked_at
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_looked_at
         """
         super().__init__("looked_at")
 
@@ -3219,7 +3380,9 @@ class EntityLookedAt(_BaseComponent):
         if find_players_only:
             self._add_field("find_players_only", find_players_only)
         if line_of_sight_obstruction_type != LineOfSightObstructionType.Collision:
-            self._add_field("line_of_sight_obstruction_type", line_of_sight_obstruction_type)
+            self._add_field(
+                "line_of_sight_obstruction_type", line_of_sight_obstruction_type
+            )
         if look_at_locations is not None:
             self._add_field("look_at_locations", look_at_locations)
         if looked_at_cooldown != (0, 0):
@@ -3245,7 +3408,8 @@ class EntityMovementSoundDistanceOffset(_BaseComponent):
         Parameters:
             value (float): The higher the number, the less often the movement sound will be played.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement.sound_distance_offset
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement.sound_distance_offset
         """
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.60")
         super().__init__("movement_sound_distance_offset")
@@ -3258,7 +3422,8 @@ class EntityRendersWhenInvisible(_BaseComponent):
     def __init__(self) -> None:
         """When set, the entity will render even when invisible. Appropriate rendering behavior can then be specified in the corresponding "minecraft:client_entity".
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_renders_when_invisible
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_renders_when_invisible
         """
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.60")
         super().__init__("renders_when_invisible")
@@ -3333,13 +3498,24 @@ class EntityBreedable(_BaseComponent):
         if mutation_strategy != BreedingMutationStrategy.None_:
             self._add_field("mutation_strategy", mutation_strategy.value)
         if parent_centric_attribute_blending is not None:
-            self._add_field("parent_centric_attribute_blending", [c.identifier for c in parent_centric_attribute_blending])
+            self._add_field(
+                "parent_centric_attribute_blending",
+                [c.identifier for c in parent_centric_attribute_blending],
+            )
         if property_inheritance is not None:
-            self._add_field("property_inheritance", [f"{CONFIG.NAMESPACE}:{property}" for property in property_inheritance])
+            self._add_field(
+                "property_inheritance",
+                [f"{CONFIG.NAMESPACE}:{property}" for property in property_inheritance],
+            )
         if random_extra_variant_mutation_interval != (0, 0):
-            self._add_field("random_extra_variant_mutation_interval", random_extra_variant_mutation_interval)
+            self._add_field(
+                "random_extra_variant_mutation_interval",
+                random_extra_variant_mutation_interval,
+            )
         if random_variant_mutation_interval != (0, 0):
-            self._add_field("random_variant_mutation_interval", random_variant_mutation_interval)
+            self._add_field(
+                "random_variant_mutation_interval", random_variant_mutation_interval
+            )
         if require_full_health:
             self._add_field("require_full_health", require_full_health)
         if require_tame is not True:
@@ -3369,7 +3545,9 @@ class EntityBreedable(_BaseComponent):
         )
         return self
 
-    def deny_parents_variant(self, chance: float, min_variant: str, max_variant: str) -> dict:
+    def deny_parents_variant(
+        self, chance: float, min_variant: str, max_variant: str
+    ) -> dict:
         """Defines the chance of denying the parents' variant.
 
         Parameters:
@@ -3390,7 +3568,9 @@ class EntityBreedable(_BaseComponent):
         )
         return self
 
-    def environment_requirements(self, block_types: list[str], count: int, radius: float) -> dict:
+    def environment_requirements(
+        self, block_types: list[str], count: int, radius: float
+    ) -> dict:
         """Defines the nearby block requirements for breeding.
 
         Parameters:
@@ -3411,7 +3591,9 @@ class EntityBreedable(_BaseComponent):
         )
         return self
 
-    def mutation_factor(self, color: float, extra_variant: float, variant: float) -> dict:
+    def mutation_factor(
+        self, color: float, extra_variant: float, variant: float
+    ) -> dict:
         """Defines the mutation factor for the entity.
 
         Parameters:
@@ -3439,7 +3621,8 @@ class EntityIsCollidable(_BaseComponent):
     def __init__(self) -> None:
         """Allows other mobs to have vertical and horizontal collisions with this mob.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_collidable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_collidable
         """
         super().__init__("is_collidable")
 
@@ -3450,7 +3633,8 @@ class EntityRotationAxisAligned(_BaseComponent):
     def __init__(self) -> None:
         """Causes the entity's body to automatically rotate to align with the nearest cardinal direction based on its current facing direction.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rotation_axis_aligned
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rotation_axis_aligned
         """
         super().__init__("rotation_axis_aligned")
 
@@ -3498,7 +3682,8 @@ class EntityLeashable(_BaseComponent):
             max_distance (int, optional): Distance in blocks at which the leash breaks. Defaults to None.
             soft_distance (int, optional): Distance in blocks at which the 'spring' effect starts acting to keep this entity close to the entity that leashed it. Defaults to 4.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable
         """
         super().__init__("leashable")
 
@@ -3519,7 +3704,12 @@ class EntityLeashable(_BaseComponent):
         self._add_field("on_leash", {"event": event, "target": target})
         return self
 
-    def on_unleash(self, event: str, interact_only: bool = False, target: FilterSubject = FilterSubject.Self) -> dict:
+    def on_unleash(
+        self,
+        event: str,
+        interact_only: bool = False,
+        target: FilterSubject = FilterSubject.Self,
+    ) -> dict:
         """Defines the event to trigger when the entity is unleashed.
 
         Parameters:
@@ -3582,7 +3772,8 @@ class EntityBodyRotationAlwaysFollowsHead(_BaseComponent):
     def __init__(self) -> None:
         """Causes the entity's body to always be automatically rotated to align with the entity's head. Does not override the "minecraft:body_rotation_blocked" component.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_always_follows_head
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_always_follows_head
         """
         super().__init__("body_rotation_always_follows_head")
 
@@ -3617,7 +3808,8 @@ class EntityPersistent(_BaseComponent):
     def __init__(self) -> None:
         """Defines whether an entity should be persistent in the game world.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_persistent
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_persistent
         """
         super().__init__("persistent")
 
@@ -3631,7 +3823,8 @@ class EntityVerticalMovementAction(_BaseComponent):
         Parameters:
             vertical_velocity (float): Vertical velocity to apply when jump action is issued. Default: 0.5.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vertical_movement.action
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vertical_movement.action
         """
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.111")
         super().__init__("vertical_movement_action")
@@ -3642,7 +3835,12 @@ class EntityVerticalMovementAction(_BaseComponent):
 class EntityOnDeath(_BaseEventTrigger):
     _identifier = "minecraft:on_death"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Add a trigger to run when the entity dies.
 
         Parameters:
@@ -3650,7 +3848,8 @@ class EntityOnDeath(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_death
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_death
         """
         super().__init__(event, filters, target)
 
@@ -3658,7 +3857,12 @@ class EntityOnDeath(_BaseEventTrigger):
 class EntityOnFriendlyAnger(_BaseEventTrigger):
     _identifier = "minecraft:on_friendly_anger"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Adds a trigger that will run when a nearby entity of the same type as this entity becomes Angry.
 
         Parameters:
@@ -3666,15 +3870,21 @@ class EntityOnFriendlyAnger(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_friendly_anger
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_friendly_anger
         """
         super().__init__(event, filters, target)
-    
+
 
 class EntityOnHurt(_BaseEventTrigger):
     _identifier = "minecraft:on_hurt"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Add a trigger to run when the entity is hurt.
 
         Parameters:
@@ -3682,7 +3892,8 @@ class EntityOnHurt(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt
         """
         super().__init__(event, filters, target)
 
@@ -3690,7 +3901,12 @@ class EntityOnHurt(_BaseEventTrigger):
 class EntityOnHurtByPlayer(_BaseEventTrigger):
     _identifier = "minecraft:on_hurt_by_player"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Adds a trigger to call when this entity is attacked by the player.
 
         Parameters:
@@ -3698,7 +3914,8 @@ class EntityOnHurtByPlayer(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt_by_player
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt_by_player
         """
         super().__init__(event, filters, target)
 
@@ -3706,7 +3923,12 @@ class EntityOnHurtByPlayer(_BaseEventTrigger):
 class EntityOnIgnite(_BaseEventTrigger):
     _identifier = "minecraft:on_ignite"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Adds a trigger to call when this entity is set on fire.
 
         Parameters:
@@ -3714,7 +3936,8 @@ class EntityOnIgnite(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_ignite
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_ignite
         """
         super().__init__(event, filters, target)
 
@@ -3722,7 +3945,12 @@ class EntityOnIgnite(_BaseEventTrigger):
 class EntityOnStartLanding(_BaseEventTrigger):
     _identifier = "minecraft:on_start_landing"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Only usable by the Ender Dragon. Adds a trigger to call when this entity lands.
 
         Parameters:
@@ -3730,7 +3958,8 @@ class EntityOnStartLanding(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_landing
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_landing
         """
         super().__init__(event, filters, target)
 
@@ -3738,7 +3967,12 @@ class EntityOnStartLanding(_BaseEventTrigger):
 class EntityOnStartTakeoff(_BaseEventTrigger):
     _identifier = "minecraft:on_start_takeoff"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Only usable by the Ender Dragon. Adds a trigger to call when this entity starts flying.
 
         Parameters:
@@ -3746,7 +3980,8 @@ class EntityOnStartTakeoff(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_takeoff
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_takeoff
         """
         super().__init__(event, filters, target)
 
@@ -3754,7 +3989,12 @@ class EntityOnStartTakeoff(_BaseEventTrigger):
 class EntityOnTargetAcquired(_BaseEventTrigger):
     _identifier = "minecraft:on_target_acquired"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Adds a trigger to call when this entity finds a target.
 
         Parameters:
@@ -3762,7 +4002,8 @@ class EntityOnTargetAcquired(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_acquired
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_acquired
         """
         super().__init__(event, filters, target)
 
@@ -3770,7 +4011,12 @@ class EntityOnTargetAcquired(_BaseEventTrigger):
 class EntityOnTargetEscaped(_BaseEventTrigger):
     _identifier = "minecraft:on_target_escaped"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """Adds a trigger to call when this entity loses the target it currently has.
 
         Parameters:
@@ -3778,7 +4024,8 @@ class EntityOnTargetEscaped(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_escaped
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_escaped
         """
         super().__init__(event, filters, target)
 
@@ -3786,7 +4033,12 @@ class EntityOnTargetEscaped(_BaseEventTrigger):
 class EntityOnWakeWithOwner(_BaseEventTrigger):
     _identifier = "minecraft:on_wake_with_owner"
 
-    def __init__(self, event: Event, filters: Filter = None, target: FilterSubject = FilterSubject.Self):
+    def __init__(
+        self,
+        event: Event,
+        filters: Filter = None,
+        target: FilterSubject = FilterSubject.Self,
+    ):
         """A trigger when a mob's tamed onwer wakes up.
 
         Parameters:
@@ -3794,9 +4046,59 @@ class EntityOnWakeWithOwner(_BaseEventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        [Documentation reference]: https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_wake_with_owner
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_wake_with_owner
         """
         super().__init__(event, filters, target)
+
+
+class EntityNameable(_BaseComponent):
+    _identifier = "minecraft:nameable"
+
+    def __init__(
+        self, allow_name_tag_renaming: bool = True, always_show: bool = False
+    ) -> None:
+        """Allows the entity to have a custom name.
+
+        Parameters:
+            allow_name_tag_renaming (bool, optional): If true, the name tag can be renamed. Defaults to True.
+            always_show (bool, optional): If true, the custom name will always be visible. Defaults to False.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_nameable
+        """
+        super().__init__("nameable")
+
+        if always_show:
+            self._add_field("always_show", always_show)
+        if not allow_name_tag_renaming:
+            self._add_field("allow_name_tag_renaming", allow_name_tag_renaming)
+
+        self._add_field("name_actions", [])
+
+    def default_trigger(self, event: str, target: FilterSubject = FilterSubject.Self):
+        """Sets the default trigger event for the nameable component.
+
+        Parameters:
+            event (str): The event to trigger when the entity is named.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+        """
+        self._add_field("default_trigger", {"event": event, "target": target})
+        return self
+
+    def name_action(self, name, event: str, target: FilterSubject = FilterSubject.Self):
+        """Adds a name action to the nameable component.
+
+        Parameters:
+            name (str): The name that triggers the event.
+            event (str): The event to trigger when the entity is named.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+        """
+        self._component["name_actions"].append(
+            {"name_filter": name, "on_named": {"event": event, "target": target}}
+        )
+        return self
+
 
 # AI Goals ==========================================================================
 
@@ -3852,7 +4154,9 @@ class EntityAINearestAttackableTarget(_BaseAIGoal):
         if not target_search_height == -0.1:
             self._add_field("target_search_height", target_search_height)
         if not target_sneak_visibility_multiplier == 0.8:
-            self._add_field("target_sneak_visibility_multiplier", target_sneak_visibility_multiplier)
+            self._add_field(
+                "target_sneak_visibility_multiplier", target_sneak_visibility_multiplier
+            )
         if not within_radius == 0.0:
             self._add_field("within_radius", within_radius)
 
@@ -3873,9 +4177,15 @@ class EntityAINearestAttackableTarget(_BaseAIGoal):
                 "cooldown": cooldown if cooldown > 0 else {},
                 "max_dist": max_dist if max_dist != 32 else {},
                 "must_see": must_see if must_see else {},
-                "must_see_forget_duration": must_see_forget_duration if must_see_forget_duration != 3.0 else {},
-                "sprint_speed_multiplier": sprint_speed_multiplier if sprint_speed_multiplier != 1.0 else {},
-                "walk_speed_multiplier": walk_speed_multiplier if walk_speed_multiplier != 1.0 else {},
+                "must_see_forget_duration": (
+                    must_see_forget_duration if must_see_forget_duration != 3.0 else {}
+                ),
+                "sprint_speed_multiplier": (
+                    sprint_speed_multiplier if sprint_speed_multiplier != 1.0 else {}
+                ),
+                "walk_speed_multiplier": (
+                    walk_speed_multiplier if walk_speed_multiplier != 1.0 else {}
+                ),
             }
         )
         return self
@@ -3933,7 +4243,9 @@ class EntityAINearestPrioritizedAttackableTarget(_BaseAIGoal):
         if not target_search_height == -0.1:
             self._add_field("target_search_height", target_search_height)
         if not target_sneak_visibility_multiplier == 0.8:
-            self._add_field("target_sneak_visibility_multiplier", target_sneak_visibility_multiplier)
+            self._add_field(
+                "target_sneak_visibility_multiplier", target_sneak_visibility_multiplier
+            )
         if not within_radius == 0.0:
             self._add_field("within_radius", within_radius)
 
@@ -3954,9 +4266,15 @@ class EntityAINearestPrioritizedAttackableTarget(_BaseAIGoal):
                 "cooldown": cooldown if cooldown > 0 else {},
                 "max_dist": max_dist if max_dist != 32 else {},
                 "must_see": must_see if must_see else {},
-                "must_see_forget_duration": must_see_forget_duration if must_see_forget_duration != 3.0 else {},
-                "sprint_speed_multiplier": sprint_speed_multiplier if sprint_speed_multiplier != 1.0 else {},
-                "walk_speed_multiplier": walk_speed_multiplier if walk_speed_multiplier != 1.0 else {},
+                "must_see_forget_duration": (
+                    must_see_forget_duration if must_see_forget_duration != 3.0 else {}
+                ),
+                "sprint_speed_multiplier": (
+                    sprint_speed_multiplier if sprint_speed_multiplier != 1.0 else {}
+                ),
+                "walk_speed_multiplier": (
+                    walk_speed_multiplier if walk_speed_multiplier != 1.0 else {}
+                ),
             }
         )
         return self
@@ -3996,7 +4314,9 @@ class EntityAIKnockbackRoar(_BaseAIGoal):
         if not knockback_height_cap == 0.4:
             self._add_field("knockback_height_cap", knockback_height_cap)
         if not knockback_horizontal_strength == 4:
-            self._add_field("knockback_horizontal_strength", knockback_horizontal_strength)
+            self._add_field(
+                "knockback_horizontal_strength", knockback_horizontal_strength
+            )
         if not knockback_range == 4:
             self._add_field("knockback_range", knockback_range)
         if not knockback_vertical_strength == 4:
@@ -4035,7 +4355,8 @@ class EntityAIRandomStroll(_BaseAIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_stroll
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_stroll
         """
         super().__init__("behavior.random_stroll")
         if interval != 120:
@@ -4174,7 +4495,9 @@ class EntityAIMeleeAttack(_BaseAIGoal):
         if cooldown_time != 1:
             self._add_field("cooldown_time", cooldown_time)
         if inner_boundary_time_increase != 0.75:
-            self._add_field("inner_boundary_time_increase", inner_boundary_time_increase)
+            self._add_field(
+                "inner_boundary_time_increase", inner_boundary_time_increase
+            )
         if max_path_time != 0.75:
             self._add_field("max_path_time", max_path_time)
         if melee_fov != 90:
@@ -4182,7 +4505,9 @@ class EntityAIMeleeAttack(_BaseAIGoal):
         if min_path_time != 0.2:
             self._add_field("min_path_time", min_path_time)
         if outer_boundary_time_increase != 0.5:
-            self._add_field("outer_boundary_time_increase", outer_boundary_time_increase)
+            self._add_field(
+                "outer_boundary_time_increase", outer_boundary_time_increase
+            )
         if path_fail_time_increase != 0.75:
             self._add_field("path_fail_time_increase", path_fail_time_increase)
         if path_inner_boundary != 16:
@@ -4216,8 +4541,20 @@ class EntityAIMeleeAttack(_BaseAIGoal):
         self._add_field("on_attack", on_attack)
         return self
 
-    def on_kill(self, on_kill: str, subject: FilterSubject = FilterSubject.Self, filter: Filter = None):
-        self._add_field("on_kill", {"event": on_kill, "filters": filter if not filter is None else {}, "target": subject})
+    def on_kill(
+        self,
+        on_kill: str,
+        subject: FilterSubject = FilterSubject.Self,
+        filter: Filter = None,
+    ):
+        self._add_field(
+            "on_kill",
+            {
+                "event": on_kill,
+                "filters": filter if not filter is None else {},
+                "target": subject,
+            },
+        )
 
 
 class EntityAIRangedAttack(_BaseAIGoal):
@@ -4305,10 +4642,16 @@ class EntityAISummonEntity(_BaseAIGoal):
                 "cooldown_time": cooldown_time if cooldown_time != 0 else {},
                 "do_casting": do_casting if not do_casting else {},
                 "filters": filters if not filters is None != 0 else {},
-                "max_activation_range": max_activation_range if max_activation_range != 32 else {},
-                "min_activation_range": min_activation_range if min_activation_range != 1 else {},
+                "max_activation_range": (
+                    max_activation_range if max_activation_range != 32 else {}
+                ),
+                "min_activation_range": (
+                    min_activation_range if min_activation_range != 1 else {}
+                ),
                 "particle_color": particle_color if particle_color != 0 else {},
-                "start_sound_event": start_sound_event if not start_sound_event is None else {},
+                "start_sound_event": (
+                    start_sound_event if not start_sound_event is None else {}
+                ),
                 "weight": weight,
                 "sequence": [],
             }
@@ -4341,9 +4684,13 @@ class EntityAISummonEntity(_BaseAIGoal):
                 "size": size,
                 "sound_event": sound_event if not sound_event is None else {},
                 "summon_cap": summon_cap if summon_cap != 0 else {},
-                "summon_cap_radius": summon_cap_radius if summon_cap_radius != 0 else {},
+                "summon_cap_radius": (
+                    summon_cap_radius if summon_cap_radius != 0 else {}
+                ),
                 "target": target,
-                "summon_event": summon_event if summon_event != "minecraft:entity_spawned" else {},
+                "summon_event": (
+                    summon_event if summon_event != "minecraft:entity_spawned" else {}
+                ),
             }
         )
         return self
@@ -4399,7 +4746,8 @@ class EntityAIDelayedAttack(_BaseAIGoal):
             x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Defaults to 30.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_delayed_attack
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_delayed_attack
         """
 
         super().__init__("behavior.delayed_attack")
@@ -4412,7 +4760,9 @@ class EntityAIDelayedAttack(_BaseAIGoal):
         if hit_delay_pct != 0.5:
             self._add_field("hit_delay_pct", clamp(hit_delay_pct, 0, 1))
         if inner_boundary_time_increase != 0.25:
-            self._add_field("inner_boundary_time_increase", inner_boundary_time_increase)
+            self._add_field(
+                "inner_boundary_time_increase", inner_boundary_time_increase
+            )
         if max_path_time != 0.55:
             self._add_field("max_path_time", max_path_time)
         if melee_fov != 90:
@@ -4420,7 +4770,9 @@ class EntityAIDelayedAttack(_BaseAIGoal):
         if min_path_time != 0.2:
             self._add_field("min_path_time", min_path_time)
         if outer_boundary_time_increase != 0.5:
-            self._add_field("outer_boundary_time_increase", outer_boundary_time_increase)
+            self._add_field(
+                "outer_boundary_time_increase", outer_boundary_time_increase
+            )
         if path_fail_time_increase != 0.75:
             self._add_field("path_fail_time_increase", path_fail_time_increase)
         if path_inner_boundary != 16:
@@ -4450,8 +4802,20 @@ class EntityAIDelayedAttack(_BaseAIGoal):
         self._add_field("attack_types", attack_types)
         return self
 
-    def on_attack(self, on_attack: str, target: FilterSubject = FilterSubject.Self, filter: Filter = None):
-        self._add_field("on_attack", {"event": on_attack, "filters": filter if not filter is None else {}, "target": target})
+    def on_attack(
+        self,
+        on_attack: str,
+        target: FilterSubject = FilterSubject.Self,
+        filter: Filter = None,
+    ):
+        self._add_field(
+            "on_attack",
+            {
+                "event": on_attack,
+                "filters": filter if not filter is None else {},
+                "target": target,
+            },
+        )
         return self
 
 
@@ -4476,7 +4840,10 @@ class EntityAIMoveToBlock(_BaseAIGoal):
 
         from anvil.lib.schemas import MinecraftBlockDescriptor
 
-        if not all(isinstance(block, (MinecraftBlockDescriptor, str)) for block in target_blocks):
+        if not all(
+            isinstance(block, (MinecraftBlockDescriptor, str))
+            for block in target_blocks
+        ):
             raise TypeError(
                 f"All target_blocks must be either MinecraftBlockDescriptor instances or strings representing block identifiers. Component [{self._identifier}]"
             )
@@ -4509,7 +4876,9 @@ class EntityAIMoveToBlock(_BaseAIGoal):
         self._add_field("on_reach", {"event": event, "target": target.value})
         return self
 
-    def on_stay_completed(self, event: Event, target: FilterSubject = FilterSubject.Self):
+    def on_stay_completed(
+        self, event: Event, target: FilterSubject = FilterSubject.Self
+    ):
         self._add_field("on_stay_completed", {"event": event, "target": target.value})
         return self
 
@@ -4578,14 +4947,17 @@ class EntityAISendEvent(_BaseAIGoal):
 class EntityAIMoveTowardsTarget(_BaseAIGoal):
     _identifier = "minecraft:behavior.move_towards_target"
 
-    def __init__(self, within_radius: float = 0.0, speed_multiplier: float = 1.0) -> None:
+    def __init__(
+        self, within_radius: float = 0.0, speed_multiplier: float = 1.0
+    ) -> None:
         """Compels an entity to move towards a target.
 
         Parameters:
             within_radius (float, optional): Defines the radius in blocks that the mob tries to be from the target. A value of 0 means it tries to occupy the same block as the target. Defaults to 0.0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_target
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_target
         """
         super().__init__("behavior.move_towards_target")
 
@@ -4598,7 +4970,13 @@ class EntityAIMoveTowardsTarget(_BaseAIGoal):
 class EntityAIRandomSitting(_BaseAIGoal):
     _identifier = "minecraft:behavior.random_sitting"
 
-    def __init__(self, cooldown_time: float = 0, min_sit_time: float = 10, start_chance: float = 0.1, stop_chance: float = 0.3) -> None:
+    def __init__(
+        self,
+        cooldown_time: float = 0,
+        min_sit_time: float = 10,
+        start_chance: float = 0.1,
+        stop_chance: float = 0.3,
+    ) -> None:
         """Compels an entity to stop and sit for a random duration of time.
 
         Parameters:
@@ -4607,7 +4985,8 @@ class EntityAIRandomSitting(_BaseAIGoal):
             start_chance (float, optional): This is the chance that the entity will start this goal, from 0 to 1. Defaults to 0.1.
             stop_chance (float, optional): This is the chance that the entity will stop this goal, from 0 to 1. Defaults to 0.3.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_sitting
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_sitting
         """
         super().__init__("behavior.random_sitting")
 
@@ -4627,7 +5006,8 @@ class EntityAIStayWhileSitting(_BaseAIGoal):
     def __init__(self) -> None:
         """Compels an entity to stay in place while sitting.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stay_while_sitting
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stay_while_sitting
         """
         super().__init__("behavior.stay_while_sitting")
 
@@ -4652,7 +5032,8 @@ class EntityAIRandomSwim(_BaseAIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim
         """
 
         super().__init__("behavior.random_swim")
@@ -4689,7 +5070,8 @@ class EntityAIRandomBreach(_BaseAIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_breach
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_breach
         """
 
         super().__init__("behavior.random_breach")
@@ -4726,7 +5108,8 @@ class EntityAIMoveToWater(_BaseAIGoal):
             search_range (int, optional): The distance in blocks it will look for water to move towards. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_water
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_water
         """
         super().__init__("behavior.move_to_water")
 
@@ -4762,7 +5145,8 @@ class EntityAIMoveToLand(_BaseAIGoal):
             search_range (int, optional): The distance in blocks it will look for land to move towards. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_land
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_land
         """
         super().__init__("behavior.move_to_land")
 
@@ -4798,7 +5182,8 @@ class EntityAIMoveToLava(_BaseAIGoal):
             search_range (int, optional): The distance in blocks it will look for lava to move towards. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_lava
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_lava
         """
         super().__init__("behavior.move_to_lava")
 
@@ -4945,7 +5330,8 @@ class EntityAIChargeAttack(_BaseAIGoal):
             success_rate (float, optional): Percent chance this entity will start a charge attack, if not already attacking (1.0 = 100%). Defaults to 0.1428.
             speed_multiplier (float, optional): Modifies the entity's speed when charging toward the target. Defaults to 1.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_attack
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_attack
         """
         super().__init__("behavior.charge_attack")
         if max_distance != 3:
@@ -4988,7 +5374,8 @@ class EntityAIRamAttack(_BaseAIGoal):
             ram_speed (float, optional): The entity's speed when charging toward the target. Defaults to 2.0.
             run_speed (float, optional): The entity's speed when running toward the target. Defaults to 1.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ram_attack
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ram_attack
         """
         super().__init__("behavior.ram_attack")
         if baby_knockback_modifier != 0.333333:
@@ -5045,11 +5432,10 @@ class EntityAIAvoidMobType(_BaseAIGoal):
             check_if_outnumbered (bool, optional): If true, the entity will only avoid other entities if it is outnumbered. Defaults to False.
             cooldown (float, optional): Time in seconds the entity has to wait before using the goal again. Defaults to 0.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_avoid_mob_type
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_avoid_mob_type
         """
         super().__init__("behavior.avoid_mob_type")
-
-        self._add_field("entity_types", [])
         if not avoid_mob_sound is None:
             self._add_field("avoid_mob_sound", avoid_mob_sound)
         if avoid_target_xz != 16:
@@ -5063,7 +5449,14 @@ class EntityAIAvoidMobType(_BaseAIGoal):
         if remove_target:
             self._add_field("remove_target", remove_target)
         if sound_interval != [3.0, 8.0]:
-            self._add_field("sound_interval", sound_interval)
+            if not isinstance(sound_interval, list):
+                raise TypeError("sound_interval must be a list of two numbers")
+            if len(sound_interval) != 2:
+                raise ValueError("sound_interval must contain exactly two numbers")
+            self._add_field("sound_interval", {
+                "range_min": min(sound_interval),
+                "range_max": max(sound_interval),
+            })
         if check_if_outnumbered:
             self._add_field("check_if_outnumbered", check_if_outnumbered)
         if cooldown != 0.0:
@@ -5100,7 +5493,7 @@ class EntityAIAvoidMobType(_BaseAIGoal):
             a["sprint_speed_multiplier"] = sprint_speed_multiplier
         if walk_speed_multiplier != 1.0:
             a["walk_speed_multiplier"] = walk_speed_multiplier
-        self._component["entity_types"].append(a)
+        self._get_field("entity_types", []).append(a)
         return self
 
     def on_escape_event(self, event: str, target: FilterSubject = FilterSubject.Self):
@@ -5110,7 +5503,8 @@ class EntityAIAvoidMobType(_BaseAIGoal):
             event (str): Event to trigger.
             target (FilterSubject, optional): Target of the event. Defaults to FilterSubject.Self.
         """
-        self._add_field("on_escape_event", {"event": event, "target": target.value})
+        # append to the escape event list so multiple handlers can be added
+        self._get_field("on_escape_event", []).append({"event": event, "target": target.value})
         return self
 
 
@@ -5132,7 +5526,8 @@ class EntityAILeapAtTarget(_BaseAIGoal):
             target_dist (float, optional): Distance in blocks the mob jumps when leaping at its target. Defaults to 0.3.
             yd (float, optional): Height in blocks the mob jumps when leaping at its target. Defaults to 0.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_leap_at_target
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_leap_at_target
         """
 
         super().__init__("behavior.leap_at_target")
@@ -5176,7 +5571,8 @@ class EntityAIOcelotAttack(_BaseAIGoal):
             x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Defaults to 30.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ocelotattack
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ocelotattack
         """
         super().__init__("behavior.ocelotattack")
         if cooldown_time != 5:
@@ -5229,7 +5625,8 @@ class EntityAIOwnerHurtByTarget(_BaseAIGoal):
             sprint_speed_multiplier (float, optional): Multiplier for the running speed. A value of 1.0 means the speed is unchanged. Defaults to 1.0.
             walk_speed_multiplier (float, optional): Multiplier for the walking speed. A value of 1.0 means the speed is unchanged. Defaults to 1.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_owner_hurt_by_target
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_owner_hurt_by_target
         """
         super().__init__("behavior.owner_hurt_by_target")
 
@@ -5281,7 +5678,8 @@ class EntityAIOwnerHurtTarget(_BaseAIGoal):
             sprint_speed_multiplier (float, optional): Multiplier for the running speed. A value of 1.0 means the speed is unchanged. Defaults to 1.0.
             walk_speed_multiplier (float, optional): Multiplier for the walking speed. A value of 1.0 means the speed is unchanged. Defaults to 1.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_owner_hurt_target
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_owner_hurt_target
         """
         super().__init__("behavior.owner_hurt_target")
 
@@ -5339,7 +5737,8 @@ class EntityAIRandomSearchAndDig(_BaseAIGoal):
             target_blocks (list[str], optional): List of target block types on which the goal will look to dig. Overrides the default list. Defaults to [].
             target_dig_position_offset (float, optional): Dig target position offset from the feet position of the entity in their facing direction. Defaults to 2.25.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_search_and_dig
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_search_and_dig
         """
         super().__init__("behavior.random_search_and_dig")
 
@@ -5372,19 +5771,29 @@ class EntityAIRandomSearchAndDig(_BaseAIGoal):
         self._add_field("on_digging_start", {"event": event, "target": target.value})
         return self
 
-    def on_fail_during_digging(self, event: str, target: FilterSubject = FilterSubject.Self):
-        self._add_field("on_fail_during_digging", {"event": event, "target": target.value})
+    def on_fail_during_digging(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ):
+        self._add_field(
+            "on_fail_during_digging", {"event": event, "target": target.value}
+        )
         return self
 
-    def on_fail_during_searching(self, event: str, target: FilterSubject = FilterSubject.Self):
-        self._add_field("on_fail_during_searching", {"event": event, "target": target.value})
+    def on_fail_during_searching(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ):
+        self._add_field(
+            "on_fail_during_searching", {"event": event, "target": target.value}
+        )
         return self
 
     def on_item_found(self, event: str, target: FilterSubject = FilterSubject.Self):
         self._add_field("on_item_found", {"event": event, "target": target.value})
         return self
 
-    def on_searching_start(self, event: str, target: FilterSubject = FilterSubject.Self):
+    def on_searching_start(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ):
         self._add_field("on_searching_start", {"event": event, "target": target.value})
         return self
 
@@ -5445,7 +5854,8 @@ class EntityAIStompAttack(_BaseAIGoal):
             x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Defaults to 30.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stomp_attack
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stomp_attack
         """
         super().__init__("behavior.stomp_attack")
 
@@ -5456,7 +5866,9 @@ class EntityAIStompAttack(_BaseAIGoal):
         if cooldown_time != 1:
             self._add_field("cooldown_time", cooldown_time)
         if inner_boundary_time_increase != 0.25:
-            self._add_field("inner_boundary_time_increase", inner_boundary_time_increase)
+            self._add_field(
+                "inner_boundary_time_increase", inner_boundary_time_increase
+            )
         if max_path_time != 0.55:
             self._add_field("max_path_time", max_path_time)
         if melee_fov != 90:
@@ -5466,7 +5878,9 @@ class EntityAIStompAttack(_BaseAIGoal):
         if no_damage_range_multiplier != 2:
             self._add_field("no_damage_range_multiplier", no_damage_range_multiplier)
         if outer_boundary_time_increase != 0.5:
-            self._add_field("outer_boundary_time_increase", outer_boundary_time_increase)
+            self._add_field(
+                "outer_boundary_time_increase", outer_boundary_time_increase
+            )
         if path_fail_time_increase != 0.75:
             self._add_field("path_fail_time_increase", path_fail_time_increase)
         if path_inner_boundary != 16:
@@ -5513,7 +5927,8 @@ class EntityAIFollowMob(_BaseAIGoal):
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
             stop_distance (int, optional): The distance in blocks this mob stops from the mob it is following. Defaults to 2.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_mob
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_mob
         """
         super().__init__("behavior.follow_mob")
         if search_range != 0:
@@ -5544,7 +5959,8 @@ class EntityAIRandomSwim(_BaseAIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the entity will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim
         """
         super().__init__("behavior.random_swim")
 
@@ -5580,7 +5996,8 @@ class EntityAIRandomBreach(_BaseAIGoal):
             y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
             cooldown_time (seconds, optional): The amount of time in seconds that the mob has to wait before selecting a target of the same type again. Defaults to 10.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior
         """
         super().__init__("behavior.random_breach")
 
@@ -5618,7 +6035,8 @@ class EntityAIRandomHover(_BaseAIGoal):
             y_dist (int, optional): Distance in blocks that the entity will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
             y_offset (float, optional): Height in blocks to add to the selected target position. Defaults to 0.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_hover
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_hover
         """
         super().__init__("behavior.random_hover")
 
@@ -5648,7 +6066,8 @@ class EntityAIRoar(_BaseAIGoal):
         Parameters:
             duration (seconds, optional): The amount of time to roar for. Defaults to 0.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_roar
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_roar
         """
         super().__init__("behavior.roar")
 
@@ -5661,41 +6080,78 @@ class EntityAIFloatWander(_BaseAIGoal):
 
     def __init__(
         self,
+        additional_collision_buffer: bool = False,
+        allow_navigating_through_liquids: bool = False,
         float_duration: tuple[Seconds, Seconds] = (0.0, 0.0),
+        float_wander_has_move_control: bool = True,
         must_reach: bool = False,
+        navigate_around_surface: bool = False,
         priority: int = 0,
         random_reselect: bool = False,
+        surface_xz_dist: int = 0,
+        surface_y_dist: int = 0,
+        use_home_position_restriction: bool = True,
         xz_dist: int = 10,
         y_dist: int = 7,
         y_offset: float = 0.0,
     ) -> None:
-        """Compels an entity to float around in a random direction, similar to the ghast entity.
+        """Allows the mob to float around like the Ghast.
 
         Parameters:
+            additional_collision_buffer (bool, optional): If true, the mob will have an additional buffer zone around it to avoid collisions with blocks when picking a position to wander to. Defaults to False.
+            allow_navigating_through_liquids (bool, optional): If true allows the mob to navigate through liquids on its way to the target position. Defaults to False.
             float_duration (tuple[Seconds, Seconds], optional): Range of time in seconds the mob will float around before landing and choosing to do something else. Defaults to (0.0, 0.0).
+            float_wander_has_move_control (bool, optional): If true, the MoveControl flag will be added to the behavior which means that it can no longer be active at the same time as other behaviors with MoveControl. Defaults to True.
             must_reach (bool, optional): If true, the point has to be reachable to be a valid target. Defaults to False.
+            navigate_around_surface (bool, optional): If true, will prioritize finding random positions in the vicinity of surfaces, i.e. blocks that are not Air or Liquid. Defaults to False.
             priority (int, optional): The higher the priority, the sooner this behavior will be executed as a goal. Defaults to 0.
             random_reselect (bool, optional): If true, the mob will randomly pick a new point while moving to the previously selected one. Defaults to False.
+            surface_xz_dist (int, optional): The horizontal distance in blocks that the goal will check for a surface from a candidate position. Only valid when navigate_around_surface is true. Defaults to 0.
+            surface_y_dist (int, optional): The vertical distance in blocks that the goal will check for a surface from a candidate position. Only valid when navigate_around_surface is true. Defaults to 0.
+            use_home_position_restriction (bool, optional): If true, the mob will respect home position restrictions when choosing new target positions. If false, it will choose target position without considering home restrictions. Defaults to True.
             xz_dist (int, optional): Distance in blocks on ground that the mob will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
             y_offset (float, optional): Height in blocks to add to the selected target position. Defaults to 0.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float_wander
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float_wander?view=minecraft-bedrock-stable
         """
         super().__init__("behavior.float_wander")
 
+        if additional_collision_buffer:
+            self._add_field("additional_collision_buffer", additional_collision_buffer)
+        if allow_navigating_through_liquids:
+            self._add_field(
+                "allow_navigating_through_liquids", allow_navigating_through_liquids
+            )
         if float_duration != (0.0, 0.0):
             self._add_field("float_duration", float_duration)
+        if not float_wander_has_move_control:
+            self._add_field(
+                "float_wander_has_move_control", float_wander_has_move_control
+            )
         if must_reach:
             self._add_field("must_reach", must_reach)
+        if navigate_around_surface:
+            self._add_field("navigate_around_surface", navigate_around_surface)
         if priority != 0:
             self._add_field("priority", priority)
         if random_reselect:
             self._add_field("random_reselect", random_reselect)
+        if surface_xz_dist != 0:
+            self._add_field("surface_xz_dist", surface_xz_dist)
+        if surface_y_dist != 0:
+            self._add_field("surface_y_dist", surface_y_dist)
+        if not use_home_position_restriction:
+            self._add_field(
+                "use_home_position_restriction", use_home_position_restriction
+            )
         if xz_dist != 10:
             self._add_field("xz_dist", xz_dist)
         if y_dist != 7:
             self._add_field("y_dist", y_dist)
+        if y_offset != 0.0:
+            self._add_field("y_offset", y_offset)
 
 
 class EntityAILayDown(_BaseAIGoal):
@@ -5712,7 +6168,8 @@ class EntityAILayDown(_BaseAIGoal):
             interval (int, optional): A random value to determine at what intervals something can occur. This has a 1/interval chance to choose this goal. Defaults to 120.
             random_stop_interval (int, optional): A random value to determine at what interval the AI goal can stop. This has a 1/interval chance to stop this goal. Defaults to 120.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_lay_down
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_lay_down
         """
         super().__init__("behavior.lay_down")
 
@@ -5774,7 +6231,8 @@ class EntityAIMeleeBoxAttack(_BaseAIGoal):
             x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Defaults to 30.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_melee_box_attack
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_melee_box_attack
         """
         super().__init__("behavior.melee_box_attack")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.20.50")
@@ -5790,7 +6248,9 @@ class EntityAIMeleeBoxAttack(_BaseAIGoal):
         if horizontal_reach != 0.8:
             self._add_field("horizontal_reach", horizontal_reach)
         if inner_boundary_time_increase != 0.25:
-            self._add_field("inner_boundary_time_increase", inner_boundary_time_increase)
+            self._add_field(
+                "inner_boundary_time_increase", inner_boundary_time_increase
+            )
         if max_path_time != 0.55:
             self._add_field("max_path_time", max_path_time)
         if melee_fov != 90:
@@ -5798,7 +6258,9 @@ class EntityAIMeleeBoxAttack(_BaseAIGoal):
         if min_path_time != 0.2:
             self._add_field("min_path_time", min_path_time)
         if outer_boundary_time_increase != 0.5:
-            self._add_field("outer_boundary_time_increase", outer_boundary_time_increase)
+            self._add_field(
+                "outer_boundary_time_increase", outer_boundary_time_increase
+            )
         if path_fail_time_increase != 0.75:
             self._add_field("path_fail_time_increase", path_fail_time_increase)
         if path_inner_boundary != 16:
@@ -5842,7 +6304,8 @@ class EntityAITimerFlag1(_BaseAIGoal):
             cooldown_range (tuple[Seconds, Seconds], optional): The goal cooldown range, in seconds. Defaults to (10.0, 10.0).
             duration_range (tuple[Seconds, Seconds], optional): The goal duration range, in seconds. Defaults to (2.0, 2.0).
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_1
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_1
         """
         super().__init__("behavior.timer_flag_1")
 
@@ -5877,7 +6340,8 @@ class EntityAITimerFlag2(_BaseAIGoal):
             cooldown_range (tuple[Seconds, Seconds], optional): The goal cooldown range, in seconds. Defaults to (10.0, 10.0).
             duration_range (tuple[Seconds, Seconds], optional): The goal duration range, in seconds. Defaults to (2.0, 2.0).
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_2
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_2
         """
         super().__init__("behavior.timer_flag_2")
 
@@ -5912,7 +6376,8 @@ class EntityAITimerFlag3(_BaseAIGoal):
             cooldown_range (tuple[Seconds, Seconds], optional): The goal cooldown range, in seconds. Defaults to (10.0, 10.0).
             duration_range (tuple[Seconds, Seconds], optional): The goal duration range, in seconds. Defaults to (2.0, 2.0).
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_3
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_3
         """
         super().__init__("behavior.timer_flag_3")
 
@@ -5945,7 +6410,8 @@ class EntityAIRunAroundLikeCrazy(_BaseAIGoal):
             priority (int, optional): The higher the priority, the sooner this behavior will be executed as a goal. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_run_around_like_crazy
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_run_around_like_crazy
         """
         super().__init__("behavior.run_around_like_crazy")
 
@@ -5965,7 +6431,8 @@ class EntityAISlimeKeepOnJumping(_BaseAIGoal):
         Parameters:
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_keep_on_jumping
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_keep_on_jumping
         """
         super().__init__("behavior.slime_keep_on_jumping")
 
@@ -5989,7 +6456,8 @@ class EntityAIRiseToLiquidLevel(_BaseAIGoal):
             rise_delta (float, optional): Movement up in Y per tick when below the liquid surface. Defaults to 0.0.
             sink_delta (float, optional): Movement down in Y per tick when above the liquid surface. Defaults to 0.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_rise_to_liquid_level
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_rise_to_liquid_level
         """
         super().__init__("behavior.rise_to_liquid_level")
 
@@ -6025,7 +6493,8 @@ class EntityAITakeBlock(_BaseAIGoal):
             xz_range (tuple[int, int], optional): XZ range from which the entity will try and take blocks from. Defaults to (0, 0).
             y_range (tuple[int, int], optional): Y range from which the entity will try and take blocks from. Defaults to (0, 0).
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_block
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_block
         """
         super().__init__("behavior.take_block")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.20.100")
@@ -6081,7 +6550,8 @@ class EntityAIPlaceBlock(_BaseAIGoal):
             xz_range (Vector2D, optional): XZ range from which the entity will try and place blocks in. Defaults to (0, 0).
             y_range (Vector2D, optional): Y range from which the entity will try and place blocks in. Defaults to (0, 0).
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_place_block
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_place_block
         """
         super().__init__("behavior.place_block")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.20.100")
@@ -6113,7 +6583,9 @@ class EntityAIPlaceBlock(_BaseAIGoal):
         self._add_field("on_place", {"event": event, "target": target.value})
         return self
 
-    def randomly_placeable_block(self, block: BlockDescriptor, filter: Filter, states: dict[str, Any] = None):
+    def randomly_placeable_block(
+        self, block: BlockDescriptor, filter: Filter, states: dict[str, Any] = None
+    ):
         """Sets the block that the entity can randomly place.
 
         Parameters:
@@ -6125,7 +6597,10 @@ class EntityAIPlaceBlock(_BaseAIGoal):
             self: Returns the current instance for method chaining.
         """
         self._get_field("randomly_placeable_blocks").append(
-            {"block": {"name": block.name, "states": states if states else {}}, "filter": filter}
+            {
+                "block": {"name": block.name, "states": states if states else {}},
+                "filter": filter,
+            }
         )
         return self
 
@@ -6146,7 +6621,8 @@ class EntityAIMoveToRandomBlock(_BaseAIGoal):
             speed_multiplier (float, optional): Movement speed multiplier while using this goal. Default: 1.0.
             within_radius (float, optional): Distance in blocks the mob must be from the block to consider movement finished. Default: 0.0.
 
-        [Documentation reference]: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_random_block
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_random_block
         """
         super().__init__("behavior.move_to_random_block")
 
@@ -6156,3 +6632,159 @@ class EntityAIMoveToRandomBlock(_BaseAIGoal):
             self._add_field("speed_multiplier", speed_multiplier)
         if within_radius != 0.0:
             self._add_field("within_radius", within_radius)
+
+
+class EntityAIDig(_BaseAIGoal):
+    _identifier = "minecraft:behavior.dig"
+
+    def __init__(
+        self,
+        duration: Seconds = 0,
+        idle_time: Seconds = 0,
+        allow_dig_when_named: bool = False,
+        digs_in_daylight: bool = False,
+        suspicion_is_disturbance: bool = False,
+        vibration_is_disturbance: bool = False,
+    ) -> None:
+        """Allows this entity to dig into the ground before despawning.
+
+        Parameters:
+            duration (seconds, optional): Goal duration in seconds. Defaults to 0.
+            idle_time (seconds, optional): Minimum idle time in seconds between the last detected disturbance to the start of digging. Defaults to 0.
+            allow_dig_when_named (bool, optional): If true, this behavior can run when this entity is named. Defaults to False.
+            digs_in_daylight (bool, optional): If true, the actor should start digging when it sees daylight. Defaults to False.
+            suspicion_is_disturbance (bool, optional): If true, finding new suspicious locations count as disturbances that may delay start. Defaults to False.
+            vibration_is_disturbance (bool, optional): If true, vibrations count as disturbances that may delay start. Defaults to False.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_dig
+        """
+        super().__init__("behavior.dig")
+
+        if duration != 0:
+            self._add_field("duration", duration)
+        if idle_time != 0:
+            self._add_field("idle_time", idle_time)
+        if allow_dig_when_named:
+            self._add_field("allow_dig_when_named", allow_dig_when_named)
+        if digs_in_daylight:
+            self._add_field("digs_in_daylight", digs_in_daylight)
+        if suspicion_is_disturbance:
+            self._add_field("suspicion_is_disturbance", suspicion_is_disturbance)
+        if vibration_is_disturbance:
+            self._add_field("vibration_is_disturbance", vibration_is_disturbance)
+
+    def on_start(self, event: str, target: FilterSubject = FilterSubject.Self):
+        """Sets an event to run when the dig goal starts.
+
+        Parameters:
+            event (str): The event name to trigger.
+            target (FilterSubject, optional): The event target. Defaults to FilterSubject.Self.
+
+        Returns:
+            self: for chaining.
+        """
+        self._add_field("on_start", {"event": event, "target": target.value})
+        return self
+
+
+class EntityAIDrinkMilk(_BaseAIGoal):
+    _identifier = "minecraft:behavior.drink_milk"
+
+    def __init__(
+        self,
+        cooldown_seconds: Seconds = 5,
+        filters: Filter = None,
+    ) -> None:
+        """Allows the mob to drink milk based on specified environment conditions.
+
+        Parameters:
+            cooldown_seconds (seconds, optional): Time the goal is on cooldown before it can be used again. Defaults to 5.
+            filters (Filter, optional): Conditions that need to be met for the behavior to start. Defaults to None.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_drink_milk
+        """
+        super().__init__("behavior.drink_milk")
+
+        if cooldown_seconds != 5:
+            self._add_field("cooldown_seconds", cooldown_seconds)
+        if filters is not None:
+            self._add_field("filters", filters)
+
+
+class EntityAIAvoidBlock(_BaseAIGoal):
+    _identifier = "minecraft:behavior.avoid_block"
+
+    def __init__(
+        self,
+        tick_interval: int = 1,
+        search_range: int = 0,
+        search_height: int = 0,
+        walk_speed_modifier: float = 1.0,
+        sprint_speed_modifier: float = 1.0,
+        avoid_block_sound: str = None,
+        sound_interval: list[float] = None,
+        target_selection_method: Literal["nearest"] = "nearest",
+        target_blocks: list[BlockDescriptor] = [],
+    ) -> None:
+        """Allows this entity to avoid certain blocks.
+
+        Parameters:
+            tick_interval (int, optional): Start tick interval. Defaults to 1.
+            search_range (int, optional): Maximum distance to look for a block in xz. Defaults to 0.
+            search_height (int, optional): Maximum distance to look for a block in y. Defaults to 0.
+            walk_speed_modifier (float, optional): Modifier for walking speed. Defaults to 1.0.
+            sprint_speed_modifier (float, optional): Modifier for sprint speed. Defaults to 1.0.
+            avoid_block_sound (str, optional): Sound event to play when avoiding a block. Defaults to None.
+            sound_interval (list[float], optional): Range/time to randomly wait before playing the sound again. Defaults to None.
+            target_selection_method (str, optional): Block search method. Defaults to "nearest".
+            target_blocks (list[str], optional): List of block types this mob avoids. Defaults to [].
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_avoid_block
+        """
+        super().__init__("behavior.avoid_block")
+
+        if tick_interval != 1:
+            self._add_field("tick_interval", tick_interval)
+        if search_range != 0:
+            self._add_field("search_range", search_range)
+        if search_height != 0:
+            self._add_field("search_height", search_height)
+        if walk_speed_modifier != 1.0:
+            self._add_field("walk_speed_modifier", walk_speed_modifier)
+        if sprint_speed_modifier != 1.0:
+            self._add_field("sprint_speed_modifier", sprint_speed_modifier)
+        if avoid_block_sound is not None:
+            self._add_field("avoid_block_sound", avoid_block_sound)
+        if sound_interval is not None:
+            if not isinstance(sound_interval, list):
+                raise TypeError("sound_interval must be a list of two floats")
+            if len(sound_interval) != 2:
+                raise ValueError("sound_interval must be a list of two floats")
+            self._add_field("sound_interval", {
+                "range_min": min(sound_interval),
+                "range_max": max(sound_interval)
+            })
+        if target_selection_method != "nearest":
+            self._add_field("target_selection_method", target_selection_method)
+        if not target_blocks == []:
+            self._add_field("target_blocks", target_blocks)
+
+        self._add_field("on_escape", [])
+
+    def on_escape(self, event: str, target: FilterSubject = FilterSubject.Self):
+        """Add an escape event to be triggered when the mob escapes the avoided block.
+
+        Parameters:
+            event (str): The event name to trigger.
+            target (FilterSubject, optional): The event target. Defaults to FilterSubject.Self.
+
+        Returns:
+            self: for chaining.
+        """
+        self._get_field("on_escape").append({"event": event, "target": target.value})
+        return self
+
+

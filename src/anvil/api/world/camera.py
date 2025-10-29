@@ -110,7 +110,10 @@ class CameraPreset(AddonObject):
             is_vanilla (bool, optional): Whether the camera preset is a vanilla camera preset. Defaults to False.
         """
         super().__init__(name)
-        self._inherit = inherit_from.value if isinstance(inherit_from, CameraPresets) else str(inherit_from)
+        if not isinstance(inherit_from, CameraPresets):
+            raise ValueError("inherit_from must be an instance of CameraPresets enum.")
+
+        self._inherit = inherit_from
         self._camera_preset = JsonSchemes.camera_preset(self.identifier, self._inherit)
         self._replace_reticle = False
 
@@ -172,9 +175,7 @@ class CameraPreset(AddonObject):
             if value == False:
                 self._camera_preset["minecraft:camera_preset"]["extend_player_rendering"] = False
         else:
-            raise ValueError(
-                f"Extend player rendering can only be set for the Free camera preset, not {self._inherit}."
-            )
+            raise ValueError(f"Extend player rendering can only be set for the Free camera preset, not {self._inherit}.")
         return self
 
     def view_offset(self, x_offset: float, y_offset: float):
@@ -244,7 +245,7 @@ class CameraPreset(AddonObject):
         if y != 0:
             self._camera_preset["minecraft:camera_preset"]["starting_rot_y"] = y
         return self
-    
+
     def queue(self):
         """Queues the camera preset to be exported."""
         self.content(self._camera_preset)

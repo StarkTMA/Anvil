@@ -72,7 +72,12 @@ class _ItemServer(AddonObject):
         if not self._components._has(ItemDisplayName):
             self._server_item["minecraft:item"]["components"][
                 ItemDisplayName._identifier
-            ] = {"value": self._display_name}
+            ] = {"value": f"item.{self.identifier}.name"}
+
+            ANVIL.definitions.register_lang(
+                f"item.{self.identifier}.name",
+                self._display_name,
+            )
 
         self.content(self._server_item)
 
@@ -100,10 +105,7 @@ class Item(ItemDescriptor):
         display_name = self.server._server_item["minecraft:item"]["components"][
             "minecraft:display_name"
         ]["value"]
-        ANVIL.definitions.register_lang(
-            f"item.{self.identifier}.name",
-            display_name,
-        )
+
         CONFIG.Report.add_report(
             ReportType.ITEM,
             vanilla=self._is_vanilla,

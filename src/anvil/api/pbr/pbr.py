@@ -6,66 +6,92 @@ from anvil import ANVIL, CONFIG
 from anvil.api.world.fog import Fog
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.enums import MusicCategory, SoundCategory
-from anvil.lib.lib import Color, clamp, process_color
+from anvil.lib.lib import Color, HexRGB, clamp, convert_color
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.sounds import SoundDescription
-from anvil.lib.types import RGB, RGBA, Block, ColorHex, Identifier, Vector3D
+from anvil.lib.types import RGB, RGBA, Block, HexRGBA, Identifier, Vector3D
 
 
-class __TextureSet(AddonObject):
+class TextureSet(AddonObject):
     _extension = ".texture_set.json"
-    _path = os.path.join(CONFIG.RP_PATH, "textures")
+    _path = os.path.join(
+        CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME
+    )
     _object_type = "Texture Set"
 
-    def __init__(self, name: str, target: str) -> None:
-        super().__init__(name)
-        self.content(JsonSchemes.texture_set(f"{CONFIG.NAMESPACE}:{name}"))
-        self._path = os.path.join(self._path, target)
+    def __init__(self, texture_name: str) -> None:
+        super().__init__(texture_name)
+        self.content(JsonSchemes.texture_set())
 
     def set_textures(
         self,
         blockbench_name: str,
         color_texture: str,
-        normal_texture: Optional[str | RGB | RGBA],
-        heightmap_texture: Optional[str | RGB | RGBA],
-        metalness_emissive_roughness_texture: Optional[str | RGB | RGBA],
-        metalness_emissive_roughness_subsurface_texture: Optional[str | RGB | RGBA],
+        normal_texture: str | Color | None,
+        heightmap_texture: str | Color | None,
+        metalness_emissive_roughness_texture: str | Color | None,
+        metalness_emissive_roughness_subsurface_texture: str | Color | None,
     ):
         if normal_texture is not None and heightmap_texture is not None:
             raise ValueError("Normal and heightmap textures are mutually exclusive.")
 
-        if metalness_emissive_roughness_texture is not None and metalness_emissive_roughness_subsurface_texture is not None:
-            raise ValueError("Metalness, emissive, roughness and subsurface textures are mutually exclusive.")
+        if (
+            metalness_emissive_roughness_texture is not None
+            and metalness_emissive_roughness_subsurface_texture is not None
+        ):
+            raise ValueError(
+                "Metalness, emissive, roughness and subsurface textures are mutually exclusive."
+            )
 
-        bb = _Blockbench(blockbench_name, "actors")
-        bb.textures.queue_texture(color_texture)
-
-        if type(normal_texture) is str:
-            bb.textures.queue_texture(normal_texture)
-        if type(heightmap_texture) is str:
-            bb.textures.queue_texture(heightmap_texture)
-        if type(metalness_emissive_roughness_texture) is str:
-            bb.textures.queue_texture(metalness_emissive_roughness_texture)
-        if type(metalness_emissive_roughness_subsurface_texture) is str:
-            bb.textures.queue_texture(metalness_emissive_roughness_subsurface_texture)
+        self._blockbench = _Blockbench(blockbench_name, "actors")
+        self._blockbench.textures.queue_texture(color_texture)
 
         self._content["minecraft:texture_set"]["color"] = color_texture
-        self._content["minecraft:texture_set"]["normal"] = (
-            normal_texture if type(normal_texture) is str else process_color(normal_texture)
-        )
-        self._content["minecraft:texture_set"]["heightmap"] = (
-            heightmap_texture if type(heightmap_texture) is str else process_color(heightmap_texture)
-        )
-        self._content["minecraft:texture_set"]["metalness_emissive_roughness"] = (
-            metalness_emissive_roughness_texture
-            if type(metalness_emissive_roughness_texture) is str
-            else process_color(metalness_emissive_roughness_texture)
-        )
-        self._content["minecraft:texture_set"]["metalness_emissive_roughness_subsurface"] = (
-            metalness_emissive_roughness_subsurface_texture
-            if type(metalness_emissive_roughness_subsurface_texture) is str
-            else process_color(metalness_emissive_roughness_subsurface_texture)
-        )
+        self._path = os.path.join(self._path, "blocks", blockbench_name)
+
+        if type(normal_texture) is str:
+            self._blockbench.textures.queue_texture(normal_texture)
+            self._content["minecraft:texture_set"]["normal"] = color_texture
+        elif type(normal_texture) is Color:
+            self._content["minecraft:texture_set"]["normal"] = convert_color(
+                normal_texture, HexRGB
+            )
+
+        if type(heightmap_texture) is str:
+            self._blockbench.textures.queue_texture(heightmap_texture)
+            self._content["minecraft:texture_set"]["heightmap"] = heightmap_texture
+        elif type(heightmap_texture) is Color:
+            self._content["minecraft:texture_set"]["heightmap"] = convert_color(
+                heightmap_texture, HexRGB
+            )
+
+        if type(metalness_emissive_roughness_texture) is str:
+            self._blockbench.textures.queue_texture(
+                metalness_emissive_roughness_texture
+            )
+            self._content["minecraft:texture_set"][
+                "metalness_emissive_roughness"
+            ] = metalness_emissive_roughness_texture
+        elif type(metalness_emissive_roughness_texture) is Color:
+            self._content["minecraft:texture_set"]["metalness_emissive_roughness"] = (
+                convert_color(metalness_emissive_roughness_texture, HexRGB)
+            )
+
+        if type(metalness_emissive_roughness_subsurface_texture) is str:
+            self._blockbench.textures.queue_texture(
+                metalness_emissive_roughness_subsurface_texture
+            )
+            self._content["minecraft:texture_set"][
+                "metalness_emissive_roughness_subsurface"
+            ] = metalness_emissive_roughness_subsurface_texture
+        elif type(metalness_emissive_roughness_subsurface_texture) is Color:
+            self._content["minecraft:texture_set"][
+                "metalness_emissive_roughness_subsurface"
+            ] = convert_color(metalness_emissive_roughness_subsurface_texture, HexRGBA)
+
+    def _export(self):
+        if self._content["minecraft:texture_set"] != {}:
+            super()._export()
 
 
 class AtmosphericSettings(AddonObject):
@@ -75,12 +101,20 @@ class AtmosphericSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
+            raise RuntimeError(
+                "Atmospherics addon requires PBR to be enabled in the config."
+            )
         super().__init__("atmospherics")
-        self.content(JsonSchemes.atmosphere_settings(f"{CONFIG.NAMESPACE}:atmosphere_settings"))
+        self.content(
+            JsonSchemes.atmosphere_settings(f"{CONFIG.NAMESPACE}:atmosphere_settings")
+        )
 
     def horizon_blend_stops(
-        self, min: dict[float, float], start: dict[float, float], mie_start: dict[float, float], max: dict[float, float]
+        self,
+        min: dict[float, float],
+        start: dict[float, float],
+        mie_start: dict[float, float],
+        max: dict[float, float],
     ):
         self._content["horizon_blend_stops"] = {
             "min": {
@@ -124,7 +158,12 @@ class AtmosphericSettings(AddonObject):
 
     def sky_horizon_color(self, keyframe: dict[float, RGB]):
         self._content["sky_horizon_color"] = {
-            **{clamp(k, 0.0, 1.0): process_color(v) for k, v in keyframe.items()},
+            **{
+                clamp(k, 0.0, 1.0): convert_color(
+                    v,
+                )
+                for k, v in keyframe.items()
+            },
         }
 
 
@@ -135,7 +174,9 @@ class FogSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
+            raise RuntimeError(
+                "Atmospherics addon requires PBR to be enabled in the config."
+            )
         super().__init__("fog")
         self.content(JsonSchemes.fog_settings(f"{CONFIG.NAMESPACE}:fog_settings"))
 
@@ -145,7 +186,12 @@ class FogSettings(AddonObject):
             "uniform": uniform,
         }
 
-    def air_density(self, max_density: float, zero_density_height: float = 0.0, max_density_height: float = 0.0):
+    def air_density(
+        self,
+        max_density: float,
+        zero_density_height: float = 0.0,
+        max_density_height: float = 0.0,
+    ):
         self._content["minecraft:fog_settings"]["volumetric"]["density"]["air"] = {
             "max_density": clamp(max_density, 0.0, 1.0),
             "zero_density_height": zero_density_height,
@@ -178,11 +224,15 @@ class ShadowSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
+            raise RuntimeError(
+                "Atmospherics addon requires PBR to be enabled in the config."
+            )
         super().__init__("shadows")
         self.content(JsonSchemes.shadow_settings(f"{CONFIG.NAMESPACE}:shadow_settings"))
 
-    def shadow_style(self, style: Literal["blocky_shadows", "soft_shadows"], texel_size: float = 16):
+    def shadow_style(
+        self, style: Literal["blocky_shadows", "soft_shadows"], texel_size: float = 16
+    ):
         self._content["minecraft:shadow_settings"]["shadow_style"] = style
         self._content["minecraft:shadow_settings"]["texel_size"] = texel_size
 
@@ -194,12 +244,17 @@ class WaterSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
+            raise RuntimeError(
+                "Atmospherics addon requires PBR to be enabled in the config."
+            )
         super().__init__("water_settings")
         self.content(JsonSchemes.water_settings(f"{CONFIG.NAMESPACE}:water_settings"))
 
     def particle_concentrations(
-        self, cdom: float | None = None, chlorophyll: float | None = None, suspended_sediment: float | None = None
+        self,
+        cdom: float | None = None,
+        chlorophyll: float | None = None,
+        suspended_sediment: float | None = None,
     ):
         """
         The composition of particles in a body of water determines its color and how light behaves as it
@@ -210,7 +265,9 @@ class WaterSettings(AddonObject):
             chlorophyll (float | None): Concentration of chlorophyll in the water.
             suspended_sediment (float | None): Concentration of suspended sediment in the water.
         """
-        pc = self._content["minecraft:water_settings"].setdefault("particle_concentrations", {})
+        pc = self._content["minecraft:water_settings"].setdefault(
+            "particle_concentrations", {}
+        )
         if cdom is not None:
             pc["cdom"] = clamp(cdom, 0.0, 15.0)
         if chlorophyll is not None:
@@ -319,9 +376,15 @@ class ColorGradingSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
+            raise RuntimeError(
+                "Atmospherics addon requires PBR to be enabled in the config."
+            )
         super().__init__("color_grading_settings")
-        self.content(JsonSchemes.color_grading_settings(f"{CONFIG.NAMESPACE}:color_grading_settings"))
+        self.content(
+            JsonSchemes.color_grading_settings(
+                f"{CONFIG.NAMESPACE}:color_grading_settings"
+            )
+        )
 
     def midtones(
         self,
@@ -331,8 +394,12 @@ class ColorGradingSettings(AddonObject):
         offset: Vector3D | None = None,
         saturation: Vector3D | None = None,
     ):
-        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault("midtones", {})
-        mid = self._content["minecraft:color_grading_settings"]["color_grading"]["midtones"]
+        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault(
+            "midtones", {}
+        )
+        mid = self._content["minecraft:color_grading_settings"]["color_grading"][
+            "midtones"
+        ]
         if contrast is not None:
             mid["contrast"] = [clamp(c, 0.0, 4.0) for c in contrast]
         if gain is not None:
@@ -355,8 +422,12 @@ class ColorGradingSettings(AddonObject):
         saturation: list[float] | None = None,
     ):
 
-        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault("highlights", {})
-        high = self._content["minecraft:color_grading_settings"]["color_grading"]["highlights"]
+        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault(
+            "highlights", {}
+        )
+        high = self._content["minecraft:color_grading_settings"]["color_grading"][
+            "highlights"
+        ]
         high["enabled"] = enabled
         if highlightsMin is not None:
             high["highlightsMin"] = clamp(highlightsMin, 1.0, 4.0)
@@ -381,8 +452,12 @@ class ColorGradingSettings(AddonObject):
         offset: list[float] | None = None,
         saturation: list[float] | None = None,
     ):
-        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault("shadows", {})
-        shad = self._content["minecraft:color_grading_settings"]["color_grading"]["shadows"]
+        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault(
+            "shadows", {}
+        )
+        shad = self._content["minecraft:color_grading_settings"]["color_grading"][
+            "shadows"
+        ]
         shad["enabled"] = enabled
         if shadowsMax is not None:
             shad["shadowsMax"] = clamp(shadowsMax, 0.1, 1.0)
@@ -403,17 +478,33 @@ class ColorGradingSettings(AddonObject):
         temp_value: float | None = None,
         type: Literal["white_balance", "color_temperature"] | None = None,
     ):
-        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault("temperature_grade", {})
-        temp = self._content["minecraft:color_grading_settings"]["color_grading"]["temperature_grade"]
+        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault(
+            "temperature_grade", {}
+        )
+        temp = self._content["minecraft:color_grading_settings"]["color_grading"][
+            "temperature_grade"
+        ]
         temp["enabled"] = enabled
         if temp_value is not None:
             temp["temperature"] = clamp(temp_value, 1000.0, 15000.0)
         if type is not None:
             temp["type"] = type
 
-    def tone_mapping(self, operator: Literal["reinhard", "reinhard_luma", "reinhard_luminance", "hable", "aces", "generic"]):
+    def tone_mapping(
+        self,
+        operator: Literal[
+            "reinhard",
+            "reinhard_luma",
+            "reinhard_luminance",
+            "hable",
+            "aces",
+            "generic",
+        ],
+    ):
         self._content["minecraft:color_grading_settings"].setdefault("tone_mapping", {})
-        self._content["minecraft:color_grading_settings"]["tone_mapping"]["operator"] = operator
+        self._content["minecraft:color_grading_settings"]["tone_mapping"][
+            "operator"
+        ] = operator
 
 
 class LightingSettings(AddonObject):
@@ -423,26 +514,32 @@ class LightingSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError("Lighting settings require PBR to be enabled in the config.")
+            raise RuntimeError(
+                "Lighting settings require PBR to be enabled in the config."
+            )
         super().__init__("global")
-        self.content(JsonSchemes.lighting_settings(f"{CONFIG.NAMESPACE}:default_lighting"))
+        self.content(
+            JsonSchemes.lighting_settings(f"{CONFIG.NAMESPACE}:default_lighting")
+        )
 
     def orbital_lights(
         self,
         sun_illuminance: float | dict[float, float],
-        sun_color: RGB | ColorHex,
+        sun_color: RGB | HexRGB,
         moon_illuminance: float | dict[float, float],
-        moon_color: RGB | ColorHex,
+        moon_color: RGB | HexRGB,
         orbital_offset_degrees: float,
     ) -> None:
-        self._content["minecraft:lighting_settings"]["directional_lights"]["orbital"] = {
+        self._content["minecraft:lighting_settings"]["directional_lights"][
+            "orbital"
+        ] = {
             "sun": {
                 "illuminance": (
                     sun_illuminance
                     if type(sun_illuminance) is float
                     else {clamp(k, 0.0, 1.0): v for k, v in sun_illuminance.items()}
                 ),
-                "color": process_color(sun_color),
+                "color": convert_color(sun_color),
             },
             "moon": {
                 "illuminance": (
@@ -450,42 +547,48 @@ class LightingSettings(AddonObject):
                     if type(moon_illuminance) is float
                     else {clamp(k, 0.0, 1.0): v for k, v in moon_illuminance.items()}
                 ),
-                "color": process_color(moon_color),
+                "color": convert_color(moon_color),
             },
             "orbital_offset_degrees": orbital_offset_degrees,
         }
 
-    def flash_light(self, illuminance: float, color: RGB | ColorHex) -> None:
+    def flash_light(self, illuminance: float, color: RGB | HexRGB) -> None:
         self._content["minecraft:lighting_settings"]["directional_lights"]["flash"] = {
             "illuminance": illuminance,
-            "color": process_color(color),
+            "color": convert_color(color),
         }
 
     def emissive(self, desaturation: float) -> None:
-        self._content["minecraft:lighting_settings"]["emissive"] = {"desaturation": clamp(desaturation, 0.0, 1.0)}
+        self._content["minecraft:lighting_settings"]["emissive"] = {
+            "desaturation": clamp(desaturation, 0.0, 1.0)
+        }
 
-    def ambient(self, illuminance: float, color: RGB | ColorHex) -> None:
+    def ambient(self, illuminance: float, color: RGB | HexRGB) -> None:
         self._content["minecraft:lighting_settings"]["ambient"] = {
             "illuminance": clamp(illuminance, 0.0, 5.0),
-            "color": process_color(color),
+            "color": convert_color(color),
         }
 
     def sky(self, intensity: float) -> None:
-        self._content["minecraft:lighting_settings"]["sky"] = {"intensity": clamp(intensity, 0.1, 1.0)}
+        self._content["minecraft:lighting_settings"]["sky"] = {
+            "intensity": clamp(intensity, 0.1, 1.0)
+        }
 
 
 class PointLights(AddonObject):
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "point_lights")
+    _path = os.path.join(CONFIG.RP_PATH, "local_lighting")
     _object_type = "Point Lights Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
             raise RuntimeError("Point lights require PBR to be enabled in the config.")
-        super().__init__("global")
-        self.content(JsonSchemes.point_lights())
+        super().__init__("local_lighting")
+        self.content(JsonSchemes.local_lighting())
 
-    def add_point_light(self, block_identifier: Block | Identifier, color: ColorHex) -> None:
+    def add_point_light(
+        self, block_identifier: Block | Identifier, color: HexRGB
+    ) -> None:
         """
         Adds a point light to the point lights configuration.
 
@@ -494,7 +597,10 @@ class PointLights(AddonObject):
             color (ColorHex): The color of the light in hexadecimal format (e.g., "#RRGGBB").
         """
 
-        self._content["minecraft:point_light_settings"]["colors"][str(block_identifier)] = process_color(color, add_alpha=False)
+        self._content["minecraft:point_light_settings"][str(block_identifier)] = {
+            "light_color": convert_color(color, HexRGB),
+            "light_type": "point_light",
+        }
 
 
 class PBRFallback(AddonObject):
@@ -506,7 +612,9 @@ class PBRFallback(AddonObject):
         if not CONFIG._PBR:
             raise RuntimeError("PBR fallback requires PBR to be enabled in the config.")
         super().__init__("global")
-        self.content(JsonSchemes.pbr_fallback_settings(f"{CONFIG.NAMESPACE}:pbr_fallback"))
+        self.content(
+            JsonSchemes.pbr_fallback_settings(f"{CONFIG.NAMESPACE}:pbr_fallback")
+        )
 
     def block_fallback(self, MERS: RGBA) -> None:
         """
@@ -516,7 +624,7 @@ class PBRFallback(AddonObject):
             MERS (RGBA): The RGBA values representing the fallback MERS.
         """
         self._content["minecraft:pbr_fallback_settings"]["blocks"] = {
-            "global_metalness_emissive_roughness_subsurface": process_color(MERS, add_alpha=True)
+            "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
         }
 
     def actors_fallback(self, MERS: RGBA) -> None:
@@ -527,7 +635,7 @@ class PBRFallback(AddonObject):
             MERS (RGBA): The RGBA values representing the fallback MERS.
         """
         self._content["minecraft:pbr_fallback_settings"]["actors"] = {
-            "global_metalness_emissive_roughness_subsurface": process_color(MERS, add_alpha=True)
+            "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
         }
 
     def particles_fallback(self, MERS: RGBA) -> None:
@@ -538,7 +646,7 @@ class PBRFallback(AddonObject):
             MERS (RGBA): The RGBA values representing the fallback MERS.
         """
         self._content["minecraft:pbr_fallback_settings"]["particles"] = {
-            "global_metalness_emissive_roughness_subsurface": process_color(MERS, add_alpha=True)
+            "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
         }
 
     def items_fallback(self, MERS: RGBA) -> None:
@@ -549,5 +657,5 @@ class PBRFallback(AddonObject):
             MERS (RGBA): The RGBA values representing the fallback MERS.
         """
         self._content["minecraft:pbr_fallback_settings"]["items"] = {
-            "global_metalness_emissive_roughness_subsurface": process_color(MERS, add_alpha=True)
+            "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
         }

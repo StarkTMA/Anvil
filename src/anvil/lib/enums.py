@@ -420,7 +420,9 @@ class Selector:
         self._Parameters(c=count)
         return self
 
-    def coordinates(self, *, x: Coordinate = None, y: Coordinate = None, z: Coordinate = None):
+    def coordinates(
+        self, *, x: Coordinate = None, y: Coordinate = None, z: Coordinate = None
+    ):
         """Sets the coordinates of the target.
 
         Parameters:
@@ -570,7 +572,9 @@ class Selector:
 
         property_values = {}
         for property, value in properties.items():
-            property_values.update({f"{ANVIL.config.NAMESPACE}:{property}": json.dumps(value)})
+            property_values.update(
+                {f"{ANVIL.config.NAMESPACE}:{property}": json.dumps(value)}
+            )
         self._Parameters(has_property=property_values)
         return self
 
@@ -1156,10 +1160,69 @@ class ContainerType(StrEnum):
 
 
 class EnchantsSlots(StrEnum):
+    """
+    Enumeration of enchantment slots available in Minecraft.
+
+    This enum defines all possible equipment slots that can receive enchantments,
+    organized by equipment type and usage category.
+
+    Armor Slots:
+        ArmorHead: Helmet slot enchantments
+        ArmorTorso: Chestplate slot enchantments
+        ArmorLegs: Leggings slot enchantments
+        ArmorFeet: Boots slot enchantments
+        GArmor: General armor enchantments (applicable to any armor piece)
+
+    Weapon Slots:
+        Sword: Sword-specific enchantments
+        Bow: Bow-specific enchantments
+        Spear: Spear/trident enchantments
+        Crossbow: Crossbow-specific enchantments
+        MeleeSpear: Melee trident enchantments
+
+    Tool Slots:
+        GTool: General tool enchantments (applicable to multiple tool types)
+        Hoe: Hoe-specific enchantments
+        Shears: Shears-specific enchantments
+        Flintandsteel: Flint and steel enchantments
+        Shield: Shield-specific enchantments
+
+    Digging Tools:
+        GDigging: General digging tool enchantments
+        Axe: Axe-specific enchantments
+        Pickaxe: Pickaxe-specific enchantments
+        Shovel: Shovel-specific enchantments
+
+    Special Items:
+        FishingRod: Fishing rod enchantments
+        CarrotStick: Carrot on a stick enchantments
+        Elytra: Elytra wing enchantments
+        CosmeticHead: Cosmetic head item enchantments
+    """
+
     ArmorHead = "armor_head"
-    ArmorTorse = "armor_torso"
+    ArmorTorso = "armor_torso"
     ArmorLegs = "armor_legs"
     ArmorFeet = "armor_feet"
+    GArmor = "g_armor"
+    Sword = "sword"
+    Bow = "bow"
+    Spear = "spear"
+    Crossbow = "crossbow"
+    MeleeSpear = "melee_spear"
+    GTool = "g_tool"
+    Hoe = "hoe"
+    Shears = "shears"
+    Flintandsteel = "flintsteel"
+    Shield = "shield"
+    GDigging = "g_digging"
+    Axe = "axe"
+    Pickaxe = "pickaxe"
+    Shovel = "shovel"
+    FishingRod = "fishing_rod"
+    CarrotStick = "carrot_stick"
+    Elytra = "elytra"
+    CosmeticHead = "cosmetic_head"
 
 
 class HudElement(StrEnum):
@@ -1340,7 +1403,7 @@ class EnchantmentTypes(StrEnum):
     Unbreaking = "minecraft:unbreaking"
     Vanishing = "minecraft:vanishing"
     WindBurst = "minecraft:wind_burst"
-    
+
 
 class BlockMovementType(StrEnum):
     """

@@ -1,5 +1,6 @@
 import os
 import zipfile
+from calendar import c
 from datetime import datetime
 from typing import Optional
 
@@ -32,6 +33,7 @@ from anvil.lib.sounds import (
 )
 from anvil.lib.textures import (
     BlocksJSONObject,
+    FlipBookTexturesObject,
     ItemTexturesObject,
     TerrainTexturesObject,
     UITexturesObject,
@@ -97,18 +99,16 @@ class _AnvilSkinPack(AddonObject):
 
 
 class _AnvilDefinitions:
-    _materials_object: _MaterialsObject = None
     _sound_definition_object: SoundDefinition = None
     _music_definition_object: MusicDefinition = None
     _sound_event_object: SoundEvent = None
     _item_textures_object: ItemTexturesObject = None
-    _terrain_texture_object: TerrainTexturesObject = None
+    _flipbook_textures_object: FlipBookTexturesObject = None
     _ui_textures_object: UITexturesObject = None
 
     _scores: dict[str, int] = {}
     _tags: set[str] = ()
     _raw_text: int = 0
-    _translator: AnvilTranslator = None
 
     _blocks_object: BlocksJSONObject = None
 
@@ -116,6 +116,8 @@ class _AnvilDefinitions:
         self.config = config
         self._materials_object = _MaterialsObject()
         self._translator = AnvilTranslator()
+        self._terrain_texture_object = TerrainTexturesObject()
+        self._flipbook_textures_object = FlipBookTexturesObject()
 
     def register_sound_definition(
         self,
@@ -301,21 +303,6 @@ class _AnvilDefinitions:
 
         self._blocks_object.add_block(block_identifier, block_data)
 
-    def register_terrain_texture(
-        self, texture_name: str, texture_path: str, *block_textures
-    ):
-        """Registers a terrain texture.
-
-        Parameters:
-            texture_name (str): The name of the texture.
-            texture_path (str): The path to the texture.
-        """
-        if self._terrain_texture_object is None:
-            self._terrain_texture_object = TerrainTexturesObject()
-        self._terrain_texture_object.add_block(
-            texture_name, texture_path, *block_textures
-        )
-
     def register_skin_pack(self):
         """Registers a skin pack."""
         if self.config._TARGET == ConfigPackageTarget.ADDON:
@@ -463,7 +450,11 @@ class _AnvilDefinitions:
         )
         self._setup_function.queue()
 
-    def queue(self, extract_world: bool = False):
+    def queue(self, anvil: "_Anvil", extract_world: bool = False):
+        self._terrain_texture_object.queue()
+        self._flipbook_textures_object.queue()
+        anvil._queue(self._translator)
+
         if self._materials_object.size > 0:
             self._materials_object.queue()
         if not self._sound_definition_object == None:
@@ -474,16 +465,12 @@ class _AnvilDefinitions:
             self._sound_event_object.queue
         if not self._item_textures_object == None:
             self._item_textures_object.queue
-        if not self._terrain_texture_object == None:
-            self._terrain_texture_object.queue
         if not self._blocks_object == None:
             self._blocks_object.queue
         if not self._ui_textures_object == None:
             self._ui_textures_object.queue
 
         self._export_manifest(extract_world)
-        self._translator._export()
-        # self._export_helper_functions()
 
         if any([self.config._SCRIPT_API, self.config._SCRIPT_UI]):
             self._export_scripts()
@@ -537,29 +524,62 @@ class _Anvil:
             ) as zip_ref:
                 zip_ref.extractall(self.config._WORLD_PATH)
 
-        self._definitions.queue(extract_world != None)
+        self._definitions.queue(self, extract_world != None)
         _Blockbench._export()
 
         for object in self._objects_list:
             try:
                 object._export()
             except Exception as e:
-                traceback = f"<{object.__class__.__name__} created from:\n{''.join(object.__created_from)}>"
+                import traceback as tb
+                full_traceback = tb.format_exc()
+                creation_info = f"<{object.__class__.__name__} created from:\n{''.join(getattr(object, "_created_from", None))}>"
+                click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
+                click.echo(click.style(f"\r\nCreation Context:", fg="cyan"), err=True)
+                click.echo(click.style(f"\r{creation_info}", fg="white"), err=True)
+                click.echo(click.style(f"\r\nFull Traceback:", fg="cyan"), err=True)
+                click.echo(click.style(f"\r{full_traceback}", fg="white"), err=True)
+                click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
                 click.echo(
-                    f"\rError exporting {object._name}: {e}", err=True, color="red"
+                    click.style(
+                        f"\rERROR EXPORTING OBJECT: {getattr(object, '_name', 'Unknown')}",
+                        fg="red",
+                    ),
+                    err=True,
                 )
-                click.echo(f"\rTraceback: {traceback}", err=True, color="red")
+                click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
+                click.echo(
+                    click.style(
+                        f"\rObject Type: {object.__class__.__name__}",
+                        fg="yellow",
+                    ),
+                    err=True,
+                )
+                click.echo(
+                    click.style(
+                        f"\rObject Name: {getattr(object, '_name', 'Unknown')}",
+                        fg="yellow",
+                    ),
+                    err=True,
+                )
+                click.echo(
+                    click.style(f"\rError Message: {str(e)}", fg="red"), err=True
+                )
+                click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
 
         from anvil.api.blocks.blocks import _PermutationComponents
 
         if _PermutationComponents._count > 10000:
             if self.config._TARGET == ConfigPackageTarget.ADDON:
                 raise RuntimeError(
-                    f"Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons must not exceed this limit."
+                    f"\r[Info]: Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons must not exceed this limit."
                 )
             else:
                 click.echo(
-                    f"\rTotal Block permutations exceeded 10000 ({_PermutationComponents._count}). For minimal performance impact, consider reducing the number of permutations."
+                    click.style(
+                        f"\r[INFO]: Total Block permutations exceeded 10000 ({_PermutationComponents._count}). This may cause issues when submitting to the Marketplace.",
+                        fg="yellow",
+                    )
                 )
 
         if self.config._TARGET == ConfigPackageTarget.ADDON:
@@ -923,8 +943,10 @@ class _Anvil:
 
             else:
                 click.echo(
-                    f"\rpanorama.png does not exist. It is optional but might have been left out unintentionally.",
-                    color="yellow",
+                    click.style(
+                        f"\r[INFO]: panorama.png does not exist. It is optional but might have been left out unintentionally.",
+                        fg="yellow",
+                    )
                 )
 
             for i in range(999):

@@ -7,12 +7,12 @@ from anvil.api.pbr.pbr import (AtmosphericSettings, ColorGradingSettings,
 from anvil.api.world.fog import Fog
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.enums import MusicCategory, SoundCategory
-from anvil.lib.lib import clamp, process_color
+from anvil.lib.lib import clamp, convert_color
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (AddonObject, BiomeDescriptor, JsonSchemes,
                                MinecraftDescription)
 from anvil.lib.sounds import SoundDescription
-from anvil.lib.types import RGB, Color, ColorHex
+from anvil.lib.types import RGB, Color, HexRGBA
 
 
 class _BiomeDescription(MinecraftDescription):
@@ -164,7 +164,7 @@ class _BiomeClient(AddonObject):
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_dry_foliage_color)
         """
         self._content["minecraft:client_biome"]["components"]["minecraft:dry_foliage_color"] = {
-            "color": process_color(color, add_alpha=False)
+            "color": convert_color(color, RGB)
         }
 
     def fog_appearance(self, fog: str | Fog):
@@ -192,7 +192,7 @@ class _BiomeClient(AddonObject):
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_foliage_appearance)
         """
         self._content["minecraft:client_biome"]["components"]["minecraft:foliage_appearance"] = {
-            "color": process_color(color, add_alpha=False)
+            "color": convert_color(color, RGB)
         }
 
     def grass_appearance(self, color: RGB):
@@ -205,7 +205,7 @@ class _BiomeClient(AddonObject):
         """
 
         self._content["minecraft:client_biome"]["components"]["minecraft:grass_appearance"] = {
-            "color": process_color(color, add_alpha=False)
+            "color": convert_color(color, RGB)
         }
 
     def lighting_identifier(self, lighting_identifier: LightingSettings) -> None:
@@ -255,7 +255,7 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_sky_color)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:sky_color"] = {"sky_color": process_color(color, add_alpha=False)}
+        self._content["minecraft:client_biome"]["components"]["minecraft:sky_color"] = {"sky_color": convert_color(color, RGB)}
 
     def water_appearance(self, surface_color: Color, surface_opacity: float = 0.8):
         """
@@ -269,7 +269,7 @@ class _BiomeClient(AddonObject):
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_water_appearance)
         """
         self._content["minecraft:client_biome"]["components"]["minecraft:water_appearance"] = {
-            "surface_color": process_color(surface_color, add_alpha=False),
+            "surface_color": convert_color(surface_color, RGB),
             "surface_opacity": clamp(surface_opacity, 0, 1),
         }
 

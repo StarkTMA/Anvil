@@ -9,7 +9,7 @@ from anvil.api.actors._render_controller import _RenderControllers
 from anvil.api.actors.components import EntityInstantDespawn, EntityRideable
 from anvil.api.actors.spawn_rules import SpawnRule
 from anvil.api.logic.molang import Molang, Variable
-from anvil.api.pbr.pbr import __TextureSet
+from anvil.api.pbr.pbr import TextureSet
 from anvil.api.vanilla.entities import MinecraftEntityTypes
 from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.lib.blockbench import _Blockbench
@@ -728,7 +728,7 @@ class _ActorClientDescription(_ActorDescription):
         self._animation_controllers = _RP_AnimationControllers(self, self._name)
         self._render_controllers = _RenderControllers(self._name)
         self._sounds: list[SoundDescription] = []
-        self._texture_set: __TextureSet = None
+        self._texture_set: TextureSet = None
 
         self._description["description"].update(JsonSchemes.client_description())
 
@@ -865,7 +865,7 @@ class _ActorClientDescription(_ActorDescription):
                 metalness_emissive_roughness_subsurface_texture,
             ]
         ):
-            self._texture_set = __TextureSet(self.identifier, "entities")
+            self._texture_set = TextureSet(self.identifier, "entities")
             self._texture_set.set_textures(
                 blockbench_name,
                 color_texture,
@@ -1481,13 +1481,16 @@ class _EntityServer(AddonObject):
         Parameters:
             directory (str, optional): The directory to export the entity to. Defaults to None.
         """
+        super().queue(directory=directory)
+
+    def _export(self):
         if len(self._vars) > 0:
             self.animation_controller("variables", True).add_state("default").on_entry(
                 *self._vars
             )
-        self._animations.queue(directory=directory)
-        self._animation_controllers.queue(directory=directory)
-        self._spawn_rule.queue(directory=directory)
+        self._animations.queue(directory=self._directory)
+        self._animation_controllers.queue(directory=self._directory)
+        self._spawn_rule.queue(directory=self._directory)
 
         self._server_entity["minecraft:entity"].update(self.description._export)
         self._server_entity["minecraft:entity"]["components"].update(
@@ -1524,8 +1527,7 @@ class _EntityServer(AddonObject):
             ANVIL.definitions.register_lang(
                 f"action.hint.exit.{self.identifier}", "Sneak to exit"
             )
-
-        super().queue(directory=directory)
+        return super()._export()
 
 
 class _EntityClient(AddonObject):

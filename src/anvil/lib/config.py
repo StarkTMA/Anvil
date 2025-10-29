@@ -343,10 +343,13 @@ class _AnvilConfig:
 
         if Version(__version__) < Version(latest_build):
             click.echo(
-                f"A newer anvil build were found: [{latest_build}].", color="cyan"
+                click.style(
+                    f"\r[INFO]: A newer anvil build were found: [{latest_build}].",
+                    fg="yellow",
+                )
             )
         else:
-            click.echo("Anvil is up to date.", color="green")
+            click.echo(click.style("\r[INFO]: Anvil is up to date.", fg="green"))
 
         self.Config.add_option(
             ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, vanilla_latest_build
