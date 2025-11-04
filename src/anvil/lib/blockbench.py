@@ -8,27 +8,11 @@ from warnings import warn
 import click
 from packaging.version import Version
 
-from anvil import CONFIG
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import BlockFaces
 from anvil.lib.lib import FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.types import Vector2D
-
-
-def _keyframes_mapper(keyframes: List[dict]) -> dict:
-    keyframes_dict = {}
-    for keyframe in keyframes:
-        time = float(keyframe.get("time"))
-        data_points = keyframe.get("data_points")
-        interpolation = keyframe.get("interpolation", "linear")
-        channel = keyframe.get("channel")
-
-        keyframes_dict.setdefault(channel, {})[time] = {
-            "data_points": list(data_points),
-            "interpolation": interpolation,
-        }
-
-    return keyframes_dict
 
 
 class _Geometry(AddonObject):
@@ -72,6 +56,264 @@ class _AnimationsManager:
             for x in points
         ]
 
+    def _keyframes_mapper(self, keyframes: List[dict]) -> dict:
+        keyframes_dict = {}
+        for keyframe in keyframes:
+            time = float(keyframe.get("time"))
+            data_points = keyframe.get("data_points")
+            interpolation = keyframe.get("interpolation", "linear")
+            channel = keyframe.get("channel")
+
+            keyframes_dict.setdefault(channel, {})[time] = {
+                "data_points": list(data_points),
+                "interpolation": interpolation,
+            }
+
+        return keyframes_dict
+
+    def _process_position_channel(
+        self, bone_name: str, channel: dict, bones: dict
+    ) -> None:
+        """Process position keyframes for a bone."""
+        is_step = False
+        channel_points = list(channel.values())
+
+        for keyframe_index, (time, value) in enumerate(list(channel.items())):
+            interpolation = value["interpolation"]
+            points: list[Dict[str, str]] = value["data_points"]
+            previous_points = channel_points[keyframe_index - 1]["data_points"]
+
+            if len(points) == 1:
+                points = self.adjust_keyframe_type(points[0].values())
+                # Check for newline characters in keyframe values
+                for point in points:
+                    if isinstance(point, str) and "\n" in point:
+                        raise ValueError(
+                            f"Newline character found in position keyframe for bone '{bone_name}' at time {time}. "
+                            f"Keyframe values cannot contain newlines."
+                        )
+
+            if interpolation == "linear" or interpolation == "bezier":
+                if is_step:
+                    bones[bone_name]["position"][time] = {
+                        "pre": self.adjust_keyframe_type(previous_points[0].values()),
+                        "post": points,
+                    }
+                    is_step = False
+                elif len(points) == 2:
+                    bones[bone_name]["position"][time] = {
+                        "pre": self.adjust_keyframe_type(points[0].values()),
+                        "post": self.adjust_keyframe_type(points[1].values()),
+                    }
+                else:
+                    bones[bone_name]["position"][time] = points
+
+            elif interpolation == "catmullrom":
+                bones[bone_name]["position"][time] = {
+                    "post": points,
+                    "lerp_mode": interpolation,
+                }
+                is_step = False
+
+            elif interpolation == "step":
+                if is_step:
+                    bones[bone_name]["position"][time] = {
+                        "pre": self.adjust_keyframe_type(previous_points[0].values()),
+                        "post": self.adjust_keyframe_type(
+                            value["data_points"][0].values()
+                        ),
+                    }
+                else:
+                    bones[bone_name]["position"][time] = points
+                is_step = True
+
+    def _process_rotation_channel(
+        self, bone_name: str, channel: dict, bones: dict
+    ) -> None:
+        """Process rotation keyframes for a bone."""
+        is_step = False
+        channel_points = list(channel.values())
+
+        for keyframe_index, (time, value) in enumerate(list(channel.items())):
+            interpolation = value["interpolation"]
+            points: list[Dict[str, str]] = value["data_points"]
+            previous_points = channel_points[keyframe_index - 1]["data_points"]
+
+            if len(points) == 1:
+                points = self.adjust_keyframe_sign(points[0].values())
+                # Check for newline characters in keyframe values
+                for point in points:
+                    if isinstance(point, str) and "\n" in point:
+                        raise ValueError(
+                            f"Newline character found in rotation keyframe for bone '{bone_name}' at time {time}. "
+                            f"Keyframe values cannot contain newlines."
+                        )
+
+            if interpolation == "linear" or interpolation == "bezier":
+                if is_step:
+                    bones[bone_name]["rotation"][time] = {
+                        "pre": self.adjust_keyframe_type(previous_points[0].values()),
+                        "post": points,
+                    }
+                    is_step = False
+                elif len(points) == 2:
+                    bones[bone_name]["rotation"][time] = {
+                        "pre": self.adjust_keyframe_type(points[0].values()),
+                        "post": self.adjust_keyframe_type(points[1].values()),
+                    }
+                else:
+                    bones[bone_name]["rotation"][time] = points
+
+            elif interpolation == "catmullrom":
+                bones[bone_name]["rotation"][time] = {
+                    "post": points,
+                    "lerp_mode": interpolation,
+                }
+                is_step = False
+
+            elif interpolation == "step":
+                if is_step:
+                    bones[bone_name]["rotation"][time] = {
+                        "pre": self.adjust_keyframe_type(previous_points[0].values()),
+                        "post": self.adjust_keyframe_type(
+                            value["data_points"][0].values()
+                        ),
+                    }
+                else:
+                    bones[bone_name]["rotation"][time] = points
+                is_step = True
+
+    def _process_scale_channel(
+        self, bone_name: str, channel: dict, bones: dict
+    ) -> None:
+        """Process scale keyframes for a bone."""
+        is_step = False
+        channel_points = list(channel.values())
+
+        for keyframe_index, (time, value) in enumerate(list(channel.items())):
+            interpolation = value["interpolation"]
+            points: list[Dict[str, str]] = value["data_points"]
+            previous_points = channel_points[keyframe_index - 1]["data_points"]
+
+            if len(points) == 1:
+                points = self.adjust_keyframe_type(points[0].values())
+                # Check for newline characters in keyframe values
+                for point in points:
+                    if isinstance(point, str) and "\n" in point:
+                        raise ValueError(
+                            f"Newline character found in scale keyframe for bone '{bone_name}' at time {time}. "
+                            f"Keyframe values cannot contain newlines."
+                        )
+
+            if interpolation == "linear" or interpolation == "bezier":
+                if is_step:
+                    bones[bone_name]["scale"][time] = {
+                        "pre": self.adjust_keyframe_type(previous_points[0].values()),
+                        "post": points,
+                    }
+                    is_step = False
+                elif len(points) == 2:
+                    bones[bone_name]["scale"][time] = {
+                        "pre": self.adjust_keyframe_type(points[0].values()),
+                        "post": self.adjust_keyframe_type(points[1].values()),
+                    }
+                else:
+                    bones[bone_name]["scale"][time] = points
+
+            elif interpolation == "catmullrom":
+                bones[bone_name]["scale"][time] = {
+                    "post": points,
+                    "lerp_mode": interpolation,
+                }
+                is_step = False
+
+            elif interpolation == "step":
+                if is_step:
+                    bones[bone_name]["scale"][time] = {
+                        "pre": self.adjust_keyframe_type(previous_points[0].values()),
+                        "post": self.adjust_keyframe_type(
+                            value["data_points"][0].values()
+                        ),
+                    }
+                else:
+                    bones[bone_name]["scale"][time] = points
+                is_step = True
+
+    def _process_particle_channel(self, channel: dict, particles: dict) -> None:
+        """Process particle effect keyframes."""
+        for time, value in channel.items():
+            effect = value["data_points"][0]["effect"]
+            locator = value["data_points"][0]["locator"]
+            script = value["data_points"][0]["script"]
+
+            # Check for newline characters
+            if "\n" in effect:
+                raise ValueError(
+                    f"Newline character found in particle effect keyframe at time {time}. "
+                    f"Keyframe values cannot contain newlines."
+                )
+            if "\n" in locator:
+                raise ValueError(
+                    f"Newline character found in particle locator keyframe at time {time}. "
+                    f"Keyframe values cannot contain newlines."
+                )
+            if "\n" in script:
+                raise ValueError(
+                    f"Newline character found in particle script keyframe at time {time}. "
+                    f"Keyframe values cannot contain newlines."
+                )
+
+            particles[time] = {
+                "effect": effect,
+                "locator": locator,
+            }
+            if script != "":
+                particles[time]["pre_effect_script"] = (script + ";").replace(";;", ";")
+
+    def _process_sound_channel(self, channel: dict, sounds: dict) -> None:
+        """Process sound effect keyframes."""
+        for time, value in channel.items():
+            effect = value["data_points"][0]["effect"]
+
+            # Check for newline characters
+            if "\n" in effect:
+                raise ValueError(
+                    f"Newline character found in sound effect keyframe at time {time}. "
+                    f"Keyframe values cannot contain newlines."
+                )
+
+            sounds[time] = {"effect": effect}
+
+    def _process_timeline_channel(self, channel: dict, timeline: dict) -> None:
+        """Process timeline keyframes."""
+        for time, value in channel.items():
+            data_point = value["data_points"][0]
+
+            # Check for newline characters
+            if isinstance(data_point, str) and "\n" in data_point:
+                raise ValueError(
+                    f"Newline character found in timeline keyframe at time {time}. "
+                    f"Keyframe values cannot contain newlines."
+                )
+
+            timeline[time] = data_point
+
+    def _cleanup_bone_channels(self, bone_name: str, bones: dict) -> None:
+        """Clean up empty or single-value bone channels."""
+        for channel in ["position", "rotation", "scale"]:
+            keys = bones[bone_name][channel].keys()
+            if len(keys) == 0:
+                del bones[bone_name][channel]
+            elif len(keys) == 1:
+                bones[bone_name][channel] = list(bones[bone_name][channel].values())[0]
+
+            if (
+                channel == "scale"
+                and isinstance(bones[bone_name].get("scale"), list)
+                and len(set(bones[bone_name]["scale"])) == 1
+            ):
+                bones[bone_name]["scale"] = bones[bone_name]["scale"][0]
+
     def _process_animation(self, animation_dict: dict) -> dict:
         animation = {}
         animation_length = animation_dict.get("length")
@@ -96,6 +338,7 @@ class _AnimationsManager:
             particles = {}
             sounds = {}
             timeline = {}
+
             for animator in animation_dict.get("animators", {}).values():
                 bone_name = animator.get("name")
 
@@ -104,111 +347,24 @@ class _AnimationsManager:
                     "rotation": {},
                     "scale": {},
                 }
-                for channel_name, channel in _keyframes_mapper(
-                    animator.get("keyframes", [])
-                ).items():
-                    if channel_name not in ["particle", "sound", "timeline"]:
-                        is_step = False
-                        channel_points = list(channel.values())
-                        for keyframe_index, (time, value) in enumerate(
-                            list(channel.items())
-                        ):
-                            interpolation = value["interpolation"]
-                            points: list[Dict[str, str]] = value["data_points"]
-                            previous_points = channel_points[keyframe_index - 1][
-                                "data_points"
-                            ]
 
-                            if len(points) == 1:
-                                if channel_name == "rotation":
-                                    points = self.adjust_keyframe_sign(
-                                        points[0].values()
-                                    )
-                                else:
-                                    points = self.adjust_keyframe_type(
-                                        points[0].values()
-                                    )
+                keyframes = self._keyframes_mapper(animator.get("keyframes", []))
 
-                            if interpolation == "linear" or interpolation == "bezier":
-                                if is_step:
-                                    bones[bone_name][channel_name][time] = {
-                                        "pre": self.adjust_keyframe_type(
-                                            previous_points[0].values()
-                                        ),
-                                        "post": points,
-                                    }
-                                    is_step = False
-                                elif len(points) == 2:
-                                    bones[bone_name][channel_name][time] = {
-                                        "pre": self.adjust_keyframe_type(
-                                            points[0].values()
-                                        ),
-                                        "post": self.adjust_keyframe_type(
-                                            points[1].values()
-                                        ),
-                                    }
-                                    is_step = False
-                                else:
-                                    bones[bone_name][channel_name][time] = points
-                                    is_step = False
-
-                            elif interpolation == "catmullrom":
-                                bones[bone_name][channel_name][time] = {
-                                    "post": points,
-                                    "lerp_mode": interpolation,
-                                }
-                                is_step = False
-
-                            elif interpolation == "step":
-                                if is_step:
-                                    bones[bone_name][channel_name][time] = {
-                                        "pre": self.adjust_keyframe_type(
-                                            previous_points[0].values()
-                                        ),
-                                        "post": self.adjust_keyframe_type(
-                                            value["data_points"][0].values()
-                                        ),
-                                    }
-                                else:
-                                    bones[bone_name][channel_name][time] = points
-                                is_step = True
-
+                for channel_name, channel in keyframes.items():
+                    if channel_name == "position":
+                        self._process_position_channel(bone_name, channel, bones)
+                    elif channel_name == "rotation":
+                        self._process_rotation_channel(bone_name, channel, bones)
+                    elif channel_name == "scale":
+                        self._process_scale_channel(bone_name, channel, bones)
                     elif channel_name == "particle":
-                        for time, value in channel.items():
-                            particles[time] = {
-                                "effect": value["data_points"][0]["effect"],
-                                "locator": value["data_points"][0]["locator"],
-                            }
-                            if value["data_points"][0]["script"] != "":
-                                particles[time]["pre_effect_script"] = (
-                                    value["data_points"][0]["script"] + ";"
-                                ).replace(";;", ";")
-
+                        self._process_particle_channel(channel, particles)
                     elif channel_name == "sound":
-                        for keyframe in list(channel.items()):
-                            time, value = keyframe
-                            sounds[time] = {"effect": value["data_points"][0]["effect"]}
-
+                        self._process_sound_channel(channel, sounds)
                     elif channel_name == "timeline":
-                        for keyframe in list(channel.items()):
-                            time, value = keyframe
-                            timeline[time] = value["data_points"][0]
+                        self._process_timeline_channel(channel, timeline)
 
-                for channel in ["position", "rotation", "scale"]:
-                    keys = bones[bone_name][channel].keys()
-                    if len(keys) == 0:
-                        del bones[bone_name][channel]
-                    elif len(keys) == 1:
-                        bones[bone_name][channel] = list(
-                            bones[bone_name][channel].values()
-                        )[0]
-
-                    if (
-                        channel == "scale"
-                        and isinstance(bones[bone_name].get("scale"), list)
-                        and len(set(bones[bone_name]["scale"])) == 1
-                    ):
-                        bones[bone_name]["scale"] = bones[bone_name]["scale"][0]
+                self._cleanup_bone_channels(bone_name, bones)
 
                 if animator.get("rotation_global", False):
                     bones[bone_name]["relative_to"] = {"rotation": "entity"}
@@ -223,9 +379,8 @@ class _AnimationsManager:
                 animation["timeline"] = timeline
 
         return {
-            f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation_dict.get("name")}": animation
+            f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation_dict.get('name')}": animation
         }
-        # return { animation_dict.get("name"): animation}
 
     def __init__(self, name: str, source: str, bbmodel: dict) -> None:
         self._name = name
@@ -260,13 +415,14 @@ class _AnimationsManager:
 
 class _TexturesManager:
     def __init__(self, filename: str, source: str, bbmodel: dict) -> None:
+        config = CONFIG
         self._name = filename
         self._bbmodel = bbmodel
         self._path = os.path.join(
-            CONFIG.RP_PATH,
+            config.RP_PATH,
             "textures",
-            CONFIG.NAMESPACE,
-            CONFIG.PROJECT_NAME,
+            config.NAMESPACE,
+            config.PROJECT_NAME,
             source,
             filename,
         )

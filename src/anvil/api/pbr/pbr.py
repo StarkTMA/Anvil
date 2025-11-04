@@ -1,27 +1,29 @@
 import os
-from typing import Literal, Optional
-from xml.dom.minidom import Identified
+from typing import Literal
 
-from anvil import ANVIL, CONFIG
-from anvil.api.world.fog import Fog
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.enums import MusicCategory, SoundCategory
+from anvil.lib.config import CONFIG
 from anvil.lib.lib import Color, HexRGB, clamp, convert_color
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.sounds import SoundDescription
 from anvil.lib.types import RGB, RGBA, Block, HexRGBA, Identifier, Vector3D
 
 
 class TextureSet(AddonObject):
     _extension = ".texture_set.json"
     _path = os.path.join(
-        CONFIG.RP_PATH, "textures", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME
+        CONFIG.RP_PATH,
+        "textures",
+        CONFIG.NAMESPACE,
+        CONFIG.PROJECT_NAME,
     )
     _object_type = "Texture Set"
 
-    def __init__(self, texture_name: str) -> None:
+    def __init__(self, texture_name: str, target: str) -> None:
         super().__init__(texture_name)
         self.content(JsonSchemes.texture_set())
+        self._target = target
+        if not CONFIG._PBR:
+            raise RuntimeError("Texture sets require PBR to be enabled in the config.")
 
     def set_textures(
         self,
@@ -47,7 +49,7 @@ class TextureSet(AddonObject):
         self._blockbench.textures.queue_texture(color_texture)
 
         self._content["minecraft:texture_set"]["color"] = color_texture
-        self._path = os.path.join(self._path, "blocks", blockbench_name)
+        self._path = os.path.join(self._path, self._target, blockbench_name)
 
         if type(normal_texture) is str:
             self._blockbench.textures.queue_texture(normal_texture)

@@ -1,28 +1,26 @@
 import os
 from typing import Any, Dict, List
-from warnings import warn
 
-import click
-
-from anvil import ANVIL, CONFIG
+from anvil import ANVIL
 from anvil.api.actors.actors import _Components
 from anvil.api.blocks.components import (
-    BlockDefault,
     BlockDisplayName,
     BlockGeometry,
     BlockMaterialInstance,
 )
+from anvil.api.core.components import _BaseComponent
+from anvil.api.core.core import SoundEvent
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.lib.components import _BaseComponent
-from anvil.lib.core import ConfigPackageTarget
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import (
+    BlockInteractiveSoundEvent,
+    BlockSoundEvent,
     ItemCategory,
     ItemGroups,
     PlacementDirectionTrait,
     PlacementPositionTrait,
 )
-from anvil.lib.lib import IMAGE_EXTENSIONS_PRIORITY, CopyFiles
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
     AddonObject,
@@ -172,12 +170,14 @@ class _BlockServerDescription(MinecraftDescription):
         self,
         category: ItemCategory = ItemCategory.none,
         group: ItemGroups | str = ItemGroups.none,
+        is_hidden_in_commands: bool = False,
     ):
-        """Sets the menu category for the block.
+        """Sets the menu category for the Block.
 
         Parameters:
-            category (ItemCategory, optional): The category of the block. Defaults to ItemCategory.none.
-            group (str, optional): The group of the block. Defaults to None.
+            category (ItemCategory, optional): The category of the Block. Defaults to ItemCategory.none.
+            group (str, optional): The group of the Block. Defaults to None.
+            is_hidden_in_commands (bool, optional): Whether the Block is hidden in commands. Defaults to False.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
@@ -186,16 +186,10 @@ class _BlockServerDescription(MinecraftDescription):
         self._description["description"]["menu_category"] = {
             "category": category.value if not category == ItemCategory.none else {},
             "group": group.value if not group == ItemGroups.none else {},
+            "is_hidden_in_commands": (
+                is_hidden_in_commands if is_hidden_in_commands else {}
+            ),
         }
-        return self
-
-    @property
-    def is_hidden_in_commands(self):
-        """Sets the block to be hidden in commands.
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
-        """
-        self._description["description"]["is_hidden_in_commands"] = True
         return self
 
     @property
@@ -261,20 +255,14 @@ class _BlockServer(AddonObject):
             permutation._export() for permutation in self._permutations
         ]
 
-        if not BlockDefault._identifier in comps:
-            if not BlockMaterialInstance._identifier in comps:
-                raise RuntimeError(
-                    f"Block {self.identifier} missing default component. Block [{self.identifier}]"
-                )
-            if not BlockGeometry._identifier in comps:
-                raise RuntimeError(
-                    f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]"
-                )
-        else:
-            ANVIL.definitions.register_block(
-                self.description.identifier, comps[BlockDefault._identifier]
+        if not BlockMaterialInstance._identifier in comps:
+            raise RuntimeError(
+                f"Block {self.identifier} missing default component. Block [{self.identifier}]"
             )
-            comps.pop(BlockDefault._identifier)
+        if not BlockGeometry._identifier in comps:
+            raise RuntimeError(
+                f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]"
+            )
 
         if (
             not BlockDisplayName._identifier
@@ -288,41 +276,47 @@ class _BlockServer(AddonObject):
         super()._export()
 
 
-class _BlockClient:
+class _BlockClient(AddonObject):
     def __init__(self, name: str, is_vanilla: bool = False):
-        self._name = name.split(":")[-1]
-        self._is_vanilla = is_vanilla
-        self._textures: Dict[str:str] = {}
+        super().__init__(name, is_vanilla)
 
-    def replace_vanilla_texture(self, texture_name: str, directory: str = ""):
-        if not self._is_vanilla:
-            raise RuntimeError(
-                "The Block Client property is only accessible to vanilla block types."
+    def block_sound(
+        self,
+        sound_identifier: str,
+        sound_event: BlockSoundEvent | BlockInteractiveSoundEvent,
+        volume: float = 1.0,
+        pitch: tuple[float, float] = (0.8, 1.2),
+        max_distance: float = 0,
+        min_distance: float = 9999,
+    ):
+        sound_event_obj = SoundEvent()
+        if isinstance(sound_event, BlockSoundEvent):
+            sound_def = sound_event_obj.add_block_event(
+                self.identifier,
+                sound_identifier,
+                sound_event,
+                volume,
+                pitch,
+                max_distance,
+                min_distance,
             )
-
-        self._textures[texture_name] = directory
-
-        return self
+            return sound_def
+        elif isinstance(sound_event, BlockInteractiveSoundEvent):
+            sound_def = sound_event_obj.add_block_interactive_event(
+                self.identifier,
+                sound_identifier,
+                sound_event,
+                volume,
+                pitch,
+                max_distance,
+                min_distance,
+            )
+            return sound_def
+        else:
+            raise TypeError("Invalid sound event type.")
 
     def queue(self):
-        ANVIL._queue(self)
-
-    def _export(self):
-        for texture, directory in self._textures.items():
-            for i in IMAGE_EXTENSIONS_PRIORITY:
-                if os.path.exists(
-                    os.path.join("assets", "textures", "blocks", f"{texture}{i}")
-                ):
-                    CopyFiles(
-                        os.path.join("assets", "textures", "blocks"),
-                        os.path.join(CONFIG.RP_PATH, "textures", "blocks", directory),
-                        f"{texture}{i}",
-                    )
-                    break
-            else:
-                raise RuntimeError(
-                    f"Texture {texture} not found in assets/textures/blocks."
-                )
+        return
 
 
 # ===========================================

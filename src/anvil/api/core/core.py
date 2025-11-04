@@ -1,17 +1,25 @@
 import os
 import zipfile
-from calendar import c
-from datetime import datetime
 from typing import Optional
 
 import click
 from halo import Halo
 from PIL import Image
 
-from anvil.api.actors.materials import _MaterialsObject
-from anvil.api.logic.molang import Molang
+from anvil.api.actors.materials import MaterialsObject
+from anvil.api.core.sounds import (
+    BlocksJSONObject,
+    MusicDefinition,
+    SoundDefinition,
+    SoundEvent,
+)
+from anvil.api.core.textures import (
+    FlipBookTexturesObject,
+    ItemTexturesObject,
+    TerrainTexturesObject,
+)
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.config import ConfigPackageTarget, _AnvilConfig
+from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.lib import (
     CreateDirectory,
     File,
@@ -23,25 +31,86 @@ from anvil.lib.lib import (
 )
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.sounds import (
-    EntitySoundEvent,
-    MusicCategory,
-    MusicDefinition,
-    SoundCategory,
-    SoundDefinition,
-    SoundEvent,
-)
-from anvil.lib.textures import (
-    BlocksJSONObject,
-    FlipBookTexturesObject,
-    ItemTexturesObject,
-    TerrainTexturesObject,
-    UITexturesObject,
-)
 from anvil.lib.translator import AnvilTranslator
-from anvil.lib.types import Identifier
 
-from ..__version__ import __version__
+from ...__version__ import __version__
+
+
+def extract_world_pack(extract_world: str | None = None):
+    if extract_world != None and type(extract_world) is str:
+        RemoveDirectory(CONFIG._WORLD_PATH)
+        with zipfile.ZipFile(
+            os.path.join("world", f"{extract_world}.mcworld"), "r"
+        ) as zip_ref:
+            zip_ref.extractall(CONFIG._WORLD_PATH)
+
+
+def manifests(extract_world: str | None = None):
+    release_list = [int(i) for i in CONFIG._RELEASE.split(".")]
+    if extract_world != None and type(extract_world) is str:
+        File(
+            "manifest.json",
+            JsonSchemes.manifest_world(version=release_list),
+            CONFIG._WORLD_PATH,
+            "w",
+        )
+        File(
+            "world_resource_packs.json",
+            JsonSchemes.world_packs(release_list, CONFIG._RP_UUID),
+            CONFIG._WORLD_PATH,
+            "w",
+        )
+        File(
+            "world_behavior_packs.json",
+            JsonSchemes.world_packs(release_list, CONFIG._BP_UUID),
+            CONFIG._WORLD_PATH,
+            "w",
+        )
+    File(
+        "manifest.json",
+        JsonSchemes.manifest_rp(version=CONFIG._RELEASE),
+        CONFIG.RP_PATH,
+        "w",
+    )
+    File(
+        "manifest.json",
+        JsonSchemes.manifest_bp(version=CONFIG._RELEASE),
+        CONFIG.BP_PATH,
+        "w",
+    )
+
+
+def scriptapi():
+    if any([CONFIG._SCRIPT_API, CONFIG._SCRIPT_UI]):
+        if not FileExists("tsconfig.json"):
+            File(
+                "tsconfig.json",
+                JsonSchemes.tsconfig(CONFIG.BP_PATH),
+                "",
+                "w",
+                False,
+            )
+        if not FileExists("esbuild.js") and "esbuild" in CONFIG._SCRIPT_BUNDLE_SCRIPT:
+            File(
+                "esbuild.js",
+                JsonSchemes.esbuild_config_js(CONFIG.BP_PATH, CONFIG._MINIFY),
+                "",
+                "w",
+                False,
+            )
+        if not FileExists("package.json"):
+            File(
+                "package.json",
+                JsonSchemes.package_json(
+                    CONFIG.PROJECT_NAME,
+                    CONFIG._RELEASE,
+                    CONFIG.PROJECT_DESCRIPTION,
+                    CONFIG.COMPANY,
+                ),
+                "",
+                "w",
+                True,
+            )
 
 
 class _AnvilSkinPack(AddonObject):
@@ -51,10 +120,9 @@ class _AnvilSkinPack(AddonObject):
     def __init__(self, config) -> None:
         """Initializes a SkinPack instance."""
         super().__init__("skins")
-        self._config = config
         self._languages = []
         self._skins = []
-        self.content(JsonSchemes.skin_pack(self._config.PROJECT_NAME))
+        self.content(JsonSchemes.skin_pack(CONFIG.PROJECT_NAME))
 
     def add_skin(
         self,
@@ -76,20 +144,20 @@ class _AnvilSkinPack(AddonObject):
                 f"{filename}.png not found in {self._path}. Please ensure the file exists."
             )
         self._skins.append(JsonSchemes.skin_json(filename, is_slim, free))
-        self._languages[f"skin.{self._config.PROJECT_NAME}.{filename}"] = display_name
+        self._languages[f"skin.{CONFIG.PROJECT_NAME}.{filename}"] = display_name
 
     def _export(self):
         """Exports the SkinPack to the file system."""
         self._content["skins"] = self._skins
         l = JsonSchemes.skin_pack_name_lang(
-            self._config.PROJECT_NAME, self._config.PROJECT_NAME + " Skin Pack"
+            CONFIG.PROJECT_NAME, CONFIG.PROJECT_NAME + " Skin Pack"
         )
         l.extend([f"{k}={v}" for k, v in self._languages.items()])
 
         File("languages.json", JsonSchemes.languages(), self._path, "w")
         File(
             "manifest.json",
-            JsonSchemes.manifest_skins(self._config._RELEASE),
+            JsonSchemes.manifest_skins(CONFIG._RELEASE),
             self._path,
             "w",
         )
@@ -98,393 +166,13 @@ class _AnvilSkinPack(AddonObject):
         super()._export()
 
 
-class _AnvilDefinitions:
-    _sound_definition_object: SoundDefinition = None
-    _music_definition_object: MusicDefinition = None
-    _sound_event_object: SoundEvent = None
-    _item_textures_object: ItemTexturesObject = None
-    _flipbook_textures_object: FlipBookTexturesObject = None
-    _ui_textures_object: UITexturesObject = None
-
-    _scores: dict[str, int] = {}
-    _tags: set[str] = ()
-    _raw_text: int = 0
-
-    _blocks_object: BlocksJSONObject = None
-
-    def __init__(self, config: _AnvilConfig):
-        self.config = config
-        self._materials_object = _MaterialsObject()
-        self._translator = AnvilTranslator()
-        self._terrain_texture_object = TerrainTexturesObject()
-        self._flipbook_textures_object = FlipBookTexturesObject()
-
-    def register_sound_definition(
-        self,
-        sound_reference: str,
-        category: SoundCategory,
-        use_legacy_max_distance: bool = False,
-        max_distance: int = 0,
-        min_distance: int = 9999,
-    ):
-        """Adds a sound to the sound definition.
-
-        Parameters:
-            sound_reference (str): The name of the sound definition.
-            category (SoundCategory): The category of the sound.
-            use_legacy_max_distance (bool, optional): Whether to use legacy max distance. Defaults to False.
-            max_distance (int, optional): The max distance of the sound. Defaults to 0.
-            min_distance (int, optional): The min distance of the sound. Defaults to 9999.
-        """
-        if self._sound_definition_object is None:
-            self._sound_definition_object = SoundDefinition()
-        return self._sound_definition_object.sound_reference(
-            sound_reference,
-            category,
-            use_legacy_max_distance,
-            max_distance,
-            min_distance,
-        )
-
-    def register_entity_sound_event(
-        self,
-        entity_identifier: Identifier,
-        sound_reference,
-        sound_event: EntitySoundEvent,
-        category: SoundCategory = SoundCategory.Neutral,
-        volume: float = 1.0,
-        pitch: tuple[float, float] = (0.8, 1.2),
-        variant_query: Molang = None,
-        variant_map: str = None,
-        max_distance: int = 0,
-        min_distance: int = 9999,
-    ):
-        if self._sound_event_object is None:
-            self._sound_event_object = SoundEvent()
-        if self._sound_definition_object is None:
-            self._sound_definition_object = SoundDefinition()
-
-        self._sound_event_object.add_entity_event(
-            entity_identifier,
-            sound_reference,
-            sound_event,
-            volume,
-            pitch,
-            variant_query,
-            variant_map,
-        )
-        return self._sound_definition_object.sound_reference(
-            sound_reference,
-            category,
-            max_distance=max_distance,
-            min_distance=min_distance,
-        )
-
-    def register_individual_named_sounds(
-        self,
-        sound_reference,
-        category: SoundCategory = SoundCategory.Ambient,
-        volume: float = 1.0,
-        pitch: tuple[float, float] = (0.8, 1.2),
-    ):
-        if self._sound_event_object is None:
-            self._sound_event_object = SoundEvent()
-
-        self._sound_event_object.add_individual_event(sound_reference, volume, pitch)
-        return self._sound_definition_object.sound_reference(sound_reference, category)
-
-    def register_block_sound_event(self):
-        """# TO IMPLEMENT
-        Registers a block sound event."""
-        pass
-
-    def register_item_textures(
-        self, item_name: str, directory: str, *item_sprites: str
-    ):
-        if self._item_textures_object is None:
-            self._item_textures_object = ItemTexturesObject()
-        return self._item_textures_object.add_item(item_name, directory, *item_sprites)
-
-    def register_ui_textures(self, item_name: str, directory: str, *item_sprites: str):
-        if self._ui_textures_object is None:
-            self._ui_textures_object = UITexturesObject()
-        return self._ui_textures_object.add_item(item_name, directory, *item_sprites)
-
-    def register_music(
-        self,
-        music_reference: MusicCategory | str,
-        min_delay: int = 60,
-        max_delay: int = 180,
-    ):
-        """Adds a music to the music definition.
-
-        Parameters:
-            music_category (MusicCategory): The category of the music.
-            min_delay (int, optional): The min delay of the music. Defaults to 60.
-            max_delay (int, optional): The max delay of the music. Defaults to 180.
-
-        """
-        if self._music_definition_object is None:
-            self._music_definition_object = MusicDefinition()
-        if self._sound_definition_object is None:
-            self._sound_definition_object = SoundDefinition()
-        self._music_definition_object.music_definition(
-            music_reference, min_delay, max_delay
-        )
-        return self._sound_definition_object.sound_reference(
-            f"music.{music_reference}", SoundCategory.Music
-        )
-
-    def register_scores(self, **score_id_value: dict[str, int]):
-        """
-        Adds the provided scores to the setup functions as well as setting the global score values.
-        Score objective must be 16 characters or less.
-
-        Parameters:
-        ---------
-        `score_id_value` : `kwParameters`
-            The score and it's initial value.
-
-        Examples:
-        ---------
-        >>> ANVIL.score(player_id=0,test=4)
-        >>> ANVIL.score(**{'level':5,'type':1})
-        """
-        for score_id, score_value in score_id_value.items():
-            if len(score_id) > 16:
-                raise ValueError(
-                    f"Score objective must be 16 characters or less. Error at {score_id}."
-                )
-
-            start = f"{self.config.NAMESPACE}."
-            if (
-                not score_id.startswith(start)
-                and self.config._TARGET == ConfigPackageTarget.ADDON
-            ):
-                raise ValueError(
-                    f"Scores must start with the namespace [{start}]. Error at {score_id}."
-                )
-
-            if not score_id in self._scores.keys():
-                self._scores[score_id] = score_value
-
-    def register_lang(self, key: str, value: str):
-        """Adds a localized string to en_US. Translatable."""
-        self._translator.add_localization_entry(key, value)
-
-    def register_tag(self, *tags: str):
-        """Registers tags.
-
-        Parameters:
-            tags (str): The tags to register.
-        """
-        for tag in tags:
-
-            start = f"{self.config.NAMESPACE}."
-            if (
-                not tag.startswith(start)
-                and self.config._TARGET == ConfigPackageTarget.ADDON
-            ):
-                raise ValueError(
-                    f"Tags must start with the namespace [{start}]. Error at {tag}."
-                )
-
-            if not tag in self._tags:
-                self._tags.add(tags)
-
-    def register_block(self, block_identifier: Identifier, block_data: dict):
-        """Registers blocks.
-
-        Parameters:
-            blocks (dict): The blocks to register.
-        """
-        if self._blocks_object is None:
-            self._blocks_object = BlocksJSONObject()
-
-        self._blocks_object.add_block(block_identifier, block_data)
-
-    def register_skin_pack(self):
-        """Registers a skin pack."""
-        if self.config._TARGET == ConfigPackageTarget.ADDON:
-            raise ValueError("Skin packs are only supported for world templates.")
-
-        else:
-            return _AnvilSkinPack()
-
-    @property
-    def get_new_score(self):
-        id = f"{self.config.NAMESPACE}.{len(self._scores)}"
-        self.register_scores(**{id: 0})
-        return id
-
-    @property
-    def get_new_lang(self):
-        id = f"raw_text_{self._raw_text}"
-        self._raw_text += 1
-        return id
-
-    def _export_manifest(self, extract_world: bool = False):
-        release_list = [int(i) for i in self.config._RELEASE.split(".")]
-
-        File(
-            "manifest.json",
-            JsonSchemes.manifest_rp(version=self.config._RELEASE),
-            self.config.RP_PATH,
-            "w",
-        )
-        File(
-            "manifest.json",
-            JsonSchemes.manifest_bp(version=self.config._RELEASE),
-            self.config.BP_PATH,
-            "w",
-        )
-        if extract_world:
-            File(
-                "manifest.json",
-                JsonSchemes.manifest_world(version=release_list),
-                self.config._WORLD_PATH,
-                "w",
-            )
-
-            File(
-                "world_resource_packs.json",
-                JsonSchemes.world_packs(release_list, self.config._RP_UUID),
-                self.config._WORLD_PATH,
-                "w",
-            )
-            File(
-                "world_behavior_packs.json",
-                JsonSchemes.world_packs(release_list, self.config._BP_UUID),
-                self.config._WORLD_PATH,
-                "w",
-            )
-
-    def _export_scripts(self):
-        if not FileExists("tsconfig.json"):
-            File(
-                "tsconfig.json",
-                JsonSchemes.tsconfig(self.config.BP_PATH),
-                "",
-                "w",
-                False,
-            )
-        if (
-            not FileExists("esbuild.js")
-            and "esbuild" in self.config._SCRIPT_BUNDLE_SCRIPT
-        ):
-            File(
-                "esbuild.js",
-                JsonSchemes.esbuild_config_js(self.config.BP_PATH, self.config._MINIFY),
-                "",
-                "w",
-                False,
-            )
-        if not FileExists("package.json"):
-            File(
-                "package.json",
-                JsonSchemes.package_json(
-                    self.config.PROJECT_NAME,
-                    self.config._RELEASE,
-                    self.config.PROJECT_DESCRIPTION,
-                    self.config.COMPANY,
-                ),
-                "",
-                "w",
-                True,
-            )
-
-    def _export_helper_functions(self):
-        from anvil.api.logic.commands import (
-            Scoreboard,
-            ScriptEvent,
-            Tag,
-            Target,
-            Tellraw,
-        )
-        from anvil.api.logic.functions import Function, Tick
-
-        self._setup_function = Function("setup")
-        for f in Function._setup:
-            self._setup_function.add(f.execute)
-        self._setup_function.queue()
-
-        Tick().add_function(*Function._ticking).queue
-
-        self._setup_scores = Function("setup_scores")
-        self._remove_scores = Function("remove_scores")
-        self._remove_tags = Function("remove_tags")
-
-        Function("version").add(
-            Tellraw(Target.A).text.text("[Anvil Debug Message]"),
-            Tellraw(Target.A).text.text(
-                "This message contains information about the creating of this pack."
-            ),
-            Tellraw(Target.A).text.text(
-                f"Last compiled on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-            ),
-            Tellraw(Target.A).text.text(
-                f"Minecraft Version: {self.config._VANILLA_VERSION}"
-            ),
-            Tellraw(Target.A).text.text(f"Pack Version: {self.config._RELEASE}"),
-        ).queue()
-
-        for score, value in self._scores.items():
-            self._setup_scores.add(
-                Scoreboard().objective.add(score, score.title()),
-                Scoreboard().players.set(self.config.PROJECT_NAME, score, value),
-            )
-            self._remove_scores.add(Scoreboard().objective.remove(score))
-
-        for tag in self._tags:
-            self._remove_tags.add(Tag(Target.E).remove(tag))
-
-        self._setup_scores.queue()
-        self._remove_scores.queue()
-        self._remove_tags.queue()
-
-        self._setup_function.add(
-            self._remove_tags.execute,
-            self._remove_scores.execute,
-            self._setup_scores.execute,
-            ScriptEvent(f"{self.config.NAMESPACE}:setup"),
-        )
-        self._setup_function.queue()
-
-    def queue(self, anvil: "_Anvil", extract_world: bool = False):
-        self._terrain_texture_object.queue()
-        self._flipbook_textures_object.queue()
-        anvil._queue(self._translator)
-
-        if self._materials_object.size > 0:
-            self._materials_object.queue()
-        if not self._sound_definition_object == None:
-            self._sound_definition_object.queue
-        if not self._music_definition_object == None:
-            self._music_definition_object.queue
-        if not self._sound_event_object == None:
-            self._sound_event_object.queue
-        if not self._item_textures_object == None:
-            self._item_textures_object.queue
-        if not self._blocks_object == None:
-            self._blocks_object.queue
-        if not self._ui_textures_object == None:
-            self._ui_textures_object.queue
-
-        self._export_manifest(extract_world)
-
-        if any([self.config._SCRIPT_API, self.config._SCRIPT_UI]):
-            self._export_scripts()
-
-
 class _Anvil:
     """A class representing an Anvil instance."""
 
     _instance = None
     _objects_list: list[AddonObject] = []
-    _definitions: _AnvilDefinitions
-    _config: _AnvilConfig
 
-    def __init__(self, config: _AnvilConfig):
+    def __init__(self):
         """Initializes an Anvil instance.
 
         Parameters:
@@ -496,35 +184,34 @@ class _Anvil:
             raise Exception("Anvil instance already exists.")
 
         self._compiled = False
-        self._config = config
-        validate_namespace_project_name(config.NAMESPACE, config.PROJECT_NAME)
-        self._definitions = _AnvilDefinitions(config)
-
-    @property
-    def definitions(self):
-        return self._definitions
+        validate_namespace_project_name(CONFIG.NAMESPACE, CONFIG.PROJECT_NAME)
 
     @property
     def config(self):
-        return self._config
+        return CONFIG
 
     @Halo(text="Translating", spinner="dots")
     def translate(self, languages: Optional[list[str]] = None) -> None:
         """Translates the project."""
-        self.definitions._translator.auto_translate_all(languages)
+        AnvilTranslator().auto_translate_all(languages)
 
     @Halo(text="Compiling", spinner="dots")
     def compile(self, extract_world: str = None) -> None:
         """Compiles the project."""
+        extract_world_pack(extract_world)
+        manifests(extract_world)
+        scriptapi()
 
-        if extract_world != None and type(extract_world) is str:
-            RemoveDirectory(self.config._WORLD_PATH)
-            with zipfile.ZipFile(
-                os.path.join("world", f"{extract_world}.mcworld"), "r"
-            ) as zip_ref:
-                zip_ref.extractall(self.config._WORLD_PATH)
+        ItemTexturesObject().queue()
+        TerrainTexturesObject().queue()
+        FlipBookTexturesObject().queue()
+        SoundDefinition().queue()
+        SoundEvent().queue()
+        MusicDefinition().queue()
+        BlocksJSONObject().queue()
+        MaterialsObject().queue()
+        self._queue(AnvilTranslator())
 
-        self._definitions.queue(self, extract_world != None)
         _Blockbench._export()
 
         for object in self._objects_list:
@@ -532,6 +219,7 @@ class _Anvil:
                 object._export()
             except Exception as e:
                 import traceback as tb
+
                 full_traceback = tb.format_exc()
                 creation_info = f"<{object.__class__.__name__} created from:\n{''.join(getattr(object, "_created_from", None))}>"
                 click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
@@ -572,7 +260,7 @@ class _Anvil:
         if _PermutationComponents._count > 10000:
             if self.config._TARGET == ConfigPackageTarget.ADDON:
                 raise RuntimeError(
-                    f"\r[Info]: Total Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons must not exceed this limit."
+                    f"\rTotal Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons must not exceed this limit."
                 )
             else:
                 click.echo(
@@ -1004,3 +692,6 @@ class _Anvil:
                 raise FileNotFoundError(
                     "pack_icon.png not found in marketing directory. Please ensure the file exists."
                 )
+
+
+ANVIL = _Anvil()

@@ -1,4 +1,3 @@
-from anvil.lib.lib import extract_ids_from_factory_class
 from anvil.lib.schemas import MinecraftEntityDescriptor
 
 entity_factory = lambda identifier: MinecraftEntityDescriptor(identifier)
@@ -373,6 +372,3 @@ class MinecraftEntityTypes:
 
     def ZombieVillagerV2() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:zombie_villager_v2")
-
-#ENTITY_IDS: set[str] = extract_ids_from_factory_class(MinecraftEntityTypes)
-

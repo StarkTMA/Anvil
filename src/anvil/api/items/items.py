@@ -1,8 +1,8 @@
 import os
 
-from anvil import ANVIL, CONFIG
 from anvil.api.actors._component_group import _Components
 from anvil.api.actors.actors import Attachable
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import ItemCategory, ItemGroups
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
@@ -11,6 +11,7 @@ from anvil.lib.schemas import (
     JsonSchemes,
     MinecraftDescription,
 )
+from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["Item"]
 
@@ -21,21 +22,30 @@ class _ItemServerDescription(MinecraftDescription):
         super().__init__(name, is_vanilla)
         self._description["description"].update({"properties": {}, "menu_category": {}})
 
-    def group(self, group: ItemGroups):
-        self._description["description"]["menu_category"][
-            "group"
-        ] = f"{CONFIG.NAMESPACE}:{group}"
-        return self
+    def menu_category(
+        self,
+        category: ItemCategory = ItemCategory.none,
+        group: ItemGroups | str = ItemGroups.none,
+        is_hidden_in_commands: bool = False,
+    ):
+        """Sets the menu category for the item.
 
-    def category(self, category: ItemCategory):
-        self._description["description"]["menu_category"]["category"] = str(category)
-        return self
+        Parameters:
+            category (ItemCategory, optional): The category of the item. Defaults to ItemCategory.none.
+            group (str, optional): The group of the item. Defaults to None.
+            is_hidden_in_commands (bool, optional): Whether the item is hidden in commands. Defaults to False.
 
-    @property
-    def is_hidden_in_commands(self):
-        self._description["description"]["menu_category"][
-            "is_hidden_in_commands"
-        ] = True
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemdefinition?view=minecraft-bedrock-stable
+
+        """
+        self._description["description"]["menu_category"] = {
+            "category": category.value if not category == ItemCategory.none else {},
+            "group": group.value if not group == ItemGroups.none else {},
+            "is_hidden_in_commands": (
+                is_hidden_in_commands if is_hidden_in_commands else {}
+            ),
+        }
         return self
 
     def _export(self):
@@ -74,7 +84,7 @@ class _ItemServer(AddonObject):
                 ItemDisplayName._identifier
             ] = {"value": f"item.{self.identifier}.name"}
 
-            ANVIL.definitions.register_lang(
+            AnvilTranslator().add_localization_entry(
                 f"item.{self.identifier}.name",
                 self._display_name,
             )

@@ -1,8 +1,6 @@
-import inspect
 from enum import StrEnum
 from typing import Literal
 
-from anvil.lib.lib import extract_ids_from_factory_class
 from anvil.lib.schemas import MinecraftItemDescriptor
 
 item_factory = lambda identifier: MinecraftItemDescriptor(identifier)
@@ -4363,6 +4361,3 @@ class MinecraftItemTypes:
 
     def ZombieVillagerSpawnEgg() -> MinecraftItemDescriptor:
         return item_factory("minecraft:zombie_villager_spawn_egg")
-
-
-# ITEM_IDS: set[str] = extract_ids_from_factory_class(MinecraftItemTypes)

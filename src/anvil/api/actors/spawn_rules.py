@@ -1,9 +1,9 @@
 import os
 from typing import Literal
 
-from anvil import CONFIG
+from anvil.api.core.filters import Filter
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import Difficulty, Population
-from anvil.lib.filters import Filter
 from anvil.lib.schemas import (
     AddonObject,
     BlockDescriptor,

@@ -1,8 +1,8 @@
 import os
 from typing import Union, overload
 
-from anvil import CONFIG
 from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import ExplorationMapDestinations, LootPoolType, RawTextConstructor
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import (

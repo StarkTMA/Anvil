@@ -580,3 +580,18 @@ def export_world(world_name: str) -> None:
             os.path.join("world", f"{world_name}.mcworld"), "r"
         ) as zip_ref:
             zip_ref.extractall(WORLD_PATH)
+
+
+@cli.command(help="Enable loopback for Minecraft UWP")
+def loopback() -> None:
+    """
+    Enables loopback for the Minecraft UWP application.
+    """
+    process_subcommand(
+        'CheckNetIsolation LoopbackExempt -a -n="Microsoft.MinecraftUWP_8wekyb3d8bbwe";',
+        "Unable to enable loopback for Minecraft.",
+    )
+    process_subcommand(
+        "start http://localhost:7003/",
+        "Unable to start the loopback test page.",
+    )

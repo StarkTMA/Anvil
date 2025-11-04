@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from anvil.lib.enums import ComponentTarget, FilterSubject
-from anvil.lib.filters import Filter
+from anvil.api.core.filters import Filter
 from anvil.lib.format_versions import *
 from anvil.lib.schemas import AddonDescriptor
 from anvil.lib.types import Event

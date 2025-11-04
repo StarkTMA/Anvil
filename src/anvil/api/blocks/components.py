@@ -4,13 +4,14 @@ import os
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union, overload
 
-from anvil import ANVIL, CONFIG
+from anvil.api.core.components import List, _BaseComponent
+from anvil.api.core.core import TerrainTexturesObject
+from anvil.api.core.textures import FlipBookTexturesObject
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import TextureSet
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.components import List, _BaseComponent
-from anvil.lib.core import TerrainTexturesObject
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import (
     BlockFaces,
     BlockLiquidDetectionTouching,
@@ -25,7 +26,7 @@ from anvil.lib.format_versions import (
 )
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.schemas import BlockDescriptor
-from anvil.lib.textures import FlipBookTexturesObject
+from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import Identifier
 
 
@@ -190,7 +191,7 @@ class BlockMaterialInstance(_BaseComponent):
 
         if spec.any_aux():
             for vp in spec.variations:
-                self._texture_set = TextureSet(vp.color)
+                self._texture_set = TextureSet(vp.color, "blocks")
                 self._texture_set.set_textures(
                     spec.blockbench_name,
                     vp.color,
@@ -480,88 +481,6 @@ class BlockCustomComponents(_BaseComponent):
         """
         super().__init__(component_name, False)
         self._set_value({"do_not_shorten": True})
-
-
-class BlockDefault(_BaseComponent):
-    _identifier = "minecraft:block_default"
-
-    def __init__(self) -> None:
-        """The default block component."""
-        super().__init__("block_default")
-
-    def ambient_occlusion_exponent(self, exponent: int):
-        """The exponent for ambient occlusion of the block."""
-        self._add_field("ambient_occlusion_exponent", max(0, exponent))
-        return self
-
-    def sound(self, sound: str):
-        """The sound of the block."""
-        self._add_field("sound", sound)
-        return self
-
-    def isotropic(self, **kwParameters: dict[str, BlockFaces]):
-        """The isotropic of the block."""
-        if BlockFaces.All in kwParameters.values():
-            self._set_value("isotropic", True)
-        else:
-            self._add_field("isotropic", {v: k for k, v in kwParameters.items()})
-        return self
-
-    def textures(self, **kwParameters: dict[str, BlockFaces]):
-        """The textures of the block."""
-        for k in kwParameters.keys():
-            if not FileExists(os.path.join("assets", "textures", "blocks", f"{k}.png")):
-                raise FileNotFoundError(
-                    f"{k}.png not found in {os.path.join("assets", "textures", "blocks")}. Please ensure the file exists."
-                )
-
-            CopyFiles(
-                os.path.join("assets", "textures", "blocks"),
-                os.path.join(
-                    CONFIG.RP_PATH,
-                    "textures",
-                    CONFIG.NAMESPACE,
-                    CONFIG.PROJECT_NAME,
-                    "blocks",
-                ).replace("\\", "/"),
-                f"{k}.png",
-            )
-            TerrainTexturesObject().add_block(k, "", [k])
-
-        if BlockFaces.All in kwParameters.values():
-            self._add_field(
-                "textures",
-                [
-                    f"{CONFIG.NAMESPACE}:{k}"
-                    for k, v in kwParameters.items()
-                    if v == BlockFaces.All
-                ][0],
-            )
-        else:
-            self._add_field(
-                "textures",
-                {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items()},
-            )
-
-        return self
-
-    def carried_textures(self, **kwParameters: dict[str, BlockFaces]):
-        """The carried textures of the block."""
-        if BlockFaces.All in kwParameters.values():
-            self._set_value(
-                "carried_textures",
-                [
-                    f"{CONFIG.NAMESPACE}:{k}"
-                    for k, v in kwParameters.items()
-                    if v == BlockFaces.All
-                ][0],
-            )
-        else:
-            self._add_field(
-                "carried_textures",
-                {v: f"{CONFIG.NAMESPACE}:{k}" for k, v in kwParameters.items()},
-            )
-        return self
 
 
 class BlockDestructibleByExplosion(_BaseComponent):
@@ -918,7 +837,7 @@ class BlockDisplayName(_BaseComponent):
         if not localized_key:
             localized_key = f'tile.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_").replace("\\n", "_")}.name'
 
-        ANVIL.definitions.register_lang(localized_key, display_name)
+        AnvilTranslator().add_localization_entry(localized_key, display_name)
         self._set_value(localized_key)
 
 
@@ -940,7 +859,7 @@ class BlockCraftingTable(_BaseComponent):
         localized_key = (
             f'tile.{CONFIG.NAMESPACE}:{table_name.lower().replace(" ", "_")}.name'
         )
-        ANVIL.definitions.register_lang(
+        AnvilTranslator().add_localization_entry(
             localized_key,
             table_name,
         )

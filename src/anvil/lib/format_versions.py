@@ -23,7 +23,7 @@ GEOMETRY_VERSION: str = "1.21.20"  # The version of the geometry.
 DIALOGUE_VERSION: str = "1.18.0"  # The version of the dialogue.
 MATERIALS_VERSION: str = "1.0.0"  # The version of the materials.
 CAMERA_PRESET_VERSION = "1.21.0"  # The version of the camera presets.
-BLOCK_JSON_FORMAT_VERSION = "1.1.0"  # The version of the block json format.
+BLOCK_JSON_FORMAT_VERSION = "1.21.40"  # The version of the block json format.
 CRAFTING_ITEMS_CATALOG = "1.21.60"  # The version of the crafting items catalog.
 BLOCK_CULLING_VERSION = "1.20.80"  # The version of the block culling rules.
 

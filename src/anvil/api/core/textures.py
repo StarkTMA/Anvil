@@ -1,83 +1,31 @@
 import os
 
-from anvil import CONFIG
+from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.types import Identifier
-
-
-class UITexturesObject(AddonObject):
-    """Handles UI textures for the addon."""
-
-    _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "textures")
-    _textures = {}
-
-    def __init__(self) -> None:
-        """Initializes a UITexturesObject instance."""
-        super().__init__("ui_texture")
-
-    def add_item(self, texture_name: str, directory: str, *textures: str):
-        """Adds item textures to the content.
-
-        Parameters:
-            texture_name (str): The name of the texture.
-            directory (str): The directory path for the textures.
-            textures (str): The names of the textures.
-        """
-        for texture in textures:
-            if not FileExists(
-                os.path.join("assets", "textures", "ui", directory, f"{texture}.png")
-            ):
-                raise FileNotFoundError(
-                    f"UI texture '{texture}.png' does not exist in '{os.path.join("assets", "textures", "ui", directory)}'. {self._object_type}[{texture_name}]"
-                )
-            self._textures.setdefault(directory, []).append(texture)
-
-    @property
-    def queue(self):
-        """Queues the item textures.
-
-        Returns:
-            object: The parent's queue method result.
-        """
-        return super().queue("")
-
-    def _export(self):
-        """Exports the item textures if at least one item was added.
-
-        Returns:
-            object: The parent's export method result.
-        """
-        for directory, sprites in self._textures.items():
-            for sprite in sprites:
-                CopyFiles(
-                    os.path.join("assets", "textures", "ui", directory),
-                    os.path.join(
-                        CONFIG.RP_PATH,
-                        "textures",
-                        CONFIG.NAMESPACE,
-                        CONFIG.PROJECT_NAME,
-                        "ui",
-                        directory,
-                    ),
-                    sprite + ".png",
-                )
 
 
 class ItemTexturesObject(AddonObject):
-    """Handles item textures for the addon."""
+    """Handles item textures for the addon (singleton)."""
 
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "textures")
+    _instance = None
+
+    def __new__(cls):
+        """Ensures only one instance of ItemTexturesObject exists (singleton pattern)."""
+        if cls._instance is None:
+            cls._instance = super(ItemTexturesObject, cls).__new__(cls)
+        return cls._instance
 
     def __init__(self) -> None:
         """Initializes a ItemTexturesObject instance."""
-        super().__init__("item_texture")
+        if not hasattr(self, "_initialized"):
+            super().__init__("item_texture")
+            self.content(JsonSchemes.item_texture(CONFIG.PROJECT_NAME))
+            self._initialized = True
 
-        self.content(JsonSchemes.item_texture(CONFIG.PROJECT_NAME))
-
-    def add_item(self, item_name: str, directory, *item_sprites: str):
+    def add_item(self, item_name: str, directory, item_sprites: list[str]):
         """Adds item textures to the content.
 
         Parameters:
@@ -109,7 +57,6 @@ class ItemTexturesObject(AddonObject):
             ]
         }
 
-    @property
     def queue(self):
         """Queues the item textures.
 
@@ -259,7 +206,7 @@ class FlipBookTexturesObject(AddonObject):
         directory: str,
         block_texture: str,
         frames: list[int],
-        ticks_per_frame: int = 20,
+        ticks_per_frame: int = None,
         atlas_index: int = None,
         atlas_tile_variant: int = None,
         replicate: int = 1,
@@ -305,7 +252,7 @@ class FlipBookTexturesObject(AddonObject):
             "frames": frames,
         }
 
-        if ticks_per_frame != 20:
+        if ticks_per_frame is not None:
             flipbook_entry["ticks_per_frame"] = ticks_per_frame
 
         if atlas_index is not None:
@@ -349,19 +296,3 @@ class FlipBookTexturesObject(AddonObject):
             #        )
             return super()._export()
         return None
-
-
-class BlocksJSONObject(AddonObject):
-    _extension = ".json"
-    _path = CONFIG.RP_PATH
-
-    def __init__(self) -> None:
-        super().__init__("blocks")
-        self.content(JsonSchemes.blocks_json())
-
-    def add_block(self, block_identifier: Identifier, block_data: dict):
-        self._content.update({block_identifier: block_data})
-
-    @property
-    def queue(self):
-        return super().queue()

@@ -1,7 +1,7 @@
-from anvil import CONFIG
 from anvil.api.actors.components import Filter
-from anvil.lib.enums import FilterSubject, Vibrations
-from anvil.lib.types import Event, Target
+from anvil.lib.config import CONFIG
+from anvil.lib.enums import Vibrations
+from anvil.lib.types import Event
 
 
 class _BaseEvent:
@@ -18,11 +18,15 @@ class _BaseEvent:
         }
 
     def add(self, *component_groups: str):
-        self._event[self._event_name]["add"]["component_groups"].extend(component_groups)
+        self._event[self._event_name]["add"]["component_groups"].extend(
+            component_groups
+        )
         return self
 
     def remove(self, *component_groups: str):
-        self._event[self._event_name]["remove"]["component_groups"].extend(component_groups)
+        self._event[self._event_name]["remove"]["component_groups"].extend(
+            component_groups
+        )
         return self
 
     def trigger(self, event: Event):
@@ -30,11 +34,15 @@ class _BaseEvent:
         return self
 
     def set_property(self, property, value):
-        self._event[self._event_name]["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
+        self._event[self._event_name]["set_property"].update(
+            {f"{CONFIG.NAMESPACE}:{property}": value}
+        )
         return self
 
     def queue_command(self, *commands: str):
-        self._event[self._event_name]["queue_command"]["command"].extend(str(cmd) for cmd in commands)
+        self._event[self._event_name]["queue_command"]["command"].extend(
+            str(cmd) for cmd in commands
+        )
         return self
 
     def emit_vibration(self, vibration: Vibrations):
@@ -81,7 +89,9 @@ class _Randomize(_BaseEvent):
         return self
 
     def queue_command(self, *commands: str):
-        self._event.update({"queue_command": {"command": [str(cmd) for cmd in commands]}})
+        self._event.update(
+            {"queue_command": {"command": [str(cmd) for cmd in commands]}}
+        )
         return self
 
     def emit_vibration(self, vibration: Vibrations):
@@ -142,7 +152,9 @@ class _Sequence(_BaseEvent):
         return self
 
     def queue_command(self, *commands: str):
-        self._event.update({"queue_command": {"command": [str(cmd) for cmd in commands]}})
+        self._event.update(
+            {"queue_command": {"command": [str(cmd) for cmd in commands]}}
+        )
         return self
 
     def emit_vibration(self, vibration: Vibrations):
@@ -197,7 +209,9 @@ class _Event(_BaseEvent):
     @property
     def _export(self):
         if len(self._sequences) > 0 and len(self._randomizes) > 0:
-            raise SyntaxError("Sequences and Randomizes cannot coexist in the same event.")
+            raise SyntaxError(
+                "Sequences and Randomizes cannot coexist in the same event."
+            )
         if len(self._sequences) > 0:
             self._event[self._event_name].update({"sequence": []})
             for sequence in self._sequences:

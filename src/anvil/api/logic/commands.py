@@ -1,7 +1,6 @@
 import json
 from math import inf
 
-from anvil import CONFIG
 from anvil.api.blocks.blocks import Block
 from anvil.lib.enums import (
     Anchor,

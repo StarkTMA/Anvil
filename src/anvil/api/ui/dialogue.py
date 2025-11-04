@@ -1,6 +1,6 @@
 import os
 
-from anvil import CONFIG
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import RawTextConstructor
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -21,7 +21,10 @@ class _DialogueButton:
             *commands (str): The commands for the button.
         """
         self._button_name = button_name
-        self._commands = [f"/{command}" if not str(command).startswith("/") else command for command in commands]
+        self._commands = [
+            f"/{command}" if not str(command).startswith("/") else command
+            for command in commands
+        ]
 
     def _export(self):
         """Returns the dialogue button.
@@ -87,7 +90,9 @@ class _DialogueScene:
             _DialogueScene: The dialogue scene instance.
         """
         if len(self._buttons) >= 6:
-            raise RuntimeError(f"The Dialogue scene {self._scene_tag} has {len(self._buttons)} buttons, The maximum allowed is 6.")
+            raise RuntimeError(
+                f"The Dialogue scene {self._scene_tag} has {len(self._buttons)} buttons, The maximum allowed is 6."
+            )
         # Buttons cannot be translated
         button = _DialogueButton(button_name, *commands)
         self._buttons.append(button)

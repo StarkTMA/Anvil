@@ -6,18 +6,16 @@ from enum import StrEnum
 import click
 import commentjson as json
 import requests
-from packaging.version import Version
-
 from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
-    APPDATA,
     PREVIEW_COM_MOJANG,
     RELEASE_COM_MOJANG,
     FileExists,
     validate_namespace_project_name,
 )
 from anvil.lib.reports import ReportCollector
+from packaging.version import Version
 
 
 class ConfigSection(StrEnum):
@@ -155,11 +153,13 @@ class Config:
 
 
 class _AnvilConfig:
-    """Main configuration class for Anvil instances.
+    """Main configuration class for Anvil instances (singleton).
 
     Manages all configuration settings, paths, and initialization
     for an Anvil project instance.
     """
+
+    _instance = None
 
     COMPANY: str
     NAMESPACE: str
@@ -190,15 +190,58 @@ class _AnvilConfig:
     _SCRIPT_MODULE_UUID: str
     _MINIFY: bool
 
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(_AnvilConfig, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        if hasattr(self, "_initialized") and self._initialized:
+            return
+        self._initialized = True
+
+        self.Config = Config()
+
+        click.clear()
+        click.echo(
+            "\n".join(
+                [
+                    f"{click.style('Anvil', 'cyan')} - by StarkTMA.",
+                    f"Version {click.style(__version__, 'cyan')}.",
+                    f"Copyright © {datetime.now().year} {click.style('StarkTMA', 'red')}.",
+                    "All rights reserved.",
+                    "",
+                    "",
+                ]
+            )
+        )
+
+        self.Report = ReportCollector()
+        self.Report.add_headers()
+
+        self._load_configs()
+
+        # GDK Setup preparation
+        self._COM_MOJANG = PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
+        self._WORLD_PATH = os.path.join(
+            self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME
+        )
+
+        self.RP_PATH = os.path.join(
+            self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}"
+        )
+        self.BP_PATH = os.path.join(
+            self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}"
+        )
+
+        if datetime.now() - datetime.strptime(
+            self._LAST_CHECK, "%Y-%m-%d %H:%M:%S"
+        ) > timedelta(hours=24):
+            self._check_new_versions()
+
     def _handle_config(
         self, section: ConfigSection, option: ConfigOption, prompt
     ) -> None:
-        """Handles the config of the Anvil instance.
-
-        Parameters:
-            section (str): The section of the config.
-            option (str): The option of the config.
-        """
         if not self.Config.has_section(section):
             self.Config.add_section(section)
         if not self.Config.has_option(section, option):
@@ -208,11 +251,6 @@ class _AnvilConfig:
         return self.Config.get_option(section, option)
 
     def _load_configs(self) -> None:
-        """Loads and validates all configuration settings for the Anvil instance.
-
-        Handles loading configuration values from the config file, prompting for
-        missing values, and setting up all necessary project configurations.
-        """
         self.NAMESPACE = self._handle_config(
             ConfigSection.PACKAGE, ConfigOption.NAMESPACE, "input"
         )
@@ -314,11 +352,6 @@ class _AnvilConfig:
         )
 
     def _check_new_versions(self):
-        """Checks for updates to both Anvil and Minecraft versions.
-
-        Compares current versions with the latest available versions
-        and updates the configuration with the latest Minecraft version.
-        """
         click.echo(click.style("Checking for package updates...", fg="cyan"))
 
         try:
@@ -360,47 +393,5 @@ class _AnvilConfig:
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         )
 
-    def __init__(self) -> None:
-        """Initializes a new Anvil configuration instance.
 
-        Sets up the configuration, displays version information,
-        loads all settings, and establishes project paths.
-        """
-        self.Config = Config()
-
-        click.clear()
-        click.echo(
-            "\n".join(
-                [
-                    f"{click.style('Anvil', 'cyan')} - by StarkTMA.",
-                    f"Version {click.style(__version__, 'cyan')}.",
-                    f"Copyright © {datetime.now().year} {click.style('StarkTMA', 'red')}.",
-                    "All rights reserved.",
-                    "",
-                    "",
-                ]
-            )
-        )
-
-        self.Report = ReportCollector()
-        self.Report.add_headers()
-
-        self._load_configs()
-
-        # GDK Setup preparation
-        self._COM_MOJANG = PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
-        self._WORLD_PATH = os.path.join(
-            self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME
-        )
-
-        self.RP_PATH = os.path.join(
-            self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}"
-        )
-        self.BP_PATH = os.path.join(
-            self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}"
-        )
-
-        if datetime.now() - datetime.strptime(
-            self._LAST_CHECK, "%Y-%m-%d %H:%M:%S"
-        ) > timedelta(hours=24):
-            self._check_new_versions()
+CONFIG = _AnvilConfig()

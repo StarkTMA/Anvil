@@ -1,42 +1,45 @@
 import os
-from enum import StrEnum
 
-from anvil import CONFIG
-from anvil.lib.enums import (MaterialDefinitions, MaterialFunc,
-                             MaterialOperation, MaterialStates)
+from anvil.lib.config import CONFIG
+from anvil.lib.enums import (
+    MaterialDefinitions,
+    MaterialFunc,
+    MaterialOperation,
+    MaterialStates,
+)
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.types import Identifier
 
 
-class _MaterialsObject(AddonObject):
-    """Handles materials.
+class MaterialsObject(AddonObject):
+    """Handles materials as a singleton.
 
     Attributes:
         Materials (list[Material], optional): A list of materials. Defaults to empty list.
     """
 
+    _instance = None
     _extension = ".material"
     _path = os.path.join(CONFIG.RP_PATH, "materials")
     _object_type = "Materials"
 
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(MaterialsObject, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self) -> None:
-        """Initializes a Materials instance."""
+        if getattr(self, "_initialized", False):
+            return
         super().__init__("entity")
         self._materials: list[Material] = []
         self._content = JsonSchemes.materials()
+        self._initialized = True
 
-    def add_material(self, material: 'Material'):
+    def add_material(self, material: "Material"):
         self._materials.append(material)
         return material
-
-    @property
-    def size(self) -> int:
-        """Returns the size of the materials.
-
-        Returns:
-            int: The size of the materials.
-        """
-        return len(self._materials)
 
     def queue(self):
         """Returns the queue for the materials.
@@ -44,9 +47,10 @@ class _MaterialsObject(AddonObject):
         Returns:
             queue: The queue for the materials.
         """
-        for m in self._materials:
-            self._content["materials"].update(m._export())
-        super().queue()
+        if (len(self._materials)) > 0:
+            for m in self._materials:
+                self._content["materials"].update(m._export())
+            super().queue()
 
 
 class Material:
@@ -66,7 +70,11 @@ class Material:
             baseMaterial (str): The base material's name, if any.
         """
         self._identifier = f"{CONFIG.NAMESPACE}.{material_name}"
-        self._material_name = f"{self._identifier}" if baseMaterial == None else f"{self._identifier}:{baseMaterial}"
+        self._material_name = (
+            f"{self._identifier}"
+            if baseMaterial == None
+            else f"{self._identifier}:{baseMaterial}"
+        )
         self._material = {self._material_name: {}}
 
     @property
@@ -140,7 +148,9 @@ class Material:
             "stencilPassOp": stencilPassOp,
             "stencilPass": stencilPass,
         }
-        self._material[self._material_name]["frontFace"] = {key: value.value for key, value in a.items() if value != None}
+        self._material[self._material_name]["frontFace"] = {
+            key: value.value for key, value in a.items() if value != None
+        }
         return self
 
     def backFace(
@@ -171,7 +181,9 @@ class Material:
             "stencilPassOp": stencilPassOp,
             "stencilPass": stencilPass,
         }
-        self._material[self._material_name]["backFace"] = {key: value for key, value in a.items() if value != None}
+        self._material[self._material_name]["backFace"] = {
+            key: value for key, value in a.items() if value != None
+        }
         return self
 
     def stencilRef(self, stencilRef: int):
@@ -241,9 +253,7 @@ class Material:
         return self
 
     def queue(self):
-        from anvil import ANVIL
-
-        ANVIL.definitions._materials_object.add_material(self)
+        MaterialsObject().add_material(self)
 
     def _export(self) -> dict:
         """Exports the material as a dictionary.

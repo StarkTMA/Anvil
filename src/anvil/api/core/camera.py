@@ -1,6 +1,6 @@
 import os
 
-from anvil import CONFIG
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import AimAssistTargetMode, CameraPresets
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
@@ -88,7 +88,9 @@ class AimAssistCategories(AddonObject):
 
     def _export(self):
         for category in self._categories:
-            self._content["minecraft:aim_assist_categories"]["categories"].append(category.export())
+            self._content["minecraft:aim_assist_categories"]["categories"].append(
+                category.export()
+            )
         return self._content
 
     def queue(self):
@@ -173,21 +175,34 @@ class CameraPreset(AddonObject):
         """
         if self._inherit == CameraPresets.Free:
             if value == False:
-                self._camera_preset["minecraft:camera_preset"]["extend_player_rendering"] = False
+                self._camera_preset["minecraft:camera_preset"][
+                    "extend_player_rendering"
+                ] = False
         else:
-            raise ValueError(f"Extend player rendering can only be set for the Free camera preset, not {self._inherit}.")
+            raise ValueError(
+                f"Extend player rendering can only be set for the Free camera preset, not {self._inherit}."
+            )
         return self
 
     def view_offset(self, x_offset: float, y_offset: float):
-        self._camera_preset["minecraft:camera_preset"]["view_offset"] = [x_offset, y_offset]
+        self._camera_preset["minecraft:camera_preset"]["view_offset"] = [
+            x_offset,
+            y_offset,
+        ]
         return self
 
     def entity_offset(self, x_offset: float, y_offset: float, z_offset: float):
-        self._camera_preset["minecraft:camera_preset"]["entity_offset"] = [x_offset, y_offset, z_offset]
+        self._camera_preset["minecraft:camera_preset"]["entity_offset"] = [
+            x_offset,
+            y_offset,
+            z_offset,
+        ]
         return self
 
     def radius(self, radius: float):
-        self._camera_preset["minecraft:camera_preset"]["radius"] = clamp(radius, 0.1, 100)
+        self._camera_preset["minecraft:camera_preset"]["radius"] = clamp(
+            radius, 0.1, 100
+        )
         return self
 
     def aim_assist(
@@ -218,8 +233,12 @@ class CameraPreset(AddonObject):
         continue_targeting: bool = False,
         tracking_radius: float = 50.0,
     ):
-        self._camera_preset["minecraft:camera_preset"]["rotation_speed"] = max(0.0, rotation_speed)
-        self._camera_preset["minecraft:camera_preset"]["snap_to_target"] = snap_to_target
+        self._camera_preset["minecraft:camera_preset"]["rotation_speed"] = max(
+            0.0, rotation_speed
+        )
+        self._camera_preset["minecraft:camera_preset"][
+            "snap_to_target"
+        ] = snap_to_target
 
         self._camera_preset["minecraft:camera_preset"]["horizontal_rotation_limit"] = [
             max(horizontal_rotation_limit[0], 0),
@@ -229,8 +248,12 @@ class CameraPreset(AddonObject):
             max(vertical_rotation_limit[0], 0),
             min(vertical_rotation_limit[1], 180),
         ]
-        self._camera_preset["minecraft:camera_preset"]["continue_targeting"] = continue_targeting
-        self._camera_preset["minecraft:camera_preset"]["tracking_radius"] = tracking_radius
+        self._camera_preset["minecraft:camera_preset"][
+            "continue_targeting"
+        ] = continue_targeting
+        self._camera_preset["minecraft:camera_preset"][
+            "tracking_radius"
+        ] = tracking_radius
         return self
 
     def starting_rotation(self, x: float = 0, y: float = 0):
@@ -253,13 +276,21 @@ class CameraPreset(AddonObject):
 
     def _export(self):
         if self._replace_reticle:
-            if FileExists(os.path.join("assets", "textures", "ui", "aimassist_block_highlight.png")):
+            if FileExists(
+                os.path.join(
+                    "assets", "textures", "ui", "aimassist_block_highlight.png"
+                )
+            ):
                 CopyFiles(
                     os.path.join("assets", "textures", "ui"),
                     os.path.join(CONFIG.RP_PATH, "textures", "ui"),
                     "aimassist_block_highlight.png",
                 )
-            if FileExists(os.path.join("assets", "textures", "ui", "aimassist_entity_highlight.png")):
+            if FileExists(
+                os.path.join(
+                    "assets", "textures", "ui", "aimassist_entity_highlight.png"
+                )
+            ):
                 CopyFiles(
                     os.path.join("assets", "textures", "ui"),
                     os.path.join(CONFIG.RP_PATH, "textures", "ui"),

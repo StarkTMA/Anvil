@@ -1,19 +1,20 @@
 import os
 from typing import overload
 
-from anvil import ANVIL, CONFIG
 from anvil.api.actors._animations import _BPAnimations
 from anvil.api.actors._component_group import _ComponentGroup, _Components, _Properties
 from anvil.api.actors._events import _Event
 from anvil.api.actors._render_controller import _RenderControllers
 from anvil.api.actors.components import EntityInstantDespawn, EntityRideable
 from anvil.api.actors.spawn_rules import SpawnRule
+from anvil.api.core.core import SoundDefinition, SoundEvent
+from anvil.api.core.sounds import EntitySoundEvent, SoundCategory, _SoundDescription
+from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.logic.molang import Molang, Variable
 from anvil.api.pbr.pbr import TextureSet
 from anvil.api.vanilla.entities import MinecraftEntityTypes
-from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.config import ConfigPackageTarget
+from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.enums import DamageSensor, Target
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.reports import ReportType
@@ -24,7 +25,7 @@ from anvil.lib.schemas import (
     MinecraftDescription,
     MinecraftEntityDescriptor,
 )
-from anvil.lib.sounds import EntitySoundEvent, SoundCategory, SoundDescription
+from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import RGB, RGBA, Vector2D
 
 __all__ = ["Entity", "Attachable"]
@@ -727,7 +728,6 @@ class _ActorClientDescription(_ActorDescription):
         self._is_dummy = False
         self._animation_controllers = _RP_AnimationControllers(self, self._name)
         self._render_controllers = _RenderControllers(self._name)
-        self._sounds: list[SoundDescription] = []
         self._texture_set: TextureSet = None
 
         self._description["description"].update(JsonSchemes.client_description())
@@ -829,11 +829,11 @@ class _ActorClientDescription(_ActorDescription):
     def texture(
         self,
         blockbench_name: str,
-        color_texture: str,
-        normal_texture: str | RGB | RGBA = None,
-        heightmap_texture: str | RGB | RGBA = None,
-        metalness_emissive_roughness_texture: str | RGB | RGBA = None,
-        metalness_emissive_roughness_subsurface_texture: str | RGB | RGBA = None,
+        color: str,
+        normal: str | RGB | RGBA = None,
+        height: str | RGB | RGBA = None,
+        mer: str | RGB | RGBA = None,
+        mers: str | RGB | RGBA = None,
     ):
         """This method manages the textures for an entity.
 
@@ -842,38 +842,39 @@ class _ActorClientDescription(_ActorDescription):
             texture_name (str): The name of the texture.
         """
         bb = _Blockbench(blockbench_name, "actors")
-        bb.textures.queue_texture(color_texture)
+        bb.textures.queue_texture(color)
 
         self._description["description"]["textures"].update(
             {
-                color_texture: os.path.join(
+                color: os.path.join(
                     "textures",
                     CONFIG.NAMESPACE,
                     CONFIG.PROJECT_NAME,
                     "actors",
                     blockbench_name,
-                    color_texture,
+                    color,
                 )
             }
         )
 
         if any(
             [
-                normal_texture,
-                heightmap_texture,
-                metalness_emissive_roughness_texture,
-                metalness_emissive_roughness_subsurface_texture,
+                normal,
+                height,
+                mer,
+                mers,
             ]
         ):
-            self._texture_set = TextureSet(self.identifier, "entities")
+            self._texture_set = TextureSet(color, "actors")
             self._texture_set.set_textures(
                 blockbench_name,
-                color_texture,
-                normal_texture,
-                heightmap_texture,
-                metalness_emissive_roughness_texture,
-                metalness_emissive_roughness_subsurface_texture,
+                color,
+                normal,
+                height,
+                mer,
+                mers,
             )
+            self._texture_set.queue()
         return self
 
     def script(self, variable: Variable | str, *script: Molang | str):
@@ -992,8 +993,7 @@ class _ActorClientDescription(_ActorDescription):
 
     def sound_effect(
         self,
-        sound_name: str,
-        sound_path: str,
+        sound_identifier: str,
         category: SoundCategory = SoundCategory.Neutral,
         max_distance: int = 0,
         min_distance: int = 9999,
@@ -1007,13 +1007,16 @@ class _ActorClientDescription(_ActorDescription):
 
         """
         self._description["description"]["sound_effects"].update(
-            {sound_name: f"{CONFIG.NAMESPACE}:{sound_path}"}
+            {sound_identifier: f"{CONFIG.NAMESPACE}:{sound_identifier}"}
         )
-        sound: SoundDescription = ANVIL.definitions.register_sound_definition(
-            sound_path, category, max_distance=max_distance, min_distance=min_distance
+
+        sound_definition_object = SoundDefinition()
+        return sound_definition_object.sound_reference(
+            sound_identifier,
+            category,
+            max_distance=max_distance,
+            min_distance=min_distance,
         )
-        self._sounds.append(sound)
-        return sound
 
     def sound_event(
         self,
@@ -1040,17 +1043,18 @@ class _ActorClientDescription(_ActorDescription):
             variant_query (Molang, optional): The variant query of the sound effect. Defaults to None.
             variant_map (str, optional): The variant map of the sound effect. Defaults to None.
         """
-        ANVIL.definitions.register_entity_sound_event(
+        sound_event_obj = SoundEvent()
+        return sound_event_obj.add_entity_event(
             self.identifier,
             sound_reference,
             sound_event,
             category,
             volume,
             pitch,
-            variant_query,
-            variant_map,
             max_distance,
             min_distance,
+            variant_query,
+            variant_map,
         )
 
     def _export(self, directory: str = None):
@@ -1089,9 +1093,6 @@ class _ActorClientDescription(_ActorDescription):
 
             self._render_controllers.queue(directory)
             self._animation_controllers.queue(directory)
-
-        for sound in self._sounds:
-            sound._export
 
         if self._texture_set:
             self._texture_set.queue()
@@ -1160,7 +1161,7 @@ class _EntityClientDescription(_ActorClientDescription):
         Parameters:
             item_sprite (str): The name of the item sprite.
         """
-        ANVIL.definitions.register_item_textures(item_sprite, "spawn_eggs", item_sprite)
+        ItemTexturesObject().add_item(item_sprite, "spawn_eggs", [item_sprite])
         self._description["description"]["spawn_egg"] = {
             "texture": f"{CONFIG.NAMESPACE}:{item_sprite}",
             "texture_index": texture_index if texture_index == 0 else {},
@@ -1524,7 +1525,7 @@ class _EntityServer(AddonObject):
         if self._components._has(EntityRideable) or any(
             c._has(EntityRideable) for c in self._component_groups
         ):
-            ANVIL.definitions.register_lang(
+            AnvilTranslator().add_localization_entry(
                 f"action.hint.exit.{self.identifier}", "Sneak to exit"
             )
         return super()._export()
@@ -1592,11 +1593,13 @@ class Entity(EntityDescriptor):
         if self._is_vanilla:
             directory = "vanilla"
 
-        ANVIL.definitions.register_lang(f"entity.{self.identifier}.name", display_name)
-        ANVIL.definitions.register_lang(
+        AnvilTranslator().add_localization_entry(
+            f"entity.{self.identifier}.name", display_name
+        )
+        AnvilTranslator().add_localization_entry(
             f"entity.{self.identifier}<>.name", display_name
         )
-        ANVIL.definitions.register_lang(
+        AnvilTranslator().add_localization_entry(
             f"item.spawn_egg.entity.{self.identifier}.name",
             spawn_egg_name,
         )

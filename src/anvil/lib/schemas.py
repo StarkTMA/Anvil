@@ -6,8 +6,7 @@ import traceback
 import uuid
 from typing import Dict, Mapping
 
-from anvil import CONFIG
-from anvil.lib.config import ConfigPackageTarget
+from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA, File, salt_from_str
 from anvil.lib.templater import load_file
@@ -39,23 +38,24 @@ class JsonSchemes:
 
     @staticmethod
     def manifest_bp(version):
+        config = CONFIG
         m = load_file(
             "manifest_bp.jsont",
             {
-                "bp_uuid": CONFIG._BP_UUID[0],
+                "bp_uuid": config._BP_UUID[0],
                 "version": version,
                 "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
-                "data_module_uuid": CONFIG._DATA_MODULE_UUID,
-                "rp_uuid": CONFIG._RP_UUID[0],
-                "company": CONFIG.COMPANY,
+                "data_module_uuid": config._DATA_MODULE_UUID,
+                "rp_uuid": config._RP_UUID[0],
+                "company": config.COMPANY,
             },
             is_json=True,
         )
 
-        if CONFIG._SCRIPT_API:
+        if config._SCRIPT_API:
             m["modules"].append(
                 {
-                    "uuid": CONFIG._SCRIPT_MODULE_UUID,
+                    "uuid": config._SCRIPT_MODULE_UUID,
                     "version": version,
                     "type": "script",
                     "language": "javascript",
@@ -68,54 +68,56 @@ class JsonSchemes:
                     "version": MODULE_MINECRAFT_SERVER,
                 }
             )
-            if CONFIG._SCRIPT_UI:
+            if config._SCRIPT_UI:
                 m["dependencies"].append(
                     {
                         "module_name": "@minecraft/server-ui",
                         "version": MODULE_MINECRAFT_SERVER_UI,
                     }
                 )
-        if CONFIG._TARGET == "addon":
+        if config._TARGET == "addon":
             m["header"]["pack_scope"] = "world"
             m["metadata"]["product_type"] = "addon"
         return m
 
     @staticmethod
     def manifest_rp(version):
+        config = CONFIG
         m = load_file(
             "manifest_rp.jsont",
             {
-                "rp_uuid": CONFIG._RP_UUID[0],
+                "rp_uuid": config._RP_UUID[0],
                 "version": version,
                 "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
                 "resource_module_uuid": str(uuid.uuid4()),
-                "bp_uuid": CONFIG._BP_UUID[0],
-                "company": CONFIG.COMPANY,
+                "bp_uuid": config._BP_UUID[0],
+                "company": config.COMPANY,
             },
             is_json=True,
         )
-        if CONFIG._PBR:
+        if config._PBR:
             m.update({"capabilities": ["pbr"]})
-        if CONFIG._TARGET == "addon":
+        if config._TARGET == "addon":
             m["header"]["pack_scope"] = "world"
             m["metadata"]["product_type"] = "addon"
         return m
 
     @staticmethod
     def manifest_world(version):
+        config = CONFIG
         m = load_file(
             "manifest_rp.jsont",
             {
-                "world_uuid": CONFIG._PACK_UUID,
+                "world_uuid": config._PACK_UUID,
                 "version": version,
                 "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
                 "world_module_uuid": str(uuid.uuid4()),
-                "company": CONFIG.COMPANY,
+                "company": config.COMPANY,
             },
             is_json=True,
         )
 
-        if CONFIG._RANDOM_SEED:
+        if config._RANDOM_SEED:
             m["header"]["allow_random_seed"] = True
 
         return m
@@ -183,7 +185,7 @@ class JsonSchemes:
         return {name: {"category": category, "sounds": []}}
 
     @staticmethod
-    def materials():
+    def materials() -> Dict:
         return load_file(
             "materials.jsont", {"version": MATERIALS_VERSION}, is_json=True
         )
@@ -285,11 +287,12 @@ class JsonSchemes:
         visible_box: list[int],
         visible_offset: list[int],
     ):
+        config = CONFIG
         return load_file(
             "geometry.jsont",
             {
                 "format_version": GEOMETRY_VERSION,
-                "namespace": CONFIG.NAMESPACE,
+                "namespace": config.NAMESPACE,
                 "model_name": model_name,
                 "texture_width": texture_size[0],
                 "texture_height": texture_size[1],
@@ -432,7 +435,7 @@ class JsonSchemes:
     def blocks_json():
         return load_file(
             "blocks_json.jsont",
-            {"format_version": [int(i) for i in BLOCK_JSON_FORMAT_VERSION.split(".")]},
+            {"format_version": BLOCK_JSON_FORMAT_VERSION},
             is_json=True,
         )
 
@@ -901,6 +904,7 @@ class AddonObject(AddonDescriptor):
     _extension = ".json"
     _path = ""
     _object_type = "addon_object"
+    _config = CONFIG
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """

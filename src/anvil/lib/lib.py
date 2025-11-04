@@ -1,7 +1,7 @@
 """A collection of useful functions and classes used throughout the program."""
 
 import inspect
-import json as json
+import json
 import os
 import re
 import shutil
@@ -10,7 +10,6 @@ import zipfile
 from datetime import datetime
 
 import commentjson as commentjson
-
 from anvil.lib.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 
 from ..__version__ import __version__
@@ -38,6 +37,36 @@ MOLANG_PREFIXES = (
     "math.",
 )
 IMAGE_EXTENSIONS_PRIORITY = [".tga", ".png", ".jpg", ".jpeg"]
+
+
+class PrettyPrintedEncoder(json.JSONEncoder):
+    def __init__(self, *args, max_width=88, indent=4, **kwargs):
+        super().__init__(*args, indent=indent, **kwargs)
+        self.max_width = max_width
+        self._indent_str = " " * indent
+
+    def encode(self, o, _level=0):
+        if isinstance(o, (list, tuple)):
+            items = [self.encode(v, _level + 1) for v in o]
+            inline = f"[{', '.join(items)}]"
+            if len(inline) <= self.max_width - _level * self.indent:
+                return inline
+            inner = ",\n".join(self._indent_str * (_level + 1) + i for i in items)
+            return f"[\n{inner}\n{self._indent_str * _level}]"
+
+        elif isinstance(o, dict):
+            items = [
+                f"{json.dumps(str(k))}: {self.encode(v, _level + 1)}"
+                for k, v in o.items()
+            ]
+            inline = f"{{ {', '.join(items)} }}"
+            if len(inline) <= self.max_width - _level * self.indent:
+                return inline
+            inner = ",\n".join(self._indent_str * (_level + 1) + i for i in items)
+            return f"{{\n{inner}\n{self._indent_str * _level}}}"
+
+        else:
+            return json.dumps(o)
 
 
 # --------------------------------------------------------------------------
@@ -270,6 +299,7 @@ def File(
                     sort_keys=False,
                     indent=4 if not oneline else None,
                     ensure_ascii=False,
+                    cls=PrettyPrintedEncoder,
                 )
             case "py" | "mcfunction":
                 out_content = f"#Filename: {name}\n#{stamp}\n#{time}\n#{copyright}\n\n"
@@ -373,7 +403,7 @@ def convert_color(
     Supported input formats:
     - Hex string: "#RRGGBB", "#RRGGBBAA", "#RGB", or "#RGBA" (short format)
     - RGB/RGBA (0-1): tuple of 3 or 4 floats in range [0, 1]
-    - RGB255/RGBA255 (0-255): tuple of 3 or 4 floats in range [0, 255]
+    - RGB255/RGBA255 (0-255): tuple of 3 or 4 ints in range [0, 255]
 
     Args:
         color (Color): The input color in any supported format.

@@ -1,7 +1,6 @@
 from enum import StrEnum
 from typing import Literal, TypeAlias
 
-from anvil.lib.lib import extract_ids_from_factory_class
 from anvil.lib.schemas import MinecraftBlockDescriptor
 
 Active: TypeAlias = Literal["0b", "1b"]
@@ -11970,6 +11969,3 @@ class MinecraftBlockTypes:
             True,
             {_BlockStateKeys.FacingDirection: facing_direction},
         )
-
-
-#BLOCK_IDS: set[str] = extract_ids_from_factory_class(MinecraftBlockTypes)

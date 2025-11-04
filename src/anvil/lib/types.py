@@ -3,11 +3,14 @@ from typing import Literal, TypedDict
 type Vector2D = tuple[float, float]
 type Vector3D = tuple[float, float, float]
 type Vector4D = tuple[float, float, float, float]
+type Vector2DInt = tuple[int, int]
+type Vector3DInt = tuple[int, int, int]
+type Vector4DInt = tuple[int, int, int, int]
 
 type RGB = Vector3D
 type RGBA = Vector4D
-type RGB255 = Vector3D
-type RGBA255 = Vector4D
+type RGB255 = Vector3DInt
+type RGBA255 = Vector4DInt
 type HexRGB = str
 type HexRGBA = str
 type Color = RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA

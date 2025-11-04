@@ -1,6 +1,6 @@
 import os
 
-from anvil import CONFIG
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import FogCameraLocation, RenderDistanceType
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 
@@ -15,7 +15,9 @@ class _FogDistance:
         _distance (dict): A dictionary containing the fog properties related to the camera location.
     """
 
-    def __init__(self, camera_location: FogCameraLocation = FogCameraLocation.Air) -> None:
+    def __init__(
+        self, camera_location: FogCameraLocation = FogCameraLocation.Air
+    ) -> None:
         """
         Initialize the _FogDistance instance.
 
@@ -56,11 +58,15 @@ class _FogDistance:
             _FogDistance: Returns self for chaining.
         """
         if fog_start >= fog_end:
-            raise ValueError(f"fog_end: [{fog_end}] must be greater than fog_start: [{fog_start}].")
+            raise ValueError(
+                f"fog_end: [{fog_end}] must be greater than fog_start: [{fog_start}]."
+            )
 
         self._distance[self._camera_location]["fog_start"] = fog_start
         self._distance[self._camera_location]["fog_end"] = fog_end
-        self._distance[self._camera_location]["render_distance_type"] = render_distance_type.value
+        self._distance[self._camera_location][
+            "render_distance_type"
+        ] = render_distance_type.value
         return self
 
     def transition_fog(
@@ -83,11 +89,15 @@ class _FogDistance:
             _FogDistance: Returns self for chaining.
         """
         if fog_start >= fog_end:
-            raise ValueError(f"fog_end: [{fog_end}] must be greater than fog_start: [{fog_start}].")
+            raise ValueError(
+                f"fog_end: [{fog_end}] must be greater than fog_start: [{fog_start}]."
+            )
         self._distance[self._camera_location]["color"] = color
         self._distance[self._camera_location]["fog_start"] = fog_start
         self._distance[self._camera_location]["fog_end"] = fog_end
-        self._distance[self._camera_location]["render_distance_type"] = render_distance_type.value
+        self._distance[self._camera_location][
+            "render_distance_type"
+        ] = render_distance_type.value
         return self
 
     def _export(self):
@@ -120,7 +130,9 @@ class Fog(AddonObject):
         self._locations: list[_FogDistance] = []
         self._volumes = []
 
-    def add_distance_location(self, camera_location: FogCameraLocation = FogCameraLocation.Air):
+    def add_distance_location(
+        self, camera_location: FogCameraLocation = FogCameraLocation.Air
+    ):
         """Adds a distance location to the fog.
 
         Parameters:

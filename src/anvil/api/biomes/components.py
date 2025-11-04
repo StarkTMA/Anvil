@@ -1,7 +1,7 @@
 from warnings import deprecated
 
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
-from anvil.lib.components import _BaseComponent
+from anvil.api.core.components import _BaseComponent
 from anvil.lib.enums import Dimension
 from anvil.lib.format_versions import BIOME_SERVER_VERSION
 from anvil.lib.lib import convert_color

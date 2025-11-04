@@ -4,10 +4,11 @@ import os
 import amulet
 from amulet.api.block import Block as amuletBlock
 from amulet.api.block import StringTag
-from anvil import CONFIG
-from anvil.api.vanilla.blocks import MinecraftBlockTypes
-from anvil.lib.format_versions import MANIFEST_BUILD
 from halo import Halo
+
+from anvil.api.vanilla.blocks import MinecraftBlockTypes
+from anvil.lib.config import CONFIG
+from anvil.lib.format_versions import MANIFEST_BUILD
 
 
 # Requires Amulet core to build the world
@@ -35,14 +36,22 @@ class LDtk:
                 }
                 for tile_custom_data in tile["data"].split("\n"):
                     if tile_custom_data.startswith("id="):
-                        self.dictionary["tilesets"][tileset["uid"]][tile["tileId"]]["id"] = tile_custom_data.removeprefix("id=").removesuffix("\n")
+                        self.dictionary["tilesets"][tileset["uid"]][tile["tileId"]][
+                            "id"
+                        ] = tile_custom_data.removeprefix("id=").removesuffix("\n")
                     if tile_custom_data.startswith("origin="):
-                        self.dictionary["tilesets"][tileset["uid"]][tile["tileId"]]["origin"] = tile_custom_data.removeprefix("origin=").removesuffix(
-                            "\n"
-                        )
+                        self.dictionary["tilesets"][tileset["uid"]][tile["tileId"]][
+                            "origin"
+                        ] = tile_custom_data.removeprefix("origin=").removesuffix("\n")
                     if tile_custom_data.startswith("properties="):
-                        self.dictionary["tilesets"][tileset["uid"]][tile["tileId"]]["properties"] = (
-                            tile_custom_data.removeprefix("properties=").removesuffix("\n").removeprefix("[").removesuffix("]").split(",")
+                        self.dictionary["tilesets"][tileset["uid"]][tile["tileId"]][
+                            "properties"
+                        ] = (
+                            tile_custom_data.removeprefix("properties=")
+                            .removesuffix("\n")
+                            .removeprefix("[")
+                            .removesuffix("]")
+                            .split(",")
                         )
 
     def _collect_level_data(self):
@@ -61,7 +70,9 @@ class LDtk:
                 level_data = level["layerInstances"]
 
             else:
-                with open(os.path.join("world", "ldtk", level["externalRelPath"]), "r") as File:
+                with open(
+                    os.path.join("world", "ldtk", level["externalRelPath"]), "r"
+                ) as File:
                     level_data = json.load(File)["layerInstances"]
 
             # Level Layers
@@ -97,7 +108,9 @@ class LDtk:
                     dat = {}
                     # Collecting Entity data per level
                     for tile_custom_data in entity["fieldInstances"]:
-                        dat[tile_custom_data["__identifier"]] = tile_custom_data["__value"]
+                        dat[tile_custom_data["__identifier"]] = tile_custom_data[
+                            "__value"
+                        ]
                     id = f'{"minecraft" if dat["vanilla"] else CONFIG.NAMESPACE}:{entity["__identifier"].lower()}'
                     self.dictionary["levels"][level["identifier"]]["entities"].append(
                         {
@@ -129,7 +142,13 @@ class LDtk:
 
         return world
 
-    def __init__(self, filename: str, *, clear_chunks: bool = False, default_origin_block=MinecraftBlockTypes.Air()) -> None:
+    def __init__(
+        self,
+        filename: str,
+        *,
+        clear_chunks: bool = False,
+        default_origin_block=MinecraftBlockTypes.Air(),
+    ) -> None:
         """Converts LDtk map to Minecraft worlds.
 
         Parameters:
@@ -146,7 +165,12 @@ class LDtk:
         # self._dump_dictionary()
 
     @Halo(text="Converting LDtk world", spinner="dots")
-    def convert(self, plane: str = "yz", offset: tuple[float, float, float] = (0, 0, 0), export_entities: bool = True):
+    def convert(
+        self,
+        plane: str = "yz",
+        offset: tuple[float, float, float] = (0, 0, 0),
+        export_entities: bool = True,
+    ):
         def map_coordinates(level_origin, x, y, layer):
             if plane in ["yx", "xy"]:
                 return (
@@ -169,26 +193,47 @@ class LDtk:
         for level_name, level in self.dictionary["levels"].items():
             for tile in level["tiles"]:
                 functions = {k: [] for k in self.dictionary["enums"]}
-                mapped_coords = map_coordinates(level["origin"], tile["x"], tile["y"], level["layer"])
+                mapped_coords = map_coordinates(
+                    level["origin"], tile["x"], tile["y"], level["layer"]
+                )
 
                 try:
-                    prop_get = self.dictionary.get("tilesets").get(tile["tileset_id"]).get(tile["id"]).get("properties")
+                    prop_get = (
+                        self.dictionary.get("tilesets")
+                        .get(tile["tileset_id"])
+                        .get(tile["id"])
+                        .get("properties")
+                    )
                 except:
-                    raise KeyError(f"Error retrieving custom data for tile id: [{tile['id']}]")
+                    raise KeyError(
+                        f"Error retrieving custom data for tile id: [{tile['id']}]"
+                    )
 
-                properties = {str(k): StringTag(v) for k, v in [p.split("=") for p in prop_get] if type(prop_get) is list}
+                properties = {
+                    str(k): StringTag(v)
+                    for k, v in [p.split("=") for p in prop_get]
+                    if type(prop_get) is list
+                }
 
                 origin_block = amuletBlock(
-                    *self.dictionary["tilesets"][tile["tileset_id"]][tile["id"]]["origin"].split(":"),
+                    *self.dictionary["tilesets"][tile["tileset_id"]][tile["id"]][
+                        "origin"
+                    ].split(":"),
                     properties,
                 )
                 block = amuletBlock(
-                    *self.dictionary["tilesets"][tile["tileset_id"]][tile["id"]]["id"].split(":"),
+                    *self.dictionary["tilesets"][tile["tileset_id"]][tile["id"]][
+                        "id"
+                    ].split(":"),
                     properties,
                 )
 
-                world.set_version_block(*mapped_coords, "minecraft:overworld", game_version, origin_block)
-                world.set_version_block(*mapped_coords, "minecraft:overworld", game_version, block)
+                world.set_version_block(
+                    *mapped_coords, "minecraft:overworld", game_version, origin_block
+                )
+                world.set_version_block(
+                    *mapped_coords, "minecraft:overworld", game_version, block
+                )
 
         with open(os.path.join("scripts", "javascript", "entities.ts"), "w") as File:
             entities = {}
@@ -196,7 +241,9 @@ class LDtk:
                 for level_name, level in self.dictionary["levels"].items():
                     entities[level_name] = []
                     for entity in level["entities"]:
-                        mapped_coords = map_coordinates(level["origin"], entity["x"], entity["y"], level["layer"])
+                        mapped_coords = map_coordinates(
+                            level["origin"], entity["x"], entity["y"], level["layer"]
+                        )
 
                         point = entity["data"].get("point")
                         if point != None:
@@ -208,12 +255,18 @@ class LDtk:
                                 cy = level["origin"][1] + cy + offset[2]
 
                             entity["data"]["point"]["cy"] = cy
-                            entity["data"]["point"]["cx"] = cx + level["origin"][0] + offset[0]
+                            entity["data"]["point"]["cx"] = (
+                                cx + level["origin"][0] + offset[0]
+                            )
 
                         entities[level_name].append(
                             {
                                 "id": entity["entity_id"],
-                                "location": {"x": mapped_coords[0], "y": mapped_coords[1], "z": mapped_coords[2]},
+                                "location": {
+                                    "x": mapped_coords[0],
+                                    "y": mapped_coords[1],
+                                    "z": mapped_coords[2],
+                                },
                                 "data": entity["data"],
                             }
                         )

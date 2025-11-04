@@ -2,10 +2,11 @@ import math
 from os import path
 from typing import Any
 
-from anvil import ANVIL, CONFIG
 from anvil.api.blocks.components import LootTable
+from anvil.api.core.components import _BaseAIGoal, _BaseComponent, _BaseEventTrigger
+from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Molang
-from anvil.lib.components import _BaseAIGoal, _BaseComponent, _BaseEventTrigger
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import (
     BreedingMutationStrategy,
     ContainerType,
@@ -23,10 +24,10 @@ from anvil.lib.enums import (
     Slots,
     Vibrations,
 )
-from anvil.lib.filters import Filter
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import BlockDescriptor, ItemDescriptor, MinecraftBlockDescriptor
+from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import *
 
 # Components ==========================================================================
@@ -1162,7 +1163,9 @@ class EntityRideable(_BaseComponent):
         if not interact_text == "Mount":
             t = interact_text.lower().replace(" ", "_")
             self._add_field("interact_text", f"action.interact.{t}")
-            ANVIL.definitions.register_lang(f"action.interact.{t}", interact_text)
+            AnvilTranslator().add_localization_entry(
+                f"action.interact.{t}", interact_text
+            )
         if not controlling_seat == 0:
             self._add_field("controlling_seat", controlling_seat)
         if not crouching_skip_interact:
@@ -1611,7 +1614,7 @@ class EntityProjectile(_BaseComponent):
             self._component["on_hit"]["impact_damage"][
                 "apply_knockback_to_blocking_targets"
             ] = apply_knockback_to_blocking_targets
-            
+
         return self
 
     def mob_effect(
@@ -3040,7 +3043,9 @@ class EntityEquippable(_BaseComponent):
         if not interact_text is None:
             t = interact_text.lower().replace(" ", "_")
             slot_data["interact_text"] = f"action.interact.{t}"
-            ANVIL.definitions.register_lang(f"action.interact.{t}", interact_text)
+            AnvilTranslator().add_localization_entry(
+                f"action.interact.{t}", interact_text
+            )
         if not on_equip is None:
             slot_data["on_equip"] = {"event": on_equip}
         if not on_unequip is None:
@@ -5453,10 +5458,13 @@ class EntityAIAvoidMobType(_BaseAIGoal):
                 raise TypeError("sound_interval must be a list of two numbers")
             if len(sound_interval) != 2:
                 raise ValueError("sound_interval must contain exactly two numbers")
-            self._add_field("sound_interval", {
-                "range_min": min(sound_interval),
-                "range_max": max(sound_interval),
-            })
+            self._add_field(
+                "sound_interval",
+                {
+                    "range_min": min(sound_interval),
+                    "range_max": max(sound_interval),
+                },
+            )
         if check_if_outnumbered:
             self._add_field("check_if_outnumbered", check_if_outnumbered)
         if cooldown != 0.0:
@@ -5504,7 +5512,9 @@ class EntityAIAvoidMobType(_BaseAIGoal):
             target (FilterSubject, optional): Target of the event. Defaults to FilterSubject.Self.
         """
         # append to the escape event list so multiple handlers can be added
-        self._get_field("on_escape_event", []).append({"event": event, "target": target.value})
+        self._get_field("on_escape_event", []).append(
+            {"event": event, "target": target.value}
+        )
         return self
 
 
@@ -6763,10 +6773,10 @@ class EntityAIAvoidBlock(_BaseAIGoal):
                 raise TypeError("sound_interval must be a list of two floats")
             if len(sound_interval) != 2:
                 raise ValueError("sound_interval must be a list of two floats")
-            self._add_field("sound_interval", {
-                "range_min": min(sound_interval),
-                "range_max": max(sound_interval)
-            })
+            self._add_field(
+                "sound_interval",
+                {"range_min": min(sound_interval), "range_max": max(sound_interval)},
+            )
         if target_selection_method != "nearest":
             self._add_field("target_selection_method", target_selection_method)
         if not target_blocks == []:
@@ -6786,5 +6796,3 @@ class EntityAIAvoidBlock(_BaseAIGoal):
         """
         self._get_field("on_escape").append({"event": event, "target": target.value})
         return self
-
-

@@ -1,15 +1,17 @@
 from math import inf
 from typing import Dict, Literal
 
-from anvil import ANVIL, CONFIG
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.actors import Entity, ItemTexturesObject
+from anvil.api.core.components import _BaseComponent
+from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.components import _BaseComponent
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import DamageCause, Effects, EnchantsSlots, ItemRarity, Slots
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import Color, HexRGB, clamp, convert_color
 from anvil.lib.schemas import BlockDescriptor, EntityDescriptor, ItemDescriptor
+from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import RGB, RGBA, Identifier, Seconds
 
 
@@ -29,7 +31,8 @@ class ItemSwingDuration(_BaseComponent):
         super().__init__("swing_duration")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.120")
         self._set_value(clamp(value, 0, inf))
-        
+
+
 class ItemFireResistant(_BaseComponent):
     _identifier = "minecraft:fire_resistant"
 
@@ -355,7 +358,7 @@ class ItemInteractButton(_BaseComponent):
 
         if isinstance(value, str):
             localized_key = f"key.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.{value.lower().replace(' ', '_')}"
-            ANVIL.definitions.register_lang(localized_key, str(value))
+            AnvilTranslator().add_localization_entry(localized_key, str(value))
             self._set_value(localized_key)
         elif isinstance(value, bool):
             self._set_value(True)
@@ -919,7 +922,7 @@ class ItemDisplayName(_BaseComponent):
         if not localized_key:
             localized_key = f'item.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_").replace("\\n", "_")}.name'
 
-        ANVIL.definitions.register_lang(localized_key, display_name)
+        AnvilTranslator().add_localization_entry(localized_key, display_name)
         self._add_field("value", localized_key)
 
 
@@ -981,7 +984,7 @@ class ItemIcon(_BaseComponent):
         """
         super().__init__("icon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
-        ANVIL.definitions.register_item_textures(texture, "", texture)
+        ItemTexturesObject().add_item(texture, "", [texture])
         self._component["textures"] = {
             "default": f"{CONFIG.NAMESPACE}:{texture}",
         }

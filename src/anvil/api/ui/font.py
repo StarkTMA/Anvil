@@ -2,7 +2,8 @@ import os
 
 from PIL import Image, ImageDraw, ImageFont
 
-from anvil import ANVIL, CONFIG
+from anvil import ANVIL
+from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists
 
 
@@ -17,13 +18,19 @@ class Fonts:
             character_size (int, optional): The size of the character. Defaults to 32.
         """
         if character_size % 16 != 0:
-            raise ValueError(f"Character size must be a multiple of 16. Font [{font_name}]")
+            raise ValueError(
+                f"Character size must be a multiple of 16. Font [{font_name}]"
+            )
         font_size = round(character_size * 0.8)
 
         try:
-            self.font = ImageFont.truetype(f"assets/textures/ui/{font_name}.ttf", font_size)
+            self.font = ImageFont.truetype(
+                f"assets/textures/ui/{font_name}.ttf", font_size
+            )
         except FileNotFoundError:
-            self.font = ImageFont.truetype(f"assets/textures/ui/{font_name}.otf", font_size)
+            self.font = ImageFont.truetype(
+                f"assets/textures/ui/{font_name}.otf", font_size
+            )
         except:
             self.font = ImageFont.truetype(f"{font_name}.ttf", font_size)
 

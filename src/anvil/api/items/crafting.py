@@ -1,8 +1,9 @@
 import os
 
-from anvil import ANVIL, CONFIG
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import ItemCategory, RecipeUnlockContext, SmeltingTags
 from anvil.lib.schemas import AddonObject, BlockDescriptor, ItemDescriptor, JsonSchemes
+from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import Identifier
 
 
@@ -40,7 +41,7 @@ class CraftingItemCatalog(AddonObject):
             items_list (list[ItemDescriptor | BlockDescriptor], optional): List of items to add to the group. Defaults to an empty list.
         """
         localized_key = f"tag.{CONFIG.NAMESPACE}:{group_name.replace(" ", "_").lower()}"
-        ANVIL.definitions.register_lang(localized_key, group_name)
+        AnvilTranslator().add_localization_entry(localized_key, group_name)
 
         group = {
             "group_identifier": {

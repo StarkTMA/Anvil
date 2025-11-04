@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.5**](#version-095)
+- [**Version 0.9.5.1**](#version-0951)
+- [Version 0.9.5](#version-095)
 - [Version 0.9.4.6](#version-0946)
 - [Version 0.9.4.5](#version-0945)
 - [Version 0.9.4.4](#version-0944)
@@ -74,6 +75,40 @@
 
 - [**Version 0.1.0** - _Core Foundation_](#version-010)
 - [Version 0.0.0 → 0.1.0](#version-000--010)
+
+---
+
+## Version 0.9.5.1
+
+### CLI
+
+- Added `anvil loopback` command to enable minecraft loopback networking on Windows systems. Also starts http://localhost:7003/ in the default browser.
+
+### Anvil
+
+- Fixed support for PBR texture sets in entities.
+- `ItemTexturesObject`, `BlockTexturesObject` and `EntityTexturesObject` now support texture and use a singleton pattern to avoid overwriting definitions.
+- `AnvilTranslator` uses a singleton pattern to avoid overwriting translations.
+- `TextureSet` require the `pbr` flag to be enabled in Anvil configuration.
+- `AnvilConfig` is now a singleton to avoid overwriting configuration values.
+- Updated format versions.
+- Introduced a new JSON parser for pretty printing JSON files, this is the default behavior. The minify flag is still supported to export single line JSON files.
+- `BlocksJSONObject`, `MusicDefinition` and `SoundDefinition` use a singleton pattern to avoid overwriting definitions.
+- Massively improved sound registration through Entities and Blocks client methods, everything is now properly namespaced and referenced and integrates Entity and Block events.
+  - Standalone sound references can still be added using `SoundDefinition` class.
+
+### Items
+
+- Removed `group`, `category` and `is_hidden_in_commands` from Item description, these are now handled through the `menu_category()` method.
+
+### Blocks
+
+- Removed `group`, `category` and `is_hidden_in_commands` from Block description, these are now handled through the `menu_category()` method.
+- Removed `BlockDefault` component. All block client can be handled through `BlockMaterialInstance` and the block client instance.
+
+### Blockbench
+
+- Blockbench now raises errors if newlines are detected in animation keyframes, a very common mistake.
 
 ---
 

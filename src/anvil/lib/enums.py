@@ -1,8 +1,8 @@
 import json
 from enum import StrEnum
-from random import Random
 
 from anvil.lib.lib import clamp, normalize_180
+from anvil.lib.translator import AnvilTranslator
 from anvil.lib.types import Coordinate, Identifier
 
 
@@ -631,7 +631,7 @@ class RawTextConstructor:
         self._raw_text.append({"text": str(text)})
         return self
 
-    def translate(self, text):
+    def translate(self, key: str, text: str):
         """
         Localizes the given text and appends it to the raw text.
 
@@ -641,11 +641,8 @@ class RawTextConstructor:
         Returns:
             self: The instance of the current RawTextConstructor.
         """
-        from anvil import ANVIL
-
-        self.id = ANVIL.definitions.get_new_lang
-        ANVIL.definitions.register_lang(self.id, text)
-        self._raw_text.append({"translate": self.id, "with": ["\n"]})
+        AnvilTranslator().add_localization_entry(key, text)
+        self._raw_text.append({"translate": key, "with": ["\n"]})
         return self
 
     def score(self, objective, target: Selector | Target | str):
@@ -1113,6 +1110,38 @@ class EntitySoundEvent(StrEnum):
     Growl = "growl"
     Whine = "whine"
     Pant = "pant"
+
+
+class BlockSoundEvent(StrEnum):
+    BreakPot = "break_pot"
+    Break = "break"
+    ButtonClickOff = "button.click_off"
+    ButtonClickOn = "button.click_on"
+    Default = "default"
+    DoorClose = "door.close"
+    DoorOpen = "door.open"
+    Fall = "fall"
+    FenceGateClose = "fence_gate.close"
+    FenceGateOpen = "fence_gate.open"
+    Hit = "hit"
+    ItemUseOn = "item.use.on"
+    Place = "place"
+    PowerOff = "power.off"
+    PowerOn = "power.on"
+    PressurePlateClickOff = "pressure_plate.click_off"
+    PressurePlateClickOn = "pressure_plate.click_on"
+    ShatterPot = "shatter_pot"
+    Step = "step"
+    TrapdoorClose = "trapdoor.close"
+    TrapdoorOpen = "trapdoor.open"
+
+
+class BlockInteractiveSoundEvent(StrEnum):
+    Default = "default"
+    Fall = "fall"
+    Jump = "jump"
+    Land = "land"
+    Step = "step"
 
 
 class MusicCategory(StrEnum):

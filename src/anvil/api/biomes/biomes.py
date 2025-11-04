@@ -1,18 +1,26 @@
 import os
+from typing import Literal
 
-from anvil import ANVIL, CONFIG
 from anvil.api.actors.actors import _Components
-from anvil.api.pbr.pbr import (AtmosphericSettings, ColorGradingSettings,
-                               LightingSettings, WaterSettings)
+from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
+from anvil.api.pbr.pbr import (
+    AtmosphericSettings,
+    ColorGradingSettings,
+    LightingSettings,
+    WaterSettings,
+)
 from anvil.api.world.fog import Fog
-from anvil.lib.config import ConfigPackageTarget
+from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.enums import MusicCategory, SoundCategory
 from anvil.lib.lib import clamp, convert_color
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (AddonObject, BiomeDescriptor, JsonSchemes,
-                               MinecraftDescription)
-from anvil.lib.sounds import SoundDescription
-from anvil.lib.types import RGB, Color, HexRGBA
+from anvil.lib.schemas import (
+    AddonObject,
+    BiomeDescriptor,
+    JsonSchemes,
+    MinecraftDescription,
+)
+from anvil.lib.types import RGB, Color
 
 
 class _BiomeDescription(MinecraftDescription):
@@ -80,8 +88,11 @@ class _BiomeClient(AddonObject):
         self._description = _BiomeDescription(name, is_vanilla)
 
     def ambient_sounds(
-        self, sound_reference: str | None = None, loop_reference: str | None = None, mood_reference: str | None = None
-    ) -> SoundDescription | tuple[SoundDescription, SoundDescription]:
+        self,
+        sound_reference: str | None = None,
+        loop_reference: str | None = None,
+        mood_reference: str | None = None,
+    ) -> dict[Literal["addition", "loop", "mood"], _SoundDescription | None]:
         """
         Sets the ambient sounds for the biome.
 
@@ -92,18 +103,38 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_ambient_sounds)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:ambient_sounds"] = {
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:ambient_sounds"
+        ] = {
             "addition": sound_reference,
             "loop": loop_reference,
             "mood": mood_reference,
         }
 
+        sound_event_obj = SoundEvent()
+
         return {
             "addition": (
-                ANVIL.definitions.register_individual_named_sounds(sound_reference, SoundCategory.Ambient) if sound_reference else None
+                sound_event_obj.add_individual_event(
+                    sound_reference, SoundCategory.Ambient
+                )
+                if sound_reference
+                else None
             ),
-            "loop": ANVIL.definitions.register_individual_named_sounds(loop_reference, SoundCategory.Ambient) if loop_reference else None,
-            "mood": ANVIL.definitions.register_individual_named_sounds(mood_reference, SoundCategory.Ambient) if mood_reference else None,
+            "loop": (
+                sound_event_obj.add_individual_event(
+                    loop_reference, SoundCategory.Ambient
+                )
+                if loop_reference
+                else None
+            ),
+            "mood": (
+                sound_event_obj.add_individual_event(
+                    mood_reference, SoundCategory.Ambient
+                )
+                if mood_reference
+                else None
+            ),
         }
 
     def atmosphere_identifier(self, atmosphere_identifier: AtmosphericSettings) -> None:
@@ -114,16 +145,16 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_atmosphere_identifier)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:atmosphere_identifier"] = {
-            "atmosphere_identifier": atmosphere_identifier.identifier
-        }
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:atmosphere_identifier"
+        ] = {"atmosphere_identifier": atmosphere_identifier.identifier}
 
     def biome_music(
         self,
         music_reference: MusicCategory | str = None,
         underwater_music: MusicCategory | str = None,
         volume_multiplier: float = 1.0,
-    ):
+    ) -> dict[Literal["music_definition", "underwater_music"], MusicCategory | str]:
         """
         Affects how music plays within the biome.
 
@@ -134,15 +165,28 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_biome_music)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:biome_music"] = {
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:biome_music"
+        ] = {
             "music_definition": music_reference,
             "underwater_music": underwater_music,
             "volume_multiplier": clamp(volume_multiplier, 0, 1),
         }
 
-        return ANVIL.definitions.register_music(music_reference)
+        music_definition_object = MusicDefinition()
 
-    def color_grading_identifier(self, color_grading_identifier: ColorGradingSettings) -> None:
+        return {
+            "music_definition": music_definition_object.music_definition(
+                music_reference
+            ),
+            "underwater_music": music_definition_object.music_definition(
+                underwater_music
+            ),
+        }
+
+    def color_grading_identifier(
+        self, color_grading_identifier: ColorGradingSettings
+    ) -> None:
         """Set the identifier used for color grading in Vibrant Visuals mode. Identifiers must resolve to identifiers in valid Color Grading JSON schemas under the "color_grading" directory. Biomes without this component will have default color_grading settings.
 
         Parameters:
@@ -150,9 +194,9 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_color_grading_identifier)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:color_grading_identifier"] = {
-            "color_grading_identifier": color_grading_identifier.identifier
-        }
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:color_grading_identifier"
+        ] = {"color_grading_identifier": color_grading_identifier.identifier}
 
     def dry_foliage_appearance(self, color: Color):
         """
@@ -163,9 +207,9 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_dry_foliage_color)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:dry_foliage_color"] = {
-            "color": convert_color(color, RGB)
-        }
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:dry_foliage_color"
+        ] = {"color": convert_color(color, RGB)}
 
     def fog_appearance(self, fog: str | Fog):
         """
@@ -181,7 +225,9 @@ class _BiomeClient(AddonObject):
         elif isinstance(fog, Fog):
             self._fog = fog
 
-        self._content["minecraft:client_biome"]["components"]["minecraft:fog_appearance"] = {"fog_appearance": self._fog.identifier}
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:fog_appearance"
+        ] = {"fog_appearance": self._fog.identifier}
 
     def foliage_appearance(self, color: RGB):
         """Sets the foliage color or color map used during rendering. Biomes without this component will have default foliage appearance.
@@ -191,9 +237,9 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_foliage_appearance)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:foliage_appearance"] = {
-            "color": convert_color(color, RGB)
-        }
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:foliage_appearance"
+        ] = {"color": convert_color(color, RGB)}
 
     def grass_appearance(self, color: RGB):
         """Set the grass color or color map used during rendering. Biomes without this component will have default grass appearance.
@@ -204,9 +250,9 @@ class _BiomeClient(AddonObject):
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_grass_appearance)
         """
 
-        self._content["minecraft:client_biome"]["components"]["minecraft:grass_appearance"] = {
-            "color": convert_color(color, RGB)
-        }
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:grass_appearance"
+        ] = {"color": convert_color(color, RGB)}
 
     def lighting_identifier(self, lighting_identifier: LightingSettings) -> None:
         """Set the identifier used for lighting in Vibrant Visuals mode. Identifiers must resolve to identifiers in valid Lighting JSON schemas under the "lighting" directory. Biomes without this component will have default lighting settings.
@@ -216,11 +262,17 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_lighting_identifier)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:lighting_identifier"] = {
-            "lighting_identifier": lighting_identifier
-        }
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:lighting_identifier"
+        ] = {"lighting_identifier": lighting_identifier}
 
-    def precipitation(self, ash: float = None, blue_spores: float = None, red_spores: float = None, white_ash: float = None):
+    def precipitation(
+        self,
+        ash: float = None,
+        blue_spores: float = None,
+        red_spores: float = None,
+        white_ash: float = None,
+    ):
         """
         Sets the precipitation visuals for the biome.
 
@@ -244,7 +296,9 @@ class _BiomeClient(AddonObject):
             precipitation_data["white_ash"] = white_ash
 
         if precipitation_data:
-            self._content["minecraft:client_biome"]["components"]["minecraft:precipitation"] = precipitation_data
+            self._content["minecraft:client_biome"]["components"][
+                "minecraft:precipitation"
+            ] = precipitation_data
 
     def sky_color(self, color: Color):
         """
@@ -255,7 +309,9 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_sky_color)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:sky_color"] = {"sky_color": convert_color(color, RGB)}
+        self._content["minecraft:client_biome"]["components"]["minecraft:sky_color"] = {
+            "sky_color": convert_color(color, RGB)
+        }
 
     def water_appearance(self, surface_color: Color, surface_opacity: float = 0.8):
         """
@@ -268,7 +324,9 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_water_appearance)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:water_appearance"] = {
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:water_appearance"
+        ] = {
             "surface_color": convert_color(surface_color, RGB),
             "surface_opacity": clamp(surface_opacity, 0, 1),
         }
@@ -281,9 +339,9 @@ class _BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_water_identifier)
         """
-        self._content["minecraft:client_biome"]["components"]["minecraft:water_identifier"] = {
-            "water_identifier": water_identifier.identifier
-        }
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:water_identifier"
+        ] = {"water_identifier": water_identifier.identifier}
 
     def queue(self):
         if self._fog:
@@ -300,7 +358,9 @@ class Biome(BiomeDescriptor):
         #    raise RuntimeError("Biome support is experimental and must be enabled in the config.")
 
         if CONFIG.TARGET == ConfigPackageTarget.ADDON and is_vanilla:
-            raise ValueError("Vanilla biomes overrides cannot be used in addons, use Partial overrides instead.")
+            raise ValueError(
+                "Vanilla biomes overrides cannot be used in addons, use Partial overrides instead."
+            )
 
         super().__init__(name, is_vanilla)
 
@@ -324,4 +384,9 @@ class Biome(BiomeDescriptor):
         if self._server:
             self.server.queue()
 
-        CONFIG.Report.add_report(ReportType.BIOME, vanilla=self._is_vanilla, col0=self._display_name, col1=self.identifier)
+        CONFIG.Report.add_report(
+            ReportType.BIOME,
+            vanilla=self._is_vanilla,
+            col0=self._display_name,
+            col1=self.identifier,
+        )

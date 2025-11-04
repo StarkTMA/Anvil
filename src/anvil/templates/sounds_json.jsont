@@ -1,8 +1,11 @@
 {
-    "individual_event_sounds": {},
     "block_sounds": {},
     "entity_sounds": {
         "entities": {}
     },
-    "interactive_sounds": {}
+    "individual_event_sounds": {},
+    "individual_named_sounds": {},
+    "interactive_sounds": {
+        "block_sounds": {}
+    }
 }

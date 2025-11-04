@@ -1,13 +1,15 @@
 import os
 
-from anvil import CONFIG
 from anvil.api.logic.commands import Command
+from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject
 
 
 class Function(AddonObject):
     _extension = ".mcfunction"
-    _path = os.path.join(CONFIG.BP_PATH, "functions", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME)
+    _path = os.path.join(
+        CONFIG.BP_PATH, "functions", CONFIG.NAMESPACE, CONFIG.PROJECT_NAME
+    )
     _object_type = "Function"
 
     _ticking: list["Function"] = set()
@@ -27,8 +29,13 @@ class Function(AddonObject):
 
     def add(self, *commands: str | Command):
         """Adds a command to the function."""
-        if len(self._sub_functions[-1]._function) >= self._function_limit - len(commands) - 1:
-            self._sub_functions.append(Function(f"{self._name}_{len(self._sub_functions)}"))
+        if (
+            len(self._sub_functions[-1]._function)
+            >= self._function_limit - len(commands) - 1
+        ):
+            self._sub_functions.append(
+                Function(f"{self._name}_{len(self._sub_functions)}")
+            )
         self._sub_functions[-1]._function.extend([str(func) for func in commands])
         return self
 
@@ -58,7 +65,8 @@ class Function(AddonObject):
         """Queues the function to be exported.
 
         Parameters:
-            directory (str, optional): The directory to queue the function to. Defaults to None."""
+            directory (str, optional): The directory to queue the function to. Defaults to None.
+        """
 
         self._directory = directory
         return super().queue(self._directory)

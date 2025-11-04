@@ -1,7 +1,7 @@
 from enum import StrEnum
-from typing import Optional
+from typing import Optional, overload
 
-from anvil import CONFIG
+from anvil.lib.config import CONFIG
 from anvil.lib.enums import InputModes, Slots
 from anvil.lib.lib import *
 
@@ -102,6 +102,7 @@ class Molang(str):
                     else f"{arg}"
                 )
                 for arg in arguments
+                if arg is not None
             )
             a += f"({Parameters})"
         return Molang(a)
@@ -339,7 +340,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return self._query(self, self.handle, "base_swing_duration")
-    
+
     @classmethod
     def BlockFace(self):
         """Returns the block face for this (only valid for certain triggers such as placing blocks, or interacting with block) (Down=0.0, Up=1.0, North=2.0, South=3.0, West=4.0, East=5.0, Undefined=6.0).
@@ -1889,10 +1890,12 @@ class Query(Molang):
     def ItemInUseDuration(self):
         """Returns the amount of time an item has been in use in seconds up to the maximum duration, else 0.0 if it doesn't make sense.
 
+        **Note**: The value exported by this query is calculated by dividing the internal tick count by 200 to convert it to seconds from whatever internal unit is used.
+
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "item_in_use_duration")
+        return self._query(self, self.handle, "item_in_use_duration") / 200
 
     @classmethod
     def ItemIsCharged(self, hand: int = 0):
@@ -2143,7 +2146,7 @@ class Query(Molang):
             Molang(Molang): A Molang Instance
         """
         return self._query(self, self.handle, "modifier_swing_duration")
-    
+
     @classmethod
     def MoonBrightness(self):
         """Returns the brightness of the moon
@@ -2667,14 +2670,34 @@ class Query(Molang):
         """
         return self._query(self, self.handle, "cooldown_time", slot, slot_id)
 
+    @overload
     @classmethod
     def CooldownTimeRemaining(self, slot: Slots, slot_id: int = 0):
+        """Returns the cooldown time remaining in seconds for the item held or worn by the specified equipment slot name (and if required second numerical slot id), otherwise returns 0. Uses the same name and id that the replaceitem command takes when querying entities. Returns highest cooldown if no parameters are supplied.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        ...
+
+    @overload
+    @classmethod
+    def CooldownTimeRemaining(self, cooldown_name: str):
+        """Returns the cooldown time remaining in seconds for specified cooldown type, otherwise returns 0. Returns highest cooldown if no parameters are supplied.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        ...
+
+    @classmethod
+    def CooldownTimeRemaining(self, arg1: Slots | str = None, arg2: int = None):
         """Returns the cooldown time remaining in seconds for specified cooldown type or the item held or worn by the specified equipment slot name (and if required second numerical slot id), otherwise returns 0. Uses the same name and id that the replaceitem command takes when querying entities. Returns highest cooldown if no parameters are supplied.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "cooldown_time_remaining", slot, slot_id)
+        return self._query(self, self.handle, "cooldown_time_remaining", arg1, arg2)
 
     @classmethod
     def RelativeBlockHasAnyTags(self, x: int, y: int, z: int, *tags: str):

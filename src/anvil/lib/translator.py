@@ -6,20 +6,31 @@ import click
 import pandas as pd
 from deep_translator import GoogleTranslator
 
-from anvil import CONFIG
+from anvil.lib.config import CONFIG
 from anvil.lib.lib import File
 from anvil.lib.schemas import JsonSchemes
 
 
 class AnvilTranslator:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(AnvilTranslator, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self):
         """
         Initialize the translator with an Excel file path.
         """
+        if hasattr(self, "_initialized") and self._initialized:
+            return
         self._excel_file_path = Path("localization.xlsx")
         self._source_language = "en_US"
         self._translated = False
         self.translated_languages = [self._source_language]
+        self._initialized = True
+        self.config = CONFIG
 
         if not self._excel_file_path.exists():
             with pd.ExcelWriter(self._excel_file_path, engine="openpyxl") as writer:
@@ -27,15 +38,15 @@ class AnvilTranslator:
                     df = pd.DataFrame(columns=["Key", "Value"])
                     df.to_excel(writer, sheet_name=lang_code, index=False)
 
-        self.add_localization_entry("pack.name", CONFIG.DISPLAY_NAME)
+        self.add_localization_entry("pack.name", self.config.DISPLAY_NAME)
         self.add_localization_entry(
-            "pack.project_description", CONFIG.PROJECT_DESCRIPTION
+            "pack.project_description", self.config.PROJECT_DESCRIPTION
         )
         self.add_localization_entry(
-            "pack.resource_description", CONFIG.RESOURCE_DESCRIPTION
+            "pack.resource_description", self.config.RESOURCE_DESCRIPTION
         )
         self.add_localization_entry(
-            "pack.behaviour_description", CONFIG.BEHAVIOUR_DESCRIPTION
+            "pack.behaviour_description", self.config.BEHAVIOUR_DESCRIPTION
         )
 
     def _get_languages(self) -> List[str]:
@@ -312,21 +323,21 @@ class AnvilTranslator:
             File(
                 f"{lang_code}.lang",
                 "\n".join(rp_content),
-                os.path.join(CONFIG.RP_PATH, "texts"),
+                os.path.join(self.config.RP_PATH, "texts"),
                 "w",
             )
             File(
                 f"{lang_code}.lang",
                 "\n".join(bp_content),
-                os.path.join(CONFIG.BP_PATH, "texts"),
+                os.path.join(self.config.BP_PATH, "texts"),
                 "w",
             )
 
-            if CONFIG._TARGET == "world":
+            if self.config._TARGET == "world":
                 File(
                     f"{lang_code}.lang",
                     "\n".join(world_content),
-                    os.path.join(CONFIG._WORLD_PATH, "texts"),
+                    os.path.join(self.config._WORLD_PATH, "texts"),
                     "w",
                 )
 
@@ -337,12 +348,16 @@ class AnvilTranslator:
                     fg="yellow",
                 )
             )
-        File("languages.json", languages, os.path.join(CONFIG.BP_PATH, "texts"), "w")
-        File("languages.json", languages, os.path.join(CONFIG.RP_PATH, "texts"), "w")
-        if CONFIG._TARGET == "world":
+        File(
+            "languages.json", languages, os.path.join(self.config.BP_PATH, "texts"), "w"
+        )
+        File(
+            "languages.json", languages, os.path.join(self.config.RP_PATH, "texts"), "w"
+        )
+        if self.config._TARGET == "world":
             File(
                 "languages.json",
                 languages,
-                os.path.join(CONFIG._WORLD_PATH, "texts"),
+                os.path.join(self.config._WORLD_PATH, "texts"),
                 "w",
             )

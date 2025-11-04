@@ -1,7 +1,7 @@
 import os
 
-from anvil import CONFIG
 from anvil.api.logic.molang import Query
+from anvil.lib.config import CONFIG
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -9,9 +9,13 @@ from anvil.lib.schemas import AddonObject, JsonSchemes
 class _BPAnimation:
     def __init__(self, identifier, animation_short_name: str, loop: bool):
         self._identifier = identifier
-        self._animation_key = f"animation.{identifier.replace(':', '.')}.{animation_short_name}"
+        self._animation_key = (
+            f"animation.{identifier.replace(':', '.')}.{animation_short_name}"
+        )
         self._animation_length = 0.05
-        self._animation = JsonSchemes.bp_animation(self._identifier, animation_short_name, loop)
+        self._animation = JsonSchemes.bp_animation(
+            self._identifier, animation_short_name, loop
+        )
 
     def timeline(self, timestamp: float, *commands: str):
         """Takes a timestamp and a list of events, command or molang to run at that time.
@@ -26,16 +30,24 @@ class _BPAnimation:
         if self._animation_length <= timestamp:
             self._animation_length = timestamp + 0.05
 
-        self._animation[self._animation_key]["animation_length"] = self._animation_length
+        self._animation[self._animation_key][
+            "animation_length"
+        ] = self._animation_length
         if timestamp not in self._animation[self._animation_key]["timeline"]:
             self._animation[self._animation_key]["timeline"][timestamp] = []
         for command in commands:
             if str(command).startswith("@s"):
-                self._animation[self._animation_key]["timeline"][timestamp].append(f"{command}")
+                self._animation[self._animation_key]["timeline"][timestamp].append(
+                    f"{command}"
+                )
             elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
-                self._animation[self._animation_key]["timeline"][timestamp].append(f"{command};")
+                self._animation[self._animation_key]["timeline"][timestamp].append(
+                    f"{command};"
+                )
             else:
-                self._animation[self._animation_key]["timeline"][timestamp].append(f"/{command}")
+                self._animation[self._animation_key]["timeline"][timestamp].append(
+                    f"/{command}"
+                )
         return self
 
     def animation_length(self, animation_length: float):
@@ -52,7 +64,7 @@ class _BPAnimation:
 
     def anim_time_update(self, anim_time_update: Query):
         """Sets the animation time update query.
-        
+
         Args:
             anim_time_update (Query): The animation time update query.
 
@@ -65,7 +77,7 @@ class _BPAnimation:
     @property
     def _export(self):
         """Exports the animation data.
-        
+
         Returns:
             dict: The animation data.
         """
@@ -98,7 +110,7 @@ class _BPAnimations(AddonObject):
 
     def queue(self, directory: str = None):
         """Queues the animations for export.
-        
+
         Args:
             directory (str, optional): The directory to export to. Defaults to None.
         """
