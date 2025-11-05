@@ -16,21 +16,21 @@ def arcane_user_guide():
 ```
 
 !!! warning
-    Declare an `Item` with a **unique name** (e.g., `"arcane_user_guide"`). Namespace comes from **anvilconfig**.
+Declare an `Item` with a **unique name** (e.g., `"arcane_user_guide"`). Namespace comes from **anvilconfig**.
 
 ---
 
 ## Server Description
 
 ```py title="server description"
-from anvil.lib.enums import ItemCategory
+from anvil.api.core.enums import ItemCategory
 
 # Optional: where it appears in the creative inventory
 item.server.description.category(ItemCategory.Items)
 ```
 
 !!! note
-    The category is **optional**. If omitted, the item still exports and can be obtained by commands or via recipes.
+The category is **optional**. If omitted, the item still exports and can be obtained by commands or via recipes.
 
 ---
 
@@ -51,10 +51,10 @@ item.server.components.add(
 ```
 
 !!! info "Textures"
-    `ItemIcon(<name>)` looks up a **texture** with the same identifier under your assets/textures/items (e.g., `arcane_user_guide`). If the texture doesn't exist, export will fail.
+`ItemIcon(<name>)` looks up a **texture** with the same identifier under your assets/textures/items (e.g., `arcane_user_guide`). If the texture doesn't exist, export will fail.
 
 !!! tip "Localization"
-    Every plain string passed to any anvil component (e.g., `ItemDisplayName("Arcane User Guide")`) is automatically converted to a localization key and tracked via an XLSX file in your project root.
+Every plain string passed to any anvil component (e.g., `ItemDisplayName("Arcane User Guide")`) is automatically converted to a localization key and tracked via an XLSX file in your project root.
 
 ---
 
@@ -75,7 +75,7 @@ item.server.components.add(
 ```
 
 !!! note
-    All of the above are **optional**. Use them to control usability and flair.
+All of the above are **optional**. Use them to control usability and flair.
 
 ---
 
@@ -95,7 +95,7 @@ recipe.queue()
 ```
 
 !!! note
-    Recipes are **optional**. If omitted, the item is still available via category or commands.
+Recipes are **optional**. If omitted, the item is still available via category or commands.
 
 ---
 
@@ -106,10 +106,10 @@ att = item.attachable
 ```
 
 !!! tip
-    The item's **attachable** is available as `item.attachable`. Accessing it auto‑creates a corresponding attachable.
+The item's **attachable** is available as `item.attachable`. Accessing it auto‑creates a corresponding attachable.
 
 !!! info "Same API as entities"
-    From here, **everything works exactly like the entity client**: add textures/materials, render controllers, animations, animation controllers, particles, and sounds. Reuse the patterns from your **Adding a Custom Entity** tutorial for attachables.
+From here, **everything works exactly like the entity client**: add textures/materials, render controllers, animations, animation controllers, particles, and sounds. Reuse the patterns from your **Adding a Custom Entity** tutorial for attachables.
 
 ---
 
@@ -121,11 +121,11 @@ return item
 ```
 
 !!! success
-    **Queuing is mandatory.** If you don't call `item.queue()`, the framework will **not export** the item.
-    Queuing the item will also queue any associated attachable.
+**Queuing is mandatory.** If you don't call `item.queue()`, the framework will **not export** the item.
+Queuing the item will also queue any associated attachable.
 
 !!! tip "Queue groups"
-    You can group exports with `item.queue("group")` just like blocks and entities.
+You can group exports with `item.queue("group")` just like blocks and entities.
 
 ---
 
@@ -143,7 +143,7 @@ from anvil.api.items.components import (
 )
 from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.vanilla.items import MinecraftItemTypes
-from anvil.lib.enums import ItemCategory
+from anvil.api.core.enums import ItemCategory
 
 # Import the attachable helper from wherever you store it
 from items.arcane_user_guide import user_guide_attachable  # adjust path to your layout
@@ -197,7 +197,7 @@ ArcaneUserGuide = arcane_user_guide()
 from anvil.api.items.items import Item
 from anvil.api.items.components import ItemIcon, ItemDisplayName, ItemMaxStackSize
 from anvil.api.items.crafting import CraftingItemCatalog
-from anvil.lib.enums import ItemCategory
+from anvil.api.core.enums import ItemCategory
 
 
 def enchanted_tomes():
@@ -227,4 +227,4 @@ def enchanted_tomes():
 ```
 
 !!! note
-    `CraftingItemCatalog` lets you group related items in the creative/in‑game catalogs. Entirely **optional**.
+`CraftingItemCatalog` lets you group related items in the creative/in‑game catalogs. Entirely **optional**.

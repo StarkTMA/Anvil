@@ -1,3 +1,3 @@
 # Core - Enums Module
 
-::: anvil.lib.enums
+::: anvil.api.core.enums

@@ -5,7 +5,7 @@ from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import Color, HexRGB, clamp, convert_color
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.types import RGB, RGBA, Block, HexRGBA, Identifier, Vector3D
+from anvil.api.core.types import RGB, RGBA, Block, HexRGBA, Identifier, Vector3D
 
 
 class TextureSet(AddonObject):

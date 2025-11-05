@@ -1,3 +1,3 @@
 # Core - Types Module
 
-::: anvil.lib.types
+::: anvil.api.core.types

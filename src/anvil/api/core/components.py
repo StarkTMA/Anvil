@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from anvil.lib.enums import ComponentTarget, FilterSubject
+from packaging.version import Version
+
+from anvil.api.core.enums import ComponentTarget, FilterSubject
 from anvil.api.core.filters import Filter
+from anvil.api.core.types import Event
 from anvil.lib.format_versions import *
 from anvil.lib.schemas import AddonDescriptor
-from anvil.lib.types import Event
-from packaging.version import Version
 
 
 class _BaseComponent(AddonDescriptor):

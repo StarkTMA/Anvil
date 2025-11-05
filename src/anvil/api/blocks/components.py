@@ -6,19 +6,20 @@ from typing import Dict, List, Optional, Union, overload
 
 from anvil.api.core.components import List, _BaseComponent
 from anvil.api.core.core import TerrainTexturesObject
-from anvil.api.core.textures import FlipBookTexturesObject
-from anvil.api.logic.molang import Molang
-from anvil.api.pbr.pbr import TextureSet
-from anvil.api.world.loot_tables import LootTable
-from anvil.lib.blockbench import _Blockbench
-from anvil.lib.config import CONFIG
-from anvil.lib.enums import (
+from anvil.api.core.enums import (
     BlockFaces,
     BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
     TintMethod,
 )
+from anvil.api.core.textures import FlipBookTexturesObject
+from anvil.api.core.types import Identifier
+from anvil.api.logic.molang import Molang
+from anvil.api.pbr.pbr import TextureSet
+from anvil.api.world.loot_tables import LootTable
+from anvil.lib.blockbench import _Blockbench
+from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import (
     BLOCK_JSON_FORMAT_VERSION,
     BLOCK_SERVER_VERSION,
@@ -27,7 +28,6 @@ from anvil.lib.format_versions import (
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.schemas import BlockDescriptor
 from anvil.lib.translator import AnvilTranslator
-from anvil.lib.types import Identifier
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -3,16 +3,15 @@ import json
 import os
 from collections import defaultdict
 from typing import Dict, List, Union
-from warnings import warn
 
 import click
 from packaging.version import Version
 
+from anvil.api.core.enums import BlockFaces
+from anvil.api.core.types import Vector2D
 from anvil.lib.config import CONFIG
-from anvil.lib.enums import BlockFaces
 from anvil.lib.lib import FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.types import Vector2D
 
 
 class _Geometry(AddonObject):

@@ -1,18 +1,18 @@
 import os
 
-from anvil.api.logic.molang import Molang
-from anvil.lib.config import CONFIG
-from anvil.lib.enums import (
+from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
     EntitySoundEvent,
     MusicCategory,
     SoundCategory,
 )
+from anvil.api.core.types import Identifier
+from anvil.api.logic.molang import Molang
+from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.types import Identifier
 
 
 class _SoundDescription:

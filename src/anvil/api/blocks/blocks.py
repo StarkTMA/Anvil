@@ -10,10 +10,7 @@ from anvil.api.blocks.components import (
 )
 from anvil.api.core.components import _BaseComponent
 from anvil.api.core.core import SoundEvent
-from anvil.api.logic.molang import Molang
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.lib.config import CONFIG
-from anvil.lib.enums import (
+from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
     ItemCategory,
@@ -21,6 +18,9 @@ from anvil.lib.enums import (
     PlacementDirectionTrait,
     PlacementPositionTrait,
 )
+from anvil.api.logic.molang import Molang
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
     AddonObject,

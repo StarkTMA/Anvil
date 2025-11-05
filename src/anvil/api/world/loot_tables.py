@@ -1,9 +1,13 @@
 import os
 from typing import Union, overload
 
+from anvil.api.core.enums import (
+    ExplorationMapDestinations,
+    LootPoolType,
+)
+from anvil.api.core.types import Identifier
 from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
 from anvil.lib.config import CONFIG
-from anvil.lib.enums import ExplorationMapDestinations, LootPoolType, RawTextConstructor
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import (
     AddonObject,
@@ -12,7 +16,6 @@ from anvil.lib.schemas import (
     ItemDescriptor,
     JsonSchemes,
 )
-from anvil.lib.types import Identifier
 
 __all__ = ["LootTable"]
 
@@ -332,7 +335,7 @@ class _LootPoolEntryFunctions:
         return self
 
     def SetBookContent(
-        self, author: str, title: str, pages: list[str | RawTextConstructor]
+        self, author: str, title: str, pages: list[str]
     ):
         """Sets the contents of a book including author, title, and pages.
 
@@ -342,7 +345,7 @@ class _LootPoolEntryFunctions:
         Parameters:
             author (str): The author of the book.
             title (str): The title of the book.
-            pages (list[str | RawTextConstructor]): List of page contents as strings or rawtext.
+            pages (list[str]): List of page contents as strings.
 
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.

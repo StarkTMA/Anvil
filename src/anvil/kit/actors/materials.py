@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 
 from anvil.api.actors.materials import Material
-from anvil.lib.enums import (MaterialDefinitions, MaterialFunc,
-                             MaterialOperation, MaterialStates)
+from anvil.api.core.enums import (
+    MaterialDefinitions,
+    MaterialFunc,
+    MaterialOperation,
+    MaterialStates,
+)
 
 
 def add_entity_outline(xray_mode: bool = False):
@@ -22,7 +26,9 @@ def add_entity_outline(xray_mode: bool = False):
             self.outline_material.queue()
 
     entity_outline_base = Material("entity_outline_base", "entity_alphatest")
-    entity_outline_base.add_states(MaterialStates.EnableStencilTest, MaterialStates.StencilWrite)
+    entity_outline_base.add_states(
+        MaterialStates.EnableStencilTest, MaterialStates.StencilWrite
+    )
     entity_outline_base.frontFace(
         stencilFunc=MaterialFunc.Always,
         stencilFailOp=MaterialOperation.Replace,
@@ -38,11 +44,17 @@ def add_entity_outline(xray_mode: bool = False):
     entity_outline_base.stencilRef(3)
 
     entity_outline = Material("entity_outline", "entity_alphatest")
-    entity_outline.add_states(MaterialStates.EnableStencilTest, MaterialStates.InvertCulling)
-    entity_outline.add_defines(MaterialDefinitions.MULTI_COLOR_TINT, MaterialDefinitions.USE_OVERLAY)
+    entity_outline.add_states(
+        MaterialStates.EnableStencilTest, MaterialStates.InvertCulling
+    )
+    entity_outline.add_defines(
+        MaterialDefinitions.MULTI_COLOR_TINT, MaterialDefinitions.USE_OVERLAY
+    )
     entity_outline.remove_states(MaterialStates.DisableCulling)
     entity_outline.remove_defines(MaterialDefinitions.Fancy)
     entity_outline.frontFace(MaterialFunc.NotEqual)
     entity_outline.stencilRef(3)
-    entity_outline.depthFunc(MaterialFunc.Always if xray_mode else MaterialFunc.LessEqual)
+    entity_outline.depthFunc(
+        MaterialFunc.Always if xray_mode else MaterialFunc.LessEqual
+    )
     return Materials(entity_outline_base, entity_outline)

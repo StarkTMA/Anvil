@@ -1,7 +1,7 @@
 import os
 
+from anvil.api.core.enums import AimAssistTargetMode, CameraPresets
 from anvil.lib.config import CONFIG
-from anvil.lib.enums import AimAssistTargetMode, CameraPresets
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
 

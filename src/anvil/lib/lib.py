@@ -10,7 +10,7 @@ import zipfile
 from datetime import datetime
 
 import commentjson as commentjson
-from anvil.lib.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
+from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 
 from ..__version__ import __version__
 

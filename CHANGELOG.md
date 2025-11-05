@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.5.1**](#version-0951)
+- [**Version 0.9.6**](#version-096)
+- [Version 0.9.5.1](#version-0951)
 - [Version 0.9.5](#version-095)
 - [Version 0.9.4.6](#version-0946)
 - [Version 0.9.4.5](#version-0945)
@@ -75,6 +76,15 @@
 
 - [**Version 0.1.0** - _Core Foundation_](#version-010)
 - [Version 0.0.0 → 0.1.0](#version-000--010)
+
+---
+
+## Version 0.9.5.2
+
+### Anvil
+
+- Completely dropped support for `functions`, `tick.json` and `commands`, these features are very limited and a much better and advanced scripting system is available through the Minecraft ScriptingAPI.
+- Resolved import issues with some modules.
 
 ---
 

@@ -1,7 +1,4 @@
-
-from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
-from anvil.lib.config import CONFIG
-from anvil.lib.enums import (
+from anvil.api.core.enums import (
     Difficulty,
     FilterEquipmentDomain,
     FilterOperation,
@@ -9,8 +6,10 @@ from anvil.lib.enums import (
     PlayerAbilities,
     Weather,
 )
+from anvil.api.core.types import Identifier
+from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
+from anvil.lib.config import CONFIG
 from anvil.lib.schemas import BiomeDescriptor, BlockDescriptor
-from anvil.lib.types import Identifier
 
 
 class Filter:

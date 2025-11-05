@@ -6,11 +6,11 @@ import traceback
 import uuid
 from typing import Dict, Mapping
 
+from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA, File, salt_from_str
 from anvil.lib.templater import load_file
-from anvil.lib.types import Identifier
 
 
 class JsonSchemes:

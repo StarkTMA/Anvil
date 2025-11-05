@@ -4,10 +4,7 @@ from typing import Any
 
 from anvil.api.blocks.components import LootTable
 from anvil.api.core.components import _BaseAIGoal, _BaseComponent, _BaseEventTrigger
-from anvil.api.core.filters import Filter
-from anvil.api.logic.molang import Molang
-from anvil.lib.config import CONFIG
-from anvil.lib.enums import (
+from anvil.api.core.enums import (
     BreedingMutationStrategy,
     ContainerType,
     ControlFlags,
@@ -24,11 +21,14 @@ from anvil.lib.enums import (
     Slots,
     Vibrations,
 )
+from anvil.api.core.filters import Filter
+from anvil.api.core.types import *
+from anvil.api.logic.molang import Molang
+from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import BlockDescriptor, ItemDescriptor, MinecraftBlockDescriptor
 from anvil.lib.translator import AnvilTranslator
-from anvil.lib.types import *
 
 # Components ==========================================================================
 # Attributes ==========================================================================

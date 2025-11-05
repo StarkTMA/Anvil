@@ -1,14 +1,14 @@
 import os
 
-from anvil.lib.config import CONFIG
-from anvil.lib.enums import (
+from anvil.api.core.enums import (
     MaterialDefinitions,
     MaterialFunc,
     MaterialOperation,
     MaterialStates,
 )
+from anvil.api.core.types import Identifier
+from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.types import Identifier
 
 
 class MaterialsObject(AddonObject):

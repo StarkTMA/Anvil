@@ -1,8 +1,8 @@
 from enum import StrEnum
 from typing import Optional, overload
 
+from anvil.api.core.enums import InputModes, Slots
 from anvil.lib.config import CONFIG
-from anvil.lib.enums import InputModes, Slots
 from anvil.lib.lib import *
 
 

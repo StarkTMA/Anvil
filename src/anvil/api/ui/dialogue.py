@@ -1,7 +1,7 @@
 import os
 
+from anvil.api.core.enums import RawTextConstructor
 from anvil.lib.config import CONFIG
-from anvil.lib.enums import RawTextConstructor
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 

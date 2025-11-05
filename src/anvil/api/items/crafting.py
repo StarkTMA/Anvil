@@ -1,10 +1,10 @@
 import os
 
+from anvil.api.core.enums import ItemCategory, RecipeUnlockContext, SmeltingTags
+from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG
-from anvil.lib.enums import ItemCategory, RecipeUnlockContext, SmeltingTags
 from anvil.lib.schemas import AddonObject, BlockDescriptor, ItemDescriptor, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
-from anvil.lib.types import Identifier
 
 
 class CraftingItemCatalog(AddonObject):

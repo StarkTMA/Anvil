@@ -2,7 +2,9 @@ import os
 from typing import Literal
 
 from anvil.api.actors.actors import _Components
+from anvil.api.core.enums import MusicCategory, SoundCategory
 from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
+from anvil.api.core.types import RGB, Color
 from anvil.api.pbr.pbr import (
     AtmosphericSettings,
     ColorGradingSettings,
@@ -11,7 +13,6 @@ from anvil.api.pbr.pbr import (
 )
 from anvil.api.world.fog import Fog
 from anvil.lib.config import CONFIG, ConfigPackageTarget
-from anvil.lib.enums import MusicCategory, SoundCategory
 from anvil.lib.lib import clamp, convert_color
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
@@ -20,7 +21,6 @@ from anvil.lib.schemas import (
     JsonSchemes,
     MinecraftDescription,
 )
-from anvil.lib.types import RGB, Color
 
 
 class _BiomeDescription(MinecraftDescription):

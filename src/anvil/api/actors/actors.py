@@ -8,14 +8,15 @@ from anvil.api.actors._render_controller import _RenderControllers
 from anvil.api.actors.components import EntityInstantDespawn, EntityRideable
 from anvil.api.actors.spawn_rules import SpawnRule
 from anvil.api.core.core import SoundDefinition, SoundEvent
+from anvil.api.core.enums import DamageSensor, Target
 from anvil.api.core.sounds import EntitySoundEvent, SoundCategory, _SoundDescription
 from anvil.api.core.textures import ItemTexturesObject
+from anvil.api.core.types import RGB, RGBA, Vector2D
 from anvil.api.logic.molang import Molang, Variable
 from anvil.api.pbr.pbr import TextureSet
 from anvil.api.vanilla.entities import MinecraftEntityTypes
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG, ConfigPackageTarget
-from anvil.lib.enums import DamageSensor, Target
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
@@ -26,7 +27,6 @@ from anvil.lib.schemas import (
     MinecraftEntityDescriptor,
 )
 from anvil.lib.translator import AnvilTranslator
-from anvil.lib.types import RGB, RGBA, Vector2D
 
 __all__ = ["Entity", "Attachable"]
 

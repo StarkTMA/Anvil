@@ -6,7 +6,7 @@ from anvil.api.core.filters import Filter
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.lib.types import (
+from anvil.api.core.types import (
     ConstantIntProvider,
     Identifier,
     StructureProcessors,

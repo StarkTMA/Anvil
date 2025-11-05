@@ -1,12 +1,12 @@
 from warnings import deprecated
 
-from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.api.core.components import _BaseComponent
-from anvil.lib.enums import Dimension
+from anvil.api.core.enums import Dimension
+from anvil.api.core.types import Color, HexRGB
+from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.format_versions import BIOME_SERVER_VERSION
 from anvil.lib.lib import convert_color
 from anvil.lib.schemas import BlockDescriptor
-from anvil.lib.types import Color, HexRGB
 
 
 class BiomeClimate(_BaseComponent):

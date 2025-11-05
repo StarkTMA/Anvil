@@ -3,16 +3,16 @@ from typing import Dict, Literal
 
 from anvil.api.actors.actors import Entity, ItemTexturesObject
 from anvil.api.core.components import _BaseComponent
+from anvil.api.core.enums import DamageCause, Effects, EnchantsSlots, ItemRarity, Slots
 from anvil.api.core.textures import ItemTexturesObject
+from anvil.api.core.types import RGB, RGBA, Identifier, Seconds
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.lib.config import CONFIG
-from anvil.lib.enums import DamageCause, Effects, EnchantsSlots, ItemRarity, Slots
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import Color, HexRGB, clamp, convert_color
 from anvil.lib.schemas import BlockDescriptor, EntityDescriptor, ItemDescriptor
 from anvil.lib.translator import AnvilTranslator
-from anvil.lib.types import RGB, RGBA, Identifier, Seconds
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.120
