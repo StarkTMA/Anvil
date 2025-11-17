@@ -26,13 +26,21 @@ def redstone_golem():
 ## Client Description
 
 ```py title="client visuals"
+from anvil.api.pbr.pbr import TextureComponents
+
 # These identifiers must exist in your Blockbench asset and match internal names.
 entity.client.description.geometry(entity.name)
-entity.client.description.texture(entity.name, "redstone_golem")
+entity.client.description.texture(
+    blockbench_name=entity.name,
+    component=TextureComponents(color="redstone_golem")
+)
 ```
 
 !!! info "Blockbench references"
     The first argument in `description.geometry`, `description.texture`, and `description.animation` points to a **Blockbench file** under `assets/blockbench`. The **geometry/texture names inside that file must match what's being referenced** or Anvil raises an error.
+
+!!! tip "PBR Support"
+    You can add PBR textures for advanced rendering: `TextureComponents(color="redstone_golem", normal="redstone_golem_normal", mer="redstone_golem_mer")` enables normal mapping and metalness/emissive/roughness effects.
 
 !!! tip "Material defaults"
     Anvil automatically adds a default material named `entity_alphatest`. You can define additional materials as needed.
@@ -124,6 +132,7 @@ from anvil.api.actors.components import (
     EntityPushable,
     EntityHealth,
 )
+from anvil.api.pbr.pbr import TextureComponents
 
 
 def redstone_golem():
@@ -131,7 +140,10 @@ def redstone_golem():
 
     # Client visuals (mandatory)
     entity.client.description.geometry(entity.name)
-    entity.client.description.texture(entity.name, "redstone_golem")
+    entity.client.description.texture(
+        blockbench_name=entity.name,
+        component=TextureComponents(color="redstone_golem")
+    )
 
     # Render (mandatory)
     rc = entity.client.description.render_controller("default")

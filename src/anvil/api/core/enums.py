@@ -1,9 +1,9 @@
 import json
 from enum import StrEnum
 
+from anvil.api.core.types import Coordinate, Identifier
 from anvil.lib.lib import clamp, normalize_180
 from anvil.lib.translator import AnvilTranslator
-from anvil.api.core.types import Coordinate, Identifier
 
 
 class Target(StrEnum):

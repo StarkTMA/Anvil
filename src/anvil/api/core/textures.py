@@ -1,5 +1,7 @@
 import os
+from typing import overload
 
+from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
@@ -11,6 +13,7 @@ class ItemTexturesObject(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "textures")
     _instance = None
+    _items: dict[str, list[str]] = {}
 
     def __new__(cls):
         """Ensures only one instance of ItemTexturesObject exists (singleton pattern)."""
@@ -25,37 +28,102 @@ class ItemTexturesObject(AddonObject):
             self.content(JsonSchemes.item_texture(CONFIG.PROJECT_NAME))
             self._initialized = True
 
-    def add_item(self, item_name: str, directory, item_sprites: list[str]):
+    @overload
+    def add_item(self, item_name: str, item_sprites: list[str]):
         """Adds item textures to the content.
 
         Parameters:
             item_name (str): The name of the item.
-            directory (str): The directory path for the textures.
-            item_sprites (str): The names of the item sprites.
+            item_sprites (list[str]): The names of the item sprites.
         """
-        for item in item_sprites:
-            if not FileExists(
-                os.path.join("assets", "textures", "items", f"{item}.png")
-            ):
-                raise FileNotFoundError(
-                    f"Item texture '{item}.png' does not exist in '{os.path.join("assets", "textures", "items")}'. {self._object_type}[{item_name}]"
-                )
+        ...
 
-        self._content["texture_data"][f"{CONFIG.NAMESPACE}:{item_name}"] = {
-            "textures": [
-                *[
+    @overload
+    def add_item(self, item_name: str, blockbench: str, item_sprites: list[str]):
+        """Adds item textures to the content.
+
+        Parameters:
+            item_name (str): The name of the item.
+            blockbench (str): The blockbench model name.
+            item_sprites (list[str]): The names of the item sprites.
+        """
+        ...
+
+    def add_item(
+        self,
+        item_name: str,
+        blockbench: str | list[str],
+        item_sprites: list[str] | None = None,
+    ):
+        """Adds item textures to the content.
+
+        Parameters:
+            item_name (str): The name of the item.
+            blockbench (str | list[str]): Either blockbench model name (str) or item sprites list (list[str]).
+            item_sprites (list[str] | None): The names of the item sprites if blockbench is a string, otherwise None.
+        """
+        # Handle overload: if blockbench is a list, it's actually item_sprites
+        if isinstance(blockbench, list):
+            item_sprites = blockbench
+            blockbench_model = None
+        else:
+            blockbench_model = blockbench
+
+        # Ensure item_sprites is set
+        if item_sprites is None:
+            item_sprites = []
+
+        if blockbench_model:
+            bb = _Blockbench(blockbench_model, "items")
+            for sprite in item_sprites:
+                bb.textures.queue_texture(sprite)
+
+            self._content["texture_data"][f"{CONFIG.NAMESPACE}:{item_name}"] = {
+                "textures": [
+                    os.path.join(
+                        "textures",
+                        CONFIG.NAMESPACE,
+                        CONFIG.PROJECT_NAME,
+                        "actors",
+                        blockbench_model,
+                        sprite,
+                    ).replace("\\", "/")
+                    for sprite in item_sprites
+                ]
+            }
+
+        else:
+            for item in item_sprites:
+                if not FileExists(
+                    os.path.join("assets", "textures", "items", f"{item}.png")
+                ):
+                    raise FileNotFoundError(
+                        f"Item texture '{item}.png' does not exist in '{os.path.join("assets", "textures", "items")}'. {self._object_type}[{item_name}]"
+                    )
+
+            self._items[item_name] = [
+                os.path.join(
+                    "textures",
+                    CONFIG.NAMESPACE,
+                    CONFIG.PROJECT_NAME,
+                    "items",
+                    sprite,
+                ).replace("\\", "/")
+                for sprite in item_sprites
+            ]
+
+            self._content["texture_data"][f"{CONFIG.NAMESPACE}:{item_name}"] = {
+                "textures": [
                     os.path.join(
                         "textures",
                         CONFIG.NAMESPACE,
                         CONFIG.PROJECT_NAME,
                         "items",
-                        directory,
                         sprite,
                     ).replace("\\", "/")
                     for sprite in item_sprites
                 ]
-            ]
-        }
+            }
 
     def queue(self):
         """Queues the item textures.
@@ -72,8 +140,8 @@ class ItemTexturesObject(AddonObject):
             object: The parent's export method result.
         """
         if len(self._content["texture_data"]) > 0:
-            for items in self._content["texture_data"].values():
-                for sprite in items["textures"]:
+            for items in self._items.values():
+                for sprite in items:
                     CopyFiles(
                         os.path.join("assets", "textures", "items"),
                         os.path.join(

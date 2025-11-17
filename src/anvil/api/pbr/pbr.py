@@ -1,14 +1,83 @@
 import os
+from dataclasses import dataclass
 from typing import Literal
 
+from anvil.api.core.types import (
+    RGB,
+    RGB255,
+    RGBA,
+    RGBA255,
+    Block,
+    Color,
+    HexRGB,
+    HexRGBA,
+    Identifier,
+    Vector3D,
+)
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import Color, HexRGB, clamp, convert_color
+from anvil.lib.lib import CopyFiles, FileExists, clamp, convert_color
 from anvil.lib.schemas import AddonObject, JsonSchemes
-from anvil.api.core.types import RGB, RGBA, Block, HexRGBA, Identifier, Vector3D
+
+
+@dataclass(frozen=True)
+class TextureComponents:
+    """PBR texture components for blocks, items, and entities.
+
+    Attributes:
+        color: Base color texture filename or color value
+        normal: Normal map texture filename or color value (mutually exclusive with heightmap)
+        heightmap: Height/displacement map texture filename or color value (mutually exclusive with normal)
+        mer: MER texture filename or color value (mutually exclusive with mers)
+        mers: MERS texture filename or color value (mutually exclusive with mer)
+    """
+
+    color: str
+    normal: str | Color | None = None
+    height: str | Color | None = None
+    mer: str | Color | None = None
+    mers: str | Color | None = None
+
+    def has_aux(self) -> bool:
+        return bool(self.normal or self.height or self.mer or self.mers)
+
+
+def _is_color_value(value) -> bool:
+    """
+    Check if a value is a color value (not a texture file name).
+    Returns True for RGB/RGBA tuples and hex color strings.
+    Returns False for texture file names (plain strings without # prefix).
+    """
+    if value is None:
+        return False
+
+    # Check for tuple types (RGB, RGBA)
+    if isinstance(value, tuple):
+        return True
+
+    # Check for hex color strings (start with #)
+    if isinstance(value, str) and value.startswith("#"):
+        return True
+
+    # Everything else (including plain strings) are treated as texture file names
+    return False
+
+
+def _is_texture_filename(value) -> bool:
+    """
+    Check if a value is a texture filename (not a color value).
+    Returns True for strings that don't start with # (texture file names).
+    Returns False for color values (tuples, hex strings, None).
+    """
+    if value is None:
+        return False
+
+    # Only plain strings (not starting with #) are texture filenames
+    return isinstance(value, str) and not value.startswith("#")
 
 
 class TextureSet(AddonObject):
+    _object_type = "Texture Set"
     _extension = ".texture_set.json"
     _path = os.path.join(
         CONFIG.RP_PATH,
@@ -16,7 +85,6 @@ class TextureSet(AddonObject):
         CONFIG.NAMESPACE,
         CONFIG.PROJECT_NAME,
     )
-    _object_type = "Texture Set"
 
     def __init__(self, texture_name: str, target: str) -> None:
         super().__init__(texture_name)
@@ -25,74 +93,158 @@ class TextureSet(AddonObject):
         if not CONFIG._PBR:
             raise RuntimeError("Texture sets require PBR to be enabled in the config.")
 
-    def set_textures(
+    def __validate(
         self,
-        blockbench_name: str,
-        color_texture: str,
-        normal_texture: str | Color | None,
-        heightmap_texture: str | Color | None,
-        metalness_emissive_roughness_texture: str | Color | None,
-        metalness_emissive_roughness_subsurface_texture: str | Color | None,
+        components: TextureComponents,
     ):
-        if normal_texture is not None and heightmap_texture is not None:
-            raise ValueError("Normal and heightmap textures are mutually exclusive.")
 
-        if (
-            metalness_emissive_roughness_texture is not None
-            and metalness_emissive_roughness_subsurface_texture is not None
-        ):
+        color_map: dict[str, str] = {}
+        if components.normal is not None and components.height is not None:
+            raise ValueError("Normal and heightmap textures are mutually exclusive.")
+        if components.mer is not None and components.mers is not None:
             raise ValueError(
                 "Metalness, emissive, roughness and subsurface textures are mutually exclusive."
             )
 
-        self._blockbench = _Blockbench(blockbench_name, "actors")
-        self._blockbench.textures.queue_texture(color_texture)
+        if _is_color_value(components.color):
+            color_map["color"] = convert_color(components.color, HexRGB)
+        if _is_color_value(components.normal):
+            color_map["normal"] = convert_color(components.normal, HexRGB)
+        if _is_color_value(components.height):
+            color_map["heightmap"] = convert_color(components.height, HexRGB)
+        if _is_color_value(components.mer):
+            color_map["metalness_emissive_roughness"] = convert_color(
+                components.mer, HexRGB
+            )
+        if _is_color_value(components.mers):
+            color_map["metalness_emissive_roughness_subsurface"] = convert_color(
+                components.mers, HexRGBA
+            )
 
-        self._content["minecraft:texture_set"]["color"] = color_texture
+        return color_map
+
+    def __set_individual_textures(
+        self,
+        source: str,
+        components: TextureComponents,
+    ):
+        color_map = self.__validate(components)
+
+        color_map["color"] = components.color
+        self._queued_textures: dict[str, dict[str, list[str]]] = {
+            source: {components.color: [components.color]}
+        }
+        if not FileExists(os.path.join("assets", source, f"{components.color}.png")):
+            raise FileNotFoundError(
+                f"Color texture file '{components.color}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+            )
+
+        if _is_texture_filename(components.normal):
+            if not FileExists(
+                os.path.join("assets", source, f"{components.normal}.png")
+            ):
+                raise FileNotFoundError(
+                    f"Normal texture file '{components.normal}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                )
+            color_map["normal"] = components.normal
+            self._queued_textures.get(source).get(components.color).append(
+                components.normal
+            )
+
+        if _is_texture_filename(components.height):
+            if not FileExists(
+                os.path.join("assets", source, f"{components.height}.png")
+            ):
+                raise FileNotFoundError(
+                    f"Height texture file '{components.height}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                )
+            color_map["heightmap"] = components.height
+            self._queued_textures.get(source).get(components.color).append(
+                components.height
+            )
+
+        if _is_texture_filename(components.mer):
+            if not FileExists(os.path.join("assets", source, f"{components.mer}.png")):
+                raise FileNotFoundError(
+                    f"MER texture file '{components.mer}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                )
+            color_map["metalness_emissive_roughness"] = components.mer
+            self._queued_textures.get(source).get(components.color).append(
+                components.mer
+            )
+
+        if _is_texture_filename(components.mers):
+            if not FileExists(os.path.join("assets", source, f"{components.mers}.png")):
+                raise FileNotFoundError(
+                    f"MERS texture file '{components.mers}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
+                )
+            color_map["metalness_emissive_roughness_subsurface"] = components.mers
+            self._queued_textures.get(source).get(components.color).append(
+                components.mers
+            )
+
+        self._content["minecraft:texture_set"].update(color_map)
+        self._path = os.path.join(self._path, self._target)
+
+    def set_particle_textures(
+        self,
+        components: TextureComponents,
+    ):
+        self.__set_individual_textures(
+            "particles",
+            components,
+        )
+
+    def set_item_textures(
+        self,
+        components: TextureComponents,
+    ):
+        self.__set_individual_textures("textures/items", components)
+
+    def set_blockbench_textures(
+        self,
+        blockbench_name: str,
+        components: TextureComponents,
+    ):
+        color_map = self.__validate(components)
+
+        self._blockbench = _Blockbench(blockbench_name, self._target)
+        self._blockbench.textures.queue_texture(components.color)
+        color_map["color"] = components.color
+        if _is_texture_filename(components.normal):
+            self._blockbench.textures.queue_texture(components.normal)
+            color_map["normal"] = components.normal
+        if _is_texture_filename(components.height):
+            self._blockbench.textures.queue_texture(components.height)
+            color_map["heightmap"] = components.height
+        if _is_texture_filename(components.mer):
+            self._blockbench.textures.queue_texture(components.mer)
+            color_map["metalness_emissive_roughness"] = components.mer
+        if _is_texture_filename(components.mers):
+            self._blockbench.textures.queue_texture(components.mers)
+            color_map["metalness_emissive_roughness_subsurface"] = components.mers
+
         self._path = os.path.join(self._path, self._target, blockbench_name)
-
-        if type(normal_texture) is str:
-            self._blockbench.textures.queue_texture(normal_texture)
-            self._content["minecraft:texture_set"]["normal"] = color_texture
-        elif type(normal_texture) is Color:
-            self._content["minecraft:texture_set"]["normal"] = convert_color(
-                normal_texture, HexRGB
-            )
-
-        if type(heightmap_texture) is str:
-            self._blockbench.textures.queue_texture(heightmap_texture)
-            self._content["minecraft:texture_set"]["heightmap"] = heightmap_texture
-        elif type(heightmap_texture) is Color:
-            self._content["minecraft:texture_set"]["heightmap"] = convert_color(
-                heightmap_texture, HexRGB
-            )
-
-        if type(metalness_emissive_roughness_texture) is str:
-            self._blockbench.textures.queue_texture(
-                metalness_emissive_roughness_texture
-            )
-            self._content["minecraft:texture_set"][
-                "metalness_emissive_roughness"
-            ] = metalness_emissive_roughness_texture
-        elif type(metalness_emissive_roughness_texture) is Color:
-            self._content["minecraft:texture_set"]["metalness_emissive_roughness"] = (
-                convert_color(metalness_emissive_roughness_texture, HexRGB)
-            )
-
-        if type(metalness_emissive_roughness_subsurface_texture) is str:
-            self._blockbench.textures.queue_texture(
-                metalness_emissive_roughness_subsurface_texture
-            )
-            self._content["minecraft:texture_set"][
-                "metalness_emissive_roughness_subsurface"
-            ] = metalness_emissive_roughness_subsurface_texture
-        elif type(metalness_emissive_roughness_subsurface_texture) is Color:
-            self._content["minecraft:texture_set"][
-                "metalness_emissive_roughness_subsurface"
-            ] = convert_color(metalness_emissive_roughness_subsurface_texture, HexRGBA)
+        self._content["minecraft:texture_set"].update(color_map)
 
     def _export(self):
-        if self._content["minecraft:texture_set"] != {}:
+        if hasattr(self, "_queued_textures"):
+            for source, textures in self._queued_textures.items():
+                for color, texture_list in textures.items():
+                    for texture in texture_list:
+                        CopyFiles(
+                            os.path.join("assets", source),
+                            os.path.join(
+                                CONFIG.RP_PATH,
+                                "textures",
+                                CONFIG.NAMESPACE,
+                                CONFIG.PROJECT_NAME,
+                                self._target,
+                            ),
+                            f"{texture}.png",
+                        )
+
+        if len(self._content["minecraft:texture_set"].keys()) > 1:
             super()._export()
 
 

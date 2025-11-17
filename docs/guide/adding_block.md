@@ -16,7 +16,7 @@ def enchanting_plus_table():
 ```
 
 !!! warning
-Declare a `Block` with a **unique name** (e.g., `"enchanting_plus_table"`). Namespace comes from **anvilconfig**.
+    Declare a `Block` with a **unique name** (e.g., `"enchanting_plus_table"`). Namespace comes from **anvilconfig**.
 
 ---
 
@@ -31,7 +31,7 @@ block.server.description.add_state("is_awesome", (False, True))
 ```
 
 !!! note
-Server‑side states are **optional**. If you don't define any, the block still exports and works.
+    Server‑side states are **optional**. If you don't define any, the block still exports and works.
 
 ---
 
@@ -45,24 +45,35 @@ from anvil.api.blocks.components import (
     BlockMaterialInstance,
     BlockGeometry,
     BlockDestructibleByMining,
+    InstanceSpec,
+    InstanceVariant,
 )
+from anvil.api.pbr.pbr import TextureComponents
 
 # Visuals (mandatory): geometry + at least one material instance
 block.server.components.add(
     BlockCollisionBox((16, 12, 16), (0, 0, 0)),
     BlockSelectionBox((16, 12, 16), (0, 0, 0)),
     BlockDisplayName("Enchanting Plus Table"),
-    BlockMaterialInstance().add_instance(block.name, "enchanting_plus_table"),
+    BlockMaterialInstance().add_instance(
+        InstanceSpec(
+            blockbench_name="enchanting_plus_table",
+            variations=[InstanceVariant(color="enchanting_plus_table")]
+        )
+    ),
     BlockGeometry("enchanting_plus_table"),
     BlockDestructibleByMining(1.5),
 )
 ```
 
 !!! info "Blockbench references"
-The identifier passed to `BlockGeometry(...)` must map to a **Blockbench file** under `assets/blockbench`, and its **internal geometry/material names must match**. Mismatches raise an export error.
+    The identifier passed to `BlockGeometry(...)` must map to a **Blockbench file** under `assets/blockbench`, and its **internal geometry/material names must match**. Mismatches raise an export error.
+
+!!! tip "PBR Support"
+    `InstanceVariant` inherits from `TextureComponents`, so you can add PBR textures: `InstanceVariant(color="block", normal="block_normal", mer="block_mer")` for advanced rendering with normal maps and metalness/emissive/roughness channels.
 
 !!! failure
-**Visuals are mandatory.** Without a `BlockGeometry` and at least one material instance, the block won't export.
+    **Visuals are mandatory.** Without a `BlockGeometry` and at least one material instance, the block won't export.
 
 ![Enchanting Plus Table Blockbench preview](/assets/enchanting_plus_table_blockbench.png)
 
@@ -90,7 +101,7 @@ recipe.queue()
 ```
 
 !!! note
-Recipes are **optional**. If omitted, the block can still be obtained via creative inventory or commands.
+    Recipes are **optional**. If omitted, the block can still be obtained via creative inventory or commands.
 
 ---
 
@@ -99,19 +110,20 @@ Recipes are **optional**. If omitted, the block can still be obtained via creati
 ```py title="block item"
 from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemIcon, ItemMaxStackSize
 from anvil.api.core.enums import ItemCategory
+from anvil.api.pbr.pbr import TextureComponents
 
 item = block.item
 item.server.description.category(ItemCategory.Construction)
 item.server.components.add(
     ItemMaxStackSize(64),
-    ItemIcon(item.name),
+    ItemIcon(TextureComponents(color=item.name)),
     ItemBlockPlacer(block.identifier),
     ItemDisplayName("Enchanting Plus Table"),
 )
 ```
 
 !!! tip
-The block's **item** is available as `block.item`. Accessing it auto‑creates a corresponding item.
+    The block's **item** is available as `block.item`. Accessing it auto‑creates a corresponding item.
 
 ---
 
@@ -123,12 +135,11 @@ return block
 ```
 
 !!! success
-**Queuing is mandatory.** If you don't call `block.queue()`, the framework will **not export** the block.
+    **Queuing is mandatory.** If you don't call `block.queue()`, the framework will **not export** the block.
 Queuing the block will also queue any associated item.
 
 !!! tip "Queue groups"
-You can also group exports by calling `block.queue("group")` if you prefer a structured output directory.
-
+    You can also group exports by calling `block.queue("group")` if you prefer a structured output directory.
 ---
 
 ## Full Example — Enchanting Plus Table
@@ -142,12 +153,15 @@ from anvil.api.blocks.components import (
     BlockMaterialInstance,
     BlockGeometry,
     BlockDestructibleByMining,
+    InstanceSpec,
+    InstanceVariant,
 )
 from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemIcon, ItemMaxStackSize
 from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.api.core.enums import ItemCategory
+from anvil.api.pbr.pbr import TextureComponents
 
 
 def enchanting_plus_table():
@@ -161,7 +175,12 @@ def enchanting_plus_table():
         BlockCollisionBox((16, 12, 16), (0, 0, 0)),
         BlockSelectionBox((16, 12, 16), (0, 0, 0)),
         BlockDisplayName("Enchanting Plus Table"),
-        BlockMaterialInstance().add_instance(block.name, "enchanting_plus_table"),
+        BlockMaterialInstance().add_instance(
+            InstanceSpec(
+                blockbench_name="enchanting_plus_table",
+                variations=[InstanceVariant(color="enchanting_plus_table")]
+            )
+        ),
         BlockGeometry("enchanting_plus_table"),
         BlockDestructibleByMining(1.5),
     )
@@ -185,7 +204,7 @@ def enchanting_plus_table():
     item.server.description.category(ItemCategory.Construction)
     item.server.components.add(
         ItemMaxStackSize(64),
-        ItemIcon(item.name),
+        ItemIcon(TextureComponents(color=item.name)),
         ItemBlockPlacer(block.identifier),
         ItemDisplayName("Enchanting Plus Table"),
     )

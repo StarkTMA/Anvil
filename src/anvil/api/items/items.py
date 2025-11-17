@@ -3,6 +3,7 @@ import os
 from anvil.api.actors._component_group import _Components
 from anvil.api.actors.actors import Attachable
 from anvil.api.core.enums import ItemCategory, ItemGroups
+from anvil.api.items.components import ItemDisplayName
 from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
@@ -39,13 +40,15 @@ class _ItemServerDescription(MinecraftDescription):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemdefinition?view=minecraft-bedrock-stable
 
         """
-        self._description["description"]["menu_category"] = {
-            "category": category.value if not category == ItemCategory.none else {},
-            "group": group.value if not group == ItemGroups.none else {},
-            "is_hidden_in_commands": (
-                is_hidden_in_commands if is_hidden_in_commands else {}
-            ),
-        }
+        self._description["description"]["menu_category"]["category"] = (
+            str(category) if not category == ItemCategory.none else {}
+        )
+        self._description["description"]["menu_category"]["group"] = (
+            str(group) if not group == ItemGroups.none else {}
+        )
+        self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
+            is_hidden_in_commands if is_hidden_in_commands else {}
+        )
         return self
 
     def _export(self):
@@ -71,7 +74,7 @@ class _ItemServer(AddonObject):
     def components(self):
         return self._components
 
-    def queue(self):
+    def _export(self):
         from anvil.api.items.components import ItemDisplayName
 
         self._server_item["minecraft:item"].update(self.description._export())
@@ -90,8 +93,7 @@ class _ItemServer(AddonObject):
             )
 
         self.content(self._server_item)
-
-        super().queue()
+        super()._export()
 
 
 class Item(ItemDescriptor):
@@ -109,12 +111,19 @@ class Item(ItemDescriptor):
 
     def queue(self):
         self.server.queue()
+
         if self._attachable:
             self._attachable.queue()
 
+    def _export(self):
         display_name = self.server._server_item["minecraft:item"]["components"][
-            "minecraft:display_name"
+            ItemDisplayName._identifier
         ]["value"]
+
+        if display_name.startswith("tile."):
+            display_name = AnvilTranslator.get_localization_value(display_name)
+        else:
+            display_name = display_name
 
         CONFIG.Report.add_report(
             ReportType.ITEM,

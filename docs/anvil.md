@@ -114,7 +114,6 @@ Call `ANVIL.package_zip()` and set `target` in `anvilconfig.json`.
 
 Call `ANVIL.mcaddon()` to get a ready‑to‑use `.mcaddon` file, which is a ZIP containing both resource and behavior packs.
 Call `ANVIL.mcworld()` to get a ready‑to‑use `.mcworld` file, which is a ZIP containing the world template and its resource and behavior packs.
-Call `ANVIL.generate_technical_notes()` to generate a `technical_notes.pdf` file with all the project Entities, Blocks, Items, Recipes, sounds, and more, for easy reference.
 
 Icon/Marketing requirements differ per target; Anvil refuses to package until mandatory art exists.
 

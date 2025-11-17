@@ -7,28 +7,42 @@ from anvil.lib.lib import *
 
 
 class Molang(str):
+    def __parse_other(self, other):
+        if isinstance(other, (str, StrEnum)) and not isinstance(other, Molang):
+            o = f"'{other}'"
+        elif isinstance(other, bool):
+            o = json.dumps(other)
+        else:
+            o = f"{other}"
+        return o
+
     def __invert__(self):
         return Molang(f"!({self})")
 
     def __eq__(self, other):
-        o = f"'{other}'" if isinstance(other, (str, StrEnum)) else f"{other}"
+        o = self.__parse_other(other)
         return Molang(f"{self} == {o}")
 
     def __ne__(self, other):
-        o = f"'{other}'" if type(other) is str else f"{other}"
+        o = self.__parse_other(other)
+
         return Molang(f"{self} != {o}")
 
     def __lt__(self, other):
-        return Molang(f"{self} < {other}")
+        o = self.__parse_other(other)
+        return Molang(f"{self} < {o}")
 
     def __gt__(self, other):
-        return Molang(f"{self} > {other}")
+        o = self.__parse_other(other)
+        return Molang(f"{self} > {o}")
 
     def __le__(self, other):
-        return Molang(f"{self} <= {other}")
+        o = self.__parse_other(other)
+        return Molang(f"{self} <= {o}")
 
     def __ge__(self, other):
-        return Molang(f"{self} >= {other}")
+        o = self.__parse_other(other)
+        return Molang(f"{self} >= {o}")
 
     def __and__(self, other):
         return Molang(f"({self} && {other})")
@@ -370,7 +384,7 @@ class Query(Molang):
         """Returns the value of the associated property.
 
         Parameters:
-            property (str): The block property to query, no namespace.
+            property (str): The property to query, no namespace.
 
 
         Returns:

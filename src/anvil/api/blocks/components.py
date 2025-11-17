@@ -16,7 +16,7 @@ from anvil.api.core.enums import (
 from anvil.api.core.textures import FlipBookTexturesObject
 from anvil.api.core.types import Identifier
 from anvil.api.logic.molang import Molang
-from anvil.api.pbr.pbr import TextureSet
+from anvil.api.pbr.pbr import TextureComponents, TextureSet
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
@@ -57,24 +57,8 @@ class FlipbookParams:
 
 
 @dataclass(frozen=True)
-class InstanceVariant:
-    color: str
-    normal: str | None = None
-    height: str | None = None
-    mer: str | None = None
-    mers: str | None = None
+class InstanceVariant(TextureComponents):
     weight: int = 1
-
-    def queue(self, bb: "_Blockbench") -> None:
-        bb.textures.queue_texture(self.color)
-        if self.normal:
-            bb.textures.queue_texture(self.normal)
-        if self.height:
-            bb.textures.queue_texture(self.height)
-        if self.mer:
-            bb.textures.queue_texture(self.mer)
-        if self.mers:
-            bb.textures.queue_texture(self.mers)
 
     def has_aux(self) -> bool:
         return bool(self.normal or self.height or self.mer or self.mers)
@@ -138,12 +122,6 @@ class InstanceSpec:
             for fb in self.flipbooks:
                 fb.validate(len(self.variations))
 
-    def queue_all(self) -> "_Blockbench":
-        bb = _Blockbench(self.blockbench_name, "blocks")
-        for vp in self.variations:
-            vp.queue(bb)
-        return bb
-
     def any_aux(self) -> bool:
         return any(vp.has_aux() for vp in self.variations)
 
@@ -162,7 +140,6 @@ class BlockMaterialInstance(_BaseComponent):
     def add_instance(self, spec: InstanceSpec) -> "BlockMaterialInstance":
         spec.validate()
         spec.params.validate(self._enforce_version)
-        bb = spec.queue_all()
 
         if len(spec.variations) > 1:
             variations_payload = [
@@ -189,18 +166,10 @@ class BlockMaterialInstance(_BaseComponent):
             }
         )
 
-        if spec.any_aux():
-            for vp in spec.variations:
-                self._texture_set = TextureSet(vp.color, "blocks")
-                self._texture_set.set_textures(
-                    spec.blockbench_name,
-                    vp.color,
-                    vp.normal,
-                    vp.height,
-                    vp.mer,
-                    vp.mers,
-                )
-                self._texture_set.queue()
+        for vp in spec.variations:
+            self._texture_set = TextureSet(vp.color, "blocks")
+            self._texture_set.set_blockbench_textures(spec.blockbench_name, vp)
+            self._texture_set.queue()
 
         if spec.flipbooks:
             for fb in spec.flipbooks:

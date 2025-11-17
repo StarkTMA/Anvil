@@ -13,7 +13,7 @@ from anvil.api.core.sounds import EntitySoundEvent, SoundCategory, _SoundDescrip
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import RGB, RGBA, Vector2D
 from anvil.api.logic.molang import Molang, Variable
-from anvil.api.pbr.pbr import TextureSet
+from anvil.api.pbr.pbr import TextureComponents, TextureSet
 from anvil.api.vanilla.entities import MinecraftEntityTypes
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG, ConfigPackageTarget
@@ -829,11 +829,7 @@ class _ActorClientDescription(_ActorDescription):
     def texture(
         self,
         blockbench_name: str,
-        color: str,
-        normal: str | RGB | RGBA = None,
-        height: str | RGB | RGBA = None,
-        mer: str | RGB | RGBA = None,
-        mers: str | RGB | RGBA = None,
+        component: TextureComponents,
     ):
         """This method manages the textures for an entity.
 
@@ -842,38 +838,24 @@ class _ActorClientDescription(_ActorDescription):
             texture_name (str): The name of the texture.
         """
         bb = _Blockbench(blockbench_name, "actors")
-        bb.textures.queue_texture(color)
+        bb.textures.queue_texture(component.color)
 
         self._description["description"]["textures"].update(
             {
-                color: os.path.join(
+                component.color: os.path.join(
                     "textures",
                     CONFIG.NAMESPACE,
                     CONFIG.PROJECT_NAME,
                     "actors",
                     blockbench_name,
-                    color,
+                    component.color,
                 )
             }
         )
 
-        if any(
-            [
-                normal,
-                height,
-                mer,
-                mers,
-            ]
-        ):
-            self._texture_set = TextureSet(color, "actors")
-            self._texture_set.set_textures(
-                blockbench_name,
-                color,
-                normal,
-                height,
-                mer,
-                mers,
-            )
+        if component.has_aux():
+            self._texture_set = TextureSet(component.color, "actors")
+            self._texture_set.set_blockbench_textures(blockbench_name, component)
             self._texture_set.queue()
         return self
 
@@ -975,20 +957,20 @@ class _ActorClientDescription(_ActorDescription):
 
         return self._render_controllers.add_controller(controller_name)
 
-    def particle_effect(self, particle_name: str, use_vanilla_texture: bool = False):
+    def particle_effect(self, particle: str, component: TextureComponents):
         """This method manages the particle effects for an entity.
 
         Parameters:
-            particle_name (str): The name of the particle effect.
+            particle (str): The name of the particle effect.
 
         """
         from anvil.api.world.particles import Particle
 
-        self._particle_name = particle_name
+        self._particle_name = particle
         self._description["description"]["particle_effects"].update(
             {self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"}
         )
-        Particle(self._particle_name, use_vanilla_texture).queue()
+        Particle(self._particle_name, component).queue()
         return self
 
     def sound_effect(
@@ -1459,7 +1441,7 @@ class _EntityServer(AddonObject):
             EntityPushable,
             EntityPushThrough,
         )
-        from anvil.api.logic.commands import DamageCause
+        from anvil.api.core.enums import DamageCause
 
         self.components.add(
             EntityJumpStatic(0),
@@ -1565,12 +1547,15 @@ class _EntityClient(AddonObject):
         Parameters:
             directory (str, optional): The directory to export the entity to. Defaults to None.
         """
+        super().queue(directory=directory)
+
+    def _export(self):
         self._client_entity["minecraft:client_entity"].update(
-            self._description._export(directory)
+            self._description._export(self._directory)
         )
 
         self.content(self._client_entity)
-        super().queue(directory=directory)
+        return super()._export()
 
 
 class Entity(EntityDescriptor):

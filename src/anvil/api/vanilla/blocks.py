@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Literal, TypeAlias
+from typing import Literal, Optional, TypeAlias
 
 from anvil.lib.schemas import MinecraftBlockDescriptor
 
@@ -646,7 +646,7 @@ class MinecraftBlockTags(StrEnum):
     StoneTierDestructible = "minecraft:stone_tier_destructible"
 
 
-class MinecraftBlockTypes:    
+class MinecraftBlockTypes:
     @staticmethod
     def AcaciaButton(
         button_pressed_bit: ButtonPressedBit, facing_direction: FacingDirection
@@ -10031,7 +10031,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StonePressurePlate(redstone_signal: RedstoneSignal) -> MinecraftBlockDescriptor:
+    def StonePressurePlate(
+        redstone_signal: RedstoneSignal | None = None,
+    ) -> MinecraftBlockDescriptor:
         """Factory for StonePressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:stone_pressure_plate",

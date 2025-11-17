@@ -1,7 +1,9 @@
 import os
 
+from anvil.api.blocks.blocks import Block
 from anvil.api.core.enums import ItemCategory, RecipeUnlockContext, SmeltingTags
 from anvil.api.core.types import Identifier
+from anvil.api.items.items import Item
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject, BlockDescriptor, ItemDescriptor, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
@@ -26,7 +28,7 @@ class CraftingItemCatalog(AddonObject):
 
     def add_group(
         self,
-        category_name: ItemCategory,
+        category: ItemCategory,
         group_name: str,
         group_icon: ItemDescriptor | BlockDescriptor,
         items_list: list[ItemDescriptor | BlockDescriptor] = [],
@@ -35,7 +37,7 @@ class CraftingItemCatalog(AddonObject):
         Adds a group to an existing category.
 
         Parameters:
-            category_name (str): The category name to update.
+            category (ItemCategory): The category to update.
             group_name (str): The group name to add.
             group_icon (ItemDescriptor | BlockDescriptor): The item to use as the icon for the group.
             items_list (list[ItemDescriptor | BlockDescriptor], optional): List of items to add to the group. Defaults to an empty list.
@@ -51,8 +53,13 @@ class CraftingItemCatalog(AddonObject):
             "items": [item.identifier for item in items_list],
         }
 
+        for item in items_list:
+            item: Item | Block = item.server.description.menu_category(
+                category=category, group=localized_key
+            )
+
         for cat in self._content["minecraft:crafting_items_catalog"]["categories"]:
-            if cat.get("category_name") == str(category_name):
+            if cat.get("category_name") == str(category):
                 if "groups" not in cat:
                     cat["groups"] = []
                 for existing_group in cat["groups"]:
@@ -67,7 +74,7 @@ class CraftingItemCatalog(AddonObject):
         else:
             self._content["minecraft:crafting_items_catalog"]["categories"].append(
                 {
-                    "category_name": str(category_name),
+                    "category_name": str(category),
                     "groups": [group],
                 }
             )
@@ -85,6 +92,12 @@ class CraftingItemCatalog(AddonObject):
         Returns:
             CraftingItemCatalog: The current instance of CraftingItemCatalog.
         """
+
+        for item in items:
+            item: Item | Block = item.server.description.menu_category(
+                category=category_name
+            )
+
         for cat in self._content["minecraft:crafting_items_catalog"]["categories"]:
             if cat.get("category_name") == str(category_name):
                 cat.setdefault("loose_items", []).extend(items)

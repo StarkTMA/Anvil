@@ -110,3 +110,30 @@ This command will run your python script and generates the necessary files for y
 
 - [**Documentation**](https://anvil.starktma.net/) - Official docs for **anvil**.
 - [**Bedrock Learn Portal**](https://learn.microsoft.com/en-gb/minecraft/creator/reference/) - Official Minecraft Bedrock Documentation.
+
+### Projects made with Anvil
+
+<table>
+  <tr>
+    <td width="25%">
+      <a href="https://www.minecraft.net/en-us/marketplace/pdp/starktma/enchantments-plus/7c27b1c3-40e4-4b70-87f6-ff15ab32daa1">
+        <img src="https://starktma.net/wp-content/uploads/2025/10/keyart.png" alt="Enchantments Plus" width="100%"/>
+      </a>
+    </td>
+    <td width="25%">
+      <a href="https://www.minecraft.net/en-us/marketplace/pdp/honeyfrost/dinosaurs-add--on-2.1/bbc3adf7-b481-47f2-9a3d-749ae5421508">
+        <img src="https://starktma.net/wp-content/uploads/2024/09/dinosaurs_addon.jpg" alt="Dinosaurs" width="100%"/>
+      </a>
+    </td>
+    <td width="25%">
+      <a href="https://www.minecraft.net/en-us/marketplace/pdp/starktma/sugar-rush/369a21ac-1f36-4629-8d70-59849c5501ec">
+        <img src="https://starktma.net/wp-content/uploads/2023/11/keyart.png" alt="Sugar Rush" width="100%"/>
+      </a>
+    </td>
+    <td width="25%">
+      <a href="https://www.minecraft.net/en-us/marketplace/pdp/starktma/beyond:-platformer/f1ecf12b-1b6f-4794-a8de-24dfb82e6f25">
+        <img src="https://starktma.net/wp-content/uploads/2024/10/beyond_platformer_v2.jpg" alt="Beyond: Platformers" width="100%"/>
+      </a>
+    </td>
+  </tr>
+</table>

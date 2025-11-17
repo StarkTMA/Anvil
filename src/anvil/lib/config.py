@@ -6,6 +6,8 @@ from enum import StrEnum
 import click
 import commentjson as json
 import requests
+from packaging.version import Version
+
 from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
@@ -15,7 +17,6 @@ from anvil.lib.lib import (
     validate_namespace_project_name,
 )
 from anvil.lib.reports import ReportCollector
-from packaging.version import Version
 
 
 class ConfigSection(StrEnum):
@@ -202,6 +203,11 @@ class _AnvilConfig:
 
         self.Config = Config()
 
+        self.Report = ReportCollector()
+        self.Report.add_headers()
+
+        self._load_configs()
+
         click.clear()
         click.echo(
             "\n".join(
@@ -211,16 +217,11 @@ class _AnvilConfig:
                     f"Copyright © {datetime.now().year} {click.style('StarkTMA', 'red')}.",
                     "All rights reserved.",
                     "",
+                    f"Project: {self.DISPLAY_NAME}",
                     "",
                 ]
             )
         )
-
-        self.Report = ReportCollector()
-        self.Report.add_headers()
-
-        self._load_configs()
-
         # GDK Setup preparation
         self._COM_MOJANG = PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
         self._WORLD_PATH = os.path.join(

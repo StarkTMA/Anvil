@@ -496,12 +496,12 @@ def create(
     DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
     DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
 
-    if scriptapi:
-        handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR, vscode)
-
     File("main.py", JsonSchemes.python(), "scripts/python/", "w")
     File(".gitignore", JsonSchemes.gitignore(), "", "w")
     File("CHANGELOG.md", "", "", "w")
+
+    if scriptapi:
+        handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR, vscode)
 
     if vscode:
         File(

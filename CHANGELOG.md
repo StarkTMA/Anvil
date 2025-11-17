@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.6**](#version-096)
+- [**Version 0.9.5.3**](#version-0953)
+- [Version 0.9.5.2](#version-0952)
 - [Version 0.9.5.1](#version-0951)
 - [Version 0.9.5](#version-095)
 - [Version 0.9.4.6](#version-0946)
@@ -76,6 +77,20 @@
 
 - [**Version 0.1.0** - _Core Foundation_](#version-010)
 - [Version 0.0.0 → 0.1.0](#version-000--010)
+
+---
+
+## Version 0.9.5.3
+
+### Anvil
+
+- All components referencing textures now require using `TextureComponents` to define texture maps including the color map.
+- `Particles` now require you specifying the particle texture in addition to optional Normal, Height, MER and MERS maps.
+
+### Items
+
+- `ItemIcon` component now supports normal, height, MER and MERS maps.
+- `ItemIcon` can now reference blockbench files for icons, useful if you're using a billboard entity with the same texture as the item icon.
 
 ---
 

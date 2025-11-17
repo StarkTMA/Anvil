@@ -51,8 +51,12 @@ class _AnimationsManager:
 
     def adjust_keyframe_type(self, points: List[Dict[str, str]]) -> List[str]:
         return [
-            (float(x) if x.replace("-", "").replace(".", "").isnumeric() else str(x))
-            for x in points
+            (
+                (-float(x) if i == 0 else float(x))
+                if x.replace("-", "").replace(".", "").isnumeric()
+                else (f"-({str(x)})" if i == 0 else str(x))
+            )
+            for i, x in enumerate(list(points))
         ]
 
     def _keyframes_mapper(self, keyframes: List[dict]) -> dict:
@@ -62,6 +66,10 @@ class _AnimationsManager:
             data_points = keyframe.get("data_points")
             interpolation = keyframe.get("interpolation", "linear")
             channel = keyframe.get("channel")
+
+            # data_points = [
+            #    {k: v.strip("\n") for k, v in point.items()} for point in data_points
+            # ]
 
             keyframes_dict.setdefault(channel, {})[time] = {
                 "data_points": list(data_points),
@@ -86,10 +94,10 @@ class _AnimationsManager:
                 points = self.adjust_keyframe_type(points[0].values())
                 # Check for newline characters in keyframe values
                 for point in points:
-                    if isinstance(point, str) and "\n" in point:
+                    if isinstance(point, str) and len(point) == 0:
                         raise ValueError(
-                            f"Newline character found in position keyframe for bone '{bone_name}' at time {time}. "
-                            f"Keyframe values cannot contain newlines."
+                            f"Empty string found in position keyframe for bone '{bone_name}' at time {time}. "
+                            f"Keyframe values cannot be empty."
                         )
 
             if interpolation == "linear" or interpolation == "bezier":
@@ -142,10 +150,10 @@ class _AnimationsManager:
                 points = self.adjust_keyframe_sign(points[0].values())
                 # Check for newline characters in keyframe values
                 for point in points:
-                    if isinstance(point, str) and "\n" in point:
+                    if isinstance(point, str) and len(point) == 0:
                         raise ValueError(
-                            f"Newline character found in rotation keyframe for bone '{bone_name}' at time {time}. "
-                            f"Keyframe values cannot contain newlines."
+                            f"Empty string found in rotation keyframe for bone '{bone_name}' at time {time}. "
+                            f"Keyframe values cannot be empty."
                         )
 
             if interpolation == "linear" or interpolation == "bezier":
@@ -196,12 +204,12 @@ class _AnimationsManager:
 
             if len(points) == 1:
                 points = self.adjust_keyframe_type(points[0].values())
-                # Check for newline characters in keyframe values
+                # Check for empty strings in keyframe values
                 for point in points:
-                    if isinstance(point, str) and "\n" in point:
+                    if isinstance(point, str) and len(point) == 0:
                         raise ValueError(
-                            f"Newline character found in scale keyframe for bone '{bone_name}' at time {time}. "
-                            f"Keyframe values cannot contain newlines."
+                            f"Empty string found in scale keyframe for bone '{bone_name}' at time {time}. "
+                            f"Keyframe values cannot be empty."
                         )
 
             if interpolation == "linear" or interpolation == "bezier":
@@ -417,13 +425,14 @@ class _TexturesManager:
         config = CONFIG
         self._name = filename
         self._bbmodel = bbmodel
+
         self._path = os.path.join(
             config.RP_PATH,
             "textures",
             config.NAMESPACE,
             config.PROJECT_NAME,
             source,
-            filename,
+            self._name,
         )
         self._textures = {
             texture.get("name").split(".")[0]: texture

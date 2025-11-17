@@ -1,5 +1,5 @@
 from math import inf
-from typing import Dict, Literal
+from typing import Dict, Literal, overload
 
 from anvil.api.actors.actors import Entity, ItemTexturesObject
 from anvil.api.core.components import _BaseComponent
@@ -7,7 +7,9 @@ from anvil.api.core.enums import DamageCause, Effects, EnchantsSlots, ItemRarity
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import RGB, RGBA, Identifier, Seconds
 from anvil.api.logic.molang import Molang
+from anvil.api.pbr.pbr import TextureComponents, TextureSet
 from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import Color, HexRGB, clamp, convert_color
@@ -710,7 +712,7 @@ class ItemBlockPlacer(_BaseComponent):
 
         Parameters:
             block (str): Set the placement block name for the planter item.
-            use_on (str): List of block descriptors that contain blocks that this item can be used on. If left empty, all blocks will be allowed.
+            replace_block_item (bool): If true, the item will be registered as the item for this block. This item will be returned by default when the block is broken/picked. Note: the identifier for this item must match the block's identifier for this field to be valid.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer
@@ -973,18 +975,61 @@ class ItemEntityPlacer(_BaseComponent):
 class ItemIcon(_BaseComponent):
     _identifier = "minecraft:icon"
 
-    def __init__(self, texture: str) -> None:
+    @overload
+    def __init__(
+        self,
+        component: TextureComponents,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        blockbench: str,
+        component: TextureComponents,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        blockbench: str | TextureComponents,
+        component: TextureComponents | None = None,
+    ) -> None:
         """Sets the icon item component. Determines the icon to represent the item in the UI and elsewhere.
 
         Parameters:
-            texture (str): The item texture name to be used.
+            blockbench (str | TextureComponents): Either the Blockbench project file name (str) or TextureComponents directly.
+            component (TextureComponents | None): The texture components if blockbench is a string, otherwise None.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_icon
         """
         super().__init__("icon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
-        ItemTexturesObject().add_item(texture, "", [texture])
+
+        # Handle overload: if blockbench is TextureComponents, use it as component
+        if isinstance(blockbench, TextureComponents):
+            component = blockbench
+            blockbench_model = None
+        else:
+            blockbench_model = blockbench
+
+        # Ensure component is set
+        if component is None:
+            raise ValueError("TextureComponents must be provided")
+
+        ItemTexturesObject().add_item(
+            component.color, blockbench_model, [component.color]
+        )
+        self._texture_set = TextureSet(component.color, "items")
+        if blockbench_model:
+            self._texture_set.set_blockbench_textures(blockbench_model, component)
+        else:
+            self._texture_set.set_item_textures(component)
+
+        self._texture_set.queue()
+
         self._component["textures"] = {
-            "default": f"{CONFIG.NAMESPACE}:{texture}",
+            "default": f"{CONFIG.NAMESPACE}:{component.color}",
         }
+
+    def _export(self):
+        return super()._export()

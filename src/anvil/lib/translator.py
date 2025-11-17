@@ -4,11 +4,10 @@ from typing import Dict, List, Optional
 
 import click
 import pandas as pd
-from deep_translator import GoogleTranslator
-
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import File
 from anvil.lib.schemas import JsonSchemes
+from deep_translator import GoogleTranslator
 
 
 class AnvilTranslator:
@@ -178,6 +177,16 @@ class AnvilTranslator:
                     )
                     worksheet.column_dimensions["A"].width = max(max_key_length + 5, 20)
                 worksheet.column_dimensions["B"].width = 20
+
+    def add_entries(self, entries: Dict[str, str]) -> None:
+        """
+        Add multiple localization entries to the en_US sheet.
+
+        Parameters:
+            entries (Dict[str, str]): A dictionary of localization entries
+        """
+        for key, value in entries.items():
+            self.add_localization_entry(key, value)
 
     def get_localization_value(self, key: str) -> Optional[str]:
         """

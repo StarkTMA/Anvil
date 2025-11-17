@@ -28,6 +28,7 @@ from anvil.lib.schemas import (
     JsonSchemes,
     MinecraftDescription,
 )
+from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["Block"]
 
@@ -45,6 +46,7 @@ class _tag:
         Args:
             tag (MinecraftBlockTags): The vanilla tag to assign to the block.
         """
+        self._identifier = f"tag:{tag}"
         self._dependencies: List["_BaseComponent"] = []
         self._clashes: List["_BaseComponent"] = []
         self._component: Dict[str, Any] = {f"tag:{tag}": {"do_not_shorten": True}}
@@ -83,7 +85,6 @@ class _PermutationComponents(_Components):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
         """
         for tag in tags:
-
             self._set(_tag(tag))
 
         return self
@@ -144,10 +145,7 @@ class _BlockServerDescription(MinecraftDescription):
         super().__init__(name, is_vanilla)
         self._traits = _BlockTraits()
         self._description["description"].update(
-            {
-                "states": {},
-                "traits": {},
-            }
+            {"states": {}, "traits": {}, "menu_category": {}}
         )
 
     def add_state(self, name: str, range: set[float | str | bool]):
@@ -183,13 +181,15 @@ class _BlockServerDescription(MinecraftDescription):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
 
         """
-        self._description["description"]["menu_category"] = {
-            "category": category.value if not category == ItemCategory.none else {},
-            "group": group.value if not group == ItemGroups.none else {},
-            "is_hidden_in_commands": (
-                is_hidden_in_commands if is_hidden_in_commands else {}
-            ),
-        }
+        self._description["description"]["menu_category"]["category"] = (
+            str(category) if not category == ItemCategory.none else {}
+        )
+        self._description["description"]["menu_category"]["group"] = (
+            str(group) if not group == ItemGroups.none else {}
+        )
+        self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
+            is_hidden_in_commands if is_hidden_in_commands else {}
+        )
         return self
 
     @property
@@ -355,9 +355,7 @@ class Block(BlockDescriptor):
             BlockDisplayName._identifier
         ]
         if block_name_comp.startswith("tile."):
-            display_name = ANVIL.definitions._translator.get_localization_value(
-                block_name_comp
-            )
+            display_name = AnvilTranslator.get_localization_value(block_name_comp)
         else:
             display_name = block_name_comp
 
