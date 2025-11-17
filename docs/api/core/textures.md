@@ -1,3 +1,3 @@
 # Core - Textures Module
 
-::: anvil.lib.textures
+::: anvil.api.core.textures
