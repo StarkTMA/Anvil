@@ -60,7 +60,7 @@ Complete API reference for Anvil, exposing all available classes, functions, and
 
 ### Filters
 
-::: anvil.lib.filters
+::: anvil.api.core.filters
 
 ### Library Functions
 
