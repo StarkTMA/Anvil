@@ -1,3 +1,3 @@
 # Core - Sounds Module
 
-::: anvil.lib.sounds
+::: anvil.api.core.sounds
