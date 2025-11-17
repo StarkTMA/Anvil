@@ -72,11 +72,11 @@ Complete API reference for Anvil, exposing all available classes, functions, and
 
 ### Sounds
 
-::: anvil.lib.sounds
+::: anvil.api.core.sounds
 
 ### Textures
 
-::: anvil.lib.textures
+::: anvil.api.core.textures
 
 ### Templater
 
