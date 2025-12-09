@@ -9,13 +9,13 @@ from anvil.api.core.enums import (
 from anvil.api.core.types import Identifier
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.config import CONFIG
-from anvil.lib.schemas import BiomeDescriptor, BlockDescriptor
+from anvil.lib.schemas import MinecraftBiomeDescriptor, MinecraftBlockDescriptor
 
 
 class Filter:
     # Basic configuration
     @staticmethod
-    def _construct_filter(filter_name, subject, operator, domain, value):
+    def _construct_filter(filter_name, subject, operator, domain, value) -> dict:
         """Constructs a filter dictionary with the specified parameters.
 
         Parameters:
@@ -941,19 +941,17 @@ class Filter:
     @classmethod
     def is_biome(
         cls,
-        value: MinecraftBiomeTypes | BiomeDescriptor,
+        value: MinecraftBiomeTypes | MinecraftBiomeDescriptor,
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter(
-            "is_biome", subject, operator, None, value.identifier
-        )
+        return cls._construct_filter("is_biome", subject, operator, None, str(value))
 
     @classmethod
     def is_block(
         cls,
-        value: BlockDescriptor | Identifier,
+        value: MinecraftBlockDescriptor | Identifier,
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
@@ -961,7 +959,7 @@ class Filter:
         """Returns true when the block has the given name.
 
         Parameters:
-            value (BlockDescriptor | Identifier): Block descriptor or identifier to test
+            value (MinecraftBlockDescriptor | Identifier): Block descriptor or identifier to test
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
@@ -2167,3 +2165,61 @@ class Filter:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/y_rotation
         """
         return cls._construct_filter("y_rotation", subject, operator, None, value)
+
+    @classmethod
+    def is_controlling_passenger_family(
+        cls,
+        value: str,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        """Returns true when the subject entity's controlling passenger is a member of the named family.
+
+        Parameters:
+            value (str): The family name to test for (e.g., "monster", "player", "mob")
+            subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
+            operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
+
+        Returns:
+            dict: Filter testing family membership
+
+        Example:
+            # Test if entity is a monster
+            Filter.is_controlling_passenger_family("monster")
+
+            # Test if target is not a player
+            Filter.is_controlling_passenger_family("player", subject=FilterSubject.Self, operator=FilterOperation.Not)
+
+        ## Documentation Reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_controlling_passenger_family?view=minecraft-bedrock-stable
+        """
+        return cls._construct_filter("is_family", subject, operator, None, value)
+
+    @classmethod
+    def has_item_with_component(
+        cls,
+        component: Identifier,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        """Returns true if the subject entity has an item with the specified component.
+
+        Parameters:
+            component (str): The component name to check for on the item
+            subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
+            operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
+
+        Returns:
+            dict: Filter testing for item component
+
+        Example:
+            Filter.has_item_with_component("minecraft:enchantments")  # Test if entity has an enchanted item
+
+        Reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_item_with_component
+        """
+        return cls._construct_filter(
+            "has_item_with_component", subject, operator, None, component
+        )

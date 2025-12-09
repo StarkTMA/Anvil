@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.5.3**](#version-0953)
+- [**Version 0.9.6**](#version-096)
+- [Version 0.9.5.3](#version-0953)
 - [Version 0.9.5.2](#version-0952)
 - [Version 0.9.5.1](#version-0951)
 - [Version 0.9.5](#version-095)
@@ -77,6 +78,62 @@
 
 - [**Version 0.1.0** - _Core Foundation_](#version-010)
 - [Version 0.0.0 → 0.1.0](#version-000--010)
+
+---
+
+## Version 0.9.6
+
+### Anvil
+
+- Anvil now passes the behaviour pack script path to the bundling script as `--outdir` argument.
+- Added Pack Configuration functionality, now you can use `ManifestRP` and `ManifestBP` classes to register pack settings. for more information about this feature, please refer to the official [Configurable Packs Documentation](https://learn.microsoft.com/en-us/minecraft/creator/documents/addons/custompacksettings).
+- Improved the AnvilTranslator language handling.
+- Updated manifest format version to `3`.
+- Anvil now has a custom JSON parser that supports pretty printing JSON files with proper indentation and spacing. The minify flag is still supported to export single line JSON files. And will handle Minecraft objects gracefully without having to call `.identifier` on every object.
+- Added Dimension Configuration support. You can now use the `DimensionConfiguration()` from `anvil.api.world.dimensions`. You can read more about this feature in the official [Dimension Configuration Documentation](https://learn.microsoft.com/en-us/minecraft/creator/documents/datadrivenoverworldheight?view=minecraft-bedrock-stable).
+- Anvil now uses a placeholder pack_icon for simple compilation if no pack_icon is provided in marketing. Anvil will still raise an error during packaging if no pack_icon is provided.
+- Updated format versions.
+
+### Blockbench
+
+- Major improvements to Blockbench file parsing.
+- Blockbench will not parse `fit_to_frame` option for block model visuals and will always default to true, as this option is no longer allowed in Minecraft `1.21.130` onwards.
+
+### Molang
+
+- Added `GetPackSetting()`, `IsPackSettingEnabled()` and `IsPackSettingSelected()` queries. These queries can be used to read pack settings defined in the pack configuration.
+
+### Actors
+
+- Updated `EntityAddRider`, `EntityTameable`, `EntityAINearestAttackableTarget`, `EntityBurnsInDaylight` and `EntityAIFloat`.
+- Added `EntityRotationLockedToVehicle`, `EntityHealable`, `EntityExhaustionValues` and `EntityAIUseKineticWeapon`.
+
+### Items
+
+- Added `ItemSwingSounds`, `ItemKineticWeapon`, `ItemPiercingWeapon` components.
+- Updated `ItemUseModifiers` and `ItemCooldown` components.
+
+### Blocks
+
+- Added `descriptor()` method to the `Block` class. This method can be used to get a block descriptor for block including specific block states and tags. This will return the identified if no states or tags are provided otherwise it will return a custom block descriptor `{"name": str, "states": {}, "tags": []}`.
+
+### Vibrant Visuals
+
+- Added Cubemap settings to the pbr api.
+- PBR keyframed settings now use `Keyframe` dataclass for instead of manual dicts.
+
+### Molang
+
+- Added `TempVar` variable type for temporary variables.
+- Added `EntityBiomeHasAllTags`, `EntityBiomeHasAnyTags`, `EntityBiomeHasAnyIdentifier`, `GetKineticItemDelay`, `GetKineticItemDamageDuration`, `GetKineticItemKnockbackDuration`, `GetKineticItemDismountDuration`, `KineticWeaponDelay`, `KineticWeaponDamageDuration`, `KineticWeaponKnockbackDuration`, `KineticWeaponDismountDuration`, `TicksSinceLastKineticWeaponHit` queries.
+
+### Vanilla
+
+- Updated Minecraft vanilla definitions to 1.21.130
+
+### Filters
+
+- Added `is_controlling_passenger_family` and `has_item_with_component` filters.
 
 ---
 

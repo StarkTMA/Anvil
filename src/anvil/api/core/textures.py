@@ -1,7 +1,7 @@
 import os
 from typing import overload
 
-from anvil.lib.blockbench import _Blockbench
+from anvil.lib.blockbench import BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
@@ -74,7 +74,7 @@ class ItemTexturesObject(AddonObject):
             item_sprites = []
 
         if blockbench_model:
-            bb = _Blockbench(blockbench_model, "items")
+            bb = _Blockbench(blockbench_model, BlockBenchSource.ITEM)
             for sprite in item_sprites:
                 bb.textures.queue_texture(sprite)
 

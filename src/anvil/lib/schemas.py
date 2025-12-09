@@ -38,69 +38,38 @@ class JsonSchemes:
 
     @staticmethod
     def manifest_bp(version):
-        config = CONFIG
-        m = load_file(
+        content: dict = load_file(
             "manifest_bp.jsont",
             {
-                "bp_uuid": config._BP_UUID[0],
+                "format_version": MANIFEST_VERSION,
+                "bp_uuid": CONFIG._BP_UUID[0],
                 "version": version,
-                "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
-                "data_module_uuid": config._DATA_MODULE_UUID,
-                "rp_uuid": config._RP_UUID[0],
-                "company": config.COMPANY,
+                "min_engine_version": MANIFEST_BUILD,
+                "data_module_uuid": CONFIG._DATA_MODULE_UUID,
+                "rp_uuid": CONFIG._RP_UUID[0],
+                "company": CONFIG.COMPANY,
             },
             is_json=True,
         )
-
-        if config._SCRIPT_API:
-            m["modules"].append(
-                {
-                    "uuid": config._SCRIPT_MODULE_UUID,
-                    "version": version,
-                    "type": "script",
-                    "language": "javascript",
-                    "entry": "scripts/main.js",
-                }
-            )
-            m["dependencies"].append(
-                {
-                    "module_name": "@minecraft/server",
-                    "version": MODULE_MINECRAFT_SERVER,
-                }
-            )
-            if config._SCRIPT_UI:
-                m["dependencies"].append(
-                    {
-                        "module_name": "@minecraft/server-ui",
-                        "version": MODULE_MINECRAFT_SERVER_UI,
-                    }
-                )
-        if config._TARGET == "addon":
-            m["header"]["pack_scope"] = "world"
-            m["metadata"]["product_type"] = "addon"
-        return m
+        return content
 
     @staticmethod
     def manifest_rp(version):
         config = CONFIG
-        m = load_file(
+        content: dict = load_file(
             "manifest_rp.jsont",
             {
+                "format_version": MANIFEST_VERSION,
                 "rp_uuid": config._RP_UUID[0],
                 "version": version,
-                "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
+                "min_engine_version": MANIFEST_BUILD,
                 "resource_module_uuid": str(uuid.uuid4()),
                 "bp_uuid": config._BP_UUID[0],
                 "company": config.COMPANY,
             },
             is_json=True,
         )
-        if config._PBR:
-            m.update({"capabilities": ["pbr"]})
-        if config._TARGET == "addon":
-            m["header"]["pack_scope"] = "world"
-            m["metadata"]["product_type"] = "addon"
-        return m
+        return content
 
     @staticmethod
     def manifest_world(version):
@@ -446,7 +415,7 @@ class JsonSchemes:
     @staticmethod
     def atmosphere_settings(identifier: str):
         return load_file(
-            "atmosphere_settings.jsont",
+            "vv_atmosphere_settings.jsont",
             {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
             is_json=True,
         )
@@ -454,7 +423,7 @@ class JsonSchemes:
     @staticmethod
     def fog_settings(identifier: str):
         return load_file(
-            "fog_settings.jsont",
+            "vv_fog_settings.jsont",
             {"format_version": FOG_VERSION, "identifier": identifier},
             is_json=True,
         )
@@ -462,7 +431,7 @@ class JsonSchemes:
     @staticmethod
     def shadow_settings():
         return load_file(
-            "shadow_settings.jsont",
+            "vv_shadow_settings.jsont",
             {"format_version": PBR_SETTINGS_VERSION},
             is_json=True,
         )
@@ -470,7 +439,7 @@ class JsonSchemes:
     @staticmethod
     def water_settings(identifier: str):
         return load_file(
-            "water_settings.jsont",
+            "vv_water_settings.jsont",
             {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
             is_json=True,
         )
@@ -478,7 +447,7 @@ class JsonSchemes:
     @staticmethod
     def color_grading_settings(identifier: str):
         return load_file(
-            "color_grading_settings.jsont",
+            "vv_color_grading_settings.jsont",
             {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
             is_json=True,
         )
@@ -486,7 +455,7 @@ class JsonSchemes:
     @staticmethod
     def lighting_settings(identifier: str):
         return load_file(
-            "lighting_settings.jsont",
+            "vv_lighting_settings.jsont",
             {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
             is_json=True,
         )
@@ -494,7 +463,7 @@ class JsonSchemes:
     @staticmethod
     def local_lighting():
         return load_file(
-            "local_lighting.jsont",
+            "vv_local_lighting.jsont",
             {"format_version": PBR_SETTINGS_VERSION},
             is_json=True,
         )
@@ -502,7 +471,7 @@ class JsonSchemes:
     @staticmethod
     def pbr_fallback_settings():
         return load_file(
-            "pbr_fallback_settings.jsont",
+            "vv_pbr_fallback_settings.jsont",
             {"format_version": PBR_SETTINGS_VERSION},
             is_json=True,
         )
@@ -762,6 +731,42 @@ class JsonSchemes:
             is_json=True,
         )
 
+    @staticmethod
+    def worldgen_feature(template_name: str, identifier: Identifier):
+        return load_file(
+            f"{template_name}.jsont",
+            {"format_version": MANIFEST_BUILD, "identifier": identifier},
+            is_json=True,
+        )
+
+    @staticmethod
+    def worldgen_feature_rule(identifier: Identifier, feature_identifier: Identifier):
+        return load_file(
+            "feature_rule.jsont",
+            {
+                "format_version": MANIFEST_BUILD,
+                "identifier": identifier,
+                "feature_identifier": feature_identifier,
+            },
+            is_json=True,
+        )
+
+    @staticmethod
+    def dimension_configuration(identifier: Identifier):
+        return load_file(
+            "dimension_configuration.jsont",
+            {"format_version": MANIFEST_BUILD, "identifier": identifier},
+            is_json=True,
+        )
+
+    @staticmethod
+    def cubemap_settings(identifier: Identifier):
+        return load_file(
+            "vv_cubemap.jsont",
+            {"format_version": MANIFEST_BUILD, "identifier": identifier},
+            is_json=True,
+        )
+
 
 class AddonDescriptor:
     """An object representing an addon descriptor with validation for names and namespaces."""
@@ -917,13 +922,7 @@ class AddonObject(AddonDescriptor):
 
         self._directory = ""
         self._content = {}
-        self._shorten = True
-
-    def do_not_shorten(self):
-        """
-        Setter property that disables shortening of `dict` when exporting.
-        """
-        self._shorten = False
+        self._name = name
 
     def content(self, content) -> AddonObject:
         """
@@ -960,34 +959,6 @@ class AddonObject(AddonDescriptor):
         Exports the addon object after potentially shortening its content and replacing backslashes.
         Logs the event and writes the object to a file.
         """
-
-        def _shorten_dict(d):
-            if isinstance(d, dict):
-                return {
-                    k: (v if v != {"do_not_shorten": True} else {})
-                    for k, v in ((k, _shorten_dict(v)) for k, v in d.items())
-                    if (v != {} and v != [] and v != None)
-                    or str(k).startswith("minecraft:")
-                    or v == {"do_not_shorten": True}
-                }
-
-            elif isinstance(d, list):
-                return [v for v in map(_shorten_dict, d) if v != []]
-
-            return d
-
-        def _replace_backslashes(obj):
-            if isinstance(obj, str):
-                return (
-                    obj.replace('"/n"', '"\\n"').replace("/n", "\n").replace("\\", "/")
-                )
-            elif isinstance(obj, list):
-                return [_replace_backslashes(item) for item in obj]
-            elif isinstance(obj, dict):
-                return {key: _replace_backslashes(value) for key, value in obj.items()}
-            else:
-                return obj
-
         path = self._path.removeprefix(CONFIG.RP_PATH).removeprefix(CONFIG.BP_PATH)
         path = os.path.join(path, f"{self._name}{self._extension}")
         if len(path) > 80:
@@ -995,10 +966,6 @@ class AddonObject(AddonDescriptor):
                 f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters."
             )
 
-        if self._shorten and type(self._content) is dict:
-            self._content = _shorten_dict(self._content)
-
-        self._content = _replace_backslashes(self._content)
         File(f"{self._name}{self._extension}", self._content, self._path, "w")
 
 
@@ -1033,18 +1000,16 @@ class MinecraftBlockDescriptor(AddonDescriptor):
         return self._tags
 
     @property
-    def states(self) -> str:
+    def states(self) -> Mapping[str, str | int | float | bool]:
         """Returns a string representation of the block states."""
-        if len(self._states.keys()) > 0:
-            return "{" + ", ".join(f"{k}={v}" for k, v in self._states.items()) + "}"
-        return ""
+        return self._states
 
-    def __str__(self) -> Identifier:
-        if self.states or self._tags:
+    def descriptor(self) -> Identifier | dict:
+        if len(self.states) > 0 or len(self._tags) > 0:
             return {
                 "name": self.identifier,
-                "states": self.states if self.states else {},
-                "tags": self.tags if self.tags else {},
+                "states": self.states,
+                "tags": list(self.tags),
             }
         return self.identifier
 
@@ -1082,31 +1047,3 @@ class MinecraftEntityDescriptor(MinecraftAddonObject):
     ):
         super().__init__(name, is_vanilla, is_vanilla_allowed)
         self._allow_runtime = allow_runtime
-
-
-class EntityDescriptor(MinecraftEntityDescriptor):
-    def __init__(
-        self, name: str, is_vanilla: bool = False, allow_runtime: bool = True
-    ) -> None:
-        super().__init__(name, is_vanilla, allow_runtime, False)
-
-
-class BlockDescriptor(MinecraftBlockDescriptor):
-    def __init__(
-        self,
-        name: str,
-        is_vanilla: bool = False,
-        states: Mapping[str, str | int | float | bool] = None,
-        tags: set[str] = None,
-    ) -> None:
-        super().__init__(name, is_vanilla, states, tags, False)
-
-
-class ItemDescriptor(MinecraftItemDescriptor):
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        super().__init__(name, is_vanilla, False)
-
-
-class BiomeDescriptor(MinecraftBiomeDescriptor):
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        super().__init__(name, is_vanilla, False)

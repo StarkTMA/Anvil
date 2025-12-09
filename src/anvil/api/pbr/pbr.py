@@ -1,6 +1,7 @@
 import os
+from ast import List
 from dataclasses import dataclass
-from typing import Literal
+from typing import Dict, Literal, overload
 
 from anvil.api.core.types import (
     RGB,
@@ -18,28 +19,6 @@ from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists, clamp, convert_color
 from anvil.lib.schemas import AddonObject, JsonSchemes
-
-
-@dataclass(frozen=True)
-class TextureComponents:
-    """PBR texture components for blocks, items, and entities.
-
-    Attributes:
-        color: Base color texture filename or color value
-        normal: Normal map texture filename or color value (mutually exclusive with heightmap)
-        heightmap: Height/displacement map texture filename or color value (mutually exclusive with normal)
-        mer: MER texture filename or color value (mutually exclusive with mers)
-        mers: MERS texture filename or color value (mutually exclusive with mer)
-    """
-
-    color: str
-    normal: str | Color | None = None
-    height: str | Color | None = None
-    mer: str | Color | None = None
-    mers: str | Color | None = None
-
-    def has_aux(self) -> bool:
-        return bool(self.normal or self.height or self.mer or self.mers)
 
 
 def _is_color_value(value) -> bool:
@@ -74,6 +53,46 @@ def _is_texture_filename(value) -> bool:
 
     # Only plain strings (not starting with #) are texture filenames
     return isinstance(value, str) and not value.startswith("#")
+
+
+@dataclass
+class KeyFrame:
+    time: float
+    value: float
+
+    @classmethod
+    def keyframe_dict(
+        cls,
+        keyframes: list["KeyFrame"],
+    ) -> dict[str, float]:
+        """
+        Converts a list of KeyFrame into a dict suitable for Minecraft JSON.
+        Example input: [KeyFrame(0,1), ...]
+        Example output: {"0.0": 1, ...}
+        """
+        return {str(clamp(k.time, 0.0, 1.0)): k.value for k in keyframes}
+
+
+@dataclass(frozen=True)
+class TextureComponents:
+    """PBR texture components for blocks, items, and entities.
+
+    Attributes:
+        color: Base color texture filename or color value
+        normal: Normal map texture filename or color value (mutually exclusive with heightmap)
+        heightmap: Height/displacement map texture filename or color value (mutually exclusive with normal)
+        mer: MER texture filename or color value (mutually exclusive with mers)
+        mers: MERS texture filename or color value (mutually exclusive with mer)
+    """
+
+    color: str
+    normal: str | Color | None = None
+    height: str | Color | None = None
+    mer: str | Color | None = None
+    mers: str | Color | None = None
+
+    def has_aux(self) -> bool:
+        return bool(self.normal or self.height or self.mer or self.mers)
 
 
 class TextureSet(AddonObject):
@@ -265,60 +284,35 @@ class AtmosphericSettings(AddonObject):
 
     def horizon_blend_stops(
         self,
-        min: dict[float, float],
-        start: dict[float, float],
-        mie_start: dict[float, float],
-        max: dict[float, float],
+        min: list[KeyFrame],
+        start: list[KeyFrame],
+        mie_start: list[KeyFrame],
+        max: list[KeyFrame],
     ):
         self._content["horizon_blend_stops"] = {
-            "min": {
-                **{clamp(k, 0.0, 1.0): v for k, v in min.items()},
-            },
-            "start": {
-                **{clamp(k, 0.0, 1.0): v for k, v in start.items()},
-            },
-            "mie_start": {
-                **{clamp(k, 0.0, 1.0): v for k, v in mie_start.items()},
-            },
-            "max": {
-                **{clamp(k, 0.0, 1.0): v for k, v in max.items()},
-            },
+            "min": KeyFrame.keyframe_dict(min),
+            "start": KeyFrame.keyframe_dict(start),
+            "mie_start": KeyFrame.keyframe_dict(mie_start),
+            "max": KeyFrame.keyframe_dict(max),
         }
 
-    def rayleigh_strength(self, keyframe: dict[float, float]):
-        self._content["rayleigh_strength"] = {
-            **{clamp(k, 0.0, 1.0): v for k, v in keyframe.items()},
-        }
+    def rayleigh_strength(self, keyframe: list[KeyFrame]):
+        self._content["rayleigh_strength"] = KeyFrame.keyframe_dict(keyframe)
 
-    def sun_mie_strength(self, keyframe: dict[float, float]):
-        self._content["sun_mie_strength"] = {
-            **{clamp(k, 0.0, 1.0): v for k, v in keyframe.items()},
-        }
+    def sun_mie_strength(self, keyframe: list[KeyFrame]):
+        self._content["sun_mie_strength"] = KeyFrame.keyframe_dict(keyframe)
 
-    def moon_mie_strength(self, keyframe: dict[float, float]):
-        self._content["moon_mie_strength"] = {
-            **{clamp(k, 0.0, 1.0): v for k, v in keyframe.items()},
-        }
+    def moon_mie_strength(self, keyframe: list[KeyFrame]):
+        self._content["moon_mie_strength"] = KeyFrame.keyframe_dict(keyframe)
 
-    def sun_glare_shape(self, keyframe: dict[float, float]):
-        self._content["sun_glare_shape"] = {
-            **{clamp(k, 0.0, 1.0): v for k, v in keyframe.items()},
-        }
+    def sun_glare_shape(self, keyframe: list[KeyFrame]):
+        self._content["sun_glare_shape"] = KeyFrame.keyframe_dict(keyframe)
 
-    def sky_zenith_color(self, keyframe: dict[float, float]):
-        self._content["sky_zenith_color"] = {
-            **{clamp(k, 0.0, 1.0): v for k, v in keyframe.items()},
-        }
+    def sky_zenith_color(self, keyframe: list[KeyFrame]):
+        self._content["sky_zenith_color"] = KeyFrame.keyframe_dict(keyframe)
 
     def sky_horizon_color(self, keyframe: dict[float, RGB]):
-        self._content["sky_horizon_color"] = {
-            **{
-                clamp(k, 0.0, 1.0): convert_color(
-                    v,
-                )
-                for k, v in keyframe.items()
-            },
-        }
+        self._content["sky_horizon_color"] = KeyFrame.keyframe_dict(keyframe)
 
 
 class FogSettings(AddonObject):
@@ -678,9 +672,9 @@ class LightingSettings(AddonObject):
 
     def orbital_lights(
         self,
-        sun_illuminance: float | dict[float, float],
+        sun_illuminance: float | list[KeyFrame],
         sun_color: RGB | HexRGB,
-        moon_illuminance: float | dict[float, float],
+        moon_illuminance: float | list[KeyFrame],
         moon_color: RGB | HexRGB,
         orbital_offset_degrees: float,
     ) -> None:
@@ -691,7 +685,7 @@ class LightingSettings(AddonObject):
                 "illuminance": (
                     sun_illuminance
                     if type(sun_illuminance) is float
-                    else {clamp(k, 0.0, 1.0): v for k, v in sun_illuminance.items()}
+                    else KeyFrame.keyframe_dict(sun_illuminance)
                 ),
                 "color": convert_color(sun_color),
             },
@@ -699,7 +693,7 @@ class LightingSettings(AddonObject):
                 "illuminance": (
                     moon_illuminance
                     if type(moon_illuminance) is float
-                    else {clamp(k, 0.0, 1.0): v for k, v in moon_illuminance.items()}
+                    else KeyFrame.keyframe_dict(moon_illuminance)
                 ),
                 "color": convert_color(moon_color),
             },
@@ -729,14 +723,16 @@ class LightingSettings(AddonObject):
         }
 
 
-class PointLights(AddonObject):
+class LocalLighting(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "local_lighting")
-    _object_type = "Point Lights Settings"
+    _object_type = "Local Lighting Settings"
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError("Point lights require PBR to be enabled in the config.")
+            raise RuntimeError(
+                "Local lighting requires PBR to be enabled in the config."
+            )
         super().__init__("local_lighting")
         self.content(JsonSchemes.local_lighting())
 
@@ -812,4 +808,73 @@ class PBRFallback(AddonObject):
         """
         self._content["minecraft:pbr_fallback_settings"]["items"] = {
             "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
+        }
+
+
+class CubeMapSettings(AddonObject):
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "cubemaps")
+    _object_type = "Cube Map Settings"
+
+    @overload
+    def __init__(self) -> None: ...
+
+    @overload
+    def __init__(self, identifier: str) -> None: ...
+
+    def __init__(self, identifier: str = "minecraft:default_cubemap") -> None:
+        if not CONFIG._PBR:
+            raise RuntimeError(
+                "Cube map settings require PBR to be enabled in the config."
+            )
+
+        if identifier == "minecraft:default_cubemap":
+            super().__init__(identifier, True)
+        else:
+            super().__init__(identifier)
+
+        self.content(JsonSchemes.cubemap_settings(self.identifier))
+
+    def set_lighting(
+        self,
+        ambient_light_illuminance: list[KeyFrame] = [
+            KeyFrame(0.0, 5.625),
+            KeyFrame(1.0, 5.625),
+        ],
+        sky_light_contribution: float = 1.0,
+        directional_light_contribution: float = 1.0,
+        affected_by_atmospheric_scattering: bool = False,
+        affected_by_volumetric_scattering: bool = False,
+    ):
+        """
+        Set lighting parameters for the cubemap.
+
+        Args:
+            ambient_light_illuminance : list[KeyFrame], optional
+                Keyframed ambient illuminance (lux) over the day cycle. Each keyframe's
+                time is clamped to [0.0, 1.0] and values should be in [0.0, 100000.0].
+                If not provided, defaults to a constant 5.625 lux across the day.
+            sky_light_contribution : float, optional
+                How much the sky light contributes to the cubemap, in [0.0, 1.0]. Default 1.0.
+            directional_light_contribution : float, optional
+                How much directional light (sun/moon) contributes to the cubemap, in [0.0, 1.0].
+                Default 1.0.
+            affected_by_atmospheric_scattering : bool, optional
+                Whether the cubemap is affected by atmospheric scattering (horizon/sky effects).
+                Use True for near-surface sky content (clouds, airships). Default False.
+            affected_by_volumetric_scattering : bool, optional
+                Whether the cubemap is affected by volumetric scattering (fog/light shafts).
+                Use True if cubemap content should interact with volumetric fog. Default False.
+        """
+
+        self._content["minecraft:cubemap_settings"]["lighting"] = {
+            "ambient_light_illuminance": KeyFrame.keyframe_dict(
+                ambient_light_illuminance
+            ),
+            "sky_light_contribution": clamp(sky_light_contribution, 0.0, 1.0),
+            "directional_light_contribution": clamp(
+                directional_light_contribution, 0.0, 1.0
+            ),
+            "affected_by_atmospheric_scattering": affected_by_atmospheric_scattering,
+            "affected_by_volumetric_scattering": affected_by_volumetric_scattering,
         }

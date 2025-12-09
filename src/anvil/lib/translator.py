@@ -4,10 +4,11 @@ from typing import Dict, List, Optional
 
 import click
 import pandas as pd
+from deep_translator import GoogleTranslator
+
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import File
 from anvil.lib.schemas import JsonSchemes
-from deep_translator import GoogleTranslator
 
 
 class AnvilTranslator:
@@ -31,7 +32,20 @@ class AnvilTranslator:
         self._initialized = True
         self.config = CONFIG
 
-        if not self._excel_file_path.exists():
+        # Runtime storage for user-registered entries
+        self._runtime_entries: Dict[str, str] = {}
+        
+        # Original state from file
+        self._original_entries: Dict[str, str] = {}
+        
+        if self._excel_file_path.exists():
+            try:
+                # Load original en_US entries to track deletions/modifications
+                df = pd.read_excel(self._excel_file_path, sheet_name=self._source_language)
+                self._original_entries = dict(zip(df["Key"], df["Value"]))
+            except ValueError:
+                pass
+        else:
             with pd.ExcelWriter(self._excel_file_path, engine="openpyxl") as writer:
                 for lang_code in JsonSchemes.languages():
                     df = pd.DataFrame(columns=["Key", "Value"])
@@ -63,103 +77,65 @@ class AnvilTranslator:
         except ValueError:
             return {}
 
-    def _cleanup_orphaned_keys(self) -> None:
+    def _sync_excel(self) -> None:
         """
-        Remove keys from other languages that don't exist in the source language (en_US).
+        Synchronizes the runtime entries with the Excel file.
         """
-        try:
-            source_df = pd.read_excel(
-                self._excel_file_path, sheet_name=self._source_language
-            )
-            source_keys = set(source_df["Key"].tolist())
-        except ValueError:
+        if not self._runtime_entries:
             return
 
+        # Load all existing sheets
         all_dfs = {}
-        languages_to_update = []
-
         for language in self._get_languages():
             try:
-                df_lang = pd.read_excel(self._excel_file_path, sheet_name=language)
-                lang_keys = set(df_lang["Key"].tolist())
-
-                orphaned_keys = lang_keys - source_keys
-
-                if orphaned_keys:
-                    df_lang = df_lang[~df_lang["Key"].isin(orphaned_keys)]
-                    all_dfs[language] = df_lang
-                    languages_to_update.append(language)
-
+                df = pd.read_excel(self._excel_file_path, sheet_name=language)
+                all_dfs[language] = df
             except ValueError:
-                continue
+                all_dfs[language] = pd.DataFrame(columns=["Key", "Value"])
 
-        if languages_to_update:
-            with pd.ExcelWriter(
-                self._excel_file_path,
-                engine="openpyxl",
-                mode="a",
-                if_sheet_exists="replace",
-            ) as writer:
-                for language in languages_to_update:
-                    df = all_dfs[language]
-                    df.to_excel(writer, sheet_name=language, index=False)
-                    worksheet = writer.sheets[language]
-                    if not df.empty:
-                        max_key_length = (
-                            max(len(str(key)) for key in df["Key"])
-                            if len(df["Key"]) > 0
-                            else 10
-                        )
-                        worksheet.column_dimensions["A"].width = max(
-                            max_key_length + 5, 20
-                        )
-                    worksheet.column_dimensions["B"].width = 20
+        original_set = set(self._original_entries.keys())
+        runtime_set = set(self._runtime_entries.keys())
+        
+        # Identify changes
+        new_keys = runtime_set - original_set
+        deleted_keys = original_set - runtime_set
+        shared_keys = runtime_set.intersection(original_set)
 
-    def add_localization_entry(self, key: str, value: str) -> None:
-        """
-        Add a new localization entry to the en_US sheet.
+        # 1. Handle New Keys
+        if new_keys:
+            new_rows_en = pd.DataFrame({"Key": list(new_keys), "Value": [self._runtime_entries[k] for k in new_keys]})
+            all_dfs[self._source_language] = pd.concat([all_dfs[self._source_language], new_rows_en], ignore_index=True)
+            
+            for lang, df in all_dfs.items():
+                if lang == self._source_language: 
+                    continue
+                new_rows_other = pd.DataFrame({"Key": list(new_keys), "Value": [""] * len(new_keys)})
+                all_dfs[lang] = pd.concat([df, new_rows_other], ignore_index=True)
 
-        Parameters:
-            key (str): The localization key
-            value (str): The English value
-        """
-        try:
-            df_en_us = pd.read_excel(
-                self._excel_file_path, sheet_name=self._source_language
-            )
-        except ValueError:
-            df_en_us = pd.DataFrame(columns=["Key", "Value"])
+        # 2. Handle Deleted Keys
+        if deleted_keys:
+            for lang in all_dfs:
+                all_dfs[lang] = all_dfs[lang][~all_dfs[lang]["Key"].isin(deleted_keys)]
 
-        existing_mask = df_en_us["Key"] == key
-        if existing_mask.any():
-            current_value = df_en_us.loc[existing_mask, "Value"].iloc[0]
-            if current_value == value:
-                return
-            df_en_us.loc[existing_mask, "Value"] = value
-        else:
-            new_row = pd.DataFrame({"Key": [key], "Value": [value]})
-            df_en_us = pd.concat([df_en_us, new_row], ignore_index=True)
-
-        all_dfs = {self._source_language: df_en_us}
-
-        for language in self._get_languages():
-            if language == self._source_language:
-                continue
-
-            try:
-                df_lang = pd.read_excel(self._excel_file_path, sheet_name=language)
-                if existing_mask.any():
+        # 3. Handle Modified Values
+        for key in shared_keys:
+            original_val = self._original_entries[key]
+            runtime_val = self._runtime_entries[key]
+            
+            if original_val != runtime_val:
+                # Update en_US
+                df_en = all_dfs[self._source_language]
+                df_en.loc[df_en["Key"] == key, "Value"] = runtime_val
+                
+                # Clear other languages
+                for lang in all_dfs:
+                    if lang == self._source_language:
+                        continue
+                    df_lang = all_dfs[lang]
                     if key in df_lang["Key"].values:
-                        df_lang.loc[df_lang["Key"] == key, "Value"] = pd.NA
-                else:
-                    if key not in df_lang["Key"].values:
-                        new_row = pd.DataFrame({"Key": [key], "Value": [""]})
-                        df_lang = pd.concat([df_lang, new_row], ignore_index=True)
-            except ValueError:
-                df_lang = pd.DataFrame({"Key": [key], "Value": [""]})
+                         df_lang.loc[df_lang["Key"] == key, "Value"] = pd.NA
 
-            all_dfs[language] = df_lang
-
+        # Write back to Excel
         with pd.ExcelWriter(
             self._excel_file_path,
             engine="openpyxl",
@@ -170,13 +146,25 @@ class AnvilTranslator:
                 df.to_excel(writer, sheet_name=lang, index=False)
                 worksheet = writer.sheets[lang]
                 if not df.empty:
-                    max_key_length = (
-                        max(len(str(key)) for key in df["Key"])
-                        if len(df["Key"]) > 0
-                        else 10
+                    key_lengths = [len(str(k)) for k in df["Key"] if pd.notna(k)]
+                    max_key_length = max(key_lengths) if key_lengths else 10
+                    worksheet.column_dimensions["A"].width = max(
+                        max_key_length + 5, 20
                     )
-                    worksheet.column_dimensions["A"].width = max(max_key_length + 5, 20)
                 worksheet.column_dimensions["B"].width = 20
+        
+        # Update original entries after sync
+        self._original_entries = self._runtime_entries.copy()
+
+    def add_localization_entry(self, key: str, value: str) -> None:
+        """
+        Add a new localization entry to the runtime memory.
+
+        Parameters:
+            key (str): The localization key
+            value (str): The English value
+        """
+        self._runtime_entries[key] = value
 
     def add_entries(self, entries: Dict[str, str]) -> None:
         """
@@ -202,6 +190,7 @@ class AnvilTranslator:
         """
         Automatically translate all entries from source language to target languages.
         """
+        self._sync_excel()
 
         def parse(lang: str):
             lang = lang.replace("zh_CN", "zh-CN")
@@ -282,6 +271,7 @@ class AnvilTranslator:
         """
         Export translations to Anvil's .lang file format.
         """
+        self._sync_excel()
 
         languages = []
         skipped = []

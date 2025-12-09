@@ -3,7 +3,18 @@ from typing import Optional, overload
 
 from anvil.api.core.enums import InputModes, Slots
 from anvil.lib.config import CONFIG
+from anvil.lib.format_versions import MANIFEST_VERSION
 from anvil.lib.lib import *
+from anvil.lib.schemas import MinecraftBiomeDescriptor
+
+
+class MolangMeta(type):
+    def __getattr__(cls, name):
+        if name.startswith("_"):
+            raise AttributeError(name)
+        val = cls._query(cls, cls.handle, name)
+        setattr(cls, name, val)
+        return val
 
 
 class Molang(str):
@@ -188,7 +199,7 @@ class Query(Molang):
         return self._query(self, self.handle, "actor_count")
 
     @classmethod
-    def All(self, query: "Query", *Parameters):
+    def All(self, query: "Query", target: "Query", *Parameters):
         """Requires at least 3 arguments. Evaluates the first argument, then returns 1.0 if all of the following arguments evaluate to the same value as the first. Otherwise it returns 0.0.
 
         Parameters:
@@ -198,7 +209,10 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "all", query, *Parameters)
+        if len(Parameters) < 2:
+            raise ValueError("Query.All requires at least 3 arguments.")
+
+        return self._query(self, self.handle, "all", query, target, *Parameters)
 
     @classmethod
     def AllAnimationsFinished(self):
@@ -1455,14 +1469,19 @@ class Query(Molang):
         return self._query(self, self.handle, "is_item_equipped", clamp(hand, 0, 1))
 
     @classmethod
-    def IsItemNameAny(self, slot: Slots, index: int, *item_identifiers):
+    def IsItemNameAny(self, slot: Slots, index: int, item_identifiers: list[str]):
         """Takes an equipment slot name (see the replaceitem command) and an optional slot index value. After that, takes one or more full name (with 'namespace:') strings to check for. Returns 1.0 if an item in the specified slot has any of the specified names, otherwise returns 0.0. An empty string '' can be specified to check for an empty slot. Note that querying slot.enderchest, slot.saddle, slot.armor, or slot.chest will only work in behavior packs. A preferred query to query.get_equipped_item_name, as it can be adjusted by Mojang to avoid breaking content if names are changed.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
         return self._query(
-            self, self.handle, "is_item_name_any", slot, index, *item_identifiers
+            self,
+            self.handle,
+            "is_item_name_any",
+            slot,
+            index,
+            *(str(item_identifier) for item_identifier in item_identifiers),
         )
 
     @classmethod
@@ -2952,6 +2971,225 @@ class Query(Molang):
         """
         return self._query(self, self.handle, "touch_only_affects_hotbar")
 
+    @classmethod
+    def GetPackSetting(self, id: str):
+        """### Client Only
+
+        Returns value of Pack Setting slider, parameter is name of slider. Available on the Client (Resource Packs) only.
+
+        Parameters:
+            id (str): The name of the pack setting slider to query.
+        Returns:
+            Molang(Molang): A Molang Instance representing a numerical value of the slider.
+        """
+        if MANIFEST_VERSION < 3:
+            raise ValueError(
+                "Pack Settings are not supported in Manifest Version below 3."
+            )
+
+        from anvil.api.core.core import ManifestRP
+
+        settings_list = ManifestRP()._content.get("settings", [])
+        slider_ids = [
+            slider["name"] for slider in settings_list if slider.get("type") == "slider"
+        ]
+
+        if f"{CONFIG.NAMESPACE}:{id}" not in slider_ids:
+            raise ValueError(
+                f"Pack Setting '{id}' does not exist in sliders, make sure to register it using `ManifestRP()`."
+            )
+
+        return self._query(self, self.handle, "get_pack_setting", id)
+
+    @classmethod
+    def IsPackSettingEnabled(self, id: str):
+        """### Client Only
+
+        Returns 1.0 if Pack Setting toggle is enabled, else it returns 0.0. Parameter is name of toggle. Available on the Client (Resource Packs) only.
+
+        Parameters:
+            id (str): The name of the pack setting toggle to query.
+
+        Returns:
+            Molang(Molang): A Molang Instance representing a boolean value of the toggle.
+        """
+        if MANIFEST_VERSION < 3:
+            raise ValueError(
+                "Pack Settings are not supported in Manifest Version below 3."
+            )
+
+        from anvil.api.core.core import ManifestRP
+
+        settings_list = ManifestRP()._content.get("settings", [])
+        toggle_ids = [
+            toggle["name"] for toggle in settings_list if toggle.get("type") == "toggle"
+        ]
+
+        if f"{CONFIG.NAMESPACE}:{id}" not in toggle_ids:
+            raise ValueError(
+                f"Pack Setting '{id}' does not exist in toggles, make sure to register it using `ManifestRP()`."
+            )
+
+        return self._query(self, self.handle, "is_pack_setting_enabled", id)
+
+    @classmethod
+    def IsPackSettingSelected(self, id: str, option: str):
+        """### Client Only
+
+        Returns 1.0 if Pack Setting dropdown selection matches the specified option, else it returns 0.0.
+
+        Parameters:
+            id (str): The name of the pack setting selection to query.
+            option (str): The option to check for.
+
+        Returns:
+            Molang(Molang): A Molang Instance representing a boolean value of the selection.
+        """
+
+        if MANIFEST_VERSION < 3:
+            raise ValueError(
+                "Pack Settings are not supported in Manifest Version below 3."
+            )
+
+        from anvil.api.core.core import ManifestRP
+
+        settings_list = ManifestRP()._content.get("settings", [])
+        dropdown = next(
+            (
+                d
+                for d in settings_list
+                if d.get("type") == "dropdown"
+                and d["name"] == f"{CONFIG.NAMESPACE}:{id}"
+            ),
+            None,
+        )
+
+        if not dropdown:
+            raise ValueError(
+                f"Pack Setting '{id}' does not exist in dropdowns, make sure to register it using `ManifestRP()`."
+            )
+
+        # Then check if option exists in THAT dropdown
+        if option not in dropdown.get("options", {}).keys():
+            raise ValueError(
+                f"Option '{option}' does not exist in dropdown '{id}', available options are: {', '.join(dropdown.get("options", {}).values())}."
+            )
+
+        return self._query(self, self.handle, "is_pack_setting_selected", id, option)
+
+    @classmethod
+    def EntityBiomeHasAllTags(self, tags: tuple[str]):
+        """Takes one or more tag names, and returns either 0 or 1 based on if the biome the entity is currently in has all of the tags provided.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "entity_biome_has_all_tags", *tags)
+
+    @classmethod
+    def EntityBiomeHasAnyTags(self, tags: tuple[str]):
+        """Takes one or more tag names, and returns either 0 or 1 based on if the biome the entity is currently in has any of the tags provided.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "entity_biome_has_any_tags", *tags)
+
+    @classmethod
+    def EntityBiomeHasAnyIdentifier(
+        self, identifiers: tuple[MinecraftBiomeDescriptor | str]
+    ):
+        """Takes one or more biome identifiers or MinecraftBiomeDescriptor instances, and returns either 0 or 1 based on if the biome the entity is currently in matches any of the identifiers provided.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(
+            self, self.handle, "entity_biome_has_any_identifier", *identifiers
+        )
+
+    @classmethod
+    def GetKineticItemDelay(self):
+        """Returns the delay value from the main-hand item's minecraft:on_use_kinetic_damage component, or 0 if the component is not present.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "get_kinetic_item_delay")
+
+    @classmethod
+    def GetKineticItemDamageDuration(self):
+        """Returns the damage_duration value from the main-hand item's minecraft:on_use_kinetic_damage component, or 0 if the component is not present.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "get_kinetic_item_damage_duration")
+
+    @classmethod
+    def GetKineticItemKnockbackDuration(self):
+        """Returns the knockback_duration value from the main-hand item's minecraft:on_use_kinetic_damage component, or 0 if the component is not present.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "get_kinetic_item_knockback_duration")
+
+    @classmethod
+    def GetKineticItemDismountDuration(self):
+        """Returns the dismount_duration value from the main-hand item's minecraft:on_use_kinetic_damage component, or 0 if the component is not present.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "get_kinetic_item_dismount_duration")
+
+    @classmethod
+    def KineticWeaponDelay(self):
+        """Returns the "delay" value from the main-hand item's "minecraft:kinetic_weapon" component, or 0 if the component is not present.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "kinetic_weapon_delay")
+
+    @classmethod
+    def KineticWeaponDamageDuration(self):
+        """Returns the 'max_duration' value of 'damage_conditions' from the main-hand item's 'minecraft:kinetic_weapon' component, or 0 if the component is not present.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "kinetic_weapon_damage_duration")
+
+    @classmethod
+    def KineticWeaponKnockbackDuration(self):
+        """Returns the 'max_duration' value of 'knockback_conditions' from the main-hand item's 'minecraft:kinetic_weapon' component, or 0 if the component is not present.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "kinetic_weapon_knockback_duration")
+
+    @classmethod
+    def KineticWeaponDismountDuration(self):
+        """Returns the 'max_duration' value of 'dismount_conditions' from the main-hand item's 'minecraft:kinetic_weapon' component, or 0 if the component is not present.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "kinetic_weapon_dismount_duration")
+
+    @classmethod
+    def TicksSinceLastKineticWeaponHit(self):
+        """Returns the number of ticks elapsed since the user last hit something while using a kinetic weapon.
+        Returns -1.0 if no kinetic weapon is being used or if nothing has been hit yet. Hits that occur while the user is unloaded are not counted.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "ticks_since_last_kinetic_weapon_hit")
+
 
 class Context(Query):
     handle = "context"
@@ -2988,6 +3226,10 @@ class Variable(Molang):
     @classmethod
     def AttackTime(self):
         return self._query(self, "v", "attack_time")
+
+
+class TempVar(Molang, metaclass=MolangMeta):
+    handle = "t"
 
 
 class Math(Molang):

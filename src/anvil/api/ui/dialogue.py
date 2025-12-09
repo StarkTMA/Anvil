@@ -1,8 +1,8 @@
 import os
 
-from anvil.api.core.enums import RawTextConstructor
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.translator import AnvilTranslator
 
 
 class _DialogueButton:
@@ -74,9 +74,9 @@ class _DialogueScene:
         Returns:
             _DialogueScene: The dialogue scene instance.
         """
-        self._npc_name: str = RawTextConstructor().text(npc_name)
+        self._npc_name: str = npc_name
         if not text is None:
-            self._text: str = RawTextConstructor().translate(text)
+            self._text: str = text
         return self
 
     def button(self, button_name: str, *commands: str):
@@ -128,12 +128,15 @@ class _DialogueScene:
         Returns:
             dict: The dialogue scene.
         """
+        npc_key = AnvilTranslator().add_localization_entry(f"npc.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.{self._npc_name}", self._npc_name)
+        dialogue_text_key = AnvilTranslator().add_localization_entry(f"dialogue.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.{self._scene_tag}.text", self._text)
+
         return JsonSchemes.dialogue_scene(
             self._scene_tag,
-            self._npc_name.__str__(),
-            self._text.__str__(),
-            ["/" + cmd.__str__() for cmd in self._on_open_commands],
-            ["/" + cmd.__str__() for cmd in self._on_close_commands],
+            npc_key,
+            dialogue_text_key,
+            self._on_open_commands,
+            self._on_close_commands,
             [button._export() for button in self._buttons],
         )
 

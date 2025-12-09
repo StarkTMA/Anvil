@@ -1,0 +1,11 @@
+{
+	"format_version": "{{ format_version }}",
+	"minecraft:feature_rules": {
+		"description": {
+			"identifier": "{{ identifier }}",
+			"places_feature": "{{ feature_identifier }}"
+		},
+		"conditions": {},
+		"distribution": {}
+	}
+}

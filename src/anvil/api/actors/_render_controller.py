@@ -1,6 +1,7 @@
 import os
 from typing import Literal
 
+from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -53,15 +54,16 @@ class _RenderController:
                     f"Material {list(material.values())[0]} not found in entity {self._identifier}. Render controller [{self._identifier}]"
                 )
 
-    def __init__(self, identifier, controller_name):
+    def __init__(self, identifier, controller_name, actor_type: str) -> None:
         self._identifier = identifier
         self._controller_name = controller_name
+        self._actor_type: Literal["entity", "attachable"] = actor_type
         self._controller = JsonSchemes.render_controller(
             self._identifier, self._controller_name
         )
         self.controller_identifier = f"controller.render.{self._identifier.replace(':', '.')}.{self._controller_name}"
 
-    def texture_array(self, array_name: str, *textures_short_names: str):
+    def texture_array(self, array_name: str, textures_short_names: list[str]):
         self._controller[self.controller_identifier]["arrays"]["textures"].update(
             {
                 f"Array.{array_name}": [
@@ -83,7 +85,7 @@ class _RenderController:
         )
         return self
 
-    def geometry_array(self, array_name: str, *geometries_short_names: str):
+    def geometry_array(self, array_name: str, geometries_short_names: str):
         self._controller[self.controller_identifier]["arrays"]["geometries"].update(
             {
                 f"Array.{array_name}": [
@@ -110,9 +112,9 @@ class _RenderController:
         self._controller[self.controller_identifier]["textures"].append(name)
         return self
 
-    def part_visibility(self, bone: str, condition: str | bool):
+    def part_visibility(self, **parts_conditions: dict[str, Molang | str | bool]):
         self._controller[self.controller_identifier]["part_visibility"].append(
-            {bone: condition}
+            parts_conditions
         )
         return self
 
@@ -156,7 +158,17 @@ class _RenderController:
         ] = multiplier
         return self
 
-    def uv_anim(self, offset: list[str, str], scale: list[str, str]):
+    def uv_anim(
+        self,
+        offset: tuple[float | Molang | str, float | Molang | str],
+        scale: tuple[float | Molang | str, float | Molang | str],
+    ):
+        if self._actor_type == "attachable":
+            raise RuntimeError(
+                "UV Animation is not supported for attachables. Error in render controller "
+                f"[{self._identifier}]"
+            )
+
         self._controller[self.controller_identifier]["uv_anim"] = {
             "offset": offset,
             "scale": scale,
@@ -177,13 +189,16 @@ class _RenderControllers(AddonObject):
     )
     _object_type = "Render Controller"
 
-    def __init__(self, identifier: str) -> None:
+    def __init__(self, identifier: str, actor_type: str) -> None:
+        self._actor_type = actor_type
         self._controllers: list[_RenderController] = []
         self.render_controller = JsonSchemes.render_controllers()
         super().__init__(identifier)
 
     def add_controller(self, controller_name: str):
-        self._render_controller = _RenderController(self.identifier, controller_name)
+        self._render_controller = _RenderController(
+            self.identifier, controller_name, self._actor_type
+        )
         self._controllers.append(self._render_controller)
         return self._render_controller
 

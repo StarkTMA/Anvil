@@ -1,1 +1,1 @@
-# @minecraft/vanilla-data version: 1.21.120
+# @minecraft/vanilla-data version: 1.21.130

@@ -1,6 +1,6 @@
 import math
 from os import path
-from typing import Any
+from typing import Any, Dict, Tuple
 
 from anvil.api.blocks.components import LootTable
 from anvil.api.core.components import _BaseAIGoal, _BaseComponent, _BaseEventTrigger
@@ -10,7 +10,6 @@ from anvil.api.core.enums import (
     ControlFlags,
     DamageCause,
     DamageSensor,
-    Effects,
     ExplosionParticleEffect,
     FilterSubject,
     LeashSpringType,
@@ -24,10 +23,15 @@ from anvil.api.core.enums import (
 from anvil.api.core.filters import Filter
 from anvil.api.core.types import *
 from anvil.api.logic.molang import Molang
+from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
-from anvil.lib.schemas import BlockDescriptor, ItemDescriptor, MinecraftBlockDescriptor
+from anvil.lib.schemas import (
+    MinecraftBlockDescriptor,
+    MinecraftEntityDescriptor,
+    MinecraftItemDescriptor,
+)
 from anvil.lib.translator import AnvilTranslator
 
 # Components ==========================================================================
@@ -37,21 +41,44 @@ from anvil.lib.translator import AnvilTranslator
 class EntityAddRider(_BaseComponent):
     _identifier = "minecraft:addrider"
 
-    def __init__(self, entity_type: Identifier, spawn_event: Event = None) -> None:
+    def __init__(
+        self,
+        entity_type: MinecraftEntityDescriptor | Identifier,
+        spawn_event: Event = None,
+    ) -> None:
         """Adds a rider to the entity. Requires `minecraft:rideable.`.
 
-        Parameters
-        ----------
-        `entity_type` : `Identifier`.
-            The entity type that will be riding this
-        `spawn_event` : `Event`, `optional`.
-            The spawn event that will be used when the riding entity is created.
+        Parameters:
+        `entity_type` : `MinecraftEntityDescriptor` | `Identifier`.
+            The type of entity to add as a rider.
+        `spawn_event` : `Event`, optional.
+            An event to run when the rider is spawned.
 
         """
+        self._require_components(EntityRideable)
         super().__init__("addrider")
-        self._add_field("entity_type", str(entity_type))
-        if not spawn_event is None:
-            self._add_field("spawn_event", spawn_event)
+        self._add_field(
+            "riders", [{"entity_type": entity_type, "spawn_event": spawn_event}]
+        )
+
+    def add_rider(
+        self,
+        entity_type: MinecraftEntityDescriptor | Identifier,
+        spawn_event: Event = None,
+    ):
+        """Adds an additional rider to the entity. Requires `minecraft:rideable.`.
+
+        Parameters:
+        `entity_type` : `MinecraftEntityDescriptor` | `Identifier`.
+            The type of entity to add as a rider.
+        `spawn_event` : `Event`, optional.
+            An event to run when the rider is spawned.
+
+        """
+        self._component["riders"].append(
+            {"entity_type": entity_type, "spawn_event": spawn_event}
+        )
+        return self
 
 
 class EntityAdmireItem(_BaseComponent):
@@ -82,8 +109,8 @@ class EntityCollisionBox(_BaseComponent):
     def __init__(self, height: float, width: float) -> None:
         """Sets the width and height of the Entity's collision box."""
         super().__init__("collision_box")
-        self._add_field("height", height)
-        self._add_field("width", width)
+        self._add_field("height", max(0, height))
+        self._add_field("width", max(0, width))
 
 
 class EntityTypeFamily(_BaseComponent):
@@ -283,7 +310,7 @@ class EntitySpellEffects(_BaseComponent):
 
     def add_effects(
         self,
-        effect: Effects,
+        effect: MinecraftEffects,
         duration: int,
         amplifier: int,
         ambient: bool = True,
@@ -305,7 +332,7 @@ class EntitySpellEffects(_BaseComponent):
         self._component["add_effects"].append(effect)
         return self
 
-    def remove_effects(self, *effects: Effects):
+    def remove_effects(self, *effects: MinecraftEffects):
         self._component["remove_effects"] = [e.value for e in effects]
         return self
 
@@ -1619,7 +1646,7 @@ class EntityProjectile(_BaseComponent):
 
     def mob_effect(
         self,
-        effect: Effects,
+        effect: MinecraftEffects,
         amplifier: int = 1,
         ambient: bool = False,
         visible: bool = False,
@@ -1919,11 +1946,12 @@ class EntityMobEffect(_BaseComponent):
 
     def __init__(
         self,
-        mob_effect: Effects,
+        mob_effect: MinecraftEffects,
         entity_filter: Filter,
         cooldown_time: int = 0,
         effect_range: float = 0.2,
         effect_time: int = 10,
+        ambient: bool = False,
     ) -> None:
         """Applies a mob effect to entities that get within range."""
         super().__init__("mob_effect")
@@ -1936,6 +1964,8 @@ class EntityMobEffect(_BaseComponent):
             self._add_field("effect_range", effect_range)
         if not effect_time == 10:
             self._add_field("effect_time", effect_time)
+        if ambient:
+            self._add_field("ambient", ambient)
 
 
 class EntitySpawnEntity(_BaseComponent):
@@ -2227,16 +2257,20 @@ class EntityEquipItem(_BaseComponent):
     _identifier = "minecraft:equip_item"
 
     def __init__(
-        self, can_wear_armor: bool = False, excluded_items: list[ItemDescriptor] = []
+        self,
+        can_wear_armor: bool = False,
+        excluded_items: list[MinecraftItemDescriptor] = [],
     ) -> None:
         """Compels the entity to equip desired equipment."""
         super().__init__("equip_item")
         if can_wear_armor:
             self._add_field("can_wear_armor", can_wear_armor)
         if excluded_items:
-            if not all(isinstance(item, ItemDescriptor) for item in excluded_items):
+            if not all(
+                isinstance(item, MinecraftItemDescriptor) for item in excluded_items
+            ):
                 raise TypeError(
-                    f"excluded_items must be a list of ItemDescriptor instances. Component [{self._identifier}]."
+                    f"excluded_items must be a list of MinecraftItemDescriptor instances. Component [{self._identifier}]."
                 )
             self._add_field("excluded_items", excluded_items)
 
@@ -2665,16 +2699,11 @@ class EntityTameable(_BaseComponent):
     def __init__(
         self,
         probability: float = 1.0,
-        tame_event: str = None,
-        tame_subject: FilterSubject = FilterSubject.Self,
-        *tame_items: str,
     ) -> None:
         """Defines the rules for an entity to be tamed by the player.
 
         Parameters:
             probability (float, optional): The chance of taming the entity with each item use between 0.0 and 1.0, where 1.0 is 100%. Defaults to 1.0.
-            tame_event (dict[str, str], optional): Event to initiate when the entity becomes tamed. Defaults to None.
-            tame_items (str, optional): The list of items that can be used to tame the entity. Defaults to None.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tameable
@@ -2683,10 +2712,46 @@ class EntityTameable(_BaseComponent):
 
         if probability != 1.0:
             self._add_field("probability", probability)
-        if not tame_event is None:
-            self._add_field("tame_event", {"event": tame_event, "target": tame_subject})
-        if len(tame_items) > 0:
-            self._add_field("tame_items", [str(i) for i in tame_items])
+
+        self._add_field("tame_items", [])
+
+    def add_tame_item(
+        self,
+        item: MinecraftItemDescriptor | Identifier,
+        result_item: MinecraftItemDescriptor | Identifier = None,
+    ):
+        """Adds an item to the list of items that can be used to tame the entity.
+
+        Parameters:
+            item (str): The item to add to the list of items that can be used to tame the entity.
+            result_item (str, optional): The item that the tame item will transform into upon successful taming. Defaults to None.
+
+            Returns:
+                Tameable: Returns the Tameable component to allow for method chaining.
+        """
+        if result_item is None:
+            self._component["tame_items"].append(item)
+        else:
+            self._component["tame_items"].append(
+                {
+                    "item": item,
+                    "result_item": result_item,
+                }
+            )
+        return self
+
+    def tame_event(self, event: str, target: FilterSubject = FilterSubject.Self):
+        """Sets the event to initiate when the entity becomes tamed.
+
+        Parameters:
+            event (str): Event to initiate when the entity becomes tamed.
+            target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
+
+            Returns:
+                Tameable: Returns the Tameable component to allow for method chaining.
+        """
+        self._add_field("tame_event", {"event": event, "target": target})
+        return self
 
 
 class EntityAgeable(_BaseComponent):
@@ -2698,7 +2763,7 @@ class EntityAgeable(_BaseComponent):
         grow_up_event: str = None,
         grow_up_target: FilterSubject = FilterSubject.Self,
         interact_filters: Filter = None,
-        transform_to_item: str = None,
+        result_item: str = None,
     ) -> None:
         """Adds a timer for the entity to grow up. The timer can be accelerated by giving the entity items it likes as defined by feed_items.
 
@@ -2706,7 +2771,7 @@ class EntityAgeable(_BaseComponent):
             duration (Seconds, optional): Amount of time before the entity grows up, -1 for always a baby. Defaults to 1200.0.
             grow_up_event (str, optional): Event to initiate when the entity grows up. Defaults to None.
             interact_filters (Filter, optional): A list of conditions to meet for the entity to be fed. Defaults to None.
-            transform_to_item (str, optional): The feed item used will transform into this item upon successful interaction. Format: itemName:auxValue. Defaults to None.
+            result_item (str, optional): The feed item used will transform into this item upon successful interaction. Format: itemName:auxValue. Defaults to None.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ageable
@@ -2722,8 +2787,8 @@ class EntityAgeable(_BaseComponent):
             )
         if not interact_filters is None:
             self._add_field("interact_filters", interact_filters)
-        if not transform_to_item is None:
-            self._add_field("transform_to_item", transform_to_item)
+        if not result_item is None:
+            self._add_field("result_item", result_item)
 
     def drop_item(self, *items: str):
         """Adds an item to the list of items the entity drops when it grows up.
@@ -2816,6 +2881,7 @@ class EntityDashAction(_BaseComponent):
         cooldown_time: Seconds = 1.0,
         horizontal_momentum: float = 1.0,
         vertical_momentum: float = 1.0,
+        can_dash_underwater: bool = False,
     ) -> None:
         """Determines a rideable entity's ability to dash.
 
@@ -2824,6 +2890,7 @@ class EntityDashAction(_BaseComponent):
             cooldown_time (Seconds, optional): The dash cooldown time, in seconds. Defaults to 1.0.
             horizontal_momentum (float, optional): Horizontal momentum of the dash. Defaults to 1.0.
             vertical_momentum (float, optional): Vertical momentum of the dash. Defaults to 1.0.
+            can_dash_underwater (bool, optional): If true, the entity can dash while underwater. Defaults to False.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash
@@ -2838,6 +2905,8 @@ class EntityDashAction(_BaseComponent):
             self._add_field("horizontal_momentum", horizontal_momentum)
         if vertical_momentum != 1.0:
             self._add_field("vertical_momentum", vertical_momentum)
+        if can_dash_underwater:
+            self._add_field("can_dash_underwater", can_dash_underwater)
 
 
 class EntityBreathable(_BaseComponent):
@@ -2853,22 +2922,24 @@ class EntityBreathable(_BaseComponent):
         inhale_time: Seconds = 0.0,
         suffocate_time: Seconds = -20,
         total_supply: Seconds = 15,
-        breathe_blocks: list[str] = [],
-        non_breathe_blocks: list[str] = [],
+        can_dehydrate: bool = False,
+        breathe_blocks: list[MinecraftBlockDescriptor] = [],
+        non_breathe_blocks: list[MinecraftBlockDescriptor] = [],
     ) -> None:
         """Defines which blocks an entity can breathe in and defines the ability to suffocate in those blocks.
 
         Parameters:
-            breathe_blocks (list[str], optional): List of blocks the entity can breathe in. Defaults to [].
             breathes_air (bool, optional): If true, the entity can breathe in air. Defaults to True.
             breathes_lava (bool, optional): If true, the entity can breathe in lava. Defaults to True.
             breathes_solids (bool, optional): If true, the entity can breathe in solid blocks. Defaults to False.
             breathes_water (bool, optional): If true, the entity can breathe in water. Defaults to False.
             generates_bubbles (bool, optional): If true, the entity will have visible bubbles while in water. Defaults to True.
             inhale_time (Seconds, optional): Time in seconds to recover breath to maximum. Defaults to 0.0.
-            non_breathe_blocks (list[str], optional): List of blocks the entity can't breathe in, in addition to the other "breathes" parameters. Defaults to [].
             suffocate_time (int, optional): Time in seconds between suffocation damage. Defaults to -20.
             total_supply (int, optional): Time in seconds the entity can hold its breath. Defaults to 15.
+            can_dehydrate (bool, optional): If true, the entity can dehydrate when out of water. Defaults to False.
+            breathe_blocks (list[MinecraftBlockDescriptor], optional): List of blocks the entity can breathe in. Defaults to [].
+            non_breathe_blocks (list[MinecraftBlockDescriptor], optional): List of blocks the entity can't breathe in, in addition to the other "breathes" parameters. Defaults to [].
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breathable
@@ -2895,6 +2966,8 @@ class EntityBreathable(_BaseComponent):
             self._add_field("breathe_blocks", breathe_blocks)
         if not non_breathe_blocks == []:
             self._add_field("non_breathe_blocks", non_breathe_blocks)
+        if can_dehydrate:
+            self._add_field("can_dehydrate", can_dehydrate)
 
 
 class EntityVariableMaxAutoStep(_BaseComponent):
@@ -3016,8 +3089,8 @@ class EntityEquippable(_BaseComponent):
     def slot(
         self,
         slot: int,
-        item: str,
-        accepted_items: list[str],
+        item: MinecraftItemDescriptor | Identifier,
+        accepted_items: list[MinecraftItemDescriptor | Identifier],
         interact_text: str = None,
         on_equip: str = None,
         on_unequip: str = None,
@@ -3037,8 +3110,8 @@ class EntityEquippable(_BaseComponent):
         """
         slot_data = {
             "slot": slot,
-            "item": item,
-            "accepted_items": accepted_items,
+            "item": str(item),
+            "accepted_items": list(map(str, accepted_items)),
         }
         if not interact_text is None:
             t = interact_text.lower().replace(" ", "_")
@@ -3090,13 +3163,30 @@ class EntityColor2(_BaseComponent):
 class EntityBurnsInDaylight(_BaseComponent):
     _identifier = "minecraft:burns_in_daylight"
 
-    def __init__(self) -> None:
+    def __init__(self, protection_slot: Slots = None) -> None:
         """Compels an entity to burn when it's daylight.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_burns_in_daylight
         """
         super().__init__("burns_in_daylight")
+
+        if not protection_slot is None:
+            if not isinstance(protection_slot, Slots):
+                raise TypeError("protection_slot must be an instance of Slots Enum")
+            if protection_slot in [
+                Slots.Body,
+                Slots.Chest,
+                Slots.Feet,
+                Slots.Head,
+                Slots.Legs,
+                Slots.Offhand,
+            ]:
+                raise ValueError(
+                    "protection_slot must be one of the armor or offhand slots."
+                )
+
+            self._add_field("protection_slot", protection_slot)
 
 
 class EntityBoss(_BaseComponent):
@@ -3455,7 +3545,7 @@ class EntityBreedable(_BaseComponent):
         random_variant_mutation_interval: tuple[int, int] = (0, 0),
         require_full_health: bool = False,
         require_tame: bool = True,
-        transform_to_item: str = None,
+        result_item: str = None,
     ) -> None:
         """Allows an entity to get into the 'love' state used for breeding.
 
@@ -3478,7 +3568,7 @@ class EntityBreedable(_BaseComponent):
             - random_variant_mutation_interval: Interval for variant mutation.
             - require_full_health: If true, entity must be at full health to breed.
             - require_tame: If true, entity must be tamed to breed.
-            - transform_to_item: Breed item used will transform to this item on use.
+            - result_item: Breed item used will transform to this item on use.
         """
         super().__init__("breedable")
 
@@ -3525,8 +3615,8 @@ class EntityBreedable(_BaseComponent):
             self._add_field("require_full_health", require_full_health)
         if require_tame is not True:
             self._add_field("require_tame", require_tame)
-        if transform_to_item is not None:
-            self._add_field("transform_to_item", transform_to_item)
+        if result_item is not None:
+            self._add_field("result_item", result_item)
 
     def breeds_with(self, mate_type: str, baby_type: str, breed_event: str) -> dict:
         """Defines the breeding partner for the entity.
@@ -4105,6 +4195,116 @@ class EntityNameable(_BaseComponent):
         return self
 
 
+class EntityRotationLockedToVehicle(_BaseComponent):
+    _identifier = "minecraft:rotation_locked_to_vehicle"
+
+    def __init__(self) -> None:
+        """Locks the body rotation of this entity to the vehicle it is riding.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_locked_to_vehicle
+        """
+        super().__init__("rotation_locked_to_vehicle")
+
+
+class EntityHealable(_BaseComponent):
+    _identifier = "minecraft:healable"
+
+    def __init__(self, filters: Filter = None, force_use: bool = False) -> None:
+        """Allows the entity to be healed by players using healing items.
+
+        Parameters:
+            filters (Filter, optional): Conditions that must be met for the entity to be healable. Defaults to None.
+            force_use (bool, optional): Determines if item can be used regardless of entity being at full health.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_healable
+        """
+        super().__init__("healable")
+        if not filters is None:
+            self._add_field("filters", filters)
+        if force_use:
+            self._add_field("force_use", force_use)
+        self._add_field("items", [])
+
+    def add_heal_item(
+        self,
+        item: MinecraftItemDescriptor | Identifier,
+        heal_amount: float,
+        result_item: MinecraftItemDescriptor | Identifier = None,
+    ) -> dict:
+        """Adds a healing item to the healable component.
+
+        Parameters:
+            item (str): The item that can heal the entity.
+            heal_amount (float): The amount of health the item restores.
+
+        Returns:
+            dict: A dictionary containing the healing item information.
+        """
+        self._component["items"].append(
+            {"item": item, "heal_amount": heal_amount, "result_item": result_item}
+        )
+        return self
+
+
+class EntityExhaustionValues(_BaseComponent):
+    _identifier = "minecraft:exhaustion_values"
+
+    def __init__(
+        self,
+        attack: float = 0.1,
+        damage: float = 0.1,
+        heal: float = 6,
+        jump: float = 0.05,
+        lunge: float = 4,
+        mine: float = 0.005,
+        sprint: float = 0.01,
+        sprint_jump: float = 0.2,
+        swim: float = 0.01,
+        walk: float = 0.0,
+    ) -> None:
+        """Defines how much exhaustion this entity generates for various actions.
+
+        Parameters:
+            attack (float, optional): Exhaustion generated when the entity attacks. Defaults to 0.1.
+            damage (float, optional): Exhaustion generated when the entity takes damage. Defaults to 0.1.
+            heal (float, optional): Exhaustion reduced when the entity heals. Defaults to 6.
+            jump (float, optional): Exhaustion generated when the entity jumps. Defaults to 0.05.
+            lunge (float, optional): Exhaustion generated when the entity lunges. Defaults to 4.
+            mine (float, optional): Exhaustion generated when the entity mines. Defaults to 0.005.
+            sprint (float, optional): Exhaustion generated when the entity sprints. Defaults to 0.01.
+            sprint_jump (float, optional): Exhaustion generated when the entity sprint-jumps. Defaults to 0.2.
+            swim (float, optional): Exhaustion generated when the entity swims. Defaults to 0.01.
+            walk (float, optional): Exhaustion generated when the entity walks. Defaults to 0.0.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_exhaustion_values
+        """
+        super().__init__("exhaustion_values")
+
+        if not attack == 0.1:
+            self._add_field("attack", attack)
+        if not damage == 0.1:
+            self._add_field("damage", damage)
+        if not heal == 6:
+            self._add_field("heal", heal)
+        if not jump == 0.05:
+            self._add_field("jump", jump)
+        if not lunge == 4:
+            self._add_field("lunge", lunge)
+        if not mine == 0.005:
+            self._add_field("mine", mine)
+        if not sprint == 0.01:
+            self._add_field("sprint", sprint)
+        if not sprint_jump == 0.2:
+            self._add_field("sprint_jump", sprint_jump)
+        if not swim == 0.01:
+            self._add_field("swim", swim)
+        if not walk == 0.0:
+            self._add_field("walk", walk)
+
+
 # AI Goals ==========================================================================
 
 
@@ -4113,7 +4313,7 @@ class EntityAINearestAttackableTarget(_BaseAIGoal):
 
     def __init__(
         self,
-        attack_interval: int = 0,
+        attack_interval: tuple[float, float] | float = 0,
         attack_interval_min: int = 0,
         attack_owner: bool = False,
         must_reach: bool = False,
@@ -4128,13 +4328,23 @@ class EntityAINearestAttackableTarget(_BaseAIGoal):
         target_search_height: float = -0.1,
         target_sneak_visibility_multiplier: float = 0.8,
         within_radius: float = 0.0,
+        target_acquisition_probability: float = 1.0,
     ) -> None:
         """Allows an entity to attack the closest target within a given subset of specific target types."""
         super().__init__("behavior.nearest_attackable_target")
         self._add_field("entity_types", [])
 
         if not attack_interval == 0:
-            self._add_field("attack_interval", attack_interval)
+            if isinstance(attack_interval, tuple):
+                self._add_field(
+                    "attack_interval",
+                    {
+                        "range_min": attack_interval[0],
+                        "range_max": attack_interval[1],
+                    },
+                )
+            elif isinstance(attack_interval, float):
+                self._add_field("attack_interval", attack_interval)
         if not attack_interval_min == 0:
             self._add_field("attack_interval_min", attack_interval_min)
         if attack_owner:
@@ -4164,6 +4374,10 @@ class EntityAINearestAttackableTarget(_BaseAIGoal):
             )
         if not within_radius == 0.0:
             self._add_field("within_radius", within_radius)
+        if not target_acquisition_probability == 1.0:
+            self._add_field(
+                "target_acquisition_probability", target_acquisition_probability
+            )
 
     def add_target(
         self,
@@ -4335,11 +4549,23 @@ class EntityAIKnockbackRoar(_BaseAIGoal):
 class EntityAIFloat(_BaseAIGoal):
     _identifier = "minecraft:behavior.float"
 
-    def __init__(self, sink_with_passengers: bool = False) -> None:
+    def __init__(
+        self,
+        sink_with_passengers: bool = False,
+        chance_per_tick_to_float: float = 0.0,
+        time_under_water_to_dismount_passengers: Seconds = 0.0,
+    ) -> None:
         """Allows an entity to float on water. Passengers will be kicked out the moment the mob's head goes underwater, which may not happen for tall mobs."""
         super().__init__("behavior.float")
         if sink_with_passengers:
             self._add_field("sink_with_passengers", sink_with_passengers)
+        if chance_per_tick_to_float != 0.0:
+            self._add_field("chance_per_tick_to_float", chance_per_tick_to_float)
+        if time_under_water_to_dismount_passengers != 0.0:
+            self._add_field(
+                "time_under_water_to_dismount_passengers",
+                time_under_water_to_dismount_passengers,
+            )
 
 
 class EntityAIRandomStroll(_BaseAIGoal):
@@ -6122,7 +6348,6 @@ class EntityAIFloatWander(_BaseAIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the mob will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
             y_offset (float, optional): Height in blocks to add to the selected target position. Defaults to 0.0.
-
         ## Documentation reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float_wander?view=minecraft-bedrock-stable
         """
@@ -6485,7 +6710,7 @@ class EntityAITakeBlock(_BaseAIGoal):
     def __init__(
         self,
         affected_by_griefing_rule: bool = False,
-        blocks: list[BlockDescriptor] = [],
+        blocks: list[MinecraftBlockDescriptor] = [],
         can_take: Filter = None,
         chance: float = 0.0,
         requires_line_of_sight: bool = False,
@@ -6496,7 +6721,7 @@ class EntityAITakeBlock(_BaseAIGoal):
 
         Args:
             affected_by_griefing_rule (bool, optional): Whether the goal is affected by the mob griefing game rule. Defaults to False.
-            blocks (list[BlockDescriptor], optional): Block descriptors for which blocks are valid to be taken by the entity, if empty all blocks are valid. Defaults to [].
+            blocks (list[MinecraftBlockDescriptor], optional): Block descriptors for which blocks are valid to be taken by the entity, if empty all blocks are valid. Defaults to [].
             can_take (Filter, optional): Filters for if the entity should try to take a block. Self and Target are set. Defaults to None.
             chance (float, optional): Chance each tick for the entity to try and take a block. Defaults to 0.0.
             requires_line_of_sight (bool, optional): Whether the entity needs line of sight to the block they are trying to take. Defaults to False.
@@ -6546,7 +6771,7 @@ class EntityAIPlaceBlock(_BaseAIGoal):
         affected_by_griefing_rule: bool = False,
         can_place: Filter = None,
         chance: float = 0.0,
-        placeable_carried_blocks: list[BlockDescriptor] = [],
+        placeable_carried_blocks: list[MinecraftBlockDescriptor] = [],
         xz_range: Vector2D = (0, 0),
         y_range: Vector2D = (0, 0),
     ) -> None:
@@ -6556,7 +6781,7 @@ class EntityAIPlaceBlock(_BaseAIGoal):
             affected_by_griefing_rule (bool, optional): Whether the goal is affected by the mob griefing game rule. Defaults to False.
             can_place (Filter, optional): Filters for if the entity should try to place its block. Self and Target are set. Defaults to None.
             chance (float, optional): Chance each tick for the entity to try and place a block. Defaults to 0.0.
-            placeable_carried_blocks (list[BlockDescriptor], optional): Block descriptors for which blocks are valid to be placed from the entity's carried item, if empty all blocks are valid. Defaults to [].
+            placeable_carried_blocks (list[MinecraftBlockDescriptor], optional): Block descriptors for which blocks are valid to be placed from the entity's carried item, if empty all blocks are valid. Defaults to [].
             xz_range (Vector2D, optional): XZ range from which the entity will try and place blocks in. Defaults to (0, 0).
             y_range (Vector2D, optional): Y range from which the entity will try and place blocks in. Defaults to (0, 0).
 
@@ -6594,12 +6819,15 @@ class EntityAIPlaceBlock(_BaseAIGoal):
         return self
 
     def randomly_placeable_block(
-        self, block: BlockDescriptor, filter: Filter, states: dict[str, Any] = None
+        self,
+        block: MinecraftBlockDescriptor,
+        filter: Filter,
+        states: dict[str, Any] = None,
     ):
         """Sets the block that the entity can randomly place.
 
         Parameters:
-            block (BlockDescriptor): The block descriptor for which the block should be randomly placed.
+            block (MinecraftBlockDescriptor): The block descriptor for which the block should be randomly placed.
             filter (Filter): The filter that determines when the block can be placed.
             states (dict[str, Any], optional): The states of the block to be placed.
 
@@ -6736,7 +6964,7 @@ class EntityAIAvoidBlock(_BaseAIGoal):
         avoid_block_sound: str = None,
         sound_interval: list[float] = None,
         target_selection_method: Literal["nearest"] = "nearest",
-        target_blocks: list[BlockDescriptor] = [],
+        target_blocks: list[MinecraftBlockDescriptor] = [],
     ) -> None:
         """Allows this entity to avoid certain blocks.
 
@@ -6796,3 +7024,140 @@ class EntityAIAvoidBlock(_BaseAIGoal):
         """
         self._get_field("on_escape").append({"event": event, "target": target.value})
         return self
+
+
+class EntityAIUseKineticWeapon(_BaseAIGoal):
+    _identifier = "minecraft:behavior.use_kinetic_weapon"
+
+    def __init__(
+        self,
+        approach_distance: float = None,
+        reposition_distance: float = None,
+        reposition_speed_multiplier: float = None,
+        cooldown_distance: float = None,
+        cooldown_speed_multiplier: float = None,
+        weapon_reach_multiplier: float = None,
+        weapon_min_speed_multiplier: float = None,
+        min_path_time: float = None,
+        max_path_time: float = None,
+        path_fail_time_increase: float = None,
+        inner_boundary_time_increase: float = None,
+        outer_boundary_time_increase: float = None,
+        path_inner_boundary: float = None,
+        path_outer_boundary: float = None,
+        speed_multiplier: float = None,
+        require_complete_path: bool = None,
+        track_target: bool = None,
+        cooldown_time: float = None,
+        melee_fov: float = None,
+        x_max_rotation: float = None,
+        y_max_head_rotation: float = None,
+        random_stop_interval: int = None,
+        attack_once: bool = None,
+        hijack_mount_navigation: bool = None,
+    ) -> None:
+        """Allows a mob to make use of items with a "minecraft:kinetic_weapon" item component.
+
+        Parameters:
+        `approach_distance` : `float`, `optional`.
+            The distance to the target within which the mob begins using its kinetic weapon.
+        `reposition_distance` : `float`, `optional`.
+            The distance the mob retreats to once the target is closer than the midpoint of the item's "minecraft:kinetic_weapon" component's minimum and maximum "reach".
+        `reposition_speed_multiplier` : `float`, `optional`.
+            Multiplier applied to the mob's movement speed while repositioning.
+        `cooldown_distance` : `float`, `optional`.
+            The distance the mob retreats to after all of the item's "minecraft:kinetic_weapon" component's "max_duration" values have elapsed.
+        `cooldown_speed_multiplier` : `float`, `optional`.
+            Multiplier applied to the mob's movement speed while on cooldown.
+        `weapon_reach_multiplier` : `float`, `optional`.
+            Multiplier applied to the item's "minecraft:kinetic_weapon" component's "reach".
+        `weapon_min_speed_multiplier` : `float`, `optional`.
+            Multiplier applied to each "min_speed" and "min_relative_speed" condition in the item's "minecraft:kinetic_weapon" component.
+        `min_path_time` : `float`, `optional`.
+            Minimum base time, in seconds, before recalculating a new attack path to the target (before increases are applied).
+        `max_path_time` : `float`, `optional`.
+            Maximum base time, in seconds, before recalculating a new attack path to the target (before increases are applied).
+        `path_fail_time_increase` : `float`, `optional`.
+            Time, in seconds, added to the attack path recalculation interval when the mob cannot move along the current path.
+        `inner_boundary_time_increase` : `float`, `optional`.
+            Time, in seconds, added to the attack path recalculation interval when the target is beyond "path_inner_boundary".
+        `outer_boundary_time_increase` : `float`, `optional`.
+            Time, in seconds, added to the attack path recalculation interval when the target is beyond "path_outer_boundary".
+        `path_inner_boundary` : `float`, `optional`.
+            Distance at which to increase attack path recalculation by "inner_boundary_time_increase".
+        `path_outer_boundary` : `float`, `optional`.
+            Distance at which to increase attack path recalculation by "outer_boundary_time_increase".
+        `speed_multiplier` : `float`, `optional`.
+            Multiplier applied to the mob's movement speed when moving toward its target.
+        `require_complete_path` : `bool`, `optional`.
+            Specifies whether a full navigation path from the mob to the target is required.
+        `track_target` : `bool`, `optional`.
+            Allows the mob to track its target even if it lacks a hard-coded sensing component.
+        `cooldown_time` : `float`, `optional`.
+            Cooldown time, in seconds, between consecutive attacks.
+        `melee_fov` : `float`, `optional`.
+            Field of view, in degrees, used by the hard-coded sensing component to detect a valid attack target.
+        `x_max_rotation` : `float`, `optional`.
+            Maximum rotation, in degrees, on the X-axis while the mob is trying to look at its target.
+        `y_max_head_rotation` : `float`, `optional`.
+            Maximum rotation, in degrees, on the Y-axis while the mob is trying to look at its target.
+        `random_stop_interval` : `int`, `optional`.
+            Defines a 1-in-N chance for the mob to stop its current attack, where N equals "random_stop_interval".
+        `attack_once` : `bool`, `optional`.
+            Allows the mob to perform this melee attack behavior only once during its lifetime.
+        `hijack_mount_navigation` : `bool`, `optional`.
+            Allows a mob to override its mount's navigation behavior with the one defined by this goal.
+
+        ## Documentation reference:
+        """
+        super().__init__("behavior.use_kinetic_weapon")
+        if approach_distance is not None:
+            self._add_field("approach_distance", approach_distance)
+        if reposition_distance is not None:
+            self._add_field("reposition_distance", reposition_distance)
+        if reposition_speed_multiplier is not None:
+            self._add_field("reposition_speed_multiplier", reposition_speed_multiplier)
+        if cooldown_distance is not None:
+            self._add_field("cooldown_distance", cooldown_distance)
+        if cooldown_speed_multiplier is not None:
+            self._add_field("cooldown_speed_multiplier", cooldown_speed_multiplier)
+        if weapon_reach_multiplier is not None:
+            self._add_field("weapon_reach_multiplier", weapon_reach_multiplier)
+        if weapon_min_speed_multiplier is not None:
+            self._add_field("weapon_min_speed_multiplier", weapon_min_speed_multiplier)
+        if min_path_time is not None:
+            self._add_field("min_path_time", min_path_time)
+        if max_path_time is not None:
+            self._add_field("max_path_time", max_path_time)
+        if path_fail_time_increase is not None:
+            self._add_field("path_fail_time_increase", path_fail_time_increase)
+        if inner_boundary_time_increase is not None:
+            self._add_field(
+                "inner_boundary_time_increase", inner_boundary_time_increase
+            )
+        if outer_boundary_time_increase is not None:
+            self._add_field(
+                "outer_boundary_time_increase", outer_boundary_time_increase
+            )
+        if path_inner_boundary is not None:
+            self._add_field("path_inner_boundary", path_inner_boundary)
+        if path_outer_boundary is not None:
+            self._add_field("path_outer_boundary", path_outer_boundary)
+        if speed_multiplier is not None:
+            self._add_field("speed_multiplier", speed_multiplier)
+        if require_complete_path is not None:
+            self._add_field("require_complete_path", require_complete_path)
+        if track_target is not None:
+            self._add_field("track_target", track_target)
+        if cooldown_time is not None:
+            self._add_field("cooldown_time", cooldown_time)
+        if melee_fov is not None:
+            self._add_field("melee_fov", melee_fov)
+        if x_max_rotation is not None:
+            self._add_field("x_max_rotation", x_max_rotation)
+        if y_max_head_rotation is not None:
+            self._add_field("y_max_head_rotation", y_max_head_rotation)
+        if random_stop_interval is not None:
+            self._add_field("random_stop_interval", random_stop_interval)
+        if attack_once is not None:
+            self._add_field("attack_once", attack_once)

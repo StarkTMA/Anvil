@@ -1,20 +1,250 @@
 from math import inf
-from typing import Dict, Literal, overload
+from typing import Dict, Literal, Tuple, overload
 
 from anvil.api.actors.actors import Entity, ItemTexturesObject
 from anvil.api.core.components import _BaseComponent
-from anvil.api.core.enums import DamageCause, Effects, EnchantsSlots, ItemRarity, Slots
+from anvil.api.core.enums import DamageCause, EnchantsSlots, ItemRarity, Slots
 from anvil.api.core.textures import ItemTexturesObject
-from anvil.api.core.types import RGB, RGBA, Identifier, Seconds
+from anvil.api.core.types import RGB, RGBA, Identifier, Seconds, Tick
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
+from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.blockbench import _Blockbench
+from anvil.lib.blockbench import BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import Color, HexRGB, clamp, convert_color
-from anvil.lib.schemas import BlockDescriptor, EntityDescriptor, ItemDescriptor
+from anvil.lib.schemas import (
+    MinecraftBlockDescriptor,
+    MinecraftEntityDescriptor,
+    MinecraftItemDescriptor,
+)
 from anvil.lib.translator import AnvilTranslator
+
+
+# Require ITEM_SERVER_VERSION >= 1.21.130
+class ItemSwingSounds(_BaseComponent):
+    _identifier = "minecraft:swing_sounds"
+
+    def __init__(
+        self,
+        attack_critical_hit: str,
+        attack_hit: str,
+        attack_miss: str,
+    ) -> None:
+        """Sound played when the item is swung.
+
+        Parameters:
+            attack_critical_hit (str): Sound event played when the item is swung and a critical hit is achieved.
+            attack_hit (str): Sound event played when the item is swung and hits a target.
+            attack_miss (str): Sound event played when the item is swung and misses a target.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_sounds
+        """
+        super().__init__("swing_sounds")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
+        self._add_field("attack_critical_hit", attack_critical_hit)
+        self._add_field("attack_hit", attack_hit)
+        self._add_field("attack_miss", attack_miss)
+
+
+class ItemKineticWeapon(_BaseComponent):
+    _identifier = "minecraft:kinetic_weapon"
+
+    def __init__(
+        self,
+        reach: Tuple[float, float] = None,
+        creative_reach: Tuple[float, float] = None,
+        damage_modifier: float = 0,
+        damage_multiplier: float = 1,
+        delay: Tick = 0,
+        hitbox_margin: float = 0,
+    ) -> None:
+        """Specifies that the item is a kinetic weapon that uses kinetic energy when used.
+
+        Parameters:
+            energy_per_use (int): The amount of kinetic energy consumed per use of the weapon. Default is 100.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_kinetic_weapon
+        """
+        super().__init__("kinetic_weapon")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
+        self._require_components(ItemUseModifiers)
+
+        if reach:
+            self._add_field("reach", {"min": reach[0], "max": reach[1]})
+        if creative_reach:
+            self._add_field(
+                "creative_reach", {"min": creative_reach[0], "max": creative_reach[1]}
+            )
+        if not damage_modifier == 0:
+            self._add_field("damage_modifier", damage_modifier)
+        if not damage_multiplier == 1:
+            self._add_field("damage_multiplier", damage_multiplier)
+        if not delay == 0:
+            self._add_field("delay", delay)
+        if not hitbox_margin == 0:
+            self._add_field("hitbox_margin", hitbox_margin)
+
+    def damage_conditions(
+        self,
+        max_duration: Tick = -1,
+        min_relative_speed: float = 0.0,
+        min_speed: float = 0.0,
+    ):
+        """Conditions for applying damage when using the kinetic weapon.
+
+        Parameters:
+            max_duration (Tick): Time, in ticks, during which the effect can be applied after "delay" elapses. If negative, the effect is applied indefinitely. Default is -1.
+            min_relative_speed (float): Minimum relative speed of the user with respect to the target (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
+            min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
+        """
+        entry = {}
+        if not max_duration == -1:
+            entry["max_duration"] = max_duration
+        if not min_relative_speed == 0.0:
+            entry["min_relative_speed"] = min_relative_speed
+        if not min_speed == 0.0:
+            entry["min_speed"] = min_speed
+        self._add_field("damage_conditions", {})
+        return self
+
+    def knockback_conditions(
+        self,
+        max_duration: Tick = -1,
+        min_relative_speed: float = 0.0,
+        min_speed: float = 0.0,
+    ):
+        """Conditions for applying damage when using the kinetic weapon.
+
+        Parameters:
+            max_duration (Tick): Time, in ticks, during which the effect can be applied after "delay" elapses. If negative, the effect is applied indefinitely. Default is -1.
+            min_relative_speed (float): Minimum relative speed of the user with respect to the target (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
+            min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
+        """
+        entry = {}
+        if not max_duration == -1:
+            entry["max_duration"] = max_duration
+        if not min_relative_speed == 0.0:
+            entry["min_relative_speed"] = min_relative_speed
+        if not min_speed == 0.0:
+            entry["min_speed"] = min_speed
+        self._add_field("knockback_conditions", {})
+        return self
+
+    def dismount_conditions(
+        self,
+        max_duration: Tick = -1,
+        min_relative_speed: float = 0.0,
+        min_speed: float = 0.0,
+    ):
+        """Conditions for applying damage when using the kinetic weapon.
+
+        Parameters:
+            max_duration (Tick): Time, in ticks, during which the effect can be applied after "delay" elapses. If negative, the effect is applied indefinitely. Default is -1.
+            min_relative_speed (float): Minimum relative speed of the user with respect to the target (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
+            min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
+        """
+        entry = {}
+        if not max_duration == -1:
+            entry["max_duration"] = max_duration
+        if not min_relative_speed == 0.0:
+            entry["min_relative_speed"] = min_relative_speed
+        if not min_speed == 0.0:
+            entry["min_speed"] = min_speed
+        self._add_field("dismount_conditions", {})
+        return self
+
+
+class ItemPiercingWeapon(_BaseComponent):
+    _identifier = "minecraft:piercing_weapon"
+
+    def __init__(
+        self,
+        reach: Tuple[float, float] = None,
+        creative_reach: Tuple[float, float] = None,
+        hitbox_margin: float = 0,
+    ) -> None:
+        """Allows an item to deal damage to all entities detected in a straight line along the user's view vector. Items with this component cannot destroy blocks, as the attack action always takes priority, regardless of what the user is looking at.
+
+        Parameters:
+            reach (Tuple[float, float], optional): The minimum and maximum reach of the weapon in survival mode. If not provided, defaults to the values defined in the Kinetic Weapon component if present, or standard melee reach values otherwise.
+            creative_reach (Tuple[float, float], optional): The minimum and maximum reach of the weapon in creative mode. If not provided, defaults to the values defined in the Kinetic Weapon component if present, or standard melee reach values otherwise.
+            hitbox_margin (float): Additional margin added to the hitbox size when detecting entities along the view vector. Default is 0.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_piercing_weapon
+        """
+        super().__init__("piercing_weapon")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
+
+        if reach:
+            self._add_field("reach", {"min": reach[0], "max": reach[1]})
+        if creative_reach:
+            self._add_field(
+                "creative_reach", {"min": creative_reach[0], "max": creative_reach[1]}
+            )
+        if not hitbox_margin == 0:
+            self._add_field("hitbox_margin", hitbox_margin)
+
+
+class ItemCooldown(_BaseComponent):
+    _identifier = "minecraft:cooldown"
+
+    def __init__(
+        self, category: str, duration: Seconds, type: Literal["attack", "use"] = "use"
+    ) -> None:
+        """Sets an items "Cool down" time. After using an item, it becomes unusable for the duration specified by the 'duration' setting of this component.
+
+        Parameters:
+            category (str): The type of cool down for this item.
+            duration (float): The duration of time (in Seconds) items with a matching category will spend cooling down before becoming usable again.
+            type (Literal["attack", "use"]): The type of action the cooldown applies to. Options are mutually exclusive, so cooldown for one type of action does not affect the others. Values: "use" (when using an item), "attack" (when attack with an item). Defaults to "use".
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_cooldown
+        """
+        super().__init__("cooldown")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
+
+        self._add_field("category", category)
+        self._add_field("duration", duration)
+        if not type == "use":
+            self._add_field("type", type)
+
+
+class ItemUseModifiers(_BaseComponent):
+    _identifier = "minecraft:use_modifiers"
+
+    def __init__(
+        self,
+        use_duration: float,
+        movement_modifier: float = 1.0,
+        emit_vibrations: bool = True,
+        start_sound: str = None,
+    ) -> None:
+        """Determines how long an item takes to use in combination with components such as Shooter, Throwable, or Food.
+
+        Parameters:
+            use_duration (float): How long the item takes to use in seconds.
+            movement_modifier (float): Modifier value to scale the players movement speed when item is in use. Defaults to 1.0.
+            emit_vibrations (bool): Whether vibrations are emitted when the item starts or stops being used. Defaults to True.
+            start_sound (str): Sound event played when the item starts being used.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers?view=minecraft-bedrock-stable
+        """
+        super().__init__("use_modifiers")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
+
+        self._add_field("use_duration", clamp(use_duration, 0, inf))
+        self._add_field("movement_modifier", movement_modifier)
+        if not emit_vibrations:
+            self._add_field("emit_vibrations", emit_vibrations)
+        if start_sound:
+            self._add_field("start_sound", start_sound)
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.120
@@ -116,12 +346,12 @@ class ItemStorageItem(_BaseComponent):
         self._add_field("allow_nested_storage_items", allow_nested_storage_items)
         self._add_field("max_slots", clamp(max_slots, 1, 64))
 
-    def allowed_items(self, *items: ItemDescriptor | str):
+    def allowed_items(self, *items: MinecraftItemDescriptor | str):
         """List of items that are exclusively allowed in this Storage Item. If empty all items are allowed."""
         self._add_field("allowed_items", [str(i) for i in items])
         return self
 
-    def banned_items(self, *items: ItemDescriptor | str):
+    def banned_items(self, *items: MinecraftItemDescriptor | str):
         """List of items that are not allowed in this Storage Item."""
         self._add_field("banned_items", [str(i) for i in items])
         return self
@@ -223,7 +453,6 @@ class ItemCustomComponents(_BaseComponent):
         """
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.20")
         super().__init__(component_name, False)
-        self._set_value({"do_not_shorten": True})
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.50
@@ -234,34 +463,6 @@ class ItemTags(_BaseComponent):
         super().__init__("tags")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
         self._add_field("tags", tags)
-
-
-class ItemUseModifiers(_BaseComponent):
-    _identifier = "minecraft:use_modifiers"
-
-    def __init__(
-        self,
-        use_duration: float,
-        movement_modifier: float = 1.0,
-        emit_vibrations: bool = True,
-    ) -> None:
-        """Determines how long an item takes to use in combination with components such as Shooter, Throwable, or Food.
-
-        Parameters:
-            use_duration (float): How long the item takes to use in seconds.
-            movement_modifier (float): Modifier value to scale the players movement speed when item is in use. Defaults to 1.0.
-            emit_vibrations (bool): Whether vibrations are emitted when the item starts or stops being used. Defaults to True.
-
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers?view=minecraft-bedrock-stable
-        """
-        super().__init__("use_modifiers")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.50")
-
-        self._add_field("use_duration", clamp(use_duration, 0, inf))
-        self._add_field("movement_modifier", movement_modifier)
-        if not emit_vibrations:
-            self._add_field("emit_vibrations", emit_vibrations)
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.30
@@ -293,7 +494,7 @@ class ItemFood(_BaseComponent):
         can_always_eat: bool = False,
         nutrition: int = 0,
         saturation_modifier: float = 0,
-        using_converts_to: ItemDescriptor | Identifier = None,
+        using_converts_to: MinecraftItemDescriptor | Identifier = None,
     ) -> None:
         """Sets the item as a food component, allowing it to be edible to the player.
 
@@ -318,13 +519,13 @@ class ItemFood(_BaseComponent):
             self._add_field("using_converts_to", str(using_converts_to))
 
     def effects(
-        self, effect: Effects, chance: float, duration: Seconds, amplifier: int
+        self, effect: MinecraftEffects, chance: float, duration: Seconds, amplifier: int
     ):
         """# DEPRECATED
         Sets the effects of the food item.
 
         Parameters:
-            effect (Effects): The effect to apply.
+            effect (MinecraftEffects): The effect to apply.
             chance (float): The chance of the effect being applied.
             duration (Seconds): The duration of the effect.
             amplifier (int): The amplifier of the effect.
@@ -606,7 +807,9 @@ class ItemDamage(_BaseComponent):
 class ItemDigger(_BaseComponent):
     _identifier = "minecraft:digger"
 
-    def __init__(self, destroy_speeds: Dict[BlockDescriptor | Identifier, int]) -> None:
+    def __init__(
+        self, destroy_speeds: Dict[MinecraftBlockDescriptor | Identifier, int]
+    ) -> None:
         """Sets the item as a "Digger" item. Component put on items that dig.
 
         Parameters:
@@ -630,26 +833,6 @@ class ItemDigger(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.10
-class ItemCooldown(_BaseComponent):
-    _identifier = "minecraft:cooldown"
-
-    def __init__(self, category: str, duration: Seconds) -> None:
-        """Sets an items "Cool down" time. After using an item, it becomes unusable for the duration specified by the 'duration' setting of this component.
-
-        Parameters:
-            category (str): The type of cool down for this item.
-            duration (float): The duration of time (in Seconds) items with a matching category will spend cooling down before becoming usable again.
-
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_cooldown
-        """
-        super().__init__("cooldown")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
-
-        self._add_field("category", category)
-        self._add_field("duration", duration)
-
-
 class ItemRepairable(_BaseComponent):
     _identifier = "minecraft:repairable"
 
@@ -671,12 +854,14 @@ class ItemRepairable(_BaseComponent):
             self._add_field("on_repaired", on_repaired)
 
     def add_items(
-        self, repair_amount: Molang | int, repair_items: list[ItemDescriptor | str]
+        self,
+        repair_amount: Molang | int,
+        repair_items: list[MinecraftItemDescriptor | str],
     ):
         """
         Parameters:
             repair_amount (int): How much durability is repaired.
-            repair_items (list[ItemDescriptor | str]): List of repair item entries.
+            repair_items (list[MinecraftItemDescriptor | str]): List of repair item entries.
         """
         self._component["repair_items"].append(
             {"items": [str(i) for i in repair_items], "repair_amount": repair_amount}
@@ -706,7 +891,9 @@ class ItemBlockPlacer(_BaseComponent):
     _identifier = "minecraft:block_placer"
 
     def __init__(
-        self, block: ItemDescriptor | Identifier, replace_block_item: bool = False
+        self,
+        block: MinecraftItemDescriptor | Identifier,
+        replace_block_item: bool = False,
     ) -> None:
         """Sets the item as a Planter item component for blocks. Planter items are items that can be planted into another block.
 
@@ -811,7 +998,7 @@ class ItemProjectile(_BaseComponent):
 
     def __init__(
         self,
-        projectile_entity: EntityDescriptor | Identifier,
+        projectile_entity: MinecraftEntityDescriptor | Identifier,
         minimum_critical_power: int,
     ) -> None:
         """Compels the item to shoot, similarly to an arrow.
@@ -948,7 +1135,7 @@ class ItemFuel(_BaseComponent):
 class ItemEntityPlacer(_BaseComponent):
     _identifier = "minecraft:entity_placer"
 
-    def __init__(self, entity: EntityDescriptor | Identifier) -> None:
+    def __init__(self, entity: MinecraftEntityDescriptor | Identifier) -> None:
         """Allows an item to place entities into the world. Additionally, the component allows the item to set the spawn type of a monster spawner.
 
         Parameters:
@@ -1019,7 +1206,7 @@ class ItemIcon(_BaseComponent):
         ItemTexturesObject().add_item(
             component.color, blockbench_model, [component.color]
         )
-        self._texture_set = TextureSet(component.color, "items")
+        self._texture_set = TextureSet(component.color, BlockBenchSource.ITEM)
         if blockbench_model:
             self._texture_set.set_blockbench_textures(blockbench_model, component)
         else:

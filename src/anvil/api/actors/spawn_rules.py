@@ -6,8 +6,8 @@ from anvil.api.core.filters import Filter
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import (
     AddonObject,
-    BlockDescriptor,
     JsonSchemes,
+    MinecraftBlockDescriptor,
     MinecraftDescription,
 )
 
@@ -431,14 +431,14 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:spawns_lava": {}})
         return self
 
-    def SpawnsOnBlockFilter(self, blocks: tuple[BlockDescriptor]):
+    def SpawnsOnBlockFilter(self, blocks: tuple[MinecraftBlockDescriptor]):
         """Restricts spawning to specific block types.
 
         Entity will only spawn on top of the specified blocks. Useful for creating
         specialized spawning requirements like mushroom island mobs or desert creatures.
 
         Parameters:
-            blocks (tuple[BlockDescriptor]): Tuple of block types the entity can spawn on.
+            blocks (tuple[MinecraftBlockDescriptor]): Tuple of block types the entity can spawn on.
 
         Returns:
             _SpawnRuleCondition: Self for method chaining.
@@ -453,14 +453,14 @@ class _SpawnRuleCondition:
         ]
         return self
 
-    def SpawnsOnBlockPreventedFilter(self, blocks: tuple[BlockDescriptor]):
+    def SpawnsOnBlockPreventedFilter(self, blocks: tuple[MinecraftBlockDescriptor]):
         """Prevents spawning on specific block types.
 
         Entity will not spawn on the specified blocks, even if other conditions are met.
         Useful for preventing spawning on inappropriate surfaces.
 
         Parameters:
-            blocks (tuple[BlockDescriptor]): Tuple of block types to prevent spawning on.
+            blocks (tuple[MinecraftBlockDescriptor]): Tuple of block types to prevent spawning on.
 
         Returns:
             _SpawnRuleCondition: Self for method chaining.

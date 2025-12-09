@@ -23,13 +23,41 @@ class ReportCollector:
         self.dict = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
 
     def add_headers(self):
-        self.add_report(ReportType.SOUND, col0="Sound identifier", col1="Sounds", vanilla=False)
-        self.add_report(ReportType.ENTITY, col0="Entity Name", col1="Entity identifier", col2="Entity Events", vanilla=False)
-        self.add_report(ReportType.ATTACHABLE, col0="Attachable Name", col1="Attachable identifier", vanilla=False)
-        self.add_report(ReportType.ITEM, col0="Item Name", col1="Item identifier", vanilla=False)
-        self.add_report(ReportType.BLOCK, col0="Block Name", col1="Block identifier", col2="Block States", vanilla=False)
-        self.add_report(ReportType.PARTICLE, col0="Particle Name", col1="Particle identifier", vanilla=False)
-        self.add_report(ReportType.BIOME, col0="Biome Name", col1="Biome identifier", vanilla=False)
+        self.add_report(
+            ReportType.SOUND, col0="Sound identifier", col1="Sounds", vanilla=False
+        )
+        self.add_report(
+            ReportType.ENTITY,
+            col0="Entity Name",
+            col1="Entity identifier",
+            col2="Entity Events",
+            vanilla=False,
+        )
+        self.add_report(
+            ReportType.ATTACHABLE,
+            col0="Attachable Name",
+            col1="Attachable identifier",
+            vanilla=False,
+        )
+        self.add_report(
+            ReportType.ITEM, col0="Item Name", col1="Item identifier", vanilla=False
+        )
+        self.add_report(
+            ReportType.BLOCK,
+            col0="Block Name",
+            col1="Block identifier",
+            col2="Block States",
+            vanilla=False,
+        )
+        self.add_report(
+            ReportType.PARTICLE,
+            col0="Particle Name",
+            col1="Particle identifier",
+            vanilla=False,
+        )
+        self.add_report(
+            ReportType.BIOME, col0="Biome Name", col1="Biome identifier", vanilla=False
+        )
         return self
 
     def add_report(self, report_type: ReportType, col0, **columns):

@@ -1,6 +1,7 @@
 import os
 from typing import overload
 
+from anvil import ANVIL
 from anvil.api.actors._animations import _BPAnimations
 from anvil.api.actors._component_group import _ComponentGroup, _Components, _Properties
 from anvil.api.actors._events import _Event
@@ -15,13 +16,12 @@ from anvil.api.core.types import RGB, RGBA, Vector2D
 from anvil.api.logic.molang import Molang, Variable
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
 from anvil.api.vanilla.entities import MinecraftEntityTypes
-from anvil.lib.blockbench import _Blockbench
+from anvil.lib.blockbench import BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
     AddonObject,
-    EntityDescriptor,
     JsonSchemes,
     MinecraftDescription,
     MinecraftEntityDescriptor,
@@ -708,7 +708,7 @@ class _ActorClientDescription(_ActorDescription):
             type (str, optional): The type of the actor. Defaults to "entity".
         """
         super().__init__(name, is_vanilla)
-        if self._type not in ["entity", "attachables"]:
+        if self._type not in ["entity", "attachable"]:
             raise RuntimeError(
                 f"Invalid type '{self._type}' for actor description. Expected 'entity' or 'attachables'. Actor [{self.identifier}]"
             )
@@ -727,7 +727,7 @@ class _ActorClientDescription(_ActorDescription):
 
         self._is_dummy = False
         self._animation_controllers = _RP_AnimationControllers(self, self._name)
-        self._render_controllers = _RenderControllers(self._name)
+        self._render_controllers = _RenderControllers(self._name, self._type)
         self._texture_set: TextureSet = None
 
         self._description["description"].update(JsonSchemes.client_description())
@@ -764,7 +764,7 @@ class _ActorClientDescription(_ActorDescription):
             condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
 
         """
-        bb = _Blockbench(blockbench_name, "actors")
+        bb = _Blockbench(blockbench_name, BlockBenchSource.ACTOR)
         bb.animations.queue_animation(animation_name)
 
         self._animations(blockbench_name, animation_name, animate, condition)
@@ -796,7 +796,7 @@ class _ActorClientDescription(_ActorDescription):
             self: Returns an instance of the class.
         """
 
-        bb = _Blockbench(geometry_name, "actors")
+        bb = _Blockbench(geometry_name, BlockBenchSource.ACTOR)
         if override_bounding_box:
             bb.override_bounding_box(override_bounding_box)
         bb.model.queue_model()
@@ -837,7 +837,7 @@ class _ActorClientDescription(_ActorDescription):
             blockbench_name (str): The name of the texture.
             texture_name (str): The name of the texture.
         """
-        bb = _Blockbench(blockbench_name, "actors")
+        bb = _Blockbench(blockbench_name, BlockBenchSource.ACTOR)
         bb.textures.queue_texture(component.color)
 
         self._description["description"]["textures"].update(
@@ -854,12 +854,12 @@ class _ActorClientDescription(_ActorDescription):
         )
 
         if component.has_aux():
-            self._texture_set = TextureSet(component.color, "actors")
+            self._texture_set = TextureSet(component.color, BlockBenchSource.ACTOR)
             self._texture_set.set_blockbench_textures(blockbench_name, component)
             self._texture_set.queue()
         return self
 
-    def script(self, variable: Variable | str, *script: Molang | str):
+    def script(self, variable: Variable | Molang, *script: Molang | str):
         """This method manages the scripts for an entity.
         Parameters:
             variable (Variable | str): The variable to set the script to.
@@ -874,8 +874,9 @@ class _ActorClientDescription(_ActorDescription):
 
     def parent_setup(self, variable: Variable | str, script: Molang | str):
         """This method manages the scripts for an entity."""
+
         self._description["description"]["scripts"]["parent_setup"].append(
-            f"{variable}={script};".replace(";;", ";")
+            f"{variable}={str(script)};".replace(";;", ";")
         )
         return self
 
@@ -892,14 +893,14 @@ class _ActorClientDescription(_ActorDescription):
             )
         return self
 
-    def scale(self, scale: Molang | str = "1"):
+    def scale(self, scale: Molang | str = 1):
         """Sets the scale of the entity.
 
         Parameters:
             scale (str | Molang, optional): The scale of the entity. Defaults to "1".
         """
-        if not scale == "1":
-            self._description["description"]["scripts"].update({"scale": str(scale)})
+        if scale != 1:
+            self._description["description"]["scripts"]["scale"] = scale
 
     def should_update_bones_and_effects_offscreen(self, bool: bool = False):
         """Sets whether or not the entity should update bones and effects offscreen.
@@ -1119,10 +1120,9 @@ class _EntityClientDescription(_ActorClientDescription):
         self._spawn_egg_texture = None
         super().__init__(name, is_vanilla)
 
-    @property
-    def EnableAttachables(self):
+    def enable_attachables(self, value: bool = False):
         """This determines if the entity should render attachables such as armor."""
-        self._description["description"]["enable_attachables"] = True
+        self._description["description"]["enable_attachables"] = value
         return self
 
     @property
@@ -1181,7 +1181,7 @@ class _EntityClientDescription(_ActorClientDescription):
 class _AttachableClientDescription(_ActorClientDescription):
     """Base class for all client attachable descriptions."""
 
-    _type = "attachables"
+    _type = "attachable"
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Base class for all client attachable descriptions.
@@ -1558,7 +1558,7 @@ class _EntityClient(AddonObject):
         return super()._export()
 
 
-class Entity(EntityDescriptor):
+class Entity(MinecraftEntityDescriptor):
     def __init__(self, name, is_vanilla=False, allow_runtime=True):
         super().__init__(name, is_vanilla, allow_runtime)
 
@@ -1571,18 +1571,20 @@ class Entity(EntityDescriptor):
         display_name: str = None,
         spawn_egg_name: str = None,
     ):
-        display_name = self._display_name if display_name is None else display_name
+        self._display_name = (
+            self._display_name if display_name is None else display_name
+        )
         spawn_egg_name = (
-            f"Spawn {display_name}" if spawn_egg_name is None else spawn_egg_name
+            f"Spawn {self._display_name}" if spawn_egg_name is None else spawn_egg_name
         )
         if self._is_vanilla:
             directory = "vanilla"
 
         AnvilTranslator().add_localization_entry(
-            f"entity.{self.identifier}.name", display_name
+            f"entity.{self.identifier}.name", self._display_name
         )
         AnvilTranslator().add_localization_entry(
-            f"entity.{self.identifier}<>.name", display_name
+            f"entity.{self.identifier}<>.name", self._display_name
         )
         AnvilTranslator().add_localization_entry(
             f"item.spawn_egg.entity.{self.identifier}.name",
@@ -1590,11 +1592,13 @@ class Entity(EntityDescriptor):
         )
         self.client.queue(directory)
         self.server.queue(directory)
+        ANVIL._queue(self)
 
+    def _export(self):
         CONFIG.Report.add_report(
             ReportType.ENTITY,
             vanilla=self._is_vanilla,
-            col0=display_name,
+            col0=self._display_name,
             col1=self.identifier,
             col2=[event._event_name for event in self.server._events],
         )

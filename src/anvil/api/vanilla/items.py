@@ -633,6 +633,9 @@ class MinecraftItemTypes:
     def CalibratedSculkSensor() -> MinecraftItemDescriptor:
         return item_factory("minecraft:calibrated_sculk_sensor")
 
+    def CamelHuskSpawnEgg() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:camel_husk_spawn_egg")
+
     def CamelSpawnEgg() -> MinecraftItemDescriptor:
         return item_factory("minecraft:camel_spawn_egg")
 
@@ -936,6 +939,9 @@ class MinecraftItemTypes:
     def CopperLeggings() -> MinecraftItemDescriptor:
         return item_factory("minecraft:copper_leggings")
 
+    def CopperNautilusArmor() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:copper_nautilus_armor")
+
     def CopperNugget() -> MinecraftItemDescriptor:
         return item_factory("minecraft:copper_nugget")
 
@@ -947,6 +953,9 @@ class MinecraftItemTypes:
 
     def CopperShovel() -> MinecraftItemDescriptor:
         return item_factory("minecraft:copper_shovel")
+
+    def CopperSpear() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:copper_spear")
 
     def CopperSword() -> MinecraftItemDescriptor:
         return item_factory("minecraft:copper_sword")
@@ -1316,6 +1325,9 @@ class MinecraftItemTypes:
 
     def DiamondLeggings() -> MinecraftItemDescriptor:
         return item_factory("minecraft:diamond_leggings")
+    
+    def DiamondNautilusArmor() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:diamond_nautilus_armor")
 
     def DiamondOre() -> MinecraftItemDescriptor:
         return item_factory("minecraft:diamond_ore")
@@ -1325,6 +1337,9 @@ class MinecraftItemTypes:
 
     def DiamondShovel() -> MinecraftItemDescriptor:
         return item_factory("minecraft:diamond_shovel")
+    
+    def DiamondSpear() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:diamond_spear")
 
     def DiamondSword() -> MinecraftItemDescriptor:
         return item_factory("minecraft:diamond_sword")
@@ -1688,6 +1703,9 @@ class MinecraftItemTypes:
 
     def GoldenLeggings() -> MinecraftItemDescriptor:
         return item_factory("minecraft:golden_leggings")
+    
+    def GoldenNautilusArmor() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:golden_nautilus_armor")
 
     def GoldenPickaxe() -> MinecraftItemDescriptor:
         return item_factory("minecraft:golden_pickaxe")
@@ -1697,6 +1715,9 @@ class MinecraftItemTypes:
 
     def GoldenShovel() -> MinecraftItemDescriptor:
         return item_factory("minecraft:golden_shovel")
+    
+    def GoldenSpear() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:golden_spear")
 
     def GoldenSword() -> MinecraftItemDescriptor:
         return item_factory("minecraft:golden_sword")
@@ -1946,6 +1967,9 @@ class MinecraftItemTypes:
 
     def IronLeggings() -> MinecraftItemDescriptor:
         return item_factory("minecraft:iron_leggings")
+    
+    def IronNautilusArmor() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:iron_nautilus_armor")
 
     def IronNugget() -> MinecraftItemDescriptor:
         return item_factory("minecraft:iron_nugget")
@@ -1958,6 +1982,9 @@ class MinecraftItemTypes:
 
     def IronShovel() -> MinecraftItemDescriptor:
         return item_factory("minecraft:iron_shovel")
+    
+    def IronSpear() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:iron_spear")
 
     def IronSword() -> MinecraftItemDescriptor:
         return item_factory("minecraft:iron_sword")
@@ -2540,6 +2567,9 @@ class MinecraftItemTypes:
 
     def NautilusShell() -> MinecraftItemDescriptor:
         return item_factory("minecraft:nautilus_shell")
+    
+    def NautilusSpawnEgg() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:nautilus_spawn_egg")
 
     def NetherBrick() -> MinecraftItemDescriptor:
         return item_factory("minecraft:nether_brick")
@@ -2591,12 +2621,18 @@ class MinecraftItemTypes:
 
     def NetheriteHoe() -> MinecraftItemDescriptor:
         return item_factory("minecraft:netherite_hoe")
+    
+    def NetheriteHorseArmor() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:netherite_horse_armor")
 
     def NetheriteIngot() -> MinecraftItemDescriptor:
         return item_factory("minecraft:netherite_ingot")
 
     def NetheriteLeggings() -> MinecraftItemDescriptor:
         return item_factory("minecraft:netherite_leggings")
+    
+    def NetheriteNautilusArmor() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:netherite_nautilus_armor")
 
     def NetheritePickaxe() -> MinecraftItemDescriptor:
         return item_factory("minecraft:netherite_pickaxe")
@@ -2606,6 +2642,9 @@ class MinecraftItemTypes:
 
     def NetheriteShovel() -> MinecraftItemDescriptor:
         return item_factory("minecraft:netherite_shovel")
+    
+    def NetheriteSpear() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:netherite_spear")
 
     def NetheriteSword() -> MinecraftItemDescriptor:
         return item_factory("minecraft:netherite_sword")
@@ -2831,6 +2870,9 @@ class MinecraftItemTypes:
 
     def Paper() -> MinecraftItemDescriptor:
         return item_factory("minecraft:paper")
+    
+    def ParchedSpawnEgg() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:parched_spawn_egg")
 
     def ParrotSpawnEgg() -> MinecraftItemDescriptor:
         return item_factory("minecraft:parrot_spawn_egg")
@@ -3084,7 +3126,9 @@ class MinecraftItemTypes:
         ] = None,
     ) -> MinecraftItemDescriptor:
         if potion_addition is not None:
-            return item_factory("minecraft:potion_type").set_identifier_data(potion_addition)
+            return item_factory("minecraft:potion_type").set_identifier_data(
+                potion_addition
+            )
         return item_factory("minecraft:potion")
 
     def PowderSnowBucket() -> MinecraftItemDescriptor:
@@ -3713,6 +3757,9 @@ class MinecraftItemTypes:
 
     def StoneShovel() -> MinecraftItemDescriptor:
         return item_factory("minecraft:stone_shovel")
+    
+    def StoneSpear() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:stone_spear")
 
     def StoneStairs() -> MinecraftItemDescriptor:
         return item_factory("minecraft:stone_stairs")
@@ -4298,6 +4345,9 @@ class MinecraftItemTypes:
 
     def WoodenShovel() -> MinecraftItemDescriptor:
         return item_factory("minecraft:wooden_shovel")
+    
+    def WoodenSpear() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:wooden_spear")
 
     def WoodenSword() -> MinecraftItemDescriptor:
         return item_factory("minecraft:wooden_sword")
@@ -4352,6 +4402,9 @@ class MinecraftItemTypes:
 
     def ZombieHorseSpawnEgg() -> MinecraftItemDescriptor:
         return item_factory("minecraft:zombie_horse_spawn_egg")
+    
+    def ZombieNautilusSpawnEgg() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:zombie_nautilus_spawn_egg")
 
     def ZombiePigmanSpawnEgg() -> MinecraftItemDescriptor:
         return item_factory("minecraft:zombie_pigman_spawn_egg")

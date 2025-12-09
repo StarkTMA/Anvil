@@ -1,20 +1,17 @@
 import os
 from typing import Union, overload
 
-from anvil.api.core.enums import (
-    ExplorationMapDestinations,
-    LootPoolType,
-)
+from anvil.api.core.enums import ExplorationMapDestinations, LootPoolType
 from anvil.api.core.types import Identifier
 from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import (
     AddonObject,
-    BlockDescriptor,
-    EntityDescriptor,
-    ItemDescriptor,
     JsonSchemes,
+    MinecraftBlockDescriptor,
+    MinecraftEntityDescriptor,
+    MinecraftItemDescriptor,
 )
 
 __all__ = ["LootTable"]
@@ -289,7 +286,7 @@ class _LootPoolEntryFunctions:
         )
         return self
 
-    def SetActorId(self, actor: EntityDescriptor | Identifier | None):
+    def SetActorId(self, actor: MinecraftEntityDescriptor | Identifier | None):
         """Sets the entity ID of a spawn egg. Only works with spawn eggs.
 
         When actor is None, inherits the entity ID from the associated entity
@@ -297,7 +294,7 @@ class _LootPoolEntryFunctions:
         omitting ID with player interaction creates unusable player spawn eggs.
 
         Parameters:
-            actor (EntityDescriptor | Identifier | None): The entity identifier for the spawn egg,
+            actor (MinecraftEntityDescriptor | Identifier | None): The entity identifier for the spawn egg,
                 or None to inherit from the associated entity.
 
         Returns:
@@ -334,9 +331,7 @@ class _LootPoolEntryFunctions:
         )
         return self
 
-    def SetBookContent(
-        self, author: str, title: str, pages: list[str]
-    ):
+    def SetBookContent(self, author: str, title: str, pages: list[str]):
         """Sets the contents of a book including author, title, and pages.
 
         Can use rawtext for localization on pages only (not author/title).
@@ -659,14 +654,20 @@ class _LootPoolEntry:
 
     def __init__(
         self,
-        entry: Union[BlockDescriptor, ItemDescriptor, Identifier, "LootTable", None],
+        entry: Union[
+            MinecraftBlockDescriptor,
+            MinecraftItemDescriptor,
+            Identifier,
+            "LootTable",
+            None,
+        ],
         count: int = 1,
         weight: int = 1,
     ) -> None:
         """Initialize a loot pool entry.
 
         Parameters:
-            entry (BlockDescriptor | ItemDescriptor | Identifier | LootTable | None):
+            entry (MinecraftBlockDescriptor | MinecraftItemDescriptor | Identifier | LootTable | None):
                 The entry content (item, block, loot table, or None for empty).
             count (int, optional): Base count of items. Defaults to 1.
             weight (int, optional): Selection weight in the pool. Defaults to 1.
@@ -681,7 +682,9 @@ class _LootPoolEntry:
 
         if entry is None:
             self._LootPoolEntry["type"] = LootPoolType.Empty
-        elif isinstance(entry, (BlockDescriptor, ItemDescriptor, Identifier)):
+        elif isinstance(
+            entry, (MinecraftBlockDescriptor, MinecraftItemDescriptor, Identifier)
+        ):
             self._LootPoolEntry["type"] = LootPoolType.Item
         elif isinstance(entry, "LootTable"):
             self._LootPoolEntry["type"] = LootPoolType.LootTable
@@ -767,14 +770,20 @@ class _LootPool:
 
     def entry(
         self,
-        entry: Union[BlockDescriptor, ItemDescriptor, Identifier, "LootTable", None],
+        entry: Union[
+            MinecraftBlockDescriptor,
+            MinecraftItemDescriptor,
+            Identifier,
+            "LootTable",
+            None,
+        ],
         count: int = 1,
         weight: int = 1,
     ):
         """Add an entry to this loot pool.
 
         Parameters:
-            entry (BlockDescriptor | ItemDescriptor | Identifier | LootTable | None):
+            entry (MinecraftBlockDescriptor | MinecraftItemDescriptor | Identifier | LootTable | None):
                 The item, block, loot table, or None (for empty entry) to add.
             count (int, optional): Base count of this entry. Defaults to 1.
             weight (int, optional): Selection weight (higher = more likely). Defaults to 1.

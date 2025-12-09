@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union, overload
 
@@ -18,15 +17,15 @@ from anvil.api.core.types import Identifier
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
 from anvil.api.world.loot_tables import LootTable
-from anvil.lib.blockbench import _Blockbench
+from anvil.lib.blockbench import BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import (
     BLOCK_JSON_FORMAT_VERSION,
     BLOCK_SERVER_VERSION,
     ITEM_SERVER_VERSION,
 )
-from anvil.lib.lib import CopyFiles, FileExists, clamp
-from anvil.lib.schemas import BlockDescriptor
+from anvil.lib.lib import clamp
+from anvil.lib.schemas import MinecraftBlockDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 
@@ -167,7 +166,7 @@ class BlockMaterialInstance(_BaseComponent):
         )
 
         for vp in spec.variations:
-            self._texture_set = TextureSet(vp.color, "blocks")
+            self._texture_set = TextureSet(vp.color, BlockBenchSource.BLOCK)
             self._texture_set.set_blockbench_textures(spec.blockbench_name, vp)
             self._texture_set.queue()
 
@@ -220,7 +219,6 @@ class BlockFlowerPottable(_BaseComponent):
         """
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
         super().__init__("flower_pottable")
-        self._set_value({"do_not_shorten": True})
 
 
 class BlockEmbeddedVisual(_BaseComponent):
@@ -262,7 +260,7 @@ class BlockEmbeddedVisual(_BaseComponent):
         if blockbench_name is None:
             self._add_field("geometry", {"identifier": "minecraft:geometry.full_block"})
         else:
-            bb = _Blockbench(blockbench_name, "blocks")
+            bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
             bb.model.queue_model()
 
             self._add_field(
@@ -290,7 +288,7 @@ class BlockEmbeddedVisual(_BaseComponent):
         else:
             face_key = block_face
 
-        bb = _Blockbench(blockbench_name, "blocks")
+        bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
         bb.textures.queue_texture(texture)
 
         TerrainTexturesObject().add_block(texture, blockbench_name, [texture])
@@ -382,7 +380,7 @@ class BlockDestructionParticles(_BaseComponent):
         """
         super().__init__("destruction_particles")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.100")
-        bb = _Blockbench(blockbench_name, "blocks")
+        bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
         bb.textures.queue_texture(texture)
         self._add_field("texture", texture)
 
@@ -449,7 +447,6 @@ class BlockCustomComponents(_BaseComponent):
             https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components
         """
         super().__init__(component_name, False)
-        self._set_value({"do_not_shorten": True})
 
 
 class BlockDestructibleByExplosion(_BaseComponent):
@@ -635,7 +632,7 @@ class BlockGeometry(_BaseComponent):
             if uv_lock:
                 self._add_field("uv_lock", uv_lock)
 
-            self._bb = _Blockbench(blockbench_name, "blocks")
+            self._bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
             self._bb.model.queue_model()
 
     def bone_visibility(self, **bone: dict[str, bool | str | Molang]):
@@ -716,13 +713,13 @@ class BlockPlacementFilter(_BaseComponent):
     def add_condition(
         self,
         allowed_faces: list[BlockFaces],
-        block_filter: list[BlockDescriptor | Identifier],
+        block_filter: list[MinecraftBlockDescriptor | Identifier],
     ):
         """Adds a condition to the placement filter.
 
         Parameters:
             allowed_faces (list[BlockFaces]): The faces of the block that are allowed to be placed on.
-            block_filter (list[BlockDescriptor | str]): The blocks that are allowed to be placed on.
+            block_filter (list[MinecraftBlockDescriptor | str]): The blocks that are allowed to be placed on.
         """
         if BlockFaces.Side in allowed_faces:
             allowed_faces.remove(BlockFaces.North)
@@ -880,7 +877,7 @@ class BlockItemVisual(_BaseComponent):
         if blockbench_name is None:
             self._add_field("geometry", {"identifier": "minecraft:geometry.full_block"})
         else:
-            bb = _Blockbench(blockbench_name, "blocks")
+            bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
             bb.model.queue_model()
 
             self._add_field(
@@ -910,7 +907,7 @@ class BlockItemVisual(_BaseComponent):
         else:
             face_key = block_face
 
-        bb = _Blockbench(blockbench_name, "blocks")
+        bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
         bb.textures.queue_texture(texture)
 
         TerrainTexturesObject().add_block(texture, blockbench_name, [texture])
@@ -997,7 +994,7 @@ class BlockDestructionParticles(_BaseComponent):
         """
         super().__init__("destruction_particles")
         if texture is not None:
-            bb = _Blockbench(blockbench_name, "blocks")
+            bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
             bb.textures.queue_texture(texture)
 
             TerrainTexturesObject().add_block(texture, blockbench_name, [texture])

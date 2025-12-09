@@ -5,7 +5,12 @@ from anvil.api.core.enums import ItemCategory, RecipeUnlockContext, SmeltingTags
 from anvil.api.core.types import Identifier
 from anvil.api.items.items import Item
 from anvil.lib.config import CONFIG
-from anvil.lib.schemas import AddonObject, BlockDescriptor, ItemDescriptor, JsonSchemes
+from anvil.lib.schemas import (
+    AddonObject,
+    JsonSchemes,
+    MinecraftBlockDescriptor,
+    MinecraftItemDescriptor,
+)
 from anvil.lib.translator import AnvilTranslator
 
 
@@ -30,8 +35,8 @@ class CraftingItemCatalog(AddonObject):
         self,
         category: ItemCategory,
         group_name: str,
-        group_icon: ItemDescriptor | BlockDescriptor,
-        items_list: list[ItemDescriptor | BlockDescriptor] = [],
+        group_icon: MinecraftItemDescriptor | MinecraftBlockDescriptor,
+        items_list: list[MinecraftItemDescriptor | MinecraftBlockDescriptor] = [],
     ) -> "CraftingItemCatalog":
         """
         Adds a group to an existing category.
@@ -39,8 +44,8 @@ class CraftingItemCatalog(AddonObject):
         Parameters:
             category (ItemCategory): The category to update.
             group_name (str): The group name to add.
-            group_icon (ItemDescriptor | BlockDescriptor): The item to use as the icon for the group.
-            items_list (list[ItemDescriptor | BlockDescriptor], optional): List of items to add to the group. Defaults to an empty list.
+            group_icon (MinecraftItemDescriptor | MinecraftBlockDescriptor): The item to use as the icon for the group.
+            items_list (list[MinecraftItemDescriptor | MinecraftBlockDescriptor], optional): List of items to add to the group. Defaults to an empty list.
         """
         localized_key = f"tag.{CONFIG.NAMESPACE}:{group_name.replace(" ", "_").lower()}"
         AnvilTranslator().add_localization_entry(localized_key, group_name)
@@ -81,13 +86,15 @@ class CraftingItemCatalog(AddonObject):
         return self
 
     def add_loose_items(
-        self, category_name: ItemCategory, items: list[ItemDescriptor | BlockDescriptor]
+        self,
+        category_name: ItemCategory,
+        items: list[MinecraftItemDescriptor | MinecraftBlockDescriptor],
     ) -> "CraftingItemCatalog":
         """Adds loose items to a category.
 
         Parameters:
             category_name (ItemCategory): The category name to update.
-            items (list[ItemDescriptor | BlockDescriptor]): List of items to add to the category.
+            items (list[MinecraftItemDescriptor | MinecraftBlockDescriptor]): List of items to add to the category.
 
         Returns:
             CraftingItemCatalog: The current instance of CraftingItemCatalog.
@@ -213,7 +220,7 @@ class ShapelessRecipe(_BaseRecipe):
 
     def result(
         self,
-        item: ItemDescriptor | BlockDescriptor | Identifier,
+        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         count: int = 1,
         data: int = 0,
     ):
@@ -236,7 +243,9 @@ class StoneCutterRecipe(ShapelessRecipe):
         self.content(JsonSchemes.recipe_shapeless_crafting(self.identifier, tags))
 
     def ingredient(
-        self, item: ItemDescriptor | BlockDescriptor | Identifier, data: int = 0
+        self,
+        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
+        data: int = 0,
     ):
         return super().ingredient([(item, data)])
 
@@ -262,7 +271,13 @@ class ShapedCraftingRecipe(_BaseRecipe):
 
     def ingredients(
         self,
-        items: list[list[tuple[ItemDescriptor | BlockDescriptor | Identifier, int]]],
+        items: list[
+            list[
+                tuple[
+                    MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier, int
+                ]
+            ]
+        ],
         keep_empty_slots: bool = False,
     ) -> None:
         max_items = 9
@@ -308,7 +323,7 @@ class ShapedCraftingRecipe(_BaseRecipe):
 
     def result(
         self,
-        item: ItemDescriptor | BlockDescriptor | Identifier,
+        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         count: int = 1,
         data: int = 0,
     ):
@@ -332,11 +347,15 @@ class SmithingTrimRecipe(_BaseRecipe):
         self.content(JsonSchemes.recipe_smithing_table_trim(self.identifier, tags))
         super().__init__(name)
 
-    def base(self, item: ItemDescriptor | BlockDescriptor | Identifier):
+    def base(
+        self, item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier
+    ):
         self._content["minecraft:recipe_smithing_transform"]["base"] = item
         return self
 
-    def addition(self, item: ItemDescriptor | BlockDescriptor | Identifier):
+    def addition(
+        self, item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier
+    ):
         self._content["minecraft:recipe_smithing_transform"]["addition"] = item
         return self
 
@@ -363,16 +382,16 @@ class PotionBrewingRecipe(_BaseRecipe):
 
     def recipe(
         self,
-        item: ItemDescriptor | BlockDescriptor | Identifier,
-        reagent: ItemDescriptor | BlockDescriptor | Identifier,
-        output: ItemDescriptor | BlockDescriptor | Identifier,
+        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
+        reagent: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
+        output: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
     ):
         """Sets the recipe for the potion brewing container.
 
         Args:
-            item (ItemDescriptor | BlockDescriptor | Identifier): Input potion used in the brewing container recipe.
-            reagent (ItemDescriptor | BlockDescriptor | Identifier): ItemDescriptor | BlockDescriptor used in the brewing container recipe with the input potio
-            output (ItemDescriptor | BlockDescriptor | Identifier): Output potion from the brewing container recipe.
+            item (MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier): Input potion used in the brewing container recipe.
+            reagent (MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier): MinecraftItemDescriptor | MinecraftBlockDescriptor used in the brewing container recipe with the input potio
+            output (MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier): Output potion from the brewing container recipe.
 
         Returns:
             PotionBrewingRecipe: The current instance of PotionBrewingRecipe.
@@ -405,16 +424,16 @@ class PotionMixingRecipe(_BaseRecipe):
 
     def recipe(
         self,
-        item: ItemDescriptor | BlockDescriptor | Identifier,
-        reagent: ItemDescriptor | BlockDescriptor | Identifier,
-        output: ItemDescriptor | BlockDescriptor | Identifier,
+        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
+        reagent: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
+        output: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
     ):
         """Sets the recipe for the potion mixing.
 
         Args:
-            item (ItemDescriptor | BlockDescriptor | Identifier): Input potion used in the mixing recipe.
-            reagent (ItemDescriptor | BlockDescriptor | Identifier): ItemDescriptor | BlockDescriptor used in the mixing recipe with the input potion.
-            output (ItemDescriptor | BlockDescriptor | Identifier): Output potion from the mixing recipe.
+            item (MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier): Input potion used in the mixing recipe.
+            reagent (MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier): MinecraftItemDescriptor | MinecraftBlockDescriptor used in the mixing recipe with the input potion.
+            output (MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier): Output potion from the mixing recipe.
 
         Returns:
             PotionMixingRecipe: The current instance of PotionMixingRecipe.

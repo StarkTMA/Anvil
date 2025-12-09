@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Mapping
 
 from anvil import ANVIL
 from anvil.api.actors.actors import _Components
@@ -24,8 +24,8 @@ from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
     AddonObject,
-    BlockDescriptor,
     JsonSchemes,
+    MinecraftBlockDescriptor,
     MinecraftDescription,
 )
 from anvil.lib.translator import AnvilTranslator
@@ -49,7 +49,7 @@ class _tag:
         self._identifier = f"tag:{tag}"
         self._dependencies: List["_BaseComponent"] = []
         self._clashes: List["_BaseComponent"] = []
-        self._component: Dict[str, Any] = {f"tag:{tag}": {"do_not_shorten": True}}
+        self._component: Dict[str, Any] = {f"tag:{tag}": {}}
 
     def __iter__(self):
         """Iterates over the tag component items.
@@ -322,7 +322,7 @@ class _BlockClient(AddonObject):
 # ===========================================
 
 
-class Block(BlockDescriptor):
+class Block(MinecraftBlockDescriptor):
     _object_type = "Block"
 
     def __init__(self, name, is_vanilla=False):
@@ -332,6 +332,19 @@ class Block(BlockDescriptor):
         self.client = _BlockClient(name, is_vanilla)
 
         self._item = None
+
+    def descriptor(
+        self,
+        states: Mapping[str, str | int | float | bool] = None,
+        tags: list[str] = None,
+    ):
+        if states > 0 or tags:
+            return {
+                "name": self.identifier,
+                "states": states if states else {},
+                "tags": tags if tags else {},
+            }
+        return self.identifier
 
     @property
     def item(self):
@@ -350,12 +363,14 @@ class Block(BlockDescriptor):
         if self._item:
             self._item.queue()
 
+        ANVIL._queue(self)
+
     def _export(self):
         block_name_comp = self.server._server_block["minecraft:block"]["components"][
             BlockDisplayName._identifier
         ]
         if block_name_comp.startswith("tile."):
-            display_name = AnvilTranslator.get_localization_value(block_name_comp)
+            display_name = AnvilTranslator().get_localization_value(block_name_comp)
         else:
             display_name = block_name_comp
 

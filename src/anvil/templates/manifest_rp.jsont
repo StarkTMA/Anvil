@@ -1,11 +1,11 @@
 {
-    "format_version": 2,
+    "format_version": {{ format_version }},
     "header": {
         "description": "pack.description",
         "name": "pack.name",
         "uuid": "{{ rp_uuid }}",
         "version": "{{ version }}",
-        "min_engine_version": {{ engine_version }}
+        "min_engine_version": "{{ min_engine_version }}"
     },
     "modules": [
         { "type": "resources", "uuid": "{{ resource_module_uuid }}", "version":  "{{ version }}" }
@@ -15,5 +15,6 @@
         "authors": [
             "{{ company }}"
         ]
-    }
+    },
+    "settings": []
 }

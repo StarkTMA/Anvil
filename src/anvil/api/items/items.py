@@ -1,5 +1,6 @@
 import os
 
+from anvil import ANVIL
 from anvil.api.actors._component_group import _Components
 from anvil.api.actors.actors import Attachable
 from anvil.api.core.enums import ItemCategory, ItemGroups
@@ -8,9 +9,9 @@ from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
     AddonObject,
-    ItemDescriptor,
     JsonSchemes,
     MinecraftDescription,
+    MinecraftItemDescriptor,
 )
 from anvil.lib.translator import AnvilTranslator
 
@@ -96,7 +97,7 @@ class _ItemServer(AddonObject):
         super()._export()
 
 
-class Item(ItemDescriptor):
+class Item(MinecraftItemDescriptor):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         super().__init__(name, is_vanilla)
         self.server = _ItemServer(name, is_vanilla)
@@ -115,15 +116,17 @@ class Item(ItemDescriptor):
         if self._attachable:
             self._attachable.queue()
 
+        ANVIL._queue(self)
+
     def _export(self):
-        display_name = self.server._server_item["minecraft:item"]["components"][
+        item_name_comp = self.server._server_item["minecraft:item"]["components"][
             ItemDisplayName._identifier
         ]["value"]
 
-        if display_name.startswith("tile."):
-            display_name = AnvilTranslator.get_localization_value(display_name)
+        if item_name_comp.startswith("item."):
+            display_name = AnvilTranslator().get_localization_value(item_name_comp)
         else:
-            display_name = display_name
+            display_name = item_name_comp
 
         CONFIG.Report.add_report(
             ReportType.ITEM,

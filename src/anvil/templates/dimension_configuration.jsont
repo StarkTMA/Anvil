@@ -1,0 +1,9 @@
+{
+	"format_version": "{{ format_version }}",
+	"minecraft:dimension": {
+		"description": {
+			"identifier": "{{ identifier }}"
+		},
+		"components": {}
+	}
+}

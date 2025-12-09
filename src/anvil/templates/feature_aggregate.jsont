@@ -1,0 +1,9 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:aggregate_feature": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        },
+        "features": []
+    }
+}

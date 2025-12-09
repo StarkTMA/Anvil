@@ -47,7 +47,7 @@ from enum import StrEnum
 import click
 from PIL import Image
 
-from anvil.lib.config import ConfigPackageTarget
+from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.lib import *
 from anvil.lib.schemas import AddonObject
 
@@ -1969,7 +1969,6 @@ class _UIVariables(AddonObject):
     def __init__(self) -> None:
         """Initialize the global variables container."""
         super().__init__("_global_variables")
-        self.do_not_shorten()
 
     def add_variable(self, variable, value):
         """Add a global variable.
@@ -1997,7 +1996,6 @@ class _UIDefs(AddonObject):
     def __init__(self) -> None:
         """Initialize the UI definitions container."""
         super().__init__("_ui_defs")
-        self.do_not_shorten()
         self._files = []
 
     def add_file(self, path: str):
@@ -2051,7 +2049,6 @@ class _UIAnimation(AddonObject):
         self._content = {
             "namespace": namespace,
         }
-        self.do_not_shorten()
 
     def add_animation(self, animation_name: str):
         """Add a new animation to the collection.
@@ -2136,7 +2133,6 @@ class _UIScreen(AddonObject):
         self._ignored_title_texts = []
         self._ignored_actionbar_texts = []
         self._hides_hud = []
-        self.do_not_shorten()
 
     def add_element(
         self,
@@ -2852,7 +2848,10 @@ class UI:
             )
 
         click.echo(
-            "\r[Info]: UI is supported by Anvil but is not officially supported by Mojang. Code will very likely break in future versions of Minecraft Bedrock Edition.",
+            click.style(
+                "\r[INFO]: UI is supported by Anvil but is not officially supported by Mojang. Code will very likely break in future versions of Minecraft Bedrock Edition.",
+                fg="yellow",
+            ),
         )
 
         self._defs = _UIDefs()

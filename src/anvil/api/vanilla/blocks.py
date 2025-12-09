@@ -2591,11 +2591,6 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:coal_ore", True)
 
     @staticmethod
-    def CoarseDirt() -> MinecraftBlockDescriptor:
-        """Factory for CoarseDirt"""
-        return MinecraftBlockDescriptor("minecraft:coarse_dirt", True)
-
-    @staticmethod
     def CobbledDeepslate() -> MinecraftBlockDescriptor:
         """Factory for CobbledDeepslate"""
         return MinecraftBlockDescriptor("minecraft:cobbled_deepslate", True)
@@ -4052,9 +4047,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Dirt() -> MinecraftBlockDescriptor:
+    def Dirt(dirt_type: DirtType) -> MinecraftBlockDescriptor:
         """Factory for Dirt"""
-        return MinecraftBlockDescriptor("minecraft:dirt", True)
+        return MinecraftBlockDescriptor("minecraft:dirt", True, {_BlockStateKeys.DirtType: dirt_type})
 
     @staticmethod
     def DirtWithRoots() -> MinecraftBlockDescriptor:

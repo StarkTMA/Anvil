@@ -4,10 +4,11 @@ from typing import Literal
 from anvil.api.actors.actors import _Components
 from anvil.api.core.enums import MusicCategory, SoundCategory
 from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
-from anvil.api.core.types import RGB, Color
+from anvil.api.core.types import RGB, Color, Identifier
 from anvil.api.pbr.pbr import (
     AtmosphericSettings,
     ColorGradingSettings,
+    CubeMapSettings,
     LightingSettings,
     WaterSettings,
 )
@@ -17,8 +18,8 @@ from anvil.lib.lib import clamp, convert_color
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
     AddonObject,
-    BiomeDescriptor,
     JsonSchemes,
+    MinecraftBiomeDescriptor,
     MinecraftDescription,
 )
 
@@ -52,7 +53,7 @@ class _BiomeServer(AddonObject):
             is_vanilla (bool, optional): Whether or not the biome is a vanilla biome. Defaults to False.
         """
         super().__init__(name)
-        self._server_biome = JsonSchemes.biome_server()
+        self.content(JsonSchemes.biome_server())
         self._description = _BiomeDescription(name, is_vanilla)
         self._components = _Components()
 
@@ -68,10 +69,10 @@ class _BiomeServer(AddonObject):
 
     def queue(self):
         """Queues the biome to be exported."""
-        self._server_biome["minecraft:biome"].update(self.description._export())
-        self._server_biome["minecraft:biome"].update(self._components._export())
+        self._content["minecraft:biome"].update(self.description._export())
+        self._content["minecraft:biome"].update(self._components._export())
 
-        self.content(self._server_biome)
+        self.content(self._content)
         super().queue()
 
 
@@ -84,7 +85,7 @@ class _BiomeClient(AddonObject):
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         super().__init__(name)
-        self._server_biome = JsonSchemes.biome_client()
+        self.content(JsonSchemes.biome_client())
         self._description = _BiomeDescription(name, is_vanilla)
 
     def ambient_sounds(
@@ -343,13 +344,32 @@ class _BiomeClient(AddonObject):
             "minecraft:water_identifier"
         ] = {"water_identifier": water_identifier.identifier}
 
+    def cubemap_identifier(
+        self, cubemap_identifier: CubeMapSettings | Identifier
+    ) -> None:
+        """Set the identifier used for cube map in Vibrant Visuals mode. Identifiers must resolve to identifiers in valid Cube Map JSON schemas under the "cube_maps" directory. Biomes without this component will have default cube map settings.
+
+        Parameters:
+            cubemap_identifier (CubeMapSettings | Identifier): Identifier of cube map definition to use.
+
+        [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_cubemap_identifier)
+        """
+        if isinstance(cubemap_identifier, CubeMapSettings):
+            identifier = cubemap_identifier.identifier
+        else:
+            identifier = cubemap_identifier
+
+        self._content["minecraft:client_biome"]["components"][
+            "minecraft:cubemap_identifier"
+        ] = {"cubemap_identifier": identifier}
+
     def queue(self):
         if self._fog:
             self._fog.queue()
         return super().queue()
 
 
-class Biome(BiomeDescriptor):
+class Biome(MinecraftBiomeDescriptor):
     _object_type = "Biome"
 
     def __init__(self, name, is_vanilla=False):
@@ -357,8 +377,8 @@ class Biome(BiomeDescriptor):
         # if not CONFIG._EXPERIMENTAL:
         #    raise RuntimeError("Biome support is experimental and must be enabled in the config.")
 
-        if CONFIG.TARGET == ConfigPackageTarget.ADDON and is_vanilla:
-            raise ValueError(
+        if CONFIG._TARGET == ConfigPackageTarget.ADDON and is_vanilla:
+            raise RuntimeError(
                 "Vanilla biomes overrides cannot be used in addons, use Partial overrides instead."
             )
 

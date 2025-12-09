@@ -10,6 +10,7 @@ import zipfile
 from datetime import datetime
 
 import commentjson as commentjson
+
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 
 from ..__version__ import __version__
@@ -45,7 +46,45 @@ class PrettyPrintedEncoder(json.JSONEncoder):
         self.max_width = max_width
         self._indent_str = " " * indent
 
+    def shorten_dict(self, d):
+        """Recursively removes empty/None values from dicts and lists.
+
+        Parameters:
+            d: The dict, list, or other value to shorten.
+
+        Returns:
+            The shortened version with empty values removed.
+        """
+        if isinstance(d, dict):
+            return {
+                k: v
+                for k, v in ((k, self.shorten_dict(v)) for k, v in d.items())
+                if (
+                    all(
+                        [
+                            v != {},
+                            v != [],
+                            v != None,
+                            v != "None",
+                            v != "",
+                        ]
+                    )
+                )
+                or ":" in str(k)
+            }
+
+        elif isinstance(d, list):
+            return [v for v in map(self.shorten_dict, d) if v != []]
+
+        elif isinstance(d, str):
+            return d.replace("\\", "/").replace('"/n"', '"\\n"').replace("/n", "\n")
+
+        return d
+
     def encode(self, o, _level=0):
+        if _level == 0:
+            o = self.shorten_dict(o)
+
         if isinstance(o, (list, tuple)):
             items = [self.encode(v, _level + 1) for v in o]
             inline = f"[{', '.join(items)}]"
@@ -65,8 +104,16 @@ class PrettyPrintedEncoder(json.JSONEncoder):
             inner = ",\n".join(self._indent_str * (_level + 1) + i for i in items)
             return f"{{\n{inner}\n{self._indent_str * _level}}}"
 
+        elif o.__class__.__name__ == "MinecraftBlockDescriptor":
+            return self.encode(self.shorten_dict(o.descriptor()), _level)
+        elif o.__class__.__name__ in [
+            "MinecraftItemDescriptor",
+            "MinecraftEntityDescriptor",
+            "MinecraftBiomeDescriptor",
+        ]:
+            return self.encode(self.shorten_dict(o.identifier), _level)
         else:
-            return json.dumps(o)
+            return json.dumps(o, ensure_ascii=False)
 
 
 # --------------------------------------------------------------------------

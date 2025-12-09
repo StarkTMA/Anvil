@@ -1,9 +1,4 @@
-import json
 from enum import StrEnum
-
-from anvil.api.core.types import Coordinate, Identifier
-from anvil.lib.lib import clamp, normalize_180
-from anvil.lib.translator import AnvilTranslator
 
 
 class Target(StrEnum):
@@ -201,49 +196,6 @@ class DamageCause(StrEnum):
     Thorns = "thorns"
     Void = "void"
     Wither = "wither"
-
-
-class Effects(StrEnum):
-    """
-    Enumeration for the different types of effects in the game.
-    """
-
-    Absorption = "minecraft:absorption"
-    BadOmen = "minecraft:bad_omen"
-    Blindness = "minecraft:blindness"
-    ConduitPower = "minecraft:conduit_power"
-    Darkness = "minecraft:darkness"
-    FatalPoison = "minecraft:fatal_poison"
-    FireResistance = "minecraft:fire_resistance"
-    Haste = "minecraft:haste"
-    HealthBoost = "minecraft:health_boost"
-    Hunger = "minecraft:hunger"
-    Infested = "minecraft:infested"
-    InstantDamage = "minecraft:instant_damage"
-    InstantHealth = "minecraft:instant_health"
-    Invisibility = "minecraft:invisibility"
-    JumpBoost = "minecraft:jump_boost"
-    Levitation = "minecraft:levitation"
-    MiningFatigue = "minecraft:mining_fatigue"
-    Nausea = "minecraft:nausea"
-    NightVision = "minecraft:night_vision"
-    Oozing = "minecraft:oozing"
-    Poison = "minecraft:poison"
-    RaidOmen = "minecraft:raid_omen"
-    Regeneration = "minecraft:regeneration"
-    Resistance = "minecraft:resistance"
-    Saturation = "minecraft:saturation"
-    SlowFalling = "minecraft:slow_falling"
-    Slowness = "minecraft:slowness"
-    Speed = "minecraft:speed"
-    Strength = "minecraft:strength"
-    TrialOmen = "minecraft:trial_omen"
-    VillageHero = "minecraft:village_hero"
-    WaterBreathing = "minecraft:water_breathing"
-    Weakness = "minecraft:weakness"
-    Weaving = "minecraft:weaving"
-    WindCharged = "minecraft:wind_charged"
-    Wither = "minecraft:wither"
 
 
 class ScoreboardOperation(StrEnum):
@@ -1176,3 +1128,22 @@ class PlayerAbilities(StrEnum):
     VerticalFlySpeed = "verticalFlySpeed"
     WalkSpeed = "walkSpeed"
     Worldbuilder = "worldbuilder"
+
+
+class FeatureRulePlacementPass(StrEnum):
+    """
+    Enumeration for the different feature rule placement passes in Minecraft.
+
+    """
+
+    FirstPass = "first_pass"
+    BeforeUndergroundPass = "before_underground_pass"
+    UndergroundPass = "underground_pass"
+    AfterUndergroundPass = "after_underground_pass"
+    BeforeSurfacePass = "before_surface_pass"
+    SurfacePass = "surface_pass"
+    AfterSurfacePass = "after_surface_pass"
+    BeforeSkyPass = "before_sky_pass"
+    SkyPass = "sky_pass"
+    AfterSkyPass = "after_sky_pass"
+    FinalPass = "final_pass"

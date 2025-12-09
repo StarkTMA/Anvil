@@ -49,6 +49,9 @@ class MinecraftEntityTypes:
     def Camel() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:camel")
 
+    def CamelHusk() -> MinecraftEntityDescriptor:
+        return entity_factory("minecraft:camel_husk")
+
     def Cat() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:cat")
 
@@ -190,6 +193,9 @@ class MinecraftEntityTypes:
     def Mule() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:mule")
 
+    def Nautilus() -> MinecraftEntityDescriptor:
+        return entity_factory("minecraft:nautilus")
+
     def Npc() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:npc")
 
@@ -201,6 +207,9 @@ class MinecraftEntityTypes:
 
     def Panda() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:panda")
+
+    def Parched() -> MinecraftEntityDescriptor:
+        return entity_factory("minecraft:parched")
 
     def Parrot() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:parrot")
@@ -363,6 +372,9 @@ class MinecraftEntityTypes:
 
     def ZombieHorse() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:zombie_horse")
+
+    def ZombieNautilus() -> MinecraftEntityDescriptor:
+        return entity_factory("minecraft:zombie_nautilus")
 
     def ZombiePigman() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:zombie_pigman")
