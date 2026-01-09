@@ -18,15 +18,11 @@ class JsonSchemes:
 
     @staticmethod
     def pack_name_lang(name, description):
-        return load_file(
-            "pack_name_lang.jsont", {"name": name, "description": description}
-        ).splitlines()
+        return load_file("pack_name_lang.jsont", {"name": name, "description": description}).splitlines()
 
     @staticmethod
     def skin_pack_name_lang(name, display_name):
-        return load_file(
-            "skin_pack_name_lang.jsont", {"name": name, "display_name": display_name}
-        ).splitlines()
+        return load_file("skin_pack_name_lang.jsont", {"name": name, "display_name": display_name}).splitlines()
 
     @staticmethod
     def esbuild_config_js(outDir, minify):
@@ -75,7 +71,7 @@ class JsonSchemes:
     def manifest_world(version):
         config = CONFIG
         m = load_file(
-            "manifest_rp.jsont",
+            "manifest_world.jsont",
             {
                 "world_uuid": config._PACK_UUID,
                 "version": version,
@@ -97,9 +93,7 @@ class JsonSchemes:
 
     @staticmethod
     def skin_pack(serialize_name):
-        return load_file(
-            "skin_pack.jsont", {"serialize_name": serialize_name}, is_json=True
-        )
+        return load_file("skin_pack.jsont", {"serialize_name": serialize_name}, is_json=True)
 
     @staticmethod
     def skin_json(filename: str, is_slim: bool, free: bool):
@@ -155,9 +149,7 @@ class JsonSchemes:
 
     @staticmethod
     def materials() -> Dict:
-        return load_file(
-            "materials.jsont", {"version": MATERIALS_VERSION}, is_json=True
-        )
+        return load_file("materials.jsont", {"version": MATERIALS_VERSION}, is_json=True)
 
     @staticmethod
     def languages() -> Dict:
@@ -294,21 +286,15 @@ class JsonSchemes:
 
     @staticmethod
     def attachable():
-        return load_file(
-            "attachable.jsont", {"format_version": ENTITY_CLIENT_VERSION}, is_json=True
-        )
+        return load_file("attachable.jsont", {"format_version": ENTITY_CLIENT_VERSION}, is_json=True)
 
     @staticmethod
     def spawn_rules():
-        return load_file(
-            "spawn_rules.jsont", {"format_version": SPAWN_RULES_VERSION}, is_json=True
-        )
+        return load_file("spawn_rules.jsont", {"format_version": SPAWN_RULES_VERSION}, is_json=True)
 
     @staticmethod
     def server_block():
-        return load_file(
-            "server_block.jsont", {"format_version": BLOCK_SERVER_VERSION}, is_json=True
-        )
+        return load_file("server_block.jsont", {"format_version": BLOCK_SERVER_VERSION}, is_json=True)
 
     @staticmethod
     def terrain_texture(resource_pack_name):
@@ -324,9 +310,7 @@ class JsonSchemes:
 
     @staticmethod
     def font(font_name, font_file):
-        return load_file(
-            "font.jsont", {"font_name": font_name, "font_file": font_file}, is_json=True
-        )
+        return load_file("font.jsont", {"font_name": font_name, "font_file": font_file}, is_json=True)
 
     @staticmethod
     def fog():
@@ -334,14 +318,10 @@ class JsonSchemes:
 
     @staticmethod
     def dialogues():
-        return load_file(
-            "dialogues_json.jsont", {"format_version": DIALOGUE_VERSION}, is_json=True
-        )
+        return load_file("dialogues_json.jsont", {"format_version": DIALOGUE_VERSION}, is_json=True)
 
     @staticmethod
-    def dialogue_scene(
-        scene_tag, npc_name, text, on_open_commands, on_close_commands, buttons
-    ):
+    def dialogue_scene(scene_tag, npc_name, text, on_open_commands, on_close_commands, buttons):
         return {
             "scene_tag": scene_tag,
             "npc_name": npc_name,
@@ -357,9 +337,7 @@ class JsonSchemes:
 
     @staticmethod
     def server_item():
-        return load_file(
-            "server_item.jsont", {"format_version": ITEM_SERVER_VERSION}, is_json=True
-        )
+        return load_file("server_item.jsont", {"format_version": ITEM_SERVER_VERSION}, is_json=True)
 
     @staticmethod
     def camera_preset(identifier, inherit_from):
@@ -388,9 +366,7 @@ class JsonSchemes:
 
     @staticmethod
     def tsconstants(namespace: str, project_name: str):
-        return load_file(
-            "tsconstants.jsont", {"namespace": namespace, "project_name": project_name}
-        )
+        return load_file("tsconstants.jsont", {"namespace": namespace, "project_name": project_name})
 
     @staticmethod
     def tsconfig(out_dir):
@@ -575,9 +551,7 @@ class JsonSchemes:
 
     @staticmethod
     def aim_assist_preset(identifier: str):
-        return load_file(
-            "aim_assist_preset.jsont", {"identifier": identifier}, is_json=True
-        )
+        return load_file("aim_assist_preset.jsont", {"identifier": identifier}, is_json=True)
 
     @staticmethod
     def aim_assist_categories():
@@ -608,9 +582,7 @@ class JsonSchemes:
                 "identifier": identifier,
                 "placement_step": placement_step,
                 "start_pool_identifier": start_pool_identifier,
-                "start_jigsaw_name": (
-                    start_jigsaw_name if start_jigsaw_name is not None else {}
-                ),
+                "start_jigsaw_name": start_jigsaw_name,
                 "max_depth": max_depth,
                 "start_height": start_height,
                 "liquid_settings": liquid_settings,
@@ -625,17 +597,13 @@ class JsonSchemes:
             {
                 "format_version": JIGSAW_VERSION,
                 "identifier": identifier,
-                "fallback_identifier": (
-                    fallback_identifier if fallback_identifier else {}
-                ),
+                "fallback_identifier": fallback_identifier,
             },
             is_json=True,
         )
 
     @staticmethod
-    def jigsaw_structure_set(
-        identifier: str, separation: int, spacing: int, spread_type, placement_type
-    ):
+    def jigsaw_structure_set(identifier: str, separation: int, spacing: int, spread_type, placement_type):
         return load_file(
             "jigsaw_structure_set.jsont",
             {
@@ -713,15 +681,11 @@ class JsonSchemes:
 
     @staticmethod
     def biome_server():
-        return load_file(
-            "biome_server.jsont", {"format_version": BIOME_SERVER_VERSION}, is_json=True
-        )
+        return load_file("biome_server.jsont", {"format_version": BIOME_SERVER_VERSION}, is_json=True)
 
     @staticmethod
     def biome_client():
-        return load_file(
-            "biome_client.jsont", {"format_version": BIOME_CLIENT_VERSION}, is_json=True
-        )
+        return load_file("biome_client.jsont", {"format_version": BIOME_CLIENT_VERSION}, is_json=True)
 
     @staticmethod
     def block_culling_rules(identifier: Identifier):
@@ -773,9 +737,7 @@ class AddonDescriptor:
 
     _object_type = "addon_descriptor"
 
-    def _validate_name(
-        self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False
-    ) -> tuple[str, str]:
+    def _validate_name(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False) -> tuple[str, str]:
         """Validates the name of the Minecraft object.
 
         Parameters:
@@ -793,20 +755,12 @@ class AddonDescriptor:
             object_name = name
 
         if str(object_name)[0].isdigit():
-            raise ValueError(
-                f"Names cannot start with a digit. {object_name} at {self._object_type}[{name}]"
-            )
+            raise ValueError(f"Names cannot start with a digit. {object_name} at {self._object_type}[{name}]")
 
         if not str(object_namespace)[0].isalpha():
-            raise ValueError(
-                f"Namespaces cannot start with a digit. {self._object_type}[{name}]"
-            )
+            raise ValueError(f"Namespaces cannot start with a digit. {self._object_type}[{name}]")
 
-        if (
-            CONFIG._TARGET == ConfigPackageTarget.ADDON
-            and is_vanilla
-            and not is_vanilla_allowed
-        ):
+        if CONFIG._TARGET == ConfigPackageTarget.ADDON and is_vanilla and not is_vanilla_allowed:
             raise RuntimeError(
                 f"Overriding vanilla features is not allowed for packages of type '{CONFIG._TARGET}'. {self._object_type}[{name}]"
             )
@@ -818,9 +772,7 @@ class AddonDescriptor:
 
         return object_name, object_namespace
 
-    def __init__(
-        self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False
-    ) -> None:
+    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = False) -> None:
         """
         Constructs all the necessary attributes for the AddonObject object.
 
@@ -831,9 +783,7 @@ class AddonDescriptor:
         """
 
         self._is_vanilla = is_vanilla
-        self._name, self._namespace = self._validate_name(
-            str(name), is_vanilla, is_vanilla_allowed
-        )
+        self._name, self._namespace = self._validate_name(str(name), is_vanilla, is_vanilla_allowed)
         self._data = None
         self._display_name = self._name.replace("_", " ").title()
         self._created_from = traceback.format_stack()[:-1]
@@ -1017,18 +967,14 @@ class MinecraftBlockDescriptor(AddonDescriptor):
 class MinecraftItemDescriptor(AddonDescriptor):
     _object_type = "Item Descriptor"
 
-    def __init__(
-        self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True
-    ) -> None:
+    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
 
 
 class MinecraftBiomeDescriptor(AddonDescriptor):
     _object_type = "Biome Descriptor"
 
-    def __init__(
-        self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True
-    ) -> None:
+    def __init__(self, name: str, is_vanilla: bool = False, is_vanilla_allowed: bool = True) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
 
     def __str__(self) -> Identifier:

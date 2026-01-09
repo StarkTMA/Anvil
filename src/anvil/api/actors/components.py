@@ -27,11 +27,7 @@ from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
 from anvil.lib.lib import clamp
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
-)
+from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftEntityDescriptor, MinecraftItemDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 # Components ==========================================================================
@@ -116,7 +112,7 @@ class EntityCollisionBox(_BaseComponent):
 class EntityTypeFamily(_BaseComponent):
     _identifier = "minecraft:type_family"
 
-    def __init__(self, *family: str) -> None:
+    def __init__(self, family: list[str]) -> None:
         """Defines the families this entity belongs to."""
         super().__init__("type_family")
         self._add_field("family", family)
@@ -1248,7 +1244,7 @@ class EntityRideable(_BaseComponent):
 
         return self
 
-    def family_types(self, *families: str):
+    def family_types(self, families: list[str]):
         self._add_field("family_types", families)
         return self
 
@@ -3767,6 +3763,7 @@ class EntityLeashable(_BaseComponent):
         hard_distance: int = 6,
         max_distance: int = None,
         soft_distance: int = 4,
+        on_unleash_interact_only: bool = False,
     ) -> None:
         """Defines how this mob can be leashed to other items.
 
@@ -3776,6 +3773,7 @@ class EntityLeashable(_BaseComponent):
             hard_distance (int, optional): Distance in blocks at which the leash stiffens, restricting movement. Defaults to 6.
             max_distance (int, optional): Distance in blocks at which the leash breaks. Defaults to None.
             soft_distance (int, optional): Distance in blocks at which the 'spring' effect starts acting to keep this entity close to the entity that leashed it. Defaults to 4.
+            on_unleash_interact_only (bool, optional): When set to true, "on_unleash" does not trigger when the entity gets unleashed for reasons other than the player directly interacting with it. Defaults to False.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable
@@ -3794,6 +3792,8 @@ class EntityLeashable(_BaseComponent):
             self._add_field("max_distance", max_distance)
         if soft_distance != 4:
             self._add_field("soft_distance", soft_distance)
+        if on_unleash_interact_only:
+            self._add_field("on_unleash_interact_only", on_unleash_interact_only)
 
     def on_leash(self, event: str, target: FilterSubject = FilterSubject.Self) -> dict:
         self._add_field("on_leash", {"event": event, "target": target})
@@ -4303,7 +4303,6 @@ class EntityExhaustionValues(_BaseComponent):
             self._add_field("swim", swim)
         if not walk == 0.0:
             self._add_field("walk", walk)
-
 
 # AI Goals ==========================================================================
 

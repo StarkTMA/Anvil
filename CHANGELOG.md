@@ -81,6 +81,14 @@
 
 ---
 
+## Version 0.9.6.1
+
+### Anvil
+- Updated to support Minecraft `1.21.132` release.
+- Fixed some Jigsaw structures and sets field data types.
+
+###
+
 ## Version 0.9.6
 
 ### Anvil

@@ -1,5 +1,5 @@
 MANIFEST_VERSION: int = 3  # The manifest version.
-MANIFEST_BUILD: str = "1.21.130"  # The build version of the manifest.
+MANIFEST_BUILD: str = "1.21.132"  # The build version of the manifest.
 BLOCK_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the block server.
 ENTITY_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = MANIFEST_BUILD  # The version of the entity client.

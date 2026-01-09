@@ -1,3 +1,6 @@
+import base64
+import io
+import math
 import os
 import traceback as tb
 import zipfile
@@ -6,28 +9,13 @@ from typing import Literal, Optional
 import click
 from halo import Halo
 from PIL import Image
-import base64   
-import io
 
 from anvil.api.actors.materials import MaterialsObject
-from anvil.api.core.sounds import (
-    BlocksJSONObject,
-    MusicDefinition,
-    SoundDefinition,
-    SoundEvent,
-)
-from anvil.api.core.textures import (
-    FlipBookTexturesObject,
-    ItemTexturesObject,
-    TerrainTexturesObject,
-)
+from anvil.api.core.sounds import BlocksJSONObject, MusicDefinition, SoundDefinition, SoundEvent
+from anvil.api.core.textures import FlipBookTexturesObject, ItemTexturesObject, TerrainTexturesObject
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG, ConfigPackageTarget, _AnvilConfig
-from anvil.lib.format_versions import (
-    MANIFEST_VERSION,
-    MODULE_MINECRAFT_SERVER,
-    MODULE_MINECRAFT_SERVER_UI,
-)
+from anvil.lib.format_versions import MANIFEST_VERSION, MODULE_MINECRAFT_SERVER, MODULE_MINECRAFT_SERVER_UI
 from anvil.lib.lib import (
     CreateDirectory,
     File,
@@ -65,12 +53,11 @@ def resize(
         quality=quality,
     )
 
+
 def extract_world_pack(extract_world: str | None = None):
     if extract_world != None and type(extract_world) is str:
         RemoveDirectory(CONFIG._WORLD_PATH)
-        with zipfile.ZipFile(
-            os.path.join("world", f"{extract_world}.mcworld"), "r"
-        ) as zip_ref:
+        with zipfile.ZipFile(os.path.join("world", f"{extract_world}.mcworld"), "r") as zip_ref:
             zip_ref.extractall(CONFIG._WORLD_PATH)
 
 
@@ -79,7 +66,7 @@ def manifests(extract_world: str | None = None):
     if extract_world != None and type(extract_world) is str:
         File(
             "manifest.json",
-            JsonSchemes.manifest_world(version=release_list),
+            JsonSchemes.manifest_world(release_list),
             CONFIG._WORLD_PATH,
             "w",
         )
@@ -161,6 +148,7 @@ def addon_object_exception(object: AddonObject, e: Exception):
         ),
         err=True,
     )
+    click.echo(click.style(f"\rObject Content: {object._content}", fg="yellow"), err=True)
     click.echo(click.style(f"\rError Message: {str(e)}", fg="red"), err=True)
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
 
@@ -221,13 +209,15 @@ def process_art(
             )
 
         else:
-            raise FileNotFoundError(
-                "keyart.png not found in marketing directory. Please ensure the file exists."
-            )
+            raise FileNotFoundError("keyart.png not found in marketing directory. Please ensure the file exists.")
 
         if FileExists(os.path.join(source, "panorama.png")):
             original = Image.open(os.path.join(source, "panorama.png"))
             scale_factor = 450 / original.size[1]
+            if (round(original.size[0] * scale_factor)) > 4000:
+                raise RuntimeError(
+                    f"panorama.png width exceeds 4000 pixels when resized to 450 pixels in height. Please use a smaller image. The recommended original size for this image would be {math.floor(4000 / scale_factor)}x450 pixels."
+                )
 
             resize(
                 original,
@@ -249,9 +239,7 @@ def process_art(
         for i in range(999):
             if not FileExists(os.path.join(source, f"{i}.png")):
                 if i < 5:
-                    raise FileNotFoundError(
-                        f"{i}.png not found in marketing directory. Please ensure the file exists."
-                    )
+                    raise FileNotFoundError(f"{i}.png not found in marketing directory. Please ensure the file exists.")
                 break
             else:
                 original = Image.open(os.path.join(source, f"{i}.png"))
@@ -285,9 +273,7 @@ def process_art(
             )
 
         else:
-            raise FileNotFoundError(
-                "partner_art.png not found in marketing directory. Please ensure the file exists."
-            )
+            raise FileNotFoundError("partner_art.png not found in marketing directory. Please ensure the file exists.")
 
         if FileExists(os.path.join(source, "pack_icon.png")):
             original = Image.open(os.path.join(source, "pack_icon.png"))
@@ -298,9 +284,7 @@ def process_art(
                 pack_icon_size,
             )
         else:
-            raise FileNotFoundError(
-                "pack_icon.png not found in marketing directory. Please ensure the file exists."
-            )
+            raise FileNotFoundError("pack_icon.png not found in marketing directory. Please ensure the file exists.")
 
 
 @Halo(text="Generating technical notes", spinner="dots")
@@ -310,13 +294,7 @@ def generate_technical_notes_pdf(config: _AnvilConfig):
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib.units import cm
-    from reportlab.platypus import (
-        Paragraph,
-        SimpleDocTemplate,
-        Spacer,
-        Table,
-        TableStyle,
-    )
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
     def add_table(section_name: str, data: dict[bool, set[str]]):
         title_style.spaceBefore = 0
@@ -355,9 +333,7 @@ def generate_technical_notes_pdf(config: _AnvilConfig):
             ("GRID", (0, 0), (-1, -1), 1, colors.black),
         ]
         for row in vanilla_true_rows:
-            style_commands.append(
-                ("BACKGROUND", (0, row), (-1, row), colors.lightgreen)
-            )
+            style_commands.append(("BACKGROUND", (0, row), (-1, row), colors.lightgreen))
         table.setStyle(TableStyle(style_commands))
 
         return title, Spacer(1, 0.3 * cm), table, Spacer(1, 1 * cm)
@@ -382,7 +358,10 @@ def generate_technical_notes_pdf(config: _AnvilConfig):
     elements = [
         Paragraph(f"{config.DISPLAY_NAME}:", title_style),
         Paragraph(f"Developed by: {config.COMPANY}", body_style),
-        Paragraph(f"Generated with StarkTMA/Anvil {__version__}", body_style),
+        Paragraph(
+            f'Generated with <a href="https://github.com/StarkTMA/Anvil"><u><font color="blue">StarkTMA/Anvil {__version__}</font></u></a>',
+            body_style,
+        ),
         Spacer(1, 1 * cm),
         Paragraph("General information:", title_style),
         Paragraph(
@@ -451,35 +430,23 @@ def package_zip_core(
                     "behavior_packs",
                     f"BP_{config._PASCAL_PROJECT_NAME}",
                 ),
-                os.path.join(config._WORLD_PATH, "texts"): os.path.join(
-                    "Content", "world_template", "texts"
-                ),
-                os.path.join(config._WORLD_PATH, "level.dat"): os.path.join(
+                os.path.join(config._WORLD_PATH, "texts"): os.path.join("Content", "world_template", "texts"),
+                os.path.join(config._WORLD_PATH, "level.dat"): os.path.join("Content", "world_template"),
+                os.path.join(config._WORLD_PATH, "levelname.txt"): os.path.join("Content", "world_template"),
+                os.path.join(config._WORLD_PATH, "manifest.json"): os.path.join("Content", "world_template"),
+                os.path.join(config._WORLD_PATH, "world_icon.jpeg"): os.path.join("Content", "world_template"),
+                os.path.join(config._WORLD_PATH, "world_behavior_packs.json"): os.path.join(
                     "Content", "world_template"
                 ),
-                os.path.join(config._WORLD_PATH, "levelname.txt"): os.path.join(
+                os.path.join(config._WORLD_PATH, "world_resource_packs.json"): os.path.join(
                     "Content", "world_template"
                 ),
-                os.path.join(config._WORLD_PATH, "manifest.json"): os.path.join(
-                    "Content", "world_template"
-                ),
-                os.path.join(config._WORLD_PATH, "world_icon.jpeg"): os.path.join(
-                    "Content", "world_template"
-                ),
-                os.path.join(
-                    config._WORLD_PATH, "world_behavior_packs.json"
-                ): os.path.join("Content", "world_template"),
-                os.path.join(
-                    config._WORLD_PATH, "world_resource_packs.json"
-                ): os.path.join("Content", "world_template"),
             }
         )
         if not config._RANDOM_SEED:
             content_structure.update(
                 {
-                    os.path.join(config._WORLD_PATH, "db"): os.path.join(
-                        "Content", "world_template", "db"
-                    ),
+                    os.path.join(config._WORLD_PATH, "db"): os.path.join("Content", "world_template", "db"),
                 }
             )
 
@@ -586,8 +553,7 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None):
 
     if CONFIG._SCRIPT_API:
         process_subcommand(
-            CONFIG._SCRIPT_BUNDLE_SCRIPT
-            + f' --outdir="{os.path.join(CONFIG.BP_PATH, "scripts")}"',
+            CONFIG._SCRIPT_BUNDLE_SCRIPT + f' --outdir="{os.path.join(CONFIG.BP_PATH, "scripts")}"',
             "Building scripts error",
         )
 
@@ -612,7 +578,6 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None):
 
         resize(placeholder_image, "pack_icon.png", CONFIG.BP_PATH, pack_icon_size)
         resize(placeholder_image, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
-
 
     anvil._compiled = True
 
@@ -678,6 +643,8 @@ class ManifestBP(AddonObject):
     @property
     def settings(self) -> "_ManifestSettings":
         """Returns a Manifest Settings object to add settings to the manifest."""
+        if not CONFIG._PREVIEW:
+            raise RuntimeError("Behaviour Pack Settings are currently only supported in current preview builds.")
         return _ManifestSettings(self)
 
     def queue(self):
@@ -715,9 +682,7 @@ class ManifestBP(AddonObject):
 class _ManifestSettings:
     def __init__(self, manifest: ManifestRP | ManifestBP):
         if MANIFEST_VERSION < 3:
-            raise RuntimeError(
-                "Settings labels are only supported in manifest version 3 and above."
-            )
+            raise RuntimeError("Settings labels are only supported in manifest version 3 and above.")
         self.manifest = manifest
 
         # Initialize settings in _content if not present
@@ -751,9 +716,7 @@ class _ManifestSettings:
             raise ValueError(f"Step value '{step}' must be greater than 0.")
 
         if not (min <= default <= max):
-            raise ValueError(
-                f"Default value '{default}' must be between min '{min}' and max '{max}'."
-            )
+            raise ValueError(f"Default value '{default}' must be between min '{min}' and max '{max}'.")
 
         if id in self.manifest._setting_ids:
             raise ValueError(f"Setting ID '{id}' is already used.")
@@ -788,11 +751,7 @@ class _ManifestSettings:
                 "type": "dropdown",
                 "name": f"{CONFIG.NAMESPACE}:{id}",
                 "text": text,
-                "options": [
-                    {"name": k, "text": v}
-                    for option in options
-                    for k, v in option.items()
-                ],
+                "options": [{"name": k, "text": v} for option in options for k, v in option.items()],
                 "default": default,
             }
         )

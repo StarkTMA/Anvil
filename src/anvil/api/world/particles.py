@@ -32,21 +32,14 @@ class Particle(AddonObject):
         self._texture_set: TextureSet = None
         self._color_texture = component.color
 
-        if not FileExists(
-            os.path.join("assets", "particles", f"{self._name}.particle.json")
-        ):
+        if not FileExists(os.path.join("assets", "particles", f"{self._name}.particle.json")):
             raise FileNotFoundError(
                 f"Particle file '{self._name}.particle.json' does not exist in 'assets/particles'. {self._object_type}[{self._name}]"
             )
 
-        with open(
-            os.path.join("assets", "particles", f"{self._name}.particle.json"), "r"
-        ) as file:
+        with open(os.path.join("assets", "particles", f"{self._name}.particle.json"), "r") as file:
             self._content = json.loads(file.read())
-            if (
-                self._content["particle_effect"]["description"]["identifier"]
-                != self._name
-            ):
+            if self._content["particle_effect"]["description"]["identifier"] != self._name:
                 raise ValueError(
                     f"Particle identifier mismatch: expected '{self._name}', got '{self._content['particle_effect']['description']['identifier']}'"
                 )
@@ -54,18 +47,15 @@ class Particle(AddonObject):
         self._texture_set = TextureSet(self._color_texture, "particle")
         self._texture_set.set_particle_textures(component)
 
-        self._content["particle_effect"]["description"]["basic_render_parameters"][
-            "texture"
-        ] = os.path.join(
+        self._content["particle_effect"]["description"]["basic_render_parameters"]["texture"] = os.path.join(
             "textures",
             CONFIG.NAMESPACE,
             CONFIG.PROJECT_NAME,
             "particle",
             self._color_texture,
         )
-        self._content["particle_effect"]["description"][
-            "identifier"
-        ] = f"{CONFIG.NAMESPACE}:{self._name}"
+
+        self._content["particle_effect"]["description"]["identifier"] = f"{CONFIG.NAMESPACE}:{self._name}"
 
     def queue(self):
         CONFIG.Report.add_report(

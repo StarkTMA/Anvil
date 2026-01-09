@@ -18,12 +18,8 @@ from ..__version__ import __version__
 APPDATA: str = os.getenv("APPDATA")
 APPDATA_LOCAL: str = os.getenv("LOCALAPPDATA")
 
-RELEASE_COM_MOJANG = os.path.join(
-    APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang"
-)
-PREVIEW_COM_MOJANG = os.path.join(
-    APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang"
-)
+RELEASE_COM_MOJANG = os.path.join(APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang")
+PREVIEW_COM_MOJANG = os.path.join(APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang")
 
 DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")
 MOLANG_PREFIXES = (
@@ -77,7 +73,7 @@ class PrettyPrintedEncoder(json.JSONEncoder):
             return [v for v in map(self.shorten_dict, d) if v != []]
 
         elif isinstance(d, str):
-            return d.replace("\\", "/").replace('"/n"', '"\\n"').replace("/n", "\n")
+            return d.replace("\\", "/")
 
         return d
 
@@ -94,10 +90,7 @@ class PrettyPrintedEncoder(json.JSONEncoder):
             return f"[\n{inner}\n{self._indent_str * _level}]"
 
         elif isinstance(o, dict):
-            items = [
-                f"{json.dumps(str(k))}: {self.encode(v, _level + 1)}"
-                for k, v in o.items()
-            ]
+            items = [f"{json.dumps(str(k))}: {self.encode(v, _level + 1)}" for k, v in o.items()]
             inline = f"{{ {', '.join(items)} }}"
             if len(inline) <= self.max_width - _level * self.indent:
                 return inline
@@ -211,13 +204,9 @@ def CopyFiles(old_dir: str, new_dir: str, target_file: str, rename: str = None) 
     """
     CreateDirectory(new_dir)
     if rename is None:
-        shutil.copyfile(
-            os.path.join(old_dir, target_file), os.path.join(new_dir, target_file)
-        )
+        shutil.copyfile(os.path.join(old_dir, target_file), os.path.join(new_dir, target_file))
     else:
-        shutil.copyfile(
-            os.path.join(old_dir, target_file), os.path.join(new_dir, rename)
-        )
+        shutil.copyfile(os.path.join(old_dir, target_file), os.path.join(new_dir, rename))
 
 
 def CopyFolder(old_dir: str, new_dir: str) -> None:
@@ -229,9 +218,7 @@ def CopyFolder(old_dir: str, new_dir: str) -> None:
         new_dir (str): The path to the destination directory.
     """
     CreateDirectory(new_dir)
-    shutil.copytree(
-        os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True
-    )
+    shutil.copytree(os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True)
 
 
 def MoveFolder(old_dir: str, new_dir: str) -> None:
@@ -270,17 +257,13 @@ def zipit(zip_name, dir_list: dict) -> None:
                         os.path.join(root, file),
                         os.path.join(
                             target,
-                            os.path.relpath(
-                                os.path.join(root, file), os.path.join(source, ".")
-                            ),
+                            os.path.relpath(os.path.join(root, file), os.path.join(source, ".")),
                         ),
                     )
         else:
             ziph.write(
                 source,
-                os.path.relpath(
-                    os.path.join(target, source), os.path.join(source, "..")
-                ),
+                os.path.relpath(os.path.join(target, source), os.path.join(source, "..")),
             )
 
     zipf = zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED)
@@ -329,18 +312,14 @@ def File(
     out_content = ""
     file_content = content
     stamp = f"Generated with StarkTMA/Anvil {__version__}"
-    time = datetime.now(datetime.now().astimezone().tzinfo).strftime(
-        "%d-%m-%Y %H:%M:%S %z"
-    )
+    time = datetime.now(datetime.now().astimezone().tzinfo).strftime("%d-%m-%Y %H:%M:%S %z")
     copyright = f"Property of {Config().get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY)}"
     path = os.path.normpath(os.path.join(directory, name))
     oneline = Config().get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)
     if mode == "w":
         match type:
             case "json" | "material" | "code-workspace":
-                out_content = (
-                    f"//Filename: {name}\n//{stamp}\n//{time}\n//{copyright}\n\n"
-                )
+                out_content = f"//Filename: {name}\n//{stamp}\n//{time}\n//{copyright}\n\n"
                 file_content = json.dumps(
                     content,
                     sort_keys=False,
@@ -351,9 +330,7 @@ def File(
             case "py" | "mcfunction":
                 out_content = f"#Filename: {name}\n#{stamp}\n#{time}\n#{copyright}\n\n"
             case "lang":
-                out_content = (
-                    f"##Filename: {name}\n##{stamp}\n##{time}\n##{copyright}\n\n"
-                )
+                out_content = f"##Filename: {name}\n##{stamp}\n##{time}\n##{copyright}\n\n"
     if skip_tag:
         out_content = file_content
     else:
@@ -376,9 +353,7 @@ def process_subcommand(command: str, error_handle: str = "Error"):
         print(f"{error_handle}: {e}")
 
 
-def validate_namespace_project_name(
-    namespace: str, project_name: str, is_addon: bool = False
-):
+def validate_namespace_project_name(namespace: str, project_name: str, is_addon: bool = False):
     """Validates namespace and project name according to Minecraft addon requirements.
 
     Args:
@@ -397,9 +372,7 @@ def validate_namespace_project_name(
         )
 
     if len(namespace) > 8:
-        raise ValueError(
-            f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long."
-        )
+        raise ValueError(f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long.")
 
     if len(project_name) > 16:
         raise ValueError(
@@ -408,9 +381,7 @@ def validate_namespace_project_name(
 
     if is_addon:
         if not namespace.endswith(f"_{pascal_project_name.lower()}"):
-            raise ValueError(
-                f"Every namespace must be unique to the pack. For this pack it should be {namespace}."
-            )
+            raise ValueError(f"Every namespace must be unique to the pack. For this pack it should be {namespace}.")
 
 
 def salt_from_str(s: str) -> int:
@@ -497,9 +468,7 @@ def convert_color(
             raise ValueError("Color tuple/list must have 3 (RGB) or 4 (RGBA) elements")
         is_str = False
     else:
-        raise TypeError(
-            f"Unsupported color type: {type(color).__name__}. Expected str, tuple, or list."
-        )
+        raise TypeError(f"Unsupported color type: {type(color).__name__}. Expected str, tuple, or list.")
 
     # Determine target from source if not specified
     if target is None:
@@ -508,11 +477,7 @@ def convert_color(
         else:
             max_val = max(color[:3])
             has_alpha = len(color) == 4
-            target = (
-                RGBA255
-                if has_alpha and max_val > 1.0
-                else RGB255 if max_val > 1.0 else RGBA if has_alpha else RGB
-            )
+            target = RGBA255 if has_alpha and max_val > 1.0 else RGB255 if max_val > 1.0 else RGBA if has_alpha else RGB
 
     # Parse input color to normalized RGBA (0-1 range with alpha)
     if is_str:

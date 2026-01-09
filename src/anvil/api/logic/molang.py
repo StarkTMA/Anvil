@@ -388,9 +388,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        state = (
-            f"{state}" if isinstance(state, StrEnum) else f"{CONFIG.NAMESPACE}:{state}"
-        )
+        state = f"{state}" if isinstance(state, StrEnum) else f"{CONFIG.NAMESPACE}:{state}"
         return self._query(self, self.handle, "block_state", state)
 
     @classmethod
@@ -404,9 +402,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "property", f"{CONFIG.NAMESPACE}:{property}"
-        )
+        return self._query(self, self.handle, "property", f"{CONFIG.NAMESPACE}:{property}")
 
     @classmethod
     def HasProperty(self, property: str):
@@ -418,9 +414,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "has_property", f"{CONFIG.NAMESPACE}:{property}"
-        )
+        return self._query(self, self.handle, "has_property", f"{CONFIG.NAMESPACE}:{property}")
 
     @classmethod
     def Blocking(self):
@@ -754,9 +748,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "equipped_item_is_attachable", clamp(hand, 0, 1)
-        )
+        return self._query(self, self.handle, "equipped_item_is_attachable", clamp(hand, 0, 1))
 
     @classmethod
     def EyeTargetXRotation(self):
@@ -829,9 +821,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "get_equipped_item_name", clamp(hand_slot, 0, 1), index
-        )
+        return self._query(self, self.handle, "get_equipped_item_name", clamp(hand_slot, 0, 1), index)
 
     # More info needed
     @classmethod
@@ -919,9 +909,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "has_block_state", f"{CONFIG.NAMESPACE}:{state}"
-        )
+        return self._query(self, self.handle, "has_block_state", f"{CONFIG.NAMESPACE}:{state}")
 
     @classmethod
     def HasCape(self):
@@ -1961,9 +1949,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "item_remaining_use_duration", clamp(hand, 0, 1)
-        )
+        return self._query(self, self.handle, "item_remaining_use_duration", clamp(hand, 0, 1))
 
     @classmethod
     def ItemSlotToBoneName(self, slot: Slots):
@@ -2690,9 +2676,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "is_cooldown_category", cooldown_name, slot, slot_id
-        )
+        return self._query(self, self.handle, "is_cooldown_category", cooldown_name, slot, slot_id)
 
     @classmethod
     def CooldownTime(self, slot: Slots, slot_id: int = 0):
@@ -2739,9 +2723,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "relative_block_has_any_tags", x, y, z, *tags
-        )
+        return self._query(self, self.handle, "relative_block_has_any_tags", x, y, z, *tags)
 
     @classmethod
     def RelativeBlockHasAllTags(self, x: int, y: int, z: int, *tags: str):
@@ -2750,9 +2732,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "relative_block_has_all_tags", x, y, z, *tags
-        )
+        return self._query(self, self.handle, "relative_block_has_all_tags", x, y, z, *tags)
 
     @classmethod
     def BlockNeighborHasAnyTags(self, x: int, y: int, z: int, *tags: str):
@@ -2761,9 +2741,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "block_neighbor_has_any_tags", x, y, z, *tags
-        )
+        return self._query(self, self.handle, "block_neighbor_has_any_tags", x, y, z, *tags)
 
     @classmethod
     def BlockNeighborHasAllTags(self, x: int, y: int, z: int, *tags: str):
@@ -2772,9 +2750,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "block_neighbor_has_all_tags", x, y, z, *tags
-        )
+        return self._query(self, self.handle, "block_neighbor_has_all_tags", x, y, z, *tags)
 
     @classmethod
     def BlockHasAllTags(self, x: int, y: int, z: int, *tags: str):
@@ -2983,16 +2959,12 @@ class Query(Molang):
             Molang(Molang): A Molang Instance representing a numerical value of the slider.
         """
         if MANIFEST_VERSION < 3:
-            raise ValueError(
-                "Pack Settings are not supported in Manifest Version below 3."
-            )
+            raise ValueError("Pack Settings are not supported in Manifest Version below 3.")
 
         from anvil.api.core.core import ManifestRP
 
         settings_list = ManifestRP()._content.get("settings", [])
-        slider_ids = [
-            slider["name"] for slider in settings_list if slider.get("type") == "slider"
-        ]
+        slider_ids = [slider["name"] for slider in settings_list if slider.get("type") == "slider"]
 
         if f"{CONFIG.NAMESPACE}:{id}" not in slider_ids:
             raise ValueError(
@@ -3014,16 +2986,12 @@ class Query(Molang):
             Molang(Molang): A Molang Instance representing a boolean value of the toggle.
         """
         if MANIFEST_VERSION < 3:
-            raise ValueError(
-                "Pack Settings are not supported in Manifest Version below 3."
-            )
+            raise ValueError("Pack Settings are not supported in Manifest Version below 3.")
 
         from anvil.api.core.core import ManifestRP
 
         settings_list = ManifestRP()._content.get("settings", [])
-        toggle_ids = [
-            toggle["name"] for toggle in settings_list if toggle.get("type") == "toggle"
-        ]
+        toggle_ids = [toggle["name"] for toggle in settings_list if toggle.get("type") == "toggle"]
 
         if f"{CONFIG.NAMESPACE}:{id}" not in toggle_ids:
             raise ValueError(
@@ -3047,20 +3015,13 @@ class Query(Molang):
         """
 
         if MANIFEST_VERSION < 3:
-            raise ValueError(
-                "Pack Settings are not supported in Manifest Version below 3."
-            )
+            raise ValueError("Pack Settings are not supported in Manifest Version below 3.")
 
         from anvil.api.core.core import ManifestRP
 
         settings_list = ManifestRP()._content.get("settings", [])
         dropdown = next(
-            (
-                d
-                for d in settings_list
-                if d.get("type") == "dropdown"
-                and d["name"] == f"{CONFIG.NAMESPACE}:{id}"
-            ),
+            (d for d in settings_list if d.get("type") == "dropdown" and d["name"] == f"{CONFIG.NAMESPACE}:{id}"),
             None,
         )
 
@@ -3096,17 +3057,13 @@ class Query(Molang):
         return self._query(self, self.handle, "entity_biome_has_any_tags", *tags)
 
     @classmethod
-    def EntityBiomeHasAnyIdentifier(
-        self, identifiers: tuple[MinecraftBiomeDescriptor | str]
-    ):
+    def EntityBiomeHasAnyIdentifier(self, identifiers: tuple[MinecraftBiomeDescriptor | str]):
         """Takes one or more biome identifiers or MinecraftBiomeDescriptor instances, and returns either 0 or 1 based on if the biome the entity is currently in matches any of the identifiers provided.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
-            self, self.handle, "entity_biome_has_any_identifier", *identifiers
-        )
+        return self._query(self, self.handle, "entity_biome_has_any_identifier", *identifiers)
 
     @classmethod
     def GetKineticItemDelay(self):
@@ -3201,9 +3158,7 @@ class Context(Query):
     @classmethod
     def OwningEntity(self, molang: Optional[Molang]):
         if molang:
-            return Molang(
-                f"({self._query(self, self.handle, "owning_entity")} -> {molang})"
-            )
+            return Molang(f"({self._query(self, self.handle, "owning_entity")} -> {molang})")
         return Molang._query(self, self.handle, "owning_entity")
 
 
@@ -3487,7 +3442,7 @@ class Math(Molang):
 
 
 def molang_conditions(condition, expression, expression2):
-    return Molang(f"{condition} ? {expression} : ({expression2})")
+    return Molang(f"({condition} ? {expression} : ({expression2}))")
 
 
 def arrow_operator(left, right):

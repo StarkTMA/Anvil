@@ -4047,7 +4047,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Dirt(dirt_type: DirtType) -> MinecraftBlockDescriptor:
+    def Dirt(dirt_type: DirtType | None = None) -> MinecraftBlockDescriptor:
         """Factory for Dirt"""
         return MinecraftBlockDescriptor("minecraft:dirt", True, {_BlockStateKeys.DirtType: dirt_type})
 
