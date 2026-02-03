@@ -7,12 +7,7 @@ from anvil.api.core.enums import ItemCategory, ItemGroups
 from anvil.api.items.components import ItemDisplayName
 from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (
-    AddonObject,
-    JsonSchemes,
-    MinecraftDescription,
-    MinecraftItemDescriptor,
-)
+from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription, MinecraftItemDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["Item"]
@@ -44,9 +39,7 @@ class _ItemServerDescription(MinecraftDescription):
         self._description["description"]["menu_category"]["category"] = (
             str(category) if not category == ItemCategory.none else {}
         )
-        self._description["description"]["menu_category"]["group"] = (
-            str(group) if not group == ItemGroups.none else {}
-        )
+        self._description["description"]["menu_category"]["group"] = str(group) if not group == ItemGroups.none else {}
         self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
             is_hidden_in_commands if is_hidden_in_commands else {}
         )
@@ -79,14 +72,12 @@ class _ItemServer(AddonObject):
         from anvil.api.items.components import ItemDisplayName
 
         self._server_item["minecraft:item"].update(self.description._export())
-        self._server_item["minecraft:item"]["components"].update(
-            self._components._export()["components"]
-        )
+        self._server_item["minecraft:item"]["components"].update(self._components._export()["components"])
 
         if not self._components._has(ItemDisplayName):
-            self._server_item["minecraft:item"]["components"][
-                ItemDisplayName._identifier
-            ] = {"value": f"item.{self.identifier}.name"}
+            self._server_item["minecraft:item"]["components"][ItemDisplayName._identifier] = {
+                "value": f"item.{self.identifier}.name"
+            }
 
             AnvilTranslator().add_localization_entry(
                 f"item.{self.identifier}.name",
@@ -119,9 +110,7 @@ class Item(MinecraftItemDescriptor):
         ANVIL._queue(self)
 
     def _export(self):
-        item_name_comp = self.server._server_item["minecraft:item"]["components"][
-            ItemDisplayName._identifier
-        ]["value"]
+        item_name_comp = self.server._server_item["minecraft:item"]["components"][ItemDisplayName._identifier]["value"]
 
         if item_name_comp.startswith("item."):
             display_name = AnvilTranslator().get_localization_value(item_name_comp)

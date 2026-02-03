@@ -751,8 +751,8 @@ class AddonDescriptor:
         if ":" in name:
             object_namespace, object_name = name.split(":", 1)
         else:
-            object_namespace = "minecraft" if is_vanilla else CONFIG.NAMESPACE
             object_name = name
+            object_namespace = "minecraft" if is_vanilla else CONFIG.NAMESPACE
 
         if str(object_name)[0].isdigit():
             raise ValueError(f"Names cannot start with a digit. {object_name} at {self._object_type}[{name}]")

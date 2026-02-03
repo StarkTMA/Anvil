@@ -540,6 +540,7 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None):
             object._export()
         except Exception as e:
             addon_object_exception(object, e)
+            return
 
     if CONFIG._TARGET == ConfigPackageTarget.ADDON:
         if len(CONFIG._RP_UUID) > 1:

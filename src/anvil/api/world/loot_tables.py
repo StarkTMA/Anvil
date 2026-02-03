@@ -4,6 +4,7 @@ from typing import Union, overload
 from anvil.api.core.enums import ExplorationMapDestinations, LootPoolType
 from anvil.api.core.types import Identifier
 from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
+from anvil.api.world.structures import JigsawStructureSet
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import (
@@ -155,9 +156,7 @@ class _LootPoolEntryFunctions:
         ...
 
     @overload
-    def SpecificEnchants(
-        self, enchants: tuple[tuple[str, int], ...]
-    ) -> "_LootPoolEntryFunctions":
+    def SpecificEnchants(self, enchants: tuple[tuple[str, int], ...]) -> "_LootPoolEntryFunctions":
         """Apply specific enchantments to an item with custom levels.
 
         Note: Maximum enchantment levels are hard-coded and cannot be overridden.
@@ -200,9 +199,7 @@ class _LootPoolEntryFunctions:
             self._function.append(
                 {
                     "function": "specific_enchants",
-                    "enchants": [
-                        {"id": enchant[0], "level": enchant[1]} for enchant in enchants
-                    ],
+                    "enchants": [{"id": enchant[0], "level": enchant[1]} for enchant in enchants],
                 }
             )
         return self
@@ -550,7 +547,10 @@ class _LootPoolEntryFunctions:
         return self
 
     # Miscellaneous Functions
-    def ExplorationMap(self, destination: ExplorationMapDestinations):
+    def ExplorationMap(
+        self,
+        destination: ExplorationMapDestinations | JigsawStructureSet | Identifier
+    ):
         """Transforms a normal map into a treasure map marking the location of structures.
 
         Parameters:
@@ -567,7 +567,7 @@ class _LootPoolEntryFunctions:
         self._function.append(
             {
                 "function": "exploration_map",
-                "destination": destination,
+                "destination": destination if isinstance(destination, str) else str(destination)
             }
         )
         return self
@@ -682,11 +682,9 @@ class _LootPoolEntry:
 
         if entry is None:
             self._LootPoolEntry["type"] = LootPoolType.Empty
-        elif isinstance(
-            entry, (MinecraftBlockDescriptor, MinecraftItemDescriptor, Identifier)
-        ):
+        elif isinstance(entry, (MinecraftBlockDescriptor, MinecraftItemDescriptor, str)):
             self._LootPoolEntry["type"] = LootPoolType.Item
-        elif isinstance(entry, "LootTable"):
+        elif isinstance(entry, LootTable):
             self._LootPoolEntry["type"] = LootPoolType.LootTable
 
     def quality(self, quality: int):
@@ -746,9 +744,7 @@ class _LootPool:
         elif isinstance(rolls, tuple):
             self._pool["rolls"] = {"min": min(rolls), "max": max(rolls)}
 
-    def tiers(
-        self, bonus_chance: float = 0.0, bonus_rolls: int = 0, initial_range: int = 0
-    ):
+    def tiers(self, bonus_chance: float = 0.0, bonus_rolls: int = 0, initial_range: int = 0):
         """Configure tier-based bonus mechanics for this pool.
 
         Parameters:

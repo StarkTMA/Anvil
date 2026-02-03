@@ -63,14 +63,16 @@ markdown_extensions:
   - pymdownx.details
 
 nav:
-  - Home: 
-    - Overview: index.md
-    - Anvil: anvil.md
-    - Config: guide/config.md
-    - Adding a Custom Entity: guide/adding_entity.md
-    - Adding a Custom Block: guide/adding_block.md
-    - Adding a Custom Item: guide/adding_item.md
-    - Localization: guide/localization.md
+  - Home:
+      - Overview: index.md
+      - Anvil: anvil.md
+      - Config: guide/config.md
+      - Adding a Custom Entity: guide/adding_entity.md
+      - Adding a Custom Block: guide/adding_block.md
+      - Adding a Custom Item: guide/adding_item.md
+      - Custom Components: guide/custom_components.md
+      - Creating Trade Tables: guide/trade_tables.md
+      - Localization: guide/localization.md
   - API Reference:
       - Overview: api/index.md
       - Actors:
@@ -81,8 +83,6 @@ nav:
           - Spawn Rules: api/actors/spawn_rules.md
       - Logic:
           - Overview: api/logic/index.md
-          - Functions: api/logic/functions.md
-          - Commands: api/logic/commands.md
           - Molang: api/logic/molang.md
       - Blocks:
           - Overview: api/blocks/index.md
@@ -93,14 +93,19 @@ nav:
           - Items: api/items/items.md
           - Components: api/items/components.md
           - Crafting: api/items/crafting.md
+      - PBR & Textures: guide/pbr.md
       - World:
           - Overview: api/world/index.md
+          - Using Jigsaw Structures: guide/using_jigsaw.md
+          - Adding a Custom Camera: guide/adding_camera.md
           - Camera: api/world/camera.md
           - Features: api/world/features.md
           - Fog: api/world/fog.md
           - Loot Tables: api/world/loot_tables.md
-          - Particles: api/world/particles.md
+          - Camera: api/core/camera.md
           - Structures: api/world/structures.md
+          - Particles: api/world/particles.md
+          - Features: api/features/features.md
       - Biomes:
           - Overview: api/biomes/index.md
       - UI:

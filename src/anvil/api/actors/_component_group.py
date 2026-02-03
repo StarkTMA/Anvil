@@ -1,6 +1,7 @@
 from typing import List
 
 from anvil.api.core.components import _BaseComponent
+from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
 
 
@@ -38,14 +39,8 @@ class _Components:
         component_classes = {component.__class__ for component in self._components}
         cmp_dict = {}
         for component in self._components:
-            missing_dependencies = [
-                dep.__name__
-                for dep in component._dependencies
-                if dep not in component_classes
-            ]
-            conflicting = [
-                cla.__name__ for cla in component._clashes if cla in component_classes
-            ]
+            missing_dependencies = [dep.__name__ for dep in component._dependencies if dep not in component_classes]
+            conflicting = [cla.__name__ for cla in component._clashes if cla in component_classes]
 
             if missing_dependencies:
                 raise RuntimeError(
@@ -73,9 +68,7 @@ class _Properties:
     def __init__(self):
         self._properties = {}
 
-    def enum(
-        self, name: str, values: tuple[str], default: str, *, client_sync: bool = False
-    ):
+    def enum(self, name: str, values: tuple[str], default: str, *, client_sync: bool = False):
         self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
             "type": "enum",
             "default": default,
@@ -94,7 +87,7 @@ class _Properties:
     ):
         self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
             "type": "int",
-            "default": int(default),
+            "default": default if isinstance(default, Molang) else int(default),
             "range": range,
             "client_sync": client_sync,
         }

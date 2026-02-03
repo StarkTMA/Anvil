@@ -1,6 +1,6 @@
 from anvil.lib.schemas import MinecraftEntityDescriptor
 
-entity_factory = lambda identifier: MinecraftEntityDescriptor(identifier)
+entity_factory = lambda identifier: MinecraftEntityDescriptor(identifier, True)
 
 
 class MinecraftEntityTypes:

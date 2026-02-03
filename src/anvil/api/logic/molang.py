@@ -1602,13 +1602,13 @@ class Query(Molang):
         return self._query(self, self.handle, "is_orphaned")
 
     @classmethod
-    def IsOwnerIdentifierAny(self):
+    def IsOwnerIdentifierAny(self, *identifiers: str):
         """Takes one or more arguments. Returns whether the root actor identifier is any of the specified strings. A preferred query to query.owner_identifier, as it can be adjusted by Mojang to avoid breaking content if names are changed.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_owner_identifier_any")
+        return self._query(self, self.handle, "is_owner_identifier_any", *identifiers)
 
     @classmethod
     def IsPersonaOrPremiumSkin(self):
@@ -3147,6 +3147,15 @@ class Query(Molang):
         """
         return self._query(self, self.handle, "ticks_since_last_kinetic_weapon_hit")
 
+    @classmethod
+    def StateTime(self):
+        """Returns the time in seconds since the entity entered its current state.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "state_time")
+
 
 class Context(Query):
     handle = "context"
@@ -3160,6 +3169,12 @@ class Context(Query):
         if molang:
             return Molang(f"({self._query(self, self.handle, "owning_entity")} -> {molang})")
         return Molang._query(self, self.handle, "owning_entity")
+
+    @classmethod
+    def Other(self, molang: Optional[Molang]):
+        if molang:
+            return Molang(f"({self._query(self, self.handle, "other")} -> {molang})")
+        return Molang._query(self, self.handle, "other")
 
 
 class Variable(Molang):

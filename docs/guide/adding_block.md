@@ -140,6 +140,7 @@ Queuing the block will also queue any associated item.
 
 !!! tip "Queue groups"
     You can also group exports by calling `block.queue("group")` if you prefer a structured output directory.
+
 ---
 
 ## Full Example — Enchanting Plus Table
@@ -218,3 +219,57 @@ EnchantingPlusTable = enchanting_plus_table()
 ```
 
 ---
+
+## Advanced Features
+
+Now that you've created a basic block, here are some advanced features you can add:
+
+### Custom Ticking
+
+Use the `BlockTicker` and `BlockTick` components to make your block execute logic periodically or randomly.
+
+```python
+from anvil.api.blocks.components import BlockTick
+
+# Add a random tick listener
+block.server.components.add(
+    BlockTick(interval_range=[10, 20], looping=True)
+)
+```
+
+### Custom Sounds
+
+You can define custom sounds for your block using `BlockSoundEvent`.
+
+```python
+from anvil.api.core.enums import BlockSoundEvent
+
+# Add custom sounds
+block.client.block_sound("my_sound", BlockSoundEvent.Break).add_sound("my_custom_sound")
+```
+
+### Custom Components
+
+For more complex logic, you can attach **Custom Components**. These are scripts that run in the game and can interact with the world.
+
+```python
+from anvil import CONFIG
+from anvil.api.blocks.components import BlockCustomComponents
+
+class MyBlockLogic(BlockCustomComponents):
+    _identifier = f"{CONFIG.NAMESPACE}:my_component"
+
+    def __init__(self):
+        super().__init__(self._identifier)
+
+block.server.components.add(
+    MyBlockLogic()
+)
+```
+
+See the [Custom Components Guide](custom_components.md) for details on how to implement the logic in TypeScript.
+
+### World Generation
+
+To make your block generate naturally in the world, use the **Features API**.
+See [World Features API](../api/world/features.md) for reference.

@@ -264,6 +264,9 @@ class _AnvilConfig:
         self._TARGET = self._handle_config(ConfigSection.PACKAGE, ConfigOption.TARGET, "world")
 
         self._RELEASE = self._handle_config(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
+        if len(self._RELEASE.split(".")) > 3:
+            raise ValueError("Invalid release version, must be in format X.X.X. Read more at https://semver.org/")
+
         self._LAST_CHECK = self._handle_config(
             ConfigSection.ANVIL,
             ConfigOption.LAST_CHECK,

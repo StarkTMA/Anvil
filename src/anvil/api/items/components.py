@@ -14,11 +14,7 @@ from anvil.lib.blockbench import BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import Color, HexRGB, clamp, convert_color
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
-)
+from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftEntityDescriptor, MinecraftItemDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 
@@ -76,9 +72,7 @@ class ItemKineticWeapon(_BaseComponent):
         if reach:
             self._add_field("reach", {"min": reach[0], "max": reach[1]})
         if creative_reach:
-            self._add_field(
-                "creative_reach", {"min": creative_reach[0], "max": creative_reach[1]}
-            )
+            self._add_field("creative_reach", {"min": creative_reach[0], "max": creative_reach[1]})
         if not damage_modifier == 0:
             self._add_field("damage_modifier", damage_modifier)
         if not damage_multiplier == 1:
@@ -183,9 +177,7 @@ class ItemPiercingWeapon(_BaseComponent):
         if reach:
             self._add_field("reach", {"min": reach[0], "max": reach[1]})
         if creative_reach:
-            self._add_field(
-                "creative_reach", {"min": creative_reach[0], "max": creative_reach[1]}
-            )
+            self._add_field("creative_reach", {"min": creative_reach[0], "max": creative_reach[1]})
         if not hitbox_margin == 0:
             self._add_field("hitbox_margin", hitbox_margin)
 
@@ -193,9 +185,7 @@ class ItemPiercingWeapon(_BaseComponent):
 class ItemCooldown(_BaseComponent):
     _identifier = "minecraft:cooldown"
 
-    def __init__(
-        self, category: str, duration: Seconds, type: Literal["attack", "use"] = "use"
-    ) -> None:
+    def __init__(self, category: str, duration: Seconds, type: Literal["attack", "use"] = "use") -> None:
         """Sets an items "Cool down" time. After using an item, it becomes unusable for the duration specified by the 'duration' setting of this component.
 
         Parameters:
@@ -327,9 +317,7 @@ class ItemCompostable(_BaseComponent):
 class ItemStorageItem(_BaseComponent):
     _identifier = "minecraft:storage_item"
 
-    def __init__(
-        self, allow_nested_storage_items: bool = True, max_slots: int = 64
-    ) -> None:
+    def __init__(self, allow_nested_storage_items: bool = True, max_slots: int = 64) -> None:
         """Enables an item to store data of the dynamic container associated with it. A dynamic container is a container for storing items that is linked to an item instead of a block or an entity.
 
         Parameters:
@@ -518,9 +506,7 @@ class ItemFood(_BaseComponent):
         if using_converts_to:
             self._add_field("using_converts_to", str(using_converts_to))
 
-    def effects(
-        self, effect: MinecraftEffects, chance: float, duration: Seconds, amplifier: int
-    ):
+    def effects(self, effect: MinecraftEffects, chance: float, duration: Seconds, amplifier: int):
         """# DEPRECATED
         Sets the effects of the food item.
 
@@ -807,9 +793,7 @@ class ItemDamage(_BaseComponent):
 class ItemDigger(_BaseComponent):
     _identifier = "minecraft:digger"
 
-    def __init__(
-        self, destroy_speeds: Dict[MinecraftBlockDescriptor | Identifier, int]
-    ) -> None:
+    def __init__(self, destroy_speeds: Dict[MinecraftBlockDescriptor | Identifier, int]) -> None:
         """Sets the item as a "Digger" item. Component put on items that dig.
 
         Parameters:
@@ -836,9 +820,7 @@ class ItemDigger(_BaseComponent):
 class ItemRepairable(_BaseComponent):
     _identifier = "minecraft:repairable"
 
-    def __init__(
-        self, on_repaired: Literal["minecraft:celebrate", None] = None
-    ) -> None:
+    def __init__(self, on_repaired: Literal["minecraft:celebrate", None] = None) -> None:
         """Defines the items that can be used to repair a defined item, and the amount of durability each item restores upon repair. Each entry needs to define a list of strings for 'items' that can be used for the repair and an optional 'repair_amount' for how much durability is repaired.
 
         Parameters:
@@ -922,9 +904,7 @@ class ItemBlockPlacer(_BaseComponent):
 class ItemRecord(_BaseComponent):
     _identifier = "minecraft:record"
 
-    def __init__(
-        self, sound_event: str, duration: float, comparator_signal: int = 1
-    ) -> None:
+    def __init__(self, sound_event: str, duration: float, comparator_signal: int = 1) -> None:
         """Used by record items to play music.
 
         Parameters:
@@ -971,9 +951,7 @@ class ItemShooter(_BaseComponent):
         if not max_draw_duration == 0.0:
             self._add_field("max_draw_duration", max_draw_duration)
         if scale_power_by_draw_duration:
-            self._add_field(
-                "scale_power_by_draw_duration", scale_power_by_draw_duration
-            )
+            self._add_field("scale_power_by_draw_duration", scale_power_by_draw_duration)
 
     def add_ammunition(
         self,
@@ -1058,18 +1036,14 @@ class ItemThrowable(_BaseComponent):
         if not min_draw_duration == 0.0:
             self._add_field("min_draw_duration", min_draw_duration)
         if scale_power_by_draw_duration:
-            self._add_field(
-                "scale_power_by_draw_duration", scale_power_by_draw_duration
-            )
+            self._add_field("scale_power_by_draw_duration", scale_power_by_draw_duration)
 
 
 # Require ITEM_SERVER_VERSION >= 1.19.80
 class ItemDurability(_BaseComponent):
     _identifier = "minecraft:durability"
 
-    def __init__(
-        self, max_durability: int, damage_chance: tuple[int, int] = 100
-    ) -> None:
+    def __init__(self, max_durability: int, damage_chance: tuple[int, int] = 100) -> None:
         """Sets how much damage the item can take before breaking, and allows the item to be combined at an anvil, grindstone, or crafting table.
 
         Parameters:
@@ -1203,9 +1177,7 @@ class ItemIcon(_BaseComponent):
         if component is None:
             raise ValueError("TextureComponents must be provided")
 
-        ItemTexturesObject().add_item(
-            component.color, blockbench_model, [component.color]
-        )
+        ItemTexturesObject().add_item(component.color, blockbench_model, [component.color])
         self._texture_set = TextureSet(component.color, BlockBenchSource.ITEM)
         if blockbench_model:
             self._texture_set.set_blockbench_textures(blockbench_model, component)

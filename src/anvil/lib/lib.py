@@ -10,7 +10,6 @@ import zipfile
 from datetime import datetime
 
 import commentjson as commentjson
-
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 
 from ..__version__ import __version__
@@ -77,9 +76,24 @@ class PrettyPrintedEncoder(json.JSONEncoder):
 
         return d
 
+    def sort_dict(self, d):
+        """Recursively sorts dict keys.
+
+        Parameters:
+            d: The dict, list, or other value to sort.
+
+        Returns:
+            The sorted version.
+        """
+        if isinstance(d, dict):
+            return {k: self.sort_dict(d[k]) for k in sorted(d.keys())}
+        elif isinstance(d, list):
+            return [self.sort_dict(v) for v in d]
+        return d
+
     def encode(self, o, _level=0):
         if _level == 0:
-            o = self.shorten_dict(o)
+            o = self.shorten_dict(self.sort_dict(o))
 
         if isinstance(o, (list, tuple)):
             items = [self.encode(v, _level + 1) for v in o]
@@ -97,7 +111,7 @@ class PrettyPrintedEncoder(json.JSONEncoder):
             inner = ",\n".join(self._indent_str * (_level + 1) + i for i in items)
             return f"{{\n{inner}\n{self._indent_str * _level}}}"
 
-        elif o.__class__.__name__ == "MinecraftBlockDescriptor":
+        elif o.__class__.__name__ == "MinecraftBlockDescriptor" or o.__class__.__name__ == "Block":
             return self.encode(self.shorten_dict(o.descriptor()), _level)
         elif o.__class__.__name__ in [
             "MinecraftItemDescriptor",
@@ -105,6 +119,8 @@ class PrettyPrintedEncoder(json.JSONEncoder):
             "MinecraftBiomeDescriptor",
         ]:
             return self.encode(self.shorten_dict(o.identifier), _level)
+        elif o.__class__.__name__ == "LootTable":
+            return self.encode(self.shorten_dict(o.table_path), _level)
         else:
             return json.dumps(o, ensure_ascii=False)
 
@@ -527,10 +543,10 @@ def convert_color(
         return (r, g, b, a)
 
     elif target is RGB255:
-        return (r * 255.0, g * 255.0, b * 255.0)
+        return (int(r * 255), int(g * 255), int(b * 255))
 
     elif target is RGBA255:
-        return (r * 255.0, g * 255.0, b * 255.0, a * 255.0)
+        return (int(r * 255), int(g * 255), int(b * 255), int(a * 255))
 
     else:
         raise ValueError(f"Unsupported target format: {target}")

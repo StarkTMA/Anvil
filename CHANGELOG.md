@@ -81,9 +81,35 @@
 
 ---
 
+## Version 0.9.6.2
+
+### Anvil
+
+- Exported json files are now sorted alphabetically for better readability.
+- Anvil raised errors now display the traceback for a single error.
+- Added new documentation.
+
+### Actors
+
+- Added `EntityIsHiddenWhenInvisible`, `EntityHurtOnCondition`, `EntityHide`, `EntityAnnotationOpenDoor`, `EntityDweller`, `EntityEconomyTradeTable`, `EntityScheduler`, `EntityTradeResupply`, `EntityShareables`, `EntityArmorEquipmentSlotMapping`, `EntityAIHide`, `EntityAITradeWithPlayer`, `EntityAIPickupItems`, `EntityAIMoveIndoors`, `EntityAILookAtTradingPlayer`, `EntityAIShareItems`,`EntityAIMoveTowardsDwellingRestriction`, `EntityAITradeInterest`, `EntityAIMakeLove`, `EntityAIReceiveLove`,`EntityAIWork`, `EntityAIWorkComposter`, `EntityAIHarvestFarmBlock`, `EntityAIFertilizeFarmBlock`, `EntityAIPlay`, `EntityAIMingle`, `EntityAISleep`, `EntityAIExploreOutskirts` and `EntityAIBreed` components.
+- Client spawn egg now require using `TextureComponent` for full PBR support.
+- Server event name includes a built-in events Literal.
+- Calling a Server event with the same name will now return the existing event instead of overwriting it.
+
+### Blockbench
+
+- Blockbench api now handles exporting animation sound events properly.
+- Animation rotations now are properly calculated.
+
+### World
+
+- Added Trade Table API to manage trade tables, `anvil.api.world.trade_tables`.
+- Loot Table explorer map entry function now support Jigsaw structures.
+
 ## Version 0.9.6.1
 
 ### Anvil
+
 - Updated to support Minecraft `1.21.132` release.
 - Fixed some Jigsaw structures and sets field data types.
 

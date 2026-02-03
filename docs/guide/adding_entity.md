@@ -168,3 +168,34 @@ RedstoneGolem = redstone_golem()
 ```
 
 ---
+
+## Advanced Features
+
+### Entity Events
+
+You can define complex event chains to manage entity state, such as phases in a boss fight.
+
+```python
+from anvil.api.actors.components import EntityScale, EntityHealth
+
+# 1. Define Component Groups
+entity.server.component_group("phase_1", EntityScale(1.0))
+entity.server.component_group("phase_2", EntityScale(1.5), EntityHealth(100))
+
+# 2. Define the Transition Event
+# Note: Events do not need a namespace prefix if internal to the entity
+phase_transition = entity.server.event("transform_to_phase_2")
+
+# 3. Chain actions: Remove old state -> Add new state -> Trigger side effects
+phase_transition.sequence.add("phase_2").remove("phase_1")
+phase_transition.sequence.trigger("spawn_minions")
+phase_transition.sequence.trigger("restore_health")
+
+# 4. Run commands on event
+entity.server.event("restore_health").queue_command("effect @s regeneration 100")
+```
+
+### Related Systems
+
+- **Loot Tables**: Define drops using the [Loot Table API](../api/world/loot_tables.md).
+- **Trade Tables**: Create trading options using the [Trade Table API](../guide/trade_tables.md).

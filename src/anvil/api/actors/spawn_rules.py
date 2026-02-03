@@ -4,12 +4,7 @@ from typing import Literal
 from anvil.api.core.enums import Difficulty, Population
 from anvil.api.core.filters import Filter
 from anvil.lib.config import CONFIG
-from anvil.lib.schemas import (
-    AddonObject,
-    JsonSchemes,
-    MinecraftBlockDescriptor,
-    MinecraftDescription,
-)
+from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor, MinecraftDescription
 
 __all__ = ["SpawnRule"]
 
@@ -130,9 +125,7 @@ class _SpawnRuleCondition:
         )
         return self
 
-    def DelayFilter(
-        self, minimum: int, maximum: int, identifier: str, spawn_chance: int
-    ):
+    def DelayFilter(self, minimum: int, maximum: int, identifier: str, spawn_chance: int):
         """Sets specific time delays before entities will spawn.
 
         This creates a delay mechanism where the entity specified by identifier
@@ -331,9 +324,7 @@ class _SpawnRuleCondition:
             self._condition.update({"minecraft:herd": []})
         self_herd = {"min_size": min_size, "max_size": max_size}
         if spawn_event != None:
-            self_herd.update(
-                {"event": spawn_event, "event_skip_count": event_skip_count}
-            )
+            self_herd.update({"event": spawn_event, "event_skip_count": event_skip_count})
         self._condition["minecraft:herd"].append(self_herd)
         return self
 
@@ -448,9 +439,7 @@ class _SpawnRuleCondition:
         """
         if "minecraft:spawns_on_block_filter" not in self._condition:
             self._condition.update({"minecraft:spawns_on_block_filter": []})
-        self._condition["minecraft:spawns_on_block_filter"] = [
-            block.identifier for block in blocks
-        ]
+        self._condition["minecraft:spawns_on_block_filter"] = [block.identifier for block in blocks]
         return self
 
     def SpawnsOnBlockPreventedFilter(self, blocks: tuple[MinecraftBlockDescriptor]):
@@ -467,9 +456,7 @@ class _SpawnRuleCondition:
         """
         if "minecraft:spawns_on_block_prevented_filter" not in self._condition:
             self._condition.update({"minecraft:spawns_on_block_prevented_filter": []})
-        self._condition["minecraft:spawns_on_block_prevented_filter"] = [
-            block.identifier for block in blocks
-        ]
+        self._condition["minecraft:spawns_on_block_prevented_filter"] = [block.identifier for block in blocks]
         return self
 
     @property
@@ -616,9 +603,7 @@ class SpawnRule(AddonObject):
             is_vanilla (bool): Whether this is a vanilla Minecraft entity.
         """
         super().__init__(identifier, is_vanilla)
-        self._description = _SpawnRuleDescription(
-            self, self.identifier, self._is_vanilla
-        )
+        self._description = _SpawnRuleDescription(self, self.identifier, self._is_vanilla)
         self._spawn_rule = JsonSchemes.spawn_rules()
         self._conditions: list[_SpawnRuleCondition] = []
 
@@ -658,11 +643,10 @@ class SpawnRule(AddonObject):
             SpawnRule: Self for method chaining, or None if no conditions exist.
         """
         if len(self._conditions) > 0:
-            self._spawn_rule["minecraft:spawn_rules"].update(
-                self._description._export()
-            )
-            self._spawn_rule["minecraft:spawn_rules"]["conditions"] = [
-                condition.export() for condition in self._conditions
-            ]
-            self.content(self._spawn_rule)
             return super().queue(directory=directory)
+
+    def _export(self):
+        self._spawn_rule["minecraft:spawn_rules"].update(self._description._export())
+        self._spawn_rule["minecraft:spawn_rules"]["conditions"] = [condition.export() for condition in self._conditions]
+        self.content(self._spawn_rule)
+        return super()._export()
