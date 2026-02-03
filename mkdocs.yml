@@ -105,7 +105,6 @@ nav:
           - Camera: api/core/camera.md
           - Structures: api/world/structures.md
           - Particles: api/world/particles.md
-          - Features: api/features/features.md
       - Biomes:
           - Overview: api/biomes/index.md
       - UI:
