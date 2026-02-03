@@ -99,7 +99,6 @@ nav:
           - Using Jigsaw Structures: guide/using_jigsaw.md
           - Adding a Custom Camera: guide/adding_camera.md
           - Camera: api/world/camera.md
-          - Features: api/world/features.md
           - Fog: api/world/fog.md
           - Loot Tables: api/world/loot_tables.md
           - Camera: api/core/camera.md
