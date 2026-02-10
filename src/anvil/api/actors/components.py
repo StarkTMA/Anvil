@@ -4016,6 +4016,39 @@ class EntityBreedable(_BaseComponent):
         )
         return self
 
+    def breeds_with(
+        self,
+        mate_type: str,
+        baby_type: str,
+        breed_event: str,
+        breed_event_target: FilterSubject = FilterSubject.Baby,
+        breed_event_filter: Filter = None,
+    ) -> dict:
+        """Defines the breeding partner for the entity.
+
+        Parameters:
+            mate_type (str): The entity type of the breeding partner.
+            baby_type (str): The entity type of the offspring.
+            breed_event (str): The event to trigger when breeding occurs.
+
+        Returns:
+            dict: A dictionary containing the breeding information.
+        """
+
+        self._add_field(
+            "breeds_with",
+            {
+                "mate_type": mate_type,
+                "baby_type": baby_type,
+                "breed_event": {
+                    "event": breed_event,
+                    "target": breed_event_target,
+                    "filters": breed_event_filter,
+                },
+            },
+        )
+        return self
+
 
 class EntityOffspring(_BaseComponent):
     _identifier = "minecraft:offspring"

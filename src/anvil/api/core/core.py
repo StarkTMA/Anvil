@@ -7,9 +7,6 @@ import zipfile
 from typing import Literal, Optional
 
 import click
-from halo import Halo
-from PIL import Image
-
 from anvil.api.actors.materials import MaterialsObject
 from anvil.api.core.sounds import BlocksJSONObject, MusicDefinition, SoundDefinition, SoundEvent
 from anvil.api.core.textures import FlipBookTexturesObject, ItemTexturesObject, TerrainTexturesObject
@@ -28,6 +25,8 @@ from anvil.lib.lib import (
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
+from halo import Halo
+from PIL import Image
 
 from ...__version__ import __version__
 
