@@ -333,6 +333,13 @@ class PlacementDirectionTrait(StrEnum):
 class PlacementPositionTrait(StrEnum):
     BlockFace = "minecraft:block_face"  # Up, Down, North, South, East, West
     VerticalHalf = "minecraft:vertical_half"  # Top, Bottom
+    CornerAndCardinal = (
+        "minecraft:corner_and_cardinal"  # North, South, East, West, Northeast, Northwest, Southeast, Southwest
+    )
+
+
+class ConnectionTrait(StrEnum):
+    CardinalConnections = "minecraft:cardinal_connections"  # north, south, east, west
 
 
 class CardinalDirectionsTrait(StrEnum):
@@ -365,6 +372,29 @@ class VerticalHalfTrait(StrEnum):
     BOTTOM = "bottom"
 
 
+class BlockCardinalConnection(StrEnum):
+    """
+    Enumeration representing the connected faces of a block in Minecraft, used for blocks that can connect to adjacent blocks (e.g., fences, walls).
+    """
+
+    North = "minecraft:connection_north"
+    South = "minecraft:connection_south"
+    East = "minecraft:connection_east"
+    West = "minecraft:connection_west"
+
+
+class BlockCorner(StrEnum):
+    """
+    Enumeration representing the corner and cardinal directions for block placement in Minecraft.
+    """
+
+    InnerLeft = "inner_left"
+    InnerRight = "inner_right"
+    OuterLeft = "outer_left"
+    OuterRight = "outer_right"
+    None_ = "none"
+
+
 class BlockFaces(StrEnum):
     """
     Enumeration representing the different faces of a block in Minecraft.
@@ -393,6 +423,7 @@ class BlockMaterial(StrEnum):
     BlendToOpaque = "blend_to_opaque"
     AlphaTestToOpaque = "alpha_test_to_opaque"
     AlphaTestSingleSidedToOpaque = "alpha_test_single_sided_to_opaque"
+    AlphaMaskedTint = "alpha_masked_tint"
 
 
 class ItemCategory(StrEnum):

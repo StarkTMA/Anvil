@@ -787,6 +787,9 @@ class ItemDamage(_BaseComponent):
         super().__init__("damage")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
 
+        if not (0 <= value <= 32767):
+            raise ValueError("Damage value must be between 0 and 32767 inclusive")
+
         self._set_value(value)
 
 

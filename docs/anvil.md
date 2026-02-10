@@ -26,14 +26,14 @@ project/
 │   ├── bbmodels/
 │   ├── particles/
 │   ├── textures/
-│   └── sounds/
+│   ├── sounds/
+│   └── structures/
 ├── marketing/
 ├── output/
 ├── scripts/
 │   ├── javascript/
 │   └── python/
 ├── world/
-│   └── structures/
 ├── anvilconfig.json
 ├── esbuild.js
 ├── package.json

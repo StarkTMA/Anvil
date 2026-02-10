@@ -78,14 +78,14 @@ awesome_project/
 │   ├── bbmodels/
 │   ├── particles/
 │   ├── textures/
-│   └── sounds/
+│   ├── sounds/
+│   └── structures/
 ├── marketing/
 ├── output/
 ├── scripts/
 │   ├── javascript/
 │   └── python/
 ├── world/
-│   └── structures/
 ├── .gitignore
 ├── CHANGELOG.md
 ├── anvilconfig.json

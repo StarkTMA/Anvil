@@ -4,24 +4,27 @@ from typing import Literal, overload
 
 from anvil import ANVIL
 from anvil.api.actors._animations import _BPAnimations
-from anvil.api.actors._component_group import _ComponentGroup, _Components, _Properties
+from anvil.api.actors._component_group import (_ComponentGroup, _Components,
+                                               _Properties)
 from anvil.api.actors._events import _Event
 from anvil.api.actors._render_controller import _RenderControllers
 from anvil.api.actors.components import EntityInstantDespawn, EntityRideable
 from anvil.api.actors.spawn_rules import SpawnRule
 from anvil.api.core.core import SoundDefinition, SoundEvent
 from anvil.api.core.enums import DamageSensor, Target
-from anvil.api.core.sounds import EntitySoundEvent, SoundCategory, _SoundDescription
+from anvil.api.core.sounds import (EntitySoundEvent, SoundCategory,
+                                   _SoundDescription)
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import RGB, RGBA, Vector2D
 from anvil.api.logic.molang import Molang, Variable
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
-from anvil.api.vanilla.entities import MinecraftEntityTypes
+from anvil.api.vanilla.entities import MinecraftEntityTypes, vanilla_entity_ids
 from anvil.lib.blockbench import BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription, MinecraftEntityDescriptor
+from anvil.lib.schemas import (AddonObject, JsonSchemes, MinecraftDescription,
+                               MinecraftEntityDescriptor)
 from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["Entity", "Attachable"]
@@ -640,12 +643,6 @@ class _ActorClientDescription(_ActorDescription):
             raise RuntimeError(
                 f"Invalid type '{self._type}' for actor description. Expected 'entity' or 'attachables'. Actor [{self.identifier}]"
             )
-
-        vanilla_entity_ids = [
-            getattr(MinecraftEntityTypes, method)().identifier
-            for method in dir(MinecraftEntityTypes)
-            if callable(getattr(MinecraftEntityTypes, method)) and not method.startswith("_")
-        ]
 
         if is_vanilla and self.identifier not in vanilla_entity_ids:
             raise RuntimeError(
@@ -1347,20 +1344,17 @@ class _EntityServer(AddonObject):
             - `EntityPushable`
             - `EntityPushThrough`
         """
-        from anvil.api.actors.components import (
-            EntityBreathable,
-            EntityCollisionBox,
-            EntityDamageSensor,
-            EntityHealth,
-            EntityJumpStatic,
-            EntityKnockbackResistance,
-            EntityMovement,
-            EntityMovementType,
-            EntityNavigationType,
-            EntityPhysics,
-            EntityPushable,
-            EntityPushThrough,
-        )
+        from anvil.api.actors.components import (EntityBreathable,
+                                                 EntityCollisionBox,
+                                                 EntityDamageSensor,
+                                                 EntityHealth,
+                                                 EntityJumpStatic,
+                                                 EntityKnockbackResistance,
+                                                 EntityMovement,
+                                                 EntityMovementType,
+                                                 EntityNavigationType,
+                                                 EntityPhysics, EntityPushable,
+                                                 EntityPushThrough)
         from anvil.api.core.enums import DamageCause
 
         self.components.add(

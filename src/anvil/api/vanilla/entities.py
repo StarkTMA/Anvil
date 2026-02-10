@@ -384,3 +384,9 @@ class MinecraftEntityTypes:
 
     def ZombieVillagerV2() -> MinecraftEntityDescriptor:
         return entity_factory("minecraft:zombie_villager_v2")
+
+vanilla_entity_ids = [
+    getattr(MinecraftEntityTypes, method)().identifier
+    for method in dir(MinecraftEntityTypes)
+    if callable(getattr(MinecraftEntityTypes, method)) and not method.startswith("_")
+]

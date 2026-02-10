@@ -3,18 +3,7 @@ from ast import List
 from dataclasses import dataclass
 from typing import Dict, Literal, overload
 
-from anvil.api.core.types import (
-    RGB,
-    RGB255,
-    RGBA,
-    RGBA255,
-    Block,
-    Color,
-    HexRGB,
-    HexRGBA,
-    Identifier,
-    Vector3D,
-)
+from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Block, Color, HexRGB, HexRGBA, Identifier, Vector3D
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists, clamp, convert_color
@@ -121,9 +110,7 @@ class TextureSet(AddonObject):
         if components.normal is not None and components.height is not None:
             raise ValueError("Normal and heightmap textures are mutually exclusive.")
         if components.mer is not None and components.mers is not None:
-            raise ValueError(
-                "Metalness, emissive, roughness and subsurface textures are mutually exclusive."
-            )
+            raise ValueError("Metalness, emissive, roughness and subsurface textures are mutually exclusive.")
 
         if _is_color_value(components.color):
             color_map["color"] = convert_color(components.color, HexRGB)
@@ -132,13 +119,9 @@ class TextureSet(AddonObject):
         if _is_color_value(components.height):
             color_map["heightmap"] = convert_color(components.height, HexRGB)
         if _is_color_value(components.mer):
-            color_map["metalness_emissive_roughness"] = convert_color(
-                components.mer, HexRGB
-            )
+            color_map["metalness_emissive_roughness"] = convert_color(components.mer, HexRGB)
         if _is_color_value(components.mers):
-            color_map["metalness_emissive_roughness_subsurface"] = convert_color(
-                components.mers, HexRGBA
-            )
+            color_map["metalness_emissive_roughness_subsurface"] = convert_color(components.mers, HexRGBA)
 
         return color_map
 
@@ -150,37 +133,27 @@ class TextureSet(AddonObject):
         color_map = self.__validate(components)
 
         color_map["color"] = components.color
-        self._queued_textures: dict[str, dict[str, list[str]]] = {
-            source: {components.color: [components.color]}
-        }
+        self._queued_textures: dict[str, dict[str, list[str]]] = {source: {components.color: [components.color]}}
         if not FileExists(os.path.join("assets", source, f"{components.color}.png")):
             raise FileNotFoundError(
                 f"Color texture file '{components.color}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
             )
 
         if _is_texture_filename(components.normal):
-            if not FileExists(
-                os.path.join("assets", source, f"{components.normal}.png")
-            ):
+            if not FileExists(os.path.join("assets", source, f"{components.normal}.png")):
                 raise FileNotFoundError(
                     f"Normal texture file '{components.normal}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
                 )
             color_map["normal"] = components.normal
-            self._queued_textures.get(source).get(components.color).append(
-                components.normal
-            )
+            self._queued_textures.get(source).get(components.color).append(components.normal)
 
         if _is_texture_filename(components.height):
-            if not FileExists(
-                os.path.join("assets", source, f"{components.height}.png")
-            ):
+            if not FileExists(os.path.join("assets", source, f"{components.height}.png")):
                 raise FileNotFoundError(
                     f"Height texture file '{components.height}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
                 )
             color_map["heightmap"] = components.height
-            self._queued_textures.get(source).get(components.color).append(
-                components.height
-            )
+            self._queued_textures.get(source).get(components.color).append(components.height)
 
         if _is_texture_filename(components.mer):
             if not FileExists(os.path.join("assets", source, f"{components.mer}.png")):
@@ -188,9 +161,7 @@ class TextureSet(AddonObject):
                     f"MER texture file '{components.mer}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
                 )
             color_map["metalness_emissive_roughness"] = components.mer
-            self._queued_textures.get(source).get(components.color).append(
-                components.mer
-            )
+            self._queued_textures.get(source).get(components.color).append(components.mer)
 
         if _is_texture_filename(components.mers):
             if not FileExists(os.path.join("assets", source, f"{components.mers}.png")):
@@ -198,9 +169,7 @@ class TextureSet(AddonObject):
                     f"MERS texture file '{components.mers}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
                 )
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
-            self._queued_textures.get(source).get(components.color).append(
-                components.mers
-            )
+            self._queued_textures.get(source).get(components.color).append(components.mers)
 
         self._content["minecraft:texture_set"].update(color_map)
         self._path = os.path.join(self._path, self._target)
@@ -274,13 +243,9 @@ class AtmosphericSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError(
-                "Atmospherics addon requires PBR to be enabled in the config."
-            )
+            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
         super().__init__("atmospherics")
-        self.content(
-            JsonSchemes.atmosphere_settings(f"{CONFIG.NAMESPACE}:atmosphere_settings")
-        )
+        self.content(JsonSchemes.atmosphere_settings(f"{CONFIG.NAMESPACE}:atmosphere_settings"))
 
     def horizon_blend_stops(
         self,
@@ -322,9 +287,7 @@ class FogSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError(
-                "Atmospherics addon requires PBR to be enabled in the config."
-            )
+            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
         super().__init__("fog")
         self.content(JsonSchemes.fog_settings(f"{CONFIG.NAMESPACE}:fog_settings"))
 
@@ -372,15 +335,11 @@ class ShadowSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError(
-                "Atmospherics addon requires PBR to be enabled in the config."
-            )
+            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
         super().__init__("shadows")
         self.content(JsonSchemes.shadow_settings(f"{CONFIG.NAMESPACE}:shadow_settings"))
 
-    def shadow_style(
-        self, style: Literal["blocky_shadows", "soft_shadows"], texel_size: float = 16
-    ):
+    def shadow_style(self, style: Literal["blocky_shadows", "soft_shadows"], texel_size: float = 16):
         self._content["minecraft:shadow_settings"]["shadow_style"] = style
         self._content["minecraft:shadow_settings"]["texel_size"] = texel_size
 
@@ -390,13 +349,12 @@ class WaterSettings(AddonObject):
     _path = os.path.join(CONFIG.RP_PATH, "water")
     _object_type = "Water Settings"
 
-    def __init__(self) -> None:
+    def __init__(self, biome_water_color_contribution: float) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError(
-                "Atmospherics addon requires PBR to be enabled in the config."
-            )
+            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
         super().__init__("water_settings")
         self.content(JsonSchemes.water_settings(f"{CONFIG.NAMESPACE}:water_settings"))
+        self._content["minecraft:water_settings"]["biome_water_color_contribution"] = clamp(biome_water_color_contribution, 0.0, 1.0)
 
     def particle_concentrations(
         self,
@@ -413,9 +371,7 @@ class WaterSettings(AddonObject):
             chlorophyll (float | None): Concentration of chlorophyll in the water.
             suspended_sediment (float | None): Concentration of suspended sediment in the water.
         """
-        pc = self._content["minecraft:water_settings"].setdefault(
-            "particle_concentrations", {}
-        )
+        pc = self._content["minecraft:water_settings"].setdefault("particle_concentrations", {})
         if cdom is not None:
             pc["cdom"] = clamp(cdom, 0.0, 15.0)
         if chlorophyll is not None:
@@ -524,15 +480,9 @@ class ColorGradingSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError(
-                "Atmospherics addon requires PBR to be enabled in the config."
-            )
+            raise RuntimeError("Atmospherics addon requires PBR to be enabled in the config.")
         super().__init__("color_grading_settings")
-        self.content(
-            JsonSchemes.color_grading_settings(
-                f"{CONFIG.NAMESPACE}:color_grading_settings"
-            )
-        )
+        self.content(JsonSchemes.color_grading_settings(f"{CONFIG.NAMESPACE}:color_grading_settings"))
 
     def midtones(
         self,
@@ -542,12 +492,8 @@ class ColorGradingSettings(AddonObject):
         offset: Vector3D | None = None,
         saturation: Vector3D | None = None,
     ):
-        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault(
-            "midtones", {}
-        )
-        mid = self._content["minecraft:color_grading_settings"]["color_grading"][
-            "midtones"
-        ]
+        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault("midtones", {})
+        mid = self._content["minecraft:color_grading_settings"]["color_grading"]["midtones"]
         if contrast is not None:
             mid["contrast"] = [clamp(c, 0.0, 4.0) for c in contrast]
         if gain is not None:
@@ -570,12 +516,8 @@ class ColorGradingSettings(AddonObject):
         saturation: list[float] | None = None,
     ):
 
-        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault(
-            "highlights", {}
-        )
-        high = self._content["minecraft:color_grading_settings"]["color_grading"][
-            "highlights"
-        ]
+        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault("highlights", {})
+        high = self._content["minecraft:color_grading_settings"]["color_grading"]["highlights"]
         high["enabled"] = enabled
         if highlightsMin is not None:
             high["highlightsMin"] = clamp(highlightsMin, 1.0, 4.0)
@@ -600,12 +542,8 @@ class ColorGradingSettings(AddonObject):
         offset: list[float] | None = None,
         saturation: list[float] | None = None,
     ):
-        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault(
-            "shadows", {}
-        )
-        shad = self._content["minecraft:color_grading_settings"]["color_grading"][
-            "shadows"
-        ]
+        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault("shadows", {})
+        shad = self._content["minecraft:color_grading_settings"]["color_grading"]["shadows"]
         shad["enabled"] = enabled
         if shadowsMax is not None:
             shad["shadowsMax"] = clamp(shadowsMax, 0.1, 1.0)
@@ -626,12 +564,8 @@ class ColorGradingSettings(AddonObject):
         temp_value: float | None = None,
         type: Literal["white_balance", "color_temperature"] | None = None,
     ):
-        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault(
-            "temperature_grade", {}
-        )
-        temp = self._content["minecraft:color_grading_settings"]["color_grading"][
-            "temperature_grade"
-        ]
+        self._content["minecraft:color_grading_settings"]["color_grading"].setdefault("temperature_grade", {})
+        temp = self._content["minecraft:color_grading_settings"]["color_grading"]["temperature_grade"]
         temp["enabled"] = enabled
         if temp_value is not None:
             temp["temperature"] = clamp(temp_value, 1000.0, 15000.0)
@@ -650,9 +584,7 @@ class ColorGradingSettings(AddonObject):
         ],
     ):
         self._content["minecraft:color_grading_settings"].setdefault("tone_mapping", {})
-        self._content["minecraft:color_grading_settings"]["tone_mapping"][
-            "operator"
-        ] = operator
+        self._content["minecraft:color_grading_settings"]["tone_mapping"]["operator"] = operator
 
 
 class LightingSettings(AddonObject):
@@ -662,13 +594,9 @@ class LightingSettings(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError(
-                "Lighting settings require PBR to be enabled in the config."
-            )
+            raise RuntimeError("Lighting settings require PBR to be enabled in the config.")
         super().__init__("global")
-        self.content(
-            JsonSchemes.lighting_settings(f"{CONFIG.NAMESPACE}:default_lighting")
-        )
+        self.content(JsonSchemes.lighting_settings(f"{CONFIG.NAMESPACE}:default_lighting"))
 
     def orbital_lights(
         self,
@@ -678,22 +606,16 @@ class LightingSettings(AddonObject):
         moon_color: RGB | HexRGB,
         orbital_offset_degrees: float,
     ) -> None:
-        self._content["minecraft:lighting_settings"]["directional_lights"][
-            "orbital"
-        ] = {
+        self._content["minecraft:lighting_settings"]["directional_lights"]["orbital"] = {
             "sun": {
                 "illuminance": (
-                    sun_illuminance
-                    if type(sun_illuminance) is float
-                    else KeyFrame.keyframe_dict(sun_illuminance)
+                    sun_illuminance if type(sun_illuminance) is float else KeyFrame.keyframe_dict(sun_illuminance)
                 ),
                 "color": convert_color(sun_color),
             },
             "moon": {
                 "illuminance": (
-                    moon_illuminance
-                    if type(moon_illuminance) is float
-                    else KeyFrame.keyframe_dict(moon_illuminance)
+                    moon_illuminance if type(moon_illuminance) is float else KeyFrame.keyframe_dict(moon_illuminance)
                 ),
                 "color": convert_color(moon_color),
             },
@@ -707,9 +629,7 @@ class LightingSettings(AddonObject):
         }
 
     def emissive(self, desaturation: float) -> None:
-        self._content["minecraft:lighting_settings"]["emissive"] = {
-            "desaturation": clamp(desaturation, 0.0, 1.0)
-        }
+        self._content["minecraft:lighting_settings"]["emissive"] = {"desaturation": clamp(desaturation, 0.0, 1.0)}
 
     def ambient(self, illuminance: float, color: RGB | HexRGB) -> None:
         self._content["minecraft:lighting_settings"]["ambient"] = {
@@ -718,9 +638,7 @@ class LightingSettings(AddonObject):
         }
 
     def sky(self, intensity: float) -> None:
-        self._content["minecraft:lighting_settings"]["sky"] = {
-            "intensity": clamp(intensity, 0.1, 1.0)
-        }
+        self._content["minecraft:lighting_settings"]["sky"] = {"intensity": clamp(intensity, 0.1, 1.0)}
 
 
 class LocalLighting(AddonObject):
@@ -730,15 +648,11 @@ class LocalLighting(AddonObject):
 
     def __init__(self) -> None:
         if not CONFIG._PBR:
-            raise RuntimeError(
-                "Local lighting requires PBR to be enabled in the config."
-            )
+            raise RuntimeError("Local lighting requires PBR to be enabled in the config.")
         super().__init__("local_lighting")
         self.content(JsonSchemes.local_lighting())
 
-    def add_point_light(
-        self, block_identifier: Block | Identifier, color: HexRGB
-    ) -> None:
+    def add_point_light(self, block_identifier: Block | Identifier, color: HexRGB) -> None:
         """
         Adds a point light to the point lights configuration.
 
@@ -762,9 +676,7 @@ class PBRFallback(AddonObject):
         if not CONFIG._PBR:
             raise RuntimeError("PBR fallback requires PBR to be enabled in the config.")
         super().__init__("global")
-        self.content(
-            JsonSchemes.pbr_fallback_settings(f"{CONFIG.NAMESPACE}:pbr_fallback")
-        )
+        self.content(JsonSchemes.pbr_fallback_settings(f"{CONFIG.NAMESPACE}:pbr_fallback"))
 
     def block_fallback(self, MERS: RGBA) -> None:
         """
@@ -824,9 +736,7 @@ class CubeMapSettings(AddonObject):
 
     def __init__(self, identifier: str = "minecraft:default_cubemap") -> None:
         if not CONFIG._PBR:
-            raise RuntimeError(
-                "Cube map settings require PBR to be enabled in the config."
-            )
+            raise RuntimeError("Cube map settings require PBR to be enabled in the config.")
 
         if identifier == "minecraft:default_cubemap":
             super().__init__(identifier, True)
@@ -868,13 +778,9 @@ class CubeMapSettings(AddonObject):
         """
 
         self._content["minecraft:cubemap_settings"]["lighting"] = {
-            "ambient_light_illuminance": KeyFrame.keyframe_dict(
-                ambient_light_illuminance
-            ),
+            "ambient_light_illuminance": KeyFrame.keyframe_dict(ambient_light_illuminance),
             "sky_light_contribution": clamp(sky_light_contribution, 0.0, 1.0),
-            "directional_light_contribution": clamp(
-                directional_light_contribution, 0.0, 1.0
-            ),
+            "directional_light_contribution": clamp(directional_light_contribution, 0.0, 1.0),
             "affected_by_atmospheric_scattering": affected_by_atmospheric_scattering,
             "affected_by_volumetric_scattering": affected_by_volumetric_scattering,
         }

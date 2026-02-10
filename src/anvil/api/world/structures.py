@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import os
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from anvil import ANVIL
 from anvil.api.core.filters import Filter
@@ -7,6 +9,9 @@ from anvil.api.core.types import ConstantIntProvider, Identifier, StructureProce
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import CopyFiles, FileExists, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
+
+if TYPE_CHECKING:
+    from anvil.api.world.loot_tables import LootTable
 
 
 class _processor_predicates:
@@ -93,10 +98,122 @@ class _processor_predicates:
         def get(self):
             return self._dict
 
+    class _block_entity_modifier:
+        def __init__(self, processor: dict):
+            self._dict = processor
+
+        def get(self):
+            return self._dict
+
+        def passthrough(self):
+            self._dict["block_entity_modifier"] = {"type": "minecraft:passthrough"}
+
+        def append_loot(self, loot_table: LootTable | str):
+            from anvil.api.world.loot_tables import LootTable
+
+            self._dict["block_entity_modifier"] = {
+                "type": "minecraft:append_loot",
+                "loot_table": loot_table.table_path if isinstance(loot_table, LootTable) else str(loot_table),
+            }
+
+    class _output_state:
+        def __init__(self, processor: dict):
+            self._dict = processor
+
+        def get(self):
+            return self._dict
+
+        def output_block(self, block: MinecraftBlockDescriptor | Identifier):
+            self._dict["output_state"] = block if isinstance(block, str) else block.identifier
+
     def __init__(self, processor: dict):
         self.input_predicate = self._input_predicate(processor)
         self.position_predicate = self._position_predicate(processor)
         self.location_predicate = self._location_predicate(processor)
+        self.block_entity_modifier = self._block_entity_modifier(processor)
+        self.output_state = self._output_state(processor)
+
+
+class _processor_builder:
+    def __init__(self, allow_capped_processor: bool = True):
+        self._process_list: list[dict] = []
+        self._allow_capped_processor = allow_capped_processor
+
+    def add_block_ignore_processor(self, blocks: list[MinecraftBlockDescriptor | Identifier]):
+        if not isinstance(blocks, list):
+            raise TypeError("blocks must be a list")
+
+        self._process_list.append(
+            {
+                "processor_type": "minecraft:block_ignore",
+                "blocks": [block if isinstance(block, str) else block.identifier for block in blocks],
+            }
+        )
+
+    def add_protected_blocks_processor(self, block_tag: str):
+        if not isinstance(block_tag, str):
+            raise TypeError("block_tag must be a string")
+
+        self._process_list.append({"processor_type": "minecraft:protected_blocks", "value": block_tag})
+
+    def add_capped_processor(
+        self,
+        limit: int | ConstantIntProvider | UniformIntProvider,
+    ) -> _processor_builder:
+        if not self._allow_capped_processor:
+            raise ValueError("Capped processors are not allowed to be chained.")
+
+        if not isinstance(limit, (int, ConstantIntProvider, UniformIntProvider)):
+            raise TypeError("limit must be an integer or a provider")
+
+        if isinstance(limit, int):
+            limit_data = limit
+        elif isinstance(limit, ConstantIntProvider):
+            limit_data = {"type": "constant", "value": limit["value"]}
+        else:
+            limit_data = {
+                "type": "uniform",
+                "min_inclusive": limit["min"],
+                "max_inclusive": limit["max"],
+            }
+
+        process = {
+            "processor_type": "minecraft:capped",
+            "delegate": _processor_builder(False),
+            "limit": limit_data,
+        }
+        self._process_list.append(process)
+
+        return process["delegate"]
+
+    def add_block_rule(self) -> _processor_predicates:
+        processors: list[dict] = self._process_list
+        processor = next(
+            (pr for pr in processors if pr.get("processor_type") == "minecraft:rule"),
+            None,
+        )
+        if processor is None:
+            processor = {"processor_type": "minecraft:rule", "rules": []}
+            processors.append(processor)
+
+        rule = {
+            "input_predicate": {},
+            "position_predicate": {},
+            "location_predicate": {},
+            "output_state": {},
+        }
+        processor["rules"].append(rule)
+        predicate = _processor_predicates(processor["rules"][-1])
+        return predicate
+
+    def build(self):
+        for processor in self._process_list:
+            if processor["processor_type"] == "minecraft:capped" and isinstance(
+                processor["delegate"], _processor_builder
+            ):
+                processor["delegate"] = processor["delegate"].build()[0]
+
+        return self._process_list
 
 
 class Structure:
@@ -117,9 +234,9 @@ class Structure:
             *self._sub_path,
             f"{self._name}.mcstructure",
         )
-        if not FileExists(os.path.join("world", "structures", *self._sub_path, f"{self._name}.mcstructure")):
+        if not FileExists(os.path.join("assets", "structures", *self._sub_path, f"{self._name}.mcstructure")):
             raise FileNotFoundError(
-                f"{self._name}.mcstructure not found in {os.path.join('assets', 'world', 'structures')}. Please ensure the file exists."
+                f"{self._name}.mcstructure not found in {os.path.join('assets', 'structures')}. Please ensure the file exists."
             )
 
     def queue(self):
@@ -139,7 +256,7 @@ class Structure:
     def _export(self):
         """Exports the structure to the file system."""
         CopyFiles(
-            os.path.join("world", "structures", *self._sub_path),
+            os.path.join("assets", "structures", *self._sub_path),
             os.path.join(
                 CONFIG.BP_PATH,
                 "structures",
@@ -150,7 +267,7 @@ class Structure:
         )
 
 
-class _JigsawStructureProcess(AddonObject):
+class _JigsawStructureProcess(AddonObject, _processor_builder):
     """A class representing a Structure Process in Minecraft."""
 
     _extension = ".json"
@@ -159,97 +276,12 @@ class _JigsawStructureProcess(AddonObject):
 
     def __init__(self, name: str):
         super().__init__(name)
+        _processor_builder.__init__(self)
         self.content(JsonSchemes.jigsaw_structure_process(self.identifier))
 
-    def add_block_ignore_processor(self, blocks: list[MinecraftBlockDescriptor | Identifier]):
-        if not isinstance(blocks, list):
-            raise TypeError("blocks must be a list")
-
-        self._content["minecraft:processor_list"]["processors"].append(
-            {
-                "processor_type": "minecraft:block_ignore",
-                "blocks": [block if isinstance(block, str) else block.identifier for block in blocks],
-            }
-        )
-
-    def add_protected_blocks_processor(self, block_tag: str):
-        if not isinstance(block_tag, str):
-            raise TypeError("block_tag must be a string")
-
-        self._content["minecraft:processor_list"]["processors"].append(
-            {"processor_type": "minecraft:protected_blocks", "value": block_tag}
-        )
-
-    def add_capped_processor(
-        self,
-        delegate: StructureProcessors,
-        limit: int | ConstantIntProvider | UniformIntProvider,
-    ):
-        if not isinstance(delegate, str):
-            raise TypeError("delegate must be a string")
-        if delegate not in ["minecraft:block_ignore", "minecraft:protected_blocks"]:
-            raise ValueError("delegate must be one of 'minecraft:block_ignore', 'minecraft:protected_blocks'")
-        if not isinstance(limit, (int, ConstantIntProvider, UniformIntProvider)):
-            raise TypeError("limit must be an integer or a provider")
-
-        if isinstance(limit, int):
-            limit_data = limit
-        elif isinstance(limit, ConstantIntProvider):
-            limit_data = {"type": "constant", "value": limit["value"]}
-        else:
-            limit_data = {
-                "type": "uniform",
-                "min_inclusive": limit["min"],
-                "max_inclusive": limit["max"],
-            }
-
-        self._content["minecraft:processor_list"]["processors"].append(
-            {
-                "processor_type": "minecraft:capped",
-                "delegate": delegate,
-                "limit": limit_data,
-            }
-        )
-
-    def add_block_rule(
-        self, output_block: MinecraftBlockDescriptor | Identifier, loot_table_path: str = None
-    ) -> _processor_predicates:
-        if not isinstance(output_block, (MinecraftBlockDescriptor, Identifier)):
-            raise TypeError("output_block must be a MinecraftBlockDescriptor or Identifier")
-        if loot_table_path is not None and not isinstance(loot_table_path, str):
-            raise TypeError("loot_table_path must be a string or None")
-
-        processors: list[dict] = self._content["minecraft:processor_list"]["processors"]
-        processor = next(
-            (pr for pr in processors if pr.get("processor_type") == "minecraft:rule"),
-            None,
-        )
-        if processor is None:
-            processor = {"processor_type": "minecraft:rule", "rules": []}
-            processors.append(processor)
-
-        processor["rules"].append(
-            {
-                "input_predicate": {},
-                "position_predicate": {},
-                "location_predicate": {},
-                "output_state": output_block,
-            }
-        )
-
-        if loot_table_path:
-            processor["block_entity_modifier"] = {
-                "type": "minecraft:append_loot",
-                "loot_table": loot_table_path,
-            }
-
-        predicate = _processor_predicates(processor["rules"][-1])
-        return predicate
-
-    def queue(
-        self,
-    ):
-        return super().queue()
+    def _export(self):
+        self._content["minecraft:processor_list"]["processors"] = self.build()
+        super()._export()
 
 
 class _JigsawStructure(AddonObject):
@@ -537,7 +569,7 @@ class JigsawStructureTemplatePool(AddonObject):
         processors_name: str | _JigsawStructureProcess | None = None,
         weight: int = 1,
         projection: Literal["rigid", "terrain_matching"] = "rigid",
-    ) -> _JigsawStructureProcess | None:
+    ) -> _JigsawStructureProcess:
         """Adds a structure to the template pool.
 
         Parameters:

@@ -10,6 +10,7 @@ import zipfile
 from datetime import datetime
 
 import commentjson as commentjson
+
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 
 from ..__version__ import __version__
@@ -93,7 +94,7 @@ class PrettyPrintedEncoder(json.JSONEncoder):
 
     def encode(self, o, _level=0):
         if _level == 0:
-            o = self.shorten_dict(self.sort_dict(o))
+            o = self.shorten_dict(o)
 
         if isinstance(o, (list, tuple)):
             items = [self.encode(v, _level + 1) for v in o]

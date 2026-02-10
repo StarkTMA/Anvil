@@ -292,7 +292,7 @@ class Animation:
                 if "\n" in effect:
                     raise ValueError(f"Newline in sound at {time}")
                 e = {"effect": effect.get("effect")}
-                if (effect.get("locator") != ""):
+                if effect.get("locator") != "":
                     e["locator"] = effect.get("locator")
                 target_dict[time].append(e)
 
@@ -910,7 +910,7 @@ class _ModelManager:
                     ]
                 ):
                     # Minecraft will not accept fit_to_frame=False from "1.21.130" onwards
-                    transform["fit_to_frame"] = True
+                    transform["fit_to_frame"] = {}
                     transforms[display] = transform
 
     def process_geometry_scheme(self) -> None:

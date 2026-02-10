@@ -17,9 +17,7 @@ type Color = RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA
 
 type Coordinate = Vector3D
 type Coordinates = tuple[Vector3D, Vector3D, Vector3D]
-type RelativePosition = tuple[
-    int | Literal["^", "~"], int | Literal["^", "~"], int | Literal["^", "~"]
-]
+type RelativePosition = tuple[int | Literal["^", "~"], int | Literal["^", "~"], int | Literal["^", "~"]]
 type RelativeRotation = tuple[int | Literal["~"], int | Literal["~"]]
 
 type Component = str

@@ -9,6 +9,7 @@ from anvil.api.core.core import SoundEvent
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
+    ConnectionTrait,
     ItemCategory,
     ItemGroups,
     PlacementDirectionTrait,
@@ -91,32 +92,56 @@ class _BlockTraits:
     def __init__(self) -> None:
         self._traits = {}
 
-    def placement_direction(self, y_rotation_offset: float = 0, *traits: PlacementDirectionTrait):
+    def placement_direction(
+        self,
+        *,
+        y_rotation_offset: float = 0,
+        blocks_to_corner_with: list[MinecraftBlockDescriptor] = None,
+        traits: list[PlacementDirectionTrait] = None,
+    ):
         """can add states containing information about the player's rotation when the block is placed.
 
         Parameters:
             y_rotation_offset (float, optional): The y rotation offset. Defaults to 0.
-            traits (PlacementDirectionTrait): The traits for the block.
+            blocks_to_corner_with (list[MinecraftBlockDescriptor], optional): A list of blocks that when placed next to this block, will cause the block to rotate to face the corner between them. Defaults to None.
+            traits (list[PlacementDirectionTrait], optional): The traits for the block. Defaults to None.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_direction-example
         """
 
+        if blocks_to_corner_with and PlacementPositionTrait.CornerAndCardinal not in traits:
+            raise ValueError(
+                "blocks_to_corner_with can only be used if PlacementPositionTrait.CornerAndCardinal is in traits."
+            )
+
         self._traits["minecraft:placement_direction"] = {
-            "enabled_states": [t for t in traits if t],
+            "enabled_states": traits,
             "y_rotation_offset": y_rotation_offset,
+            "blocks_to_corner_with": blocks_to_corner_with,
         }
 
-    def placement_position(self, *traits: PlacementPositionTrait):
+    def placement_position(self, traits: list[PlacementPositionTrait]):
         """Can add states containing information about the position of the block when it is placed.
 
         Parameters:
-            traits (PlacementPositionTrait): The traits for the block.
+            traits (list[PlacementPositionTrait]): The traits for the block.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_position-example
         """
         self._traits["minecraft:placement_position"] = {"enabled_states": traits}
+
+    def connection(self, traits: list[ConnectionTrait]):
+        """Can add states containing information about the connection of the block to other blocks.
+
+        Parameters:
+            traits (list[ConnectionTrait]): The traits for the block.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#connection_trait_example
+        """
+        self._traits["minecraft:connection"] = {"enabled_states": traits}
 
     @property
     def export(self):
@@ -242,7 +267,6 @@ class _BlockServer(AddonObject):
             raise RuntimeError(f"Block {self.identifier} missing default component. Block [{self.identifier}]")
         if not BlockGeometry._identifier in comps:
             raise RuntimeError(f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]")
-
         if not BlockDisplayName._identifier in self._server_block["minecraft:block"]["components"]:
             self._server_block["minecraft:block"]["components"][BlockDisplayName._identifier] = self._display_name
 

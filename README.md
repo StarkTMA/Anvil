@@ -4,6 +4,7 @@
 ![Anvil Version](https://img.shields.io/github/v/release/StarkTMA/Anvil?label=version)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/StarkTMA/Anvil)
 
 ## Introduction to Anvil
 
@@ -78,14 +79,14 @@ awesome_project/
 │   ├── bbmodels/
 │   ├── particles/
 │   ├── textures/
-│   └── sounds/
+│   ├── sounds/
+│   └── structures/
 ├── marketing/
 ├── output/
 ├── scripts/
 │   ├── javascript/
 │   └── python/
 ├── world/
-│   └── structures/
 ├── .gitignore
 ├── CHANGELOG.md
 ├── anvilconfig.json

@@ -65,9 +65,7 @@ class BiomeClimate(_BaseComponent):
                 raise ValueError("Snow accumulation must be a list of two values.")
             for val in snow_accumulation:
                 if not (0.0 <= val <= 1.0):
-                    raise ValueError(
-                        "Snow accumulation values must be between 0.0 and 1.0"
-                    )
+                    raise ValueError("Snow accumulation values must be between 0.0 and 1.0")
             self._add_field("snow_accumulation", snow_accumulation)
 
 
@@ -192,9 +190,7 @@ class BiomeMountainParameters(_BaseComponent):
             steep["steep_material_adjustment"]["west_slopes"] = west_slopes
 
         if not isinstance(block, MinecraftBlockDescriptor):
-            raise ValueError(
-                "Material name must be a MinecraftBlockDescriptor instance"
-            )
+            raise ValueError("Material name must be a MinecraftBlockDescriptor instance")
 
         self._component.update(steep)
 
@@ -289,9 +285,7 @@ class BiomeOverworldHeight(_BaseComponent):
                 self._add_field("noise_params", list(arg))
             elif isinstance(arg, str):
                 if arg not in BiomeNoiseType.__args__:
-                    raise ValueError(
-                        f"Noise type must be one of: {BiomeNoiseType}. Got {arg}"
-                    )
+                    raise ValueError(f"Noise type must be one of: {BiomeNoiseType}. Got {arg}")
                 self._add_field("noise_type", arg)
 
 
@@ -411,9 +405,7 @@ class BiomeSurfaceMaterialAdjustments(_BaseComponent):
         ):
             raise ValueError("Height range must be a list or tuple of two integers")
 
-        if noise_frequency_scale is not None and not isinstance(
-            noise_frequency_scale, (int, float)
-        ):
+        if noise_frequency_scale is not None and not isinstance(noise_frequency_scale, (int, float)):
             raise ValueError("Noise frequency scale must be a number")
 
         if noise_range is not None and (
@@ -430,12 +422,8 @@ class BiomeSurfaceMaterialAdjustments(_BaseComponent):
             sea_material,
             top_material,
         ]:
-            if material is not None and not isinstance(
-                material, MinecraftBlockDescriptor
-            ):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+            if material is not None and not isinstance(material, MinecraftBlockDescriptor):
+                raise ValueError("All materials must be MinecraftBlockDescriptor instances")
 
         adjustment = {
             "height_range": height_range,
@@ -496,9 +484,7 @@ class BiomeSurfaceBuilder(_BaseComponent):
             sea_material,
         ]:
             if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+                raise ValueError("All materials must be MinecraftBlockDescriptor instances")
 
         if sea_floor_depth is not None:
             if not isinstance(sea_floor_depth, int):
@@ -548,9 +534,7 @@ class BiomeSurfaceBuilder(_BaseComponent):
             sea_material,
         ]:
             if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+                raise ValueError("All materials must be MinecraftBlockDescriptor instances")
 
         if sea_floor_depth is not None:
             if not isinstance(sea_floor_depth, int):
@@ -610,9 +594,7 @@ class BiomeSurfaceBuilder(_BaseComponent):
             hard_clay_material,
         ]:
             if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+                raise ValueError("All materials must be MinecraftBlockDescriptor instances")
 
         if bryce_pillars is not None and not isinstance(bryce_pillars, bool):
             raise ValueError("Bryce pillars must be a boolean")
@@ -678,9 +660,7 @@ class BiomeSurfaceBuilder(_BaseComponent):
             sea_material,
         ]:
             if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+                raise ValueError("All materials must be MinecraftBlockDescriptor instances")
 
         if sea_floor_depth is not None:
             if not isinstance(sea_floor_depth, int):
@@ -707,9 +687,7 @@ class BiomeSurfaceBuilder(_BaseComponent):
             builder["sea_floor_depth"] = sea_floor_depth
 
         if max_puddle_depth_below_sea_level is not None:
-            builder["max_puddle_depth_below_sea_level"] = (
-                max_puddle_depth_below_sea_level
-            )
+            builder["max_puddle_depth_below_sea_level"] = max_puddle_depth_below_sea_level
 
         self._add_field("builder", builder)
         return self
@@ -733,9 +711,7 @@ class BiomeSurfaceBuilder(_BaseComponent):
         """
         for material in [foundation_material, sea_material, beach_material]:
             if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+                raise ValueError("All materials must be MinecraftBlockDescriptor instances")
 
         if not isinstance(ceiling_materials, list) or len(ceiling_materials) < 1:
             raise ValueError("Ceiling materials must be a list with at least 1 item")
@@ -745,9 +721,7 @@ class BiomeSurfaceBuilder(_BaseComponent):
 
         for material in ceiling_materials + floor_materials:
             if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+                raise ValueError("All materials must be MinecraftBlockDescriptor instances")
 
         builder = {
             "type": "minecraft:capped",
@@ -790,8 +764,30 @@ class BiomeTags(_BaseComponent):
 
             for tag in tags:
                 if not isinstance(tag, (str, MinecraftBiomeTags)):
-                    raise ValueError(
-                        "All tags must be strings or MinecraftBiomeTags enum values"
-                    )
+                    raise ValueError("All tags must be strings or MinecraftBiomeTags enum values")
 
             self._add_field("tags", tags)
+
+
+class BiomeVillageType(_BaseComponent):
+    _identifier = "minecraft:village_type"
+
+    def __init__(self, village_type: Literal["default", "desert", "ice", "savanna", "taiga"]) -> None:
+        """SDetermines the type of village for the Biome.
+
+        Parameters:
+            village_type (Literal["default", "desert", "ice", "savanna", "taiga"]): The village type for this biome. Must be one of: "default", "desert", "ice", "savanna", "taiga".
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_village_type
+        """
+        super().__init__("village_type")
+        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
+
+        if not isinstance(village_type, str):
+            raise ValueError("Village type must be a string")
+
+        if village_type not in ["default", "desert", "ice", "savanna", "taiga"]:
+            raise ValueError("Village type must be one of: 'default', 'desert', 'ice', 'savanna', 'taiga'")
+
+        self._add_field("village_type", village_type)

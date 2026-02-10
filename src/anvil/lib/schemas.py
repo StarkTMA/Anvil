@@ -749,10 +749,11 @@ class AddonDescriptor:
         object_namespace: str
 
         if ":" in name:
-            object_namespace, object_name = name.split(":", 1)
+            object_namespace, object_name = name.split(":")
         else:
             object_name = name
             object_namespace = "minecraft" if is_vanilla else CONFIG.NAMESPACE
+
 
         if str(object_name)[0].isdigit():
             raise ValueError(f"Names cannot start with a digit. {object_name} at {self._object_type}[{name}]")
@@ -872,7 +873,6 @@ class AddonObject(AddonDescriptor):
 
         self._directory = ""
         self._content = {}
-        self._name = name
 
     def content(self, content) -> AddonObject:
         """

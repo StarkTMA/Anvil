@@ -13,18 +13,19 @@ class _DialogueButton:
         _commands (list[str], optional): A list of commands for the button. Defaults to empty list.
     """
 
-    def __init__(self, button_name: str, *commands: str):
+    def __init__(self, button_name: str, commands: list[str]):
         """Initializes a _DialogueButton instance.
 
         Parameters:
             button_name (str): The name of the button.
-            *commands (str): The commands for the button.
+            commands (list[str]): The commands for the button.
         """
-        self._button_name = button_name
-        self._commands = [
-            f"/{command}" if not str(command).startswith("/") else command
-            for command in commands
-        ]
+        lower_case = button_name.lower().replace(" ", "_")
+        key = f"dialogue.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.button.{lower_case}"
+        AnvilTranslator().add_localization_entry(key, button_name)
+
+        self._button_name = key
+        self._commands = [f"/{command}" if not str(command).startswith("/") else command for command in commands]
 
     def _export(self):
         """Returns the dialogue button.
@@ -64,7 +65,7 @@ class _DialogueScene:
     def identifier(self):
         return self._scene_tag
 
-    def properties(self, npc_name: str, text: str = ""):
+    def properties(self, npc_name: str, text: str):
         """Sets the properties for the dialogue scene.
 
         Parameters:
@@ -74,17 +75,24 @@ class _DialogueScene:
         Returns:
             _DialogueScene: The dialogue scene instance.
         """
-        self._npc_name: str = npc_name
-        if not text is None:
-            self._text: str = text
+        lower_case = npc_name.lower().replace(" ", "_")
+        key = f"dialogue.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.npc_name.{lower_case}"
+        AnvilTranslator().add_localization_entry(key, npc_name)
+        self._npc_name = key
+
+        lower_case = text.lower().replace(" ", "_")
+        key = f"dialogue.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.text.{lower_case}"
+        AnvilTranslator().add_localization_entry(key, text)
+        self._text = key
+
         return self
 
-    def button(self, button_name: str, *commands: str):
+    def button(self, button_name: str, commands: list[str]):
         """Adds a button to the dialogue scene.
 
         Parameters:
             button_name (str): The name of the button.
-            *commands (str): The commands for the button.
+            commands (list[str]): A list of commands for the button.
 
         Returns:
             _DialogueScene: The dialogue scene instance.
@@ -94,15 +102,15 @@ class _DialogueScene:
                 f"The Dialogue scene {self._scene_tag} has {len(self._buttons)} buttons, The maximum allowed is 6."
             )
         # Buttons cannot be translated
-        button = _DialogueButton(button_name, *commands)
+        button = _DialogueButton(button_name, commands)
         self._buttons.append(button)
         return self
 
-    def on_open_commands(self, *commands: str):
+    def on_open_commands(self, commands: list[str]):
         """Sets the commands to be executed when the scene opens.
 
         Parameters:
-            *commands (str): The commands to be executed.
+            commands (list[str]): The commands to be executed.
 
         Returns:
             _DialogueScene: The dialogue scene instance.
@@ -110,11 +118,11 @@ class _DialogueScene:
         self._on_open_commands = commands
         return self
 
-    def on_close_commands(self, *commands: str):
+    def on_close_commands(self, commands: list[str]):
         """Sets the commands to be executed when the scene closes.
 
         Parameters:
-            *commands (str): The commands to be executed.
+            commands (list[str]): The commands to be executed.
 
         Returns:
             _DialogueScene: The dialogue scene instance.
@@ -128,13 +136,10 @@ class _DialogueScene:
         Returns:
             dict: The dialogue scene.
         """
-        npc_key = AnvilTranslator().add_localization_entry(f"npc.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.{self._npc_name}", self._npc_name)
-        dialogue_text_key = AnvilTranslator().add_localization_entry(f"dialogue.{CONFIG.NAMESPACE}:{CONFIG.PROJECT_NAME}.{self._scene_tag}.text", self._text)
-
         return JsonSchemes.dialogue_scene(
             self._scene_tag,
-            npc_key,
-            dialogue_text_key,
+            self._npc_name,
+            self._text,
             self._on_open_commands,
             self._on_close_commands,
             [button._export() for button in self._buttons],

@@ -94,9 +94,7 @@ class ItemTexturesObject(AddonObject):
 
         else:
             for item in item_sprites:
-                if not FileExists(
-                    os.path.join("assets", "textures", "items", f"{item}.png")
-                ):
+                if not FileExists(os.path.join("assets", "textures", "items", f"{item}.png")):
                     raise FileNotFoundError(
                         f"Item texture '{item}.png' does not exist in '{os.path.join("assets", "textures", "items")}'. {self._object_type}[{item_name}]"
                     )
@@ -173,7 +171,7 @@ class TerrainTexturesObject(AddonObject):
             self.content(JsonSchemes.terrain_texture(CONFIG.PROJECT_NAME))
             self._initialized = True
 
-    def add_block(self, block_name: str, directory: str, block_textures: list[str]):
+    def add_block(self, block_name: str, directory: str, block_textures: list[str], force_vanilla: bool = False):
         """Adds block textures to the content.
 
         Parameters:
@@ -181,7 +179,9 @@ class TerrainTexturesObject(AddonObject):
             directory (str): The directory path for the textures.
             block_textures (str): The names of the block textures.
         """
-        self._content["texture_data"][f"{CONFIG.NAMESPACE}:{block_name}"] = {
+        id = f"{CONFIG.NAMESPACE}:{block_name}" if not force_vanilla else f"minecraft:{block_name}"
+
+        self._content["texture_data"][id] = {
             "textures": [
                 *[
                     os.path.join(
@@ -198,7 +198,7 @@ class TerrainTexturesObject(AddonObject):
         }
 
     def add_block_variations(
-        self, block_name: str, directory: str, block_variant: list[dict[str, str]]
+        self, block_name: str, directory: str, block_variant: list[dict[str, str]], force_vanilla: bool = False
     ):
         """Adds block textures with variations to the content.
 
@@ -208,7 +208,9 @@ class TerrainTexturesObject(AddonObject):
             variations (list[dict]): List of variations for the block textures.
         """
 
-        self._content["texture_data"][f"{CONFIG.NAMESPACE}:{block_name}"] = {
+        id = f"{CONFIG.NAMESPACE}:{block_name}" if not force_vanilla else f"minecraft:{block_name}"
+
+        self._content["texture_data"][id] = {
             "textures": {
                 "variations": [
                     *[

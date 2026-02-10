@@ -356,7 +356,7 @@ class _LootPoolEntryFunctions:
         return self
 
     @overload
-    def SetCount(self, count: int):
+    def SetCount(self, count: int) -> "_LootPoolEntryFunctions":
         """Sets the quantity of items returned to an exact number.
 
         Parameters:
@@ -368,7 +368,7 @@ class _LootPoolEntryFunctions:
         ...
 
     @overload
-    def SetCount(self, count: tuple[int, int]):
+    def SetCount(self, count: tuple[int, int]) -> "_LootPoolEntryFunctions":
         """Sets the quantity of items returned to a random number within a range.
 
         Parameters:
@@ -379,7 +379,7 @@ class _LootPoolEntryFunctions:
         """
         ...
 
-    def SetCount(self, count):
+    def SetCount(self, count) -> "_LootPoolEntryFunctions":
         """Sets the quantity of items returned.
 
         Parameters:
@@ -547,10 +547,7 @@ class _LootPoolEntryFunctions:
         return self
 
     # Miscellaneous Functions
-    def ExplorationMap(
-        self,
-        destination: ExplorationMapDestinations | JigsawStructureSet | Identifier
-    ):
+    def ExplorationMap(self, destination: ExplorationMapDestinations | JigsawStructureSet | Identifier):
         """Transforms a normal map into a treasure map marking the location of structures.
 
         Parameters:
@@ -567,7 +564,7 @@ class _LootPoolEntryFunctions:
         self._function.append(
             {
                 "function": "exploration_map",
-                "destination": destination if isinstance(destination, str) else str(destination)
+                "destination": destination if isinstance(destination, str) else str(destination),
             }
         )
         return self

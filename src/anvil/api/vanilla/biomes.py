@@ -1,4 +1,3 @@
-
 from enum import StrEnum
 
 
@@ -109,11 +108,13 @@ class MinecraftBiomeTags(StrEnum):
     DripstoneCaves = "dripstone_caves"
     Edge = "edge"
     ExtremeHills = "extreme_hills"
+    FastFishing = "fast_fishing"
     FlowerForest = "flower_forest"
     Forest = "forest"
     Frozen = "frozen"
     FrozenPeaks = "frozen_peaks"
     Grove = "grove"
+    HighSeas = "high_seas"
     Hills = "hills"
     Ice = "ice"
     IcePlains = "ice_plains"
@@ -143,6 +144,7 @@ class MinecraftBiomeTags(StrEnum):
     Roofed = "roofed"
     Savanna = "savanna"
     Shore = "shore"
+    Slime = "slime"
     SnowySlopes = "snowy_slopes"
     SoulsandValley = "soulsand_valley"
     SpawnEndermen = "spawn_endermen"
@@ -154,9 +156,10 @@ class MinecraftBiomeTags(StrEnum):
     SpawnPiglin = "spawn_piglin"
     SpawnZombifiedPiglin = "spawn_zombified_piglin"
     Stone = "stone"
+    SurfaceMineshaft = "surface_mineshaft"
     Swamp = "swamp"
+    SwampWaterHugeMushroom = "swamp_water_huge_mushroom"
     Taiga = "taiga"
     TheEnd = "the_end"
     Warm = "warm"
     WarpedForest = "warped_forest"
-

@@ -113,12 +113,8 @@ class JsonSchemes:
         DEV_RES_DIR = os.path.join(RELEASE_COM_MOJANG, "development_resource_packs")
         DEV_BEH_DIR = os.path.join(RELEASE_COM_MOJANG, "development_behavior_packs")
 
-        DEV_PREV_RES_DIR = os.path.join(
-            PREVIEW_COM_MOJANG, "development_resource_packs"
-        )
-        DEV_PREV_BEH_DIR = os.path.join(
-            PREVIEW_COM_MOJANG, "development_behavior_packs"
-        )
+        DEV_PREV_RES_DIR = os.path.join(PREVIEW_COM_MOJANG, "development_resource_packs")
+        DEV_PREV_BEH_DIR = os.path.join(PREVIEW_COM_MOJANG, "development_behavior_packs")
 
         return load_file(
             "code_workspace.jsont",
@@ -153,9 +149,7 @@ class JsonSchemes:
 
     @staticmethod
     def tsconstants(namespace: str, project_name: str):
-        return load_file(
-            "tsconstants.jsont", {"namespace": namespace, "project_name": project_name}
-        )
+        return load_file("tsconstants.jsont", {"namespace": namespace, "project_name": project_name})
 
 
 def CreateDirectoriesFromTree(tree: dict) -> None:
@@ -203,17 +197,13 @@ def handle_configuration(
 ):
     config = Config()
 
-    config.add_option(
-        ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
-    )
+    config.add_option(ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
 
     config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
     config.add_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME, display_name)
-    config.add_option(
-        ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs"
-    )
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_DESCRIPTION, f"{display_name} Packs")
     config.add_option(
         ConfigSection.PACKAGE,
         ConfigOption.BEHAVIOUR_DESCRIPTION,
@@ -224,9 +214,7 @@ def handle_configuration(
         ConfigOption.RESOURCE_DESCRIPTION,
         f"{display_name} Resource Pack",
     )
-    config.add_option(
-        ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world"
-    )
+    config.add_option(ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world")
 
     config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
     config.add_option(
@@ -245,18 +233,14 @@ def handle_configuration(
     config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
     config.add_option(ConfigSection.ANVIL, ConfigOption.PREVIEW, preview)
-    config.add_option(
-        ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
-    )
+    config.add_option(ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py")
     config.add_option(ConfigSection.ANVIL, ConfigOption.MINIFY, False)
 
     config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
     config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
     config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
     config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
-    config.add_option(
-        ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4())
-    )
+    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4()))
 
     config.add_section(namespace)
 
@@ -295,9 +279,7 @@ def check_version() -> None:
     """
     try:
         latest_build: str = (
-            requests.get(
-                "https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py"
-            )
+            requests.get("https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py")
             .split("=")[-1]
             .strip()
         )
@@ -332,9 +314,7 @@ def handle_script(
 
     script_uuid = str(uuid.uuid4())
     config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, script_uuid)
-    config.add_option(
-        ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
-    )
+    config.add_option(ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js")
     DEV_BEH_DIR = os.path.join(
         DEV_BEH_DIR,
         f"BP_{config.get_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME)}",
@@ -462,14 +442,13 @@ def create(
     display_name = project_name.title().replace("-", " ").replace("_", " ")
     display_welcome_message(display_name)
 
-    config = handle_configuration(
-        namespace, project_name, display_name, preview, scriptapi, addon
-    )
+    config = handle_configuration(namespace, project_name, display_name, preview, scriptapi, addon)
 
     CreateDirectoriesFromTree(
         {
             project_name: {
                 "assets": {
+                    "structures": {},
                     "bbmodels": {},
                     "textures": {
                         "environment": {},
@@ -481,7 +460,7 @@ def create(
                     "skins": {},
                 },
                 "scripts": {"javascript": {}, "python": {}},
-                "world": {"structures": {}},
+                "world": {},
                 "marketing": {},
                 "output": {},
             }
@@ -506,9 +485,7 @@ def create(
     if vscode:
         File(
             f"{project_name}.code-workspace",
-            JsonSchemes.code_workspace(
-                config.get_option("package", "company"), WORKING_DIR, preview
-            ),
+            JsonSchemes.code_workspace(config.get_option("package", "company"), WORKING_DIR, preview),
             DESKTOP,
             "w",
         )
@@ -568,17 +545,13 @@ def export_world(world_name: str) -> None:
         with open("./anvilconfig.json", "r") as file:
             data: dict = json.loads(file.read())
             preview = data.get(ConfigSection.ANVIL).get(ConfigOption.PREVIEW)
-            project_name = data.get(ConfigSection.PACKAGE).get(
-                ConfigOption.PROJECT_NAME
-            )
+            project_name = data.get(ConfigSection.PACKAGE).get(ConfigOption.PROJECT_NAME)
 
         COM_MOJANG = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
         WORLD_PATH = os.path.join(COM_MOJANG, "minecraftWorlds", project_name)
 
         RemoveDirectory(WORLD_PATH)
-        with zipfile.ZipFile(
-            os.path.join("world", f"{world_name}.mcworld"), "r"
-        ) as zip_ref:
+        with zipfile.ZipFile(os.path.join("world", f"{world_name}.mcworld"), "r") as zip_ref:
             zip_ref.extractall(WORLD_PATH)
 
 

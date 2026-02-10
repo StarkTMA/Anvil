@@ -51,7 +51,7 @@ def dungeon_start_pool():
     # Note: In the jigsaw block, you must use a unique NAMESPACE:POOL_NAME. Anvil will automaticall use the namespace of the addon.
     pool = JigsawStructureTemplatePool("dungeon_start")
 
-    # Add an element pointing to world/structures/dungeon/start.mcstructure
+    # Add an element pointing to assets/structures/dungeon/start.mcstructure
     # We apply the processor we created earlier
     pool.add_structure_element("dungeon/start", ignore_air)
 
@@ -119,7 +119,7 @@ def generate_dungeon():
 
 1.  **Design in Game**: Build your structures and save them with Jigsaw blocks.
     - Set the **Target Pool** in Jigsaw blocks to match your pool names (e.g., `my_namespace:dungeon_rooms`).
-    - Save `.mcstructure` files to `world/structures/<category>/<name>.mcstructure`.
+    - Save `.mcstructure` files to `assets/structures/<category>/<name>.mcstructure`.
 2.  **Define in Python**: Use the code above to register your pools and sets.
 3.  **Run**: Anvil will export the structure set, which the game uses to generate your dungeon.
 

@@ -4,7 +4,10 @@
 
 ### Latest Releases
 
-- [**Version 0.9.6**](#version-096)
+- [**Version 0.9.6.3**](#version-0963)
+- [Version 0.9.6.2](#version-0962)
+- [Version 0.9.6.1](#version-0961)
+- [Version 0.9.6](#version-096)
 - [Version 0.9.5.3](#version-0953)
 - [Version 0.9.5.2](#version-0952)
 - [Version 0.9.5.1](#version-0951)
@@ -81,6 +84,37 @@
 
 ---
 
+## Version 0.9.6.3
+
+### Anvil
+
+- Added a new Ask DeepWiki badge to the readme file, this badge will link to the Anvil ai generated documentation on the DeepWiki platform.
+- Update the minecraft version to `1.26.0` following the new versioning scheme adopted by Minecraft. For more information about this change, please refer to the official [Minecraft New Version Numbering System](https://www.minecraft.net/en-us/article/minecraft-new-version-numbering-system).
+- Updated format versions.
+
+### Actors
+
+- Added `EntityAIInspectBookshelf`, `EntityJumpDynamic`, `EntityOffspring` components.
+- Updated some components to support new features and changes in Minecraft `1.26.0`.
+
+
+### Blocks
+
+- Updated `BlockCollisionBox` component to support multiple collision boxes, additionally increased the max allowed height from 16 to 24.
+- Added `ConnectionTrait`, `BlockCardinalConnection` and `BlockConnectionRule` component.
+- Added `BlockRedstoneConsumer`, `BlockSupport`, `BlockLeashable`.
+- Updated `BlockLiquidDetection` component to support liquid clipping.
+- Added `CornerAndCardinal` to `PlacementPositionTrait` enum, Added `BlockCorner` enum.
+- Added `AlphaMaskedTint` to `BlockMaterial` enum.
+
+### Jigsaw Structures
+
+- Updated jigsaw rules to properly support the capped processor.
+
+### Biomes
+- Added `BiomeVillageType` component.
+- Updated `MinecraftBiomeTags` enum to include new biome tags.
+
 ## Version 0.9.6.2
 
 ### Anvil
@@ -105,6 +139,10 @@
 
 - Added Trade Table API to manage trade tables, `anvil.api.world.trade_tables`.
 - Loot Table explorer map entry function now support Jigsaw structures.
+
+### Kit
+- Added `anvil.kit.world.potionsAPI` module to create vanilla like custom potions.
+- Added `anvil.kit.actors.components` module to host custom components that can be used across different projects.
 
 ## Version 0.9.6.1
 

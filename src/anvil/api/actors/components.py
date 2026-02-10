@@ -363,6 +363,58 @@ class EntityJumpStatic(_BaseComponent):
         self._add_field("jump_power", jump_power)
 
 
+class EntityJumpDynamic(_BaseComponent):
+    _identifier = "minecraft:jump.dynamic"
+
+    def __init__(self) -> None:
+        """Defines a dynamic type jump control that will change jump properties based on the speed modifier of the mob. Requires minecraft:movement.skip to be used.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/pt-br/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_jump.dynamic
+        """
+        super().__init__("jump.dynamic")
+
+    def regular_skip_data(self, animation_duration: float, distance_scale: float, height: float, jump_delay: float):
+        """Sets the regular skip data for the entity's jump.
+
+        Args:
+            animation_duration (float): Duration of the jump animation.
+            distance_scale (float): The multiplier applied to horizontal velocity when jumping.
+            height (float): The force applied vertically when jumping.
+            jump_delay (float): Amount of ticks between sequential jumps.
+        """
+        self._add_field(
+            "regular_skip_data",
+            {
+                "animation_duration": animation_duration,
+                "distance_scale": distance_scale,
+                "height": height,
+                "jump_delay": jump_delay,
+            },
+        )
+        return self
+
+    def fast_skip_data(self, animation_duration: float, distance_scale: float, height: float, jump_delay: float):
+        """Sets the fast skip data for the entity's jump.
+
+        Args:
+            animation_duration (float): Duration of the jump animation.
+            distance_scale (float): The multiplier applied to horizontal velocity when jumping.
+            height (float): The force applied vertically when jumping.
+            jump_delay (float): Amount of ticks between sequential jumps.
+        """
+        self._add_field(
+            "fast_skip_data",
+            {
+                "animation_duration": animation_duration,
+                "distance_scale": distance_scale,
+                "height": height,
+                "jump_delay": jump_delay,
+            },
+        )
+        return self
+
+
 class EntityHorseJumpStrength(_BaseComponent):
     _identifier = "minecraft:horse.jump_strength"
 
@@ -1452,6 +1504,7 @@ class EntityRideable(_BaseComponent):
             t = interact_text.lower().replace(" ", "_")
             self._add_field("interact_text", f"action.interact.{t}")
             AnvilTranslator().add_localization_entry(f"action.interact.{t}", interact_text)
+
         self._add_field("controlling_seat", controlling_seat)
         if not crouching_skip_interact:
             self._add_field("crouching_skip_interact", crouching_skip_interact)
@@ -2863,7 +2916,7 @@ class EntityInteract(_BaseComponent):
         play_sounds: str = None,
         spawn_entities: Identifier = None,
         spawn_items: str = None,
-        swing: bool = False,
+        swing: bool = True,
         transform_to_item: str = None,
         use_item: bool = False,
         vibration: Vibrations = Vibrations.EntityInteract,
@@ -2924,7 +2977,7 @@ class EntityInteract(_BaseComponent):
             interaction["spawn_entities"] = spawn_entities
         if not spawn_items is None:
             interaction["spawn_items"] = {"table": spawn_items}
-        if swing:
+        if not swing:
             interaction["swing"] = swing
         if not transform_to_item is None:
             interaction["transform_to_item"] = transform_to_item
@@ -3896,19 +3949,11 @@ class EntityBreedable(_BaseComponent):
     def __init__(
         self,
         allow_sitting: bool = False,
-        blend_attributes: bool = True,
         breed_cooldown: Seconds = 60,
         breed_items: list[str] = None,
         causes_pregnancy: bool = False,
-        combine_parent_colors: bool = None,
         extra_baby_chance: float = 0,
-        inherit_tamed: bool = True,
         love_filters: Filter = None,
-        mutation_strategy: BreedingMutationStrategy = BreedingMutationStrategy.None_,
-        parent_centric_attribute_blending: list[_BaseComponent] = None,
-        property_inheritance: list[str] = None,
-        random_extra_variant_mutation_interval: tuple[int, int] = (0, 0),
-        random_variant_mutation_interval: tuple[int, int] = (0, 0),
         require_full_health: bool = False,
         require_tame: bool = True,
         result_item: str = None,
@@ -3917,19 +3962,11 @@ class EntityBreedable(_BaseComponent):
 
         Parameters:
             allow_sitting (bool, optional): Description. Defaults to False.
-            blend_attributes (bool, optional): Description. Defaults to True.
             breed_cooldown (Seconds, optional): Description. Defaults to 60.
             breed_items (list[str], optional): Description. Defaults to None.
             causes_pregnancy (bool, optional): Description. Defaults to False.
-            combine_parent_colors (bool, optional): Description. Defaults to None.
             extra_baby_chance (float, optional): Description. Defaults to 0.
-            inherit_tamed (bool, optional): Description. Defaults to True.
             love_filters (Filter, optional): Description. Defaults to None.
-            mutation_strategy (BreedingMutationStrategy, optional): Description. Defaults to BreedingMutationStrategy.None_.
-            parent_centric_attribute_blending (list[_BaseComponent], optional): Description. Defaults to None.
-            property_inheritance (list[str], optional): Description. Defaults to None.
-            random_extra_variant_mutation_interval (tuple[int, int], optional): Description. Defaults to (0, 0).
-            random_variant_mutation_interval (tuple[int, int], optional): Description. Defaults to (0, 0).
             require_full_health (bool, optional): Description. Defaults to False.
             require_tame (bool, optional): Description. Defaults to True.
             result_item (str, optional): Description. Defaults to None.
@@ -3941,101 +3978,22 @@ class EntityBreedable(_BaseComponent):
 
         if allow_sitting:
             self._add_field("allow_sitting", allow_sitting)
-        if blend_attributes is not True:
-            self._add_field("blend_attributes", blend_attributes)
         if breed_cooldown != 60:
             self._add_field("breed_cooldown", breed_cooldown)
         if breed_items is not None:
             self._add_field("breed_items", breed_items)
         if causes_pregnancy:
             self._add_field("causes_pregnancy", causes_pregnancy)
-        if combine_parent_colors is not None:
-            self._add_field("combine_parent_colors", combine_parent_colors)
         if extra_baby_chance != 0:
             self._add_field("extra_baby_chance", extra_baby_chance)
-        if inherit_tamed is not True:
-            self._add_field("inherit_tamed", inherit_tamed)
         if love_filters is not None:
             self._add_field("love_filters", love_filters)
-        if mutation_strategy != BreedingMutationStrategy.None_:
-            self._add_field("mutation_strategy", mutation_strategy.value)
-        if parent_centric_attribute_blending is not None:
-            self._add_field(
-                "parent_centric_attribute_blending",
-                [c.identifier for c in parent_centric_attribute_blending],
-            )
-        if property_inheritance is not None:
-            self._add_field(
-                "property_inheritance",
-                [f"{CONFIG.NAMESPACE}:{property}" for property in property_inheritance],
-            )
-        if random_extra_variant_mutation_interval != (0, 0):
-            self._add_field(
-                "random_extra_variant_mutation_interval",
-                random_extra_variant_mutation_interval,
-            )
-        if random_variant_mutation_interval != (0, 0):
-            self._add_field("random_variant_mutation_interval", random_variant_mutation_interval)
         if require_full_health:
             self._add_field("require_full_health", require_full_health)
         if require_tame is not True:
             self._add_field("require_tame", require_tame)
         if result_item is not None:
             self._add_field("result_item", result_item)
-
-    def breeds_with(
-        self,
-        mate_type: str,
-        baby_type: str,
-        breed_event: str,
-        breed_event_target: FilterSubject = FilterSubject.Baby,
-        breed_event_filter: Filter = None,
-    ) -> dict:
-        """Defines the breeding partner for the entity.
-
-        Parameters:
-            mate_type (str): The entity type of the breeding partner.
-            baby_type (str): The entity type of the offspring.
-            breed_event (str): The event to trigger when breeding occurs.
-
-        Returns:
-            dict: A dictionary containing the breeding information.
-        """
-
-        self._add_field(
-            "breeds_with",
-            {
-                "mate_type": mate_type,
-                "baby_type": baby_type,
-                "breed_event": {
-                    "event": breed_event,
-                    "target": breed_event_target,
-                    "filters": breed_event_filter,
-                },
-            },
-        )
-        return self
-
-    def deny_parents_variant(self, chance: float, min_variant: str, max_variant: str) -> dict:
-        """Defines the chance of denying the parents' variant.
-
-        Parameters:
-            chance (float): The percentage chance of denying the parents' variant.
-            min_variant (str): The inclusive minimum of the variant range.
-            max_variant (str): The inclusive maximum of the variant range.
-
-        Returns:
-            dict: A dictionary containing the deny parents variant information.
-        """
-        self._add_field(
-            "deny_parents_variant",
-            {
-                "chance": chance,
-                "min_variant": min_variant,
-                "max_variant": max_variant,
-            },
-        )
-        return self
 
     def environment_requirements(self, block_types: list[str], count: int, radius: float) -> dict:
         """Defines the nearby block requirements for breeding.
@@ -4054,6 +4012,95 @@ class EntityBreedable(_BaseComponent):
                 "block_types": block_types,
                 "count": count,
                 "radius": clamp(radius, 0, 16),
+            },
+        )
+        return self
+
+
+class EntityOffspring(_BaseComponent):
+    _identifier = "minecraft:offspring"
+
+    def __init__(
+        self,
+        blend_attributes: bool = True,
+        inherit_tamed: bool = True,
+        mutation_strategy: BreedingMutationStrategy = BreedingMutationStrategy.None_,
+        offspring_pairs: list[
+            tuple[MinecraftEntityDescriptor | Identifier, MinecraftEntityDescriptor | Identifier]
+        ] = None,
+        combine_parent_colors: bool = None,
+        parent_centric_attribute_blending: list[_BaseComponent] = None,
+        property_inheritance: list[str] = None,
+        random_extra_variant_mutation_interval: tuple[int, int] = (0, 0),
+        random_variant_mutation_interval: tuple[int, int] = (0, 0),
+    ):
+        """Defines the way an entity can create a born offspring.
+
+        Parameters:
+            blend_attributes (bool, optional): Description. Defaults to True.
+            inherit_tamed (bool, optional): Description. Defaults to True.
+            mutation_strategy (BreedingMutationStrategy, optional): Description. Defaults to BreedingMutationStrategy.None_.
+            offspring_pairs (list[tuple[MinecraftEntityDescriptor | Identifier, MinecraftEntityDescriptor | Identifier]], optional): Description. Defaults to None.
+            combine_parent_colors (bool, optional): Description. Defaults to None.
+            parent_centric_attribute_blending (list[_BaseComponent], optional): Description. Defaults to None.
+            property_inheritance (list[str], optional): Description. Defaults to None.
+            random_extra_variant_mutation_interval (tuple[int, int], optional): Description. Defaults to (0, 0).
+            random_variant_mutation_interval (tuple[int, int], optional): Description. Defaults to (0, 0).
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_offspring
+        """
+
+        super().__init__("offspring")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.26.0")
+        if blend_attributes is not True:
+            self._add_field("blend_attributes", blend_attributes)
+        if inherit_tamed is not True:
+            self._add_field("inherit_tamed", inherit_tamed)
+        if offspring_pairs is not None:
+            self._add_field(
+                "offspring_pairs",
+                {str(parent): str(offspring) for parent, offspring in offspring_pairs},
+            )
+        if parent_centric_attribute_blending is not None:
+            self._add_field(
+                "parent_centric_attribute_blending",
+                [c.identifier for c in parent_centric_attribute_blending],
+            )
+        if property_inheritance is not None:
+            self._add_field(
+                "property_inheritance",
+                [f"{CONFIG.NAMESPACE}:{property}" for property in property_inheritance],
+            )
+        if random_extra_variant_mutation_interval != (0, 0):
+            self._add_field(
+                "random_extra_variant_mutation_interval",
+                random_extra_variant_mutation_interval,
+            )
+        if random_variant_mutation_interval != (0, 0):
+            self._add_field("random_variant_mutation_interval", random_variant_mutation_interval)
+        if mutation_strategy != BreedingMutationStrategy.None_:
+            self._add_field("mutation_strategy", mutation_strategy.value)
+        if combine_parent_colors is not None:
+            self._add_field("combine_parent_colors", combine_parent_colors)
+        
+    def deny_parents_variant(self, chance: float, min_variant: str, max_variant: str) -> dict:
+        """Defines the chance of denying the parents' variant.
+
+        Parameters:
+            chance (float): The percentage chance of denying the parents' variant.
+            min_variant (str): The inclusive minimum of the variant range.
+            max_variant (str): The inclusive maximum of the variant range.
+
+        Returns:
+            dict: A dictionary containing the deny parents variant information.
+        """
+        self._add_field(
+            "deny_parents_variant",
+            {
+                "chance": chance,
+                "min_variant": min_variant,
+                "max_variant": max_variant,
             },
         )
         return self
@@ -4874,13 +4921,10 @@ class EntityEconomyTradeTable(_BaseComponent):
         if cured_discount is not None:
             self._add_field("cured_discount", cured_discount)
         if display_name is not None:
-            key = display_name.lower().replace(" ", "_")
-            self._add_field(
-                "display_name",
-                AnvilTranslator().add_localization_entry(
-                    f"tradetable.{CONFIG.NAMESPACE}.{CONFIG.PROJECT_NAME}.{key}.name", display_name
-                ),
-            )
+            lower_case = display_name.lower().replace(" ", "_")
+            key = f"tradetable.{CONFIG.NAMESPACE}.{CONFIG.PROJECT_NAME}.{lower_case}.name"
+            AnvilTranslator().add_localization_entry(key, display_name)
+            self._add_field("display_name", key)
         if hero_demand_discount != -4:
             self._add_field("hero_demand_discount", hero_demand_discount)
         if max_cured_discount is not None:
@@ -5119,16 +5163,21 @@ class EntityAINearestAttackableTarget(_BaseAIGoal):
         self._add_field("entity_types", [])
 
         if not attack_interval == 0:
-            if isinstance(attack_interval, tuple):
-                self._add_field(
-                    "attack_interval",
-                    {
-                        "range_min": attack_interval[0],
-                        "range_max": attack_interval[1],
-                    },
-                )
-            elif isinstance(attack_interval, float):
-                self._add_field("attack_interval", attack_interval)
+            if (
+                not isinstance(attack_interval, tuple)
+                or not len(attack_interval) == 2
+                or not all(isinstance(i, (int, float)) for i in attack_interval)
+            ):
+                raise ValueError("attack_interval must be a tuple of 2 numbers (int or float)")
+
+            self._add_field(
+                "attack_interval",
+                {
+                    "min": attack_interval[0],
+                    "max": attack_interval[1],
+                },
+            )
+
         if not attack_interval_min == 0:
             self._add_field("attack_interval_min", attack_interval_min)
         if attack_owner:
@@ -5443,7 +5492,14 @@ class EntityAILookAtPlayer(_BaseAIGoal):
         if look_distance != 8.0:
             self._add_field("look_distance", look_distance)
         if look_time != (2, 4):
-            self._add_field("look_time", look_time)
+            if (
+                not isinstance(look_time, tuple)
+                or not len(look_time) == 2
+                or not all(isinstance(i, (int, float)) for i in look_time)
+            ):
+                raise ValueError("look_time must be a tuple of 2 numbers (int or float)")
+            self._add_field("look_time", {"min": look_time[0], "max": look_time[1]})
+
         if probability != 0.02:
             self._add_field("probability", probability)
         if target_distance != 0.6:
@@ -6370,7 +6426,13 @@ class EntityAILookAtTarget(_BaseAIGoal):
         if look_distance != 8.0:
             self._add_field("look_distance", look_distance)
         if look_time != (2, 4):
-            self._add_field("look_time", look_time)
+            if (
+                not isinstance(look_time, tuple)
+                or not len(look_time) == 2
+                or not all(isinstance(i, (int, float)) for i in look_time)
+            ):
+                raise ValueError("look_time must be a tuple of 2 numbers (int or float)")
+            self._add_field("look_time", {"min": look_time[0], "max": look_time[1]})
         if probability != 0.02:
             self._add_field("probability", probability)
         if target_distance != 0.6:
@@ -7474,9 +7536,21 @@ class EntityAITimerFlag1(_BaseAIGoal):
         super().__init__("behavior.timer_flag_1")
 
         if cooldown_range != (10.0, 10.0):
-            self._add_field("cooldown_range", cooldown_range)
+            if (
+                not isinstance(cooldown_range, tuple)
+                or not len(cooldown_range) == 2
+                or not all(isinstance(i, (int, float)) for i in cooldown_range)
+            ):
+                raise ValueError("cooldown_range must be a tuple of 2 numbers (int or float)")
+            self._add_field("cooldown_range", {"min": cooldown_range[0], "max": cooldown_range[1]})
         if duration_range != (2.0, 2.0):
-            self._add_field("duration_range", duration_range)
+            if (
+                not isinstance(duration_range, tuple)
+                or not len(duration_range) == 2
+                or not all(isinstance(i, (int, float)) for i in duration_range)
+            ):
+                raise ValueError("duration_range must be a tuple of 2 numbers (int or float)")
+            self._add_field("duration_range", {"min": duration_range[0], "max": duration_range[1]})
         if not control_flags == []:
             self._add_field("control_flags", control_flags)
 
@@ -7484,8 +7558,8 @@ class EntityAITimerFlag1(_BaseAIGoal):
         self._add_field("on_end", {"event": on_end, "target": subject})
         return self
 
-    def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._add_field("on_start", {"event": on_end, "target": subject})
+    def on_start(self, on_start: str, subject: FilterSubject = FilterSubject.Self):
+        self._add_field("on_start", {"event": on_start, "target": subject})
         return self
 
 
@@ -7510,9 +7584,21 @@ class EntityAITimerFlag2(_BaseAIGoal):
         super().__init__("behavior.timer_flag_2")
 
         if cooldown_range != (10.0, 10.0):
-            self._add_field("cooldown_range", cooldown_range)
+            if (
+                not isinstance(cooldown_range, tuple)
+                or not len(cooldown_range) == 2
+                or not all(isinstance(i, (int, float)) for i in cooldown_range)
+            ):
+                raise ValueError("cooldown_range must be a tuple of 2 numbers (int or float)")
+            self._add_field("cooldown_range", {"min": cooldown_range[0], "max": cooldown_range[1]})
         if duration_range != (2.0, 2.0):
-            self._add_field("duration_range", duration_range)
+            if (
+                not isinstance(duration_range, tuple)
+                or not len(duration_range) == 2
+                or not all(isinstance(i, (int, float)) for i in duration_range)
+            ):
+                raise ValueError("duration_range must be a tuple of 2 numbers (int or float)")
+            self._add_field("duration_range", {"min": duration_range[0], "max": duration_range[1]})
         if not control_flags == []:
             self._add_field("control_flags", control_flags)
 
@@ -7520,8 +7606,8 @@ class EntityAITimerFlag2(_BaseAIGoal):
         self._add_field("on_end", {"event": on_end, "target": subject})
         return self
 
-    def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._add_field("on_end", {"event": on_end, "target": subject})
+    def on_start(self, on_start: str, subject: FilterSubject = FilterSubject.Self):
+        self._add_field("on_start", {"event": on_start, "target": subject})
         return self
 
 
@@ -7546,9 +7632,21 @@ class EntityAITimerFlag3(_BaseAIGoal):
         super().__init__("behavior.timer_flag_3")
 
         if cooldown_range != (10.0, 10.0):
-            self._add_field("cooldown_range", cooldown_range)
+            if (
+                not isinstance(cooldown_range, tuple)
+                or not len(cooldown_range) == 2
+                or not all(isinstance(i, (int, float)) for i in cooldown_range)
+            ):
+                raise ValueError("cooldown_range must be a tuple of 2 numbers (int or float)")
+            self._add_field("cooldown_range", {"min": cooldown_range[0], "max": cooldown_range[1]})
         if duration_range != (2.0, 2.0):
-            self._add_field("duration_range", duration_range)
+            if (
+                not isinstance(duration_range, tuple)
+                or not len(duration_range) == 2
+                or not all(isinstance(i, (int, float)) for i in duration_range)
+            ):
+                raise ValueError("duration_range must be a tuple of 2 numbers (int or float)")
+            self._add_field("duration_range", {"min": duration_range[0], "max": duration_range[1]})
         if not control_flags == []:
             self._add_field("control_flags", control_flags)
 
@@ -7556,8 +7654,8 @@ class EntityAITimerFlag3(_BaseAIGoal):
         self._add_field("on_end", {"event": on_end, "target": subject})
         return self
 
-    def on_start(self, on_end: str, subject: FilterSubject = FilterSubject.Self):
-        self._add_field("on_end", {"event": on_end, "target": subject})
+    def on_start(self, on_start: str, subject: FilterSubject = FilterSubject.Self):
+        self._add_field("on_start", {"event": on_start, "target": subject})
         return self
 
 
@@ -8239,7 +8337,14 @@ class EntityAILookAtTradingPlayer(_BaseAIGoal):
         if look_distance != 8.0:
             self._add_field("look_distance", look_distance)
         if look_time is not None:
-            self._add_field("look_time", look_time)
+            if (
+                not isinstance(look_time, tuple)
+                or len(look_time) != 2
+                or not all(isinstance(t, (int, float)) for t in look_time)
+            ):
+                raise ValueError("look_time must be a tuple of two numbers (int or float)")
+            self._add_field("look_time", {"min": look_time[0], "max": look_time[1]})
+
         if probability != 0.02:
             self._add_field("probability", probability)
 
@@ -8293,7 +8398,7 @@ class EntityAIMoveTowardsDwellingRestriction(_BaseAIGoal):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_dwelling_restriction
         """
         super().__init__("behavior.move_towards_dwelling_restriction")
-        self._require_components(EntityDweller)
+        # self._require_components(EntityDweller)
 
         if speed_multiplier != 1.0:
             self._add_field("speed_multiplier", speed_multiplier)
@@ -8787,5 +8892,42 @@ class EntityAIBreed(_BaseAIGoal):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_breed
         """
         super().__init__("behavior.breed")
+        if speed_multiplier != 1.0:
+            self._add_field("speed_multiplier", speed_multiplier)
+
+
+class EntityAIInspectBookshelf(_BaseAIGoal):
+    _identifier = "minecraft:behavior.inspect_bookshelf"
+
+    def __init__(
+        self,
+        goal_radius: float = 0.5,
+        search_count: int = 10,
+        search_height: int = 1,
+        search_range: int = 0,
+        speed_multiplier: float = 1.0,
+    ) -> None:
+        """Allows the mob to inspect bookshelves.
+
+        Parameters:
+            goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. Defaults to 0.5.
+            search_count (int, optional): The number of blocks each tick that the mob will check. Defaults to 10.
+            search_height (int, optional): The height that the mob will search for bookshelves. Defaults to 1.
+            search_range (int, optional): Distance in blocks the mob will look for books to inspect. Defaults to 0.
+            speed_multiplier (float, optional): Movement speed multiplier of the mob. Defaults to 1.0.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_inspect_bookshelf
+        """
+        super().__init__("behavior.inspect_bookshelf")
+
+        if goal_radius != 0.5:
+            self._add_field("goal_radius", goal_radius)
+        if search_count != 10:
+            self._add_field("search_count", search_count)
+        if search_height != 1:
+            self._add_field("search_height", search_height)
+        if search_range != 0:
+            self._add_field("search_range", search_range)
         if speed_multiplier != 1.0:
             self._add_field("speed_multiplier", speed_multiplier)
