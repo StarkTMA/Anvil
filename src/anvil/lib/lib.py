@@ -122,6 +122,8 @@ class PrettyPrintedEncoder(json.JSONEncoder):
             return self.encode(self.shorten_dict(o.identifier), _level)
         elif o.__class__.__name__ == "LootTable":
             return self.encode(self.shorten_dict(o.table_path), _level)
+        elif o.__class__.__name__ in ["_UIElement"]:
+            return self.encode(self.shorten_dict(o.queue()), _level)
         else:
             return json.dumps(o, ensure_ascii=False)
 

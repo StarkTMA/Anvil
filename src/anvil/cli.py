@@ -523,7 +523,7 @@ def run() -> None:
                 return
 
         process_subcommand(
-            f"py {os.path.join(*entry_point.split('/'))}",
+            f"py {entry_point}",
             "Unable to run the anvil project.",
         )
 

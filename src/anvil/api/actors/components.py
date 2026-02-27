@@ -4116,7 +4116,7 @@ class EntityOffspring(_BaseComponent):
             self._add_field("mutation_strategy", mutation_strategy.value)
         if combine_parent_colors is not None:
             self._add_field("combine_parent_colors", combine_parent_colors)
-        
+
     def deny_parents_variant(self, chance: float, min_variant: str, max_variant: str) -> dict:
         """Defines the chance of denying the parents' variant.
 
@@ -5143,6 +5143,75 @@ class EntityArmorEquipmentSlotMapping(_BaseComponent):
         if not armor_slot in [Slots.Chest, Slots.Body]:
             raise ValueError(f"Invalid armor_slot '{armor_slot}'. Must be one of: '{Slots.Chest}', '{Slots.Body}'")
         self._add_field("armor_slot", armor_slot)
+
+
+class EntityDespawn(_BaseComponent):
+    _identifier = "minecraft:despawn"
+
+    def __init__(
+        self,
+        despawn_from_chance: bool = True,
+        despawn_from_distance: dict = None,
+        despawn_from_inactivity: bool = True,
+        despawn_from_simulation_edge: bool = True,
+        filters: Filter = None,
+        min_range_inactivity_timer: int = 30,
+        min_range_random_chance: int = 800,
+        remove_child_entities: bool = False,
+    ) -> None:
+        """Despawns the Actor when the despawn rules or optional filters evaluate to true.
+
+        Parameters:
+            despawn_from_chance (bool, optional): Determines if "min_range_random_chance" is used in the standard despawn rules. Defaults to True.
+            despawn_from_distance (dict, optional): Specifies if the 'min_distance' and 'max_distance' are used in the standard despawn rules. Defaults to None.
+            despawn_from_inactivity (bool, optional): Determines if the "min_range_inactivity_timer" is used in the standard despawn rules. Defaults to True.
+            despawn_from_simulation_edge (bool, optional): Determines if the mob is instantly despawned at the edge of simulation distance in the standard despawn rules. Defaults to True.
+            filters (Filter, optional): The list of conditions that must be satisfied before the Actor is despawned. If a filter is defined then standard despawn rules are ignored. Defaults to None.
+            min_range_inactivity_timer (int, optional): The amount of time in seconds that the mob must be inactive. Defaults to 30.
+            min_range_random_chance (int, optional): A random chance between 1 and the given value. Defaults to 800.
+            remove_child_entities (bool, optional): If true, all entities linked to this entity in a child relationship will also be despawned. Defaults to False.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_despawn
+        """
+        super().__init__("despawn")
+
+        if not despawn_from_chance:
+            self._add_field("despawn_from_chance", despawn_from_chance)
+        if despawn_from_distance is not None:
+            self._add_field("despawn_from_distance", despawn_from_distance)
+        if not despawn_from_inactivity:
+            self._add_field("despawn_from_inactivity", despawn_from_inactivity)
+        if not despawn_from_simulation_edge:
+            self._add_field("despawn_from_simulation_edge", despawn_from_simulation_edge)
+        if filters is not None:
+            self._add_field("filters", filters)
+        if min_range_inactivity_timer != 30:
+            self._add_field("min_range_inactivity_timer", min_range_inactivity_timer)
+        if min_range_random_chance != 800:
+            self._add_field("min_range_random_chance", min_range_random_chance)
+        if remove_child_entities:
+            self._add_field("remove_child_entities", remove_child_entities)
+
+    def despawn_from_distance(self, range: tuple[int, int] = (32, 128)):
+        """Sets the despawn distance properties.
+
+        Parameters:
+            range (tuple[int, int], optional): A tuple containing the minimum and maximum distance for despawning. Defaults to (32, 128).
+
+        Returns:
+            EntityDespawn: Returns the EntityDespawn component to allow for method chaining.
+        """
+        if not isinstance(range, tuple) or not len(range) == 2 or not all(isinstance(i, int) for i in range):
+            raise ValueError("range must be a tuple of 2 integers")
+        if range[0] < 0 or range[1] < 0:
+            raise ValueError("range values must be non-negative")
+        if range[0] > range[1]:
+            raise ValueError("range minimum must be less than or equal to maximum")
+        if range != (32, 128):
+            min_distance, max_distance = range
+            self._add_field("despawn_from_distance", {"min_distance": min_distance, "max_distance": max_distance})
+        return self
 
 
 # AI Goals ==========================================================================

@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.6.3**](#version-0963)
+- [**Version 0.9.6.4**](#version-0964)
+- [Version 0.9.6.3](#version-0963)
 - [Version 0.9.6.2](#version-0962)
 - [Version 0.9.6.1](#version-0961)
 - [Version 0.9.6](#version-096)
@@ -84,6 +85,16 @@
 
 ---
 
+## Version 0.9.6.4
+
+### Anvil
+
+- Updated to support Minecraft `1.26.2` release.
+
+### Actors
+
+- the texture array method in render controllers now support a query to determine the texture index, this avoid manually writing the indexing logic in the textures method.
+
 ## Version 0.9.6.3
 
 ### Anvil
@@ -96,7 +107,6 @@
 
 - Added `EntityAIInspectBookshelf`, `EntityJumpDynamic`, `EntityOffspring` components.
 - Updated some components to support new features and changes in Minecraft `1.26.0`.
-
 
 ### Blocks
 
@@ -112,6 +122,7 @@
 - Updated jigsaw rules to properly support the capped processor.
 
 ### Biomes
+
 - Added `BiomeVillageType` component.
 - Updated `MinecraftBiomeTags` enum to include new biome tags.
 
@@ -141,6 +152,7 @@
 - Loot Table explorer map entry function now support Jigsaw structures.
 
 ### Kit
+
 - Added `anvil.kit.world.potionsAPI` module to create vanilla like custom potions.
 - Added `anvil.kit.actors.components` module to host custom components that can be used across different projects.
 

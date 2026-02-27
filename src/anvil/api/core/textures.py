@@ -179,7 +179,7 @@ class TerrainTexturesObject(AddonObject):
             directory (str): The directory path for the textures.
             block_textures (str): The names of the block textures.
         """
-        id = f"{CONFIG.NAMESPACE}:{block_name}" if not force_vanilla else f"minecraft:{block_name}"
+        id = f"{CONFIG.NAMESPACE}:{block_name}" if not force_vanilla else block_name
 
         self._content["texture_data"][id] = {
             "textures": [

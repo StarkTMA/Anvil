@@ -52,10 +52,13 @@ class _RenderController:
         self._controller = JsonSchemes.render_controller(self._identifier, self._controller_name)
         self.controller_identifier = f"controller.render.{self._identifier.replace(':', '.')}.{self._controller_name}"
 
-    def texture_array(self, array_name: str, textures_short_names: list[str]):
+    def texture_array(self, array_name: str, textures_short_names: list[str], query: Molang | str = None):
         self._controller[self.controller_identifier]["arrays"]["textures"].update(
             {f"Array.{array_name}": [f"Texture.{texture}" for texture in textures_short_names]}
         )
+        if query is not None:
+            self._controller[self.controller_identifier]["textures"].append(f"Array.{array_name}[{query}]")
+
         return self
 
     def material(self, bone: Literal["*"] | str, material_shortname: str):
@@ -70,10 +73,12 @@ class _RenderController:
         )
         return self
 
-    def geometry_array(self, array_name: str, geometries_short_names: str):
+    def geometry_array(self, array_name: str, geometries_short_names: list[str], query: Molang | str = None):
         self._controller[self.controller_identifier]["arrays"]["geometries"].update(
             {f"Array.{array_name}": [f"Geometry.{geometry}" for geometry in geometries_short_names]}
         )
+        if query is not None:
+            self._controller[self.controller_identifier]["geometry"] = f"Array.{array_name}[{query}]"
         return self
 
     def geometry(self, short_name):
