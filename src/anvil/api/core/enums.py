@@ -948,7 +948,7 @@ class HudVisibility(StrEnum):
     Reset = "reset"
 
 
-class ItemRarity(StrEnum):
+class Rarity(StrEnum):
     Common = "common"
     Uncommon = "uncommon"
     Rare = "rare"

@@ -4,9 +4,7 @@ from typing import Literal, Optional, TypeAlias
 from anvil.lib.schemas import MinecraftBlockDescriptor
 
 Active: TypeAlias = Literal["0b", "1b"]
-Age: TypeAlias = Literal[
-    "12", "10", "5", "13", "9", "4", "0", "6", "14", "1", "15", "8", "2", "3", "7", "11"
-]
+Age: TypeAlias = Literal["12", "10", "5", "13", "9", "4", "0", "6", "14", "1", "15", "8", "2", "3", "7", "11"]
 AgeBit: TypeAlias = Literal["0b", "1b"]
 AllowUnderwaterBit: TypeAlias = Literal["0b", "1b"]
 AttachedBit: TypeAlias = Literal["0b", "1b"]
@@ -231,9 +229,7 @@ LeverDirection: TypeAlias = Literal[
     "up_east_west",
     "down_north_south",
 ]
-LiquidDepth: TypeAlias = Literal[
-    "12", "10", "5", "13", "9", "4", "0", "6", "14", "1", "15", "8", "2", "3", "7", "11"
-]
+LiquidDepth: TypeAlias = Literal["12", "10", "5", "13", "9", "4", "0", "6", "14", "1", "15", "8", "2", "3", "7", "11"]
 Lit: TypeAlias = Literal["0b", "1b"]
 MoisturizedAmount: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6", "7"]
 MultiFaceDirectionBits: TypeAlias = Literal[
@@ -324,9 +320,7 @@ RespawnAnchorCharge: TypeAlias = Literal["0", "1", "2", "3", "4"]
 Rotation: TypeAlias = Literal["0", "1", "2", "3"]
 SandStoneType: TypeAlias = Literal["heiroglyphs", "default", "cut", "smooth"]
 SandType: TypeAlias = Literal["normal", "red"]
-SaplingType: TypeAlias = Literal[
-    "dark_oak", "acacia", "spruce", "birch", "jungle", "oak"
-]
+SaplingType: TypeAlias = Literal["dark_oak", "acacia", "spruce", "birch", "jungle", "oak"]
 SculkSensorPhase: TypeAlias = Literal["0", "2", "1"]
 SeaGrassType: TypeAlias = Literal["default", "double_top", "double_bot"]
 SpongeType: TypeAlias = Literal["dry", "wet"]
@@ -343,16 +337,12 @@ StoneType: TypeAlias = Literal[
     "andesite_smooth",
 ]
 StrippedBit: TypeAlias = Literal["0b", "1b"]
-StructureBlockType: TypeAlias = Literal[
-    "data", "save", "load", "corner", "invalid", "export"
-]
+StructureBlockType: TypeAlias = Literal["data", "save", "load", "corner", "invalid", "export"]
 StructureVoidType: TypeAlias = Literal["void", "air"]
 SuspendedBit: TypeAlias = Literal["0b", "1b"]
 ToggleBit: TypeAlias = Literal["0b", "1b"]
 TopSlotBit: TypeAlias = Literal["0b", "1b"]
-TorchFacingDirection: TypeAlias = Literal[
-    "unknown", "west", "south", "north", "east", "top"
-]
+TorchFacingDirection: TypeAlias = Literal["unknown", "west", "south", "north", "east", "top"]
 TrialSpawnerState: TypeAlias = Literal["5", "4", "3", "2", "1", "0"]
 TriggeredBit: TypeAlias = Literal["0b", "1b"]
 TurtleEggCount: TypeAlias = Literal["one_egg", "two_egg", "three_egg", "four_egg"]
@@ -443,9 +433,7 @@ WeepingVinesAge: TypeAlias = Literal[
 ]
 WeirdoDirection: TypeAlias = Literal["0", "2", "1", "3"]
 WoodType: TypeAlias = Literal["dark_oak", "acacia", "spruce", "birch", "jungle", "oak"]
-Orientation: TypeAlias = Literal[
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"
-]
+Orientation: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
 CreakingHeartState: TypeAlias = Literal["0b", "1b"]
 Natural: TypeAlias = Literal["0b", "1b"]
 RehydrationLevel: TypeAlias = Literal["0", "1", "2", "3", "4", "5", "6", "7"]
@@ -649,8 +637,7 @@ class MinecraftBlockTags(StrEnum):
 class MinecraftBlockTypes:
     @staticmethod
     def AcaciaButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for AcaciaButton"""
         return MinecraftBlockDescriptor(
@@ -667,7 +654,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for AcaciaDoor"""
         return MinecraftBlockDescriptor(
@@ -682,9 +669,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def AcaciaDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def AcaciaDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for AcaciaDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:acacia_double_slab",
@@ -701,7 +686,7 @@ class MinecraftBlockTypes:
     def AcaciaFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for AcaciaFenceGate"""
         return MinecraftBlockDescriptor(
@@ -719,7 +704,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for AcaciaHangingSign"""
         return MinecraftBlockDescriptor(
@@ -735,8 +720,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def AcaciaLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for AcaciaLeaves"""
         return MinecraftBlockDescriptor(
@@ -749,13 +733,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def AcaciaLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def AcaciaLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for AcaciaLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:acacia_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:acacia_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def AcaciaPlanks() -> MinecraftBlockDescriptor:
@@ -763,9 +743,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:acacia_planks", True)
 
     @staticmethod
-    def AcaciaPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def AcaciaPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for AcaciaPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:acacia_pressure_plate",
@@ -774,19 +752,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def AcaciaSapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def AcaciaSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for AcaciaSapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:acacia_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:acacia_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def AcaciaShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for AcaciaShelf"""
         return MinecraftBlockDescriptor(
@@ -800,9 +774,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def AcaciaSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def AcaciaSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for AcaciaSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:acacia_slab",
@@ -812,8 +784,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def AcaciaStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for AcaciaStairs"""
         return MinecraftBlockDescriptor(
@@ -826,9 +797,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def AcaciaStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def AcaciaStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for AcaciaStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:acacia_standing_sign",
@@ -840,7 +809,7 @@ class MinecraftBlockTypes:
     def AcaciaTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for AcaciaTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -854,9 +823,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def AcaciaWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def AcaciaWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for AcaciaWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:acacia_wall_sign",
@@ -865,18 +832,13 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def AcaciaWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def AcaciaWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for AcaciaWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:acacia_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:acacia_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def ActivatorRail(
-        rail_data_bit: Optional[RailDataBit] = None,
-        rail_direction: Optional[RailDirection] = None
+        rail_data_bit: Optional[RailDataBit] = None, rail_direction: Optional[RailDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for ActivatorRail"""
         return MinecraftBlockDescriptor(
@@ -909,9 +871,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:amethyst_block", True)
 
     @staticmethod
-    def AmethystCluster(
-        minecraft_block_face: Optional[BlockFace] = None
-    ) -> MinecraftBlockDescriptor:
+    def AmethystCluster(minecraft_block_face: Optional[BlockFace] = None) -> MinecraftBlockDescriptor:
         """Factory for AmethystCluster"""
         return MinecraftBlockDescriptor(
             "minecraft:amethyst_cluster",
@@ -930,9 +890,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:andesite", True)
 
     @staticmethod
-    def AndesiteDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def AndesiteDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for AndesiteDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:andesite_double_slab",
@@ -941,9 +899,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def AndesiteSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def AndesiteSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for AndesiteSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:andesite_slab",
@@ -953,8 +909,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def AndesiteStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for AndesiteStairs"""
         return MinecraftBlockDescriptor(
@@ -972,7 +927,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for AndesiteWall"""
         return MinecraftBlockDescriptor(
@@ -988,9 +943,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Anvil(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Anvil(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Anvil"""
         return MinecraftBlockDescriptor(
             "minecraft:anvil",
@@ -1005,8 +958,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def AzaleaLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for AzaleaLeaves"""
         return MinecraftBlockDescriptor(
@@ -1020,8 +972,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def AzaleaLeavesFlowered(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for AzaleaLeavesFlowered"""
         return MinecraftBlockDescriptor(
@@ -1042,7 +993,7 @@ class MinecraftBlockTypes:
     def Bamboo(
         age_bit: Optional[AgeBit] = None,
         bamboo_leaf_size: Optional[BambooLeafSize] = None,
-        bamboo_stalk_thickness: Optional[BambooStalkThickness] = None
+        bamboo_stalk_thickness: Optional[BambooStalkThickness] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for Bamboo"""
         return MinecraftBlockDescriptor(
@@ -1056,18 +1007,13 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BambooBlock(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooBlock(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooBlock"""
-        return MinecraftBlockDescriptor(
-            "minecraft:bamboo_block", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:bamboo_block", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def BambooButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BambooButton"""
         return MinecraftBlockDescriptor(
@@ -1084,7 +1030,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BambooDoor"""
         return MinecraftBlockDescriptor(
@@ -1099,9 +1045,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BambooDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:bamboo_double_slab",
@@ -1118,7 +1062,7 @@ class MinecraftBlockTypes:
     def BambooFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BambooFenceGate"""
         return MinecraftBlockDescriptor(
@@ -1136,7 +1080,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BambooHangingSign"""
         return MinecraftBlockDescriptor(
@@ -1156,9 +1100,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:bamboo_mosaic", True)
 
     @staticmethod
-    def BambooMosaicDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooMosaicDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooMosaicDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:bamboo_mosaic_double_slab",
@@ -1167,9 +1109,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BambooMosaicSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooMosaicSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooMosaicSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:bamboo_mosaic_slab",
@@ -1179,8 +1119,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def BambooMosaicStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BambooMosaicStairs"""
         return MinecraftBlockDescriptor(
@@ -1198,9 +1137,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:bamboo_planks", True)
 
     @staticmethod
-    def BambooPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:bamboo_pressure_plate",
@@ -1209,19 +1146,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BambooSapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooSapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:bamboo_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:bamboo_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def BambooShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BambooShelf"""
         return MinecraftBlockDescriptor(
@@ -1235,9 +1168,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BambooSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:bamboo_slab",
@@ -1247,8 +1178,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def BambooStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BambooStairs"""
         return MinecraftBlockDescriptor(
@@ -1261,9 +1191,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BambooStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:bamboo_standing_sign",
@@ -1275,7 +1203,7 @@ class MinecraftBlockTypes:
     def BambooTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BambooTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -1289,9 +1217,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BambooWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BambooWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BambooWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:bamboo_wall_sign",
@@ -1301,8 +1227,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Barrel(
-        facing_direction: Optional[FacingDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        facing_direction: Optional[FacingDirection] = None, open_bit: Optional[OpenBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Barrel"""
         return MinecraftBlockDescriptor(
@@ -1320,13 +1245,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:barrier", True)
 
     @staticmethod
-    def Basalt(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def Basalt(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for Basalt"""
-        return MinecraftBlockDescriptor(
-            "minecraft:basalt", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:basalt", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def Beacon() -> MinecraftBlockDescriptor:
@@ -1337,7 +1258,7 @@ class MinecraftBlockTypes:
     def Bed(
         direction: Optional[Direction] = None,
         head_piece_bit: Optional[HeadPieceBit] = None,
-        occupied_bit: Optional[OccupiedBit] = None
+        occupied_bit: Optional[OccupiedBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for Bed"""
         return MinecraftBlockDescriptor(
@@ -1351,18 +1272,13 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Bedrock(
-        infiniburn_bit: Optional[InfiniburnBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def Bedrock(infiniburn_bit: Optional[InfiniburnBit] = None) -> MinecraftBlockDescriptor:
         """Factory for Bedrock"""
-        return MinecraftBlockDescriptor(
-            "minecraft:bedrock", True, {_BlockStateKeys.InfiniburnBit: infiniburn_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:bedrock", True, {_BlockStateKeys.InfiniburnBit: infiniburn_bit})
 
     @staticmethod
     def BeeNest(
-        direction: Optional[Direction] = None,
-        honey_level: Optional[HoneyLevel] = None
+        direction: Optional[Direction] = None, honey_level: Optional[HoneyLevel] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BeeNest"""
         return MinecraftBlockDescriptor(
@@ -1376,8 +1292,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Beehive(
-        direction: Optional[Direction] = None,
-        honey_level: Optional[HoneyLevel] = None
+        direction: Optional[Direction] = None, honey_level: Optional[HoneyLevel] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Beehive"""
         return MinecraftBlockDescriptor(
@@ -1390,19 +1305,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Beetroot(
-        growth: Optional[Growth] = None
-    ) -> MinecraftBlockDescriptor:
+    def Beetroot(growth: Optional[Growth] = None) -> MinecraftBlockDescriptor:
         """Factory for Beetroot"""
-        return MinecraftBlockDescriptor(
-            "minecraft:beetroot", True, {_BlockStateKeys.Growth: growth}
-        )
+        return MinecraftBlockDescriptor("minecraft:beetroot", True, {_BlockStateKeys.Growth: growth})
 
     @staticmethod
     def Bell(
         attachment: Optional[Attachment] = None,
         direction: Optional[Direction] = None,
-        toggle_bit: Optional[ToggleBit] = None
+        toggle_bit: Optional[ToggleBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for Bell"""
         return MinecraftBlockDescriptor(
@@ -1419,7 +1330,7 @@ class MinecraftBlockTypes:
     def BigDripleaf(
         big_dripleaf_head: Optional[BigDripleafHead] = None,
         big_dripleaf_tilt: Optional[BigDripleafTilt] = None,
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
+        minecraft_cardinal_direction: Optional[CardinalDirection] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BigDripleaf"""
         return MinecraftBlockDescriptor(
@@ -1434,8 +1345,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def BirchButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BirchButton"""
         return MinecraftBlockDescriptor(
@@ -1452,7 +1362,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BirchDoor"""
         return MinecraftBlockDescriptor(
@@ -1467,9 +1377,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BirchDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BirchDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BirchDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:birch_double_slab",
@@ -1486,7 +1394,7 @@ class MinecraftBlockTypes:
     def BirchFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BirchFenceGate"""
         return MinecraftBlockDescriptor(
@@ -1504,7 +1412,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BirchHangingSign"""
         return MinecraftBlockDescriptor(
@@ -1520,8 +1428,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def BirchLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BirchLeaves"""
         return MinecraftBlockDescriptor(
@@ -1534,13 +1441,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BirchLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def BirchLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for BirchLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:birch_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:birch_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def BirchPlanks() -> MinecraftBlockDescriptor:
@@ -1548,9 +1451,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:birch_planks", True)
 
     @staticmethod
-    def BirchPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def BirchPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for BirchPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:birch_pressure_plate",
@@ -1559,19 +1460,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BirchSapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def BirchSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for BirchSapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:birch_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:birch_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def BirchShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BirchShelf"""
         return MinecraftBlockDescriptor(
@@ -1585,9 +1482,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BirchSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BirchSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BirchSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:birch_slab",
@@ -1597,8 +1492,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def BirchStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BirchStairs"""
         return MinecraftBlockDescriptor(
@@ -1611,9 +1505,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BirchStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BirchStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BirchStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:birch_standing_sign",
@@ -1625,7 +1517,7 @@ class MinecraftBlockTypes:
     def BirchTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BirchTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -1639,9 +1531,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BirchWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BirchWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BirchWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:birch_wall_sign",
@@ -1650,19 +1540,12 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BirchWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def BirchWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for BirchWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:birch_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:birch_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def BlackCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlackCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for BlackCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:black_candle",
@@ -1671,13 +1554,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BlackCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlackCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for BlackCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:black_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:black_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def BlackCarpet() -> MinecraftBlockDescriptor:
@@ -1695,9 +1574,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:black_concrete_powder", True)
 
     @staticmethod
-    def BlackGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlackGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BlackGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:black_glazed_terracotta",
@@ -1736,9 +1613,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:blackstone", True)
 
     @staticmethod
-    def BlackstoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlackstoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BlackstoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:blackstone_double_slab",
@@ -1747,9 +1622,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BlackstoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlackstoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BlackstoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:blackstone_slab",
@@ -1759,8 +1632,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def BlackstoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BlackstoneStairs"""
         return MinecraftBlockDescriptor(
@@ -1778,7 +1650,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BlackstoneWall"""
         return MinecraftBlockDescriptor(
@@ -1794,9 +1666,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BlastFurnace(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlastFurnace(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BlastFurnace"""
         return MinecraftBlockDescriptor(
             "minecraft:blast_furnace",
@@ -1805,10 +1675,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BlueCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlueCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for BlueCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:blue_candle",
@@ -1817,13 +1684,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BlueCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlueCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for BlueCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:blue_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:blue_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def BlueCarpet() -> MinecraftBlockDescriptor:
@@ -1841,9 +1704,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:blue_concrete_powder", True)
 
     @staticmethod
-    def BlueGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BlueGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BlueGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:blue_glazed_terracotta",
@@ -1888,8 +1749,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def BoneBlock(
-        deprecated: Optional[Deprecated] = None,
-        pillar_axis: Optional[PillarAxis] = None
+        deprecated: Optional[Deprecated] = None, pillar_axis: Optional[PillarAxis] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BoneBlock"""
         return MinecraftBlockDescriptor(
@@ -1912,7 +1772,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BorderBlock"""
         return MinecraftBlockDescriptor(
@@ -1938,9 +1798,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:brain_coral_block", True)
 
     @staticmethod
-    def BrainCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BrainCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BrainCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:brain_coral_fan",
@@ -1949,9 +1807,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BrainCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BrainCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BrainCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:brain_coral_wall_fan",
@@ -1963,7 +1819,7 @@ class MinecraftBlockTypes:
     def BrewingStand(
         brewing_stand_slot_a_bit: Optional[BrewingStandSlotABit] = None,
         brewing_stand_slot_b_bit: Optional[BrewingStandSlotBBit] = None,
-        brewing_stand_slot_c_bit: Optional[BrewingStandSlotCBit] = None
+        brewing_stand_slot_c_bit: Optional[BrewingStandSlotCBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BrewingStand"""
         return MinecraftBlockDescriptor(
@@ -1982,9 +1838,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:brick_block", True)
 
     @staticmethod
-    def BrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:brick_double_slab",
@@ -1993,9 +1847,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def BrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for BrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:brick_slab",
@@ -2005,8 +1857,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def BrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for BrickStairs"""
         return MinecraftBlockDescriptor(
@@ -2024,7 +1875,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for BrickWall"""
         return MinecraftBlockDescriptor(
@@ -2040,10 +1891,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BrownCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def BrownCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for BrownCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:brown_candle",
@@ -2052,13 +1900,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BrownCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def BrownCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for BrownCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:brown_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:brown_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def BrownCarpet() -> MinecraftBlockDescriptor:
@@ -2076,9 +1920,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:brown_concrete_powder", True)
 
     @staticmethod
-    def BrownGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BrownGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BrownGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:brown_glazed_terracotta",
@@ -2092,9 +1934,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:brown_mushroom", True)
 
     @staticmethod
-    def BrownMushroomBlock(
-        huge_mushroom_bits: Optional[HugeMushroomBits] = None
-    ) -> MinecraftBlockDescriptor:
+    def BrownMushroomBlock(huge_mushroom_bits: Optional[HugeMushroomBits] = None) -> MinecraftBlockDescriptor:
         """Factory for BrownMushroomBlock"""
         return MinecraftBlockDescriptor(
             "minecraft:brown_mushroom_block",
@@ -2128,13 +1968,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:brown_wool", True)
 
     @staticmethod
-    def BubbleColumn(
-        drag_down: Optional[DragDown] = None
-    ) -> MinecraftBlockDescriptor:
+    def BubbleColumn(drag_down: Optional[DragDown] = None) -> MinecraftBlockDescriptor:
         """Factory for BubbleColumn"""
-        return MinecraftBlockDescriptor(
-            "minecraft:bubble_column", True, {_BlockStateKeys.DragDown: drag_down}
-        )
+        return MinecraftBlockDescriptor("minecraft:bubble_column", True, {_BlockStateKeys.DragDown: drag_down})
 
     @staticmethod
     def BubbleCoral() -> MinecraftBlockDescriptor:
@@ -2147,9 +1983,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:bubble_coral_block", True)
 
     @staticmethod
-    def BubbleCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BubbleCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BubbleCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:bubble_coral_fan",
@@ -2158,9 +1992,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def BubbleCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def BubbleCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for BubbleCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:bubble_coral_wall_fan",
@@ -2179,13 +2011,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:bush", True)
 
     @staticmethod
-    def Cactus(
-        age: Optional[Age] = None
-    ) -> MinecraftBlockDescriptor:
+    def Cactus(age: Optional[Age] = None) -> MinecraftBlockDescriptor:
         """Factory for Cactus"""
-        return MinecraftBlockDescriptor(
-            "minecraft:cactus", True, {_BlockStateKeys.Age: age}
-        )
+        return MinecraftBlockDescriptor("minecraft:cactus", True, {_BlockStateKeys.Age: age})
 
     @staticmethod
     def CactusFlower() -> MinecraftBlockDescriptor:
@@ -2193,13 +2021,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cactus_flower", True)
 
     @staticmethod
-    def Cake(
-        bite_counter: Optional[BiteCounter] = None
-    ) -> MinecraftBlockDescriptor:
+    def Cake(bite_counter: Optional[BiteCounter] = None) -> MinecraftBlockDescriptor:
         """Factory for Cake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:cake", True, {_BlockStateKeys.BiteCounter: bite_counter}
-        )
+        return MinecraftBlockDescriptor("minecraft:cake", True, {_BlockStateKeys.BiteCounter: bite_counter})
 
     @staticmethod
     def Calcite() -> MinecraftBlockDescriptor:
@@ -2209,7 +2033,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def CalibratedSculkSensor(
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        sculk_sensor_phase: Optional[SculkSensorPhase] = None
+        sculk_sensor_phase: Optional[SculkSensorPhase] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CalibratedSculkSensor"""
         return MinecraftBlockDescriptor(
@@ -2228,8 +2052,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Campfire(
-        extinguished: Optional[Extinguished] = None,
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
+        extinguished: Optional[Extinguished] = None, minecraft_cardinal_direction: Optional[CardinalDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Campfire"""
         return MinecraftBlockDescriptor(
@@ -2242,10 +2065,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Candle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def Candle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for Candle"""
         return MinecraftBlockDescriptor(
             "minecraft:candle",
@@ -2254,22 +2074,14 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def CandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for CandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
-    def Carrots(
-        growth: Optional[Growth] = None
-    ) -> MinecraftBlockDescriptor:
+    def Carrots(growth: Optional[Growth] = None) -> MinecraftBlockDescriptor:
         """Factory for Carrots"""
-        return MinecraftBlockDescriptor(
-            "minecraft:carrots", True, {_BlockStateKeys.Growth: growth}
-        )
+        return MinecraftBlockDescriptor("minecraft:carrots", True, {_BlockStateKeys.Growth: growth})
 
     @staticmethod
     def CartographyTable() -> MinecraftBlockDescriptor:
@@ -2277,9 +2089,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cartography_table", True)
 
     @staticmethod
-    def CarvedPumpkin(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CarvedPumpkin(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CarvedPumpkin"""
         return MinecraftBlockDescriptor(
             "minecraft:carved_pumpkin",
@@ -2289,8 +2099,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Cauldron(
-        cauldron_liquid: Optional[CauldronLiquid] = None,
-        fill_level: Optional[FillLevel] = None
+        cauldron_liquid: Optional[CauldronLiquid] = None, fill_level: Optional[FillLevel] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Cauldron"""
         return MinecraftBlockDescriptor(
@@ -2303,9 +2112,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CaveVines(
-        growing_plant_age: Optional[GrowingPlantAge] = None
-    ) -> MinecraftBlockDescriptor:
+    def CaveVines(growing_plant_age: Optional[GrowingPlantAge] = None) -> MinecraftBlockDescriptor:
         """Factory for CaveVines"""
         return MinecraftBlockDescriptor(
             "minecraft:cave_vines",
@@ -2314,9 +2121,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CaveVinesBodyWithBerries(
-        growing_plant_age: Optional[GrowingPlantAge] = None
-    ) -> MinecraftBlockDescriptor:
+    def CaveVinesBodyWithBerries(growing_plant_age: Optional[GrowingPlantAge] = None) -> MinecraftBlockDescriptor:
         """Factory for CaveVinesBodyWithBerries"""
         return MinecraftBlockDescriptor(
             "minecraft:cave_vines_body_with_berries",
@@ -2325,9 +2130,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CaveVinesHeadWithBerries(
-        growing_plant_age: Optional[GrowingPlantAge] = None
-    ) -> MinecraftBlockDescriptor:
+    def CaveVinesHeadWithBerries(growing_plant_age: Optional[GrowingPlantAge] = None) -> MinecraftBlockDescriptor:
         """Factory for CaveVinesHeadWithBerries"""
         return MinecraftBlockDescriptor(
             "minecraft:cave_vines_head_with_berries",
@@ -2342,8 +2145,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def ChainCommandBlock(
-        conditional_bit: Optional[ConditionalBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        conditional_bit: Optional[ConditionalBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for ChainCommandBlock"""
         return MinecraftBlockDescriptor(
@@ -2362,8 +2164,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def CherryButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for CherryButton"""
         return MinecraftBlockDescriptor(
@@ -2380,7 +2181,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CherryDoor"""
         return MinecraftBlockDescriptor(
@@ -2395,9 +2196,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CherryDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CherryDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CherryDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cherry_double_slab",
@@ -2414,7 +2213,7 @@ class MinecraftBlockTypes:
     def CherryFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CherryFenceGate"""
         return MinecraftBlockDescriptor(
@@ -2432,7 +2231,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CherryHangingSign"""
         return MinecraftBlockDescriptor(
@@ -2448,8 +2247,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def CherryLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for CherryLeaves"""
         return MinecraftBlockDescriptor(
@@ -2462,13 +2260,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CherryLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def CherryLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for CherryLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:cherry_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:cherry_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def CherryPlanks() -> MinecraftBlockDescriptor:
@@ -2476,9 +2270,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cherry_planks", True)
 
     @staticmethod
-    def CherryPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def CherryPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for CherryPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:cherry_pressure_plate",
@@ -2487,19 +2279,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CherrySapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def CherrySapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for CherrySapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:cherry_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:cherry_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def CherryShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CherryShelf"""
         return MinecraftBlockDescriptor(
@@ -2513,9 +2301,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CherrySlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CherrySlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CherrySlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cherry_slab",
@@ -2525,8 +2311,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def CherryStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for CherryStairs"""
         return MinecraftBlockDescriptor(
@@ -2539,9 +2324,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CherryStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CherryStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CherryStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:cherry_standing_sign",
@@ -2553,7 +2336,7 @@ class MinecraftBlockTypes:
     def CherryTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CherryTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -2567,9 +2350,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CherryWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CherryWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CherryWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:cherry_wall_sign",
@@ -2578,18 +2359,12 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CherryWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def CherryWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for CherryWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:cherry_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:cherry_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def Chest(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Chest(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Chest"""
         return MinecraftBlockDescriptor(
             "minecraft:chest",
@@ -2598,9 +2373,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def ChippedAnvil(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def ChippedAnvil(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for ChippedAnvil"""
         return MinecraftBlockDescriptor(
             "minecraft:chipped_anvil",
@@ -2610,8 +2383,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def ChiseledBookshelf(
-        books_stored: Optional[BooksStored] = None,
-        direction: Optional[Direction] = None
+        books_stored: Optional[BooksStored] = None, direction: Optional[Direction] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for ChiseledBookshelf"""
         return MinecraftBlockDescriptor(
@@ -2644,9 +2416,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:chiseled_polished_blackstone", True)
 
     @staticmethod
-    def ChiseledQuartzBlock(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def ChiseledQuartzBlock(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for ChiseledQuartzBlock"""
         return MinecraftBlockDescriptor(
             "minecraft:chiseled_quartz_block",
@@ -2685,13 +2455,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:chiseled_tuff_bricks", True)
 
     @staticmethod
-    def ChorusFlower(
-        age: Optional[Age] = None
-    ) -> MinecraftBlockDescriptor:
+    def ChorusFlower(age: Optional[Age] = None) -> MinecraftBlockDescriptor:
         """Factory for ChorusFlower"""
-        return MinecraftBlockDescriptor(
-            "minecraft:chorus_flower", True, {_BlockStateKeys.Age: age}
-        )
+        return MinecraftBlockDescriptor("minecraft:chorus_flower", True, {_BlockStateKeys.Age: age})
 
     @staticmethod
     def ChorusPlant() -> MinecraftBlockDescriptor:
@@ -2724,9 +2490,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cobbled_deepslate", True)
 
     @staticmethod
-    def CobbledDeepslateDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CobbledDeepslateDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CobbledDeepslateDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cobbled_deepslate_double_slab",
@@ -2735,9 +2499,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CobbledDeepslateSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CobbledDeepslateSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CobbledDeepslateSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cobbled_deepslate_slab",
@@ -2747,8 +2509,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def CobbledDeepslateStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for CobbledDeepslateStairs"""
         return MinecraftBlockDescriptor(
@@ -2766,7 +2527,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CobbledDeepslateWall"""
         return MinecraftBlockDescriptor(
@@ -2787,9 +2548,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cobblestone", True)
 
     @staticmethod
-    def CobblestoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CobblestoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CobblestoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cobblestone_double_slab",
@@ -2798,9 +2557,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CobblestoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CobblestoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CobblestoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cobblestone_slab",
@@ -2814,7 +2571,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CobblestoneWall"""
         return MinecraftBlockDescriptor(
@@ -2830,10 +2587,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Cocoa(
-        age: Optional[Age] = None,
-        direction: Optional[Direction] = None
-    ) -> MinecraftBlockDescriptor:
+    def Cocoa(age: Optional[Age] = None, direction: Optional[Direction] = None) -> MinecraftBlockDescriptor:
         """Factory for Cocoa"""
         return MinecraftBlockDescriptor(
             "minecraft:cocoa",
@@ -2842,9 +2596,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def ColoredTorchBlue(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def ColoredTorchBlue(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for ColoredTorchBlue"""
         return MinecraftBlockDescriptor(
             "minecraft:colored_torch_blue",
@@ -2853,9 +2605,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def ColoredTorchGreen(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def ColoredTorchGreen(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for ColoredTorchGreen"""
         return MinecraftBlockDescriptor(
             "minecraft:colored_torch_green",
@@ -2864,9 +2614,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def ColoredTorchPurple(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def ColoredTorchPurple(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for ColoredTorchPurple"""
         return MinecraftBlockDescriptor(
             "minecraft:colored_torch_purple",
@@ -2875,9 +2623,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def ColoredTorchRed(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def ColoredTorchRed(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for ColoredTorchRed"""
         return MinecraftBlockDescriptor(
             "minecraft:colored_torch_red",
@@ -2887,8 +2633,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def CommandBlock(
-        conditional_bit: Optional[ConditionalBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        conditional_bit: Optional[ConditionalBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for CommandBlock"""
         return MinecraftBlockDescriptor(
@@ -2901,9 +2646,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Composter(
-        composter_fill_level: Optional[ComposterFillLevel] = None
-    ) -> MinecraftBlockDescriptor:
+    def Composter(composter_fill_level: Optional[ComposterFillLevel] = None) -> MinecraftBlockDescriptor:
         """Factory for Composter"""
         return MinecraftBlockDescriptor(
             "minecraft:composter",
@@ -2912,13 +2655,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CompoundCreator(
-        direction: Optional[Direction] = None
-    ) -> MinecraftBlockDescriptor:
+    def CompoundCreator(direction: Optional[Direction] = None) -> MinecraftBlockDescriptor:
         """Factory for CompoundCreator"""
-        return MinecraftBlockDescriptor(
-            "minecraft:compound_creator", True, {_BlockStateKeys.Direction: direction}
-        )
+        return MinecraftBlockDescriptor("minecraft:compound_creator", True, {_BlockStateKeys.Direction: direction})
 
     @staticmethod
     def Conduit() -> MinecraftBlockDescriptor:
@@ -2936,10 +2675,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:copper_block", True)
 
     @staticmethod
-    def CopperBulb(
-        lit: Optional[Lit] = None,
-        powered_bit: Optional[PoweredBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def CopperBulb(lit: Optional[Lit] = None, powered_bit: Optional[PoweredBit] = None) -> MinecraftBlockDescriptor:
         """Factory for CopperBulb"""
         return MinecraftBlockDescriptor(
             "minecraft:copper_bulb",
@@ -2948,20 +2684,16 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CopperChain(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def CopperChain(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for CopperChain"""
-        return MinecraftBlockDescriptor(
-            "minecraft:copper_chain", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:copper_chain", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def CopperDoor(
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CopperDoor"""
         return MinecraftBlockDescriptor(
@@ -2976,9 +2708,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CopperGolemStatue(
-        cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CopperGolemStatue(cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CopperGolemStatue"""
         return MinecraftBlockDescriptor(
             "minecraft:copper_golem_statue",
@@ -2992,13 +2722,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:copper_grate", True)
 
     @staticmethod
-    def CopperLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def CopperLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for CopperLantern"""
-        return MinecraftBlockDescriptor(
-            "minecraft:copper_lantern", True, {_BlockStateKeys.Hanging: hanging}
-        )
+        return MinecraftBlockDescriptor("minecraft:copper_lantern", True, {_BlockStateKeys.Hanging: hanging})
 
     @staticmethod
     def CopperOre() -> MinecraftBlockDescriptor:
@@ -3006,9 +2732,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:copper_ore", True)
 
     @staticmethod
-    def CopperTorch(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CopperTorch(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CopperTorch"""
         return MinecraftBlockDescriptor(
             "minecraft:copper_torch",
@@ -3020,7 +2744,7 @@ class MinecraftBlockTypes:
     def CopperTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CopperTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -3056,9 +2780,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def CrackedPolishedBlackstoneBricks() -> MinecraftBlockDescriptor:
         """Factory for CrackedPolishedBlackstoneBricks"""
-        return MinecraftBlockDescriptor(
-            "minecraft:cracked_polished_blackstone_bricks", True
-        )
+        return MinecraftBlockDescriptor("minecraft:cracked_polished_blackstone_bricks", True)
 
     @staticmethod
     def CrackedStoneBricks() -> MinecraftBlockDescriptor:
@@ -3069,7 +2791,7 @@ class MinecraftBlockTypes:
     def Crafter(
         crafting: Optional[Crafting] = None,
         orientation: Optional[Orientation] = None,
-        triggered_bit: Optional[TriggeredBit] = None
+        triggered_bit: Optional[TriggeredBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for Crafter"""
         return MinecraftBlockDescriptor(
@@ -3091,7 +2813,7 @@ class MinecraftBlockTypes:
     def CreakingHeart(
         creaking_heart_state: Optional[CreakingHeartState] = None,
         natural: Optional[Natural] = None,
-        pillar_axis: Optional[PillarAxis] = None
+        pillar_axis: Optional[PillarAxis] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CreakingHeart"""
         return MinecraftBlockDescriptor(
@@ -3105,9 +2827,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CreeperHead(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CreeperHead(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CreeperHead"""
         return MinecraftBlockDescriptor(
             "minecraft:creeper_head",
@@ -3117,8 +2837,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def CrimsonButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for CrimsonButton"""
         return MinecraftBlockDescriptor(
@@ -3135,7 +2854,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CrimsonDoor"""
         return MinecraftBlockDescriptor(
@@ -3150,9 +2869,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CrimsonDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CrimsonDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CrimsonDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:crimson_double_slab",
@@ -3169,7 +2886,7 @@ class MinecraftBlockTypes:
     def CrimsonFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CrimsonFenceGate"""
         return MinecraftBlockDescriptor(
@@ -3192,7 +2909,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CrimsonHangingSign"""
         return MinecraftBlockDescriptor(
@@ -3207,13 +2924,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CrimsonHyphae(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def CrimsonHyphae(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for CrimsonHyphae"""
-        return MinecraftBlockDescriptor(
-            "minecraft:crimson_hyphae", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:crimson_hyphae", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def CrimsonNylium() -> MinecraftBlockDescriptor:
@@ -3226,9 +2939,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:crimson_planks", True)
 
     @staticmethod
-    def CrimsonPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def CrimsonPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for CrimsonPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:crimson_pressure_plate",
@@ -3245,7 +2956,7 @@ class MinecraftBlockTypes:
     def CrimsonShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CrimsonShelf"""
         return MinecraftBlockDescriptor(
@@ -3259,9 +2970,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CrimsonSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CrimsonSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CrimsonSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:crimson_slab",
@@ -3271,8 +2980,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def CrimsonStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for CrimsonStairs"""
         return MinecraftBlockDescriptor(
@@ -3285,9 +2993,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CrimsonStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CrimsonStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CrimsonStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:crimson_standing_sign",
@@ -3296,19 +3002,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CrimsonStem(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def CrimsonStem(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for CrimsonStem"""
-        return MinecraftBlockDescriptor(
-            "minecraft:crimson_stem", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:crimson_stem", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def CrimsonTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for CrimsonTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -3322,9 +3024,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CrimsonWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CrimsonWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CrimsonWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:crimson_wall_sign",
@@ -3343,9 +3043,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cut_copper", True)
 
     @staticmethod
-    def CutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cut_copper_slab",
@@ -3355,8 +3053,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def CutCopperStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for CutCopperStairs"""
         return MinecraftBlockDescriptor(
@@ -3374,9 +3071,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cut_red_sandstone", True)
 
     @staticmethod
-    def CutRedSandstoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CutRedSandstoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CutRedSandstoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cut_red_sandstone_double_slab",
@@ -3385,9 +3080,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CutRedSandstoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CutRedSandstoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CutRedSandstoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cut_red_sandstone_slab",
@@ -3401,9 +3094,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cut_sandstone", True)
 
     @staticmethod
-    def CutSandstoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CutSandstoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CutSandstoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cut_sandstone_double_slab",
@@ -3412,9 +3103,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CutSandstoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def CutSandstoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for CutSandstoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:cut_sandstone_slab",
@@ -3423,10 +3112,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CyanCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def CyanCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for CyanCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:cyan_candle",
@@ -3435,13 +3121,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def CyanCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def CyanCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for CyanCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:cyan_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:cyan_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def CyanCarpet() -> MinecraftBlockDescriptor:
@@ -3459,9 +3141,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cyan_concrete_powder", True)
 
     @staticmethod
-    def CyanGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def CyanGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for CyanGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:cyan_glazed_terracotta",
@@ -3495,9 +3175,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:cyan_wool", True)
 
     @staticmethod
-    def DamagedAnvil(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DamagedAnvil(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DamagedAnvil"""
         return MinecraftBlockDescriptor(
             "minecraft:damaged_anvil",
@@ -3512,8 +3190,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def DarkOakButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkOakButton"""
         return MinecraftBlockDescriptor(
@@ -3530,7 +3207,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkOakDoor"""
         return MinecraftBlockDescriptor(
@@ -3545,9 +3222,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DarkOakDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkOakDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkOakDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:dark_oak_double_slab",
@@ -3564,7 +3239,7 @@ class MinecraftBlockTypes:
     def DarkOakFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkOakFenceGate"""
         return MinecraftBlockDescriptor(
@@ -3582,7 +3257,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkOakHangingSign"""
         return MinecraftBlockDescriptor(
@@ -3598,8 +3273,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def DarkOakLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkOakLeaves"""
         return MinecraftBlockDescriptor(
@@ -3612,13 +3286,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DarkOakLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkOakLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkOakLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:dark_oak_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:dark_oak_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def DarkOakPlanks() -> MinecraftBlockDescriptor:
@@ -3626,9 +3296,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:dark_oak_planks", True)
 
     @staticmethod
-    def DarkOakPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkOakPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkOakPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:dark_oak_pressure_plate",
@@ -3637,19 +3305,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DarkOakSapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkOakSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkOakSapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:dark_oak_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:dark_oak_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def DarkOakShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkOakShelf"""
         return MinecraftBlockDescriptor(
@@ -3663,9 +3327,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DarkOakSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkOakSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkOakSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:dark_oak_slab",
@@ -3675,8 +3337,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def DarkOakStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkOakStairs"""
         return MinecraftBlockDescriptor(
@@ -3692,7 +3353,7 @@ class MinecraftBlockTypes:
     def DarkOakTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkOakTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -3706,13 +3367,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DarkOakWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkOakWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkOakWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:dark_oak_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:dark_oak_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def DarkPrismarine() -> MinecraftBlockDescriptor:
@@ -3720,9 +3377,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:dark_prismarine", True)
 
     @staticmethod
-    def DarkPrismarineDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkPrismarineDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkPrismarineDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:dark_prismarine_double_slab",
@@ -3731,9 +3386,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DarkPrismarineSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkPrismarineSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkPrismarineSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:dark_prismarine_slab",
@@ -3743,8 +3396,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def DarkPrismarineStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for DarkPrismarineStairs"""
         return MinecraftBlockDescriptor(
@@ -3757,9 +3409,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DarkoakStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkoakStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkoakStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:darkoak_standing_sign",
@@ -3768,9 +3418,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DarkoakWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DarkoakWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DarkoakWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:darkoak_wall_sign",
@@ -3779,9 +3427,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DaylightDetector(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def DaylightDetector(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for DaylightDetector"""
         return MinecraftBlockDescriptor(
             "minecraft:daylight_detector",
@@ -3790,9 +3436,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DaylightDetectorInverted(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def DaylightDetectorInverted(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for DaylightDetectorInverted"""
         return MinecraftBlockDescriptor(
             "minecraft:daylight_detector_inverted",
@@ -3811,9 +3455,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:dead_brain_coral_block", True)
 
     @staticmethod
-    def DeadBrainCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadBrainCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadBrainCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_brain_coral_fan",
@@ -3822,9 +3464,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DeadBrainCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadBrainCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadBrainCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_brain_coral_wall_fan",
@@ -3843,9 +3483,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:dead_bubble_coral_block", True)
 
     @staticmethod
-    def DeadBubbleCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadBubbleCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadBubbleCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_bubble_coral_fan",
@@ -3854,9 +3492,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DeadBubbleCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadBubbleCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadBubbleCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_bubble_coral_wall_fan",
@@ -3875,9 +3511,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:dead_fire_coral_block", True)
 
     @staticmethod
-    def DeadFireCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadFireCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadFireCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_fire_coral_fan",
@@ -3886,9 +3520,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DeadFireCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadFireCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadFireCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_fire_coral_wall_fan",
@@ -3907,9 +3539,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:dead_horn_coral_block", True)
 
     @staticmethod
-    def DeadHornCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadHornCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadHornCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_horn_coral_fan",
@@ -3918,9 +3548,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DeadHornCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadHornCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadHornCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_horn_coral_wall_fan",
@@ -3939,9 +3567,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:dead_tube_coral_block", True)
 
     @staticmethod
-    def DeadTubeCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadTubeCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadTubeCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_tube_coral_fan",
@@ -3950,9 +3576,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DeadTubeCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeadTubeCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DeadTubeCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:dead_tube_coral_wall_fan",
@@ -3966,27 +3590,17 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:deadbush", True)
 
     @staticmethod
-    def DecoratedPot(
-        direction: Optional[Direction] = None
-    ) -> MinecraftBlockDescriptor:
+    def DecoratedPot(direction: Optional[Direction] = None) -> MinecraftBlockDescriptor:
         """Factory for DecoratedPot"""
-        return MinecraftBlockDescriptor(
-            "minecraft:decorated_pot", True, {_BlockStateKeys.Direction: direction}
-        )
+        return MinecraftBlockDescriptor("minecraft:decorated_pot", True, {_BlockStateKeys.Direction: direction})
 
     @staticmethod
-    def Deepslate(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def Deepslate(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for Deepslate"""
-        return MinecraftBlockDescriptor(
-            "minecraft:deepslate", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:deepslate", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def DeepslateBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeepslateBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DeepslateBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:deepslate_brick_double_slab",
@@ -3995,9 +3609,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DeepslateBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeepslateBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DeepslateBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:deepslate_brick_slab",
@@ -4007,8 +3619,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def DeepslateBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for DeepslateBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -4026,7 +3637,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DeepslateBrickWall"""
         return MinecraftBlockDescriptor(
@@ -4087,9 +3698,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:deepslate_redstone_ore", True)
 
     @staticmethod
-    def DeepslateTileDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeepslateTileDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DeepslateTileDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:deepslate_tile_double_slab",
@@ -4098,9 +3707,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DeepslateTileSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DeepslateTileSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DeepslateTileSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:deepslate_tile_slab",
@@ -4110,8 +3717,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def DeepslateTileStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for DeepslateTileStairs"""
         return MinecraftBlockDescriptor(
@@ -4129,7 +3735,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DeepslateTileWall"""
         return MinecraftBlockDescriptor(
@@ -4156,8 +3762,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def DetectorRail(
-        rail_data_bit: Optional[RailDataBit] = None,
-        rail_direction: Optional[RailDirection] = None
+        rail_data_bit: Optional[RailDataBit] = None, rail_direction: Optional[RailDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for DetectorRail"""
         return MinecraftBlockDescriptor(
@@ -4185,9 +3790,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:diorite", True)
 
     @staticmethod
-    def DioriteDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DioriteDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DioriteDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:diorite_double_slab",
@@ -4196,9 +3799,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DioriteSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DioriteSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DioriteSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:diorite_slab",
@@ -4208,8 +3809,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def DioriteStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for DioriteStairs"""
         return MinecraftBlockDescriptor(
@@ -4227,7 +3827,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DioriteWall"""
         return MinecraftBlockDescriptor(
@@ -4243,9 +3843,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Dirt(
-        dirt_type: Optional[DirtType | None] = None
-    ) -> MinecraftBlockDescriptor:
+    def Dirt(dirt_type: Optional[DirtType | None] = None) -> MinecraftBlockDescriptor:
         """Factory for Dirt"""
         return MinecraftBlockDescriptor("minecraft:dirt", True, {_BlockStateKeys.DirtType: dirt_type})
 
@@ -4256,8 +3854,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Dispenser(
-        facing_direction: Optional[FacingDirection] = None,
-        triggered_bit: Optional[TriggeredBit] = None
+        facing_direction: Optional[FacingDirection] = None, triggered_bit: Optional[TriggeredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Dispenser"""
         return MinecraftBlockDescriptor(
@@ -4270,9 +3867,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def DoubleCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def DoubleCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for DoubleCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:double_cut_copper_slab",
@@ -4286,9 +3881,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:dragon_egg", True)
 
     @staticmethod
-    def DragonHead(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def DragonHead(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for DragonHead"""
         return MinecraftBlockDescriptor(
             "minecraft:dragon_head",
@@ -4299,7 +3892,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def DriedGhast(
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        rehydration_level: Optional[RehydrationLevel] = None
+        rehydration_level: Optional[RehydrationLevel] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for DriedGhast"""
         return MinecraftBlockDescriptor(
@@ -4323,8 +3916,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Dropper(
-        facing_direction: Optional[FacingDirection] = None,
-        triggered_bit: Optional[TriggeredBit] = None
+        facing_direction: Optional[FacingDirection] = None, triggered_bit: Optional[TriggeredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Dropper"""
         return MinecraftBlockDescriptor(
@@ -4932,9 +4524,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:element_99", True)
 
     @staticmethod
-    def ElementConstructor(
-        direction: Optional[Direction] = None
-    ) -> MinecraftBlockDescriptor:
+    def ElementConstructor(direction: Optional[Direction] = None) -> MinecraftBlockDescriptor:
         """Factory for ElementConstructor"""
         return MinecraftBlockDescriptor(
             "minecraft:element_constructor",
@@ -4959,8 +4549,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def EndBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for EndBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -4985,7 +4574,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def EndPortalFrame(
         end_portal_eye_bit: Optional[EndPortalEyeBit] = None,
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
+        minecraft_cardinal_direction: Optional[CardinalDirection] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for EndPortalFrame"""
         return MinecraftBlockDescriptor(
@@ -4998,9 +4587,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def EndRod(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def EndRod(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for EndRod"""
         return MinecraftBlockDescriptor(
             "minecraft:end_rod",
@@ -5014,9 +4601,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:end_stone", True)
 
     @staticmethod
-    def EndStoneBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def EndStoneBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for EndStoneBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:end_stone_brick_double_slab",
@@ -5025,9 +4610,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def EndStoneBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def EndStoneBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for EndStoneBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:end_stone_brick_slab",
@@ -5041,7 +4624,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for EndStoneBrickWall"""
         return MinecraftBlockDescriptor(
@@ -5057,9 +4640,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def EnderChest(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def EnderChest(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for EnderChest"""
         return MinecraftBlockDescriptor(
             "minecraft:ender_chest",
@@ -5084,8 +4665,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def ExposedCopperBulb(
-        lit: Optional[Lit] = None,
-        powered_bit: Optional[PoweredBit] = None
+        lit: Optional[Lit] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for ExposedCopperBulb"""
         return MinecraftBlockDescriptor(
@@ -5104,7 +4684,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for ExposedCopperDoor"""
         return MinecraftBlockDescriptor(
@@ -5119,9 +4699,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def ExposedCopperGolemStatue(
-        cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def ExposedCopperGolemStatue(cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for ExposedCopperGolemStatue"""
         return MinecraftBlockDescriptor(
             "minecraft:exposed_copper_golem_statue",
@@ -5135,19 +4713,15 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:exposed_copper_grate", True)
 
     @staticmethod
-    def ExposedCopperLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def ExposedCopperLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for ExposedCopperLantern"""
-        return MinecraftBlockDescriptor(
-            "minecraft:exposed_copper_lantern", True, {_BlockStateKeys.Hanging: hanging}
-        )
+        return MinecraftBlockDescriptor("minecraft:exposed_copper_lantern", True, {_BlockStateKeys.Hanging: hanging})
 
     @staticmethod
     def ExposedCopperTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for ExposedCopperTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -5166,9 +4740,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:exposed_cut_copper", True)
 
     @staticmethod
-    def ExposedCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def ExposedCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for ExposedCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:exposed_cut_copper_slab",
@@ -5178,8 +4750,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def ExposedCutCopperStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for ExposedCutCopperStairs"""
         return MinecraftBlockDescriptor(
@@ -5192,9 +4763,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def ExposedDoubleCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def ExposedDoubleCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for ExposedDoubleCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:exposed_double_cut_copper_slab",
@@ -5204,8 +4773,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def ExposedLightningRod(
-        facing_direction: Optional[FacingDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        facing_direction: Optional[FacingDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for ExposedLightningRod"""
         return MinecraftBlockDescriptor(
@@ -5218,9 +4786,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Farmland(
-        moisturized_amount: Optional[MoisturizedAmount] = None
-    ) -> MinecraftBlockDescriptor:
+    def Farmland(moisturized_amount: Optional[MoisturizedAmount] = None) -> MinecraftBlockDescriptor:
         """Factory for Farmland"""
         return MinecraftBlockDescriptor(
             "minecraft:farmland",
@@ -5232,7 +4798,7 @@ class MinecraftBlockTypes:
     def FenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for FenceGate"""
         return MinecraftBlockDescriptor(
@@ -5251,13 +4817,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:fern", True)
 
     @staticmethod
-    def Fire(
-        age: Optional[Age] = None
-    ) -> MinecraftBlockDescriptor:
+    def Fire(age: Optional[Age] = None) -> MinecraftBlockDescriptor:
         """Factory for Fire"""
-        return MinecraftBlockDescriptor(
-            "minecraft:fire", True, {_BlockStateKeys.Age: age}
-        )
+        return MinecraftBlockDescriptor("minecraft:fire", True, {_BlockStateKeys.Age: age})
 
     @staticmethod
     def FireCoral() -> MinecraftBlockDescriptor:
@@ -5270,9 +4832,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:fire_coral_block", True)
 
     @staticmethod
-    def FireCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def FireCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for FireCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:fire_coral_fan",
@@ -5281,9 +4841,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def FireCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def FireCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for FireCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:fire_coral_wall_fan",
@@ -5302,13 +4860,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:fletching_table", True)
 
     @staticmethod
-    def FlowerPot(
-        update_bit: Optional[UpdateBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def FlowerPot(update_bit: Optional[UpdateBit] = None) -> MinecraftBlockDescriptor:
         """Factory for FlowerPot"""
-        return MinecraftBlockDescriptor(
-            "minecraft:flower_pot", True, {_BlockStateKeys.UpdateBit: update_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:flower_pot", True, {_BlockStateKeys.UpdateBit: update_bit})
 
     @staticmethod
     def FloweringAzalea() -> MinecraftBlockDescriptor:
@@ -5316,28 +4870,20 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:flowering_azalea", True)
 
     @staticmethod
-    def FlowingLava(
-        liquid_depth: Optional[LiquidDepth] = None
-    ) -> MinecraftBlockDescriptor:
+    def FlowingLava(liquid_depth: Optional[LiquidDepth] = None) -> MinecraftBlockDescriptor:
         """Factory for FlowingLava"""
-        return MinecraftBlockDescriptor(
-            "minecraft:flowing_lava", True, {_BlockStateKeys.LiquidDepth: liquid_depth}
-        )
+        return MinecraftBlockDescriptor("minecraft:flowing_lava", True, {_BlockStateKeys.LiquidDepth: liquid_depth})
 
     @staticmethod
-    def FlowingWater(
-        liquid_depth: Optional[LiquidDepth] = None
-    ) -> MinecraftBlockDescriptor:
+    def FlowingWater(liquid_depth: Optional[LiquidDepth] = None) -> MinecraftBlockDescriptor:
         """Factory for FlowingWater"""
-        return MinecraftBlockDescriptor(
-            "minecraft:flowing_water", True, {_BlockStateKeys.LiquidDepth: liquid_depth}
-        )
+        return MinecraftBlockDescriptor("minecraft:flowing_water", True, {_BlockStateKeys.LiquidDepth: liquid_depth})
 
     @staticmethod
     def Frame(
         facing_direction: Optional[FacingDirection] = None,
         item_frame_map_bit: Optional[ItemFrameMapBit] = None,
-        item_frame_photo_bit: Optional[ItemFramePhotoBit] = None
+        item_frame_photo_bit: Optional[ItemFramePhotoBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for Frame"""
         return MinecraftBlockDescriptor(
@@ -5356,18 +4902,12 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:frog_spawn", True)
 
     @staticmethod
-    def FrostedIce(
-        age: Optional[Age] = None
-    ) -> MinecraftBlockDescriptor:
+    def FrostedIce(age: Optional[Age] = None) -> MinecraftBlockDescriptor:
         """Factory for FrostedIce"""
-        return MinecraftBlockDescriptor(
-            "minecraft:frosted_ice", True, {_BlockStateKeys.Age: age}
-        )
+        return MinecraftBlockDescriptor("minecraft:frosted_ice", True, {_BlockStateKeys.Age: age})
 
     @staticmethod
-    def Furnace(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Furnace(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Furnace"""
         return MinecraftBlockDescriptor(
             "minecraft:furnace",
@@ -5394,7 +4934,7 @@ class MinecraftBlockTypes:
     def GlowFrame(
         facing_direction: Optional[FacingDirection] = None,
         item_frame_map_bit: Optional[ItemFrameMapBit] = None,
-        item_frame_photo_bit: Optional[ItemFramePhotoBit] = None
+        item_frame_photo_bit: Optional[ItemFramePhotoBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for GlowFrame"""
         return MinecraftBlockDescriptor(
@@ -5408,9 +4948,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def GlowLichen(
-        multi_face_direction_bits: Optional[MultiFaceDirectionBits] = None
-    ) -> MinecraftBlockDescriptor:
+    def GlowLichen(multi_face_direction_bits: Optional[MultiFaceDirectionBits] = None) -> MinecraftBlockDescriptor:
         """Factory for GlowLichen"""
         return MinecraftBlockDescriptor(
             "minecraft:glow_lichen",
@@ -5434,9 +4972,13 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:gold_ore", True)
 
     @staticmethod
+    def GoldenDandelion() -> MinecraftBlockDescriptor:
+        """Factory for GoldenDandelion"""
+        return MinecraftBlockDescriptor("minecraft:golden_dandelion", True)
+
+    @staticmethod
     def GoldenRail(
-        rail_data_bit: Optional[RailDataBit] = None,
-        rail_direction: Optional[RailDirection] = None
+        rail_data_bit: Optional[RailDataBit] = None, rail_direction: Optional[RailDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for GoldenRail"""
         return MinecraftBlockDescriptor(
@@ -5454,9 +4996,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:granite", True)
 
     @staticmethod
-    def GraniteDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def GraniteDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for GraniteDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:granite_double_slab",
@@ -5465,9 +5005,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def GraniteSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def GraniteSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for GraniteSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:granite_slab",
@@ -5477,8 +5015,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def GraniteStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for GraniteStairs"""
         return MinecraftBlockDescriptor(
@@ -5496,7 +5033,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for GraniteWall"""
         return MinecraftBlockDescriptor(
@@ -5527,10 +5064,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:gravel", True)
 
     @staticmethod
-    def GrayCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def GrayCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for GrayCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:gray_candle",
@@ -5539,13 +5073,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def GrayCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def GrayCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for GrayCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:gray_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:gray_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def GrayCarpet() -> MinecraftBlockDescriptor:
@@ -5563,9 +5093,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:gray_concrete_powder", True)
 
     @staticmethod
-    def GrayGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def GrayGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for GrayGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:gray_glazed_terracotta",
@@ -5599,10 +5127,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:gray_wool", True)
 
     @staticmethod
-    def GreenCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def GreenCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for GreenCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:green_candle",
@@ -5611,13 +5136,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def GreenCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def GreenCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for GreenCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:green_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:green_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def GreenCarpet() -> MinecraftBlockDescriptor:
@@ -5635,9 +5156,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:green_concrete_powder", True)
 
     @staticmethod
-    def GreenGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def GreenGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for GreenGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:green_glazed_terracotta",
@@ -5672,8 +5191,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Grindstone(
-        attachment: Optional[Attachment] = None,
-        direction: Optional[Direction] = None
+        attachment: Optional[Attachment] = None, direction: Optional[Direction] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Grindstone"""
         return MinecraftBlockDescriptor(
@@ -5768,9 +5286,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def HardLightBlueStainedGlassPane() -> MinecraftBlockDescriptor:
         """Factory for HardLightBlueStainedGlassPane"""
-        return MinecraftBlockDescriptor(
-            "minecraft:hard_light_blue_stained_glass_pane", True
-        )
+        return MinecraftBlockDescriptor("minecraft:hard_light_blue_stained_glass_pane", True)
 
     @staticmethod
     def HardLightGrayStainedGlass() -> MinecraftBlockDescriptor:
@@ -5780,9 +5296,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def HardLightGrayStainedGlassPane() -> MinecraftBlockDescriptor:
         """Factory for HardLightGrayStainedGlassPane"""
-        return MinecraftBlockDescriptor(
-            "minecraft:hard_light_gray_stained_glass_pane", True
-        )
+        return MinecraftBlockDescriptor("minecraft:hard_light_gray_stained_glass_pane", True)
 
     @staticmethod
     def HardLimeStainedGlass() -> MinecraftBlockDescriptor:
@@ -5802,9 +5316,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def HardMagentaStainedGlassPane() -> MinecraftBlockDescriptor:
         """Factory for HardMagentaStainedGlassPane"""
-        return MinecraftBlockDescriptor(
-            "minecraft:hard_magenta_stained_glass_pane", True
-        )
+        return MinecraftBlockDescriptor("minecraft:hard_magenta_stained_glass_pane", True)
 
     @staticmethod
     def HardOrangeStainedGlass() -> MinecraftBlockDescriptor:
@@ -5814,9 +5326,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def HardOrangeStainedGlassPane() -> MinecraftBlockDescriptor:
         """Factory for HardOrangeStainedGlassPane"""
-        return MinecraftBlockDescriptor(
-            "minecraft:hard_orange_stained_glass_pane", True
-        )
+        return MinecraftBlockDescriptor("minecraft:hard_orange_stained_glass_pane", True)
 
     @staticmethod
     def HardPinkStainedGlass() -> MinecraftBlockDescriptor:
@@ -5836,9 +5346,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def HardPurpleStainedGlassPane() -> MinecraftBlockDescriptor:
         """Factory for HardPurpleStainedGlassPane"""
-        return MinecraftBlockDescriptor(
-            "minecraft:hard_purple_stained_glass_pane", True
-        )
+        return MinecraftBlockDescriptor("minecraft:hard_purple_stained_glass_pane", True)
 
     @staticmethod
     def HardRedStainedGlass() -> MinecraftBlockDescriptor:
@@ -5868,9 +5376,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def HardYellowStainedGlassPane() -> MinecraftBlockDescriptor:
         """Factory for HardYellowStainedGlassPane"""
-        return MinecraftBlockDescriptor(
-            "minecraft:hard_yellow_stained_glass_pane", True
-        )
+        return MinecraftBlockDescriptor("minecraft:hard_yellow_stained_glass_pane", True)
 
     @staticmethod
     def HardenedClay() -> MinecraftBlockDescriptor:
@@ -5879,8 +5385,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def HayBlock(
-        deprecated: Optional[Deprecated] = None,
-        pillar_axis: Optional[PillarAxis] = None
+        deprecated: Optional[Deprecated] = None, pillar_axis: Optional[PillarAxis] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for HayBlock"""
         return MinecraftBlockDescriptor(
@@ -5898,9 +5403,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:heavy_core", True)
 
     @staticmethod
-    def HeavyWeightedPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def HeavyWeightedPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for HeavyWeightedPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:heavy_weighted_pressure_plate",
@@ -5920,8 +5423,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Hopper(
-        facing_direction: Optional[FacingDirection] = None,
-        toggle_bit: Optional[ToggleBit] = None
+        facing_direction: Optional[FacingDirection] = None, toggle_bit: Optional[ToggleBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Hopper"""
         return MinecraftBlockDescriptor(
@@ -5944,9 +5446,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:horn_coral_block", True)
 
     @staticmethod
-    def HornCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def HornCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for HornCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:horn_coral_fan",
@@ -5955,9 +5455,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def HornCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def HornCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for HornCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:horn_coral_wall_fan",
@@ -5973,9 +5471,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def InfestedChiseledStoneBricks() -> MinecraftBlockDescriptor:
         """Factory for InfestedChiseledStoneBricks"""
-        return MinecraftBlockDescriptor(
-            "minecraft:infested_chiseled_stone_bricks", True
-        )
+        return MinecraftBlockDescriptor("minecraft:infested_chiseled_stone_bricks", True)
 
     @staticmethod
     def InfestedCobblestone() -> MinecraftBlockDescriptor:
@@ -5988,9 +5484,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:infested_cracked_stone_bricks", True)
 
     @staticmethod
-    def InfestedDeepslate(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def InfestedDeepslate(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for InfestedDeepslate"""
         return MinecraftBlockDescriptor(
             "minecraft:infested_deepslate",
@@ -6024,20 +5518,16 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:iron_block", True)
 
     @staticmethod
-    def IronChain(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def IronChain(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for IronChain"""
-        return MinecraftBlockDescriptor(
-            "minecraft:iron_chain", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:iron_chain", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def IronDoor(
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for IronDoor"""
         return MinecraftBlockDescriptor(
@@ -6060,7 +5550,7 @@ class MinecraftBlockTypes:
     def IronTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for IronTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -6075,8 +5565,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Jigsaw(
-        facing_direction: Optional[FacingDirection] = None,
-        rotation: Optional[Rotation] = None
+        facing_direction: Optional[FacingDirection] = None, rotation: Optional[Rotation] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Jigsaw"""
         return MinecraftBlockDescriptor(
@@ -6095,8 +5584,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def JungleButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for JungleButton"""
         return MinecraftBlockDescriptor(
@@ -6113,7 +5601,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for JungleDoor"""
         return MinecraftBlockDescriptor(
@@ -6128,9 +5616,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def JungleDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def JungleDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for JungleDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:jungle_double_slab",
@@ -6147,7 +5633,7 @@ class MinecraftBlockTypes:
     def JungleFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for JungleFenceGate"""
         return MinecraftBlockDescriptor(
@@ -6165,7 +5651,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for JungleHangingSign"""
         return MinecraftBlockDescriptor(
@@ -6181,8 +5667,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def JungleLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for JungleLeaves"""
         return MinecraftBlockDescriptor(
@@ -6195,13 +5680,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def JungleLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def JungleLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for JungleLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:jungle_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:jungle_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def JunglePlanks() -> MinecraftBlockDescriptor:
@@ -6209,9 +5690,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:jungle_planks", True)
 
     @staticmethod
-    def JunglePressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def JunglePressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for JunglePressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:jungle_pressure_plate",
@@ -6220,19 +5699,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def JungleSapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def JungleSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for JungleSapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:jungle_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:jungle_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def JungleShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for JungleShelf"""
         return MinecraftBlockDescriptor(
@@ -6246,9 +5721,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def JungleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def JungleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for JungleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:jungle_slab",
@@ -6258,8 +5731,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def JungleStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for JungleStairs"""
         return MinecraftBlockDescriptor(
@@ -6272,9 +5744,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def JungleStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def JungleStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for JungleStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:jungle_standing_sign",
@@ -6286,7 +5756,7 @@ class MinecraftBlockTypes:
     def JungleTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for JungleTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -6300,9 +5770,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def JungleWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def JungleWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for JungleWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:jungle_wall_sign",
@@ -6311,36 +5779,22 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def JungleWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def JungleWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for JungleWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:jungle_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:jungle_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def Kelp(
-        kelp_age: Optional[KelpAge] = None
-    ) -> MinecraftBlockDescriptor:
+    def Kelp(kelp_age: Optional[KelpAge] = None) -> MinecraftBlockDescriptor:
         """Factory for Kelp"""
-        return MinecraftBlockDescriptor(
-            "minecraft:kelp", True, {_BlockStateKeys.KelpAge: kelp_age}
-        )
+        return MinecraftBlockDescriptor("minecraft:kelp", True, {_BlockStateKeys.KelpAge: kelp_age})
 
     @staticmethod
-    def LabTable(
-        direction: Optional[Direction] = None
-    ) -> MinecraftBlockDescriptor:
+    def LabTable(direction: Optional[Direction] = None) -> MinecraftBlockDescriptor:
         """Factory for LabTable"""
-        return MinecraftBlockDescriptor(
-            "minecraft:lab_table", True, {_BlockStateKeys.Direction: direction}
-        )
+        return MinecraftBlockDescriptor("minecraft:lab_table", True, {_BlockStateKeys.Direction: direction})
 
     @staticmethod
-    def Ladder(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Ladder(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Ladder"""
         return MinecraftBlockDescriptor(
             "minecraft:ladder",
@@ -6349,13 +5803,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Lantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def Lantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for Lantern"""
-        return MinecraftBlockDescriptor(
-            "minecraft:lantern", True, {_BlockStateKeys.Hanging: hanging}
-        )
+        return MinecraftBlockDescriptor("minecraft:lantern", True, {_BlockStateKeys.Hanging: hanging})
 
     @staticmethod
     def LapisBlock() -> MinecraftBlockDescriptor:
@@ -6368,9 +5818,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:lapis_ore", True)
 
     @staticmethod
-    def LargeAmethystBud(
-        minecraft_block_face: Optional[BlockFace] = None
-    ) -> MinecraftBlockDescriptor:
+    def LargeAmethystBud(minecraft_block_face: Optional[BlockFace] = None) -> MinecraftBlockDescriptor:
         """Factory for LargeAmethystBud"""
         return MinecraftBlockDescriptor(
             "minecraft:large_amethyst_bud",
@@ -6379,9 +5827,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def LargeFern(
-        upper_block_bit: Optional[UpperBlockBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def LargeFern(upper_block_bit: Optional[UpperBlockBit] = None) -> MinecraftBlockDescriptor:
         """Factory for LargeFern"""
         return MinecraftBlockDescriptor(
             "minecraft:large_fern",
@@ -6390,18 +5836,13 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Lava(
-        liquid_depth: Optional[LiquidDepth] = None
-    ) -> MinecraftBlockDescriptor:
+    def Lava(liquid_depth: Optional[LiquidDepth] = None) -> MinecraftBlockDescriptor:
         """Factory for Lava"""
-        return MinecraftBlockDescriptor(
-            "minecraft:lava", True, {_BlockStateKeys.LiquidDepth: liquid_depth}
-        )
+        return MinecraftBlockDescriptor("minecraft:lava", True, {_BlockStateKeys.LiquidDepth: liquid_depth})
 
     @staticmethod
     def LeafLitter(
-        growth: Optional[Growth] = None,
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
+        growth: Optional[Growth] = None, minecraft_cardinal_direction: Optional[CardinalDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for LeafLitter"""
         return MinecraftBlockDescriptor(
@@ -6415,8 +5856,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Lectern(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        minecraft_cardinal_direction: Optional[CardinalDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Lectern"""
         return MinecraftBlockDescriptor(
@@ -6430,8 +5870,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Lever(
-        lever_direction: Optional[LeverDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        lever_direction: Optional[LeverDirection] = None, open_bit: Optional[OpenBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Lever"""
         return MinecraftBlockDescriptor(
@@ -6524,10 +5963,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:light_block_9", True)
 
     @staticmethod
-    def LightBlueCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def LightBlueCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for LightBlueCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:light_blue_candle",
@@ -6536,13 +5972,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def LightBlueCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def LightBlueCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for LightBlueCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:light_blue_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:light_blue_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def LightBlueCarpet() -> MinecraftBlockDescriptor:
@@ -6560,9 +5992,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:light_blue_concrete_powder", True)
 
     @staticmethod
-    def LightBlueGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def LightBlueGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for LightBlueGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:light_blue_glazed_terracotta",
@@ -6596,10 +6026,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:light_blue_wool", True)
 
     @staticmethod
-    def LightGrayCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def LightGrayCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for LightGrayCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:light_gray_candle",
@@ -6608,13 +6035,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def LightGrayCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def LightGrayCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for LightGrayCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:light_gray_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:light_gray_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def LightGrayCarpet() -> MinecraftBlockDescriptor:
@@ -6657,9 +6080,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:light_gray_wool", True)
 
     @staticmethod
-    def LightWeightedPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def LightWeightedPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for LightWeightedPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:light_weighted_pressure_plate",
@@ -6668,9 +6089,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def LightningRod(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def LightningRod(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for LightningRod"""
         return MinecraftBlockDescriptor(
             "minecraft:lightning_rod",
@@ -6679,13 +6098,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Lilac(
-        upper_block_bit: Optional[UpperBlockBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def Lilac(upper_block_bit: Optional[UpperBlockBit] = None) -> MinecraftBlockDescriptor:
         """Factory for Lilac"""
-        return MinecraftBlockDescriptor(
-            "minecraft:lilac", True, {_BlockStateKeys.UpperBlockBit: upper_block_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:lilac", True, {_BlockStateKeys.UpperBlockBit: upper_block_bit})
 
     @staticmethod
     def LilyOfTheValley() -> MinecraftBlockDescriptor:
@@ -6693,10 +6108,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:lily_of_the_valley", True)
 
     @staticmethod
-    def LimeCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def LimeCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for LimeCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:lime_candle",
@@ -6705,13 +6117,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def LimeCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def LimeCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for LimeCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:lime_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:lime_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def LimeCarpet() -> MinecraftBlockDescriptor:
@@ -6729,9 +6137,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:lime_concrete_powder", True)
 
     @staticmethod
-    def LimeGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def LimeGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for LimeGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:lime_glazed_terracotta",
@@ -6765,9 +6171,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:lime_wool", True)
 
     @staticmethod
-    def LitBlastFurnace(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def LitBlastFurnace(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for LitBlastFurnace"""
         return MinecraftBlockDescriptor(
             "minecraft:lit_blast_furnace",
@@ -6781,9 +6185,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:lit_deepslate_redstone_ore", True)
 
     @staticmethod
-    def LitFurnace(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def LitFurnace(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for LitFurnace"""
         return MinecraftBlockDescriptor(
             "minecraft:lit_furnace",
@@ -6792,9 +6194,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def LitPumpkin(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def LitPumpkin(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for LitPumpkin"""
         return MinecraftBlockDescriptor(
             "minecraft:lit_pumpkin",
@@ -6813,9 +6213,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:lit_redstone_ore", True)
 
     @staticmethod
-    def LitSmoker(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def LitSmoker(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for LitSmoker"""
         return MinecraftBlockDescriptor(
             "minecraft:lit_smoker",
@@ -6829,19 +6227,12 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:lodestone", True)
 
     @staticmethod
-    def Loom(
-        direction: Optional[Direction] = None
-    ) -> MinecraftBlockDescriptor:
+    def Loom(direction: Optional[Direction] = None) -> MinecraftBlockDescriptor:
         """Factory for Loom"""
-        return MinecraftBlockDescriptor(
-            "minecraft:loom", True, {_BlockStateKeys.Direction: direction}
-        )
+        return MinecraftBlockDescriptor("minecraft:loom", True, {_BlockStateKeys.Direction: direction})
 
     @staticmethod
-    def MagentaCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def MagentaCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for MagentaCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:magenta_candle",
@@ -6850,13 +6241,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MagentaCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def MagentaCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for MagentaCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:magenta_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:magenta_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def MagentaCarpet() -> MinecraftBlockDescriptor:
@@ -6874,9 +6261,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:magenta_concrete_powder", True)
 
     @staticmethod
-    def MagentaGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def MagentaGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for MagentaGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:magenta_glazed_terracotta",
@@ -6916,8 +6301,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def MangroveButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for MangroveButton"""
         return MinecraftBlockDescriptor(
@@ -6934,7 +6318,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for MangroveDoor"""
         return MinecraftBlockDescriptor(
@@ -6949,9 +6333,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MangroveDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def MangroveDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for MangroveDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:mangrove_double_slab",
@@ -6968,7 +6350,7 @@ class MinecraftBlockTypes:
     def MangroveFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for MangroveFenceGate"""
         return MinecraftBlockDescriptor(
@@ -6986,7 +6368,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for MangroveHangingSign"""
         return MinecraftBlockDescriptor(
@@ -7002,8 +6384,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def MangroveLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for MangroveLeaves"""
         return MinecraftBlockDescriptor(
@@ -7016,13 +6397,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MangroveLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def MangroveLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for MangroveLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:mangrove_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:mangrove_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def MangrovePlanks() -> MinecraftBlockDescriptor:
@@ -7030,9 +6407,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:mangrove_planks", True)
 
     @staticmethod
-    def MangrovePressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def MangrovePressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for MangrovePressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:mangrove_pressure_plate",
@@ -7042,8 +6417,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def MangrovePropagule(
-        hanging: Optional[Hanging] = None,
-        propagule_stage: Optional[PropaguleStage] = None
+        hanging: Optional[Hanging] = None, propagule_stage: Optional[PropaguleStage] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for MangrovePropagule"""
         return MinecraftBlockDescriptor(
@@ -7064,7 +6438,7 @@ class MinecraftBlockTypes:
     def MangroveShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for MangroveShelf"""
         return MinecraftBlockDescriptor(
@@ -7078,9 +6452,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MangroveSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def MangroveSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for MangroveSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:mangrove_slab",
@@ -7090,8 +6462,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def MangroveStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for MangroveStairs"""
         return MinecraftBlockDescriptor(
@@ -7104,9 +6475,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MangroveStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def MangroveStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for MangroveStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:mangrove_standing_sign",
@@ -7118,7 +6487,7 @@ class MinecraftBlockTypes:
     def MangroveTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for MangroveTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -7132,9 +6501,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MangroveWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def MangroveWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for MangroveWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:mangrove_wall_sign",
@@ -7143,27 +6510,17 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MangroveWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def MangroveWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for MangroveWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:mangrove_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:mangrove_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def MaterialReducer(
-        direction: Optional[Direction] = None
-    ) -> MinecraftBlockDescriptor:
+    def MaterialReducer(direction: Optional[Direction] = None) -> MinecraftBlockDescriptor:
         """Factory for MaterialReducer"""
-        return MinecraftBlockDescriptor(
-            "minecraft:material_reducer", True, {_BlockStateKeys.Direction: direction}
-        )
+        return MinecraftBlockDescriptor("minecraft:material_reducer", True, {_BlockStateKeys.Direction: direction})
 
     @staticmethod
-    def MediumAmethystBud(
-        minecraft_block_face: Optional[BlockFace] = None
-    ) -> MinecraftBlockDescriptor:
+    def MediumAmethystBud(minecraft_block_face: Optional[BlockFace] = None) -> MinecraftBlockDescriptor:
         """Factory for MediumAmethystBud"""
         return MinecraftBlockDescriptor(
             "minecraft:medium_amethyst_bud",
@@ -7178,8 +6535,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def MelonStem(
-        facing_direction: Optional[FacingDirection] = None,
-        growth: Optional[Growth] = None
+        facing_direction: Optional[FacingDirection] = None, growth: Optional[Growth] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for MelonStem"""
         return MinecraftBlockDescriptor(
@@ -7212,9 +6568,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:mossy_cobblestone", True)
 
     @staticmethod
-    def MossyCobblestoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def MossyCobblestoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for MossyCobblestoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:mossy_cobblestone_double_slab",
@@ -7223,9 +6577,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MossyCobblestoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def MossyCobblestoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for MossyCobblestoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:mossy_cobblestone_slab",
@@ -7235,8 +6587,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def MossyCobblestoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for MossyCobblestoneStairs"""
         return MinecraftBlockDescriptor(
@@ -7254,7 +6605,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for MossyCobblestoneWall"""
         return MinecraftBlockDescriptor(
@@ -7270,9 +6621,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MossyStoneBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def MossyStoneBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for MossyStoneBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:mossy_stone_brick_double_slab",
@@ -7281,9 +6630,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MossyStoneBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def MossyStoneBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for MossyStoneBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:mossy_stone_brick_slab",
@@ -7293,8 +6640,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def MossyStoneBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for MossyStoneBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -7312,7 +6658,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for MossyStoneBrickWall"""
         return MinecraftBlockDescriptor(
@@ -7338,9 +6684,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:mud", True)
 
     @staticmethod
-    def MudBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def MudBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for MudBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:mud_brick_double_slab",
@@ -7349,9 +6693,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MudBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def MudBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for MudBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:mud_brick_slab",
@@ -7361,8 +6703,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def MudBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for MudBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -7380,7 +6721,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for MudBrickWall"""
         return MinecraftBlockDescriptor(
@@ -7401,9 +6742,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:mud_bricks", True)
 
     @staticmethod
-    def MuddyMangroveRoots(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def MuddyMangroveRoots(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for MuddyMangroveRoots"""
         return MinecraftBlockDescriptor(
             "minecraft:muddy_mangrove_roots",
@@ -7412,9 +6751,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def MushroomStem(
-        huge_mushroom_bits: Optional[HugeMushroomBits] = None
-    ) -> MinecraftBlockDescriptor:
+    def MushroomStem(huge_mushroom_bits: Optional[HugeMushroomBits] = None) -> MinecraftBlockDescriptor:
         """Factory for MushroomStem"""
         return MinecraftBlockDescriptor(
             "minecraft:mushroom_stem",
@@ -7433,9 +6770,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:nether_brick", True)
 
     @staticmethod
-    def NetherBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def NetherBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for NetherBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:nether_brick_double_slab",
@@ -7449,9 +6784,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:nether_brick_fence", True)
 
     @staticmethod
-    def NetherBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def NetherBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for NetherBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:nether_brick_slab",
@@ -7461,8 +6794,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def NetherBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for NetherBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -7480,7 +6812,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for NetherBrickWall"""
         return MinecraftBlockDescriptor(
@@ -7506,13 +6838,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:nether_sprouts", True)
 
     @staticmethod
-    def NetherWart(
-        age: Optional[Age] = None
-    ) -> MinecraftBlockDescriptor:
+    def NetherWart(age: Optional[Age] = None) -> MinecraftBlockDescriptor:
         """Factory for NetherWart"""
-        return MinecraftBlockDescriptor(
-            "minecraft:nether_wart", True, {_BlockStateKeys.Age: age}
-        )
+        return MinecraftBlockDescriptor("minecraft:nether_wart", True, {_BlockStateKeys.Age: age})
 
     @staticmethod
     def NetherWartBlock() -> MinecraftBlockDescriptor:
@@ -7530,9 +6858,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:netherrack", True)
 
     @staticmethod
-    def NormalStoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def NormalStoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for NormalStoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:normal_stone_double_slab",
@@ -7541,9 +6867,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def NormalStoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def NormalStoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for NormalStoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:normal_stone_slab",
@@ -7553,8 +6877,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def NormalStoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for NormalStoneStairs"""
         return MinecraftBlockDescriptor(
@@ -7572,9 +6895,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:noteblock", True)
 
     @staticmethod
-    def OakDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def OakDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for OakDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:oak_double_slab",
@@ -7592,7 +6913,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for OakHangingSign"""
         return MinecraftBlockDescriptor(
@@ -7608,8 +6929,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def OakLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for OakLeaves"""
         return MinecraftBlockDescriptor(
@@ -7622,13 +6942,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def OakLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def OakLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for OakLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:oak_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:oak_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def OakPlanks() -> MinecraftBlockDescriptor:
@@ -7636,19 +6952,15 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:oak_planks", True)
 
     @staticmethod
-    def OakSapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def OakSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for OakSapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:oak_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:oak_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def OakShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for OakShelf"""
         return MinecraftBlockDescriptor(
@@ -7662,9 +6974,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def OakSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def OakSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for OakSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:oak_slab",
@@ -7674,8 +6984,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def OakStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for OakStairs"""
         return MinecraftBlockDescriptor(
@@ -7688,18 +6997,13 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def OakWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def OakWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for OakWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:oak_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:oak_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def Observer(
-        facing_direction: Optional[FacingDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        facing_direction: Optional[FacingDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Observer"""
         return MinecraftBlockDescriptor(
@@ -7717,13 +7021,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:obsidian", True)
 
     @staticmethod
-    def OchreFroglight(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def OchreFroglight(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for OchreFroglight"""
-        return MinecraftBlockDescriptor(
-            "minecraft:ochre_froglight", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:ochre_froglight", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def OpenEyeblossom() -> MinecraftBlockDescriptor:
@@ -7731,10 +7031,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:open_eyeblossom", True)
 
     @staticmethod
-    def OrangeCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def OrangeCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for OrangeCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:orange_candle",
@@ -7743,13 +7040,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def OrangeCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def OrangeCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for OrangeCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:orange_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:orange_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def OrangeCarpet() -> MinecraftBlockDescriptor:
@@ -7767,9 +7060,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:orange_concrete_powder", True)
 
     @staticmethod
-    def OrangeGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def OrangeGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for OrangeGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:orange_glazed_terracotta",
@@ -7829,8 +7120,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def OxidizedCopperBulb(
-        lit: Optional[Lit] = None,
-        powered_bit: Optional[PoweredBit] = None
+        lit: Optional[Lit] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCopperBulb"""
         return MinecraftBlockDescriptor(
@@ -7840,9 +7130,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def OxidizedCopperChain(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def OxidizedCopperChain(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCopperChain"""
         return MinecraftBlockDescriptor(
             "minecraft:oxidized_copper_chain",
@@ -7851,9 +7139,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def OxidizedCopperChest(
-        cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def OxidizedCopperChest(cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCopperChest"""
         return MinecraftBlockDescriptor(
             "minecraft:oxidized_copper_chest",
@@ -7866,7 +7152,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCopperDoor"""
         return MinecraftBlockDescriptor(
@@ -7881,9 +7167,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def OxidizedCopperGolemStatue(
-        cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def OxidizedCopperGolemStatue(cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCopperGolemStatue"""
         return MinecraftBlockDescriptor(
             "minecraft:oxidized_copper_golem_statue",
@@ -7897,9 +7181,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:oxidized_copper_grate", True)
 
     @staticmethod
-    def OxidizedCopperLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def OxidizedCopperLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCopperLantern"""
         return MinecraftBlockDescriptor(
             "minecraft:oxidized_copper_lantern",
@@ -7911,7 +7193,7 @@ class MinecraftBlockTypes:
     def OxidizedCopperTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCopperTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -7930,9 +7212,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:oxidized_cut_copper", True)
 
     @staticmethod
-    def OxidizedCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def OxidizedCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:oxidized_cut_copper_slab",
@@ -7942,8 +7222,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def OxidizedCutCopperStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for OxidizedCutCopperStairs"""
         return MinecraftBlockDescriptor(
@@ -7956,9 +7235,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def OxidizedDoubleCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def OxidizedDoubleCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for OxidizedDoubleCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:oxidized_double_cut_copper_slab",
@@ -7968,8 +7245,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def OxidizedLightningRod(
-        facing_direction: Optional[FacingDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        facing_direction: Optional[FacingDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for OxidizedLightningRod"""
         return MinecraftBlockDescriptor(
@@ -7992,13 +7268,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:packed_mud", True)
 
     @staticmethod
-    def PaleHangingMoss(
-        tip: Optional[Tip] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleHangingMoss(tip: Optional[Tip] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleHangingMoss"""
-        return MinecraftBlockDescriptor(
-            "minecraft:pale_hanging_moss", True, {_BlockStateKeys.Tip: tip}
-        )
+        return MinecraftBlockDescriptor("minecraft:pale_hanging_moss", True, {_BlockStateKeys.Tip: tip})
 
     @staticmethod
     def PaleMossBlock() -> MinecraftBlockDescriptor:
@@ -8011,7 +7283,7 @@ class MinecraftBlockTypes:
         pale_moss_carpet_side_north: Optional[PaleMossCarpetSideNorth] = None,
         pale_moss_carpet_side_south: Optional[PaleMossCarpetSideSouth] = None,
         pale_moss_carpet_side_west: Optional[PaleMossCarpetSideWest] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleMossCarpet"""
         return MinecraftBlockDescriptor(
@@ -8028,8 +7300,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PaleOakButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleOakButton"""
         return MinecraftBlockDescriptor(
@@ -8046,7 +7317,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleOakDoor"""
         return MinecraftBlockDescriptor(
@@ -8061,9 +7332,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PaleOakDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleOakDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleOakDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:pale_oak_double_slab",
@@ -8080,7 +7349,7 @@ class MinecraftBlockTypes:
     def PaleOakFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleOakFenceGate"""
         return MinecraftBlockDescriptor(
@@ -8098,7 +7367,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleOakHangingSign"""
         return MinecraftBlockDescriptor(
@@ -8114,8 +7383,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PaleOakLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleOakLeaves"""
         return MinecraftBlockDescriptor(
@@ -8128,13 +7396,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PaleOakLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleOakLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleOakLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:pale_oak_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:pale_oak_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def PaleOakPlanks() -> MinecraftBlockDescriptor:
@@ -8142,9 +7406,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:pale_oak_planks", True)
 
     @staticmethod
-    def PaleOakPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleOakPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleOakPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:pale_oak_pressure_plate",
@@ -8153,19 +7415,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PaleOakSapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleOakSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleOakSapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:pale_oak_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:pale_oak_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def PaleOakShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleOakShelf"""
         return MinecraftBlockDescriptor(
@@ -8179,9 +7437,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PaleOakSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleOakSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleOakSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:pale_oak_slab",
@@ -8191,8 +7447,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PaleOakStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleOakStairs"""
         return MinecraftBlockDescriptor(
@@ -8205,9 +7460,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PaleOakStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleOakStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleOakStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:pale_oak_standing_sign",
@@ -8219,7 +7472,7 @@ class MinecraftBlockTypes:
     def PaleOakTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PaleOakTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -8233,9 +7486,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PaleOakWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleOakWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleOakWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:pale_oak_wall_sign",
@@ -8244,18 +7495,12 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PaleOakWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def PaleOakWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for PaleOakWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:pale_oak_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:pale_oak_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def PearlescentFroglight(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def PearlescentFroglight(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for PearlescentFroglight"""
         return MinecraftBlockDescriptor(
             "minecraft:pearlescent_froglight",
@@ -8264,18 +7509,12 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Peony(
-        upper_block_bit: Optional[UpperBlockBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def Peony(upper_block_bit: Optional[UpperBlockBit] = None) -> MinecraftBlockDescriptor:
         """Factory for Peony"""
-        return MinecraftBlockDescriptor(
-            "minecraft:peony", True, {_BlockStateKeys.UpperBlockBit: upper_block_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:peony", True, {_BlockStateKeys.UpperBlockBit: upper_block_bit})
 
     @staticmethod
-    def PetrifiedOakDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PetrifiedOakDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PetrifiedOakDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:petrified_oak_double_slab",
@@ -8284,9 +7523,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PetrifiedOakSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PetrifiedOakSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PetrifiedOakSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:petrified_oak_slab",
@@ -8295,9 +7532,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PiglinHead(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def PiglinHead(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for PiglinHead"""
         return MinecraftBlockDescriptor(
             "minecraft:piglin_head",
@@ -8306,10 +7541,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PinkCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def PinkCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for PinkCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:pink_candle",
@@ -8318,13 +7550,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PinkCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def PinkCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for PinkCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:pink_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:pink_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def PinkCarpet() -> MinecraftBlockDescriptor:
@@ -8342,9 +7570,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:pink_concrete_powder", True)
 
     @staticmethod
-    def PinkGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def PinkGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for PinkGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:pink_glazed_terracotta",
@@ -8354,8 +7580,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PinkPetals(
-        growth: Optional[Growth] = None,
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
+        growth: Optional[Growth] = None, minecraft_cardinal_direction: Optional[CardinalDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PinkPetals"""
         return MinecraftBlockDescriptor(
@@ -8398,9 +7623,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:pink_wool", True)
 
     @staticmethod
-    def Piston(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Piston(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Piston"""
         return MinecraftBlockDescriptor(
             "minecraft:piston",
@@ -8409,9 +7632,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PistonArmCollision(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def PistonArmCollision(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for PistonArmCollision"""
         return MinecraftBlockDescriptor(
             "minecraft:piston_arm_collision",
@@ -8421,8 +7642,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PitcherCrop(
-        growth: Optional[Growth] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        growth: Optional[Growth] = None, upper_block_bit: Optional[UpperBlockBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PitcherCrop"""
         return MinecraftBlockDescriptor(
@@ -8435,9 +7655,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PitcherPlant(
-        upper_block_bit: Optional[UpperBlockBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def PitcherPlant(upper_block_bit: Optional[UpperBlockBit] = None) -> MinecraftBlockDescriptor:
         """Factory for PitcherPlant"""
         return MinecraftBlockDescriptor(
             "minecraft:pitcher_plant",
@@ -8446,9 +7664,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PlayerHead(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def PlayerHead(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for PlayerHead"""
         return MinecraftBlockDescriptor(
             "minecraft:player_head",
@@ -8463,8 +7679,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PointedDripstone(
-        dripstone_thickness: Optional[DripstoneThickness] = None,
-        hanging: Optional[Hanging] = None
+        dripstone_thickness: Optional[DripstoneThickness] = None, hanging: Optional[Hanging] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PointedDripstone"""
         return MinecraftBlockDescriptor(
@@ -8482,9 +7697,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:polished_andesite", True)
 
     @staticmethod
-    def PolishedAndesiteDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedAndesiteDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedAndesiteDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_andesite_double_slab",
@@ -8493,9 +7706,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedAndesiteSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedAndesiteSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedAndesiteSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_andesite_slab",
@@ -8505,8 +7716,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedAndesiteStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedAndesiteStairs"""
         return MinecraftBlockDescriptor(
@@ -8519,13 +7729,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedBasalt(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedBasalt(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedBasalt"""
-        return MinecraftBlockDescriptor(
-            "minecraft:polished_basalt", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:polished_basalt", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def PolishedBlackstone() -> MinecraftBlockDescriptor:
@@ -8534,7 +7740,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedBlackstoneBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
+        minecraft_vertical_half: Optional[VerticalHalf] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
@@ -8544,9 +7750,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedBlackstoneBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedBlackstoneBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_blackstone_brick_slab",
@@ -8556,8 +7760,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedBlackstoneBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -8575,7 +7778,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneBrickWall"""
         return MinecraftBlockDescriptor(
@@ -8597,8 +7800,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedBlackstoneButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneButton"""
         return MinecraftBlockDescriptor(
@@ -8612,7 +7814,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedBlackstoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
+        minecraft_vertical_half: Optional[VerticalHalf] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneDoubleSlab"""
         return MinecraftBlockDescriptor(
@@ -8622,9 +7824,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedBlackstonePressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedBlackstonePressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstonePressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_blackstone_pressure_plate",
@@ -8633,9 +7833,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedBlackstoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedBlackstoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_blackstone_slab",
@@ -8645,8 +7843,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedBlackstoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneStairs"""
         return MinecraftBlockDescriptor(
@@ -8664,7 +7861,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedBlackstoneWall"""
         return MinecraftBlockDescriptor(
@@ -8685,9 +7882,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:polished_deepslate", True)
 
     @staticmethod
-    def PolishedDeepslateDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedDeepslateDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedDeepslateDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_deepslate_double_slab",
@@ -8696,9 +7891,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedDeepslateSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedDeepslateSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedDeepslateSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_deepslate_slab",
@@ -8708,8 +7901,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedDeepslateStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedDeepslateStairs"""
         return MinecraftBlockDescriptor(
@@ -8727,7 +7919,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedDeepslateWall"""
         return MinecraftBlockDescriptor(
@@ -8748,9 +7940,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:polished_diorite", True)
 
     @staticmethod
-    def PolishedDioriteDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedDioriteDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedDioriteDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_diorite_double_slab",
@@ -8759,9 +7949,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedDioriteSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedDioriteSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedDioriteSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_diorite_slab",
@@ -8771,8 +7959,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedDioriteStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedDioriteStairs"""
         return MinecraftBlockDescriptor(
@@ -8790,9 +7977,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:polished_granite", True)
 
     @staticmethod
-    def PolishedGraniteDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedGraniteDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedGraniteDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_granite_double_slab",
@@ -8801,9 +7986,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedGraniteSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedGraniteSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedGraniteSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_granite_slab",
@@ -8813,8 +7996,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedGraniteStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedGraniteStairs"""
         return MinecraftBlockDescriptor(
@@ -8832,9 +8014,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:polished_tuff", True)
 
     @staticmethod
-    def PolishedTuffDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedTuffDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedTuffDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_tuff_double_slab",
@@ -8843,9 +8023,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PolishedTuffSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PolishedTuffSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PolishedTuffSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:polished_tuff_slab",
@@ -8855,8 +8033,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PolishedTuffStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedTuffStairs"""
         return MinecraftBlockDescriptor(
@@ -8874,7 +8051,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PolishedTuffWall"""
         return MinecraftBlockDescriptor(
@@ -8895,22 +8072,14 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:poppy", True)
 
     @staticmethod
-    def Portal(
-        portal_axis: Optional[PortalAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def Portal(portal_axis: Optional[PortalAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for Portal"""
-        return MinecraftBlockDescriptor(
-            "minecraft:portal", True, {_BlockStateKeys.PortalAxis: portal_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:portal", True, {_BlockStateKeys.PortalAxis: portal_axis})
 
     @staticmethod
-    def Potatoes(
-        growth: Optional[Growth] = None
-    ) -> MinecraftBlockDescriptor:
+    def Potatoes(growth: Optional[Growth] = None) -> MinecraftBlockDescriptor:
         """Factory for Potatoes"""
-        return MinecraftBlockDescriptor(
-            "minecraft:potatoes", True, {_BlockStateKeys.Growth: growth}
-        )
+        return MinecraftBlockDescriptor("minecraft:potatoes", True, {_BlockStateKeys.Growth: growth})
 
     @staticmethod
     def PowderSnow() -> MinecraftBlockDescriptor:
@@ -8921,7 +8090,7 @@ class MinecraftBlockTypes:
     def PoweredComparator(
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         output_lit_bit: Optional[OutputLitBit] = None,
-        output_subtract_bit: Optional[OutputSubtractBit] = None
+        output_subtract_bit: Optional[OutputSubtractBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PoweredComparator"""
         return MinecraftBlockDescriptor(
@@ -8936,8 +8105,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PoweredRepeater(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        repeater_delay: Optional[RepeaterDelay] = None
+        minecraft_cardinal_direction: Optional[CardinalDirection] = None, repeater_delay: Optional[RepeaterDelay] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PoweredRepeater"""
         return MinecraftBlockDescriptor(
@@ -8955,9 +8123,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:prismarine", True)
 
     @staticmethod
-    def PrismarineBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PrismarineBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PrismarineBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:prismarine_brick_double_slab",
@@ -8966,9 +8132,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PrismarineBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PrismarineBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PrismarineBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:prismarine_brick_slab",
@@ -8983,8 +8147,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PrismarineBricksStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PrismarineBricksStairs"""
         return MinecraftBlockDescriptor(
@@ -8997,9 +8160,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PrismarineDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PrismarineDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PrismarineDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:prismarine_double_slab",
@@ -9008,9 +8169,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PrismarineSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PrismarineSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PrismarineSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:prismarine_slab",
@@ -9020,8 +8179,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PrismarineStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PrismarineStairs"""
         return MinecraftBlockDescriptor(
@@ -9039,7 +8197,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for PrismarineWall"""
         return MinecraftBlockDescriptor(
@@ -9055,9 +8213,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Pumpkin(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Pumpkin(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Pumpkin"""
         return MinecraftBlockDescriptor(
             "minecraft:pumpkin",
@@ -9067,8 +8223,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PumpkinStem(
-        facing_direction: Optional[FacingDirection] = None,
-        growth: Optional[Growth] = None
+        facing_direction: Optional[FacingDirection] = None, growth: Optional[Growth] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PumpkinStem"""
         return MinecraftBlockDescriptor(
@@ -9081,10 +8236,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PurpleCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def PurpleCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for PurpleCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:purple_candle",
@@ -9093,13 +8245,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PurpleCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def PurpleCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for PurpleCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:purple_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:purple_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def PurpleCarpet() -> MinecraftBlockDescriptor:
@@ -9117,9 +8265,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:purple_concrete_powder", True)
 
     @staticmethod
-    def PurpleGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def PurpleGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for PurpleGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:purple_glazed_terracotta",
@@ -9153,18 +8299,12 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:purple_wool", True)
 
     @staticmethod
-    def PurpurBlock(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def PurpurBlock(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for PurpurBlock"""
-        return MinecraftBlockDescriptor(
-            "minecraft:purpur_block", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:purpur_block", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def PurpurDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PurpurDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PurpurDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:purpur_double_slab",
@@ -9173,18 +8313,12 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def PurpurPillar(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def PurpurPillar(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for PurpurPillar"""
-        return MinecraftBlockDescriptor(
-            "minecraft:purpur_pillar", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:purpur_pillar", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def PurpurSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def PurpurSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for PurpurSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:purpur_slab",
@@ -9194,8 +8328,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def PurpurStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for PurpurStairs"""
         return MinecraftBlockDescriptor(
@@ -9208,13 +8341,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def QuartzBlock(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def QuartzBlock(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for QuartzBlock"""
-        return MinecraftBlockDescriptor(
-            "minecraft:quartz_block", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:quartz_block", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def QuartzBricks() -> MinecraftBlockDescriptor:
@@ -9222,9 +8351,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:quartz_bricks", True)
 
     @staticmethod
-    def QuartzDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def QuartzDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for QuartzDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:quartz_double_slab",
@@ -9238,18 +8365,12 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:quartz_ore", True)
 
     @staticmethod
-    def QuartzPillar(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def QuartzPillar(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for QuartzPillar"""
-        return MinecraftBlockDescriptor(
-            "minecraft:quartz_pillar", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:quartz_pillar", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def QuartzSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def QuartzSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for QuartzSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:quartz_slab",
@@ -9259,8 +8380,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def QuartzStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for QuartzStairs"""
         return MinecraftBlockDescriptor(
@@ -9273,13 +8393,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Rail(
-        rail_direction: Optional[RailDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Rail(rail_direction: Optional[RailDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Rail"""
-        return MinecraftBlockDescriptor(
-            "minecraft:rail", True, {_BlockStateKeys.RailDirection: rail_direction}
-        )
+        return MinecraftBlockDescriptor("minecraft:rail", True, {_BlockStateKeys.RailDirection: rail_direction})
 
     @staticmethod
     def RawCopperBlock() -> MinecraftBlockDescriptor:
@@ -9297,10 +8413,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:raw_iron_block", True)
 
     @staticmethod
-    def RedCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for RedCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:red_candle",
@@ -9309,13 +8422,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def RedCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for RedCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:red_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:red_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def RedCarpet() -> MinecraftBlockDescriptor:
@@ -9333,9 +8442,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:red_concrete_powder", True)
 
     @staticmethod
-    def RedGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for RedGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:red_glazed_terracotta",
@@ -9349,9 +8456,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:red_mushroom", True)
 
     @staticmethod
-    def RedMushroomBlock(
-        huge_mushroom_bits: Optional[HugeMushroomBits] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedMushroomBlock(huge_mushroom_bits: Optional[HugeMushroomBits] = None) -> MinecraftBlockDescriptor:
         """Factory for RedMushroomBlock"""
         return MinecraftBlockDescriptor(
             "minecraft:red_mushroom_block",
@@ -9365,9 +8470,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:red_nether_brick", True)
 
     @staticmethod
-    def RedNetherBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedNetherBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for RedNetherBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:red_nether_brick_double_slab",
@@ -9376,9 +8479,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def RedNetherBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedNetherBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for RedNetherBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:red_nether_brick_slab",
@@ -9388,8 +8489,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def RedNetherBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for RedNetherBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -9407,7 +8507,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for RedNetherBrickWall"""
         return MinecraftBlockDescriptor(
@@ -9433,9 +8533,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:red_sandstone", True)
 
     @staticmethod
-    def RedSandstoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedSandstoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for RedSandstoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:red_sandstone_double_slab",
@@ -9444,9 +8542,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def RedSandstoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedSandstoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for RedSandstoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:red_sandstone_slab",
@@ -9456,8 +8552,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def RedSandstoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for RedSandstoneStairs"""
         return MinecraftBlockDescriptor(
@@ -9475,7 +8570,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for RedSandstoneWall"""
         return MinecraftBlockDescriptor(
@@ -9536,9 +8631,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:redstone_ore", True)
 
     @staticmethod
-    def RedstoneTorch(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedstoneTorch(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for RedstoneTorch"""
         return MinecraftBlockDescriptor(
             "minecraft:redstone_torch",
@@ -9547,9 +8640,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def RedstoneWire(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def RedstoneWire(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for RedstoneWire"""
         return MinecraftBlockDescriptor(
             "minecraft:redstone_wire",
@@ -9558,13 +8649,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Reeds(
-        age: Optional[Age] = None
-    ) -> MinecraftBlockDescriptor:
+    def Reeds(age: Optional[Age] = None) -> MinecraftBlockDescriptor:
         """Factory for Reeds"""
-        return MinecraftBlockDescriptor(
-            "minecraft:reeds", True, {_BlockStateKeys.Age: age}
-        )
+        return MinecraftBlockDescriptor("minecraft:reeds", True, {_BlockStateKeys.Age: age})
 
     @staticmethod
     def ReinforcedDeepslate() -> MinecraftBlockDescriptor:
@@ -9573,8 +8660,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def RepeatingCommandBlock(
-        conditional_bit: Optional[ConditionalBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        conditional_bit: Optional[ConditionalBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for RepeatingCommandBlock"""
         return MinecraftBlockDescriptor(
@@ -9592,9 +8678,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:resin_block", True)
 
     @staticmethod
-    def ResinBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def ResinBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for ResinBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:resin_brick_double_slab",
@@ -9603,9 +8687,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def ResinBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def ResinBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for ResinBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:resin_brick_slab",
@@ -9615,8 +8697,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def ResinBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for ResinBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -9634,7 +8715,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for ResinBrickWall"""
         return MinecraftBlockDescriptor(
@@ -9655,9 +8736,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:resin_bricks", True)
 
     @staticmethod
-    def ResinClump(
-        multi_face_direction_bits: Optional[MultiFaceDirectionBits] = None
-    ) -> MinecraftBlockDescriptor:
+    def ResinClump(multi_face_direction_bits: Optional[MultiFaceDirectionBits] = None) -> MinecraftBlockDescriptor:
         """Factory for ResinClump"""
         return MinecraftBlockDescriptor(
             "minecraft:resin_clump",
@@ -9666,9 +8745,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def RespawnAnchor(
-        respawn_anchor_charge: Optional[RespawnAnchorCharge] = None
-    ) -> MinecraftBlockDescriptor:
+    def RespawnAnchor(respawn_anchor_charge: Optional[RespawnAnchorCharge] = None) -> MinecraftBlockDescriptor:
         """Factory for RespawnAnchor"""
         return MinecraftBlockDescriptor(
             "minecraft:respawn_anchor",
@@ -9677,9 +8754,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def RoseBush(
-        upper_block_bit: Optional[UpperBlockBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def RoseBush(upper_block_bit: Optional[UpperBlockBit] = None) -> MinecraftBlockDescriptor:
         """Factory for RoseBush"""
         return MinecraftBlockDescriptor(
             "minecraft:rose_bush",
@@ -9698,9 +8773,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:sandstone", True)
 
     @staticmethod
-    def SandstoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SandstoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SandstoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:sandstone_double_slab",
@@ -9709,9 +8782,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SandstoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SandstoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SandstoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:sandstone_slab",
@@ -9721,8 +8792,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SandstoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SandstoneStairs"""
         return MinecraftBlockDescriptor(
@@ -9740,7 +8810,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for SandstoneWall"""
         return MinecraftBlockDescriptor(
@@ -9757,8 +8827,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Scaffolding(
-        stability: Optional[Stability] = None,
-        stability_check: Optional[StabilityCheck] = None
+        stability: Optional[Stability] = None, stability_check: Optional[StabilityCheck] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Scaffolding"""
         return MinecraftBlockDescriptor(
@@ -9776,18 +8845,12 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:sculk", True)
 
     @staticmethod
-    def SculkCatalyst(
-        bloom: Optional[Bloom] = None
-    ) -> MinecraftBlockDescriptor:
+    def SculkCatalyst(bloom: Optional[Bloom] = None) -> MinecraftBlockDescriptor:
         """Factory for SculkCatalyst"""
-        return MinecraftBlockDescriptor(
-            "minecraft:sculk_catalyst", True, {_BlockStateKeys.Bloom: bloom}
-        )
+        return MinecraftBlockDescriptor("minecraft:sculk_catalyst", True, {_BlockStateKeys.Bloom: bloom})
 
     @staticmethod
-    def SculkSensor(
-        sculk_sensor_phase: Optional[SculkSensorPhase] = None
-    ) -> MinecraftBlockDescriptor:
+    def SculkSensor(sculk_sensor_phase: Optional[SculkSensorPhase] = None) -> MinecraftBlockDescriptor:
         """Factory for SculkSensor"""
         return MinecraftBlockDescriptor(
             "minecraft:sculk_sensor",
@@ -9797,8 +8860,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SculkShrieker(
-        active: Optional[Active] = None,
-        can_summon: Optional[CanSummon] = None
+        active: Optional[Active] = None, can_summon: Optional[CanSummon] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SculkShrieker"""
         return MinecraftBlockDescriptor(
@@ -9808,9 +8870,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SculkVein(
-        multi_face_direction_bits: Optional[MultiFaceDirectionBits] = None
-    ) -> MinecraftBlockDescriptor:
+    def SculkVein(multi_face_direction_bits: Optional[MultiFaceDirectionBits] = None) -> MinecraftBlockDescriptor:
         """Factory for SculkVein"""
         return MinecraftBlockDescriptor(
             "minecraft:sculk_vein",
@@ -9825,8 +8885,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SeaPickle(
-        cluster_count: Optional[ClusterCount] = None,
-        dead_bit: Optional[DeadBit] = None
+        cluster_count: Optional[ClusterCount] = None, dead_bit: Optional[DeadBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SeaPickle"""
         return MinecraftBlockDescriptor(
@@ -9839,13 +8898,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Seagrass(
-        sea_grass_type: Optional[SeaGrassType] = None
-    ) -> MinecraftBlockDescriptor:
+    def Seagrass(sea_grass_type: Optional[SeaGrassType] = None) -> MinecraftBlockDescriptor:
         """Factory for Seagrass"""
-        return MinecraftBlockDescriptor(
-            "minecraft:seagrass", True, {_BlockStateKeys.SeaGrassType: sea_grass_type}
-        )
+        return MinecraftBlockDescriptor("minecraft:seagrass", True, {_BlockStateKeys.SeaGrassType: sea_grass_type})
 
     @staticmethod
     def ShortDryGrass() -> MinecraftBlockDescriptor:
@@ -9863,9 +8918,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:shroomlight", True)
 
     @staticmethod
-    def SilverGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def SilverGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for SilverGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:silver_glazed_terracotta",
@@ -9874,9 +8927,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SkeletonSkull(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def SkeletonSkull(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for SkeletonSkull"""
         return MinecraftBlockDescriptor(
             "minecraft:skeleton_skull",
@@ -9890,9 +8941,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:slime", True)
 
     @staticmethod
-    def SmallAmethystBud(
-        minecraft_block_face: Optional[BlockFace] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmallAmethystBud(minecraft_block_face: Optional[BlockFace] = None) -> MinecraftBlockDescriptor:
         """Factory for SmallAmethystBud"""
         return MinecraftBlockDescriptor(
             "minecraft:small_amethyst_bud",
@@ -9903,7 +8952,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def SmallDripleafBlock(
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for SmallDripleafBlock"""
         return MinecraftBlockDescriptor(
@@ -9921,9 +8970,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:smithing_table", True)
 
     @staticmethod
-    def Smoker(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Smoker(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Smoker"""
         return MinecraftBlockDescriptor(
             "minecraft:smoker",
@@ -9937,18 +8984,12 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:smooth_basalt", True)
 
     @staticmethod
-    def SmoothQuartz(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmoothQuartz(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for SmoothQuartz"""
-        return MinecraftBlockDescriptor(
-            "minecraft:smooth_quartz", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:smooth_quartz", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def SmoothQuartzDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmoothQuartzDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SmoothQuartzDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:smooth_quartz_double_slab",
@@ -9957,9 +8998,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SmoothQuartzSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmoothQuartzSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SmoothQuartzSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:smooth_quartz_slab",
@@ -9969,8 +9008,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SmoothQuartzStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SmoothQuartzStairs"""
         return MinecraftBlockDescriptor(
@@ -9989,7 +9027,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SmoothRedSandstoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
+        minecraft_vertical_half: Optional[VerticalHalf] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for SmoothRedSandstoneDoubleSlab"""
         return MinecraftBlockDescriptor(
@@ -9999,9 +9037,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SmoothRedSandstoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmoothRedSandstoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SmoothRedSandstoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:smooth_red_sandstone_slab",
@@ -10011,8 +9047,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SmoothRedSandstoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SmoothRedSandstoneStairs"""
         return MinecraftBlockDescriptor(
@@ -10030,9 +9065,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:smooth_sandstone", True)
 
     @staticmethod
-    def SmoothSandstoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmoothSandstoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SmoothSandstoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:smooth_sandstone_double_slab",
@@ -10041,9 +9074,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SmoothSandstoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmoothSandstoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SmoothSandstoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:smooth_sandstone_slab",
@@ -10053,8 +9084,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SmoothSandstoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SmoothSandstoneStairs"""
         return MinecraftBlockDescriptor(
@@ -10072,9 +9102,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:smooth_stone", True)
 
     @staticmethod
-    def SmoothStoneDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmoothStoneDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SmoothStoneDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:smooth_stone_double_slab",
@@ -10083,9 +9111,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SmoothStoneSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SmoothStoneSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SmoothStoneSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:smooth_stone_slab",
@@ -10094,13 +9120,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SnifferEgg(
-        cracked_state: Optional[CrackedState] = None
-    ) -> MinecraftBlockDescriptor:
+    def SnifferEgg(cracked_state: Optional[CrackedState] = None) -> MinecraftBlockDescriptor:
         """Factory for SnifferEgg"""
-        return MinecraftBlockDescriptor(
-            "minecraft:sniffer_egg", True, {_BlockStateKeys.CrackedState: cracked_state}
-        )
+        return MinecraftBlockDescriptor("minecraft:sniffer_egg", True, {_BlockStateKeys.CrackedState: cracked_state})
 
     @staticmethod
     def Snow() -> MinecraftBlockDescriptor:
@@ -10109,8 +9131,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SnowLayer(
-        covered_bit: Optional[CoveredBit] = None,
-        height: Optional[Height] = None
+        covered_bit: Optional[CoveredBit] = None, height: Optional[Height] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SnowLayer"""
         return MinecraftBlockDescriptor(
@@ -10121,8 +9142,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SoulCampfire(
-        extinguished: Optional[Extinguished] = None,
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
+        extinguished: Optional[Extinguished] = None, minecraft_cardinal_direction: Optional[CardinalDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SoulCampfire"""
         return MinecraftBlockDescriptor(
@@ -10135,22 +9155,14 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SoulFire(
-        age: Optional[Age] = None
-    ) -> MinecraftBlockDescriptor:
+    def SoulFire(age: Optional[Age] = None) -> MinecraftBlockDescriptor:
         """Factory for SoulFire"""
-        return MinecraftBlockDescriptor(
-            "minecraft:soul_fire", True, {_BlockStateKeys.Age: age}
-        )
+        return MinecraftBlockDescriptor("minecraft:soul_fire", True, {_BlockStateKeys.Age: age})
 
     @staticmethod
-    def SoulLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def SoulLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for SoulLantern"""
-        return MinecraftBlockDescriptor(
-            "minecraft:soul_lantern", True, {_BlockStateKeys.Hanging: hanging}
-        )
+        return MinecraftBlockDescriptor("minecraft:soul_lantern", True, {_BlockStateKeys.Hanging: hanging})
 
     @staticmethod
     def SoulSand() -> MinecraftBlockDescriptor:
@@ -10163,9 +9175,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:soul_soil", True)
 
     @staticmethod
-    def SoulTorch(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def SoulTorch(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for SoulTorch"""
         return MinecraftBlockDescriptor(
             "minecraft:soul_torch",
@@ -10185,8 +9195,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SpruceButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SpruceButton"""
         return MinecraftBlockDescriptor(
@@ -10203,7 +9212,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for SpruceDoor"""
         return MinecraftBlockDescriptor(
@@ -10218,9 +9227,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SpruceDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SpruceDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SpruceDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:spruce_double_slab",
@@ -10237,7 +9244,7 @@ class MinecraftBlockTypes:
     def SpruceFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for SpruceFenceGate"""
         return MinecraftBlockDescriptor(
@@ -10255,7 +9262,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for SpruceHangingSign"""
         return MinecraftBlockDescriptor(
@@ -10271,8 +9278,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SpruceLeaves(
-        persistent_bit: Optional[PersistentBit] = None,
-        update_bit: Optional[UpdateBit] = None
+        persistent_bit: Optional[PersistentBit] = None, update_bit: Optional[UpdateBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SpruceLeaves"""
         return MinecraftBlockDescriptor(
@@ -10285,13 +9291,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SpruceLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def SpruceLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for SpruceLog"""
-        return MinecraftBlockDescriptor(
-            "minecraft:spruce_log", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:spruce_log", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def SprucePlanks() -> MinecraftBlockDescriptor:
@@ -10299,9 +9301,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:spruce_planks", True)
 
     @staticmethod
-    def SprucePressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def SprucePressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for SprucePressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:spruce_pressure_plate",
@@ -10310,19 +9310,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SpruceSapling(
-        age_bit: Optional[AgeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def SpruceSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for SpruceSapling"""
-        return MinecraftBlockDescriptor(
-            "minecraft:spruce_sapling", True, {_BlockStateKeys.AgeBit: age_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:spruce_sapling", True, {_BlockStateKeys.AgeBit: age_bit})
 
     @staticmethod
     def SpruceShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for SpruceShelf"""
         return MinecraftBlockDescriptor(
@@ -10336,9 +9332,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SpruceSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def SpruceSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for SpruceSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:spruce_slab",
@@ -10348,8 +9342,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SpruceStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SpruceStairs"""
         return MinecraftBlockDescriptor(
@@ -10362,9 +9355,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SpruceStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def SpruceStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for SpruceStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:spruce_standing_sign",
@@ -10376,7 +9367,7 @@ class MinecraftBlockTypes:
     def SpruceTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for SpruceTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -10390,9 +9381,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SpruceWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def SpruceWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for SpruceWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:spruce_wall_sign",
@@ -10401,18 +9390,12 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SpruceWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def SpruceWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for SpruceWood"""
-        return MinecraftBlockDescriptor(
-            "minecraft:spruce_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:spruce_wood", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
-    def StandingBanner(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def StandingBanner(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for StandingBanner"""
         return MinecraftBlockDescriptor(
             "minecraft:standing_banner",
@@ -10421,9 +9404,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def StandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for StandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:standing_sign",
@@ -10432,9 +9413,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StickyPiston(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def StickyPiston(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for StickyPiston"""
         return MinecraftBlockDescriptor(
             "minecraft:sticky_piston",
@@ -10443,9 +9422,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StickyPistonArmCollision(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def StickyPistonArmCollision(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for StickyPistonArmCollision"""
         return MinecraftBlockDescriptor(
             "minecraft:sticky_piston_arm_collision",
@@ -10459,9 +9436,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:stone", True)
 
     @staticmethod
-    def StoneBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def StoneBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for StoneBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:stone_brick_double_slab",
@@ -10470,9 +9445,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StoneBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def StoneBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for StoneBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:stone_brick_slab",
@@ -10482,8 +9455,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def StoneBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for StoneBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -10501,7 +9473,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for StoneBrickWall"""
         return MinecraftBlockDescriptor(
@@ -10523,8 +9495,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def StoneButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for StoneButton"""
         return MinecraftBlockDescriptor(
@@ -10537,9 +9508,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StonePressurePlate(
-        redstone_signal: Optional[RedstoneSignal | None] = None
-    ) -> MinecraftBlockDescriptor:
+    def StonePressurePlate(redstone_signal: Optional[RedstoneSignal | None] = None) -> MinecraftBlockDescriptor:
         """Factory for StonePressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:stone_pressure_plate",
@@ -10549,8 +9518,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def StoneStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for StoneStairs"""
         return MinecraftBlockDescriptor(
@@ -10563,9 +9531,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StonecutterBlock(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def StonecutterBlock(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for StonecutterBlock"""
         return MinecraftBlockDescriptor(
             "minecraft:stonecutter_block",
@@ -10574,9 +9540,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedAcaciaLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedAcaciaLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedAcaciaLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_acacia_log",
@@ -10585,9 +9549,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedAcaciaWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedAcaciaWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedAcaciaWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_acacia_wood",
@@ -10596,9 +9558,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedBambooBlock(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedBambooBlock(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedBambooBlock"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_bamboo_block",
@@ -10607,9 +9567,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedBirchLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedBirchLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedBirchLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_birch_log",
@@ -10618,9 +9576,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedBirchWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedBirchWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedBirchWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_birch_wood",
@@ -10629,9 +9585,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedCherryLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedCherryLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedCherryLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_cherry_log",
@@ -10640,9 +9594,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedCherryWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedCherryWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedCherryWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_cherry_wood",
@@ -10651,9 +9603,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedCrimsonHyphae(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedCrimsonHyphae(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedCrimsonHyphae"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_crimson_hyphae",
@@ -10662,9 +9612,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedCrimsonStem(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedCrimsonStem(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedCrimsonStem"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_crimson_stem",
@@ -10673,9 +9621,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedDarkOakLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedDarkOakLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedDarkOakLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_dark_oak_log",
@@ -10684,9 +9630,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedDarkOakWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedDarkOakWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedDarkOakWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_dark_oak_wood",
@@ -10695,9 +9639,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedJungleLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedJungleLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedJungleLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_jungle_log",
@@ -10706,9 +9648,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedJungleWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedJungleWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedJungleWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_jungle_wood",
@@ -10717,9 +9657,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedMangroveLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedMangroveLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedMangroveLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_mangrove_log",
@@ -10728,9 +9666,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedMangroveWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedMangroveWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedMangroveWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_mangrove_wood",
@@ -10739,9 +9675,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedOakLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedOakLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedOakLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_oak_log",
@@ -10750,9 +9684,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedOakWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedOakWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedOakWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_oak_wood",
@@ -10761,9 +9693,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedPaleOakLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedPaleOakLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedPaleOakLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_pale_oak_log",
@@ -10772,9 +9702,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedPaleOakWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedPaleOakWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedPaleOakWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_pale_oak_wood",
@@ -10783,9 +9711,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedSpruceLog(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedSpruceLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedSpruceLog"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_spruce_log",
@@ -10794,9 +9720,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedSpruceWood(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedSpruceWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedSpruceWood"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_spruce_wood",
@@ -10805,9 +9729,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedWarpedHyphae(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedWarpedHyphae(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedWarpedHyphae"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_warped_hyphae",
@@ -10816,9 +9738,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StrippedWarpedStem(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def StrippedWarpedStem(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for StrippedWarpedStem"""
         return MinecraftBlockDescriptor(
             "minecraft:stripped_warped_stem",
@@ -10827,9 +9747,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def StructureBlock(
-        structure_block_type: Optional[StructureBlockType] = None
-    ) -> MinecraftBlockDescriptor:
+    def StructureBlock(structure_block_type: Optional[StructureBlockType] = None) -> MinecraftBlockDescriptor:
         """Factory for StructureBlock"""
         return MinecraftBlockDescriptor(
             "minecraft:structure_block",
@@ -10843,9 +9761,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:structure_void", True)
 
     @staticmethod
-    def Sunflower(
-        upper_block_bit: Optional[UpperBlockBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def Sunflower(upper_block_bit: Optional[UpperBlockBit] = None) -> MinecraftBlockDescriptor:
         """Factory for Sunflower"""
         return MinecraftBlockDescriptor(
             "minecraft:sunflower",
@@ -10855,8 +9771,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SuspiciousGravel(
-        brushed_progress: Optional[BrushedProgress] = None,
-        hanging: Optional[Hanging] = None
+        brushed_progress: Optional[BrushedProgress] = None, hanging: Optional[Hanging] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SuspiciousGravel"""
         return MinecraftBlockDescriptor(
@@ -10870,8 +9785,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def SuspiciousSand(
-        brushed_progress: Optional[BrushedProgress] = None,
-        hanging: Optional[Hanging] = None
+        brushed_progress: Optional[BrushedProgress] = None, hanging: Optional[Hanging] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for SuspiciousSand"""
         return MinecraftBlockDescriptor(
@@ -10884,13 +9798,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def SweetBerryBush(
-        growth: Optional[Growth] = None
-    ) -> MinecraftBlockDescriptor:
+    def SweetBerryBush(growth: Optional[Growth] = None) -> MinecraftBlockDescriptor:
         """Factory for SweetBerryBush"""
-        return MinecraftBlockDescriptor(
-            "minecraft:sweet_berry_bush", True, {_BlockStateKeys.Growth: growth}
-        )
+        return MinecraftBlockDescriptor("minecraft:sweet_berry_bush", True, {_BlockStateKeys.Growth: growth})
 
     @staticmethod
     def TallDryGrass() -> MinecraftBlockDescriptor:
@@ -10898,9 +9808,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:tall_dry_grass", True)
 
     @staticmethod
-    def TallGrass(
-        upper_block_bit: Optional[UpperBlockBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def TallGrass(upper_block_bit: Optional[UpperBlockBit] = None) -> MinecraftBlockDescriptor:
         """Factory for TallGrass"""
         return MinecraftBlockDescriptor(
             "minecraft:tall_grass",
@@ -10919,18 +9827,12 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:tinted_glass", True)
 
     @staticmethod
-    def Tnt(
-        explode_bit: Optional[ExplodeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def Tnt(explode_bit: Optional[ExplodeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for Tnt"""
-        return MinecraftBlockDescriptor(
-            "minecraft:tnt", True, {_BlockStateKeys.ExplodeBit: explode_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:tnt", True, {_BlockStateKeys.ExplodeBit: explode_bit})
 
     @staticmethod
-    def Torch(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def Torch(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for Torch"""
         return MinecraftBlockDescriptor(
             "minecraft:torch",
@@ -10944,19 +9846,15 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:torchflower", True)
 
     @staticmethod
-    def TorchflowerCrop(
-        growth: Optional[Growth] = None
-    ) -> MinecraftBlockDescriptor:
+    def TorchflowerCrop(growth: Optional[Growth] = None) -> MinecraftBlockDescriptor:
         """Factory for TorchflowerCrop"""
-        return MinecraftBlockDescriptor(
-            "minecraft:torchflower_crop", True, {_BlockStateKeys.Growth: growth}
-        )
+        return MinecraftBlockDescriptor("minecraft:torchflower_crop", True, {_BlockStateKeys.Growth: growth})
 
     @staticmethod
     def Trapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for Trapdoor"""
         return MinecraftBlockDescriptor(
@@ -10970,9 +9868,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def TrappedChest(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def TrappedChest(minecraft_cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for TrappedChest"""
         return MinecraftBlockDescriptor(
             "minecraft:trapped_chest",
@@ -10982,8 +9878,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def TrialSpawner(
-        ominous: Optional[Ominous] = None,
-        trial_spawner_state: Optional[TrialSpawnerState] = None
+        ominous: Optional[Ominous] = None, trial_spawner_state: Optional[TrialSpawnerState] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for TrialSpawner"""
         return MinecraftBlockDescriptor(
@@ -11000,7 +9895,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         disarmed_bit: Optional[DisarmedBit] = None,
         powered_bit: Optional[PoweredBit] = None,
-        suspended_bit: Optional[SuspendedBit] = None
+        suspended_bit: Optional[SuspendedBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for TripWire"""
         return MinecraftBlockDescriptor(
@@ -11018,7 +9913,7 @@ class MinecraftBlockTypes:
     def TripwireHook(
         attached_bit: Optional[AttachedBit] = None,
         direction: Optional[Direction] = None,
-        powered_bit: Optional[PoweredBit] = None
+        powered_bit: Optional[PoweredBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for TripwireHook"""
         return MinecraftBlockDescriptor(
@@ -11042,9 +9937,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:tube_coral_block", True)
 
     @staticmethod
-    def TubeCoralFan(
-        coral_fan_direction: Optional[CoralFanDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def TubeCoralFan(coral_fan_direction: Optional[CoralFanDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for TubeCoralFan"""
         return MinecraftBlockDescriptor(
             "minecraft:tube_coral_fan",
@@ -11053,9 +9946,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def TubeCoralWallFan(
-        coral_direction: Optional[CoralDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def TubeCoralWallFan(coral_direction: Optional[CoralDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for TubeCoralWallFan"""
         return MinecraftBlockDescriptor(
             "minecraft:tube_coral_wall_fan",
@@ -11069,9 +9960,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:tuff", True)
 
     @staticmethod
-    def TuffBrickDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def TuffBrickDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for TuffBrickDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:tuff_brick_double_slab",
@@ -11080,9 +9969,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def TuffBrickSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def TuffBrickSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for TuffBrickSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:tuff_brick_slab",
@@ -11092,8 +9979,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def TuffBrickStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for TuffBrickStairs"""
         return MinecraftBlockDescriptor(
@@ -11111,7 +9997,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for TuffBrickWall"""
         return MinecraftBlockDescriptor(
@@ -11132,9 +10018,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:tuff_bricks", True)
 
     @staticmethod
-    def TuffDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def TuffDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for TuffDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:tuff_double_slab",
@@ -11143,9 +10027,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def TuffSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def TuffSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for TuffSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:tuff_slab",
@@ -11155,8 +10037,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def TuffStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for TuffStairs"""
         return MinecraftBlockDescriptor(
@@ -11174,7 +10055,7 @@ class MinecraftBlockTypes:
         wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
         wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
         wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
-        wall_post_bit: Optional[WallPostBit] = None
+        wall_post_bit: Optional[WallPostBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for TuffWall"""
         return MinecraftBlockDescriptor(
@@ -11191,8 +10072,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def TurtleEgg(
-        cracked_state: Optional[CrackedState] = None,
-        turtle_egg_count: Optional[TurtleEggCount] = None
+        cracked_state: Optional[CrackedState] = None, turtle_egg_count: Optional[TurtleEggCount] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for TurtleEgg"""
         return MinecraftBlockDescriptor(
@@ -11205,9 +10085,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def TwistingVines(
-        twisting_vines_age: Optional[TwistingVinesAge] = None
-    ) -> MinecraftBlockDescriptor:
+    def TwistingVines(twisting_vines_age: Optional[TwistingVinesAge] = None) -> MinecraftBlockDescriptor:
         """Factory for TwistingVines"""
         return MinecraftBlockDescriptor(
             "minecraft:twisting_vines",
@@ -11216,18 +10094,12 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def UnderwaterTnt(
-        explode_bit: Optional[ExplodeBit] = None
-    ) -> MinecraftBlockDescriptor:
+    def UnderwaterTnt(explode_bit: Optional[ExplodeBit] = None) -> MinecraftBlockDescriptor:
         """Factory for UnderwaterTnt"""
-        return MinecraftBlockDescriptor(
-            "minecraft:underwater_tnt", True, {_BlockStateKeys.ExplodeBit: explode_bit}
-        )
+        return MinecraftBlockDescriptor("minecraft:underwater_tnt", True, {_BlockStateKeys.ExplodeBit: explode_bit})
 
     @staticmethod
-    def UnderwaterTorch(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def UnderwaterTorch(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for UnderwaterTorch"""
         return MinecraftBlockDescriptor(
             "minecraft:underwater_torch",
@@ -11246,9 +10118,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:unknown", True)
 
     @staticmethod
-    def UnlitRedstoneTorch(
-        torch_facing_direction: Optional[TorchFacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def UnlitRedstoneTorch(torch_facing_direction: Optional[TorchFacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for UnlitRedstoneTorch"""
         return MinecraftBlockDescriptor(
             "minecraft:unlit_redstone_torch",
@@ -11260,7 +10130,7 @@ class MinecraftBlockTypes:
     def UnpoweredComparator(
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         output_lit_bit: Optional[OutputLitBit] = None,
-        output_subtract_bit: Optional[OutputSubtractBit] = None
+        output_subtract_bit: Optional[OutputSubtractBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for UnpoweredComparator"""
         return MinecraftBlockDescriptor(
@@ -11275,8 +10145,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def UnpoweredRepeater(
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        repeater_delay: Optional[RepeaterDelay] = None
+        minecraft_cardinal_direction: Optional[CardinalDirection] = None, repeater_delay: Optional[RepeaterDelay] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for UnpoweredRepeater"""
         return MinecraftBlockDescriptor(
@@ -11292,7 +10161,7 @@ class MinecraftBlockTypes:
     def Vault(
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         ominous: Optional[Ominous] = None,
-        vault_state: Optional[VaultState] = None
+        vault_state: Optional[VaultState] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for Vault"""
         return MinecraftBlockDescriptor(
@@ -11306,9 +10175,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def VerdantFroglight(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def VerdantFroglight(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for VerdantFroglight"""
         return MinecraftBlockDescriptor(
             "minecraft:verdant_froglight",
@@ -11317,9 +10184,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def Vine(
-        vine_direction_bits: Optional[VineDirectionBits] = None
-    ) -> MinecraftBlockDescriptor:
+    def Vine(vine_direction_bits: Optional[VineDirectionBits] = None) -> MinecraftBlockDescriptor:
         """Factory for Vine"""
         return MinecraftBlockDescriptor(
             "minecraft:vine",
@@ -11328,9 +10193,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WallBanner(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def WallBanner(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for WallBanner"""
         return MinecraftBlockDescriptor(
             "minecraft:wall_banner",
@@ -11339,9 +10202,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def WallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for WallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:wall_sign",
@@ -11351,8 +10212,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WarpedButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WarpedButton"""
         return MinecraftBlockDescriptor(
@@ -11369,7 +10229,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WarpedDoor"""
         return MinecraftBlockDescriptor(
@@ -11384,9 +10244,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WarpedDoubleSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def WarpedDoubleSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for WarpedDoubleSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:warped_double_slab",
@@ -11403,7 +10261,7 @@ class MinecraftBlockTypes:
     def WarpedFenceGate(
         in_wall_bit: Optional[InWallBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
-        open_bit: Optional[OpenBit] = None
+        open_bit: Optional[OpenBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WarpedFenceGate"""
         return MinecraftBlockDescriptor(
@@ -11426,7 +10284,7 @@ class MinecraftBlockTypes:
         attached_bit: Optional[AttachedBit] = None,
         facing_direction: Optional[FacingDirection] = None,
         ground_sign_direction: Optional[GroundSignDirection] = None,
-        hanging: Optional[Hanging] = None
+        hanging: Optional[Hanging] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WarpedHangingSign"""
         return MinecraftBlockDescriptor(
@@ -11441,13 +10299,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WarpedHyphae(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def WarpedHyphae(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for WarpedHyphae"""
-        return MinecraftBlockDescriptor(
-            "minecraft:warped_hyphae", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:warped_hyphae", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def WarpedNylium() -> MinecraftBlockDescriptor:
@@ -11460,9 +10314,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:warped_planks", True)
 
     @staticmethod
-    def WarpedPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def WarpedPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for WarpedPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:warped_pressure_plate",
@@ -11479,7 +10331,7 @@ class MinecraftBlockTypes:
     def WarpedShelf(
         cardinal_direction: Optional[CardinalDirection] = None,
         powered_bit: Optional[PoweredBit] = None,
-        powered_shelf_type: Optional[int] = None
+        powered_shelf_type: Optional[int] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WarpedShelf"""
         return MinecraftBlockDescriptor(
@@ -11493,9 +10345,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WarpedSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def WarpedSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for WarpedSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:warped_slab",
@@ -11505,8 +10355,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WarpedStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WarpedStairs"""
         return MinecraftBlockDescriptor(
@@ -11519,9 +10368,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WarpedStandingSign(
-        ground_sign_direction: Optional[GroundSignDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def WarpedStandingSign(ground_sign_direction: Optional[GroundSignDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for WarpedStandingSign"""
         return MinecraftBlockDescriptor(
             "minecraft:warped_standing_sign",
@@ -11530,19 +10377,15 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WarpedStem(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def WarpedStem(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for WarpedStem"""
-        return MinecraftBlockDescriptor(
-            "minecraft:warped_stem", True, {_BlockStateKeys.PillarAxis: pillar_axis}
-        )
+        return MinecraftBlockDescriptor("minecraft:warped_stem", True, {_BlockStateKeys.PillarAxis: pillar_axis})
 
     @staticmethod
     def WarpedTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WarpedTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -11556,9 +10399,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WarpedWallSign(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def WarpedWallSign(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for WarpedWallSign"""
         return MinecraftBlockDescriptor(
             "minecraft:warped_wall_sign",
@@ -11572,13 +10413,9 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:warped_wart_block", True)
 
     @staticmethod
-    def Water(
-        liquid_depth: Optional[LiquidDepth] = None
-    ) -> MinecraftBlockDescriptor:
+    def Water(liquid_depth: Optional[LiquidDepth] = None) -> MinecraftBlockDescriptor:
         """Factory for Water"""
-        return MinecraftBlockDescriptor(
-            "minecraft:water", True, {_BlockStateKeys.LiquidDepth: liquid_depth}
-        )
+        return MinecraftBlockDescriptor("minecraft:water", True, {_BlockStateKeys.LiquidDepth: liquid_depth})
 
     @staticmethod
     def Waterlily() -> MinecraftBlockDescriptor:
@@ -11602,8 +10439,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedCopperBulb(
-        lit: Optional[Lit] = None,
-        powered_bit: Optional[PoweredBit] = None
+        lit: Optional[Lit] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedCopperBulb"""
         return MinecraftBlockDescriptor(
@@ -11613,9 +10449,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WaxedCopperChain(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedCopperChain(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedCopperChain"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_copper_chain",
@@ -11628,7 +10462,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedCopperDoor"""
         return MinecraftBlockDescriptor(
@@ -11643,9 +10477,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WaxedCopperGolemStatue(
-        cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedCopperGolemStatue(cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedCopperGolemStatue"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_copper_golem_statue",
@@ -11659,19 +10491,15 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:waxed_copper_grate", True)
 
     @staticmethod
-    def WaxedCopperLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedCopperLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedCopperLantern"""
-        return MinecraftBlockDescriptor(
-            "minecraft:waxed_copper_lantern", True, {_BlockStateKeys.Hanging: hanging}
-        )
+        return MinecraftBlockDescriptor("minecraft:waxed_copper_lantern", True, {_BlockStateKeys.Hanging: hanging})
 
     @staticmethod
     def WaxedCopperTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedCopperTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -11690,9 +10518,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:waxed_cut_copper", True)
 
     @staticmethod
-    def WaxedCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_cut_copper_slab",
@@ -11702,8 +10528,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedCutCopperStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedCutCopperStairs"""
         return MinecraftBlockDescriptor(
@@ -11716,9 +10541,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WaxedDoubleCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedDoubleCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedDoubleCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_double_cut_copper_slab",
@@ -11743,8 +10566,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedExposedCopperBulb(
-        lit: Optional[Lit] = None,
-        powered_bit: Optional[PoweredBit] = None
+        lit: Optional[Lit] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedCopperBulb"""
         return MinecraftBlockDescriptor(
@@ -11754,9 +10576,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WaxedExposedCopperChain(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedExposedCopperChain(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedCopperChain"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_exposed_copper_chain",
@@ -11769,7 +10589,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedCopperDoor"""
         return MinecraftBlockDescriptor(
@@ -11785,7 +10605,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedExposedCopperGolemStatue(
-        cardinal_direction: Optional[CardinalDirection] = None
+        cardinal_direction: Optional[CardinalDirection] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedCopperGolemStatue"""
         return MinecraftBlockDescriptor(
@@ -11800,9 +10620,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:waxed_exposed_copper_grate", True)
 
     @staticmethod
-    def WaxedExposedCopperLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedExposedCopperLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedCopperLantern"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_exposed_copper_lantern",
@@ -11814,7 +10632,7 @@ class MinecraftBlockTypes:
     def WaxedExposedCopperTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedCopperTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -11833,9 +10651,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:waxed_exposed_cut_copper", True)
 
     @staticmethod
-    def WaxedExposedCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedExposedCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_exposed_cut_copper_slab",
@@ -11845,8 +10661,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedExposedCutCopperStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedCutCopperStairs"""
         return MinecraftBlockDescriptor(
@@ -11860,7 +10675,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedExposedDoubleCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
+        minecraft_vertical_half: Optional[VerticalHalf] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedDoubleCutCopperSlab"""
         return MinecraftBlockDescriptor(
@@ -11871,8 +10686,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedExposedLightningRod(
-        facing_direction: Optional[FacingDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        facing_direction: Optional[FacingDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedExposedLightningRod"""
         return MinecraftBlockDescriptor(
@@ -11886,8 +10700,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedLightningRod(
-        facing_direction: Optional[FacingDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        facing_direction: Optional[FacingDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedLightningRod"""
         return MinecraftBlockDescriptor(
@@ -11902,9 +10715,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def WaxedOxidizedChiseledCopper() -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedChiseledCopper"""
-        return MinecraftBlockDescriptor(
-            "minecraft:waxed_oxidized_chiseled_copper", True
-        )
+        return MinecraftBlockDescriptor("minecraft:waxed_oxidized_chiseled_copper", True)
 
     @staticmethod
     def WaxedOxidizedCopper() -> MinecraftBlockDescriptor:
@@ -11918,8 +10729,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedOxidizedCopperBulb(
-        lit: Optional[Lit] = None,
-        powered_bit: Optional[PoweredBit] = None
+        lit: Optional[Lit] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedCopperBulb"""
         return MinecraftBlockDescriptor(
@@ -11929,9 +10739,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WaxedOxidizedCopperChain(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedOxidizedCopperChain(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedCopperChain"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_oxidized_copper_chain",
@@ -11944,7 +10752,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedCopperDoor"""
         return MinecraftBlockDescriptor(
@@ -11960,7 +10768,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedOxidizedCopperGolemStatue(
-        cardinal_direction: Optional[CardinalDirection] = None
+        cardinal_direction: Optional[CardinalDirection] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedCopperGolemStatue"""
         return MinecraftBlockDescriptor(
@@ -11975,9 +10783,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:waxed_oxidized_copper_grate", True)
 
     @staticmethod
-    def WaxedOxidizedCopperLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedOxidizedCopperLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedCopperLantern"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_oxidized_copper_lantern",
@@ -11989,7 +10795,7 @@ class MinecraftBlockTypes:
     def WaxedOxidizedCopperTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedCopperTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -12008,9 +10814,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:waxed_oxidized_cut_copper", True)
 
     @staticmethod
-    def WaxedOxidizedCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedOxidizedCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_oxidized_cut_copper_slab",
@@ -12020,8 +10824,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedOxidizedCutCopperStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedCutCopperStairs"""
         return MinecraftBlockDescriptor(
@@ -12035,7 +10838,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedOxidizedDoubleCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
+        minecraft_vertical_half: Optional[VerticalHalf] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedDoubleCutCopperSlab"""
         return MinecraftBlockDescriptor(
@@ -12046,8 +10849,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedOxidizedLightningRod(
-        facing_direction: Optional[FacingDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        facing_direction: Optional[FacingDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedOxidizedLightningRod"""
         return MinecraftBlockDescriptor(
@@ -12062,9 +10864,7 @@ class MinecraftBlockTypes:
     @staticmethod
     def WaxedWeatheredChiseledCopper() -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredChiseledCopper"""
-        return MinecraftBlockDescriptor(
-            "minecraft:waxed_weathered_chiseled_copper", True
-        )
+        return MinecraftBlockDescriptor("minecraft:waxed_weathered_chiseled_copper", True)
 
     @staticmethod
     def WaxedWeatheredCopper() -> MinecraftBlockDescriptor:
@@ -12078,8 +10878,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedWeatheredCopperBulb(
-        lit: Optional[Lit] = None,
-        powered_bit: Optional[PoweredBit] = None
+        lit: Optional[Lit] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredCopperBulb"""
         return MinecraftBlockDescriptor(
@@ -12089,9 +10888,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WaxedWeatheredCopperChain(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedWeatheredCopperChain(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredCopperChain"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_weathered_copper_chain",
@@ -12104,7 +10901,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredCopperDoor"""
         return MinecraftBlockDescriptor(
@@ -12120,7 +10917,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedWeatheredCopperGolemStatue(
-        cardinal_direction: Optional[CardinalDirection] = None
+        cardinal_direction: Optional[CardinalDirection] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredCopperGolemStatue"""
         return MinecraftBlockDescriptor(
@@ -12135,9 +10932,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:waxed_weathered_copper_grate", True)
 
     @staticmethod
-    def WaxedWeatheredCopperLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedWeatheredCopperLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredCopperLantern"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_weathered_copper_lantern",
@@ -12149,7 +10944,7 @@ class MinecraftBlockTypes:
     def WaxedWeatheredCopperTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredCopperTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -12168,9 +10963,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:waxed_weathered_cut_copper", True)
 
     @staticmethod
-    def WaxedWeatheredCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def WaxedWeatheredCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:waxed_weathered_cut_copper_slab",
@@ -12180,8 +10973,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedWeatheredCutCopperStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredCutCopperStairs"""
         return MinecraftBlockDescriptor(
@@ -12195,7 +10987,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedWeatheredDoubleCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
+        minecraft_vertical_half: Optional[VerticalHalf] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredDoubleCutCopperSlab"""
         return MinecraftBlockDescriptor(
@@ -12206,8 +10998,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WaxedWeatheredLightningRod(
-        facing_direction: Optional[FacingDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        facing_direction: Optional[FacingDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WaxedWeatheredLightningRod"""
         return MinecraftBlockDescriptor(
@@ -12236,8 +11027,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WeatheredCopperBulb(
-        lit: Optional[Lit] = None,
-        powered_bit: Optional[PoweredBit] = None
+        lit: Optional[Lit] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WeatheredCopperBulb"""
         return MinecraftBlockDescriptor(
@@ -12247,9 +11037,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WeatheredCopperChain(
-        pillar_axis: Optional[PillarAxis] = None
-    ) -> MinecraftBlockDescriptor:
+    def WeatheredCopperChain(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
         """Factory for WeatheredCopperChain"""
         return MinecraftBlockDescriptor(
             "minecraft:weathered_copper_chain",
@@ -12262,7 +11050,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WeatheredCopperDoor"""
         return MinecraftBlockDescriptor(
@@ -12277,9 +11065,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WeatheredCopperGolemStatue(
-        cardinal_direction: Optional[CardinalDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def WeatheredCopperGolemStatue(cardinal_direction: Optional[CardinalDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for WeatheredCopperGolemStatue"""
         return MinecraftBlockDescriptor(
             "minecraft:weathered_copper_golem_statue",
@@ -12293,9 +11079,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:weathered_copper_grate", True)
 
     @staticmethod
-    def WeatheredCopperLantern(
-        hanging: Optional[Hanging] = None
-    ) -> MinecraftBlockDescriptor:
+    def WeatheredCopperLantern(hanging: Optional[Hanging] = None) -> MinecraftBlockDescriptor:
         """Factory for WeatheredCopperLantern"""
         return MinecraftBlockDescriptor(
             "minecraft:weathered_copper_lantern",
@@ -12307,7 +11091,7 @@ class MinecraftBlockTypes:
     def WeatheredCopperTrapdoor(
         direction: Optional[Direction] = None,
         open_bit: Optional[OpenBit] = None,
-        upside_down_bit: Optional[UpsideDownBit] = None
+        upside_down_bit: Optional[UpsideDownBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WeatheredCopperTrapdoor"""
         return MinecraftBlockDescriptor(
@@ -12326,9 +11110,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:weathered_cut_copper", True)
 
     @staticmethod
-    def WeatheredCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
-    ) -> MinecraftBlockDescriptor:
+    def WeatheredCutCopperSlab(minecraft_vertical_half: Optional[VerticalHalf] = None) -> MinecraftBlockDescriptor:
         """Factory for WeatheredCutCopperSlab"""
         return MinecraftBlockDescriptor(
             "minecraft:weathered_cut_copper_slab",
@@ -12338,8 +11120,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WeatheredCutCopperStairs(
-        upside_down_bit: Optional[UpsideDownBit] = None,
-        weirdo_direction: Optional[WeirdoDirection] = None
+        upside_down_bit: Optional[UpsideDownBit] = None, weirdo_direction: Optional[WeirdoDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WeatheredCutCopperStairs"""
         return MinecraftBlockDescriptor(
@@ -12353,7 +11134,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WeatheredDoubleCutCopperSlab(
-        minecraft_vertical_half: Optional[VerticalHalf] = None
+        minecraft_vertical_half: Optional[VerticalHalf] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WeatheredDoubleCutCopperSlab"""
         return MinecraftBlockDescriptor(
@@ -12364,8 +11145,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WeatheredLightningRod(
-        facing_direction: Optional[FacingDirection] = None,
-        powered_bit: Optional[PoweredBit] = None
+        facing_direction: Optional[FacingDirection] = None, powered_bit: Optional[PoweredBit] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WeatheredLightningRod"""
         return MinecraftBlockDescriptor(
@@ -12383,9 +11163,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:web", True)
 
     @staticmethod
-    def WeepingVines(
-        weeping_vines_age: Optional[WeepingVinesAge] = None
-    ) -> MinecraftBlockDescriptor:
+    def WeepingVines(weeping_vines_age: Optional[WeepingVinesAge] = None) -> MinecraftBlockDescriptor:
         """Factory for WeepingVines"""
         return MinecraftBlockDescriptor(
             "minecraft:weeping_vines",
@@ -12399,19 +11177,12 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:wet_sponge", True)
 
     @staticmethod
-    def Wheat(
-        growth: Optional[Growth] = None
-    ) -> MinecraftBlockDescriptor:
+    def Wheat(growth: Optional[Growth] = None) -> MinecraftBlockDescriptor:
         """Factory for Wheat"""
-        return MinecraftBlockDescriptor(
-            "minecraft:wheat", True, {_BlockStateKeys.Growth: growth}
-        )
+        return MinecraftBlockDescriptor("minecraft:wheat", True, {_BlockStateKeys.Growth: growth})
 
     @staticmethod
-    def WhiteCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def WhiteCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for WhiteCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:white_candle",
@@ -12420,13 +11191,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WhiteCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def WhiteCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for WhiteCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:white_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:white_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def WhiteCarpet() -> MinecraftBlockDescriptor:
@@ -12444,9 +11211,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:white_concrete_powder", True)
 
     @staticmethod
-    def WhiteGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def WhiteGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for WhiteGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:white_glazed_terracotta",
@@ -12486,8 +11251,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def Wildflowers(
-        growth: Optional[Growth] = None,
-        minecraft_cardinal_direction: Optional[CardinalDirection] = None
+        growth: Optional[Growth] = None, minecraft_cardinal_direction: Optional[CardinalDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for Wildflowers"""
         return MinecraftBlockDescriptor(
@@ -12505,9 +11269,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:wither_rose", True)
 
     @staticmethod
-    def WitherSkeletonSkull(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def WitherSkeletonSkull(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for WitherSkeletonSkull"""
         return MinecraftBlockDescriptor(
             "minecraft:wither_skeleton_skull",
@@ -12517,8 +11279,7 @@ class MinecraftBlockTypes:
 
     @staticmethod
     def WoodenButton(
-        button_pressed_bit: Optional[ButtonPressedBit] = None,
-        facing_direction: Optional[FacingDirection] = None
+        button_pressed_bit: Optional[ButtonPressedBit] = None, facing_direction: Optional[FacingDirection] = None
     ) -> MinecraftBlockDescriptor:
         """Factory for WoodenButton"""
         return MinecraftBlockDescriptor(
@@ -12535,7 +11296,7 @@ class MinecraftBlockTypes:
         door_hinge_bit: Optional[DoorHingeBit] = None,
         minecraft_cardinal_direction: Optional[CardinalDirection] = None,
         open_bit: Optional[OpenBit] = None,
-        upper_block_bit: Optional[UpperBlockBit] = None
+        upper_block_bit: Optional[UpperBlockBit] = None,
     ) -> MinecraftBlockDescriptor:
         """Factory for WoodenDoor"""
         return MinecraftBlockDescriptor(
@@ -12550,9 +11311,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def WoodenPressurePlate(
-        redstone_signal: Optional[RedstoneSignal] = None
-    ) -> MinecraftBlockDescriptor:
+    def WoodenPressurePlate(redstone_signal: Optional[RedstoneSignal] = None) -> MinecraftBlockDescriptor:
         """Factory for WoodenPressurePlate"""
         return MinecraftBlockDescriptor(
             "minecraft:wooden_pressure_plate",
@@ -12561,10 +11320,7 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def YellowCandle(
-        candles: Optional[Candles] = None,
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def YellowCandle(candles: Optional[Candles] = None, lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for YellowCandle"""
         return MinecraftBlockDescriptor(
             "minecraft:yellow_candle",
@@ -12573,13 +11329,9 @@ class MinecraftBlockTypes:
         )
 
     @staticmethod
-    def YellowCandleCake(
-        lit: Optional[Lit] = None
-    ) -> MinecraftBlockDescriptor:
+    def YellowCandleCake(lit: Optional[Lit] = None) -> MinecraftBlockDescriptor:
         """Factory for YellowCandleCake"""
-        return MinecraftBlockDescriptor(
-            "minecraft:yellow_candle_cake", True, {_BlockStateKeys.Lit: lit}
-        )
+        return MinecraftBlockDescriptor("minecraft:yellow_candle_cake", True, {_BlockStateKeys.Lit: lit})
 
     @staticmethod
     def YellowCarpet() -> MinecraftBlockDescriptor:
@@ -12597,9 +11349,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:yellow_concrete_powder", True)
 
     @staticmethod
-    def YellowGlazedTerracotta(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def YellowGlazedTerracotta(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for YellowGlazedTerracotta"""
         return MinecraftBlockDescriptor(
             "minecraft:yellow_glazed_terracotta",
@@ -12633,9 +11383,7 @@ class MinecraftBlockTypes:
         return MinecraftBlockDescriptor("minecraft:yellow_wool", True)
 
     @staticmethod
-    def ZombieHead(
-        facing_direction: Optional[FacingDirection] = None
-    ) -> MinecraftBlockDescriptor:
+    def ZombieHead(facing_direction: Optional[FacingDirection] = None) -> MinecraftBlockDescriptor:
         """Factory for ZombieHead"""
         return MinecraftBlockDescriptor(
             "minecraft:zombie_head",

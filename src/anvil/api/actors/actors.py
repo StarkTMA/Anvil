@@ -1063,6 +1063,15 @@ class _EntityClientDescription(_ActorClientDescription):
             "overlay_color": overlay_color,
         }
 
+    def held_item_scale(self, scale: Molang | str = 1):
+        """Sets the scale of the held item.
+
+        Parameters:
+            scale (str | Molang, optional): The scale of the held item. Defaults to "1".
+        """
+        if scale != 1:
+            self._description["description"]["held_item_scale"] = scale
+
     def _export(self, directory: str):
         """Queues the entity for export.
 

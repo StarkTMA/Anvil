@@ -663,7 +663,7 @@ class LocalLighting(AddonObject):
 
         self._content["minecraft:point_light_settings"][str(block_identifier)] = {
             "light_color": convert_color(color, HexRGB),
-            "light_type": "point_light",
+            "light_type": "static_light",
         }
 
 

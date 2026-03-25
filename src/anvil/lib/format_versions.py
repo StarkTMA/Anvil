@@ -1,11 +1,11 @@
 MANIFEST_VERSION: int = 3  # The manifest version.
-MANIFEST_BUILD: str = "1.26.2"  # The build version of the manifest.
+MANIFEST_BUILD: str = "1.26.10"  # The build version of the manifest.
 BLOCK_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the block server.
 ENTITY_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the entity server.
 ENTITY_CLIENT_VERSION: str = MANIFEST_BUILD  # The version of the entity client.
 ITEM_SERVER_VERSION: str = MANIFEST_BUILD  # The version of the item server.
 RECIPE_JSON_FORMAT_VERSION = MANIFEST_BUILD  # The version of the recipe json format.
-SPAWN_RULES_VERSION: str = "1.20.0"  # The version of the spawn rules.
+SPAWN_RULES_VERSION: str = "1.8.0"  # The version of the spawn rules.
 SOUND_DEFINITIONS_VERSION: str = MANIFEST_BUILD  # The version of the sound definitions.
 FOG_VERSION: str = MANIFEST_BUILD  # The version of the fog.
 JIGSAW_VERSION: str = MANIFEST_BUILD  # The version of the jigsaw.
@@ -29,7 +29,7 @@ BLOCK_CULLING_VERSION = "1.20.80"  # The version of the block culling rules.
 PBR_SETTINGS_VERSION: str = MANIFEST_BUILD  # The version of the atmospheric effects.
 TEXTURE_SET_VERSION: str = "1.21.30"  # The version of the texture set.
 
-MODULE_MINECRAFT_SERVER: str = "2.5.0"  # The version of the Minecraft server module.
+MODULE_MINECRAFT_SERVER: str = "2.6.0"  # The version of the Minecraft server module.
 MODULE_MINECRAFT_SERVER_UI: str = "2.0.0"  # The version of the Minecraft UI module.
 MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"  # The version of the Minecraft UI module.
 MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"  # The version of the Minecraft GameTest Framework module.

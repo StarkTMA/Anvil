@@ -270,18 +270,23 @@ class Animation:
     def _process_particle_channel(target_dict: Dict, keyframes: List[dict]):
         for kf in keyframes:
             time = round(float(kf.get("time")), 4)
-            data = kf.get("data_points")[0]
-            effect = data.get("effect", "")
-            locator = data.get("locator", "")
-            script = data.get("script", "")
+            data = kf.get("data_points")
+            target_dict[time] = []
+            for particle in data:
+                effect = particle.get("effect", "")
+                locator = particle.get("locator", "")
+                script = particle.get("script", "")
 
-            if "\n" in effect or "\n" in locator or "\n" in script:
-                raise ValueError(f"Newline in particle keyframe at {time}")
+                if "\n" in effect or "\n" in locator or "\n" in script:
+                    raise ValueError(f"Newline in particle keyframe at {time}")
 
-            val = {"effect": effect, "locator": locator}
-            if script:
-                val["pre_effect_script"] = (script + ";").replace(";;", ";")
-            target_dict[time] = val
+                val = {"effect": effect, "locator": locator}
+                if script:
+                    val["pre_effect_script"] = (script + ";").replace(";;", ";")
+                target_dict[time].append(val)
+
+            if len(target_dict[time]) == 1:
+                target_dict[time] = target_dict[time][0]
 
     @staticmethod
     def _process_sound_channel(target_dict: Dict, keyframes: List[dict]):

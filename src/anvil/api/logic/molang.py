@@ -3156,6 +3156,15 @@ class Query(Molang):
         """
         return self._query(self, self.handle, "state_time")
 
+    @classmethod
+    def get_level_seed_based_fraction(self):
+        """Returns the level seed based fraction, a value between 0.0 and 1.0 that is determined by the world seed but changes every tick.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self._query(self, self.handle, "get_level_seed_based_fraction")
+
 
 class Context(Query):
     handle = "context"

@@ -463,7 +463,7 @@ class JsonSchemes:
             {
                 "format_version": RECIPE_JSON_FORMAT_VERSION,
                 "identifier": identifier,
-                "tags": tags,
+                "tags": list(map(str, tags)),
             },
             is_json=True,
         )
@@ -753,7 +753,6 @@ class AddonDescriptor:
         else:
             object_name = name
             object_namespace = "minecraft" if is_vanilla else CONFIG.NAMESPACE
-
 
         if str(object_name)[0].isdigit():
             raise ValueError(f"Names cannot start with a digit. {object_name} at {self._object_type}[{name}]")

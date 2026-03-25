@@ -21,7 +21,8 @@ from anvil.api.core.enums import (
 )
 from anvil.api.core.filters import Filter
 from anvil.api.core.types import *
-from anvil.api.logic.molang import Molang
+from anvil.api.logic.molang import Molang, Query
+from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.api.world.trade_tables import TradeTable
 from anvil.lib.config import CONFIG
@@ -209,22 +210,35 @@ class EntityKnockbackResistance(_BaseComponent):
         self._add_field("value", max(0, min(1, value)))
 
 
-class EntityPushable(_BaseComponent):
+class EntityPushableByBlock(_BaseComponent):
     _identifier = "minecraft:pushable"
 
-    def __init__(self, is_pushable: bool = True, is_pushable_by_piston: bool = True) -> None:
+    def __init__(self, value: bool) -> None:
         """Defines what can push an entity between other entities and pistons.
 
         Parameters:
-            is_pushable (bool, optional): Description. Defaults to True.
-            is_pushable_by_piston (bool, optional): Description. Defaults to True.
+            value (bool): Description.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_block
         """
         super().__init__("pushable")
-        self._add_field("is_pushable", is_pushable)
-        self._add_field("is_pushable_by_piston", is_pushable_by_piston)
+        self._set_value(value)
+
+class EntityPushableByEntity(_BaseComponent):
+    _identifier = "minecraft:pushable_by_entity"
+
+    def __init__(self, value: bool) -> None:
+        """Defines whether this entity can be pushed by other entities.
+
+        Parameters:
+            value (bool): Description.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_entity
+        """
+        super().__init__("pushable_by_entity")
+        self._set_value(value)
 
 
 class EntityPushThrough(_BaseComponent):
@@ -450,7 +464,7 @@ class EntitySpellEffects(_BaseComponent):
     def add_effects(
         self,
         effect: MinecraftEffects,
-        duration: int,
+        duration: int | Literal["infinite"],
         amplifier: int,
         ambient: bool = True,
         visible: bool = True,
@@ -2587,7 +2601,7 @@ class EntityEquipment(_BaseComponent):
     _identifier = "minecraft:equipment"
 
     def __init__(self, table: LootTable | str) -> None:
-        """Sets the loot table for what items this entity drops upon death.
+        """Sets the Equipment table to use for this Entity.
 
         Parameters:
             table (LootTable | str): Description.
@@ -2721,24 +2735,46 @@ class EntitySensor(_BaseComponent):
 class EntityAmbientSoundInterval(_BaseComponent):
     _identifier = "minecraft:ambient_sound_interval"
 
-    def __init__(self, event_name: str, range: float = 16, value: float = 8) -> None:
+    def __init__(self, event_name: str, sound_delay: tuple[float, float] = (8, 16)) -> None:
         """A component that will set the entity's delay between playing its ambient sound.
 
         Parameters:
-            event_name (str): Description.
-            range (float, optional): Description. Defaults to 16.
-            value (float, optional): Description. Defaults to 8.
+            event_name (str): Level sound event to be played as the ambient sound.
+            sound_delay (tuple[float, float], optional): Minimum and maximum delay in seconds between playing the ambient sound. Defaults to (8, 16).
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ambient_sound_interval
         """
         super().__init__("ambient_sound_interval")
 
+        if sound_delay != (8, 16):
+            if not isinstance(sound_delay, (tuple, list)):
+                raise TypeError(f"sound_delay must be a tuple or list of two floats. Component [{self._identifier}].")
+            if len(sound_delay) != 2:
+                raise ValueError(f"sound_delay must have exactly two elements. Component [{self._identifier}].")
+            if not all(isinstance(delay, (int, float)) for delay in sound_delay):
+                raise TypeError(f"Both elements of sound_delay must be numbers. Component [{self._identifier}].")
+            if sound_delay[0] < 0 or sound_delay[1] < 0:
+                raise ValueError(f"Both elements of sound_delay must be non-negative. Component [{self._identifier}].")
+            if sound_delay[0] > sound_delay[1]:
+                raise ValueError(
+                    f"The first element of sound_delay must be less than or equal to the second element. Component [{self._identifier}]."
+                )
+            self._add_field("range", sound_delay[0])
+            self._add_field("value", sound_delay[1])
+            self._add_field("event_names", [])
+
         self._add_field("event_name", event_name)
-        if range != 16:
-            self._add_field("range", range)
-        if value != 8:
-            self._add_field("value", value)
+
+    def add_event(self, event_name: str, condition: Molang):
+        """Adds an additional sound event to be played when the ambient sound plays, with a Molang condition for it to play.
+
+        Parameters:
+            event_name (str): Level sound event to be played as the additional sound.
+            condition (Molang): Molang condition that must be satisfied for the additional sound to play when the ambient sound plays.
+        """
+        self._component["event_names"].append({"event_name": event_name, "condition": condition})
+        return self
 
 
 class EntityUnderwaterMovement(_BaseComponent):
@@ -3194,7 +3230,7 @@ class EntityAgeable(_BaseComponent):
         self._add_field("drop_items", items)
         return self
 
-    def feed_items(self, *items: str):
+    def feed_items(self, items: list[str]):
         """Adds an item to the list of items the entity can be fed.
 
         Parameters:
@@ -3231,6 +3267,30 @@ class EntityAgeable(_BaseComponent):
         """
         self._add_field("grow_up", {"event": event, "target": target})
         return self
+
+    def pause_growth_items(self, items: list[MinecraftItemDescriptor | Identifier]):
+        """Pauses the growth of the entity when given specific items.
+
+        Parameters:
+            items (list[MinecraftItemDescriptor | Identifier]): The items that will pause the entity's growth.
+
+            Returns:
+                Ageable: Returns the Ageable component to allow for method chaining.
+        """
+        self._add_field("pause_growth_items", [str(i) for i in items])
+        return self
+    
+    def reset_growth_items(self, items: list[MinecraftItemDescriptor | Identifier]):
+        """Resets the growth of the entity when given specific items.
+
+        Parameters:
+            items (list[MinecraftItemDescriptor | Identifier]): The items that will reset the entity's growth.
+
+        Returns:
+            Ageable: Returns the Ageable component to allow for method chaining.
+        """
+        self._add_field("reset_growth_items", [str(i) for i in items])
+
 
 
 class EntityInventory(_BaseComponent):
@@ -3411,7 +3471,8 @@ class EntityBuoyant(_BaseComponent):
         big_wave_probability: float = 0.03,
         big_wave_speed: float = 10.0,
         drag_down_on_buoyancy_removed: float = 0.0,
-        simulate_waves: bool = True,
+        movement_type: Literal["waves", "bobbing", "none"] = "waves",
+        can_auto_step_from_liquid: bool = False,
     ) -> None:
         """Allows an entity to float on the specified liquid blocks.
 
@@ -3422,7 +3483,8 @@ class EntityBuoyant(_BaseComponent):
             big_wave_probability (float, optional): Description. Defaults to 0.03.
             big_wave_speed (float, optional): Description. Defaults to 10.0.
             drag_down_on_buoyancy_removed (float, optional): Description. Defaults to 0.0.
-            simulate_waves (bool, optional): Description. Defaults to True.
+            movement_type (Literal["waves", "bobbing", "none"], optional): Description. Defaults to "waves".
+            can_auto_step_from_liquid (bool, optional): Defines whether the entity can move out of a liquid block to a neighboring solid block if pushed against it. Defaults to False.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_buoyant
@@ -3434,14 +3496,16 @@ class EntityBuoyant(_BaseComponent):
             self._add_field("apply_gravity", apply_gravity)
         if base_buoyancy != 1.0:
             self._add_field("base_buoyancy", clamp(base_buoyancy, 0, 1))
-        if big_wave_probability != 0.03:
-            self._add_field("big_wave_probability", big_wave_probability)
-        if big_wave_speed != 10.0:
-            self._add_field("big_wave_speed", big_wave_speed)
         if drag_down_on_buoyancy_removed != 0.0:
             self._add_field("drag_down_on_buoyancy_removed", drag_down_on_buoyancy_removed)
-        if not simulate_waves:
-            self._add_field("simulate_waves", simulate_waves)
+        if movement_type != "waves":
+            self._add_field("movement_type", movement_type)
+
+        if movement_type == "waves":
+            if big_wave_probability != 0.03:
+                self._add_field("big_wave_probability", big_wave_probability)
+            if big_wave_speed != 10.0:
+                self._add_field("big_wave_speed", big_wave_speed)
 
 
 class EntityLavaMovement(_BaseComponent):
@@ -3478,9 +3542,9 @@ class EntityExperienceReward(_BaseComponent):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_experience_reward
         """
         super().__init__("experience_reward")
-        if not on_bred == 0:
+        if on_bred != 0:
             self._add_field("on_bred", on_bred)
-        if not on_death == 0:
+        if on_death != 0:
             self._add_field("on_death", on_death)
 
 
@@ -4016,14 +4080,7 @@ class EntityBreedable(_BaseComponent):
         )
         return self
 
-    def breeds_with(
-        self,
-        mate_type: str,
-        baby_type: str,
-        breed_event: str,
-        breed_event_target: FilterSubject = FilterSubject.Baby,
-        breed_event_filter: Filter = None,
-    ) -> dict:
+    def breeds_with(self, mate_type: str) -> dict:
         """Defines the breeding partner for the entity.
 
         Parameters:
@@ -4037,15 +4094,7 @@ class EntityBreedable(_BaseComponent):
 
         self._add_field(
             "breeds_with",
-            {
-                "mate_type": mate_type,
-                "baby_type": baby_type,
-                "breed_event": {
-                    "event": breed_event,
-                    "target": breed_event_target,
-                    "filters": breed_event_filter,
-                },
-            },
+            {mate_type: {}},
         )
         return self
 
@@ -5151,7 +5200,7 @@ class EntityDespawn(_BaseComponent):
     def __init__(
         self,
         despawn_from_chance: bool = True,
-        despawn_from_distance: dict = None,
+        despawn_from_distance: tuple[int, int] = None,
         despawn_from_inactivity: bool = True,
         despawn_from_simulation_edge: bool = True,
         filters: Filter = None,
@@ -5163,7 +5212,7 @@ class EntityDespawn(_BaseComponent):
 
         Parameters:
             despawn_from_chance (bool, optional): Determines if "min_range_random_chance" is used in the standard despawn rules. Defaults to True.
-            despawn_from_distance (dict, optional): Specifies if the 'min_distance' and 'max_distance' are used in the standard despawn rules. Defaults to None.
+            despawn_from_distance (tuple[int, int], optional): Specifies if the 'min_distance' and 'max_distance' are used in the standard despawn rules. Defaults to None.
             despawn_from_inactivity (bool, optional): Determines if the "min_range_inactivity_timer" is used in the standard despawn rules. Defaults to True.
             despawn_from_simulation_edge (bool, optional): Determines if the mob is instantly despawned at the edge of simulation distance in the standard despawn rules. Defaults to True.
             filters (Filter, optional): The list of conditions that must be satisfied before the Actor is despawned. If a filter is defined then standard despawn rules are ignored. Defaults to None.
@@ -5179,7 +5228,22 @@ class EntityDespawn(_BaseComponent):
         if not despawn_from_chance:
             self._add_field("despawn_from_chance", despawn_from_chance)
         if despawn_from_distance is not None:
-            self._add_field("despawn_from_distance", despawn_from_distance)
+            if (
+                not isinstance(despawn_from_distance, (tuple, list))
+                or not len(despawn_from_distance) == 2
+                or not all(isinstance(i, int) for i in despawn_from_distance)
+            ):
+                raise ValueError("despawn_from_distance must be a tuple of 2 integers")
+
+            if despawn_from_distance[0] < 0 or despawn_from_distance[1] < 0:
+                raise ValueError("despawn_from_distance values must be non-negative")
+            if despawn_from_distance[0] > despawn_from_distance[1]:
+                raise ValueError("despawn_from_distance minimum must be less than or equal to maximum")
+
+            self._add_field(
+                "despawn_from_distance",
+                {"min_distance": despawn_from_distance[0], "max_distance": despawn_from_distance[1]},
+            )
         if not despawn_from_inactivity:
             self._add_field("despawn_from_inactivity", despawn_from_inactivity)
         if not despawn_from_simulation_edge:
@@ -5212,6 +5276,35 @@ class EntityDespawn(_BaseComponent):
             min_distance, max_distance = range
             self._add_field("despawn_from_distance", {"min_distance": min_distance, "max_distance": max_distance})
         return self
+
+
+class EntityGameEventMovementTracking(_BaseComponent):
+    _identifier = "minecraft:game_event_movement_tracking"
+
+    def __init__(
+        self,
+        emit_flap: bool = False,
+        emit_move: bool = True,
+        emit_swim: bool = True,
+    ) -> None:
+        """Allows an entity to emit entityMove, swim and flap game events, depending on the block the entity is moving through. It is added by default to every mob.
+
+        Parameters:
+            emit_flap (bool, optional): If true, the flap game event will be emitted when the entity moves through air. Defaults to False.
+            emit_move (bool, optional): If true, the entityMove game event will be emitted when the entity moves on ground or through a solid. Defaults to True.
+            emit_swim (bool, optional): If true, the swim game event will be emitted when the entity moves through a liquid. Defaults to True.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_game_event_movement_tracking
+        """
+        super().__init__("game_event_movement_tracking")
+
+        if emit_flap:
+            self._add_field("emit_flap", emit_flap)
+        if not emit_move:
+            self._add_field("emit_move", emit_move)
+        if not emit_swim:
+            self._add_field("emit_swim", emit_swim)
 
 
 # AI Goals ==========================================================================
@@ -6734,7 +6827,7 @@ class EntityAIRamAttack(_BaseAIGoal):
         if baby_knockback_modifier != 0.333333:
             self._add_field("baby_knockback_modifier", baby_knockback_modifier)
         if cooldown_range != [10, 20]:
-            self._add_field("cooldown_range", cooldown_range)
+            self._add_field("cooldown_range", {"min": cooldown_range[0], "max": cooldown_range[1]})
         if knockback_force != 5:
             self._add_field("knockback_force", knockback_force)
         if knockback_height != 0.1:
@@ -7815,9 +7908,9 @@ class EntityAIRiseToLiquidLevel(_BaseAIGoal):
         """Compels an entity to rise to the top of a liquid block if they are located in one or have spawned under a liquid block.
 
         Parameters:
-            liquid_y_offset (float, optional): Description. Defaults to 0.0.
-            rise_delta (float, optional): Description. Defaults to 0.0.
-            sink_delta (float, optional): Description. Defaults to 0.0.
+            liquid_y_offset (float, optional): Target distance down from the liquid surface. i.e. Positive values move the target Y down. Defaults to 0.0.
+            rise_delta (float, optional): Movement up in Y per tick when below the liquid surface. Defaults to 0.0.
+            sink_delta (float, optional): Movement down in Y per tick when above the liquid surface. Defaults to 0.0.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_rise_to_liquid_level
@@ -9033,3 +9126,169 @@ class EntityAIInspectBookshelf(_BaseAIGoal):
             self._add_field("search_range", search_range)
         if speed_multiplier != 1.0:
             self._add_field("speed_multiplier", speed_multiplier)
+
+
+class EntityAIRandomFly(_BaseAIGoal):
+    _identifier = "minecraft:behavior.random_fly"
+
+    def __init__(
+        self,
+        avoid_damage_blocks: bool = False,
+        can_land_on_trees: bool = True,
+        speed_multiplier: float = 1.0,
+        xz_dist: int = 10,
+        y_dist: int = 7,
+        y_offset: float = 0.0,
+    ) -> None:
+        """Allows a mob to randomly fly around.
+
+        Parameters:
+            avoid_damage_blocks (bool, optional): Description. Defaults to False.
+            can_land_on_trees (bool, optional): If true, the mob can stop flying and land on a tree instead of the ground. Defaults to True.
+            speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
+            xz_dist (int, optional): Distance in blocks on ground that the mob will look for a new spot to move to. Must be at least 1. Defaults to 10.
+            y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
+            y_offset (float, optional): Description. Defaults to 0.0.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_fly
+        """
+        super().__init__("behavior.random_fly")
+
+        if avoid_damage_blocks:
+            self._add_field("avoid_damage_blocks", avoid_damage_blocks)
+        if not can_land_on_trees:
+            self._add_field("can_land_on_trees", can_land_on_trees)
+        if speed_multiplier != 1.0:
+            self._add_field("speed_multiplier", speed_multiplier)
+        if xz_dist != 10:
+            self._add_field("xz_dist", max(1, xz_dist))
+        if y_dist != 7:
+            self._add_field("y_dist", max(1, y_dist))
+        if y_offset != 0.0:
+            self._add_field("y_offset", y_offset)
+
+
+class EntityAICircleAroundAnchor(_BaseAIGoal):
+    _identifier = "minecraft:behavior.circle_around_anchor"
+
+    def __init__(
+        self,
+        angle_change: float = 15.0,
+        goal_radius: float = 0.5,
+        height_above_target_range: tuple[int, int] = None,
+        height_adjustment_chance: float = 0.002857,
+        height_offset_range: tuple[int, int] = None,
+        radius_adjustment_chance: float = 0.004,
+        radius_change: float = 1.0,
+        radius_range: tuple[int, int] = None,
+        speed_multiplier: float = 1.0,
+    ) -> None:
+        """Causes an entity to circle around an anchor point placed near a point or target.
+
+        Parameters:
+            angle_change (float, optional): Number of degrees to change the entity's facing by when selecting the next anchor point. Defaults to 15.0.
+            goal_radius (float, optional): Maximum distance from the anchor-point in which the entity considers itself to have reached the anchor point. Defaults to 0.5.
+            height_above_target_range (tuple[int, int], optional): The number of blocks above the target that the next anchor point can be set. Only used when tracking a target. Defaults to None.
+            height_adjustment_chance (float, optional): Percent chance to increase or decrease the current height around the anchor point. Defaults to 0.002857.
+            height_offset_range (tuple[int, int], optional): Vertical distance from the anchor point the entity must stay within upon height adjustment. Defaults to None.
+            radius_adjustment_chance (float, optional): Percent chance to increase the current movement radius around the anchor point. Defaults to 0.004.
+            radius_change (float, optional): Number of blocks to increase the movement radius by upon successful radius adjustment. Defaults to 1.0.
+            radius_range (tuple[int, int], optional): Horizontal distance from the anchor point the entity must stay within upon radius adjustment. Defaults to None.
+            speed_multiplier (float, optional): Multiplier for the speed at which the entity travels to its next desired position. Defaults to 1.0.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_circle_around_anchor
+        """
+        super().__init__("behavior.circle_around_anchor")
+
+        if angle_change != 15.0:
+            self._add_field("angle_change", angle_change)
+        if goal_radius != 0.5:
+            self._add_field("goal_radius", goal_radius)
+        if height_above_target_range is not None:
+            self._add_field(
+                "height_above_target_range",
+                {"min": height_above_target_range[0], "max": height_above_target_range[1]},
+            )
+        if height_adjustment_chance != 0.002857:
+            self._add_field("height_adjustment_chance", height_adjustment_chance)
+        if height_offset_range is not None:
+            self._add_field("height_offset_range", {"min": height_offset_range[0], "max": height_offset_range[1]})
+        if radius_adjustment_chance != 0.004:
+            self._add_field("radius_adjustment_chance", radius_adjustment_chance)
+        if radius_change != 1.0:
+            self._add_field("radius_change", radius_change)
+        if radius_range is not None:
+            self._add_field("radius_range", {"min": radius_range[0], "max": radius_range[1]})
+        if speed_multiplier != 1.0:
+            self._add_field("speed_multiplier", speed_multiplier)
+
+
+class EntityAISwoopAttack(_BaseAIGoal):
+    _identifier = "minecraft:behavior.swoop_attack"
+
+    def __init__(
+        self,
+        damage_reach: float = 0.2,
+        delay_range: tuple[Seconds, Seconds] = None,
+        speed_multiplier: float = 1.0,
+    ) -> None:
+        """Allows an entity to attack using swoop attack behavior; Ideal for use with flying mobs. The behavior ends if the entity has a horizontal collision or gets hit.
+
+        Parameters:
+            damage_reach (float, optional): Added to the base size of the entity, to determine the target's maximum allowable distance, when trying to deal attack damage. Defaults to 0.2.
+            delay_range (tuple[Seconds, Seconds], optional): Minimum and maximum cooldown time-range (in seconds) between each attempted swoop attack. Defaults to None.
+            speed_multiplier (float, optional): During swoop attack behavior, this determines the multiplier the entity's speed is modified by when moving toward the target. Defaults to 1.0.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swoop_attack
+        """
+        super().__init__("behavior.swoop_attack")
+
+        if damage_reach != 0.2:
+            self._add_field("damage_reach", damage_reach)
+        if delay_range is not None:
+            if (
+                not isinstance(delay_range, (tuple, list))
+                or len(delay_range) != 2
+                or not all(isinstance(i, (int, float)) for i in delay_range)
+            ):
+                raise ValueError("delay_range must be a tuple of 2 numbers (int or float)")
+            self._add_field("delay_range", {"min": delay_range[0], "max": delay_range[1]})
+        if speed_multiplier != 1.0:
+            self._add_field("speed_multiplier", speed_multiplier)
+
+
+class EntityAISwimUpForBreath(_BaseAIGoal):
+    _identifier = "minecraft:behavior.swim_up_for_breath"
+
+    def __init__(
+        self,
+        material_type: Literal["water", "lava", "any"] = "water",
+        search_height: int = 16,
+        search_radius: int = 4,
+        speed_mod: float = 1.4,
+    ) -> None:
+        """Allows the mob to try to move to air once it is close to running out of its total breathable supply. Requires "minecraft:breathable".
+
+        Parameters:
+            material_type (str, optional): The material the mob is traveling in. Options are: "water", "lava", or "any". Defaults to "water".
+            search_height (int, optional): The height (in blocks) above the mob's current position that it will search for a valid air block to move to. If a valid block cannot be found, the mob will move to the position this many blocks above it. Defaults to 16.
+            search_radius (int, optional): The radius (in blocks) around the mob's current position that it will search for a valid air block to move to. Defaults to 4.
+            speed_mod (float, optional): Movement speed multiplier of the mob when using this Goal. Defaults to 1.4.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_up_for_breath
+        """
+        super().__init__("behavior.swim_up_for_breath")
+        self._require_components(EntityBreathable)
+
+        if material_type != "water":
+            self._add_field("material_type", material_type)
+        if search_height != 16:
+            self._add_field("search_height", search_height)
+        if search_radius != 4:
+            self._add_field("search_radius", search_radius)
+        if speed_mod != 1.4:
+            self._add_field("speed_mod", speed_mod)

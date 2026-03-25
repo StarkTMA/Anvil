@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Literal, Mapping
 
 from anvil import ANVIL
 from anvil.api.actors.actors import _Components
@@ -143,6 +143,33 @@ class _BlockTraits:
         """
         self._traits["minecraft:connection"] = {"enabled_states": traits}
 
+    def multi_block(self, direction: Literal["up", "down"], part_count: int = 2):
+        """Defines a block composed of multiple block parts.
+
+        Multi blocks treat all parts as a single block, similar to doors. When the
+        block uses ``minecraft:selection_box`` with a raw ``true`` value, Bedrock
+        expands the selection outline by combining the AABBs of each part.
+
+        Parameters:
+            direction (Literal["up", "down"]): Direction the parts are placed from.
+            part_count (int, optional): Number of parts in the multi block. Valid range is [2, 4]. Defaults to 2.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits
+        """
+        if direction not in ("up", "down"):
+            raise ValueError("multi_block direction must be either 'up' or 'down'.")
+        if not 2 <= part_count <= 4:
+            raise ValueError("multi_block part_count must be between 2 and 4.")
+
+        self._traits["minecraft:multi_block"] = {
+            "enabled_states": ["minecraft:multi_block_part"],
+            "parts": part_count,
+            "direction": direction,
+        }
+
+        return self
+
     @property
     def export(self):
         return self._traits
@@ -171,7 +198,8 @@ class _BlockServerDescription(MinecraftDescription):
         if len(range) > 16:
             raise ValueError(f"A block state can only have up to 16 values. {self._object_type}[{self.name}].")
 
-        self._description["description"]["states"][f"{CONFIG.NAMESPACE}:{name}"] = range
+        state_name = name if ":" in name else f"{CONFIG.NAMESPACE}:{name}"
+        self._description["description"]["states"][state_name] = range
         return self
 
     def menu_category(

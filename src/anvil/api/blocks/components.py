@@ -663,14 +663,26 @@ class BlockCollisionBox(_BaseComponent):
 class BlockSelectionBox(_BaseComponent):
     _identifier = "minecraft:selection_box"
 
+    @overload
+    def __init__(self, value: bool) -> None:
+        pass
+
+    @overload
     def __init__(self, size: list[float], origin: list[float]) -> None:
+        pass
+
+    def __init__(self, size: bool | list[float], origin: list[float] = None) -> None:
         """Defines the area of the block that is selected by the player's cursor.
 
         Parameters:
-            size (list[float]): The size of the selection box.
+            size (bool | list[float]): The size of the selection box, or a raw boolean value.
             origin (list[float]): The origin of the selection box.
         """
         super().__init__("selection_box")
+        if isinstance(size, bool):
+            self._set_value(size)
+            return
+
         if size == (0, 0, 0):
             self._set_value(False)
         else:

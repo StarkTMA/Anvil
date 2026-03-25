@@ -3,7 +3,7 @@ from typing import Dict, Literal, Tuple, overload
 
 from anvil.api.actors.actors import Entity, ItemTexturesObject
 from anvil.api.core.components import _BaseComponent
-from anvil.api.core.enums import DamageCause, EnchantsSlots, ItemRarity, Slots
+from anvil.api.core.enums import DamageCause, EnchantsSlots, Rarity, Slots
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import RGB, RGBA, Identifier, Seconds, Tick
 from anvil.api.logic.molang import Molang
@@ -295,6 +295,52 @@ class ItemDamageAbsorption(_BaseComponent):
         self._add_field("absorbable_causes", absorbable_causes)
 
 
+class ItemDurabilitySensor(_BaseComponent):
+    _identifier = "minecraft:durability_sensor"
+
+    def __init__(self) -> None:
+        """Enables an item to emit effects when it receives damage.
+
+        This component requires ``minecraft:durability`` and at least one
+        durability threshold entry.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor
+        """
+        super().__init__("durability_sensor")
+        self._require_components(ItemDurability)
+        self._add_field("durability_thresholds", [])
+
+    def add_threshold(
+        self,
+        durability: int,
+        particle_type: str | None = None,
+        sound_event: str | None = None,
+    ):
+        """Adds a durability threshold entry.
+
+        Parameters:
+            durability (int): Emit effects when item durability is less than or equal to this value.
+            particle_type (str | None): Particle effect to emit when the threshold is met.
+            sound_event (str | None): Sound effect to emit when the threshold is met.
+        """
+        entry = {"durability": max(0, durability)}
+
+        if particle_type is not None:
+            entry["particle_type"] = particle_type
+        if sound_event is not None:
+            entry["sound_event"] = sound_event
+
+        self._component["durability_thresholds"].append(entry)
+        return self
+
+    def _export(self):
+        if not self._component["durability_thresholds"]:
+            raise ValueError("ItemDurabilitySensor requires at least one durability threshold")
+
+        return super()._export()
+
+
 # Require ITEM_SERVER_VERSION >= 1.21.60
 class ItemCompostable(_BaseComponent):
     _identifier = "minecraft:compostable"
@@ -402,19 +448,19 @@ class ItemBundleInteraction(_BaseComponent):
 class ItemRarity(_BaseComponent):
     _identifier = "minecraft:rarity"
 
-    def __init__(self, value: ItemRarity) -> None:
+    def __init__(self, value: Rarity) -> None:
         """Specifies the base rarity of the item, affecting the color of its name unless overridden by
         'minecraft:hover_text_color'.
 
         Parameters:
-            value (ItemRarity): The base rarity of the item.
+            value (Rarity): The base rarity of the item.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_rarity
         """
         super().__init__("rarity")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
-        self._set_value("value", value)
+        self._set_value(value)
 
 
 class ItemDyeable(_BaseComponent):
@@ -565,7 +611,7 @@ class ItemCanDestroyInCreative(_BaseComponent):
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative
         """
-        super().__init__("can_destroy_in_creative ")
+        super().__init__("can_destroy_in_creative")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
 
         self._set_value(value)
@@ -587,24 +633,6 @@ class ItemHoverTextColor(_BaseComponent):
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
 
         self._set_value(color)
-
-
-class ItemLiquidClipped(_BaseComponent):
-    _identifier = "minecraft:can_destroy_in_creative"
-
-    def __init__(self, value: bool) -> None:
-        """Determines if an item will break blocks in Creative Mode while swinging.
-
-        Parameters:
-            value (bool): If an item will break blocks in Creative Mode while swinging.
-
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative
-        """
-        super().__init__("can_destroy_in_creative")
-        self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
-
-        self._set_value(value)
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.20
@@ -879,12 +907,14 @@ class ItemBlockPlacer(_BaseComponent):
         self,
         block: MinecraftItemDescriptor | Identifier,
         replace_block_item: bool = False,
+        aligned_placement: bool = False,
     ) -> None:
         """Sets the item as a Planter item component for blocks. Planter items are items that can be planted into another block.
 
         Parameters:
             block (str): Set the placement block name for the planter item.
             replace_block_item (bool): If true, the item will be registered as the item for this block. This item will be returned by default when the block is broken/picked. Note: the identifier for this item must match the block's identifier for this field to be valid.
+            aligned_placement (bool): When true, block placement through this item will be aligned while holding the interaction button down.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer
@@ -897,11 +927,50 @@ class ItemBlockPlacer(_BaseComponent):
         self._add_field("block", str(block))
         if replace_block_item:
             self._add_field("replace_block_item", replace_block_item)
+        if aligned_placement:
+            self._add_field("aligned_placement", aligned_placement)
 
     def use_on(self, *blocks: str):
         """List of block descriptors that contain blocks that this item can be used on."""
         self._add_field("use_on", blocks)
         return self
+
+
+class ItemSeed(_BaseComponent):
+    _identifier = "minecraft:seed"
+
+    def __init__(
+        self,
+        crop_result: MinecraftBlockDescriptor | Identifier,
+        plant_at: list[MinecraftBlockDescriptor | Identifier | str] | None = None,
+        plant_at_any_solid_surface: bool = False,
+        plant_at_face: Literal["UP", "DOWN"] | None = None,
+    ) -> None:
+        """Sets the item as a seed that can be planted to grow crops.
+
+        Parameters:
+            crop_result (MinecraftBlockDescriptor | Identifier): The block identifier placed when the seed is planted.
+            plant_at (list[MinecraftBlockDescriptor | Identifier | str] | None): Block identifiers this seed can be planted on or attached to.
+            plant_at_any_solid_surface (bool): Deprecated legacy setting that allows planting on any solid surface.
+            plant_at_face (Literal["UP", "DOWN"] | None): Deprecated legacy setting for the face the seed can be planted on.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_seed
+        """
+        super().__init__("seed")
+        self._enforce_version(ITEM_SERVER_VERSION, "1.10.0")
+
+        if not plant_at and not plant_at_any_solid_surface:
+            raise ValueError("ItemSeed requires plant_at unless plant_at_any_solid_surface is true")
+
+        self._add_field("crop_result", str(crop_result))
+
+        if plant_at:
+            self._add_field("plant_at", [str(block) for block in plant_at])
+        if plant_at_any_solid_surface:
+            self._add_field("plant_at_any_solid_surface", plant_at_any_solid_surface)
+        if plant_at_face is not None:
+            self._add_field("plant_at_face", plant_at_face)
 
 
 class ItemRecord(_BaseComponent):
@@ -1086,7 +1155,7 @@ class ItemDisplayName(_BaseComponent):
         super().__init__("display_name")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
         if not localized_key:
-            localized_key = f'item.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_").replace("\\n", "_")}.name'
+            localized_key = f'item.{CONFIG.NAMESPACE}:{display_name.lower().replace(" ", "_").replace("\\n", "_").replace("_", "")}.name'
 
         AnvilTranslator().add_localization_entry(localized_key, display_name)
         self._add_field("value", localized_key)

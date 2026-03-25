@@ -112,12 +112,14 @@ class PrettyPrintedEncoder(json.JSONEncoder):
             inner = ",\n".join(self._indent_str * (_level + 1) + i for i in items)
             return f"{{\n{inner}\n{self._indent_str * _level}}}"
 
-        elif o.__class__.__name__ == "MinecraftBlockDescriptor" or o.__class__.__name__ == "Block":
+        elif o.__class__.__name__ in ["MinecraftBlockDescriptor", "Block"]:
             return self.encode(self.shorten_dict(o.descriptor()), _level)
         elif o.__class__.__name__ in [
             "MinecraftItemDescriptor",
             "MinecraftEntityDescriptor",
             "MinecraftBiomeDescriptor",
+            "Item",
+            "Entity",
         ]:
             return self.encode(self.shorten_dict(o.identifier), _level)
         elif o.__class__.__name__ == "LootTable":

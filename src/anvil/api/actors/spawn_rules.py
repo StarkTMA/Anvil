@@ -60,7 +60,7 @@ class _SpawnRuleCondition:
         """Initialize an empty spawn condition set."""
         self._condition = {}
 
-    def BiomeFilter(self, filter: Filter):
+    def biome_filter(self, filter: list[Filter]):
         """Specifies which biomes the entity can spawn in using biome tags.
 
         Biome tags include: animal, monster, desert, forest, jungle, ocean, nether,
@@ -74,8 +74,8 @@ class _SpawnRuleCondition:
         - ocean: All ocean biomes
 
         Parameters:
-            filter (Filter): Filter condition to test biome tags
-                (e.g., Filter.has_biome_tag("monster")).
+            filter (list[Filter]): List of filter conditions to test biome tags
+                (e.g., [Filter.has_biome_tag("monster")]).
 
         Returns:
             _SpawnRuleCondition: Self for method chaining.
@@ -85,10 +85,10 @@ class _SpawnRuleCondition:
         """
         if "minecraft:biome_filter" not in self._condition:
             self._condition.update({"minecraft:biome_filter": []})
-        self._condition["minecraft:biome_filter"].append(filter)
+        self._condition["minecraft:biome_filter"].extend(filter)
         return self
 
-    def BrightnessFilter(
+    def brightness_filter(
         self,
         min_brightness: int = 0,
         max_brightness: int = 15,
@@ -125,7 +125,7 @@ class _SpawnRuleCondition:
         )
         return self
 
-    def DelayFilter(self, minimum: int, maximum: int, identifier: str, spawn_chance: int):
+    def delay_filter(self, minimum: int, maximum: int, identifier: str, spawn_chance: int):
         """Sets specific time delays before entities will spawn.
 
         This creates a delay mechanism where the entity specified by identifier
@@ -156,7 +156,7 @@ class _SpawnRuleCondition:
 
         return self
 
-    def DensityLimit(self, surface: int = -1, underground: int = -1):
+    def density_limit(self, surface: int = -1, underground: int = -1):
         """Limits the number of this entity type that can spawn in a given area.
 
         This provides local density control separate from global population limits.
@@ -182,7 +182,7 @@ class _SpawnRuleCondition:
         self._condition.update(density)
         return self
 
-    def DistanceFilter(self, min: int, max: int):
+    def distance_filter(self, min: int, max: int):
         """Sets the distance range from players where entities can spawn.
 
         Entities will only spawn within this distance range from the nearest player.
@@ -202,10 +202,10 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:distance_filter": {"min": min, "max": max}})
         return self
 
-    def DifficultyFilter(
+    def difficulty_filter(
         self,
         min_difficulty: Difficulty = Difficulty.Easy,
-        max_difficulty: Difficulty = Difficulty.Hard,
+        max_difficulty: Difficulty = Difficulty.Hardcore,
     ):
         """Restricts spawning to specific difficulty levels.
 
@@ -227,14 +227,14 @@ class _SpawnRuleCondition:
         self._condition.update(
             {
                 "minecraft:difficulty_filter": {
-                    "min": min_difficulty,
-                    "max": max_difficulty,
+                    "min": min_difficulty if min_difficulty != Difficulty.Easy else None,
+                    "max": max_difficulty if max_difficulty != Difficulty.Hardcore else None,
                 }
             }
         )
         return self
 
-    def EntityTypes(
+    def entity_types(
         self,
         filters: Filter = None,
         max_dist: float = 16,
@@ -276,7 +276,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:entity_types ": entity_types})
         return self
 
-    def HeightFilter(self, min: int, max: int):
+    def height_filter(self, min: int, max: int):
         """Restricts spawning to specific Y-coordinate ranges.
 
         Useful for creating entities that only spawn at certain heights,
@@ -295,7 +295,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:height_filter": {"min": min, "max": max}})
         return self
 
-    def Herd(
+    def herd(
         self,
         min_size: int = 1,
         max_size: int = 4,
@@ -328,7 +328,7 @@ class _SpawnRuleCondition:
         self._condition["minecraft:herd"].append(self_herd)
         return self
 
-    def MobEventFilter(
+    def mob_event_filter(
         self,
         event: Literal[
             "minecraft:pillager_patrols_event",
@@ -357,7 +357,7 @@ class _SpawnRuleCondition:
 
         return self
 
-    def PermuteType(self, entity_type: str, weight: int = 10, spawn_event: str = None):
+    def permute_type(self, entity_type: str, weight: int = 10, spawn_event: str = None):
         """Creates a chance for spawned entities to be replaced with a different type.
 
         Allows spawn variation where the original entity has a chance to spawn as
@@ -380,7 +380,7 @@ class _SpawnRuleCondition:
         self._condition["minecraft:permute_type"].append(self_permute_type)
         return self
 
-    def PlayerInVillageFilter(self, distance: int, village_border_tolerance: int):
+    def player_in_village_filter(self, distance: int, village_border_tolerance: int):
         """Filters spawning based on player proximity to villages.
 
         Controls whether entities can spawn based on how close players are to villages.
@@ -406,8 +406,7 @@ class _SpawnRuleCondition:
         )
         return self
 
-    @property
-    def SpawnInLava(self):
+    def spawns_in_lava(self):
         """Allows the entity to spawn in lava blocks.
 
         Enables spawning in lava source blocks, typically used for nether creatures
@@ -422,7 +421,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:spawns_lava": {}})
         return self
 
-    def SpawnsOnBlockFilter(self, blocks: tuple[MinecraftBlockDescriptor]):
+    def spawns_on_block_filter(self, blocks: tuple[MinecraftBlockDescriptor]):
         """Restricts spawning to specific block types.
 
         Entity will only spawn on top of the specified blocks. Useful for creating
@@ -442,7 +441,7 @@ class _SpawnRuleCondition:
         self._condition["minecraft:spawns_on_block_filter"] = [block.identifier for block in blocks]
         return self
 
-    def SpawnsOnBlockPreventedFilter(self, blocks: tuple[MinecraftBlockDescriptor]):
+    def spawns_on_block_prevented_filter(self, blocks: tuple[MinecraftBlockDescriptor]):
         """Prevents spawning on specific block types.
 
         Entity will not spawn on the specified blocks, even if other conditions are met.
@@ -459,8 +458,7 @@ class _SpawnRuleCondition:
         self._condition["minecraft:spawns_on_block_prevented_filter"] = [block.identifier for block in blocks]
         return self
 
-    @property
-    def SpawnOnSurface(self):
+    def spawns_on_surface(self):
         """Allows the entity to spawn on the world surface.
 
         Enables spawning on the topmost solid blocks exposed to sky.
@@ -475,8 +473,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:spawns_on_surface": {}})
         return self
 
-    @property
-    def SpawnUnderground(self):
+    def spawns_underground(self):
         """Allows the entity to spawn in underground locations.
 
         Enables spawning in caves, tunnels, and other enclosed underground spaces.
@@ -491,8 +488,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:spawns_underground": {}})
         return self
 
-    @property
-    def SpawnUnderwater(self):
+    def spawns_underwater(self):
         """Allows the entity to spawn in water blocks.
 
         Enables spawning inside water source blocks or flowing water.
@@ -507,7 +503,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:spawns_underwater": {}})
         return self
 
-    def Weight(self, weight: int = 0):
+    def weight(self, weight: int = 0):
         """Sets spawn priority relative to other valid spawn conditions.
 
         Higher weight values make this spawn condition more likely to be chosen
@@ -527,7 +523,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:weight": {"default": weight}})
         return self
 
-    def WorldAgeFilter(self, min: int):
+    def world_age_filter(self, min: int):
         """Prevents spawning until the world reaches a minimum age.
 
         Useful for creating entities that only appear in established worlds
@@ -546,8 +542,7 @@ class _SpawnRuleCondition:
 
         return self
 
-    @property
-    def DisallowSpawnsInBubble(self):
+    def disallow_spawns_in_bubble(self):
         """Prevents the entity from spawning in water bubble columns.
 
         Blocks spawning in bubble columns created by magma blocks or soul sand underwater.
@@ -562,7 +557,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:disallow_spawns_in_bubble": {}})
         return self
 
-    def SpawnEvent(self, event: str = "minecraft:entity_spawned"):
+    def spawn_event(self, event: str = "minecraft:entity_spawned"):
         """Specifies an event to trigger when the entity spawns.
 
         Allows custom initialization or setup when entities are spawned through spawn rules.

@@ -18,25 +18,26 @@ class _processor_predicates:
     class _input_predicate:
         def __init__(self, processor: dict):
             self._dict = processor
+            self._predicate_type = "input_predicate"
 
         def always_true(self):
-            self._dict["input_predicate"] = {"predicate_type": "minecraft:always_true"}
+            self._dict[self._predicate_type] = {"predicate_type": "minecraft:always_true"}
 
         def block_match(self, block: MinecraftBlockDescriptor | Identifier):
-            self._dict["input_predicate"] = {
+            self._dict[self._predicate_type] = {
                 "predicate_type": "minecraft:block_match",
                 "block": block if isinstance(block, str) else block.identifier,
             }
 
         def random_block_match(self, block: MinecraftBlockDescriptor | Identifier, probability: float):
-            self._dict["input_predicate"] = {
+            self._dict[self._predicate_type] = {
                 "predicate_type": "minecraft:random_block_match",
                 "block": block if isinstance(block, str) else block.identifier,
                 "probability": clamp(probability, 0.0, 1.0),
             }
 
         def block_state_match(self, block: MinecraftBlockDescriptor | Identifier):
-            self._dict["input_predicate"] = {
+            self._dict[self._predicate_type] = {
                 "predicate_type": "minecraft:blockstate_match",
                 "block_state": {"name": block} if isinstance(block, str) else block,
             }
@@ -46,7 +47,7 @@ class _processor_predicates:
             block: MinecraftBlockDescriptor | Identifier,
             probability: float,
         ):
-            self._dict["input_predicate"] = {
+            self._dict[self._predicate_type] = {
                 "predicate_type": "minecraft:random_blockstate_match",
                 "block_state": (
                     {
@@ -59,7 +60,7 @@ class _processor_predicates:
             }
 
         def tag_match(self, tag: str):
-            self._dict["input_predicate"] = {
+            self._dict[self._predicate_type] = {
                 "predicate_type": "minecraft:tag_match",
                 "tag": tag,
             }
@@ -91,9 +92,10 @@ class _processor_predicates:
         def get(self):
             return self._dict
 
-    class _location_predicate:
+    class _location_predicate(_input_predicate):
         def __init__(self, processor: dict):
-            self._dict = processor
+            super().__init__(processor)
+            self._predicate_type = "location_predicate"
 
         def get(self):
             return self._dict
@@ -127,11 +129,36 @@ class _processor_predicates:
             self._dict["output_state"] = block if isinstance(block, str) else block.identifier
 
     def __init__(self, processor: dict):
-        self.input_predicate = self._input_predicate(processor)
-        self.position_predicate = self._position_predicate(processor)
-        self.location_predicate = self._location_predicate(processor)
-        self.block_entity_modifier = self._block_entity_modifier(processor)
-        self.output_state = self._output_state(processor)
+        self.__input_predicate = self._input_predicate(processor)
+        self.__position_predicate = self._position_predicate(processor)
+        self.__location_predicate = self._location_predicate(processor)
+        self.__block_entity_modifier = self._block_entity_modifier(processor)
+        self.__output_state = self._output_state(processor)
+
+    @property
+    def input_predicate(self) -> _input_predicate:
+        """Defines how the game matches blocks in the structure before applying a rule."""
+        return self.__input_predicate
+
+    @property
+    def position_predicate(self) -> _position_predicate:
+        """Applies rules based on a block's position relative to the structure origin."""
+        return self.__position_predicate
+
+    @property
+    def location_predicate(self) -> _location_predicate:
+        """Matches the existing world block being replaced, rather than the block from the structure."""
+        return self.__location_predicate
+
+    @property
+    def block_entity_modifier(self) -> _block_entity_modifier:
+        """Configures block-entity data, such as adding loot to chests or barrels."""
+        return self.__block_entity_modifier
+
+    @property
+    def output_state(self) -> _output_state:
+        """Specifies the block state that will be placed when the rule matches."""
+        return self.__output_state
 
 
 class _processor_builder:
@@ -647,6 +674,10 @@ class JigsawStructureSet(AddonObject):
             placement_type (Literal["minecraft:random_spread"]): Describes where structures in the set spawn relative to one another. Currently, the only placement type supported is random_spread, which scatters structures randomly with a given separation and spacing.
         """
         super().__init__(name)  # "structure_set"
+        if separation >= spacing / 2:
+            raise ValueError(
+                f"Invalid spacing and separation combination for structure set {name}. Value 'separation' must be less than half of 'spacing'."
+            )
         self.content(
             JsonSchemes.jigsaw_structure_set(self.identifier, separation, spacing, spread_type, placement_type)
         )
@@ -658,7 +689,8 @@ class JigsawStructureSet(AddonObject):
         max_depth: int,
         start_height: tuple[int, int] | int,
         placement_step: Literal[
-            "raw_generation" "lakes",
+            "raw_generation",
+            "lakes",
             "local_modifications",
             "underground_structures",
             "surface_structures",

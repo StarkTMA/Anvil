@@ -1676,6 +1676,9 @@ class MinecraftItemTypes:
 
     def GoldOre() -> MinecraftItemDescriptor:
         return item_factory("minecraft:gold_ore")
+    
+    def GoldenDandelion() -> MinecraftItemDescriptor:
+        return item_factory("minecraft:golden_dandelion")
 
     def GoldenApple() -> MinecraftItemDescriptor:
         return item_factory("minecraft:golden_apple")

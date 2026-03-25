@@ -726,19 +726,19 @@ class _LootPool:
 
     def __init__(
         self,
-        rolls: int | list[int, int] = 1,
+        rolls: int | tuple[int, int] = 1,
     ):
         """Initialize a loot pool with the specified number of rolls.
 
         Parameters:
-            rolls (int | list[int, int]): Number of times to roll this pool.
+            rolls (int | tuple[int, int]): Number of times to roll this pool.
                 Can be exact number or [min, max] range. Defaults to 1.
         """
         self._pool = {}
         self._entries: list[_LootPoolEntry] = []
         if isinstance(rolls, int):
             self._pool["rolls"] = rolls
-        elif isinstance(rolls, tuple):
+        elif isinstance(rolls, (tuple, list)):
             self._pool["rolls"] = {"min": min(rolls), "max": max(rolls)}
 
     def tiers(self, bonus_chance: float = 0.0, bonus_rolls: int = 0, initial_range: int = 0):
@@ -834,7 +834,7 @@ class LootTable(AddonObject):
 
     def pool(
         self,
-        rolls: int | list[int, int] = 1,
+        rolls: int | tuple[int, int] = 1,
     ):
         """Create a new loot pool in this loot table.
 

@@ -1,7 +1,7 @@
 {
     "format_version": "{{ format_version }}",
     "minecraft:recipe_furnace": {
-        "tags": "{{ tags }}",
+        "tags": {{ tags }},
         "description": {
             "identifier": "{{ identifier }}"
         }

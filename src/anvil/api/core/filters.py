@@ -2177,3 +2177,29 @@ class Filter:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_item_with_component
         """
         return cls._construct_filter("has_item_with_component", subject, operator, None, component)
+
+    @classmethod
+    def is_tamed(
+        cls,
+        value: bool,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        """Tests if the subject is tamed.
+
+        Parameters:
+            value (bool): Whether entity is tamed
+            subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
+            operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
+
+        Returns:
+            dict: Filter testing if entity is tamed
+
+        Example:
+            Filter.is_tamed(True)  # Test if entity is tamed
+
+        Reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_tamed
+        """
+        return cls._construct_filter("is_tamed", subject, operator, None, value)
