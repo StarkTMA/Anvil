@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.6.5**](#version-0965)
+- [**Version 0.9.6.6**](#version-0966)
+- [Version 0.9.6.5](#version-0965)
 - [Version 0.9.6.4](#version-0964)
 - [Version 0.9.6.3](#version-0963)
 - [Version 0.9.6.2](#version-0962)
@@ -87,6 +88,16 @@
 ---
 
 ## Release Series 0.9.x
+
+### Version 0.9.6.6
+
+#### Blockbench
+- Added support for multiblock collections, now you can reference the specific collections in your models and the collections will be exported as separate geometries. This is useful for multiblock structures and blocks with different states that require different geometries. For example, a door can have a "bottom" collection and a "top" collection, and you can reference them in your block description as `BlockGeometry("door", collection="bottom")` and `BlockGeometry("door", collection="top")`.
+
+#### Actors
+- Fixed `EntityPushableByBlock` identifier.
+- Updated `EntityAIFollowMob` scheme.
+
 
 ### Version 0.9.6.5
 

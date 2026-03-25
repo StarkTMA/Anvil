@@ -18,10 +18,15 @@ from anvil.lib.lib import FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
-class BlockBenchSource(StrEnum):
-    ACTOR = "actors"
-    BLOCK = "blocks"
-    ITEM = "items"
+def blockbench_geometry_name(model_name: str, collection: Optional[str] = None) -> str:
+    if collection is None:
+        return model_name
+
+    collection_name = collection.strip()
+    if len(collection_name) == 0:
+        raise ValueError("Collection names cannot be empty.")
+
+    return f"{model_name}.{collection_name}"
 
 
 def adjust_value(val: Union[str, float, int], negate: bool = False) -> Union[float, str]:
@@ -41,6 +46,12 @@ def adjust_value(val: Union[str, float, int], negate: bool = False) -> Union[flo
 
 def process_vector(values: List[Any], negate_indices: List[int]) -> List[Union[float, str]]:
     return [adjust_value(v, i in negate_indices) for i, v in enumerate(values)]
+
+
+class BlockBenchSource(StrEnum):
+    ACTOR = "actors"
+    BLOCK = "blocks"
+    ITEM = "items"
 
 
 class _BlockCulling(AddonObject):
@@ -847,9 +858,51 @@ class _ModelManager:
         self._bounding_box = None
         self._model_center_offset = None
         self._culling = None
+        self._prepared = False
         self._cubes = {}
         self._groups = {}
-        self._bones: Dict[str, Bone] = {}
+        self._queued_geometries: Dict[str, dict] = {}
+        self._collection_aliases: Dict[str, str] = {}
+        self._collections = self._index_collections()
+
+    def _index_collections(self) -> Dict[str, dict]:
+        collections: Dict[str, dict] = {}
+        export_names: set[str] = set()
+
+        for collection in self._bbmodel.get("collections", []):
+            model_identifier = str(collection.get("model_identifier", "")).strip()
+            if len(model_identifier) == 0:
+                continue
+
+            collection_name = str(collection.get("name", "")).strip()
+            if len(collection_name) == 0:
+                raise ValueError(f"Blockbench collection in '{self._name}' is missing a name.")
+
+            export_suffix = model_identifier.lstrip(".") or collection_name
+            if export_suffix.startswith(f"{self._name}."):
+                export_suffix = export_suffix[len(self._name) + 1 :]
+
+            export_name = blockbench_geometry_name(self._name, export_suffix)
+            if export_name in export_names:
+                raise ValueError(
+                    f"Duplicate Blockbench collection export '{export_name}' found in model '{self._name}'."
+                )
+            if collection_name in collections:
+                raise ValueError(f"Duplicate Blockbench collection '{collection_name}' found in model '{self._name}'.")
+
+            collections[collection_name] = {
+                "name": collection_name,
+                "export_name": export_name,
+                "children": collection.get("children", []),
+            }
+            export_names.add(export_name)
+
+            for alias in {collection_name, export_suffix}:
+                if alias in self._collection_aliases and self._collection_aliases[alias] != collection_name:
+                    raise ValueError(f"Collection alias '{alias}' is ambiguous in model '{self._name}'.")
+                self._collection_aliases[alias] = collection_name
+
+        return collections
 
     def _calculate_model_center_offset(self) -> None:
         """Calculate the offset needed to center the entire model around the origin."""
@@ -883,26 +936,83 @@ class _ModelManager:
 
         self._model_center_offset = [center_x, min_y, center_z]
 
-    def process_bones(self, bones: List[Union[str, dict]], parent: str = "root") -> None:
-        for bone in bones:
-            if isinstance(bone, str):
-                bone_dict = self._cubes[bone]
-                if bone_dict["type"] == "cube":
-                    self._bones[parent].add_cube(Cube.from_dict(bone_dict))
-                elif bone_dict["type"] == "locator":
-                    self._bones[parent].add_locator(Locator.from_dict(bone_dict))
-                elif bone_dict["type"] == "mesh" and self._is_wavefront:
-                    self._bones[parent].add_mesh(Mesh.from_dict(bone_dict, parent, self._model_center_offset))
-            elif isinstance(bone, dict):
-                bone_group = self._groups[bone["uuid"]]
-                self._bones[bone_group["name"]] = Bone.from_dict(bone_group, parent if self._bones else None)
-                self.process_bones(bone["children"], bone_group["name"])
+    def _prepare_model(self) -> None:
+        if self._prepared:
+            return
 
-    def process_block_display(self) -> None:
+        if self._is_wavefront:
+            self._calculate_model_center_offset()
+
+        self._cubes = {d["uuid"]: d for d in self._bbmodel["elements"]}
+        self._groups = {d["uuid"]: d for d in self._bbmodel["groups"]}
+        self._prepared = True
+
+    def _resolve_tree_node(self, node: Union[str, dict]) -> Union[str, dict]:
+        if isinstance(node, dict):
+            return node
+        if node in self._groups:
+            group = self._groups[node]
+            return {"uuid": node, "children": group.get("children", [])}
+        if node in self._cubes:
+            return node
+        raise ValueError(f"Unknown Blockbench node '{node}' found in model '{self._name}'.")
+
+    def _ensure_root_bone(self, bones: Dict[str, Bone]) -> Bone:
+        root_bone = bones.get("root")
+        if root_bone is None:
+            root_bone = Bone(name="root", parent=None)
+            bones[root_bone.name] = root_bone
+        return root_bone
+
+    def process_bones(
+        self, bones: List[Union[str, dict]], compiled_bones: Dict[str, Bone], parent: Optional[str] = None
+    ) -> None:
+        for node in bones:
+            resolved_node = self._resolve_tree_node(node)
+
+            if isinstance(resolved_node, str):
+                parent_name = parent if parent is not None else self._ensure_root_bone(compiled_bones).name
+                bone_dict = self._cubes[resolved_node]
+                if bone_dict["type"] == "cube":
+                    compiled_bones[parent_name].add_cube(Cube.from_dict(bone_dict))
+                elif bone_dict["type"] == "locator":
+                    compiled_bones[parent_name].add_locator(Locator.from_dict(bone_dict))
+                elif bone_dict["type"] == "mesh" and self._is_wavefront:
+                    compiled_bones[parent_name].add_mesh(
+                        Mesh.from_dict(bone_dict, parent_name, self._model_center_offset)
+                    )
+                continue
+
+            bone_group = self._groups.get(resolved_node["uuid"])
+            if bone_group is None:
+                raise ValueError(
+                    f"Blockbench group '{resolved_node['uuid']}' referenced by '{self._name}' was not found."
+                )
+
+            bone_name = bone_group["name"]
+            compiled_bones[bone_name] = Bone.from_dict(bone_group, parent)
+            self.process_bones(resolved_node.get("children", []), compiled_bones, bone_name)
+
+    def _build_bones(self, bones: List[Union[str, dict]]) -> Dict[str, Bone]:
+        compiled_bones: Dict[str, Bone] = {}
+        self.process_bones(bones, compiled_bones)
+        return compiled_bones
+
+    def _resolve_collection(self, collection: str) -> dict:
+        collection_name = collection.strip()
+        canonical_name = self._collection_aliases.get(collection_name)
+        if canonical_name is None:
+            available = ", ".join(sorted(self._collections.keys())) or "none"
+            raise ValueError(
+                f"Blockbench collection '{collection}' not found in model '{self._name}'. Available collections: {available}."
+            )
+        return self._collections[canonical_name]
+
+    def process_block_display(self, content: dict) -> None:
         unit = [1, 1, 1]
         zero = [0, 0, 0]
         display_data: dict[str, dict[str, list[str | float | Molang]]] = self._bbmodel.get("display", {})
-        transforms = self._content["minecraft:geometry"][0]["item_display_transforms"]
+        transforms = content["minecraft:geometry"][0]["item_display_transforms"]
         if display_data:
             for display, transform in display_data.items():
                 if any(
@@ -918,7 +1028,7 @@ class _ModelManager:
                     transform["fit_to_frame"] = {}
                     transforms[display] = transform
 
-    def process_geometry_scheme(self) -> None:
+    def process_geometry_scheme(self, model_name: str, bones: Dict[str, Bone]) -> dict:
         width = self._bbmodel["resolution"]["width"]
         height = self._bbmodel["resolution"]["height"]
 
@@ -933,31 +1043,44 @@ class _ModelManager:
         )
         offset = [0, self._bbmodel["visible_box"][2], 0]
 
-        self._content = JsonSchemes.geometry(
-            self._bbmodel["model_identifier"],
+        content = JsonSchemes.geometry(
+            model_name,
             size,
             bounding_box,
             offset,
         )
 
-        self._content["minecraft:geometry"][0]["bones"] = [bone.compile() for bone in self._bones.values()]
+        content["minecraft:geometry"][0]["bones"] = [bone.compile() for bone in bones.values()]
 
         if self._source == BlockBenchSource.BLOCK:
-            self._content["minecraft:geometry"][0]["item_display_transforms"] = {}
+            content["minecraft:geometry"][0]["item_display_transforms"] = {}
 
-    def queue_model(self) -> None:
-        if not self._queued:
-            if self._is_wavefront:
-                self._calculate_model_center_offset()
+        return content
 
-            self._cubes = {d["uuid"]: d for d in self._bbmodel["elements"]}
-            self._groups = {d["uuid"]: d for d in self._bbmodel["groups"]}
-            self.process_bones(self._bbmodel["outliner"], "root")
-            self.process_geometry_scheme()
+    def _queue_geometry(self, model_name: str, bones: List[Union[str, dict]]) -> None:
+        if model_name in self._queued_geometries:
+            return
 
-            if self._source == BlockBenchSource.BLOCK:
-                self.process_block_display()
-            self._queued = True
+        content = self.process_geometry_scheme(model_name, self._build_bones(bones))
+        if self._source == BlockBenchSource.BLOCK:
+            self.process_block_display(content)
+
+        self._queued_geometries[model_name] = content
+
+    def queue_model(self, collection: Optional[str] = None) -> None:
+        self._prepare_model()
+
+        if collection is None:
+            self._queue_geometry(self._bbmodel["model_identifier"], self._bbmodel["outliner"])
+            return
+
+        collection_data = self._resolve_collection(collection)
+        if not collection_data["children"]:
+            raise ValueError(
+                f"Blockbench collection '{collection_data['name']}' in model '{self._name}' has no exportable children."
+            )
+
+        self._queue_geometry(collection_data["export_name"], collection_data["children"])
 
     def block_culling(self) -> _BlockCulling:
         if not self._culling:
@@ -965,10 +1088,11 @@ class _ModelManager:
         return self._culling
 
     def _export(self) -> None:
-        if self._queued:
-            _Geometry(self._bbmodel["model_identifier"], self._content).queue(self._source)
-            if self._culling:
-                self._culling.queue()
+        for model_name, content in self._queued_geometries.items():
+            _Geometry(model_name, content).queue(self._source)
+
+        if self._culling:
+            self._culling.queue()
 
 
 class _Blockbench:

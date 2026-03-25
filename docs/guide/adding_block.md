@@ -69,6 +69,9 @@ block.server.components.add(
 !!! info "Blockbench references"
     The identifier passed to `BlockGeometry(...)` must map to a **Blockbench file** under `assets/blockbench`, and its **internal geometry/material names must match**. Mismatches raise an export error.
 
+!!! info "Blockbench collections"
+    If your `.bbmodel` contains exported Blockbench collections, you can reference a specific part with `BlockGeometry("my_model", collection="bottom")`. Anvil exports that collection as its own geometry and references it as `geometry.<namespace>.my_model.bottom`.
+
 !!! tip "PBR Support"
     `InstanceVariant` inherits from `TextureComponents`, so you can add PBR textures: `InstanceVariant(color="block", normal="block_normal", mer="block_mer")` for advanced rendering with normal maps and metalness/emissive/roughness channels.
 
@@ -185,6 +188,9 @@ def enchanting_plus_table():
         BlockGeometry("enchanting_plus_table"),
         BlockDestructibleByMining(1.5),
     )
+
+    # For a multi-block model exported from Blockbench collections:
+    # BlockGeometry("tower", collection="bottom")
 
     # Crafting recipe (optional)
     recipe = ShapedCraftingRecipe(block.name)

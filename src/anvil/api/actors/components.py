@@ -211,7 +211,7 @@ class EntityKnockbackResistance(_BaseComponent):
 
 
 class EntityPushableByBlock(_BaseComponent):
-    _identifier = "minecraft:pushable"
+    _identifier = "minecraft:pushable_by_block"
 
     def __init__(self, value: bool) -> None:
         """Defines what can push an entity between other entities and pistons.
@@ -222,8 +222,9 @@ class EntityPushableByBlock(_BaseComponent):
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_block
         """
-        super().__init__("pushable")
+        super().__init__("pushable_by_block")
         self._set_value(value)
+
 
 class EntityPushableByEntity(_BaseComponent):
     _identifier = "minecraft:pushable_by_entity"
@@ -3279,7 +3280,7 @@ class EntityAgeable(_BaseComponent):
         """
         self._add_field("pause_growth_items", [str(i) for i in items])
         return self
-    
+
     def reset_growth_items(self, items: list[MinecraftItemDescriptor | Identifier]):
         """Resets the growth of the entity when given specific items.
 
@@ -3290,7 +3291,6 @@ class EntityAgeable(_BaseComponent):
             Ageable: Returns the Ageable component to allow for method chaining.
         """
         self._add_field("reset_growth_items", [str(i) for i in items])
-
 
 
 class EntityInventory(_BaseComponent):
@@ -7354,6 +7354,9 @@ class EntityAIFollowMob(_BaseAIGoal):
         search_range: int = 0,
         speed_multiplier: float = 1.0,
         stop_distance: int = 2,
+        filters: Filter = None,
+        preferred_actor_type: str = None,
+        use_home_position_restriction: bool = False,
     ) -> None:
         """Compels an entity to follow and gather around other mobs of the same type.
 
@@ -7361,6 +7364,9 @@ class EntityAIFollowMob(_BaseAIGoal):
             search_range (int, optional): Description. Defaults to 0.
             speed_multiplier (float, optional): Description. Defaults to 1.0.
             stop_distance (int, optional): Description. Defaults to 2.
+            filters (Filter, optional): Description. Defaults to None.
+            preferred_actor_type (str, optional): Description. Defaults to None.
+            use_home_position_restriction (bool, optional): Description. Defaults to False.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_mob
@@ -7372,6 +7378,12 @@ class EntityAIFollowMob(_BaseAIGoal):
             self._add_field("speed_multiplier", speed_multiplier)
         if stop_distance != 2:
             self._add_field("stop_distance", stop_distance)
+        if filters != None:
+            self._add_field("filters", filters)
+        if preferred_actor_type != None:
+            self._add_field("preferred_actor_type", preferred_actor_type)
+        if use_home_position_restriction:
+            self._add_field("use_home_position_restriction", use_home_position_restriction)
 
 
 class EntityAIRandomSwim(_BaseAIGoal):

@@ -19,7 +19,7 @@ from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
 from anvil.api.vanilla.blocks import BlockFace
 from anvil.api.world.loot_tables import LootTable
-from anvil.lib.blockbench import BlockBenchSource, _Blockbench
+from anvil.lib.blockbench import BlockBenchSource, _Blockbench, blockbench_geometry_name
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import BLOCK_JSON_FORMAT_VERSION, BLOCK_SERVER_VERSION, ITEM_SERVER_VERSION
 from anvil.lib.lib import clamp
@@ -556,12 +556,13 @@ class BlockGeometry(_BaseComponent):
     _identifier = "minecraft:geometry"
 
     @overload
-    def __init__(self, blockbench_name: str, uv_lock: bool = False) -> None:
+    def __init__(self, blockbench_name: str, uv_lock: bool = False, collection: str | None = None) -> None:
         """The description identifier of the geometry file to use to render this block.
 
         Parameters:
             blockbench_name (str): The name of the Blockbench model to use to render this block.
             uv_lock (bool, optional): A Boolean locking UV orientation of all bones in the geometry, or an array of strings locking UV orientation of specific bones in the geometry. For performance reasons it is recommended to use the Boolean. Note that for cubes using Box UVs, rather than Per-face UVs, 'uv_lock' is only supported if the cube faces are square.
+            collection (str, optional): The exported Blockbench collection to use. When provided, the geometry identifier becomes ``geometry.<namespace>.<model>.<collection>``.
         """
         pass
 
@@ -574,29 +575,35 @@ class BlockGeometry(_BaseComponent):
         self,
         blockbench_name: str = None,
         uv_lock: bool = False,
+        collection: str | None = None,
     ) -> None:
         """The description identifier of the geometry file to use to render this block.
         Parameters:
             blockbench_name (str, optional): The name of the Blockbench model to use to render this block. Defaults to "minecraft:geometry.full_block".
             uv_lock (bool, optional): A Boolean locking UV orientation of all bones in the geometry, or an array of strings locking UV orientation of specific bones in the geometry. For performance reasons it is recommended to use the Boolean. Note that for cubes using Box UVs, rather than Per-face UVs, 'uv_lock' is only supported if the cube faces are square.
+            collection (str, optional): The exported Blockbench collection to use. When provided, the geometry identifier becomes ``geometry.<namespace>.<model>.<collection>``.
         """
         super().__init__("geometry")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.80")
         self._is_default = blockbench_name is None
+        self._collection = collection
 
         if blockbench_name is None:
+            if collection is not None:
+                raise ValueError("Collection selection is only supported for custom Blockbench geometries.")
             self._add_field("identifier", "minecraft:geometry.full_block")
 
         else:
             self._require_components(BlockMaterialInstance)
-            self._add_field("identifier", f"geometry.{CONFIG.NAMESPACE}.{blockbench_name}")
+            geometry_name = blockbench_geometry_name(blockbench_name, collection)
+            self._add_field("identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
 
-            self._geometry_name = blockbench_name
+            self._geometry_name = geometry_name
             if uv_lock:
                 self._add_field("uv_lock", uv_lock)
 
             self._bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
-            self._bb.model.queue_model()
+            self._bb.model.queue_model(collection)
 
     def bone_visibility(self, **bone: dict[str, bool | str | Molang]):
         """Specifies the visibility of bones in the geometry file.
@@ -615,6 +622,8 @@ class BlockGeometry(_BaseComponent):
         """Specifies the block culling rules for the geometry file."""
         if self._is_default:
             raise ValueError("Cannot set block culling on default geometry.")
+        if self._collection is not None:
+            raise ValueError("Blockbench collection geometries do not support block culling yet.")
 
         self._add_field("culling", f"{CONFIG.NAMESPACE}:{self._geometry_name}")
         return self._bb.model.block_culling()
