@@ -2,25 +2,37 @@ import base64
 import io
 import math
 import os
+import shutil
 import traceback as tb
 import zipfile
 from typing import Literal, Optional
 
 import click
 from anvil.api.actors.materials import MaterialsObject
-from anvil.api.core.sounds import BlocksJSONObject, MusicDefinition, SoundDefinition, SoundEvent
-from anvil.api.core.textures import FlipBookTexturesObject, ItemTexturesObject, TerrainTexturesObject
+from anvil.api.core.sounds import (
+    BlocksJSONObject,
+    MusicDefinition,
+    SoundDefinition,
+    SoundEvent,
+)
+from anvil.api.core.textures import (
+    FlipBookTexturesObject,
+    ItemTexturesObject,
+    TerrainTexturesObject,
+)
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG, ConfigPackageTarget, _AnvilConfig
-from anvil.lib.format_versions import MANIFEST_VERSION, MODULE_MINECRAFT_SERVER, MODULE_MINECRAFT_SERVER_UI
+from anvil.lib.format_versions import (
+    MANIFEST_VERSION,
+    MODULE_MINECRAFT_SERVER,
+    MODULE_MINECRAFT_SERVER_UI,
+)
 from anvil.lib.lib import (
-    CreateDirectory,
-    File,
-    FileExists,
-    RemoveDirectory,
+    AnvilArchive,
+    AnvilIO,
+    Directory,
     process_subcommand,
     validate_namespace_project_name,
-    zipit,
 )
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
@@ -53,29 +65,95 @@ def resize(
     )
 
 
+def development_pack_size(path: str) -> int:
+    """Returns the total uncompressed size of a development pack directory."""
+    total_size = 0
+
+    if not os.path.isdir(path):
+        return total_size
+
+    for root, _, files in os.walk(path):
+        for filename in files:
+            try:
+                total_size += os.path.getsize(os.path.join(root, filename))
+            except OSError:
+                continue
+
+    return total_size
+
+
+def format_bytes(size_bytes: int) -> str:
+    """Formats a byte count using binary units for CLI output."""
+    size = float(size_bytes)
+    units = ("B", "KiB", "MiB", "GiB", "TiB")
+
+    for unit in units:
+        if size < 1024 or unit == units[-1]:
+            if unit == "B":
+                return f"{int(size)} {unit}"
+            return f"{size:.2f} {unit}"
+        size /= 1024
+
+    return f"{size_bytes} B"
+
+
+def output_development_pack_sizes(config: _AnvilConfig) -> None:
+    """Outputs the uncompressed size of the generated development packs."""
+    if config._TARGET != ConfigPackageTarget.ADDON:
+        return
+
+    behavior_pack_size = development_pack_size(config.BP_PATH)
+    resource_pack_size = development_pack_size(config.RP_PATH)
+    total_pack_size = behavior_pack_size + resource_pack_size
+
+    behavior_pack_name = os.path.basename(os.path.normpath(config.BP_PATH))
+    resource_pack_name = os.path.basename(os.path.normpath(config.RP_PATH))
+
+    click.echo(
+        click.style("\r[INFO]: Development pack sizes (uncompressed)", fg="cyan")
+    )
+    click.echo(
+        f"\r  {click.style(f'Behaviour Pack ({behavior_pack_name})', fg='yellow')}: "
+        f"{click.style(format_bytes(behavior_pack_size), fg='green')} "
+        f"{click.style(f'({behavior_pack_size:,} bytes)', fg='white')}"
+    )
+    click.echo(
+        f"\r  {click.style(f'Resource Pack ({resource_pack_name})', fg='yellow')}: "
+        f"{click.style(format_bytes(resource_pack_size), fg='green')} "
+        f"{click.style(f'({resource_pack_size:,} bytes)', fg='white')}"
+    )
+    click.echo(
+        f"\r  {click.style('Total', fg='cyan')}: "
+        f"{click.style(format_bytes(total_pack_size), fg='green')} "
+        f"{click.style(f'({total_pack_size:,} bytes)', fg='white')}"
+    )
+
+
 def extract_world_pack(extract_world: str | None = None):
     if extract_world != None and type(extract_world) is str:
-        RemoveDirectory(CONFIG._WORLD_PATH)
-        with zipfile.ZipFile(os.path.join("world", f"{extract_world}.mcworld"), "r") as zip_ref:
+        shutil.rmtree(CONFIG._WORLD_PATH)
+        with zipfile.ZipFile(
+            os.path.join("world", f"{extract_world}.mcworld"), "r"
+        ) as zip_ref:
             zip_ref.extractall(CONFIG._WORLD_PATH)
 
 
 def manifests(extract_world: str | None = None):
     release_list = [int(i) for i in CONFIG._RELEASE.split(".")]
     if extract_world != None and type(extract_world) is str:
-        File(
+        AnvilIO.file(
             "manifest.json",
             JsonSchemes.manifest_world(release_list),
             CONFIG._WORLD_PATH,
             "w",
         )
-        File(
+        AnvilIO.file(
             "world_resource_packs.json",
             JsonSchemes.world_packs(release_list, CONFIG._RP_UUID),
             CONFIG._WORLD_PATH,
             "w",
         )
-        File(
+        AnvilIO.file(
             "world_behavior_packs.json",
             JsonSchemes.world_packs(release_list, CONFIG._BP_UUID),
             CONFIG._WORLD_PATH,
@@ -85,24 +163,27 @@ def manifests(extract_world: str | None = None):
 
 def scriptapi():
     if any([CONFIG._SCRIPT_API, CONFIG._SCRIPT_UI]):
-        if not FileExists("tsconfig.json"):
-            File(
+        if not os.path.exists("tsconfig.json"):
+            AnvilIO.file(
                 "tsconfig.json",
                 JsonSchemes.tsconfig(CONFIG.BP_PATH),
                 "",
                 "w",
                 False,
             )
-        if not FileExists("esbuild.js") and "esbuild" in CONFIG._SCRIPT_BUNDLE_SCRIPT:
-            File(
+        if (
+            not os.path.exists("esbuild.js")
+            and "esbuild" in CONFIG._SCRIPT_BUNDLE_SCRIPT
+        ):
+            AnvilIO.file(
                 "esbuild.js",
                 JsonSchemes.esbuild_config_js(CONFIG.BP_PATH, CONFIG._MINIFY),
                 "",
                 "w",
                 False,
             )
-        if not FileExists("package.json"):
-            File(
+        if not os.path.exists("package.json"):
+            AnvilIO.file(
                 "package.json",
                 JsonSchemes.package_json(
                     CONFIG.PROJECT_NAME,
@@ -147,7 +228,9 @@ def addon_object_exception(object: AddonObject, e: Exception):
         ),
         err=True,
     )
-    click.echo(click.style(f"\rObject Content: {object._content}", fg="yellow"), err=True)
+    click.echo(
+        click.style(f"\rObject Content: {object._content}", fg="yellow"), err=True
+    )
     click.echo(click.style(f"\rError Message: {str(e)}", fg="red"), err=True)
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
 
@@ -168,10 +251,10 @@ def process_art(
     output_marketing = os.path.join("output", "Marketing Art")
 
     if zip:
-        CreateDirectory(output_store)
-        CreateDirectory(output_marketing)
+        Directory.create(output_store)
+        Directory.create(output_marketing)
 
-        if FileExists(os.path.join(source, "keyart.png")):
+        if os.path.exists(os.path.join(source, "keyart.png")):
             original = Image.open(os.path.join(source, "keyart.png")).convert("RGB")
             overlay = None
 
@@ -208,9 +291,11 @@ def process_art(
             )
 
         else:
-            raise FileNotFoundError("keyart.png not found in marketing directory. Please ensure the file exists.")
+            raise FileNotFoundError(
+                "keyart.png not found in marketing directory. Please ensure the file exists."
+            )
 
-        if FileExists(os.path.join(source, "panorama.png")):
+        if os.path.exists(os.path.join(source, "panorama.png")):
             original = Image.open(os.path.join(source, "panorama.png"))
             scale_factor = 450 / original.size[1]
             if (round(original.size[0] * scale_factor)) > 4000:
@@ -236,9 +321,11 @@ def process_art(
             )
 
         for i in range(999):
-            if not FileExists(os.path.join(source, f"{i}.png")):
+            if not os.path.exists(os.path.join(source, f"{i}.png")):
                 if i < 5:
-                    raise FileNotFoundError(f"{i}.png not found in marketing directory. Please ensure the file exists.")
+                    raise FileNotFoundError(
+                        f"{i}.png not found in marketing directory. Please ensure the file exists."
+                    )
                 break
             else:
                 original = Image.open(os.path.join(source, f"{i}.png"))
@@ -259,7 +346,7 @@ def process_art(
                     300,
                 )
 
-        if FileExists(os.path.join(source, "partner_art.png")):
+        if os.path.exists(os.path.join(source, "partner_art.png")):
             original = Image.open(os.path.join(source, "partner_art.png"))
 
             resize(
@@ -272,9 +359,11 @@ def process_art(
             )
 
         else:
-            raise FileNotFoundError("partner_art.png not found in marketing directory. Please ensure the file exists.")
+            raise FileNotFoundError(
+                "partner_art.png not found in marketing directory. Please ensure the file exists."
+            )
 
-        if FileExists(os.path.join(source, "pack_icon.png")):
+        if os.path.exists(os.path.join(source, "pack_icon.png")):
             original = Image.open(os.path.join(source, "pack_icon.png"))
             resize(
                 original,
@@ -283,7 +372,9 @@ def process_art(
                 pack_icon_size,
             )
         else:
-            raise FileNotFoundError("pack_icon.png not found in marketing directory. Please ensure the file exists.")
+            raise FileNotFoundError(
+                "pack_icon.png not found in marketing directory. Please ensure the file exists."
+            )
 
 
 @Halo(text="Generating technical notes", spinner="dots")
@@ -293,7 +384,13 @@ def generate_technical_notes_pdf(config: _AnvilConfig):
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.lib.units import cm
-    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    from reportlab.platypus import (
+        Paragraph,
+        SimpleDocTemplate,
+        Spacer,
+        Table,
+        TableStyle,
+    )
 
     def add_table(section_name: str, data: dict[bool, set[str]]):
         title_style.spaceBefore = 0
@@ -332,7 +429,9 @@ def generate_technical_notes_pdf(config: _AnvilConfig):
             ("GRID", (0, 0), (-1, -1), 1, colors.black),
         ]
         for row in vanilla_true_rows:
-            style_commands.append(("BACKGROUND", (0, row), (-1, row), colors.lightgreen))
+            style_commands.append(
+                ("BACKGROUND", (0, row), (-1, row), colors.lightgreen)
+            )
         table.setStyle(TableStyle(style_commands))
 
         return title, Spacer(1, 0.3 * cm), table, Spacer(1, 1 * cm)
@@ -388,77 +487,14 @@ def generate_technical_notes_pdf(config: _AnvilConfig):
 def package_zip_core(
     config: _AnvilConfig,
     apply_overlay: bool = False,
-    generate_technical_notes: bool = False,
 ):
     """Core logic for packaging the project into a zip file for Marketplace."""
     process_art(config, apply_overlay)
 
-    content_structure = {
-        os.path.join("output", "Store Art"): os.path.join("Store Art"),
-        os.path.join("output", "Marketing Art"): os.path.join("Marketing Art"),
-    }
+    AnvilArchive.marketplace_zip()
 
-    if config._TARGET == ConfigPackageTarget.ADDON:
-        content_structure.update(
-            {
-                config.RP_PATH: os.path.join(
-                    "Content",
-                    "resource_packs",
-                    f"RP_{config._PASCAL_PROJECT_NAME}",
-                ),
-                config.BP_PATH: os.path.join(
-                    "Content",
-                    "behavior_packs",
-                    f"BP_{config._PASCAL_PROJECT_NAME}",
-                ),
-            }
-        )
-
-    else:
-        content_structure.update(
-            {
-                config.RP_PATH: os.path.join(
-                    "Content",
-                    "world_template",
-                    "resource_packs",
-                    f"RP_{config._PASCAL_PROJECT_NAME}",
-                ),
-                config.BP_PATH: os.path.join(
-                    "Content",
-                    "world_template",
-                    "behavior_packs",
-                    f"BP_{config._PASCAL_PROJECT_NAME}",
-                ),
-                os.path.join(config._WORLD_PATH, "texts"): os.path.join("Content", "world_template", "texts"),
-                os.path.join(config._WORLD_PATH, "level.dat"): os.path.join("Content", "world_template"),
-                os.path.join(config._WORLD_PATH, "levelname.txt"): os.path.join("Content", "world_template"),
-                os.path.join(config._WORLD_PATH, "manifest.json"): os.path.join("Content", "world_template"),
-                os.path.join(config._WORLD_PATH, "world_icon.jpeg"): os.path.join("Content", "world_template"),
-                os.path.join(config._WORLD_PATH, "world_behavior_packs.json"): os.path.join(
-                    "Content", "world_template"
-                ),
-                os.path.join(config._WORLD_PATH, "world_resource_packs.json"): os.path.join(
-                    "Content", "world_template"
-                ),
-            }
-        )
-        if not config._RANDOM_SEED:
-            content_structure.update(
-                {
-                    os.path.join(config._WORLD_PATH, "db"): os.path.join("Content", "world_template", "db"),
-                }
-            )
-
-    zipit(
-        os.path.join("output", f"{config.PROJECT_NAME}.zip"),
-        content_structure,
-    )
-
-    RemoveDirectory(os.path.join("output", "Store Art"))
-    RemoveDirectory(os.path.join("output", "Marketing Art"))
-
-    if generate_technical_notes:
-        generate_technical_notes_pdf(config)
+    shutil.rmtree(os.path.join("output", "Store Art"))
+    shutil.rmtree(os.path.join("output", "Marketing Art"))
 
 
 @Halo(text="Packaging mcaddon", spinner="dots")
@@ -466,38 +502,14 @@ def mcaddon_core(config):
     """Core logic for packaging the project into a .mcaddon file."""
     process_art(config, False, False)
 
-    content_structure = {
-        config.RP_PATH: f"RP_{config.PROJECT_NAME}",
-        config.BP_PATH: f"BP_{config.PROJECT_NAME}",
-    }
-
-    zipit(
-        os.path.join("output", f"{config.PROJECT_NAME}.mcaddon"),
-        content_structure,
-    )
+    AnvilArchive.mcaddon()
 
 
 @Halo(text="Packaging mcworld", spinner="dots")
 def mcworld_core(config: _AnvilConfig):
     """Core logic for packaging the project into a .mcworld file."""
     process_art(config, False, False)
-
-    content_structure = {
-        config.RP_PATH: os.path.join("resource_packs", f"RP_{config.PROJECT_NAME}"),
-        config.BP_PATH: os.path.join("behavior_packs", f"BP_{config.PROJECT_NAME}"),
-        os.path.join(config._WORLD_PATH, "texts"): "texts",
-        os.path.join(config._WORLD_PATH, "level.dat"): "",
-        os.path.join(config._WORLD_PATH, "levelname.txt"): "",
-        os.path.join(config._WORLD_PATH, "manifest.json"): "",
-        os.path.join(config._WORLD_PATH, "world_icon.jpeg"): "",
-        os.path.join(config._WORLD_PATH, "world_behavior_packs.json"): "",
-        os.path.join(config._WORLD_PATH, "world_resource_packs.json"): "",
-    }
-
-    zipit(
-        os.path.join("output", f"{config.PROJECT_NAME}.mcworld"),
-        content_structure,
-    )
+    AnvilArchive.mcworld()
 
 
 @Halo(text="Compiling", spinner="dots")
@@ -538,8 +550,17 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None):
         try:
             object._export()
         except Exception as e:
-            addon_object_exception(object, e)
-            return
+            if CONFIG._DEBUG:
+                addon_object_exception(object, e)
+            else:
+                click.echo(
+                    click.style(
+                        f"\rERROR EXPORTING OBJECT: {getattr(object, '_name', 'Unknown')} ({object.__class__.__name__}): {e}",
+                        fg="red",
+                    ),
+                    err=True,
+                )
+            raise
 
     if CONFIG._TARGET == ConfigPackageTarget.ADDON:
         if len(CONFIG._RP_UUID) > 1:
@@ -553,14 +574,15 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None):
 
     if CONFIG._SCRIPT_API:
         process_subcommand(
-            CONFIG._SCRIPT_BUNDLE_SCRIPT + f' --outdir="{os.path.join(CONFIG.BP_PATH, "scripts")}"',
+            CONFIG._SCRIPT_BUNDLE_SCRIPT
+            + f' --outdir="{os.path.join(CONFIG.BP_PATH, "scripts")}"',
             "Building scripts error",
         )
 
     source = os.path.join("marketing")
     pack_icon_size = (256, 256)
 
-    if FileExists(os.path.join(source, "pack_icon.png")):
+    if os.path.exists(os.path.join(source, "pack_icon.png")):
         original = Image.open(os.path.join(source, "pack_icon.png"))
         resize(original, "pack_icon.png", CONFIG.BP_PATH, pack_icon_size)
         resize(original, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
@@ -578,6 +600,8 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None):
 
         resize(placeholder_image, "pack_icon.png", CONFIG.BP_PATH, pack_icon_size)
         resize(placeholder_image, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
+
+    output_development_pack_sizes(CONFIG)
 
     anvil._compiled = True
 
@@ -644,7 +668,9 @@ class ManifestBP(AddonObject):
     def settings(self) -> "_ManifestSettings":
         """Returns a Manifest Settings object to add settings to the manifest."""
         if not CONFIG._PREVIEW:
-            raise RuntimeError("Behaviour Pack Settings are currently only supported in current preview builds.")
+            raise RuntimeError(
+                "Behaviour Pack Settings are currently only supported in current preview builds."
+            )
         return _ManifestSettings(self)
 
     def queue(self):
@@ -682,7 +708,9 @@ class ManifestBP(AddonObject):
 class _ManifestSettings:
     def __init__(self, manifest: ManifestRP | ManifestBP):
         if MANIFEST_VERSION < 3:
-            raise RuntimeError("Settings labels are only supported in manifest version 3 and above.")
+            raise RuntimeError(
+                "Settings labels are only supported in manifest version 3 and above."
+            )
         self.manifest = manifest
 
         # Initialize settings in _content if not present
@@ -716,7 +744,9 @@ class _ManifestSettings:
             raise ValueError(f"Step value '{step}' must be greater than 0.")
 
         if not (min <= default <= max):
-            raise ValueError(f"Default value '{default}' must be between min '{min}' and max '{max}'.")
+            raise ValueError(
+                f"Default value '{default}' must be between min '{min}' and max '{max}'."
+            )
 
         if id in self.manifest._setting_ids:
             raise ValueError(f"Setting ID '{id}' is already used.")
@@ -751,7 +781,11 @@ class _ManifestSettings:
                 "type": "dropdown",
                 "name": f"{CONFIG.NAMESPACE}:{id}",
                 "text": text,
-                "options": [{"name": k, "text": v} for option in options for k, v in option.items()],
+                "options": [
+                    {"name": k, "text": v}
+                    for option in options
+                    for k, v in option.items()
+                ],
                 "default": default,
             }
         )
@@ -787,39 +821,27 @@ class _Anvil:
         """Translates the project."""
         translate(languages)
 
-    def compile(self, extract_world: str = None) -> None:
-        """Compiles the project."""
-        compile_objects(self, extract_world)
-
-    def package_zip(
+    def compile(
         self,
+        *,
+        extract_world: str = None,
+        mcaddon: bool = False,
+        mcworld: bool = False,
+        zip: bool = False,
         apply_overlay: bool = False,
         generate_technical_notes: bool = False,
     ) -> None:
-        """Packages the project into a zip file for Marketplace.
+        """Compiles the project."""
+        compile_objects(self, extract_world)
 
-        Parameters:
-            apply_overlay (bool, optional): Whether to apply the overlay to the marketing art. Defaults to False.
-            generate_technical_notes (bool, optional): Whether to generate technical notes PDF. Defaults to False.
-        """
-        if not self._compiled:
-            raise RuntimeError("Project must be compiled before packaging.")
-
-        package_zip_core(self.config, apply_overlay, generate_technical_notes)
-
-    def mcaddon(self):
-        """Packages the project into a .mcaddon file."""
-        if not self._compiled:
-            raise RuntimeError("Project must be compiled before packaging.")
-
-        mcaddon_core(self.config)
-
-    def mcworld(self):
-        """Packages the project into a .mcworld file."""
-        if not self._compiled:
-            raise RuntimeError("Project must be compiled before packaging.")
-
-        mcworld_core(self.config)
+        if mcaddon:
+            mcaddon_core(self.config)
+        if mcworld:
+            mcworld_core(self.config)
+        if zip:
+            package_zip_core(self.config, apply_overlay)
+        if generate_technical_notes:
+            generate_technical_notes_pdf(self.config)
 
 
 ANVIL = _Anvil()

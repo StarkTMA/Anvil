@@ -10,7 +10,7 @@ from anvil.api.core.enums import (
 from anvil.api.core.types import Identifier
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import CopyFiles, FileExists
+from anvil.lib.lib import Directory
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -78,7 +78,7 @@ class _SoundDescription:
         source_path = os.path.join("assets", "sounds", *dirs[:-1])
         target_path = os.path.join("sounds", CONFIG.NAMESPACE, *dirs[:-1])
         sound_name = dirs[-1]
-        if not FileExists(os.path.join(source_path, f"{sound_name}.ogg")):
+        if not os.path.exists(os.path.join(source_path, f"{sound_name}.ogg")):
             raise FileNotFoundError(
                 f"{sound_name}.ogg not found in {source_path}. Please ensure the file exists."
             )
@@ -128,7 +128,7 @@ class _SoundDescription:
         """
         for sound in self._sounds:
             sound_name = (sound["name"] if "name" in sound else sound).split("\\")[-1]
-            CopyFiles(
+            Directory.copy_files(
                 sound["source"],
                 os.path.join(
                     CONFIG.RP_PATH,

@@ -5,7 +5,6 @@
 			"identifier": "{{ identifier }}",
 			"places_feature": "{{ feature_identifier }}"
 		},
-		"conditions": {},
-		"distribution": {}
+		"conditions": {}
 	}
 }

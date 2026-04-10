@@ -1,15 +1,16 @@
 """A collection of useful functions and classes used throughout the program."""
 
+from ast import Dict
 import inspect
-import json
+from logging import config
 import os
 import re
 import shutil
 import subprocess
+from typing import Any
 import zipfile
+import orjson
 from datetime import datetime
-
-import commentjson as commentjson
 
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 
@@ -18,8 +19,12 @@ from ..__version__ import __version__
 APPDATA: str = os.getenv("APPDATA")
 APPDATA_LOCAL: str = os.getenv("LOCALAPPDATA")
 
-RELEASE_COM_MOJANG = os.path.join(APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang")
-PREVIEW_COM_MOJANG = os.path.join(APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang")
+RELEASE_COM_MOJANG = os.path.join(
+    APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang"
+)
+PREVIEW_COM_MOJANG = os.path.join(
+    APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang"
+)
 
 DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")
 MOLANG_PREFIXES = (
@@ -36,113 +41,484 @@ MOLANG_PREFIXES = (
 IMAGE_EXTENSIONS_PRIORITY = [".tga", ".png", ".jpg", ".jpeg"]
 
 
-class PrettyPrintedEncoder(json.JSONEncoder):
-    def __init__(self, *args, max_width=88, indent=4, **kwargs):
-        super().__init__(*args, indent=indent, **kwargs)
-        self.max_width = max_width
-        self._indent_str = " " * indent
-
-    def shorten_dict(self, d):
-        """Recursively removes empty/None values from dicts and lists.
+class Directory:
+    @classmethod
+    def create(cls, path: str):
+        """
+        Creates a new directory.
 
         Parameters:
-            d: The dict, list, or other value to shorten.
-
-        Returns:
-            The shortened version with empty values removed.
+            path (str): The path to the new directory.
         """
-        if isinstance(d, dict):
-            return {
-                k: v
-                for k, v in ((k, self.shorten_dict(v)) for k, v in d.items())
-                if (
-                    all(
-                        [
-                            v != {},
-                            v != [],
-                            v != None,
-                            v != "None",
-                            v != "",
-                        ]
-                    )
-                )
-                or ":" in str(k)
-            }
+        this_path = os.path.join("./", path.lstrip("/"))
+        os.makedirs(this_path, exist_ok=True)
 
-        elif isinstance(d, list):
-            return [v for v in map(self.shorten_dict, d) if v != []]
-
-        elif isinstance(d, str):
-            return d.replace("\\", "/")
-
-        return d
-
-    def sort_dict(self, d):
-        """Recursively sorts dict keys.
+    @classmethod
+    def copy_files(
+        cls, old_dir: str, new_dir: str, target_file: str, rename: str = None
+    ):
+        """
+        Copies a file from one directory to another.
 
         Parameters:
-            d: The dict, list, or other value to sort.
-
-        Returns:
-            The sorted version.
+            old_dir (str): The path to the source directory.
+            new_dir (str): The path to the destination directory.
+            target_file (str): The name of the file to be copied.
+            rename (str, optional): The new name for the copied file. Defaults to None.
         """
-        if isinstance(d, dict):
-            return {k: self.sort_dict(d[k]) for k in sorted(d.keys())}
-        elif isinstance(d, list):
-            return [self.sort_dict(v) for v in d]
-        return d
+        cls.create(new_dir)
+        if rename is None:
+            shutil.copyfile(
+                os.path.join(old_dir, target_file), os.path.join(new_dir, target_file)
+            )
+        else:
+            shutil.copyfile(
+                os.path.join(old_dir, target_file), os.path.join(new_dir, rename)
+            )
 
-    def encode(self, o, _level=0):
-        if _level == 0:
-            o = self.shorten_dict(o)
+    @classmethod
+    def copy_folder(cls, old_dir: str, new_dir: str):
+        """
+        Copies a folder and all its contents to a new location.
 
-        if isinstance(o, (list, tuple)):
-            items = [self.encode(v, _level + 1) for v in o]
-            inline = f"[{', '.join(items)}]"
-            if len(inline) <= self.max_width - _level * self.indent:
-                return inline
-            inner = ",\n".join(self._indent_str * (_level + 1) + i for i in items)
-            return f"[\n{inner}\n{self._indent_str * _level}]"
+        Parameters:
+            old_dir (str): The path to the source directory.
+            new_dir (str): The path to the destination directory.
+        """
+        cls.create(new_dir)
+        shutil.copytree(
+            os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True
+        )
 
-        elif isinstance(o, dict):
-            items = [f"{json.dumps(str(k))}: {self.encode(v, _level + 1)}" for k, v in o.items()]
-            inline = f"{{ {', '.join(items)} }}"
-            if len(inline) <= self.max_width - _level * self.indent:
-                return inline
-            inner = ",\n".join(self._indent_str * (_level + 1) + i for i in items)
-            return f"{{\n{inner}\n{self._indent_str * _level}}}"
+    @classmethod
+    def move_folder(cls, old_dir: str, new_dir: str) -> None:
+        """
+        Moves a folder and all its contents to a new location.
 
-        elif o.__class__.__name__ in ["MinecraftBlockDescriptor", "Block"]:
-            return self.encode(self.shorten_dict(o.descriptor()), _level)
-        elif o.__class__.__name__ in [
+        Parameters:
+            old_dir (str): The path to the source directory.
+            new_dir (str): The path to the destination directory.
+        """
+        cls.create(new_dir)
+        shutil.move(os.path.realpath(old_dir), os.path.realpath(new_dir))
+
+
+class AnvilIO:
+    _FILE_TYPE_COMMENT = {
+        "json": "//",
+        "material": "//",
+        "code-workspace": "//",
+        "py": "#",
+        "mcfunction": "#",
+        "lang": "##",
+    }
+    _BLOCK_DESCRIPTOR_NAMES = frozenset({"MinecraftBlockDescriptor", "Block"})
+    _IDENTIFIER_NAMES = frozenset(
+        {
             "MinecraftItemDescriptor",
             "MinecraftEntityDescriptor",
             "MinecraftBiomeDescriptor",
             "Item",
             "Entity",
-        ]:
-            return self.encode(self.shorten_dict(o.identifier), _level)
-        elif o.__class__.__name__ == "LootTable":
-            return self.encode(self.shorten_dict(o.table_path), _level)
-        elif o.__class__.__name__ in ["_UIElement"]:
-            return self.encode(self.shorten_dict(o.queue()), _level)
+        }
+    )
+
+    @staticmethod
+    def _should_keep_shortened_value(key: str, value) -> bool:
+        if ":" in key:
+            return True
+        return value not in ({}, [], None, "None", "")
+
+    @classmethod
+    def _normalize_json_like(cls, value):
+        if isinstance(value, dict):
+            shortened = {}
+
+            for key, item in value.items():
+                key_str = key if isinstance(key, str) else str(key)
+                shortened_value = cls._normalize_json_like(item)
+                if cls._should_keep_shortened_value(key_str, shortened_value):
+                    shortened[key_str] = shortened_value
+
+            return shortened
+
+        if isinstance(value, list):
+            shortened = []
+            append = shortened.append
+
+            for item in value:
+                shortened_value = cls._normalize_json_like(item)
+                if shortened_value != []:
+                    append(shortened_value)
+
+            return shortened
+
+        if isinstance(value, tuple):
+            return [cls._normalize_json_like(item) for item in value]
+
+        if isinstance(value, str):
+            return value.replace("\\", "/")
+
+        if value is None or isinstance(value, (bool, int, float)):
+            return value
+
+        class_name = value.__class__.__name__
+
+        if class_name in cls._BLOCK_DESCRIPTOR_NAMES:
+            return cls._normalize_json_like(value.descriptor())
+
+        if class_name in cls._IDENTIFIER_NAMES:
+            return cls._normalize_json_like(value.identifier)
+
+        if class_name == "LootTable":
+            return cls._normalize_json_like(value.table_path)
+
+        if class_name == "_UIElement":
+            return cls._normalize_json_like(value.queue())
+
+        return value
+
+    @classmethod
+    def _dump_json_like(cls, content, minify: bool = False) -> bytes:
+        option = 0 if minify else orjson.OPT_INDENT_2
+        normalized = cls._normalize_json_like(content)
+        return orjson.dumps(normalized, option=option)
+
+    @classmethod
+    def _get_file_stamp(cls, name: str, type: str, company: str) -> str:
+        prefix = cls._FILE_TYPE_COMMENT.get(type, "//")
+        time = datetime.now(datetime.now().astimezone().tzinfo).strftime(
+            "%d-%m-%Y %H:%M:%S %z"
+        )
+
+        stamp = [
+            f"Filename: {name}",
+            f"Generated with StarkTMA/Anvil {__version__}",
+            f"Time: {time}",
+            f"Property of {company}",
+        ]
+
+        return "\n".join(prefix + line for line in stamp) + "\n\n"
+
+    @classmethod
+    def _parse_json_like(cls, content: str, minify: bool = False) -> bytes:
+        return cls._dump_json_like(content, minify=minify)
+
+    @classmethod
+    def file(
+        cls,
+        name: str,
+        content: str | dict,
+        directory: str,
+        mode: str,
+        skip_tag: bool = False,
+        **parameters,
+    ):
+        """
+        Create or modify a file with the given content.
+
+        Parameters:
+            name (str): The name of the file.
+            content: The content of the file.
+            directory (str): The directory path where the file should be created or modified.
+            mode (str): The file mode, either "w" (write) or "a" (append).
+            skip_tag (bool, optional): Whether to skip adding the file metadata tag. Defaults to False.
+            *Parameters: Additional StrEnum.
+
+        Note:
+            The file content is converted to the appropriate format based on the file extension.
+        """
+
+        from anvil.lib.config import CONFIG
+
+        Directory.create(directory)
+        path = os.path.normpath(os.path.join(directory, name))
+        type = name.split(".")[-1]
+
+        if type in ["json", "material", "code-workspace"]:
+            content = cls._parse_json_like(content, minify=CONFIG._MINIFY)
+        if not skip_tag:
+            file_stamp = cls._get_file_stamp(name, type, CONFIG.COMPANY)
+            if isinstance(content, bytes):
+                content = file_stamp.encode("utf-8") + content
+            else:
+                content = file_stamp + content
+
+        if isinstance(content, bytes):
+            binary_mode = mode if "b" in mode else f"{mode}b"
+            with open(path, binary_mode) as file:
+                file.write(content)
+            return
+
+        with open(path, mode, encoding="utf-8") as file:
+            file.write(content)
+
+
+class AnvilArchive:
+    _EXCLUDED_EXTENSIONS = {".js.map"}
+    _STORED_EXTENSIONS = {}
+    _FAST_COMPRESS_LEVEL = 3
+
+    @classmethod
+    def write_entry(
+        cls, ziph: zipfile.ZipFile, file_path: str, archive_path: str
+    ) -> None:
+        extension = os.path.splitext(file_path)[1].lower()
+        if extension in cls._EXCLUDED_EXTENSIONS:
+            return
+
+        if extension in cls._STORED_EXTENSIONS:
+            ziph.write(file_path, archive_path, compress_type=zipfile.ZIP_STORED)
+            return
+
+        ziph.write(
+            file_path,
+            archive_path,
+            compress_type=zipfile.ZIP_DEFLATED,
+            compresslevel=cls._FAST_COMPRESS_LEVEL,
+        )
+
+    @classmethod
+    def from_mapping(cls, zip_name, dir_list: dict) -> None:
+        """
+        Create a ZIP archive containing multiple directories and files.
+
+        Parameters:
+            zip_name: The name of the ZIP archive.
+            dir_list (dict): A dictionary where the keys are source directories and the values are target directories.
+
+        Note:
+            The target directories represent the structure inside the ZIP archive.
+        """
+
+        with zipfile.ZipFile(
+            zip_name,
+            "w",
+            compression=zipfile.ZIP_DEFLATED,
+            compresslevel=cls._FAST_COMPRESS_LEVEL,
+        ) as zipf:
+            for source, target in dir_list.items():
+                if os.path.isdir(source):
+                    source_root = os.path.realpath(source)
+                    for root, _, files in os.walk(source_root):
+                        for file_name in files:
+                            file_path = os.path.join(root, file_name)
+                            relative_path = os.path.relpath(file_path, source_root)
+                            archive_path = os.path.join(target, relative_path)
+                            cls.write_entry(zipf, file_path, archive_path)
+                else:
+                    archive_path = os.path.join(target, os.path.basename(source))
+                    cls.write_entry(zipf, source, archive_path)
+
+    @classmethod
+    def marketplace_zip(cls):
+        from anvil.lib.config import CONFIG, ConfigPackageTarget
+
+        content_structure = {
+            os.path.join("output", "Store Art"): os.path.join("Store Art"),
+            os.path.join("output", "Marketing Art"): os.path.join("Marketing Art"),
+        }
+
+        if CONFIG._TARGET == ConfigPackageTarget.ADDON:
+            ZIP_RP_PATH = os.path.join(
+                "Content",
+                "resource_packs",
+                f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
+            )
+            ZIP_BP_PATH = os.path.join(
+                "Content",
+                "behavior_packs",
+                f"BP_{CONFIG._PASCAL_PROJECT_NAME}",
+            )
+            content_structure.update(
+                {
+                    CONFIG.RP_PATH: ZIP_RP_PATH,
+                    CONFIG.BP_PATH: ZIP_BP_PATH,
+                }
+            )
+
         else:
-            return json.dumps(o, ensure_ascii=False)
+            content_structure.update(
+                {
+                    CONFIG.RP_PATH: os.path.join(
+                        "Content",
+                        "world_template",
+                        "resource_packs",
+                        f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
+                    ),
+                    CONFIG.BP_PATH: os.path.join(
+                        "Content",
+                        "world_template",
+                        "behavior_packs",
+                        f"BP_{CONFIG._PASCAL_PROJECT_NAME}",
+                    ),
+                    os.path.join(CONFIG._WORLD_PATH, "texts"): os.path.join(
+                        "Content", "world_template", "texts"
+                    ),
+                    os.path.join(CONFIG._WORLD_PATH, "level.dat"): os.path.join(
+                        "Content", "world_template"
+                    ),
+                    os.path.join(CONFIG._WORLD_PATH, "levelname.txt"): os.path.join(
+                        "Content", "world_template"
+                    ),
+                    os.path.join(CONFIG._WORLD_PATH, "manifest.json"): os.path.join(
+                        "Content", "world_template"
+                    ),
+                    os.path.join(CONFIG._WORLD_PATH, "world_icon.jpeg"): os.path.join(
+                        "Content", "world_template"
+                    ),
+                    os.path.join(
+                        CONFIG._WORLD_PATH, "world_behavior_packs.json"
+                    ): os.path.join("Content", "world_template"),
+                    os.path.join(
+                        CONFIG._WORLD_PATH, "world_resource_packs.json"
+                    ): os.path.join("Content", "world_template"),
+                }
+            )
+            if not CONFIG._RANDOM_SEED:
+                content_structure.update(
+                    {
+                        os.path.join(CONFIG._WORLD_PATH, "db"): os.path.join(
+                            "Content", "world_template", "db"
+                        ),
+                    }
+                )
+
+        AnvilArchive.from_mapping(
+            os.path.join("output", f"{CONFIG.PROJECT_NAME}.zip"),
+            content_structure,
+        )
+
+    @classmethod
+    def mcworld(cls):
+        from anvil import CONFIG
+
+        content_structure = {
+            CONFIG.RP_PATH: os.path.join("resource_packs", f"RP_{CONFIG.PROJECT_NAME}"),
+            CONFIG.BP_PATH: os.path.join("behavior_packs", f"BP_{CONFIG.PROJECT_NAME}"),
+            os.path.join(CONFIG._WORLD_PATH, "texts"): "texts",
+            os.path.join(CONFIG._WORLD_PATH, "level.dat"): "",
+            os.path.join(CONFIG._WORLD_PATH, "levelname.txt"): "",
+            os.path.join(CONFIG._WORLD_PATH, "manifest.json"): "",
+            os.path.join(CONFIG._WORLD_PATH, "world_icon.jpeg"): "",
+            os.path.join(CONFIG._WORLD_PATH, "world_behavior_packs.json"): "",
+            os.path.join(CONFIG._WORLD_PATH, "world_resource_packs.json"): "",
+        }
+
+        AnvilArchive.from_mapping(
+            os.path.join("output", f"{CONFIG.PROJECT_NAME}.mcworld"),
+            content_structure,
+        )
+
+    @classmethod
+    def mcaddon(cls):
+        from anvil import CONFIG
+
+        content_structure = {
+            CONFIG.RP_PATH: f"RP_{CONFIG.PROJECT_NAME}",
+            CONFIG.BP_PATH: f"BP_{CONFIG.PROJECT_NAME}",
+        }
+
+        AnvilArchive.from_mapping(
+            os.path.join("output", f"{CONFIG.PROJECT_NAME}.mcaddon"),
+            content_structure,
+        )
+
+
+class AnvilFormatter:
+    @staticmethod
+    def _normalize_min_max(
+        value: Any,
+        name: str,
+        *,
+        value_types: tuple[type, ...] = (int, float),
+        clamp_min: int | float | None = None,
+        clamp_max: int | float | None = None,
+    ) -> tuple[int | float, int | float]:
+        if (
+            not isinstance(value, (tuple, list))
+            or len(value) != 2
+            or not all(isinstance(item, value_types) for item in value)
+        ):
+            value_names = " or ".join(value_type.__name__ for value_type in value_types)
+            raise ValueError(
+                f"{name} must be a tuple or list of 2 {value_names} values"
+            )
+
+        minimum, maximum = value
+        if minimum > maximum:
+            minimum, maximum = maximum, minimum
+        if clamp_min is not None:
+            minimum = max(clamp_min, minimum)
+            maximum = max(clamp_min, maximum)
+        if clamp_max is not None:
+            minimum = min(clamp_max, minimum)
+            maximum = min(clamp_max, maximum)
+
+        return minimum, maximum
+
+    @classmethod
+    def min_max_dict(
+        cls,
+        value: Any,
+        name: str,
+        *,
+        value_types: tuple[type, ...] = (int, float),
+        clamp_min: int | float | None = None,
+        clamp_max: int | float | None = None,
+    ) -> dict[str, Any]:
+        minimum, maximum = cls._normalize_min_max(
+            value,
+            name,
+            value_types=value_types,
+            clamp_min=clamp_min,
+            clamp_max=clamp_max,
+        )
+        return {"min": minimum, "max": maximum}
+
+    @classmethod
+    def min_max_list(
+        cls,
+        value: Any,
+        name: str,
+        *,
+        value_types: tuple[type, ...] = (int, float),
+        clamp_min: int | float | None = None,
+        clamp_max: int | float | None = None,
+    ) -> list[Any]:
+        minimum, maximum = cls._normalize_min_max(
+            value,
+            name,
+            value_types=value_types,
+            clamp_min=clamp_min,
+            clamp_max=clamp_max,
+        )
+        return [minimum, maximum]
+
+    @classmethod
+    def range_min_max_dict(
+        cls,
+        value: float | int | tuple[float | int, float | int],
+        name: str,
+        *,
+        value_types: tuple[type, ...] = (int, float),
+        clamp_min: int | float | None = None,
+        clamp_max: int | float | None = None,
+    ) -> dict[str, Any]:
+        if isinstance(value, (float, int)):
+            value = (value, value)
+
+        minimum, maximum = cls._normalize_min_max(
+            value,
+            name,
+            value_types=value_types,
+            clamp_min=clamp_min,
+            clamp_max=clamp_max,
+        )
+        return {"range_min": minimum, "range_max": maximum}
 
 
 # --------------------------------------------------------------------------
-
-
-def FileExists(path) -> bool:
-    """Checks if a file exists.
-
-    Parameters:
-        path (_type_): The path to the file.
-
-    Returns:
-        bool: True if the file exists, False otherwise.
-    """
-    return os.path.exists(path)
 
 
 def normalize_180(angle: float | str) -> float:
@@ -192,175 +568,6 @@ def frange(start: int, stop: int, num: float = 1):
     return values
 
 
-def RemoveDirectory(path: str) -> None:
-    """
-    Removes a directory and all its contents.
-
-    Parameters:
-        path (str): The path to the directory to be removed.
-    """
-
-    shutil.rmtree(path, ignore_errors=True)
-
-
-def RemoveFile(path: str) -> None:
-    """
-    Removes a file.
-
-    Parameters:
-        path (str): The path to the file to be removed.
-    """
-    os.remove(path)
-
-
-def CopyFiles(old_dir: str, new_dir: str, target_file: str, rename: str = None) -> None:
-    """
-    Copies a file from one directory to another.
-
-    Parameters:
-        old_dir (str): The path to the source directory.
-        new_dir (str): The path to the destination directory.
-        target_file (str): The name of the file to be copied.
-        rename (str, optional): The new name for the copied file. Defaults to None.
-    """
-    CreateDirectory(new_dir)
-    if rename is None:
-        shutil.copyfile(os.path.join(old_dir, target_file), os.path.join(new_dir, target_file))
-    else:
-        shutil.copyfile(os.path.join(old_dir, target_file), os.path.join(new_dir, rename))
-
-
-def CopyFolder(old_dir: str, new_dir: str) -> None:
-    """
-    Copies a folder and all its contents to a new location.
-
-    Parameters:
-        old_dir (str): The path to the source directory.
-        new_dir (str): The path to the destination directory.
-    """
-    CreateDirectory(new_dir)
-    shutil.copytree(os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True)
-
-
-def MoveFolder(old_dir: str, new_dir: str) -> None:
-    """
-    Moves a folder and all its contents to a new location.
-
-    Parameters:
-        old_dir (str): The path to the source directory.
-        new_dir (str): The path to the destination directory.
-    """
-    CreateDirectory(new_dir)
-    shutil.move(os.path.realpath(old_dir), os.path.realpath(new_dir))
-
-
-def zipit(zip_name, dir_list: dict) -> None:
-    """
-    Create a ZIP archive containing multiple directories and files.
-
-    Parameters:
-        zip_name: The name of the ZIP archive.
-        dir_list (dict): A dictionary where the keys are source directories and the values are target directories.
-
-    Note:
-        The target directories represent the structure inside the ZIP archive.
-    """
-
-    excluded_extensions = [".js.map"]
-
-    def zipdir(ziph: zipfile.ZipFile, source, target):
-        if os.path.isdir(source):
-            for root, dirs, files in os.walk(source):
-                for file in files:
-                    if any(file.endswith(ext) for ext in excluded_extensions):
-                        continue
-                    ziph.write(
-                        os.path.join(root, file),
-                        os.path.join(
-                            target,
-                            os.path.relpath(os.path.join(root, file), os.path.join(source, ".")),
-                        ),
-                    )
-        else:
-            ziph.write(
-                source,
-                os.path.relpath(os.path.join(target, source), os.path.join(source, "..")),
-            )
-
-    zipf = zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED)
-    for source, target in dir_list.items():
-        zipdir(zipf, source, target)
-    zipf.close()
-
-
-def CreateDirectory(path: str) -> None:
-    """
-    Creates a new directory.
-
-    Parameters:
-        path (str): The path to the new directory.
-    """
-    this_path = os.path.join("./", path.lstrip("/"))
-    os.makedirs(this_path, exist_ok=True)
-
-
-def File(
-    name: str,
-    content: str | dict,
-    directory: str,
-    mode: str,
-    skip_tag: bool = False,
-    **parameters,
-) -> None:
-    """
-    Create or modify a file with the given content.
-
-    Parameters:
-        name (str): The name of the file.
-        content: The content of the file.
-        directory (str): The directory path where the file should be created or modified.
-        mode (str): The file mode, either "w" (write) or "a" (append).
-        skip_tag (bool, optional): Whether to skip adding the file metadata tag. Defaults to False.
-        *Parameters: Additional StrEnum.
-
-    Note:
-        The file content is converted to the appropriate format based on the file extension.
-    """
-    from anvil.lib.config import Config, ConfigOption, ConfigSection
-
-    CreateDirectory(directory)
-    type = name.split(".")[-1]
-    out_content = ""
-    file_content = content
-    stamp = f"Generated with StarkTMA/Anvil {__version__}"
-    time = datetime.now(datetime.now().astimezone().tzinfo).strftime("%d-%m-%Y %H:%M:%S %z")
-    copyright = f"Property of {Config().get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY)}"
-    path = os.path.normpath(os.path.join(directory, name))
-    oneline = Config().get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)
-    if mode == "w":
-        match type:
-            case "json" | "material" | "code-workspace":
-                out_content = f"//Filename: {name}\n//{stamp}\n//{time}\n//{copyright}\n\n"
-                file_content = json.dumps(
-                    content,
-                    sort_keys=False,
-                    indent=4 if not oneline else None,
-                    ensure_ascii=False,
-                    cls=PrettyPrintedEncoder,
-                )
-            case "py" | "mcfunction":
-                out_content = f"#Filename: {name}\n#{stamp}\n#{time}\n#{copyright}\n\n"
-            case "lang":
-                out_content = f"##Filename: {name}\n##{stamp}\n##{time}\n##{copyright}\n\n"
-    if skip_tag:
-        out_content = file_content
-    else:
-        out_content += file_content
-
-    with open(path, mode, encoding="utf-8") as file:
-        file.write(out_content)
-
-
 def process_subcommand(command: str, error_handle: str = "Error"):
     """Executes a subprocess command with error handling.
 
@@ -374,7 +581,9 @@ def process_subcommand(command: str, error_handle: str = "Error"):
         print(f"{error_handle}: {e}")
 
 
-def validate_namespace_project_name(namespace: str, project_name: str, is_addon: bool = False):
+def validate_namespace_project_name(
+    namespace: str, project_name: str, is_addon: bool = False
+):
     """Validates namespace and project name according to Minecraft addon requirements.
 
     Args:
@@ -393,7 +602,9 @@ def validate_namespace_project_name(namespace: str, project_name: str, is_addon:
         )
 
     if len(namespace) > 8:
-        raise ValueError(f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long.")
+        raise ValueError(
+            f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long."
+        )
 
     if len(project_name) > 16:
         raise ValueError(
@@ -402,7 +613,9 @@ def validate_namespace_project_name(namespace: str, project_name: str, is_addon:
 
     if is_addon:
         if not namespace.endswith(f"_{pascal_project_name.lower()}"):
-            raise ValueError(f"Every namespace must be unique to the pack. For this pack it should be {namespace}.")
+            raise ValueError(
+                f"Every namespace must be unique to the pack. For this pack it should be {namespace}."
+            )
 
 
 def salt_from_str(s: str) -> int:
@@ -489,7 +702,9 @@ def convert_color(
             raise ValueError("Color tuple/list must have 3 (RGB) or 4 (RGBA) elements")
         is_str = False
     else:
-        raise TypeError(f"Unsupported color type: {type(color).__name__}. Expected str, tuple, or list.")
+        raise TypeError(
+            f"Unsupported color type: {type(color).__name__}. Expected str, tuple, or list."
+        )
 
     # Determine target from source if not specified
     if target is None:
@@ -498,7 +713,11 @@ def convert_color(
         else:
             max_val = max(color[:3])
             has_alpha = len(color) == 4
-            target = RGBA255 if has_alpha and max_val > 1.0 else RGB255 if max_val > 1.0 else RGBA if has_alpha else RGB
+            target = (
+                RGBA255
+                if has_alpha and max_val > 1.0
+                else RGB255 if max_val > 1.0 else RGBA if has_alpha else RGB
+            )
 
     # Parse input color to normalized RGBA (0-1 range with alpha)
     if is_str:

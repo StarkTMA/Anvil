@@ -1,0 +1,8 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:nether_cave_carver_feature": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        }
+    }
+}

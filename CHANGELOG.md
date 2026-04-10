@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.6.6**](#version-0966)
+- [**Version 0.9.7**](#version-097)
+- [Version 0.9.6.6](#version-0966)
 - [Version 0.9.6.5](#version-0965)
 - [Version 0.9.6.4](#version-0964)
 - [Version 0.9.6.3](#version-0963)
@@ -89,15 +90,54 @@
 
 ## Release Series 0.9.x
 
+### Version 0.9.7
+
+#### Anvil
+
+- Localization now uses `localization.csv` instead of `localization.xlsx`, with one column per Minecraft-supported language and incremental sync during export.
+- `ANVIL.compile()` now supports packaging in the same call through `zip`, `mcaddon`, `mcworld`, `apply_overlay`, and `generate_technical_notes` options.
+- Reworked file serialization and archive generation around new `AnvilIO` and `AnvilArchive` helpers backed by `orjson`, and moved localization storage to CSV-based workflows which improved compilation performance by a factor of 8.
+- Added Python `3.13` support and updated package build requirements.
+
+#### CLI
+
+- Added `anvil clear` to remove the current project's generated development packs.
+- Added `anvil profile` to record a `py-spy` speedscope trace for the current project.
+- Added pack size report to `anvil run` on packages of type `addon`.
+
+#### Actors
+
+- Added broad Bedrock actor component coverage, including `EntitySpawnEggInteraction`, `EntityAnnotationBreakDoor`, `EntityAttackCooldown`, `EntityCombatRegeneration`, `EntityDamageOverTime`, `EntityDefaultLookAngle`, `EntityFloatsInLiquid`, `EntityGroundOffset`, `EntityInputAirControlled`, `EntityRemoveInPeaceful`, `EntitySoundVolume`, `EntityUnderwaterMountBreathing`, `EntityUsesLegacyFriction`, `EntityVibrationDamper`, `EntityWalkAnimationSpeed`, and `EntityWantsJockey`.
+- Added interaction and gameplay actor components including `EntityBlockClimber`, `EntityBlockSensor`, `EntityBribeable`, `EntityCelebrateHunt`, `EntityHeartbeat`, `EntityHome`, `EntityInsomnia`, `EntityLeashableTo`, `EntityMobEffectImmunity`, `EntityTamemount`, `EntityTradeTable`, `EntityBalloonable`, `EntityBarter`, `EntityBoostable`, `EntityBreakBlocks`, `EntityDash`, `EntityDryingOutTimer`, `EntityFlocking`, `EntityGenetics`, `EntityGiveable`, `EntityGrowsCrop`, `EntityItemControllable`, `EntityManagedWanderingTrader`, `EntityPeek`, `EntityRaidTrigger`, `EntityRailMovement`, `EntityRailSensor`, `EntityRavagerBlocked`, `EntitySuspectTracking`, `EntityTeleport`, `EntityTrail`, `EntityTrust`, `EntityTrusting`, and `EntityVibrationListener`.
+- Added player-state and utility actor components including `EntityPlayerExhaustion`, `EntityPlayerExperience`, `EntityPlayerLevel`, `EntityPlayerSaturation`, `EntityStrength`, and experimental `EntityReflectProjectiles`, and added a compatibility stub for the removed `EntityPushable` component that redirects users to the replacement pushable components.
+- Added broad Bedrock actor AI goal coverage for combat, targeting, locomotion, and idle behavior, including `EntityAINearestPrioritizedAttackableTarget`, `EntityAIKnockbackRoar`, `EntityAIRandomStroll`, `EntityAILookAtPlayer`, `EntityAIRandomLookAround`, `EntityAIHurtByTarget`, `EntityAIMeleeAttack`, `EntityAIRangedAttack`, `EntityAISummonEntity`, `EntityAIDelayedAttack`, `EntityAIMoveToBlock`, `EntityAIEquipItem`, `EntityAISendEvent`, `EntityAIMoveTowardsTarget`, `EntityAIRandomSitting`, `EntityAIStayWhileSitting`, `EntityAIRandomSwim`, `EntityAIRandomBreach`, `EntityAIMoveToWater`, `EntityAIMoveToLand`, `EntityAIMoveToLava`, `EntityAILookAtTarget`, `EntityAIFollowParent`, `EntityAIPlayerRideTamed`, `EntityAIFollowOwner`, `EntityAIPanic`, `EntityAIChargeAttack`, `EntityAIRamAttack`, `EntityAIAvoidMobType`, `EntityAILeapAtTarget`, `EntityAIOcelotAttack`, `EntityAIOwnerHurtByTarget`, `EntityAIOwnerHurtTarget`, `EntityAIRandomSearchAndDig`, `EntityAIStompAttack`, `EntityAIRandomHover`, `EntityAIRoar`, `EntityAIFloatWander`, `EntityAILayDown`, `EntityAIMeleeBoxAttack`, `EntityAITimerFlag1`, `EntityAITimerFlag2`, `EntityAITimerFlag3`, `EntityAIRunAroundLikeCrazy`, `EntityAISlimeKeepOnJumping`, and `EntityAIRiseToLiquidLevel`.
+- Added rider, pet, interaction, and environment AI goals including `EntityAIAdmireItem`, `EntityAIBarter`, `EntityAIBeg`, `EntityAIBreakDoor`, `EntityAIControlledByPlayer`, `EntityAICroak`, `EntityAIDoorInteract`, `EntityAIFleeSun`, `EntityAILayEgg`, `EntityAIMoveOutdoors`, `EntityAIOpenDoor`, `EntityAIPlayDead`, `EntityAIRestrictOpenDoor`, `EntityAIRestrictSun`, `EntityAITempt`, `EntityAIMoveToLiquid`, `EntityAIMoveToVillage`, `EntityAIMoveTowardsHomeRestriction`, `EntityAIMoveTowardsRestriction`, `EntityAIOfferFlower`, `EntityAIPetSleepWithOwner`, `EntityAIRandomLookAroundAndSit`, `EntityAISwell`, `EntityAITakeFlower`, `EntityAITeleportToOwner`, `EntityAIAquaticChargeAttack`, `EntityAIChargeHeldItem`, `EntityAIDrinkPotion`, `EntityAIFollowCaravan`, `EntityAIHoldGround`, `EntityAIJumpAroundTarget`, and `EntityAIJumpToBlock`.
+- Added village, utility, and vanilla-specialized AI goals including `EntityAICelebrate`, `EntityAIDefendTrustedTarget`, `EntityAIDefendVillageTarget`, `EntityAIFloatTempt`, `EntityAILookAtEntity`, `EntityAIMoveAroundTarget`, `EntityAIMoveToPOI`, `EntityAINap`, `EntityAIStrollTowardsVillage`, `EntityAICelebrateSurvive`, `EntityAIFindCover`, `EntityAIFindUnderwaterTreasure`, `EntityAIFireAtTarget`, `EntityAIGoHome`, `EntityAIOcelotSitOnBlock`, `EntityAIRaidGarden`, `EntityAISwimIdle`, `EntityAIVexCopyOwnerTarget`, `EntityAIVexRandomMove`, `EntityAIRoll`, `EntityAIScared`, `EntityAIEmerge`, `EntityAISniff`, `EntityAISneeze`, `EntityAISnacking`, `EntityAISwimWander`, `EntityAISwimWithEntity`, `EntityAIDropItemFor`, `EntityAIFindMount`, `EntityAIFollowTargetCaptain`, `EntityAIGuardianAttack`, `EntityAIMoveThroughVillage`, `EntityAISonicBoom`, `EntityAIStayNearNoteblock`, `EntityAIStompTurtleEgg`, `EntityAIEatCarriedItem`, `EntityAIEndermanLeaveBlock`, `EntityAIEndermanTakeBlock`, `EntityAIGoAndGiveItemsToNoteblock`, `EntityAIGoAndGiveItemsToOwner`, `EntityAIInvestigateSuspiciousLocation`, `EntityAIMountPathing`, `EntityAIStalkAndPounceOnTarget`, `EntityAIEatBlock`, `EntityAIEatMob`, `EntityAITransportItems`, `EntityAISilverfishMergeWithStone`, `EntityAISilverfishWakeUpFriends`, `EntityAISkeletonHorseTrap`, `EntityAISlimeAttack`, `EntityAISlimeFloat`, `EntityAISlimeRandomDirection`, `EntityAISquidDive`, `EntityAISquidFlee`, `EntityAISquidIdle`, `EntityAISquidMoveAwayFromGround`, and `EntityAISquidOutOfWater`.
+- Updated the new actor component docstrings to follow Microsoft Learn wording, including constructor argument types and default values.
+- Refreshed components docstrings against current Microsoft Learn pages, including updated summaries, constructor parameter descriptions, and repaired Learn links for moved component pages.
+- Render controllers now support `Molang` expressions for material bindings.
+- Component group properties now validate Minecraft's 32-property limit when defining custom properties.
+
+#### Features
+
+- Added a new world generation API under `anvil.api.features`, including `FeatureRule` support and feature definitions for aggregate, cave carver, fossil, geode, growing plant, multiface, Nether cave carver, ore, partially exposed blob, scatter, search, sculk patch, sequence, single block, snap to surface, structure template, surface relative threshold, tree, underwater cave carver, vegetation patch, and weighted random features.
+- Added feature distribution helpers, biome filter integration for feature rules, and support for the `pregeneration_pass` placement pass.
+- Note: There is a mismatch between what the scheme says on the Learn Portal and what Minecraft accepts. If you find any bugs please report them.
+
+#### Molang
+
+- Added `Context.ItemSlot()`.
+
 ### Version 0.9.6.6
 
 #### Blockbench
+
 - Added support for multiblock collections, now you can reference the specific collections in your models and the collections will be exported as separate geometries. This is useful for multiblock structures and blocks with different states that require different geometries. For example, a door can have a "bottom" collection and a "top" collection, and you can reference them in your block description as `BlockGeometry("door", collection="bottom")` and `BlockGeometry("door", collection="top")`.
 
 #### Actors
+
 - Fixed `EntityPushableByBlock` identifier.
 - Updated `EntityAIFollowMob` scheme.
-
 
 ### Version 0.9.6.5
 
@@ -309,7 +349,7 @@
 - Introduced a new JSON parser for pretty printing JSON files, this is the default behavior. The minify flag is still supported to export single line JSON files.
 - `BlocksJSONObject`, `MusicDefinition` and `SoundDefinition` use a singleton pattern to avoid overwriting definitions.
 - Massively improved sound registration through Entities and Blocks client methods, everything is now properly namespaced and referenced and integrates Entity and Block events.
-  - Standalone sound references can still be added using `SoundDefinition` class.
+    - Standalone sound references can still be added using `SoundDefinition` class.
 
 #### Items
 
@@ -492,58 +532,58 @@
 - Cleaned up the codebase, removed unused imports and files.
 - Removed the Logger class as the code now relies heavily on exceptions.
 - Added 3 new entries to the anvilConfig file:
-  - **ENTRY_POINT**: This is the entry point for the Anvil CLI, it can be used to run Anvil from a specific python file.
-    - **NOTE**: The `anvil run` still requires the `anvilconfig.json` file to be present in the working directory.
-  - **SCRIPT_BUNDLE_SCRIPT**: This is the javascript compilation/bundling script that will be used to bundle the TypeScript/JavaScript files.
-  - **MINIFY**: This option enables/disables minification of json files.
+    - **ENTRY_POINT**: This is the entry point for the Anvil CLI, it can be used to run Anvil from a specific python file.
+        - **NOTE**: The `anvil run` still requires the `anvilconfig.json` file to be present in the working directory.
+    - **SCRIPT_BUNDLE_SCRIPT**: This is the javascript compilation/bundling script that will be used to bundle the TypeScript/JavaScript files.
+    - **MINIFY**: This option enables/disables minification of json files.
 - Changed the anvil project hierarchy.
-  - The new hierarchy is designed to be more intuitive and easier to navigate.
-  - The new hierarchy is as follows:
-    ```
-    project/
-    ├── assets/
-    │   ├── bbmodels/
-    │   ├── particles/
-    │   ├── textures/
-    │   └── sounds/
-    ├── marketing/
-    ├── output/
-    ├── scripts/
-    │   ├── javascript/
-    │   └── python/
-    ├── world/
-    │   └── structures/
-    ├── anvilconfig.json
-    ├── esbuild.js
-    ├── package.json
-    └── tsconfig.json
-    ```
+    - The new hierarchy is designed to be more intuitive and easier to navigate.
+    - The new hierarchy is as follows:
+        ```
+        project/
+        ├── assets/
+        │   ├── bbmodels/
+        │   ├── particles/
+        │   ├── textures/
+        │   └── sounds/
+        ├── marketing/
+        ├── output/
+        ├── scripts/
+        │   ├── javascript/
+        │   └── python/
+        ├── world/
+        │   └── structures/
+        ├── anvilconfig.json
+        ├── esbuild.js
+        ├── package.json
+        └── tsconfig.json
+        ```
 - Anvil now uses esbuild by default to bundle the TypeScript files into JavaScript files.
-  - esbuild is recommended by Microsoft for bundling TypeScript files for Minecraft Bedrock Edition.
-  - The Compiling/Bundling script can be changed in the `anvilconfig.json` file. So you can use your own bundling script if you wish.
+    - esbuild is recommended by Microsoft for bundling TypeScript files for Minecraft Bedrock Edition.
+    - The Compiling/Bundling script can be changed in the `anvilconfig.json` file. So you can use your own bundling script if you wish.
 - Updated format versions.
 - Anvil now uses Templates for file generation instead of hardcoded jsons.
 - Added a new translator module, this new module shouldn't effect your existing code at all. However it introduced a new localization.xlsx file for managing translations. Now you can choose to manually translate your strings using this, automatically translate them using the Google Translate API, or a combination of both. You can also choose to only compile and translate specific languages.
-  - The file is generated automatically in the root directory of your projects and is populated with all the localization keys from your code.
-  - If you already manually or automatically translated your strings, and then changed a value in your code, the translation of that string will be removed and that language will not be exported unless the key is updated.
+    - The file is generated automatically in the root directory of your projects and is populated with all the localization keys from your code.
+    - If you already manually or automatically translated your strings, and then changed a value in your code, the translation of that string will be removed and that language will not be exported unless the key is updated.
 
 #### Blockbench
 
 - Blockbench API can now export Generic models containing meshes. This is not a fully supported feature, and likely will not be supported in the future. The API expects meshes containing Minecraft like cubic clusters with a Cubic scale of 1 meters squared.
-  - This was tested with .OBJ files exported from Minecraft using Mineways.
+    - This was tested with .OBJ files exported from Minecraft using Mineways.
 - Blockbench can export global animation rotation.
 - Added `override_bounding_box` argument to geometry registration in Entity and Block descriptions.
 
 #### Kit
 
 - Added a new module `anvil.kit`.
-  - The module contains useful functions and classes used for different purposes across different projects by startkma.
+    - The module contains useful functions and classes used for different purposes across different projects by startkma.
 - Added `ldtk()` class `anvil.kit.world`. This class can be used to load and parse LDtk files then convert them to Minecraft worlds.
-  - ldtk can be a little confusing to work with here, but it was powerful for the creation of [Beyond: Platformer](https://www.minecraft.net/en-us/marketplace/pdp/starktma/beyond:-platformer/f1ecf12b-1b6f-4794-a8de-24dfb82e6f25).
-  - A tutorial on how to use the `ldtk()` class will be available in the documentation sometime in the future.
+    - ldtk can be a little confusing to work with here, but it was powerful for the creation of [Beyond: Platformer](https://www.minecraft.net/en-us/marketplace/pdp/starktma/beyond:-platformer/f1ecf12b-1b6f-4794-a8de-24dfb82e6f25).
+    - A tutorial on how to use the `ldtk()` class will be available in the documentation sometime in the future.
 - Added `add_entity_outline()` function to the `anvil.kit.actors.materials` module. This function can be used to add 2 materials used for entity outlines.
-  - The function will add the `base` and `outline` materials to the entity.materials file.
-  - The `base` material is used for the base model, while the `outline` material is used for the outline of entities.
+    - The function will add the `base` and `outline` materials to the entity.materials file.
+    - The `base` material is used for the base model, while the `outline` material is used for the outline of entities.
 
 #### Actors
 
@@ -711,11 +751,11 @@
 #### Blockbench
 
 - Added support for Blockbench files. Entities attachables and blocks no longer require a dedicated model, animation and texture files, instead a single bbmodel must be added to the `assets/bbmodels` folder.
-  - A blockbench file can store a model and all of its relative textures and animations.
-  - For instance, if you have an entity named `starktma:vehicle` that references a model called `truck`, you must add a model file named `truck.bbmodel` to the `assets/bbmodels` folder. For example:
-    - `player.Client.description.geometry("energy_beam")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the model from it.
-    - `player.Client.description.texture("energy_beam", "energy_beam_blue")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the texture `energy_beam_blue` from it.
-    - `player.Client.description.animation("energy_beam", "energy_beam_charging")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the animation `energy_beam_charging` from it.
+    - A blockbench file can store a model and all of its relative textures and animations.
+    - For instance, if you have an entity named `starktma:vehicle` that references a model called `truck`, you must add a model file named `truck.bbmodel` to the `assets/bbmodels` folder. For example:
+        - `player.Client.description.geometry("energy_beam")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the model from it.
+        - `player.Client.description.texture("energy_beam", "energy_beam_blue")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the texture `energy_beam_blue` from it.
+        - `player.Client.description.animation("energy_beam", "energy_beam_charging")`. Anvil will check for a file named `energy_beam.bbmodel` in the `assets/bbmodels` directory and extract the animation `energy_beam_charging` from it.
 - Blockbench file identifiers should use a namespace prefix, for example `starktma:truck.bbmodel`. Anvil will automatically add the namespace to the identifier.
 - Blockbench animations should contain their name. For example, `energy_beam_charging` instead of `animation.stark_ap.player.energy_beam`. Anvil will automatically format them properly.
 - Blockbench textures should contain their name. For example, `energy_beam_blue` instead of `texture.stark_ap.player.energy_beam`. Anvil will automatically format them properly.
@@ -912,12 +952,12 @@
 #### Blockbench
 
 - As an effort to move towards using `.bbmodel` files natively, there has been a change to how models and textures are referenced.
-  - Entities and attachables no longer require a dedicated model file, instead a referenced models must be added to the `assets/models` folder under their own name.
-    - For instance, if you have an entity named `starktma:vehicle` that references a model called `truck`, you must add a model file named `truck.geo.json` to the `assets/models/actors` folder.
-  - Entities and attachables no longer require a dedicated texture file, instead a referenced textures must be added to the `assets/textures` folder under their own name.
-    - For instance, if you have an entity named `starktma:vehicle` that references a texture called `truck`, you must add a texture file named `truck.png` to the `assets/textures/actors` folder.
-  - Entities and attachables textures and models are now placed in the same `actors` folder.
-  - Entities and attachables no longer exports their models and texture into queued folders, instead everything is exported under the `actors` folder.
+    - Entities and attachables no longer require a dedicated model file, instead a referenced models must be added to the `assets/models` folder under their own name.
+        - For instance, if you have an entity named `starktma:vehicle` that references a model called `truck`, you must add a model file named `truck.geo.json` to the `assets/models/actors` folder.
+    - Entities and attachables no longer require a dedicated texture file, instead a referenced textures must be added to the `assets/textures` folder under their own name.
+        - For instance, if you have an entity named `starktma:vehicle` that references a texture called `truck`, you must add a texture file named `truck.png` to the `assets/textures/actors` folder.
+    - Entities and attachables textures and models are now placed in the same `actors` folder.
+    - Entities and attachables no longer exports their models and texture into queued folders, instead everything is exported under the `actors` folder.
 - Adopting blockbench files will facilitate working with assets, additionally the folder structure can no longer be supported with the new enforced guidelines due to the file path limit.
 
 #### Components
@@ -1035,7 +1075,7 @@
 #### Tools
 
 - `StateMachine()`:
-  - `active_player` counter now runs all the time regardless of the max player count.
+    - `active_player` counter now runs all the time regardless of the max player count.
 
 ---
 
@@ -1123,7 +1163,7 @@
 
 - Docs are now build when pushing to the main branch.
 - Added a universal way to require project specific configuration.
-  - To use call `ANVIL.require_config()` and pass the required configs as arguments.
+    - To use call `ANVIL.require_config()` and pass the required configs as arguments.
 - Additional work on documentation.
 - Fonts can now generate a 'numbers' particle texture that contains numbers from 0-999.
 - Replaced `dependecies` with `capabilities` in resource pack manifest.
@@ -1202,7 +1242,7 @@
 - Classes use proper Enumerators.
 - Added `_debug` a rawtext attribute to ANVIL. this can be useful to display score and debug text as actionbar if DEBUG = 1.
 - Added a `_SoundEvent()` class to `core.py`. This call will serve as sound manager for Minecraft Vanilla sound event triggers.
-  - Sound Events are only supported for Entities as of now, a new method was added to `Entity.Client.description` that allows adding default sound triggers.
+    - Sound Events are only supported for Entities as of now, a new method was added to `Entity.Client.description` that allows adding default sound triggers.
 
 #### Components
 
@@ -1226,7 +1266,7 @@
 #### Molang
 
 - Added the rest of the molang queries.
-  - Some queries need more information to properly implement therefore they may not work.
+    - Some queries need more information to properly implement therefore they may not work.
 
 ---
 
@@ -1235,21 +1275,21 @@
 #### Anvil
 
 - Added support for ScriptAPI
-  - To include scripting in your project use the flag `--scriptapi` when creating a new project.
-  - Scripts can be added or removed anytime from `config.ini`.
+    - To include scripting in your project use the flag `--scriptapi` when creating a new project.
+    - Scripts can be added or removed anytime from `config.ini`.
 - Added support for PBR
-  - To include pbr in your project use the flag `--pbr` when creating a new project.
-  - PBR can be added or removed anytime from `config.ini`.
+    - To include pbr in your project use the flag `--pbr` when creating a new project.
+    - PBR can be added or removed anytime from `config.ini`.
 - Removed the #packaging comment from the generated python script, it's outdated and doesn't represent the functionality of the method anymore.
 - Updated to release `1.20.1.0`.
 - Preview builds are no longer tracked, instead focusing solely on releases.
 - Reusable geometries no longer make copies of the same geometry files, instead only reference them. Referenced entities must be queues before the referencing entity.
 - Renamed `Permission` enumerator to `InputPermissions`.
 - `package.py` changes:
-  - Added a lot of docstring.
-  - Removed `RawText`, `random_character_generator`, `CreateImage`, `GetColors`, `CreateTreeFromPath`, `GetPathFromTree`, `MoveFiles`, `DownloadFile`.
-  - Moved `CreateDirectoriesFromTree` to `cli.py`
-  - Moved `ShortenDict` inside the `AddonObject` class.
+    - Added a lot of docstring.
+    - Removed `RawText`, `random_character_generator`, `CreateImage`, `GetColors`, `CreateTreeFromPath`, `GetPathFromTree`, `MoveFiles`, `DownloadFile`.
+    - Moved `CreateDirectoriesFromTree` to `cli.py`
+    - Moved `ShortenDict` inside the `AddonObject` class.
 - Added docstrings to the `cli` tool.
 - Started moving from the basic `RaiseError` to proper Errors.
 - Removing a component from an Actor no longer results in an error if the component doesn't exist.
@@ -1258,9 +1298,9 @@
 - Created a Logger class to track error and operations.
 - Removed type subdirectory from RP animation and render controllers.
 - Added a version enforcing method to components.
-  - Implemented the enforcements in the items components.
-  - Components that require a minimum format version will raise an error if Anvil format version is not equal or higher.
-  - This change will allow us to work on implementing experimental features safely.
+    - Implemented the enforcements in the items components.
+    - Components that require a minimum format version will raise an error if Anvil format version is not equal or higher.
+    - This change will allow us to work on implementing experimental features safely.
 - Added the new Items and Blocks to the vanilla module.
 - Added `all_slots_empty` and `any_slots_empty` filters.
 - Added the `spawn_item_event` key to the `SpawnEntity` component class.
@@ -1271,7 +1311,7 @@
 >
 > - Config file is no longer automatically initialized, instead it's an `ANVIL` property.
 > - The gloabl variables such as `NAMESPACE` and `PROJECTNAME` are now accessible through the `ANVIL` instance.
->   - `NAMESPACE -> ANVIL.NAMESPACE`
+>     - `NAMESPACE -> ANVIL.NAMESPACE`
 > - Localizing uses a key_value arguments instead of a manual string now
 
 #### Components
@@ -1308,9 +1348,9 @@
 - Updated to release `1.19.81.01` and preview `1.20.0.20`.
 - Actors client `scale` values is properly set to a string.
 - `TimedFunction` is no longer tied to an actor and will be executed on the server fake player.
-  - Tags are also no longer required.
-  - To get the scoreboard objective for the TimedFunction, call it's str representation.
-  - To test if the TimedFunction has finished it's run, check if the objective is equal to -1.
+    - Tags are also no longer required.
+    - To get the scoreboard objective for the TimedFunction, call it's str representation.
+    - To test if the TimedFunction has finished it's run, check if the objective is equal to -1.
 - Added an error validation for path length exceeding 80 characters.
 - Anvil packaging function allows for applying an overlay to keyarts now.
 - Replaced the Exporter Parent class with `AddonObject` and moved extensions and paths to each individual class.
@@ -1418,12 +1458,12 @@
 #### Molang
 
 - Expanded operation support to use Python operation natively.
-  - Division: **a/b**
-  - Floor Division: **a//b** → **math.floor(a/b)**
-  - Modulo: **a%b** → **math.mod(a, b)**
-  - Power: **a**b** → **math.pow(a, b)\*\*
-  - Absolute value: **abs(a)** → **math.abs(a)**
-  - Rounded value: **round(a)** → **math.round(a)**
+    - Division: **a/b**
+    - Floor Division: **a//b** → **math.floor(a/b)**
+    - Modulo: **a%b** → **math.mod(a, b)**
+    - Power: **a**b** → **math.pow(a, b)\*\*
+    - Absolute value: **abs(a)** → **math.abs(a)**
+    - Rounded value: **round(a)** → **math.round(a)**
 - Added `BlockProperty`.
 
 ---

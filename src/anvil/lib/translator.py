@@ -1,13 +1,13 @@
+import csv
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import click
-import pandas as pd
 from deep_translator import GoogleTranslator
 
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import File
+from anvil.lib.lib import AnvilIO
 from anvil.lib.schemas import JsonSchemes
 
 
@@ -21,35 +21,27 @@ class AnvilTranslator:
 
     def __init__(self):
         """
-        Initialize the translator with an Excel file path.
+        Collect localization entries during compilation, merge them with
+        localization.csv, optionally fill missing translations, and export
+        Minecraft .lang files.
         """
         if hasattr(self, "_initialized") and self._initialized:
             return
-        self._excel_file_path = Path("localization.xlsx")
+
+        self._csv_file_path = Path("localization.csv")
         self._source_language = "en_US"
         self._translated = False
         self.translated_languages = [self._source_language]
-        self._initialized = True
         self.config = CONFIG
+        self._languages = list(JsonSchemes.languages())
 
-        # Runtime storage for user-registered entries
         self._runtime_entries: Dict[str, str] = {}
-        
-        # Original state from file
-        self._original_entries: Dict[str, str] = {}
-        
-        if self._excel_file_path.exists():
-            try:
-                # Load original en_US entries to track deletions/modifications
-                df = pd.read_excel(self._excel_file_path, sheet_name=self._source_language)
-                self._original_entries = dict(zip(df["Key"], df["Value"]))
-            except ValueError:
-                pass
-        else:
-            with pd.ExcelWriter(self._excel_file_path, engine="openpyxl") as writer:
-                for lang_code in JsonSchemes.languages():
-                    df = pd.DataFrame(columns=["Key", "Value"])
-                    df.to_excel(writer, sheet_name=lang_code, index=False)
+        self._entries: Dict[str, Dict[str, Optional[str]]] = {}
+        for language in self._languages:
+            self._entries[language] = {}
+
+        self._pending_translation_languages: set[str] = set()
+        self._initialized = True
 
         self.add_localization_entry("pack.name", self.config.DISPLAY_NAME)
         self.add_localization_entry(
@@ -62,228 +54,274 @@ class AnvilTranslator:
             "pack.behaviour_description", self.config.BEHAVIOUR_DESCRIPTION
         )
 
-    def _get_languages(self) -> List[str]:
-        """Returns a list of all languages."""
-        languages = [lang for lang in JsonSchemes.languages()]
-        return languages
+    def _normalize_value(self, value) -> Optional[str]:
+        if value is None:
+            return None
 
-    def _get_localization_entries(self, language: str) -> Dict[str, str]:
-        """
-        Returns a dictionary of localization entries for a specific language.
-        """
-        try:
-            df = pd.read_excel(self._excel_file_path, sheet_name=language)
-            return dict(zip(df["Key"], df["Value"]))
-        except ValueError:
-            return {}
+        if isinstance(value, float) and value != value:
+            return None
 
-    def _sync_excel(self) -> None:
-        """
-        Synchronizes the runtime entries with the Excel file.
-        """
-        if not self._runtime_entries:
+        return str(value)
+
+    def _read_csv_entries(
+        self,
+    ) -> tuple[Dict[str, Dict[str, Optional[str]]], list[str]]:
+        entries: Dict[str, Dict[str, Optional[str]]] = {}
+
+        for language in self._languages:
+            entries[language] = {}
+
+        if not self._csv_file_path.exists():
+            return entries, []
+
+        with self._csv_file_path.open("r", newline="", encoding="utf-8-sig") as file:
+            reader = csv.DictReader(file)
+            fieldnames = list(reader.fieldnames or [])
+
+            if not fieldnames or fieldnames[0] != "Key":
+                return entries, fieldnames
+
+            for row in reader:
+                key = self._normalize_value(row.get("Key"))
+                if key is None:
+                    continue
+
+                for language in self._languages:
+                    entries[language][key] = self._normalize_value(row.get(language))
+
+        return entries, fieldnames
+
+    def _parse_language(self, language: str) -> str:
+        language = language.replace("zh_CN", "zh-CN")
+        language = language.replace("zh_TW", "zh-TW")
+        language = language.replace("nb_NO", "no").split("_")[0]
+        language = language.replace("en_US", "en")
+        language = language.replace("en_GB", "en")
+        return language
+
+    def _translate_pending_languages(self, source_keys: List[str]) -> None:
+        if not self._pending_translation_languages:
             return
 
-        # Load all existing sheets
-        all_dfs = {}
-        for language in self._get_languages():
-            try:
-                df = pd.read_excel(self._excel_file_path, sheet_name=language)
-                all_dfs[language] = df
-            except ValueError:
-                all_dfs[language] = pd.DataFrame(columns=["Key", "Value"])
+        source_entries = self._entries[self._source_language]
 
-        original_set = set(self._original_entries.keys())
-        runtime_set = set(self._runtime_entries.keys())
-        
-        # Identify changes
-        new_keys = runtime_set - original_set
-        deleted_keys = original_set - runtime_set
-        shared_keys = runtime_set.intersection(original_set)
+        for language in sorted(self._pending_translation_languages):
+            if language == self._source_language:
+                continue
 
-        # 1. Handle New Keys
-        if new_keys:
-            new_rows_en = pd.DataFrame({"Key": list(new_keys), "Value": [self._runtime_entries[k] for k in new_keys]})
-            all_dfs[self._source_language] = pd.concat([all_dfs[self._source_language], new_rows_en], ignore_index=True)
-            
-            for lang, df in all_dfs.items():
-                if lang == self._source_language: 
+            if language not in self._entries:
+                continue
+
+            language_entries = self._entries[language]
+            keys_to_translate: List[str] = []
+            values_to_translate: List[str] = []
+
+            for key in source_keys:
+                source_value = source_entries.get(key)
+                current_value = language_entries.get(key)
+
+                if source_value is None:
                     continue
-                new_rows_other = pd.DataFrame({"Key": list(new_keys), "Value": [""] * len(new_keys)})
-                all_dfs[lang] = pd.concat([df, new_rows_other], ignore_index=True)
 
-        # 2. Handle Deleted Keys
-        if deleted_keys:
-            for lang in all_dfs:
-                all_dfs[lang] = all_dfs[lang][~all_dfs[lang]["Key"].isin(deleted_keys)]
+                if current_value not in (None, ""):
+                    continue
 
-        # 3. Handle Modified Values
-        for key in shared_keys:
-            original_val = self._original_entries[key]
-            runtime_val = self._runtime_entries[key]
-            
-            if original_val != runtime_val:
-                # Update en_US
-                df_en = all_dfs[self._source_language]
-                df_en.loc[df_en["Key"] == key, "Value"] = runtime_val
-                
-                # Clear other languages
-                for lang in all_dfs:
-                    if lang == self._source_language:
-                        continue
-                    df_lang = all_dfs[lang]
-                    if key in df_lang["Key"].values:
-                         df_lang.loc[df_lang["Key"] == key, "Value"] = pd.NA
+                keys_to_translate.append(key)
+                values_to_translate.append(source_value)
 
-        # Write back to Excel
-        with pd.ExcelWriter(
-            self._excel_file_path,
-            engine="openpyxl",
-            mode="a",
-            if_sheet_exists="replace",
-        ) as writer:
-            for lang, df in all_dfs.items():
-                df.to_excel(writer, sheet_name=lang, index=False)
-                worksheet = writer.sheets[lang]
-                if not df.empty:
-                    key_lengths = [len(str(k)) for k in df["Key"] if pd.notna(k)]
-                    max_key_length = max(key_lengths) if key_lengths else 10
-                    worksheet.column_dimensions["A"].width = max(
-                        max_key_length + 5, 20
+            if not values_to_translate:
+                continue
+
+            translator = GoogleTranslator(
+                source="en", target=self._parse_language(language)
+            )
+            batch_size = 50
+
+            for index in range(0, len(values_to_translate), batch_size):
+                batch_keys = keys_to_translate[index : index + batch_size]
+                batch_values = values_to_translate[index : index + batch_size]
+
+                try:
+                    translated_values = translator.translate_batch(batch_values)
+                    if not isinstance(translated_values, list):
+                        translated_values = list(batch_values)
+                    elif len(translated_values) != len(batch_values):
+                        translated_values = list(batch_values)
+                except Exception as error:
+                    click.echo(
+                        click.style(
+                            f"[INFO]: Translation error for {language}: {error}",
+                            fg="red",
+                        )
                     )
-                worksheet.column_dimensions["B"].width = 20
-        
-        # Update original entries after sync
-        self._original_entries = self._runtime_entries.copy()
+                    translated_values = list(batch_values)
+
+                for key, source_value, translated_value in zip(
+                    batch_keys, batch_values, translated_values
+                ):
+                    normalized_value = self._normalize_value(translated_value)
+                    if normalized_value is None:
+                        normalized_value = source_value
+
+                    language_entries[key] = normalized_value
+
+        self._translated = True
+        self._pending_translation_languages.clear()
+
+    def _write_csv(self) -> None:
+        fieldnames = ["Key", *self._languages]
+
+        with self._csv_file_path.open("w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for key in self._entries[self._source_language]:
+                row = {"Key": key}
+
+                for language in self._languages:
+                    value = self._entries[language].get(key)
+                    row[language] = "" if value in (None, "") else value
+
+                writer.writerow(row)
+
+    def _sync_csv(self) -> None:
+        """
+        Open the CSV once, read its current values, merge runtime entries,
+        apply any pending translations, and write the CSV back only when
+        the row data changed.
+        """
+        saved_entries, saved_fieldnames = self._read_csv_entries()
+        saved_source_entries = saved_entries[self._source_language]
+
+        source_keys: List[str] = []
+        for key in saved_source_entries:
+            if key in self._runtime_entries:
+                source_keys.append(key)
+
+        for key in self._runtime_entries:
+            if key not in saved_source_entries:
+                source_keys.append(key)
+
+        changed_source_keys: set[str] = set()
+        for key, value in self._runtime_entries.items():
+            if saved_source_entries.get(key) != value:
+                changed_source_keys.add(key)
+
+        merged_entries: Dict[str, Dict[str, Optional[str]]] = {}
+        for language in self._languages:
+            merged_entries[language] = {}
+
+        source_entries = merged_entries[self._source_language]
+        for key in source_keys:
+            source_entries[key] = self._runtime_entries[key]
+
+        for language in self._languages:
+            if language == self._source_language:
+                continue
+
+            saved_language_entries = saved_entries[language]
+            merged_language_entries = merged_entries[language]
+
+            for key in source_keys:
+                value = saved_language_entries.get(key)
+                if key in changed_source_keys:
+                    value = None
+
+                merged_language_entries[key] = value
+
+        self._entries = merged_entries
+        self._translate_pending_languages(source_keys)
+
+        needs_save = not self._csv_file_path.exists()
+        if saved_fieldnames != ["Key", *self._languages]:
+            needs_save = True
+
+        if not needs_save:
+            for language in self._languages:
+                if self._entries[language] != saved_entries[language]:
+                    needs_save = True
+                    break
+
+        if needs_save:
+            self._write_csv()
 
     def add_localization_entry(self, key: str, value: str) -> None:
         """
-        Add a new localization entry to the runtime memory.
-
-        Parameters:
-            key (str): The localization key
-            value (str): The English value
+        Add or update a localization entry in the source language.
         """
         self._runtime_entries[key] = value
 
     def add_entries(self, entries: Dict[str, str]) -> None:
         """
-        Add multiple localization entries to the en_US sheet.
-
-        Parameters:
-            entries (Dict[str, str]): A dictionary of localization entries
+        Add multiple localization entries.
         """
         for key, value in entries.items():
             self.add_localization_entry(key, value)
 
     def get_localization_value(self, key: str) -> Optional[str]:
         """
-        Get the localization value for a specific key from the source language (en_US).
+        Return the current source-language value for a localization key.
         """
-        try:
-            df = pd.read_excel(self._excel_file_path, sheet_name=self._source_language)
-            return df.loc[df["Key"] == key, "Value"].iloc[0]
-        except (ValueError, IndexError):
-            return None
+        if key in self._runtime_entries:
+            return self._runtime_entries[key]
+
+        source_entries = self._entries.get(self._source_language, {})
+        return source_entries.get(key)
 
     def auto_translate_all(self, languages: Optional[list[str]] = None) -> None:
         """
-        Automatically translate all entries from source language to target languages.
+        Queue languages for translation during the next export sync.
         """
-        self._sync_excel()
-
-        def parse(lang: str):
-            lang = lang.replace("zh_CN", "zh-CN")
-            lang = lang.replace("zh_TW", "zh-TW")
-            lang = lang.replace("nb_NO", "no").split("_")[0]
-            lang = lang.replace("en_US", "en")
-            lang = lang.replace("en_GB", "en")
-            return lang
-
         if languages is None:
-            languages = self._get_languages()
+            languages = self._languages
 
-        source_entries = self._get_localization_entries(self._source_language)
+        for language in languages:
+            if language == self._source_language:
+                continue
 
-        with pd.ExcelWriter(
-            self._excel_file_path,
-            engine="openpyxl",
-            mode="a",
-            if_sheet_exists="replace",
-        ) as writer:
-            for target_lang in languages:
+            if language not in self._languages:
+                continue
 
-                if target_lang == self._source_language:
-                    continue
+            self._pending_translation_languages.add(language)
 
-                existing_entries = self._get_localization_entries(target_lang)
-                keys_to_translate = []
-                values_to_translate = []
+            if language not in self.translated_languages:
+                self.translated_languages.append(language)
 
-                for key, value in source_entries.items():
-                    if (
-                        key not in existing_entries
-                        or existing_entries[key] == ""
-                        or pd.isna(existing_entries[key])
-                    ):
-                        keys_to_translate.append(key)
-                        values_to_translate.append(value)
-
-                if not values_to_translate:
-                    continue
-
-                translator = GoogleTranslator(source="en", target=parse(target_lang))
-                translated_values = []
-                batch_size = 50
-                for i in range(0, len(values_to_translate), batch_size):
-                    batch = values_to_translate[i : i + batch_size]
-                    try:
-                        translated_values.extend(translator.translate_batch(batch))
-                    except Exception as e:
-                        click.echo(
-                            click.style(
-                                f"[INFO]: Translation error for {target_lang}: {e}",
-                                fg="red",
-                            )
-                        )
-                        translated_values.extend(batch)
-
-                translation_map = dict(zip(keys_to_translate, translated_values))
-
-                all_keys = list(source_entries.keys())
-                all_values = []
-
-                for key in all_keys:
-                    if key in existing_entries and not pd.isna(existing_entries[key]):
-                        all_values.append(existing_entries[key])
-                    else:
-                        all_values.append(translation_map[key])
-
-                df = pd.DataFrame({"Key": all_keys, "Value": all_values})
-                df.to_excel(writer, sheet_name=target_lang, index=False)
-
-        self._cleanup_orphaned_keys()
-
-        self._translated = True
-        self.translated_languages.extend(languages)
+    def format_key(self, key: str) -> str:
+        """
+        Format a localization key using only alphanumeric characters and dots, no starting with a digit, suitable for use in Minecraft .lang files.
+        """
+        formatted = "".join(
+            char if char.isalnum() or char == "." else "_" for char in key
+        )
+        if formatted and formatted[0].isdigit():
+            formatted = "_" + formatted
+        return formatted
 
     def _export(self) -> None:
         """
         Export translations to Anvil's .lang file format.
         """
-        self._sync_excel()
+        self._sync_csv()
 
         languages = []
         skipped = []
 
-        for lang_code in self._get_languages():
-            entries = self._get_localization_entries(lang_code)
+        for lang_code in self._languages:
+            entries = self._entries.get(lang_code, {})
             if not entries:
                 continue
 
-            if any(not value or pd.isna(value) for value in entries.values()):
+            missing_values = False
+            for value in entries.values():
+                if not value:
+                    missing_values = True
+                    break
+
+            if missing_values:
                 skipped.append(lang_code)
                 continue
+
             languages.append(lang_code)
 
             lang_content = []
@@ -293,14 +331,19 @@ class AnvilTranslator:
                 "pack.resource_description",
                 "pack.behaviour_description",
             ]
+
             for key in ordered_keys:
                 if key in entries:
                     lang_content.append(f"{key}={entries[key]}")
 
-            remaining_entries = {
-                k: v for k, v in entries.items() if k not in ordered_keys
-            }
-            for key, value in sorted(remaining_entries.items()):
+            remaining_entries = []
+            for key, value in entries.items():
+                if key in ordered_keys:
+                    continue
+
+                remaining_entries.append((key, value))
+
+            for key, value in sorted(remaining_entries):
                 lang_content.append(f"{key}={value}")
 
             bp_content = [
@@ -319,13 +362,13 @@ class AnvilTranslator:
             del rp_content[1]
             del rp_content[2]
 
-            File(
+            AnvilIO.file(
                 f"{lang_code}.lang",
                 "\n".join(rp_content),
                 os.path.join(self.config.RP_PATH, "texts"),
                 "w",
             )
-            File(
+            AnvilIO.file(
                 f"{lang_code}.lang",
                 "\n".join(bp_content),
                 os.path.join(self.config.BP_PATH, "texts"),
@@ -333,7 +376,7 @@ class AnvilTranslator:
             )
 
             if self.config._TARGET == "world":
-                File(
+                AnvilIO.file(
                     f"{lang_code}.lang",
                     "\n".join(world_content),
                     os.path.join(self.config._WORLD_PATH, "texts"),
@@ -347,14 +390,22 @@ class AnvilTranslator:
                     fg="yellow",
                 )
             )
-        File(
-            "languages.json", languages, os.path.join(self.config.BP_PATH, "texts"), "w"
+
+        AnvilIO.file(
+            "languages.json",
+            languages,
+            os.path.join(self.config.BP_PATH, "texts"),
+            "w",
         )
-        File(
-            "languages.json", languages, os.path.join(self.config.RP_PATH, "texts"), "w"
+        AnvilIO.file(
+            "languages.json",
+            languages,
+            os.path.join(self.config.RP_PATH, "texts"),
+            "w",
         )
+
         if self.config._TARGET == "world":
-            File(
+            AnvilIO.file(
                 "languages.json",
                 languages,
                 os.path.join(self.config._WORLD_PATH, "texts"),

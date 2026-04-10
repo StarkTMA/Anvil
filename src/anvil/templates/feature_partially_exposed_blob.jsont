@@ -1,0 +1,8 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:partially_exposed_blob_feature": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        }
+    }
+}

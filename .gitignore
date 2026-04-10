@@ -1,6 +1,8 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*.pyd
+*.so
 *$py.class
 
 # Distribution / packaging
@@ -86,3 +88,4 @@ venv.bak/
 
 copilot-instructions.md
 TODO.md
+.copilot-*

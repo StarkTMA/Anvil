@@ -1,0 +1,8 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:ore_feature": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        }
+    }
+}

@@ -1,6 +1,6 @@
 # Localization in Anvil
 
-This page explains how Anvil handles localization keys and Excel sheets, and how to translate/export languages correctly.
+This page explains how Anvil handles localization keys and the localization CSV, and how to translate/export languages correctly.
 
 ---
 
@@ -9,7 +9,7 @@ This page explains how Anvil handles localization keys and Excel sheets, and how
 Whenever you pass a **plain string** to an Anvil component, Anvil automatically:
 
 1. **Creates a localization key** for that string, and
-2. **Writes the key–value pair** into the Excel workbook at your project root (e.g., `localization.xlsx`).
+2. **Writes the key–value pair** into the CSV file at your project root (e.g., `localization.csv`).
 
 ```py title="examples that create keys"
 ItemDisplayName("Arcane User Guide")
@@ -18,7 +18,7 @@ BlockDisplayName("Enchanting Plus Table")
 ```
 
 !!! info "Where it goes"
-    The English source string is saved under the **`en_us` sheet** as the value for the generated key. The **same key** is also created (with an empty value) in the **other Minecraft‑supported locale sheets** inside the same workbook.
+    The English source string is saved under the **`en_US` column** as the value for the generated key. The **same key** is also created in the **other Minecraft-supported locale columns** inside the same CSV, with empty values until you translate them.
 
 ---
 
@@ -26,11 +26,11 @@ BlockDisplayName("Enchanting Plus Table")
 
 You have two options for non‑English locales:
 
-* **Manual translation**: open `localization.xlsx` and fill in the empty values in the non‑`en_us` sheets.
-* **Automatic translation**: call `anvil.translate()` to auto‑fill missing values using Google Translate.
+* **Manual translation**: open `localization.csv` and fill in the empty values in the non-`en_US` language columns.
+* **Automatic translation**: call `anvil.translate()` to auto-fill missing values using Google Translate.
 
 ```py title="auto translate missing locales"
-# Populates only empty cells in non-en_us sheets via Google Translate
+# Populates only empty cells in non-en_US language columns via Google Translate
 import anvil
 anvil.translate()
 ```
@@ -42,28 +42,28 @@ anvil.translate()
 
 ## What happens when strings change
 
-* If you **change** the source text in code, the corresponding **key’s value is updated** in `en_us` and the old value is removed from the other language sheets.
-* If you **delete** a plain string from your Anvil code, its entry is **removed** from the workbook (or its values are **emptied** across all languages).
+* If you **change** the source text in code, the corresponding **key's value is updated** in `en_US` and the old value is removed from the other language columns.
+* If you **delete** a plain string from your Anvil code, its entry is **removed** from the CSV.
 
 !!! warning
-    Keep your source of truth in code: adding text directly in Excel that doesn’t exist in code will **not** be referenced at build time.
+    Keep your source of truth in code: adding text directly in `localization.csv` that does not exist in code will **not** be referenced at build time.
 
 ---
 
 ## Build vs package behavior
 
 * `anvil compile()` → compiles **only `en_us`**.
-* `anvil.package()`, `anvil.mcaddon()`, `anvil.mcworld()` → compile **all languages** present in `localization.xlsx`.
+* `anvil.package()`, `anvil.mcaddon()`, `anvil.mcworld()` → compile **all languages** present in `localization.csv`.
 
 !!! tip
-    Any **language sheet** that has a key with an **empty value** will **not be exported** to the final `.lang` file. Make sure you fill required translations or leave the sheet out entirely.
+    Any **language column** that has a key with an **empty value** will **not be exported** to the final `.lang` file. Make sure you fill required translations before packaging.
 
 ---
 
 ## Quick checklist
 
 * Use **plain strings** in components; Anvil will create keys automatically.
-* Verify keys and values in `localization.xlsx` → `en_us` is the source of truth.
+* Verify keys and values in `localization.csv` -> `en_US` is the source of truth.
 * Translate others **manually** or with `anvil.translate()`.
 * Remember build rules: `compile` = English only, packaging commands = all languages.
-* Empty values in a locale sheet → that locale **won’t export** to `.lang`.
+* Empty values in a locale column -> that locale **won't export** to `.lang`.

@@ -14,7 +14,6 @@ from anvil.api.core.enums import BlockFaces
 from anvil.api.core.types import Vector2D
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import FileExists
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -29,8 +28,12 @@ def blockbench_geometry_name(model_name: str, collection: Optional[str] = None) 
     return f"{model_name}.{collection_name}"
 
 
-def adjust_value(val: Union[str, float, int], negate: bool = False) -> Union[float, str]:
-    is_num = isinstance(val, (int, float)) or (isinstance(val, str) and re.match(r"^-?\d+\.?\d*$", val))
+def adjust_value(
+    val: Union[str, float, int], negate: bool = False
+) -> Union[float, str]:
+    is_num = isinstance(val, (int, float)) or (
+        isinstance(val, str) and re.match(r"^-?\d+\.?\d*$", val)
+    )
     if is_num:
         num = float(val)
         if negate:
@@ -44,7 +47,9 @@ def adjust_value(val: Union[str, float, int], negate: bool = False) -> Union[flo
         return str(val)
 
 
-def process_vector(values: List[Any], negate_indices: List[int]) -> List[Union[float, str]]:
+def process_vector(
+    values: List[Any], negate_indices: List[int]
+) -> List[Union[float, str]]:
     return [adjust_value(v, i in negate_indices) for i, v in enumerate(values)]
 
 
@@ -88,18 +93,28 @@ class _BlockCulling(AddonObject):
         # cull_against_full_and_opaque: bool = False,
     ) -> None:
         if bone not in list(map(lambda g: g["name"], self._groups.values())):
-            raise ValueError(f"Bone '{bone}' not found in blockbench model '{self._bbmodel['model_identifier']}'.")
-        if cube_index is not None and (cube_index < 0 or cube_index >= self.bones[bone]):
+            raise ValueError(
+                f"Bone '{bone}' not found in blockbench model '{self._bbmodel['model_identifier']}'."
+            )
+        if cube_index is not None and (
+            cube_index < 0 or cube_index >= self.bones[bone]
+        ):
             raise ValueError(
                 f"Cube index '{cube_index}' out of range for bone '{bone}' in blockbench model '{self._bbmodel['model_identifier']}'."
             )
 
         if direction == BlockFaces.All or direction == BlockFaces.Side:
-            raise ValueError("Direction cannot be 'all' or 'side'. Please specify a single direction.")
+            raise ValueError(
+                "Direction cannot be 'all' or 'side'. Please specify a single direction."
+            )
         if face == BlockFaces.All or face == BlockFaces.Side:
-            raise ValueError("Face cannot be 'all' or 'side'. Please specify a single face.")
+            raise ValueError(
+                "Face cannot be 'all' or 'side'. Please specify a single face."
+            )
         if face is not None and cube_index is None:
-            raise ValueError("Face specified without cube_index. Please specify cube_index when using face.")
+            raise ValueError(
+                "Face specified without cube_index. Please specify cube_index when using face."
+            )
 
         rule = {
             "direction": direction.value,
@@ -198,10 +213,14 @@ class Animation:
                 kfs.sort(key=lambda k: float(k.get("time")))
 
                 if channel_name == "position":
-                    cls._process_vector_channel(bone.position, kfs, [0])  # Negate X. Verify indices?
+                    cls._process_vector_channel(
+                        bone.position, kfs, [0]
+                    )  # Negate X. Verify indices?
                     # Original code: adjust_keyframe_sign(..., num=1) => indices < 1 => index 0. Correct.
                 elif channel_name == "rotation":
-                    cls._process_vector_channel(bone.rotation, kfs, [0, 1])  # Negate X, Y.
+                    cls._process_vector_channel(
+                        bone.rotation, kfs, [0, 1]
+                    )  # Negate X, Y.
                     # Original code: adjust_keyframe_sign(..., num=2) => indices < 2 => 0, 1. Correct.
                 elif channel_name == "scale":
                     cls._process_vector_channel(bone.scale, kfs, [])
@@ -219,7 +238,9 @@ class Animation:
         return anim
 
     @staticmethod
-    def _process_vector_channel(target_dict: Dict, keyframes: List[dict], negate_indices: List[int]):
+    def _process_vector_channel(
+        target_dict: Dict, keyframes: List[dict], negate_indices: List[int]
+    ):
         is_step = False
         parsed_kfs = []
 
@@ -235,7 +256,9 @@ class Animation:
             prev_points_processed = []
             if i > 0:
                 # Get previous keyframe's points
-                prev_points_processed = [process_vector(pt, negate_indices) for pt in parsed_kfs[i - 1][2]]
+                prev_points_processed = [
+                    process_vector(pt, negate_indices) for pt in parsed_kfs[i - 1][2]
+                ]
 
             # Logic from original _process_..._channel
             final_val = None
@@ -416,7 +439,9 @@ class _AnimationsManager:
     def queue_animation(self, animation_name: str):
         anim = self.animations.get(animation_name)
         if not anim:
-            raise ValueError(f"Animation '{animation_name}' not found in blockbench model '{self._name}'.")
+            raise ValueError(
+                f"Animation '{animation_name}' not found in blockbench model '{self._name}'."
+            )
 
         full_name = f"animation.{CONFIG.NAMESPACE}.{self._name}.{anim.name}"
         if full_name not in self._content["animations"]:
@@ -442,7 +467,10 @@ class _TexturesManager:
             source,
             self._name,
         )
-        self._textures = {texture.get("name").split(".")[0]: texture for texture in self._bbmodel["textures"]}
+        self._textures = {
+            texture.get("name").split(".")[0]: texture
+            for texture in self._bbmodel["textures"]
+        }
         self._queued_textures: set[str] = set()
 
     def queue_texture(self, texture: str) -> None:
@@ -456,7 +484,11 @@ class _TexturesManager:
     def _export(self) -> None:
         os.makedirs(self._path, exist_ok=True)
         for texture in self._queued_textures:
-            image_data = base64.b64decode(self._textures[texture].get("source").replace("data:image/png;base64,", ""))
+            image_data = base64.b64decode(
+                self._textures[texture]
+                .get("source")
+                .replace("data:image/png;base64,", "")
+            )
             with open(os.path.join(self._path, f"{texture}.png"), "wb") as file:
                 file.write(image_data)
 
@@ -590,7 +622,9 @@ class Mesh:
     mesh_texture_multiplier: int = 64
 
     @classmethod
-    def from_dict(cls, data: dict, parent: str = "root", model_center_offset: List[float] = None) -> "Mesh":
+    def from_dict(
+        cls, data: dict, parent: str = "root", model_center_offset: List[float] = None
+    ) -> "Mesh":
         return cls(
             name=data.get("name", "mesh"),
             vertices=data.get("vertices", {}),
@@ -659,7 +693,11 @@ class Mesh:
 
                     coords = [self.vertices[vid] for vid in new_verts]
                     xs, ys, zs = zip(*coords)
-                    if max(xs) - min(xs) > 24 or max(ys) - min(ys) > 24 or max(zs) - min(zs) > 24:
+                    if (
+                        max(xs) - min(xs) > 24
+                        or max(ys) - min(ys) > 24
+                        or max(zs) - min(zs) > 24
+                    ):
                         continue
 
                     working_faces.add(current)
@@ -831,7 +869,9 @@ class Bone:
             bone["cubes"] = [cube.compile() for cube in self.cubes]
 
         if self.locators:
-            bone["locators"] = {k: v for loc in self.locators for k, v in loc.compile().items()}
+            bone["locators"] = {
+                k: v for loc in self.locators for k, v in loc.compile().items()
+            }
 
         if self.meshes:
             for mesh in self.meshes:
@@ -876,7 +916,9 @@ class _ModelManager:
 
             collection_name = str(collection.get("name", "")).strip()
             if len(collection_name) == 0:
-                raise ValueError(f"Blockbench collection in '{self._name}' is missing a name.")
+                raise ValueError(
+                    f"Blockbench collection in '{self._name}' is missing a name."
+                )
 
             export_suffix = model_identifier.lstrip(".") or collection_name
             if export_suffix.startswith(f"{self._name}."):
@@ -888,7 +930,9 @@ class _ModelManager:
                     f"Duplicate Blockbench collection export '{export_name}' found in model '{self._name}'."
                 )
             if collection_name in collections:
-                raise ValueError(f"Duplicate Blockbench collection '{collection_name}' found in model '{self._name}'.")
+                raise ValueError(
+                    f"Duplicate Blockbench collection '{collection_name}' found in model '{self._name}'."
+                )
 
             collections[collection_name] = {
                 "name": collection_name,
@@ -898,8 +942,13 @@ class _ModelManager:
             export_names.add(export_name)
 
             for alias in {collection_name, export_suffix}:
-                if alias in self._collection_aliases and self._collection_aliases[alias] != collection_name:
-                    raise ValueError(f"Collection alias '{alias}' is ambiguous in model '{self._name}'.")
+                if (
+                    alias in self._collection_aliases
+                    and self._collection_aliases[alias] != collection_name
+                ):
+                    raise ValueError(
+                        f"Collection alias '{alias}' is ambiguous in model '{self._name}'."
+                    )
                 self._collection_aliases[alias] = collection_name
 
         return collections
@@ -955,7 +1004,9 @@ class _ModelManager:
             return {"uuid": node, "children": group.get("children", [])}
         if node in self._cubes:
             return node
-        raise ValueError(f"Unknown Blockbench node '{node}' found in model '{self._name}'.")
+        raise ValueError(
+            f"Unknown Blockbench node '{node}' found in model '{self._name}'."
+        )
 
     def _ensure_root_bone(self, bones: Dict[str, Bone]) -> Bone:
         root_bone = bones.get("root")
@@ -965,21 +1016,32 @@ class _ModelManager:
         return root_bone
 
     def process_bones(
-        self, bones: List[Union[str, dict]], compiled_bones: Dict[str, Bone], parent: Optional[str] = None
+        self,
+        bones: List[Union[str, dict]],
+        compiled_bones: Dict[str, Bone],
+        parent: Optional[str] = None,
     ) -> None:
         for node in bones:
             resolved_node = self._resolve_tree_node(node)
 
             if isinstance(resolved_node, str):
-                parent_name = parent if parent is not None else self._ensure_root_bone(compiled_bones).name
+                parent_name = (
+                    parent
+                    if parent is not None
+                    else self._ensure_root_bone(compiled_bones).name
+                )
                 bone_dict = self._cubes[resolved_node]
                 if bone_dict["type"] == "cube":
                     compiled_bones[parent_name].add_cube(Cube.from_dict(bone_dict))
                 elif bone_dict["type"] == "locator":
-                    compiled_bones[parent_name].add_locator(Locator.from_dict(bone_dict))
+                    compiled_bones[parent_name].add_locator(
+                        Locator.from_dict(bone_dict)
+                    )
                 elif bone_dict["type"] == "mesh" and self._is_wavefront:
                     compiled_bones[parent_name].add_mesh(
-                        Mesh.from_dict(bone_dict, parent_name, self._model_center_offset)
+                        Mesh.from_dict(
+                            bone_dict, parent_name, self._model_center_offset
+                        )
                     )
                 continue
 
@@ -991,7 +1053,9 @@ class _ModelManager:
 
             bone_name = bone_group["name"]
             compiled_bones[bone_name] = Bone.from_dict(bone_group, parent)
-            self.process_bones(resolved_node.get("children", []), compiled_bones, bone_name)
+            self.process_bones(
+                resolved_node.get("children", []), compiled_bones, bone_name
+            )
 
     def _build_bones(self, bones: List[Union[str, dict]]) -> Dict[str, Bone]:
         compiled_bones: Dict[str, Bone] = {}
@@ -1011,7 +1075,9 @@ class _ModelManager:
     def process_block_display(self, content: dict) -> None:
         unit = [1, 1, 1]
         zero = [0, 0, 0]
-        display_data: dict[str, dict[str, list[str | float | Molang]]] = self._bbmodel.get("display", {})
+        display_data: dict[str, dict[str, list[str | float | Molang]]] = (
+            self._bbmodel.get("display", {})
+        )
         transforms = content["minecraft:geometry"][0]["item_display_transforms"]
         if display_data:
             for display, transform in display_data.items():
@@ -1039,7 +1105,9 @@ class _ModelManager:
         bounding_box = (
             self._bounding_box
             if self._bounding_box
-            else (self._bbmodel["visible_box"] if not self._is_wavefront else [1024, 1024])
+            else (
+                self._bbmodel["visible_box"] if not self._is_wavefront else [1024, 1024]
+            )
         )
         offset = [0, self._bbmodel["visible_box"][2], 0]
 
@@ -1050,7 +1118,9 @@ class _ModelManager:
             offset,
         )
 
-        content["minecraft:geometry"][0]["bones"] = [bone.compile() for bone in bones.values()]
+        content["minecraft:geometry"][0]["bones"] = [
+            bone.compile() for bone in bones.values()
+        ]
 
         if self._source == BlockBenchSource.BLOCK:
             content["minecraft:geometry"][0]["item_display_transforms"] = {}
@@ -1071,7 +1141,9 @@ class _ModelManager:
         self._prepare_model()
 
         if collection is None:
-            self._queue_geometry(self._bbmodel["model_identifier"], self._bbmodel["outliner"])
+            self._queue_geometry(
+                self._bbmodel["model_identifier"], self._bbmodel["outliner"]
+            )
             return
 
         collection_data = self._resolve_collection(collection)
@@ -1080,7 +1152,9 @@ class _ModelManager:
                 f"Blockbench collection '{collection_data['name']}' in model '{self._name}' has no exportable children."
             )
 
-        self._queue_geometry(collection_data["export_name"], collection_data["children"])
+        self._queue_geometry(
+            collection_data["export_name"], collection_data["children"]
+        )
 
     def block_culling(self) -> _BlockCulling:
         if not self._culling:
@@ -1100,7 +1174,9 @@ class _Blockbench:
 
     def __new__(cls, filename, source: str = "actors"):
         if filename not in _Blockbench._loaded_blockbench_models:
-            _Blockbench._loaded_blockbench_models[filename] = super(_Blockbench, cls).__new__(cls)
+            _Blockbench._loaded_blockbench_models[filename] = super(
+                _Blockbench, cls
+            ).__new__(cls)
         return _Blockbench._loaded_blockbench_models[filename]
 
     def __init__(self, filename: str, source: str = "actors") -> None:
@@ -1119,7 +1195,7 @@ class _Blockbench:
 
         self._path = os.path.join("assets", "bbmodels", f"{filename}.bbmodel")
 
-        if FileExists(self._path):
+        if os.path.exists(self._path):
             with open(self._path, "r") as model:
                 self.bbmodel = json.load(model)
                 if self.bbmodel["model_identifier"] != filename:

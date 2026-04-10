@@ -333,9 +333,7 @@ class PlacementDirectionTrait(StrEnum):
 class PlacementPositionTrait(StrEnum):
     BlockFace = "minecraft:block_face"  # Up, Down, North, South, East, West
     VerticalHalf = "minecraft:vertical_half"  # Top, Bottom
-    CornerAndCardinal = (
-        "minecraft:corner_and_cardinal"  # North, South, East, West, Northeast, Northwest, Southeast, Southwest
-    )
+    CornerAndCardinal = "minecraft:corner_and_cardinal"  # North, South, East, West, Northeast, Northwest, Southeast, Southwest
 
 
 class ConnectionTrait(StrEnum):
@@ -1180,6 +1178,7 @@ class FeatureRulePlacementPass(StrEnum):
 
     """
 
+    PregenerationPass = "pregeneration_pass"
     FirstPass = "first_pass"
     BeforeUndergroundPass = "before_underground_pass"
     UndergroundPass = "underground_pass"

@@ -1,0 +1,8 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:sculk_patch_feature": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        }
+    }
+}

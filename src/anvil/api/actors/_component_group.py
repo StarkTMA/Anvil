@@ -39,8 +39,14 @@ class _Components:
         component_classes = {component.__class__ for component in self._components}
         cmp_dict = {}
         for component in self._components:
-            missing_dependencies = [dep.__name__ for dep in component._dependencies if dep not in component_classes]
-            conflicting = [cla.__name__ for cla in component._clashes if cla in component_classes]
+            missing_dependencies = [
+                dep.__name__
+                for dep in component._dependencies
+                if dep not in component_classes
+            ]
+            conflicting = [
+                cla.__name__ for cla in component._clashes if cla in component_classes
+            ]
 
             if missing_dependencies:
                 raise RuntimeError(
@@ -65,10 +71,19 @@ class _ComponentGroup(_Components):
 
 
 class _Properties:
+    def _enforce_count_limit(self):
+        if len(self._properties) >= 32:
+            raise ValueError(
+                "Cannot have more than 32 properties in a component group."
+            )
+
     def __init__(self):
         self._properties = {}
 
-    def enum(self, name: str, values: tuple[str], default: str, *, client_sync: bool = False):
+    def enum(
+        self, name: str, values: tuple[str], default: str, *, client_sync: bool = False
+    ):
+        self._enforce_count_limit()
         self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
             "type": "enum",
             "default": default,
@@ -85,6 +100,7 @@ class _Properties:
         default: int = 0,
         client_sync: bool = False,
     ):
+        self._enforce_count_limit()
         self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
             "type": "int",
             "default": default if isinstance(default, Molang) else int(default),
@@ -101,6 +117,7 @@ class _Properties:
         default: float = 0,
         client_sync: bool = False,
     ):
+        self._enforce_count_limit()
         self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
             "type": "float",
             "default": float(default),
@@ -110,6 +127,7 @@ class _Properties:
         return self
 
     def bool(self, name: str, *, default: bool = False, client_sync: bool = False):
+        self._enforce_count_limit()
         self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
             "type": "bool",
             "default": default,

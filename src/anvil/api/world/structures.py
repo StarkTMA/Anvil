@@ -5,9 +5,14 @@ from typing import TYPE_CHECKING, Literal
 
 from anvil import ANVIL
 from anvil.api.core.filters import Filter
-from anvil.api.core.types import ConstantIntProvider, Identifier, StructureProcessors, UniformIntProvider
+from anvil.api.core.types import (
+    ConstantIntProvider,
+    Identifier,
+    StructureProcessors,
+    UniformIntProvider,
+)
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import CopyFiles, FileExists, clamp
+from anvil.lib.lib import Directory, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
 
 if TYPE_CHECKING:
@@ -21,7 +26,9 @@ class _processor_predicates:
             self._predicate_type = "input_predicate"
 
         def always_true(self):
-            self._dict[self._predicate_type] = {"predicate_type": "minecraft:always_true"}
+            self._dict[self._predicate_type] = {
+                "predicate_type": "minecraft:always_true"
+            }
 
         def block_match(self, block: MinecraftBlockDescriptor | Identifier):
             self._dict[self._predicate_type] = {
@@ -29,7 +36,9 @@ class _processor_predicates:
                 "block": block if isinstance(block, str) else block.identifier,
             }
 
-        def random_block_match(self, block: MinecraftBlockDescriptor | Identifier, probability: float):
+        def random_block_match(
+            self, block: MinecraftBlockDescriptor | Identifier, probability: float
+        ):
             self._dict[self._predicate_type] = {
                 "predicate_type": "minecraft:random_block_match",
                 "block": block if isinstance(block, str) else block.identifier,
@@ -115,7 +124,11 @@ class _processor_predicates:
 
             self._dict["block_entity_modifier"] = {
                 "type": "minecraft:append_loot",
-                "loot_table": loot_table.table_path if isinstance(loot_table, LootTable) else str(loot_table),
+                "loot_table": (
+                    loot_table.table_path
+                    if isinstance(loot_table, LootTable)
+                    else str(loot_table)
+                ),
             }
 
     class _output_state:
@@ -126,7 +139,9 @@ class _processor_predicates:
             return self._dict
 
         def output_block(self, block: MinecraftBlockDescriptor | Identifier):
-            self._dict["output_state"] = block if isinstance(block, str) else block.identifier
+            self._dict["output_state"] = (
+                block if isinstance(block, str) else block.identifier
+            )
 
     def __init__(self, processor: dict):
         self.__input_predicate = self._input_predicate(processor)
@@ -166,14 +181,19 @@ class _processor_builder:
         self._process_list: list[dict] = []
         self._allow_capped_processor = allow_capped_processor
 
-    def add_block_ignore_processor(self, blocks: list[MinecraftBlockDescriptor | Identifier]):
+    def add_block_ignore_processor(
+        self, blocks: list[MinecraftBlockDescriptor | Identifier]
+    ):
         if not isinstance(blocks, list):
             raise TypeError("blocks must be a list")
 
         self._process_list.append(
             {
                 "processor_type": "minecraft:block_ignore",
-                "blocks": [block if isinstance(block, str) else block.identifier for block in blocks],
+                "blocks": [
+                    block if isinstance(block, str) else block.identifier
+                    for block in blocks
+                ],
             }
         )
 
@@ -181,7 +201,9 @@ class _processor_builder:
         if not isinstance(block_tag, str):
             raise TypeError("block_tag must be a string")
 
-        self._process_list.append({"processor_type": "minecraft:protected_blocks", "value": block_tag})
+        self._process_list.append(
+            {"processor_type": "minecraft:protected_blocks", "value": block_tag}
+        )
 
     def add_capped_processor(
         self,
@@ -261,7 +283,11 @@ class Structure:
             *self._sub_path,
             f"{self._name}.mcstructure",
         )
-        if not FileExists(os.path.join("assets", "structures", *self._sub_path, f"{self._name}.mcstructure")):
+        if not os.path.exists(
+            os.path.join(
+                "assets", "structures", *self._sub_path, f"{self._name}.mcstructure"
+            )
+        ):
             raise FileNotFoundError(
                 f"{self._name}.mcstructure not found in {os.path.join('assets', 'structures')}. Please ensure the file exists."
             )
@@ -282,7 +308,7 @@ class Structure:
 
     def _export(self):
         """Exports the structure to the file system."""
-        CopyFiles(
+        Directory.copy_files(
             os.path.join("assets", "structures", *self._sub_path),
             os.path.join(
                 CONFIG.BP_PATH,
@@ -441,7 +467,9 @@ class _JigsawStructure(AddonObject):
             "top_layer_modification",
         ],
         start_jigsaw_name: str = None,
-        liquid_settings: Literal["apply_waterlogging", "ignore_waterlogging"] = "apply_waterlogging",
+        liquid_settings: Literal[
+            "apply_waterlogging", "ignore_waterlogging"
+        ] = "apply_waterlogging",
         start_height_from_sea: bool = False,
     ):
         """Initializes a Jigsaw instance.
@@ -457,7 +485,9 @@ class _JigsawStructure(AddonObject):
         super().__init__(name)  # "jigsaw"
 
         if not isinstance(start_pool, JigsawStructureTemplatePool):
-            raise TypeError("start_pool must be an instance of JigsawStructureTemplatePool")
+            raise TypeError(
+                "start_pool must be an instance of JigsawStructureTemplatePool"
+            )
 
         height = {}
         if isinstance(start_height, int):
@@ -499,7 +529,9 @@ class _JigsawStructure(AddonObject):
 
     def terrain_adaptation(
         self,
-        terrain_adaptation: Literal["none", "bury", "beard_thin", "beard_box", "encapsulate"],
+        terrain_adaptation: Literal[
+            "none", "bury", "beard_thin", "beard_box", "encapsulate"
+        ],
     ):
         """Sets the terrain adaptation for the jigsaw structure.
 
@@ -521,7 +553,9 @@ class _JigsawStructure(AddonObject):
             raise ValueError("Invalid terrain adaptation value")
         self._content["minecraft:jigsaw"]["terrain_adaptation"] = terrain_adaptation
 
-    def heightmap_projection(self, heightmap_projection: Literal["none", "world_surface", "ocean_floor"]):
+    def heightmap_projection(
+        self, heightmap_projection: Literal["none", "world_surface", "ocean_floor"]
+    ):
         """Sets the heightmap projection for the jigsaw structure.
 
         Parameters:
@@ -609,14 +643,18 @@ class JigsawStructureTemplatePool(AddonObject):
             raise TypeError("structure must be an instance of Structure or str")
 
         if not isinstance(processors_name, (str, _JigsawStructureProcess, type(None))):
-            raise TypeError("processors_name must be an instance of str or JigsawStructureProcess")
+            raise TypeError(
+                "processors_name must be an instance of str or JigsawStructureProcess"
+            )
 
         if isinstance(structure, str):
             structure = Structure(structure)
             self._structures.append(structure)
 
         if isinstance(processors_name, str):
-            processors_name: _JigsawStructureProcess = _JigsawStructureProcess(processors_name)
+            processors_name: _JigsawStructureProcess = _JigsawStructureProcess(
+                processors_name
+            )
 
         if not processors_name is None:
             self._processors.append(processors_name)
@@ -624,7 +662,11 @@ class JigsawStructureTemplatePool(AddonObject):
         self._content["minecraft:template_pool"]["elements"].append(
             {
                 "element": {
-                    "element_type": ("minecraft:single_pool_element" if structure else "minecraft:empty_pool_element"),
+                    "element_type": (
+                        "minecraft:single_pool_element"
+                        if structure
+                        else "minecraft:empty_pool_element"
+                    ),
                     "location": structure.reference if structure else {},
                     "processors": processors_name.identifier if processors_name else {},
                     "projection": projection if projection else {},
@@ -679,7 +721,9 @@ class JigsawStructureSet(AddonObject):
                 f"Invalid spacing and separation combination for structure set {name}. Value 'separation' must be less than half of 'spacing'."
             )
         self.content(
-            JsonSchemes.jigsaw_structure_set(self.identifier, separation, spacing, spread_type, placement_type)
+            JsonSchemes.jigsaw_structure_set(
+                self.identifier, separation, spacing, spread_type, placement_type
+            )
         )
 
     def add_jigsaw_structure(
@@ -703,7 +747,9 @@ class JigsawStructureSet(AddonObject):
         ],
         weight: int = 1,
         start_jigsaw_name: str = None,
-        liquid_settings: Literal["apply_waterlogging", "ignore_waterlogging"] = "apply_waterlogging",
+        liquid_settings: Literal[
+            "apply_waterlogging", "ignore_waterlogging"
+        ] = "apply_waterlogging",
         start_height_from_sea: bool = False,
     ):
         """Adds a jigsaw structure to the structure set.

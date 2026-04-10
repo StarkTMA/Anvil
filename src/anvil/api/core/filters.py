@@ -15,7 +15,7 @@ from anvil.lib.schemas import MinecraftBiomeDescriptor, MinecraftBlockDescriptor
 class Filter:
     # Basic configuration
     @staticmethod
-    def _construct_filter(filter_name, subject, operator, domain, value) -> dict:
+    def _construct_filter(filter_name, subject, operator, domain, value) -> "Filter":
         """Constructs a filter dictionary with the specified parameters.
 
         Parameters:

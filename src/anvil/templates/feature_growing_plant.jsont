@@ -1,0 +1,8 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:growing_plant_feature": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        }
+    }
+}

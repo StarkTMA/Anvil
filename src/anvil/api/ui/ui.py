@@ -822,7 +822,7 @@ class _UIElement:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
         if not "$" in texture:
-            if FileExists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
+            if os.path.exists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
                 self.element["texture"] = os.path.join("textures", "ui", texture)
                 self._textures.append(texture)
             else:
@@ -833,7 +833,7 @@ class _UIElement:
             self.element["texture"] = texture
 
         if len(nineslice_size) > 0 or scale_factor != 1:
-            File(
+            AnvilIO.file(
                 f"{texture}.json",
                 {
                     "nineslice_size": (
@@ -866,11 +866,11 @@ class _UIElement:
         Raises:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
-        if FileExists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
+        if os.path.exists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
             self.element[f"${key}"] = os.path.join("textures", "ui", texture)
             self._textures.append(texture)
             if len(nineslice_size) > 0 or scale_factor != 1:
-                File(
+                AnvilIO.file(
                     f"{texture}.json",
                     {
                         "nineslice_size": nineslice_size,
@@ -903,9 +903,9 @@ class _UIElement:
         Raises:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
-        if FileExists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
+        if os.path.exists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
             self.texture(texture)
-            CopyFiles(
+            Directory.copy_files(
                 os.path.join("assets", "textures", "ui"),
                 os.path.join(CONFIG.RP_PATH, "textures", "ui"),
                 f"{texture}.json",
@@ -929,10 +929,10 @@ class _UIElement:
         Raises:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
-        if FileExists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
+        if os.path.exists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
             self.element[f"${key}"] = os.path.join("textures", "ui", texture)
             self._textures.append(texture)
-            CopyFiles(
+            Directory.copy_files(
                 os.path.join("assets", "textures", "ui"),
                 os.path.join(CONFIG.RP_PATH, "textures", "ui"),
                 f"{texture}.json",
@@ -1441,7 +1441,7 @@ class _UIElement:
             dict: Processed element data ready for JSON serialization
         """
         for texture in self._textures:
-            CopyFiles(
+            Directory.copy_files(
                 os.path.join("assets", "textures", "ui"),
                 os.path.join(
                     CONFIG.RP_PATH,

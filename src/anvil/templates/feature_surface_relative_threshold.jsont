@@ -1,0 +1,8 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:surface_relative_threshold_feature": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        }
+    }
+}

@@ -3,7 +3,6 @@ import os
 
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import Color, CopyFiles, FileExists
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject
 
@@ -32,7 +31,7 @@ class Particle(AddonObject):
         self._texture_set: TextureSet = None
         self._color_texture = component.color
 
-        if not FileExists(os.path.join("assets", "particles", f"{self._name}.particle.json")):
+        if not os.path.exists(os.path.join("assets", "particles", f"{self._name}.particle.json")):
             raise FileNotFoundError(
                 f"Particle file '{self._name}.particle.json' does not exist in 'assets/particles'. {self._object_type}[{self._name}]"
             )

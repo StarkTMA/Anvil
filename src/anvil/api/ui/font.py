@@ -1,10 +1,10 @@
 import os
+from tkinter.filedialog import Directory
 
 from PIL import Image, ImageDraw, ImageFont
 
 from anvil import ANVIL
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import CopyFiles, FileExists
 
 
 class Fonts:
@@ -82,7 +82,7 @@ class Fonts:
         max_size = int(self.font.getlength("999"))
         image_size = (max_size * 10, self.character_size * 100)
 
-        if not FileExists(img_path):
+        if not os.path.exists(img_path):
             image = Image.new("RGBA", image_size)
             offset = [0, 0]
 
@@ -102,8 +102,8 @@ class Fonts:
 
                 image.save(img_path)
 
-        # if not FileExists(particle_path):
-        #    File(
+        # if not os.path.exists(particle_path):
+        #    AnvilIO.file(
         #        "numbers.particle.json",
         #        {
         #            "format_version": "1.10.0",
@@ -147,5 +147,7 @@ class Fonts:
     def _export(self):
         """Exports the font configuration."""
         for file in ["glyph_E1.png", "default8.png"]:
-            if FileExists(os.path.join("assets", "textures", "ui", file)):
-                CopyFiles(os.path.join("assets", "textures", "ui"), self._path, file)
+            if os.path.exists(os.path.join("assets", "textures", "ui", file)):
+                Directory.copy_files(
+                    os.path.join("assets", "textures", "ui"), self._path, file
+                )
