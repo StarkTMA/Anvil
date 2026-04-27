@@ -28,7 +28,7 @@ class Particle(AddonObject):
             mers_texture: MER+subsurface texture name (optional)
         """
         super().__init__(particle)
-        self._texture_set: TextureSet = None
+        self._texture_set: TextureSet | None = None
         self._color_texture = component.color
 
         if not os.path.exists(os.path.join("assets", "particles", f"{self._name}.particle.json")):

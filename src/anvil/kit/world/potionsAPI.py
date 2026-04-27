@@ -54,15 +54,21 @@ def create_universal_potion_projectile() -> Entity:
     entity.server.description.Summonable
 
     # Properties for potion configuration
-    entity.server.description.add_property.int("amplifier", [1, 255], default=1)
-    entity.server.description.add_property.int("duration", [1, 2**31 - 1], default=1)
-    entity.server.description.add_property.int("type", [0, 2**31 - 1], default=0, client_sync=True)
-    entity.server.description.add_property.int("effect_id", [0, 2**31 - 1], default=0, client_sync=True)
+    entity.server.description.add_property.int("amplifier", (1, 255), default=1)
+    entity.server.description.add_property.int("duration", (1, 2**31 - 1), default=1)
+    entity.server.description.add_property.int(
+        "type", (0, 2**31 - 1), default=0, client_sync=True
+    )
+    entity.server.description.add_property.int(
+        "effect_id", (0, 2**31 - 1), default=0, client_sync=True
+    )
 
     # Color properties for different potion effects
     for color in ["r", "g", "b", "a"]:
         default_val = 1.0 if color == "a" else 0.8
-        entity.server.description.add_property.float(f"color_{color}", [0, 1], default=default_val)
+        entity.server.description.add_property.float(
+            f"color_{color}", (0, 1), default=default_val
+        )
 
     # Client description
     entity.client.description.animation("potion_model", "face_camera", True)
@@ -73,9 +79,9 @@ def create_universal_potion_projectile() -> Entity:
         EntityCollisionBox(0.25, 0.25),
         EntityPhysics(has_gravity=False),
         EntityPushable(),
-        EntityProjectile(angle_offset=-18, gravity=0.02, hit_sound="glass", power=0.35, inertia=0.96).on_hit(
-            douse_fire=True
-        ),
+        EntityProjectile(
+            angle_offset=-18, gravity=0.02, hit_sound="glass", power=0.35, inertia=0.96
+        ).on_hit(douse_fire=True),
         EntityConditionalBandwidthOptimization(
             max_optimized_distance=80,
             max_dropped_ticks=10,
@@ -102,7 +108,9 @@ class PotionVariant:
     potion_type: str = "base"
     potion_display: str = "Potion"
 
-    def _create_item(self, config: "PotionConfig", index: int, effect_component, projectile: Entity) -> Item:
+    def _create_item(
+        self, config: "PotionConfig", index: int, effect_component, projectile: Entity
+    ) -> Item:
         """Create the item for this variant."""
 
         duration_display = _format_duration(self.duration)
@@ -114,7 +122,9 @@ class PotionVariant:
 
         # Create item
         item = Item(f"{self.potion_type}_{config.effect_key}_potion_{index}")
-        item.server.description.menu_category(ItemCategory.Equipment, is_hidden_in_commands=True)
+        item.server.description.menu_category(
+            ItemCategory.Equipment, is_hidden_in_commands=True
+        )
 
         components = [
             ItemDisplayName(
@@ -130,7 +140,9 @@ class PotionVariant:
         item.queue()
         return item
 
-    def _setup_projectile(self, config: "PotionConfig", index: int, projectile: Entity) -> None:
+    def _setup_projectile(
+        self, config: "PotionConfig", index: int, projectile: Entity
+    ) -> None:
         """Setup projectile configuration for this variant - override in subclasses."""
         pass
 
@@ -143,7 +155,9 @@ class Drinkable(PotionVariant):
     potion_type: str = "base"
     potion_display: str = "Potion"
 
-    def _create_item(self, config: "PotionConfig", index: int, effect_component, projectile: Entity) -> Item:
+    def _create_item(
+        self, config: "PotionConfig", index: int, effect_component, projectile: Entity
+    ) -> Item:
         """Create base drinkable potion item."""
         item = super()._create_item(config, index, effect_component, projectile)
 
@@ -172,7 +186,9 @@ class Splash(PotionVariant):
     potion_type: str = "splash"
     potion_display: str = "Splash Potion"
 
-    def _create_item(self, config: "PotionConfig", index: int, effect_component, projectile: Entity) -> Item:
+    def _create_item(
+        self, config: "PotionConfig", index: int, effect_component, projectile: Entity
+    ) -> Item:
         """Create base drinkable potion item."""
         item = super()._create_item(config, index, effect_component, projectile)
         event_name = f"{config.effect_key}_splash_{index}"
@@ -190,7 +206,9 @@ class Splash(PotionVariant):
         item.server.components.add(*components)
         return item
 
-    def _setup_projectile(self, config: "PotionConfig", index: int, projectile: Entity) -> None:
+    def _setup_projectile(
+        self, config: "PotionConfig", index: int, projectile: Entity
+    ) -> None:
         """Setup splash projectile event."""
         event_name = f"{config.effect_key}_splash_{index}"
         red, green, blue, alpha = convert_color(config.color_hex, RGBA)
@@ -221,7 +239,9 @@ class Lingering(PotionVariant):
     potion_type: str = "lingering"
     potion_display: str = "Lingering Potion"
 
-    def _create_item(self, config: "PotionConfig", index: int, effect_component, projectile: Entity) -> Item:
+    def _create_item(
+        self, config: "PotionConfig", index: int, effect_component, projectile: Entity
+    ) -> Item:
         item = super()._create_item(config, index, effect_component, projectile)
         event_name = f"{config.effect_key}_lingering_{index}"
 
@@ -239,7 +259,9 @@ class Lingering(PotionVariant):
         item.queue()
         return item
 
-    def _setup_projectile(self, config: "PotionConfig", index: int, projectile: Entity) -> None:
+    def _setup_projectile(
+        self, config: "PotionConfig", index: int, projectile: Entity
+    ) -> None:
         """Setup lingering projectile event."""
         event_name = f"{config.effect_key}_lingering_{index}"
         cloud_duration = int(self.duration)
@@ -271,7 +293,9 @@ class Tick(PotionVariant):
     potion_type: str = "splash"
     potion_display: str = "Splash Potion"
 
-    def _create_item(self, config: "PotionConfig", index: int, effect_component, projectile: Entity) -> Item:
+    def _create_item(
+        self, config: "PotionConfig", index: int, effect_component, projectile: Entity
+    ) -> Item:
         """Create base drinkable potion item."""
         item = super()._create_item(config, index, effect_component, projectile)
         event_name = f"{config.effect_key}_tick_{index}"
@@ -338,7 +362,9 @@ class PotionAPI:
         class DynamicPotionEffect(ItemCustomComponents):
             _identifier = component_id
 
-            def __init__(self, *, amplifier: float, duration: float, potion_color: Color) -> None:
+            def __init__(
+                self, *, amplifier: float, duration: float, potion_color: Color
+            ) -> None:
                 super().__init__(self._identifier)
                 self._add_field("amplifier", clamp(amplifier, 0.0, 255.0))
                 self._add_field("duration", duration)
@@ -354,22 +380,32 @@ class PotionAPI:
             return
 
         for recipe in config.brewing:
-            input_item = items[recipe.from_index] if recipe.from_index >= 0 else MinecraftItemTypes.Potion("awkward")
+            input_item = (
+                items[recipe.from_index]
+                if recipe.from_index >= 0
+                else MinecraftItemTypes.Potion("awkward")
+            )
             output_item = items[recipe.to_index]
 
-            brewing_recipe = PotionMixingRecipe(f"brew_{config.effect_key}_{recipe.to_index}")
+            brewing_recipe = PotionMixingRecipe(
+                f"brew_{config.effect_key}_{recipe.to_index}"
+            )
             brewing_recipe.unlock_items([recipe.reagent])
             brewing_recipe.recipe(input_item, recipe.reagent, output_item)
             brewing_recipe.queue()
 
     @classmethod
-    def _setup_render_controller(cls, config: PotionConfig, textures: list[str]) -> None:
+    def _setup_render_controller(
+        cls, config: PotionConfig, textures: list[str]
+    ) -> None:
         """Setup render controller for projectile textures."""
         projectile = cls._get_projectile()
 
         # Set up textures
         for texture in textures:
-            projectile.client.description.texture("potion_model", TextureComponents(color=texture))
+            projectile.client.description.texture(
+                "potion_model", TextureComponents(color=texture)
+            )
 
         # Create render controller
         rc = projectile.client.description.render_controller(

@@ -1,23 +1,32 @@
 """A collection of useful functions and classes used throughout the program."""
 
-from ast import Dict
 import inspect
-from logging import config
 import os
 import re
 import shutil
 import subprocess
-from typing import Any
 import zipfile
-import orjson
 from datetime import datetime
+from typing import Any, Dict, List
+
+import click
+import commentjson
+import orjson
+import requests
+from packaging.version import Version
 
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
+from anvil.lib.format_versions import MANIFEST_BUILD
 
 from ..__version__ import __version__
 
-APPDATA: str = os.getenv("APPDATA")
-APPDATA_LOCAL: str = os.getenv("LOCALAPPDATA")
+if os.name != "nt":
+    raise OSError(
+        "Anvil is only supported on Windows due to its reliance on Minecraft Bedrock's file structure and APIs."
+    )
+
+USERPORFILE: str = os.getenv("USERPROFILE", os.path.expanduser("~"))
+APPDATA: str = os.getenv("APPDATA", os.path.join(USERPORFILE, "AppData", "Roaming"))
 
 RELEASE_COM_MOJANG = os.path.join(
     APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang"
@@ -26,18 +35,7 @@ PREVIEW_COM_MOJANG = os.path.join(
     APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang"
 )
 
-DESKTOP: str = os.path.join(os.getenv("USERPROFILE"), "Desktop")
-MOLANG_PREFIXES = (
-    "q.",
-    "v.",
-    "c.",
-    "t.",
-    "query.",
-    "variable.",
-    "context.",
-    "temp.",
-    "math.",
-)
+DESKTOP: str = os.path.join(USERPORFILE, "Desktop")
 IMAGE_EXTENSIONS_PRIORITY = [".tga", ".png", ".jpg", ".jpeg"]
 
 
@@ -55,7 +53,7 @@ class Directory:
 
     @classmethod
     def copy_files(
-        cls, old_dir: str, new_dir: str, target_file: str, rename: str = None
+        cls, old_dir: str, new_dir: str, target_file: str, rename: str | None = None
     ):
         """
         Copies a file from one directory to another.
@@ -64,7 +62,7 @@ class Directory:
             old_dir (str): The path to the source directory.
             new_dir (str): The path to the destination directory.
             target_file (str): The name of the file to be copied.
-            rename (str, optional): The new name for the copied file. Defaults to None.
+            rename (str | None, optional): The new name for the copied file. Defaults to None.
         """
         cls.create(new_dir)
         if rename is None:
@@ -130,7 +128,10 @@ class AnvilIO:
         return value not in ({}, [], None, "None", "")
 
     @classmethod
-    def _normalize_json_like(cls, value):
+    def _normalize_json_like(cls, value: Any) -> Any:
+        if value is None or isinstance(value, (bool, int, float)):
+            return value
+
         if isinstance(value, dict):
             shortened = {}
 
@@ -144,12 +145,11 @@ class AnvilIO:
 
         if isinstance(value, list):
             shortened = []
-            append = shortened.append
 
             for item in value:
                 shortened_value = cls._normalize_json_like(item)
                 if shortened_value != []:
-                    append(shortened_value)
+                    shortened.append(shortened_value)
 
             return shortened
 
@@ -159,8 +159,18 @@ class AnvilIO:
         if isinstance(value, str):
             return value.replace("\\", "/")
 
-        if value is None or isinstance(value, (bool, int, float)):
-            return value
+        from anvil.api.core.filters import Filter
+
+        if isinstance(value, Filter):
+            return cls._normalize_json_like(value.__export_dict__())
+
+        from anvil.api.core.components import Component
+
+        if isinstance(value, Component):
+            return cls._normalize_json_like(value.__export_dict__())
+
+        if isinstance(value, type) and issubclass(value, Component):
+            return cls._normalize_json_like(value.__component_identifier__())
 
         class_name = value.__class__.__name__
 
@@ -201,14 +211,16 @@ class AnvilIO:
         return "\n".join(prefix + line for line in stamp) + "\n\n"
 
     @classmethod
-    def _parse_json_like(cls, content: str, minify: bool = False) -> bytes:
+    def _parse_json_like(
+        cls, content: str | bytes | Dict | List, minify: bool = False
+    ) -> bytes:
         return cls._dump_json_like(content, minify=minify)
 
     @classmethod
     def file(
         cls,
         name: str,
-        content: str | dict,
+        content: str | bytes | Dict | List,
         directory: str,
         mode: str,
         skip_tag: bool = False,
@@ -237,12 +249,13 @@ class AnvilIO:
 
         if type in ["json", "material", "code-workspace"]:
             content = cls._parse_json_like(content, minify=CONFIG._MINIFY)
+
         if not skip_tag:
             file_stamp = cls._get_file_stamp(name, type, CONFIG.COMPANY)
             if isinstance(content, bytes):
                 content = file_stamp.encode("utf-8") + content
             else:
-                content = file_stamp + content
+                content = file_stamp + str(content)
 
         if isinstance(content, bytes):
             binary_mode = mode if "b" in mode else f"{mode}b"
@@ -518,32 +531,134 @@ class AnvilFormatter:
         return {"range_min": minimum, "range_max": maximum}
 
 
+class AnvilValidator:
+    @classmethod
+    def validate_namespace_project_name(
+        cls, namespace: str, project_name: str, is_addon: bool = False
+    ):
+        """Validates namespace and project name according to Minecraft requirements.
+
+        Args:
+            namespace (str): The namespace to validate.
+            project_name (str): The project name to validate.
+            is_addon (bool, optional): Whether this is for an addon. Defaults to False.
+
+        Raises:
+            ValueError: If validation fails for any requirement.
+        """
+        pascal_project_name = "".join(x[0] for x in project_name.split("_")).upper()
+
+        if namespace == "minecraft":
+            raise ValueError(
+                "The namespace 'minecraft' is reserved and cannot be used for custom packs. Please choose a different namespace."
+            )
+
+        if len(namespace) > 8:
+            raise ValueError(
+                f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long."
+            )
+
+        if len(project_name) > 16:
+            raise ValueError(
+                f"Project name must be 16 characters or less. '{project_name}' is {len(project_name)} characters long."
+            )
+
+        if is_addon:
+            model_name = f"{namespace}_{pascal_project_name}"
+            if not namespace.endswith(f"_{pascal_project_name.lower()}"):
+                raise ValueError(
+                    f"Every namespace must be unique to the pack ending with project name initials. For this pack it should be {model_name}."
+                )
+
+    @classmethod
+    def check_new_versions(cls):
+        click.echo(click.style("Checking for package updates...", fg="cyan"))
+
+        try:
+            request = requests.get(
+                "https://raw.githubusercontent.com/Mojang/bedrock-samples/version.json"
+            )
+            vanilla_latest_build: str = commentjson.loads(request.text)["latest"][
+                "version"
+            ]
+        except Exception:
+            click.echo(
+                click.style(
+                    "[WARN]: Could not fetch latest Minecraft version.", fg="yellow"
+                )
+            )
+            vanilla_latest_build = MANIFEST_BUILD
+
+        try:
+            request = requests.get(
+                "https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py"
+            )
+            latest_build: str = (
+                request.text.split("=")[-1].strip().strip('"').strip("'")
+            )
+
+            if Version(__version__) < Version(latest_build):
+                click.echo(
+                    click.style(
+                        f"\r[INFO]: A newer anvil build were found: [{latest_build}].",
+                        fg="green",
+                    )
+                )
+            else:
+                click.echo(click.style("\r[INFO]: Anvil is up to date.", fg="green"))
+
+        except Exception:
+            click.echo(
+                click.style(
+                    "[WARN]: Could not fetch latest Anvil version.", fg="yellow"
+                )
+            )
+            latest_build = __version__
+
+        return vanilla_latest_build, latest_build
+
+
+class AnvilDisplay:
+    @staticmethod
+    def copyright():
+        click.clear()
+        click.echo(
+            "\n".join(
+                [
+                    f"{click.style('Anvil', 'cyan')} - by StarkTMA.",
+                    f"Version {click.style(__version__, 'cyan')}.",
+                    f"Copyright © {datetime.now().year} {click.style('StarkTMA', 'red')}.",
+                    "All rights reserved.",
+                    "",
+                ]
+            )
+        )
+
+    @staticmethod
+    def project_display(display_name: str, target: str, preview: bool):
+        click.echo(
+            "\n".join(
+                [
+                    f"Project: {display_name}.",
+                    f"Target: {'Add-On' if target == 'addon' else 'World'}.",
+                    f"Minecraft: {"Release" if not preview else "Preview"}.",
+                    "",
+                ]
+            )
+        )
+
+
 # --------------------------------------------------------------------------
 
 
-def normalize_180(angle: float | str) -> float:
-    """Normalizes an angle between -180 and 180.
-
-    Parameters:
-        angle (float): The angle to be normalized.
-
-    Returns:
-        float: The normalized angle.
-    """
-    if isinstance(angle, float):
-        return round((angle + 540) % 360 - 180)
-    else:
-        return angle
-
-
-def clamp(value: float, _min: float, _max: float) -> float:
+def clamp(value: float | int, _min: float | int, _max: float | int) -> float | int:
     """
     Clamps a value between a minimum and maximum limit.
 
     Parameters:
-        value (float): The value to be clamped.
-        _min (float): The lower limit.
-        _max (float): The upper limit.
+        value (float | int): The value to be clamped.
+        _min (float | int): The lower limit.
+        _max (float | int): The upper limit.
 
     Returns:
         float: The clamped value.
@@ -564,7 +679,7 @@ def frange(start: int, stop: int, num: float = 1):
         list: A list of interpolated values between start and stop.
     """
     step = (stop - start) / (num - 1)
-    values = [round(start + i * step, 2) for i in range(num)]
+    values = [round(start + i * step, 2) for i in range(int(num))]
     return values
 
 
@@ -579,43 +694,6 @@ def process_subcommand(command: str, error_handle: str = "Error"):
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"{error_handle}: {e}")
-
-
-def validate_namespace_project_name(
-    namespace: str, project_name: str, is_addon: bool = False
-):
-    """Validates namespace and project name according to Minecraft addon requirements.
-
-    Args:
-        namespace (str): The namespace to validate.
-        project_name (str): The project name to validate.
-        is_addon (bool, optional): Whether this is for an addon. Defaults to False.
-
-    Raises:
-        ValueError: If validation fails for any requirement.
-    """
-    pascal_project_name = "".join(x[0] for x in project_name.split("_")).upper()
-
-    if namespace == "minecraft":
-        raise ValueError(
-            "The namespace 'minecraft' is reserved and cannot be used for custom packs. Please choose a different namespace."
-        )
-
-    if len(namespace) > 8:
-        raise ValueError(
-            f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long."
-        )
-
-    if len(project_name) > 16:
-        raise ValueError(
-            f"Project name must be 16 characters or less. '{project_name}' is {len(project_name)} characters long."
-        )
-
-    if is_addon:
-        if not namespace.endswith(f"_{pascal_project_name.lower()}"):
-            raise ValueError(
-                f"Every namespace must be unique to the pack. For this pack it should be {namespace}."
-            )
 
 
 def salt_from_str(s: str) -> int:
@@ -648,8 +726,8 @@ def extract_ids_from_factory_class(cls) -> set[str]:
 
 def convert_color(
     color: Color,
-    target: RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA | None = None,
-) -> RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA:
+    target: Color | None = None,
+) -> Color:
     """Converts a color from any supported format to the target format.
 
     Supported input formats:
@@ -707,17 +785,20 @@ def convert_color(
         )
 
     # Determine target from source if not specified
+    convert_target = None
     if target is None:
         if is_str:
-            target = HexRGBA if len(hex_color) in [4, 8] else HexRGB
+            convert_target = HexRGBA if len(hex_color) in [4, 8] else HexRGB
         else:
-            max_val = max(color[:3])
+            max_val = float(max(color[:3]))
             has_alpha = len(color) == 4
-            target = (
+            convert_target = (
                 RGBA255
                 if has_alpha and max_val > 1.0
                 else RGB255 if max_val > 1.0 else RGBA if has_alpha else RGB
             )
+    else:
+        convert_target = target
 
     # Parse input color to normalized RGBA (0-1 range with alpha)
     if is_str:
@@ -731,23 +812,23 @@ def convert_color(
         a = int(hex_color[6:8], 16) / 255.0 if len(hex_color) == 8 else 1.0
     else:
         # Determine if values are in 0-1 or 0-255 range
-        max_val = max(color[:3])
+        max_val = float(max(color[:3]))
 
         if max_val > 1.0:
             # Assume 0-255 range
-            r = clamp(color[0], 0.0, 255.0) / 255.0
-            g = clamp(color[1], 0.0, 255.0) / 255.0
-            b = clamp(color[2], 0.0, 255.0) / 255.0
-            a = clamp(color[3], 0.0, 255.0) / 255.0 if len(color) == 4 else 1.0
+            r = clamp(float(color[0]), 0.0, 255.0) / 255.0
+            g = clamp(float(color[1]), 0.0, 255.0) / 255.0
+            b = clamp(float(color[2]), 0.0, 255.0) / 255.0
+            a = clamp(float(color[3]), 0.0, 255.0) / 255.0 if len(color) == 4 else 1.0
         else:
             # Assume 0-1 range
-            r = clamp(color[0], 0.0, 1.0)
-            g = clamp(color[1], 0.0, 1.0)
-            b = clamp(color[2], 0.0, 1.0)
-            a = clamp(color[3], 0.0, 1.0) if len(color) == 4 else 1.0
+            r = clamp(float(color[0]), 0.0, 1.0)
+            g = clamp(float(color[1]), 0.0, 1.0)
+            b = clamp(float(color[2]), 0.0, 1.0)
+            a = clamp(float(color[3]), 0.0, 1.0) if len(color) == 4 else 1.0
 
     # Convert to target format
-    if target in (HexRGB, HexRGBA):
+    if convert_target in (HexRGB, HexRGBA):
         # Convert to hex (pre-compute once)
         hex_r = int(round(r * 255))
         hex_g = int(round(g * 255))
@@ -756,21 +837,21 @@ def convert_color(
 
         return (
             f"#{hex_r:02x}{hex_g:02x}{hex_b:02x}{hex_a:02x}"
-            if target is HexRGBA
+            if convert_target is HexRGBA
             else f"#{hex_r:02x}{hex_g:02x}{hex_b:02x}"
         )
 
-    elif target is RGB:
+    elif convert_target is RGB:
         return (r, g, b)
 
-    elif target is RGBA:
+    elif convert_target is RGBA:
         return (r, g, b, a)
 
-    elif target is RGB255:
+    elif convert_target is RGB255:
         return (int(r * 255), int(g * 255), int(b * 255))
 
-    elif target is RGBA255:
+    elif convert_target is RGBA255:
         return (int(r * 255), int(g * 255), int(b * 255), int(a * 255))
 
     else:
-        raise ValueError(f"Unsupported target format: {target}")
+        raise ValueError(f"Unsupported target format: {convert_target}")

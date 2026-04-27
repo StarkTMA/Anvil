@@ -1,6 +1,6 @@
 # Anvil Documentation
 
-![Python 10](https://img.shields.io/badge/python-+3.10%20%20-g.svg)
+![Python 3.11](https://img.shields.io/badge/python-+3.11%20%20-g.svg)
 ![Anvil Version](https://img.shields.io/github/v/release/StarkTMA/Anvil?label=version)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -11,6 +11,10 @@
 Anvil is a comprehensive development toolkit designed for creating Minecraft Bedrock Edition content with ease and flexibility. Anvil aims to simplify the creation of custom Minecraft entities, blocks, commands, and more by leveraging Python and embracing a modular, component-based design philosophy.
 
 Whether you're a seasoned Minecraft modder or just starting your journey in content development, Anvil provides you with the tools to make your creations come to life. Its features are designed to streamline workflows, enforce consistency, and offer a robust framework for handling the complexities of Minecraft content.
+
+## Community Contributions
+
+Anvil is intended to grow as a community-driven project. Contributions are very much encouraged, whether that's fixing bugs, improving documentation, or adding support for new Minecraft Bedrock features. If you have ideas or want to help build the toolkit, we want you involved.
 
 ### Key Features
 
@@ -26,7 +30,7 @@ Whether you're a seasoned Minecraft modder or just starting your journey in cont
 
 To use Anvil, ensure you have the following installed:
 
-- [**Python 3.10**](https://www.python.org/downloads/) or higher.
+- [**Python 3.11**](https://www.python.org/downloads/) or higher.
 - **Windows OS**: Anvil is designed specifically for Windows, as Minecraft Bedrock development is primarily done on this platform.
 
 ### Installation

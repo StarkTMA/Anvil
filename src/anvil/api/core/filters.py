@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Dict, List
+
 from anvil.api.core.enums import (
     Difficulty,
     FilterEquipmentDomain,
@@ -6,41 +9,55 @@ from anvil.api.core.enums import (
     PlayerAbilities,
     Weather,
 )
-from anvil.api.core.types import Component, Identifier
+from anvil.api.core.types import Identifier
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import MinecraftBiomeDescriptor, MinecraftBlockDescriptor
 
+if TYPE_CHECKING:
+    from anvil.api.core.components import Component
 
+
+@dataclass
 class Filter:
-    # Basic configuration
-    @staticmethod
-    def _construct_filter(filter_name, subject, operator, domain, value) -> "Filter":
-        """Constructs a filter dictionary with the specified parameters.
+    """Represents a filter condition for entity selection and testing.
 
-        Parameters:
-            filter_name (str): The name/test type of the filter
-            subject (FilterSubject): The subject to test against
-            operator (FilterOperation): The operation to perform
-            domain (str|None): Optional domain for certain filter types
-            value (any): The value to test against
+    Each filter specifies a test type, subject, operator, and value to compare against.
+    """
 
-        Returns:
-            dict: A properly formatted filter dictionary
-        """
-        _filter = {"test": filter_name, "value": value}
-        if subject != FilterSubject.Self:
-            _filter["subject"] = subject
-        if operator != FilterOperation.Equals:
-            _filter["operator"] = operator
-        if domain != None:
-            _filter["domain"] = domain
+    test: str | None = None
+    subject: FilterSubject | None = None
+    operator: FilterOperation | None = None
+    domain: str | None = None
+    value: Any | None = None
+    is_all_of: List["Filter"] | None = None
+    is_any_of: List["Filter"] | None = None
+    is_none_of: List["Filter"] | None = None
 
-        return _filter
+    def __export_dict__(self) -> Dict[str, Any]:
+        if self.is_all_of is not None:
+            return {"all_of": self.is_all_of}
+        if self.is_any_of is not None:
+            return {"any_of": self.is_any_of}
+        if self.is_none_of is not None:
+            return {"none_of": self.is_none_of}
+
+        if self.test is None:
+            raise ValueError("Filter must have a test type or be a filter group.")
+
+        return {
+            "test": self.test,
+            "value": self.value,
+            "subject": self.subject if not self.subject == FilterSubject.Self else None,
+            "operator": (
+                self.operator if not self.operator == FilterOperation.Equals else None
+            ),
+            "domain": self.domain,
+        }
 
     # Filter Groups
     @staticmethod
-    def all_of(*filters: "Filter"):
+    def all_of(filters: List["Filter"]):
         """Returns true when all of the filters evaluate to true.
 
         Parameters:
@@ -58,10 +75,10 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filterlist
         """
-        return {"all_of": [*filters]}
+        return Filter(is_all_of=filters)
 
     @staticmethod
-    def any_of(*filters: "Filter"):
+    def any_of(filters: List["Filter"]):
         """Returns true when any of the filters evaluate to true.
 
         Parameters:
@@ -79,10 +96,10 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filterlist
         """
-        return {"any_of": [*filters]}
+        return Filter(is_any_of=filters)
 
     @staticmethod
-    def none_of(*filters: "Filter"):
+    def none_of(filters: List["Filter"]):
         """Returns true when none of the filters evaluate to true.
 
         Parameters:
@@ -100,7 +117,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filterlist
         """
-        return {"none_of": [*filters]}
+        return Filter(is_none_of=filters)
 
     @classmethod
     def actor_health(
@@ -110,7 +127,13 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("actor_health", subject, operator, None, value)
+        return Filter(
+            test="actor_health",
+            subject=subject,
+            operator=operator,
+            domain=None,
+            value=value,
+        )
 
     @classmethod
     def all_slots_empty(
@@ -127,7 +150,7 @@ class Filter:
             subject (FilterSubject, optional): Subject to test the value against. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use in testing. Defaults to FilterOperation.Equals.
         """
-        return cls._construct_filter("all_slots_empty", subject, operator, None, value)
+        return Filter("all_slots_empty", subject, operator, None, value)
 
     @classmethod
     def any_slot_empty(
@@ -144,7 +167,7 @@ class Filter:
             subject (FilterSubject, optional): Subject to test the value against. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use in testing. Defaults to FilterOperation.Equals.
         """
-        return cls._construct_filter("all_slots_empty", subject, operator, None, value)
+        return Filter("all_slots_empty", subject, operator, None, value)
 
     @classmethod
     def bool_property(
@@ -155,7 +178,9 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("bool_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value)
+        return Filter(
+            "bool_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value
+        )
 
     @classmethod
     def clock_time(
@@ -187,7 +212,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/clock_time
         """
-        return cls._construct_filter("clock_time", subject, operator, None, max(0.0, min(1.0, value)))
+        return Filter("clock_time", subject, operator, None, max(0.0, min(1.0, value)))
 
     @classmethod
     def distance_to_nearest_player(
@@ -214,7 +239,9 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/distance_to_nearest_player
         """
-        return cls._construct_filter("distance_to_nearest_player", subject, operator, None, max(0, value))
+        return Filter(
+            "distance_to_nearest_player", subject, operator, None, max(0, value)
+        )
 
     @classmethod
     def enum_property(
@@ -225,7 +252,9 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("enum_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value)
+        return Filter(
+            "enum_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value
+        )
 
     @classmethod
     def float_property(
@@ -236,7 +265,9 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("float_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value)
+        return Filter(
+            "float_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value
+        )
 
     @classmethod
     def has_ability(
@@ -266,7 +297,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_ability
         """
-        return cls._construct_filter("has_ability", subject, operator, None, value)
+        return Filter("has_ability", subject, operator, None, value)
 
     @classmethod
     def has_biome_tag(
@@ -277,12 +308,12 @@ class Filter:
         operator: FilterOperation = FilterOperation.Equals,
     ):
         """Checks if the entity is in a biome with the specified tag."""
-        return cls._construct_filter("has_biome_tag", subject, operator, None, value)
+        return Filter("has_biome_tag", subject, operator, None, value)
 
     @classmethod
     def has_component(
         cls,
-        value: Component,
+        value: "Component | str",
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
@@ -299,7 +330,7 @@ class Filter:
 
         Example:
             # Test if entity has health component
-            Filter.has_component("minecraft:health")
+            Filter.has_component(Component.Health)
 
             # Test if target has tameable component
             Filter.has_component("minecraft:tameable", subject=FilterSubject.Target)
@@ -308,12 +339,20 @@ class Filter:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_component
         """
 
-        from anvil.api.core.components import _BaseComponent
+        from anvil.api.core.components import Component
 
-        if not issubclass(value, _BaseComponent):
-            raise TypeError("Value must be a Component class.")
+        if isinstance(value, Component):
+            value = value.identifier
+        elif isinstance(value, type) and issubclass(value, Component):
+            value = value.__component_identifier__()
 
-        return cls._construct_filter("has_component", subject, operator, None, value._identifier)
+        return Filter(
+            "has_component",
+            subject,
+            operator,
+            None,
+            value,
+        )
 
     @classmethod
     def has_container_open(
@@ -339,7 +378,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_container_open
         """
-        return cls._construct_filter("has_container_open", subject, operator, None, value)
+        return Filter("has_container_open", subject, operator, None, value)
 
     @classmethod
     def has_damaged_equipment(
@@ -350,7 +389,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("has_damaged_equipment", subject, operator, domain, value)
+        return Filter("has_damaged_equipment", subject, operator, domain, value)
 
     @classmethod
     def has_damage(
@@ -360,7 +399,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("has_damage", subject, operator, None, value)
+        return Filter("has_damage", subject, operator, None, value)
 
     @classmethod
     def has_equipment(
@@ -371,7 +410,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("has_equipment", subject, operator, domain, value)
+        return Filter("has_equipment", subject, operator, domain, value)
 
     @classmethod
     def has_equipment_tag(
@@ -382,7 +421,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("has_equipment", subject, operator, domain, value)
+        return Filter("has_equipment", subject, operator, domain, value)
 
     @classmethod
     def has_mob_effect(
@@ -409,7 +448,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_mob_effect
         """
-        return cls._construct_filter("has_mob_effect", subject, operator, None, value)
+        return Filter("has_mob_effect", subject, operator, None, value)
 
     @classmethod
     def has_nametag(
@@ -435,7 +474,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_nametag
         """
-        return cls._construct_filter("has_nametag", subject, operator, None, value)
+        return Filter("has_nametag", subject, operator, None, value)
 
     @classmethod
     def has_property(
@@ -445,7 +484,9 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("has_property", subject, operator, None, f"{CONFIG.NAMESPACE}:{value}")
+        return Filter(
+            "has_property", subject, operator, None, f"{CONFIG.NAMESPACE}:{value}"
+        )
 
     @classmethod
     def has_ranged_weapon(
@@ -471,7 +512,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_ranged_weapon
         """
-        return cls._construct_filter("has_ranged_weapon", subject, operator, None, value)
+        return Filter("has_ranged_weapon", subject, operator, None, value)
 
     @classmethod
     def has_silk_touch(
@@ -497,7 +538,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_silk_touch
         """
-        return cls._construct_filter("has_silk_touch", subject, operator, None, value)
+        return Filter("has_silk_touch", subject, operator, None, value)
 
     @classmethod
     def has_tag(
@@ -507,7 +548,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("has_tag", subject, operator, None, value)
+        return Filter("has_tag", subject, operator, None, value)
 
     @classmethod
     def has_target(
@@ -517,7 +558,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("has_target", subject, operator, None, value)
+        return Filter("has_target", subject, operator, None, value)
 
     @classmethod
     def has_trade_supply(
@@ -543,7 +584,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_trade_supply
         """
-        return cls._construct_filter("has_trade_supply", subject, operator, None, value)
+        return Filter("has_trade_supply", subject, operator, None, value)
 
     @classmethod
     def home_distance(
@@ -553,7 +594,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("home_distance", subject, operator, None, value)
+        return Filter("home_distance", subject, operator, None, value)
 
     @classmethod
     def hourly_clock_time(
@@ -582,7 +623,9 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/hourly_clock_time
         """
-        return cls._construct_filter("hourly_clock_time", subject, operator, None, max(0, min(24000, value)))
+        return Filter(
+            "hourly_clock_time", subject, operator, None, max(0, min(24000, value))
+        )
 
     @classmethod
     def inactivity_timer(
@@ -608,7 +651,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/inactivity_timer
         """
-        return cls._construct_filter("inactivity_timer", subject, operator, None, max(0, value))
+        return Filter("inactivity_timer", subject, operator, None, max(0, value))
 
     @classmethod
     def in_block(
@@ -635,7 +678,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_block
         """
-        return cls._construct_filter("in_block", subject, operator, None, value)
+        return Filter("in_block", subject, operator, None, value)
 
     @classmethod
     def in_caravan(
@@ -661,7 +704,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_caravan
         """
-        return cls._construct_filter("in_caravan", subject, operator, None, value)
+        return Filter("in_caravan", subject, operator, None, value)
 
     @classmethod
     def in_clouds(
@@ -687,7 +730,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_clouds
         """
-        return cls._construct_filter("in_clouds", subject, operator, None, value)
+        return Filter("in_clouds", subject, operator, None, value)
 
     @classmethod
     def in_contact_with_water(
@@ -713,7 +756,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_contact_with_water
         """
-        return cls._construct_filter("in_contact_with_water", subject, operator, None, value)
+        return Filter("in_contact_with_water", subject, operator, None, value)
 
     @classmethod
     def in_lava(
@@ -739,7 +782,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_lava
         """
-        return cls._construct_filter("in_lava", subject, operator, None, value)
+        return Filter("in_lava", subject, operator, None, value)
 
     @classmethod
     def in_nether(
@@ -765,7 +808,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_nether
         """
-        return cls._construct_filter("in_nether", subject, operator, None, value)
+        return Filter("in_nether", subject, operator, None, value)
 
     @classmethod
     def in_overworld(
@@ -791,7 +834,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_overworld
         """
-        return cls._construct_filter("in_overworld", subject, operator, None, value)
+        return Filter("in_overworld", subject, operator, None, value)
 
     @classmethod
     def int_property(
@@ -802,7 +845,9 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("int_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value)
+        return Filter(
+            "int_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value
+        )
 
     @classmethod
     def in_water(
@@ -812,7 +857,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("in_water", subject, operator, None, value)
+        return Filter("in_water", subject, operator, None, value)
 
     @classmethod
     def in_water_or_rain(
@@ -838,7 +883,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_water_or_rain
         """
-        return cls._construct_filter("in_water_or_rain", subject, operator, None, value)
+        return Filter("in_water_or_rain", subject, operator, None, value)
 
     @classmethod
     def is_altitude(
@@ -864,7 +909,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_altitude
         """
-        return cls._construct_filter("is_altitude", subject, operator, None, value)
+        return Filter("is_altitude", subject, operator, None, value)
 
     @classmethod
     def is_avoiding_mobs(
@@ -890,7 +935,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_avoiding_mobs
         """
-        return cls._construct_filter("is_avoiding_mobs", subject, operator, None, value)
+        return Filter("is_avoiding_mobs", subject, operator, None, value)
 
     @classmethod
     def is_baby(
@@ -916,7 +961,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_baby
         """
-        return cls._construct_filter("is_baby", subject, operator, None, value)
+        return Filter("is_baby", subject, operator, None, value)
 
     @classmethod
     def is_biome(
@@ -926,7 +971,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_biome", subject, operator, None, str(value))
+        return Filter("is_biome", subject, operator, None, str(value))
 
     @classmethod
     def is_block(
@@ -952,14 +997,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_block
         """
-        from anvil.lib.schemas import MinecraftBlockDescriptor
-
-        if not isinstance(value, (MinecraftBlockDescriptor, str)):
-            raise TypeError(
-                f"Expected MinecraftBlockDescriptor or Identifier, got {type(value).__name__}. Filter [is_block]"
-            )
-
-        return cls._construct_filter(
+        return Filter(
             "is_block",
             subject,
             operator,
@@ -975,7 +1013,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_bound_to_creaking_heart", subject, operator, None, value)
+        return Filter("is_bound_to_creaking_heart", subject, operator, None, value)
 
     @classmethod
     def is_brightness(
@@ -1001,7 +1039,9 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_brightness
         """
-        return cls._construct_filter("is_brightness", subject, operator, None, max(0.0, min(1.0, value)))
+        return Filter(
+            "is_brightness", subject, operator, None, max(0.0, min(1.0, value))
+        )
 
     @classmethod
     def is_climbing(
@@ -1027,7 +1067,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_climbing
         """
-        return cls._construct_filter("is_climbing", subject, operator, None, value)
+        return Filter("is_climbing", subject, operator, None, value)
 
     @classmethod
     def is_color(
@@ -1054,7 +1094,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_color
         """
-        return cls._construct_filter("is_color", subject, operator, None, value)
+        return Filter("is_color", subject, operator, None, value)
 
     @classmethod
     def is_daytime(
@@ -1064,7 +1104,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_daytime", subject, operator, None, value)
+        return Filter("is_daytime", subject, operator, None, value)
 
     @classmethod
     def is_difficulty(
@@ -1074,7 +1114,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_difficulty", subject, operator, None, str(value))
+        return Filter("is_difficulty", subject, operator, None, str(value))
 
     @classmethod
     def is_family(
@@ -1104,7 +1144,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_family
         """
-        return cls._construct_filter("is_family", subject, operator, None, value)
+        return Filter("is_family", subject, operator, None, value)
 
     @classmethod
     def is_game_rule(
@@ -1130,7 +1170,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_game_rule
         """
-        return cls._construct_filter("is_game_rule", subject, operator, None, value)
+        return Filter("is_game_rule", subject, operator, None, value)
 
     @classmethod
     def is_humid(
@@ -1156,7 +1196,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_humid
         """
-        return cls._construct_filter("is_humid", subject, operator, None, value)
+        return Filter("is_humid", subject, operator, None, value)
 
     @classmethod
     def is_immobile(
@@ -1182,7 +1222,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_immobile
         """
-        return cls._construct_filter("is_immobile", subject, operator, None, value)
+        return Filter("is_immobile", subject, operator, None, value)
 
     @classmethod
     def is_in_village(
@@ -1208,7 +1248,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_in_village
         """
-        return cls._construct_filter("is_in_village", subject, operator, None, value)
+        return Filter("is_in_village", subject, operator, None, value)
 
     @classmethod
     def is_leashed(
@@ -1234,7 +1274,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_leashed
         """
-        return cls._construct_filter("is_leashed", subject, operator, None, value)
+        return Filter("is_leashed", subject, operator, None, value)
 
     @classmethod
     def is_leashed_to(
@@ -1260,7 +1300,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_leashed_to
         """
-        return cls._construct_filter("is_leashed_to", subject, operator, None, value)
+        return Filter("is_leashed_to", subject, operator, None, value)
 
     @classmethod
     def is_mark_variant(
@@ -1270,7 +1310,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_mark_variant", subject, operator, None, value)
+        return Filter("is_mark_variant", subject, operator, None, value)
 
     @classmethod
     def is_missing_health(
@@ -1296,7 +1336,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_missing_health
         """
-        return cls._construct_filter("is_missing_health", subject, operator, None, value)
+        return Filter("is_missing_health", subject, operator, None, value)
 
     @classmethod
     def is_moving(
@@ -1322,7 +1362,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_moving
         """
-        return cls._construct_filter("is_moving", subject, operator, None, value)
+        return Filter("is_moving", subject, operator, None, value)
 
     @classmethod
     def is_navigating(
@@ -1348,7 +1388,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_navigating
         """
-        return cls._construct_filter("is_navigating", subject, operator, None, value)
+        return Filter("is_navigating", subject, operator, None, value)
 
     @classmethod
     def is_owner(
@@ -1358,7 +1398,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_owner", subject, operator, None, value)
+        return Filter("is_owner", subject, operator, None, value)
 
     @classmethod
     def is_panicking(
@@ -1368,7 +1408,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_panicking", subject, operator, None, value)
+        return Filter("is_panicking", subject, operator, None, value)
 
     @classmethod
     def is_persistent(
@@ -1394,7 +1434,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_persistent
         """
-        return cls._construct_filter("is_persistent", subject, operator, None, value)
+        return Filter("is_persistent", subject, operator, None, value)
 
     @classmethod
     def is_raider(
@@ -1404,7 +1444,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_raider", subject, operator, None, value)
+        return Filter("is_raider", subject, operator, None, value)
 
     @classmethod
     def is_riding(
@@ -1414,7 +1454,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_riding", subject, operator, None, value)
+        return Filter("is_riding", subject, operator, None, value)
 
     @classmethod
     def is_riding_self(
@@ -1440,7 +1480,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_riding_self
         """
-        return cls._construct_filter("is_riding_self", subject, operator, None, value)
+        return Filter("is_riding_self", subject, operator, None, value)
 
     @classmethod
     def is_sitting(
@@ -1450,7 +1490,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_sitting", subject, operator, None, value)
+        return Filter("is_sitting", subject, operator, None, value)
 
     @classmethod
     def is_skin_id(
@@ -1460,7 +1500,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_skin_id", subject, operator, None, value)
+        return Filter("is_skin_id", subject, operator, None, value)
 
     @classmethod
     def is_sleeping(
@@ -1486,7 +1526,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_sleeping
         """
-        return cls._construct_filter("is_sleeping", subject, operator, None, value)
+        return Filter("is_sleeping", subject, operator, None, value)
 
     @classmethod
     def is_sneak_held(
@@ -1512,7 +1552,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_sneak_held
         """
-        return cls._construct_filter("is_sneak_held", subject, operator, None, value)
+        return Filter("is_sneak_held", subject, operator, None, value)
 
     @classmethod
     def is_sneaking(
@@ -1538,7 +1578,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_sneaking
         """
-        return cls._construct_filter("is_sneaking", subject, operator, None, value)
+        return Filter("is_sneaking", subject, operator, None, value)
 
     @classmethod
     def is_snow_covered(
@@ -1564,7 +1604,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_snow_covered
         """
-        return cls._construct_filter("is_snow_covered", subject, operator, None, value)
+        return Filter("is_snow_covered", subject, operator, None, value)
 
     @classmethod
     def is_sprinting(
@@ -1574,7 +1614,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_sprinting", subject, operator, None, value)
+        return Filter("is_sprinting", subject, operator, None, value)
 
     @classmethod
     def is_target(
@@ -1584,7 +1624,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_target", subject, operator, None, value)
+        return Filter("is_target", subject, operator, None, value)
 
     @classmethod
     def is_temperature_type(
@@ -1610,7 +1650,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_temperature_type
         """
-        return cls._construct_filter("is_temperature_type", subject, operator, None, value)
+        return Filter("is_temperature_type", subject, operator, None, value)
 
     @classmethod
     def is_temperature_value(
@@ -1638,7 +1678,9 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_temperature_value
         """
-        return cls._construct_filter("is_temperature_value", subject, operator, None, max(0.0, min(1.0, value)))
+        return Filter(
+            "is_temperature_value", subject, operator, None, max(0.0, min(1.0, value))
+        )
 
     @classmethod
     def is_underground(
@@ -1664,7 +1706,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_underground
         """
-        return cls._construct_filter("is_underground", subject, operator, None, value)
+        return Filter("is_underground", subject, operator, None, value)
 
     @classmethod
     def is_underwater(
@@ -1674,7 +1716,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_underwater", subject, operator, None, value)
+        return Filter("is_underwater", subject, operator, None, value)
 
     @classmethod
     def is_variant(
@@ -1684,7 +1726,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_variant", subject, operator, None, value)
+        return Filter("is_variant", subject, operator, None, value)
 
     @classmethod
     def is_vehicle_family(
@@ -1710,7 +1752,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_vehicle_family
         """
-        return cls._construct_filter("is_vehicle_family", subject, operator, None, value)
+        return Filter("is_vehicle_family", subject, operator, None, value)
 
     @classmethod
     def is_visible(
@@ -1720,7 +1762,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("is_visible", subject, operator, None, value)
+        return Filter("is_visible", subject, operator, None, value)
 
     @classmethod
     def is_waterlogged(
@@ -1746,7 +1788,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_waterlogged
         """
-        return cls._construct_filter("is_waterlogged", subject, operator, None, value)
+        return Filter("is_waterlogged", subject, operator, None, value)
 
     @classmethod
     def light_level(
@@ -1772,7 +1814,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/light_level
         """
-        return cls._construct_filter("light_level", subject, operator, None, max(0, min(16, value)))
+        return Filter("light_level", subject, operator, None, max(0, min(16, value)))
 
     @classmethod
     def moon_intensity(
@@ -1798,7 +1840,9 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/moon_intensity
         """
-        return cls._construct_filter("moon_intensity", subject, operator, None, max(0.0, min(1.0, value)))
+        return Filter(
+            "moon_intensity", subject, operator, None, max(0.0, min(1.0, value))
+        )
 
     @classmethod
     def moon_phase(
@@ -1825,7 +1869,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/moon_phase
         """
-        return cls._construct_filter("moon_phase", subject, operator, None, max(0, min(7, value)))
+        return Filter("moon_phase", subject, operator, None, max(0, min(7, value)))
 
     @classmethod
     def on_fire(
@@ -1851,7 +1895,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/on_fire
         """
-        return cls._construct_filter("on_fire", subject, operator, None, value)
+        return Filter("on_fire", subject, operator, None, value)
 
     @classmethod
     def on_ground(
@@ -1861,7 +1905,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("on_ground", subject, operator, None, value)
+        return Filter("on_ground", subject, operator, None, value)
 
     @classmethod
     def on_hot_block(
@@ -1887,7 +1931,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/on_hot_block
         """
-        return cls._construct_filter("on_hot_block", subject, operator, None, value)
+        return Filter("on_hot_block", subject, operator, None, value)
 
     @classmethod
     def on_ladder(
@@ -1913,7 +1957,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/on_ladder
         """
-        return cls._construct_filter("on_ladder", subject, operator, None, value)
+        return Filter("on_ladder", subject, operator, None, value)
 
     @classmethod
     def owner_distance(
@@ -1923,7 +1967,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("owner_distance", subject, operator, None, value)
+        return Filter("owner_distance", subject, operator, None, value)
 
     @classmethod
     def random_chance(
@@ -1933,7 +1977,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("random_chance", subject, operator, None, value)
+        return Filter("random_chance", subject, operator, None, value)
 
     @classmethod
     def rider_count(
@@ -1943,7 +1987,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("rider_count", subject, operator, None, value)
+        return Filter("rider_count", subject, operator, None, value)
 
     @classmethod
     def surface_mob(
@@ -1969,7 +2013,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/surface_mob
         """
-        return cls._construct_filter("surface_mob", subject, operator, None, value)
+        return Filter("surface_mob", subject, operator, None, value)
 
     @classmethod
     def taking_fire_damage(
@@ -1995,7 +2039,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/taking_fire_damage
         """
-        return cls._construct_filter("taking_fire_damage", subject, operator, None, value)
+        return Filter("taking_fire_damage", subject, operator, None, value)
 
     @classmethod
     def target_distance(
@@ -2005,7 +2049,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("target_distance", subject, operator, None, value)
+        return Filter("target_distance", subject, operator, None, value)
 
     @classmethod
     def trusts(
@@ -2031,7 +2075,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/trusts
         """
-        return cls._construct_filter("trusts", subject, operator, None, value)
+        return Filter("trusts", subject, operator, None, value)
 
     @classmethod
     def was_last_hurt_by(
@@ -2041,7 +2085,7 @@ class Filter:
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
     ):
-        return cls._construct_filter("was_last_hurt_by", subject, operator, None, value)
+        return Filter("was_last_hurt_by", subject, operator, None, value)
 
     @classmethod
     def weather(
@@ -2068,7 +2112,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/weather
         """
-        return cls._construct_filter("weather", subject, operator, None, value)
+        return Filter("weather", subject, operator, None, value)
 
     @classmethod
     def weather_at_position(
@@ -2094,7 +2138,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/weather_at_position
         """
-        return cls._construct_filter("weather_at_position", subject, operator, None, value)
+        return Filter("weather_at_position", subject, operator, None, value)
 
     @classmethod
     def y_rotation(
@@ -2120,7 +2164,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/y_rotation
         """
-        return cls._construct_filter("y_rotation", subject, operator, None, value)
+        return Filter("y_rotation", subject, operator, None, value)
 
     @classmethod
     def is_controlling_passenger_family(
@@ -2150,7 +2194,7 @@ class Filter:
         ## Documentation Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_controlling_passenger_family?view=minecraft-bedrock-stable
         """
-        return cls._construct_filter("is_family", subject, operator, None, value)
+        return Filter("is_family", subject, operator, None, value)
 
     @classmethod
     def has_item_with_component(
@@ -2176,7 +2220,7 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_item_with_component
         """
-        return cls._construct_filter("has_item_with_component", subject, operator, None, component)
+        return Filter("has_item_with_component", subject, operator, None, component)
 
     @classmethod
     def is_tamed(
@@ -2202,4 +2246,4 @@ class Filter:
         Reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_tamed
         """
-        return cls._construct_filter("is_tamed", subject, operator, None, value)
+        return Filter("is_tamed", subject, operator, None, value)

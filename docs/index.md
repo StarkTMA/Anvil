@@ -1,9 +1,10 @@
 # Anvil Documentation
 
-![Python 10](https://img.shields.io/badge/python-+3.10%20%20-g.svg)
+![Python 3.11](https://img.shields.io/badge/python-+3.11%20%20-g.svg)
 ![Anvil Version](https://img.shields.io/github/v/release/StarkTMA/Anvil?label=version)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/StarkTMA/Anvil)
 
 ## Introduction to Anvil
 
@@ -25,7 +26,7 @@ Whether you're a seasoned Minecraft modder or just starting your journey in cont
 
 To use Anvil, ensure you have the following installed:
 
-- [**Python 3.10**](https://www.python.org/downloads/) or higher.
+- [**Python 3.11**](https://www.python.org/downloads/) or higher.
 - **Windows OS**: Anvil is designed specifically for Windows, as Minecraft Bedrock development is primarily done on this platform.
 
 ### Installation

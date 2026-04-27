@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-import pprint
 import re
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict
 
 _TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z_]\w*)\s*(?:\|([A-Za-z_]\w*))?\s*\}\}")
 
@@ -15,12 +14,18 @@ _DEFAULT_FILTERS: Dict[str, Callable[[object], str]] = {
     "path": lambda v: str(v).replace("\\", "/"),
     "dquote": lambda v: str(v).replace("'", '"'),
 }
-_TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
+_TEMPLATES_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates"
+)
 
 
 def load_file(
-    file_path: str, vars: Dict[str, object] = {}, *, on_missing: str = "empty", is_json: bool = False
-) -> str | Any:  # "keep" | "empty" | "error"
+    file_path: str,
+    vars: Dict[str, object] = {},
+    *,
+    on_missing: str = "empty",  # "keep" | "empty" | "error"
+    is_json: bool = False,
+) -> Any:
     def replace(match: re.Match) -> str:
         var_name, filter_name = match.group(1), match.group(2)
         if var_name not in vars:
@@ -42,9 +47,8 @@ def load_file(
         text = file.read()
 
     result = _TOKEN_RE.sub(replace, text)
+
     if is_json:
-        try:
-            return json.loads(result)
-        except json.JSONDecodeError as e:
-            raise ValueError("Invalid JSON", e)
-    return result
+        return json.loads(result)
+
+    return str(result)

@@ -1,12 +1,11 @@
 import click
 from anvil.api.actors.components import Filter
 from anvil.api.core.enums import Vibrations
-from anvil.api.core.types import Event
 from anvil.lib.config import CONFIG
 
 
 class _BaseEvent:
-    def __init__(self, event_name: Event):
+    def __init__(self, event_name: str):
         self._event_name = event_name
         self._event = {
             self._event_name: {
@@ -26,7 +25,7 @@ class _BaseEvent:
         self._event[self._event_name]["remove"]["component_groups"].extend(component_groups)
         return self
 
-    def trigger(self, event: Event):
+    def trigger(self, event: str):
         if "trigger" in self._event[self._event_name]:
             click.echo(click.style("An event can only have one trigger. Use sequences instead.", fg="yellow"))
 
@@ -72,7 +71,7 @@ class _Randomize(_BaseEvent):
         self._event.update({"remove": {"component_groups": [*component_groups]}})
         return self
 
-    def trigger(self, event: Event):
+    def trigger(self, event: str):
         self._event.update({"trigger": event})
         return self
 
@@ -133,7 +132,7 @@ class _Sequence(_BaseEvent):
         self._event.update({"remove": {"component_groups": [*component_groups]}})
         return self
 
-    def trigger(self, event: Event):
+    def trigger(self, event: str):
         self._event.update({"trigger": event})
         return self
 
@@ -181,7 +180,7 @@ class _Sequence(_BaseEvent):
 
 
 class _Event(_BaseEvent):
-    def __init__(self, event_name: Event):
+    def __init__(self, event_name: str):
         super().__init__(event_name)
         self._sequences: list[_Sequence] = []
         self._randomizes: list[_Randomize] = []

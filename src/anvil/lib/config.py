@@ -1,19 +1,20 @@
 import os
+import sys
 import uuid
 from datetime import datetime, timedelta
 from enum import StrEnum
+from typing import Any, List
 
 import click
 import commentjson as json
-import requests
-from packaging.version import Version
 
 from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
     PREVIEW_COM_MOJANG,
     RELEASE_COM_MOJANG,
-    validate_namespace_project_name,
+    AnvilDisplay,
+    AnvilValidator,
 )
 from anvil.lib.reports import ReportCollector
 
@@ -84,7 +85,7 @@ class Config:
 
     def __init__(self) -> None:
         """Initializes a Config object."""
-        self._config = {}
+        self._config: dict[str, Any] = {}
         if os.path.exists("anvilconfig.json"):
             with open("anvilconfig.json", "r", encoding="utf-8") as f:
                 self._config = json.loads(f.read())
@@ -121,7 +122,12 @@ class Config:
         """
         return section in self._config
 
-    def add_option(self, section: str, option: str, value):
+    def add_option(
+        self,
+        section: str,
+        option: str,
+        value: str | bool | int | float | List[str | bool | int | float],
+    ) -> None:
         """Sets a value in the anvilconfig.json file.
 
         Parameters:
@@ -147,12 +153,12 @@ class Config:
         """
         return option in self._config[section]
 
-    def get_option(self, section, option) -> str:
+    def get_option(self, section: ConfigSection, option: ConfigOption):
         """Gets a value from the anvilconfig.json file.
 
         Parameters:
-            section (str): The section to get the value from.
-            option (str): The option to get the value from.
+            section (ConfigSection): The section to get the value from.
+            option (ConfigOption): The option to get the value from.
 
         Returns:
             str: The value of the option.
@@ -198,7 +204,7 @@ class _AnvilConfig:
     _SCRIPT_MODULE_UUID: str
     _MINIFY: bool
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls):
         if cls._instance is None:
             cls._instance = super(_AnvilConfig, cls).__new__(cls)
         return cls._instance
@@ -206,6 +212,7 @@ class _AnvilConfig:
     def __init__(self) -> None:
         if hasattr(self, "_initialized") and self._initialized:
             return
+
         self._initialized = True
 
         self.Config = Config()
@@ -214,23 +221,9 @@ class _AnvilConfig:
         self.Report.add_headers()
 
         self._load_configs()
+        AnvilDisplay.copyright()
+        AnvilDisplay.project_display(self.DISPLAY_NAME, self._TARGET, self._PREVIEW)
 
-        click.clear()
-        click.echo(
-            "\n".join(
-                [
-                    f"{click.style('Anvil', 'cyan')} - by StarkTMA.",
-                    f"Version {click.style(__version__, 'cyan')}.",
-                    f"Copyright © {datetime.now().year} {click.style('StarkTMA', 'red')}.",
-                    "All rights reserved.",
-                    "",
-                    f"Project: {self.DISPLAY_NAME}.",
-                    f"Target: {'Add-On' if self._TARGET == 'addon' else 'World'}.",
-                    f"Minecraft: {"Release" if not self._PREVIEW else "Preview"}.",
-                    "",
-                ]
-            )
-        )
         # GDK Setup preparation
         self._COM_MOJANG = PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
         self._WORLD_PATH = os.path.join(
@@ -249,21 +242,28 @@ class _AnvilConfig:
         ) > timedelta(hours=24):
             self._check_new_versions()
 
-    def _handle_config(
-        self, section: ConfigSection, option: ConfigOption, prompt
-    ) -> None:
+    def _handle_config[T](
+        self, section: ConfigSection, option: ConfigOption, prompt: T
+    ) -> T:
         if not self.Config.has_section(section):
             self.Config.add_section(section)
+
         if not self.Config.has_option(section, option):
-            if prompt == "input":
-                prompt = input(f"Missing '{option}': ")
-            self.Config.add_option(section, option, prompt)
+            if isinstance(prompt, str) and prompt == "input":
+                self.Config.add_option(section, option, input(f"Missing '{option}': "))
+            elif isinstance(prompt, (str, bool, int, float, list)):
+                self.Config.add_option(section, option, prompt)
+            else:
+                raise ValueError(
+                    f"Invalid prompt value for config option '{option}'. Must be 'input' or a default value."
+                )
         return self.Config.get_option(section, option)
 
     def _load_configs(self) -> None:
         self.NAMESPACE = self._handle_config(
             ConfigSection.PACKAGE, ConfigOption.NAMESPACE, "input"
         )
+
         self.PROJECT_NAME = self._handle_config(
             ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, "input"
         )
@@ -320,6 +320,7 @@ class _AnvilConfig:
             ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False
         )
         self._PBR = self._handle_config(ConfigSection.ANVIL, ConfigOption.PBR, False)
+
         self._RANDOM_SEED = self._handle_config(
             ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False
         )
@@ -362,43 +363,12 @@ class _AnvilConfig:
             ConfigSection.ANVIL, ConfigOption.MINIFY, False
         )
 
-        validate_namespace_project_name(
+        AnvilValidator.validate_namespace_project_name(
             self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon"
         )
 
     def _check_new_versions(self):
-        click.echo(click.style("Checking for package updates...", fg="cyan"))
-
-        try:
-            vanilla_latest_build: str = json.loads(
-                requests.get(
-                    "https://raw.githubusercontent.com/Mojang/bedrock-samples/version.json"
-                )
-            )["latest"]["version"]
-        except:
-            vanilla_latest_build = MANIFEST_BUILD
-
-        try:
-            latest_build: str = (
-                requests.get(
-                    "https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py"
-                )
-                .split("=")[-1]
-                .strip()
-            )
-        except:
-            latest_build = __version__
-
-        if Version(__version__) < Version(latest_build):
-            click.echo(
-                click.style(
-                    f"\r[INFO]: A newer anvil build were found: [{latest_build}].",
-                    fg="yellow",
-                )
-            )
-        else:
-            click.echo(click.style("\r[INFO]: Anvil is up to date.", fg="green"))
-
+        vanilla_latest_build, latest_build = AnvilValidator.check_new_versions()
         self.Config.add_option(
             ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, vanilla_latest_build
         )
@@ -408,5 +378,23 @@ class _AnvilConfig:
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         )
 
+    class _Proxy:
+        def __init__(self) -> None:
+            self._instance = None
 
-CONFIG = _AnvilConfig()
+        def _resolve(self) -> "_AnvilConfig":
+            if self._instance is None:
+                self._instance = _AnvilConfig()
+            return self._instance
+
+        def __getattr__(self, name: str):
+            return getattr(self._resolve(), name)
+
+        def __repr__(self) -> str:
+            return repr(self._resolve())
+
+        def __dir__(self):
+            return dir(self._resolve())
+
+
+CONFIG = _AnvilConfig._Proxy()

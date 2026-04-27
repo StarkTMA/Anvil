@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Tuple
 
 from anvil import ANVIL
 from anvil.api.core.filters import Filter
-from anvil.api.core.types import (
-    ConstantIntProvider,
-    Identifier,
-    StructureProcessors,
-    UniformIntProvider,
-)
+from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import Directory, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
@@ -207,23 +202,21 @@ class _processor_builder:
 
     def add_capped_processor(
         self,
-        limit: int | ConstantIntProvider | UniformIntProvider,
+        limit: int | Tuple[int, int],
     ) -> _processor_builder:
         if not self._allow_capped_processor:
             raise ValueError("Capped processors are not allowed to be chained.")
 
-        if not isinstance(limit, (int, ConstantIntProvider, UniformIntProvider)):
-            raise TypeError("limit must be an integer or a provider")
+        if not isinstance(limit, (int, tuple)):
+            raise TypeError("limit must be an integer or a tuple")
 
         if isinstance(limit, int):
             limit_data = limit
-        elif isinstance(limit, ConstantIntProvider):
-            limit_data = {"type": "constant", "value": limit["value"]}
-        else:
+        elif isinstance(limit, tuple):
             limit_data = {
                 "type": "uniform",
-                "min_inclusive": limit["min"],
-                "max_inclusive": limit["max"],
+                "min_inclusive": limit[0],
+                "max_inclusive": limit[1],
             }
 
         process = {
@@ -388,7 +381,7 @@ class _JigsawStructure(AddonObject):
             if not isinstance(weight, int):
                 raise TypeError("weight must be an integer")
 
-            pool = _JigsawStructure._group_pool_alias()
+            pool = _JigsawStructure._group_pool_alias(weight)
             self._pools.append(pool)
             return pool
 
@@ -455,7 +448,8 @@ class _JigsawStructure(AddonObject):
         max_depth: int,
         start_height: tuple[int, int] | int,
         placement_step: Literal[
-            "raw_generation" "lakes",
+            "raw_generation",
+            "lakes",
             "local_modifications",
             "underground_structures",
             "surface_structures",
@@ -466,7 +460,7 @@ class _JigsawStructure(AddonObject):
             "vegetal_decoration",
             "top_layer_modification",
         ],
-        start_jigsaw_name: str = None,
+        start_jigsaw_name: str | None = None,
         liquid_settings: Literal[
             "apply_waterlogging", "ignore_waterlogging"
         ] = "apply_waterlogging",
@@ -511,12 +505,12 @@ class _JigsawStructure(AddonObject):
                 placement_step,
                 start_pool.identifier,
                 start_jigsaw_name,
-                clamp(max_depth, 0, 20),
+                int(clamp(max_depth, 0, 20)),
                 height,
                 liquid_settings,
             )
         )
-        self._pool_aliases: _JigsawStructure._pool = None
+        self._pool_aliases: _JigsawStructure._pool | None = None
         self._start_pool = start_pool
 
     def add_biome_filters(self, filter: Filter):
@@ -612,7 +606,7 @@ class JigsawStructureTemplatePool(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "worldgen", "template_pools")
     _object_type = "Jigsaw Structure Template Pool"
 
-    def __init__(self, name: str, fallback: str = None):
+    def __init__(self, name: str, fallback: str | None = None):
         """Initializes a JigsawStructureTemplatePool instance.
 
         Parameters:
@@ -627,37 +621,39 @@ class JigsawStructureTemplatePool(AddonObject):
     def add_structure_element(
         self,
         structure: Structure | str | None,
-        processors_name: str | _JigsawStructureProcess | None = None,
+        processors: str | _JigsawStructureProcess | None = None,
         weight: int = 1,
         projection: Literal["rigid", "terrain_matching"] = "rigid",
-    ) -> _JigsawStructureProcess:
+    ) -> _JigsawStructureProcess | None:
         """Adds a structure to the template pool.
 
         Parameters:
             structure (str | Structure | None): The structure to add to the pool.
             weight (int, optional): The weight of the structure. Defaults to 1.
-            processors_name (str, optional): The name of the processors for the structure. Defaults to None.
+            processors (str | _JigsawStructureProcess | None, optional): The processors for the structure. Defaults to None.
             projection (Literal["minecraft:rigid", "minecraft:terrain_matching"], optional): The projection type. Defaults to "minecraft:rigid".
         """
         if not isinstance(structure, (Structure, str, type(None))):
             raise TypeError("structure must be an instance of Structure or str")
 
-        if not isinstance(processors_name, (str, _JigsawStructureProcess, type(None))):
+        if not isinstance(processors, (str, _JigsawStructureProcess, type(None))):
             raise TypeError(
-                "processors_name must be an instance of str or JigsawStructureProcess"
+                "processors must be an instance of str or JigsawStructureProcess"
             )
 
         if isinstance(structure, str):
             structure = Structure(structure)
             self._structures.append(structure)
 
-        if isinstance(processors_name, str):
-            processors_name: _JigsawStructureProcess = _JigsawStructureProcess(
-                processors_name
-            )
+        processors_obj: _JigsawStructureProcess | None = None
 
-        if not processors_name is None:
-            self._processors.append(processors_name)
+        if isinstance(processors, str):
+            processors_obj = _JigsawStructureProcess(processors)
+        elif isinstance(processors, _JigsawStructureProcess):
+            processors_obj = processors
+
+        if not processors_obj is None:
+            self._processors.append(processors_obj)
 
         self._content["minecraft:template_pool"]["elements"].append(
             {
@@ -667,15 +663,15 @@ class JigsawStructureTemplatePool(AddonObject):
                         if structure
                         else "minecraft:empty_pool_element"
                     ),
-                    "location": structure.reference if structure else {},
-                    "processors": processors_name.identifier if processors_name else {},
-                    "projection": projection if projection else {},
+                    "location": structure.reference if structure else None,
+                    "processors": processors_obj.identifier if processors_obj else None,
+                    "projection": projection if projection else None,
                 },
                 "weight": weight,
             }
         )
 
-        return processors_name
+        return processors_obj
 
     def queue(self):
         for processor in self._processors:
@@ -746,7 +742,7 @@ class JigsawStructureSet(AddonObject):
             "top_layer_modification",
         ],
         weight: int = 1,
-        start_jigsaw_name: str = None,
+        start_jigsaw_name: str | None = None,
         liquid_settings: Literal[
             "apply_waterlogging", "ignore_waterlogging"
         ] = "apply_waterlogging",

@@ -2,7 +2,7 @@ from math import inf
 from typing import Dict, Literal, Tuple, overload
 
 from anvil.api.actors.actors import Entity, ItemTexturesObject
-from anvil.api.core.components import _BaseComponent
+from anvil.api.core.components import Component
 from anvil.api.core.enums import DamageCause, EnchantsSlots, Rarity, Slots
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import RGB, RGBA, Identifier, Seconds, Tick
@@ -23,7 +23,7 @@ from anvil.lib.translator import AnvilTranslator
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.130
-class ItemSwingSounds(_BaseComponent):
+class ItemSwingSounds(Component):
     _identifier = "minecraft:swing_sounds"
 
     def __init__(
@@ -49,7 +49,7 @@ class ItemSwingSounds(_BaseComponent):
         self._add_field("attack_miss", attack_miss)
 
 
-class ItemKineticWeapon(_BaseComponent):
+class ItemKineticWeapon(Component):
     _identifier = "minecraft:kinetic_weapon"
 
     def __init__(
@@ -80,13 +80,13 @@ class ItemKineticWeapon(_BaseComponent):
                 "creative_reach",
                 AnvilFormatter.min_max_dict(creative_reach, "creative_reach"),
             )
-        if not damage_modifier == 0:
+        if damage_modifier != 0:
             self._add_field("damage_modifier", damage_modifier)
-        if not damage_multiplier == 1:
+        if damage_multiplier != 1:
             self._add_field("damage_multiplier", damage_multiplier)
-        if not delay == 0:
+        if delay != 0:
             self._add_field("delay", delay)
-        if not hitbox_margin == 0:
+        if hitbox_margin != 0:
             self._add_field("hitbox_margin", hitbox_margin)
 
     def damage_conditions(
@@ -103,11 +103,11 @@ class ItemKineticWeapon(_BaseComponent):
             min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
         """
         entry = {}
-        if not max_duration == -1:
+        if max_duration != -1:
             entry["max_duration"] = max_duration
-        if not min_relative_speed == 0.0:
+        if min_relative_speed != 0.0:
             entry["min_relative_speed"] = min_relative_speed
-        if not min_speed == 0.0:
+        if min_speed != 0.0:
             entry["min_speed"] = min_speed
         self._add_field("damage_conditions", {})
         return self
@@ -126,11 +126,11 @@ class ItemKineticWeapon(_BaseComponent):
             min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
         """
         entry = {}
-        if not max_duration == -1:
+        if max_duration != -1:
             entry["max_duration"] = max_duration
-        if not min_relative_speed == 0.0:
+        if min_relative_speed != 0.0:
             entry["min_relative_speed"] = min_relative_speed
-        if not min_speed == 0.0:
+        if min_speed != 0.0:
             entry["min_speed"] = min_speed
         self._add_field("knockback_conditions", {})
         return self
@@ -149,17 +149,17 @@ class ItemKineticWeapon(_BaseComponent):
             min_speed (float): Minimum user's speed (projected onto the view vector via a dot product) required for the effect to be applied. Default is 0.0.
         """
         entry = {}
-        if not max_duration == -1:
+        if max_duration != -1:
             entry["max_duration"] = max_duration
-        if not min_relative_speed == 0.0:
+        if min_relative_speed != 0.0:
             entry["min_relative_speed"] = min_relative_speed
-        if not min_speed == 0.0:
+        if min_speed != 0.0:
             entry["min_speed"] = min_speed
         self._add_field("dismount_conditions", {})
         return self
 
 
-class ItemPiercingWeapon(_BaseComponent):
+class ItemPiercingWeapon(Component):
     _identifier = "minecraft:piercing_weapon"
 
     def __init__(
@@ -188,11 +188,11 @@ class ItemPiercingWeapon(_BaseComponent):
                 "creative_reach",
                 AnvilFormatter.min_max_dict(creative_reach, "creative_reach"),
             )
-        if not hitbox_margin == 0:
+        if hitbox_margin != 0:
             self._add_field("hitbox_margin", hitbox_margin)
 
 
-class ItemCooldown(_BaseComponent):
+class ItemCooldown(Component):
     _identifier = "minecraft:cooldown"
 
     def __init__(
@@ -213,11 +213,11 @@ class ItemCooldown(_BaseComponent):
 
         self._add_field("category", category)
         self._add_field("duration", duration)
-        if not type == "use":
+        if type != "use":
             self._add_field("type", type)
 
 
-class ItemUseModifiers(_BaseComponent):
+class ItemUseModifiers(Component):
     _identifier = "minecraft:use_modifiers"
 
     def __init__(
@@ -250,7 +250,7 @@ class ItemUseModifiers(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.120
-class ItemSwingDuration(_BaseComponent):
+class ItemSwingDuration(Component):
     _identifier = "minecraft:swing_duration"
 
     def __init__(self, value: float = 0.3) -> None:
@@ -267,7 +267,7 @@ class ItemSwingDuration(_BaseComponent):
         self._set_value(clamp(value, 0, inf))
 
 
-class ItemFireResistant(_BaseComponent):
+class ItemFireResistant(Component):
     _identifier = "minecraft:fire_resistant"
 
     def __init__(self, value: bool = True) -> None:
@@ -285,7 +285,7 @@ class ItemFireResistant(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.114
-class ItemDamageAbsorption(_BaseComponent):
+class ItemDamageAbsorption(Component):
     _identifier = "minecraft:damage_absorption"
 
     def __init__(self, absorbable_causes: list[DamageCause]) -> None:
@@ -307,7 +307,7 @@ class ItemDamageAbsorption(_BaseComponent):
         self._add_field("absorbable_causes", absorbable_causes)
 
 
-class ItemDurabilitySensor(_BaseComponent):
+class ItemDurabilitySensor(Component):
     _identifier = "minecraft:durability_sensor"
 
     def __init__(self) -> None:
@@ -356,7 +356,7 @@ class ItemDurabilitySensor(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.60
-class ItemCompostable(_BaseComponent):
+class ItemCompostable(Component):
     _identifier = "minecraft:compostable"
 
     def __init__(self, composting_chance: float) -> None:
@@ -374,7 +374,7 @@ class ItemCompostable(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.40
-class ItemStorageItem(_BaseComponent):
+class ItemStorageItem(Component):
     _identifier = "minecraft:storage_item"
 
     def __init__(
@@ -407,7 +407,7 @@ class ItemStorageItem(_BaseComponent):
         return self
 
 
-class ItemStorageWeightLimit(_BaseComponent):
+class ItemStorageWeightLimit(Component):
     _identifier = "minecraft:storage_weight_limit"
 
     def __init__(self, max_weight_limit: float = 64.0) -> None:
@@ -424,7 +424,7 @@ class ItemStorageWeightLimit(_BaseComponent):
         self._add_field("max_weight_limit", clamp(max_weight_limit, 0, 64))
 
 
-class ItemStorageWeightModifier(_BaseComponent):
+class ItemStorageWeightModifier(Component):
     _identifier = "minecraft:storage_weight_modifier"
 
     def __init__(self, weight_in_storage_item: int = 4) -> None:
@@ -441,7 +441,7 @@ class ItemStorageWeightModifier(_BaseComponent):
         self._add_field("weight_in_storage_item", clamp(weight_in_storage_item, 0, inf))
 
 
-class ItemBundleInteraction(_BaseComponent):
+class ItemBundleInteraction(Component):
     _identifier = "minecraft:bundle_interaction"
 
     def __init__(self, num_viewable_slots: int = 12) -> None:
@@ -461,7 +461,7 @@ class ItemBundleInteraction(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.30
-class ItemRarity(_BaseComponent):
+class ItemRarity(Component):
     _identifier = "minecraft:rarity"
 
     def __init__(self, value: Rarity) -> None:
@@ -479,7 +479,7 @@ class ItemRarity(_BaseComponent):
         self._set_value(value)
 
 
-class ItemDyeable(_BaseComponent):
+class ItemDyeable(Component):
     _identifier = "minecraft:dyeable"
 
     def __init__(self, default_color: Color) -> None:
@@ -497,7 +497,7 @@ class ItemDyeable(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.20
-class ItemCustomComponents(_BaseComponent):
+class ItemCustomComponents(Component):
     _identifier = "minecraft:custom_components"
 
     def __init__(self, component_name: str) -> None:
@@ -514,7 +514,7 @@ class ItemCustomComponents(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.50
-class ItemTags(_BaseComponent):
+class ItemTags(Component):
     _identifier = "minecraft:tags"
 
     def __init__(self, tags: list[MinecraftItemTags | str]) -> None:
@@ -524,7 +524,7 @@ class ItemTags(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.30
-class ItemEnchantable(_BaseComponent):
+class ItemEnchantable(Component):
     _identifier = "minecraft:enchantable"
 
     def __init__(self, slot: EnchantsSlots, value: int) -> None:
@@ -544,7 +544,7 @@ class ItemEnchantable(_BaseComponent):
         self._add_field("value", clamp(value, 0, inf))
 
 
-class ItemFood(_BaseComponent):
+class ItemFood(Component):
     _identifier = "minecraft:food"
 
     def __init__(
@@ -577,7 +577,11 @@ class ItemFood(_BaseComponent):
             self._add_field("using_converts_to", str(using_converts_to))
 
     def effects(
-        self, effect: MinecraftEffects, chance: float, duration: Seconds, amplifier: int
+        self,
+        effect: MinecraftEffects,
+        chance: float,
+        duration: Seconds,
+        amplifier: int = 1,
     ):
         """# DEPRECATED
         Sets the effects of the food item.
@@ -599,7 +603,7 @@ class ItemFood(_BaseComponent):
         return self
 
 
-class ItemInteractButton(_BaseComponent):
+class ItemInteractButton(Component):
     _identifier = "minecraft:interact_button"
 
     def __init__(self, value: bool | str = True) -> None:
@@ -625,7 +629,7 @@ class ItemInteractButton(_BaseComponent):
             self._set_value(True)
 
 
-class ItemCanDestroyInCreative(_BaseComponent):
+class ItemCanDestroyInCreative(Component):
     _identifier = "minecraft:can_destroy_in_creative"
 
     def __init__(self, value: bool) -> None:
@@ -643,7 +647,7 @@ class ItemCanDestroyInCreative(_BaseComponent):
         self._set_value(value)
 
 
-class ItemHoverTextColor(_BaseComponent):
+class ItemHoverTextColor(Component):
     _identifier = "minecraft:hover_text_color"
 
     def __init__(self, color: str) -> None:
@@ -662,7 +666,7 @@ class ItemHoverTextColor(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.20
-class ItemWearable(_BaseComponent):
+class ItemWearable(Component):
     _identifier = "minecraft:wearable"
 
     def __init__(self, slot: Slots, protection: int = 0) -> None:
@@ -684,7 +688,7 @@ class ItemWearable(_BaseComponent):
         # self._add_field("dispensable", dispensable)
 
 
-class ItemHandEquipped(_BaseComponent):
+class ItemHandEquipped(Component):
     _identifier = "minecraft:hand_equipped"
 
     def __init__(self, value: bool) -> None:
@@ -702,7 +706,7 @@ class ItemHandEquipped(_BaseComponent):
         self._add_field("value", value)
 
 
-class ItemGlint(_BaseComponent):
+class ItemGlint(Component):
     _identifier = "minecraft:glint"
 
     def __init__(self, value: bool) -> None:
@@ -720,7 +724,7 @@ class ItemGlint(_BaseComponent):
         self._set_value(value)
 
 
-class ItemStackedByData(_BaseComponent):
+class ItemStackedByData(Component):
     _identifier = "minecraft:stacked_by_data"
 
     def __init__(self, value: bool) -> None:
@@ -738,7 +742,7 @@ class ItemStackedByData(_BaseComponent):
         self._set_value(value)
 
 
-class ItemUseAnimation(_BaseComponent):
+class ItemUseAnimation(Component):
     _identifier = "minecraft:use_animation"
 
     def __init__(
@@ -772,7 +776,7 @@ class ItemUseAnimation(_BaseComponent):
         self._set_value(value)
 
 
-class ItemAllowOffHand(_BaseComponent):
+class ItemAllowOffHand(Component):
     _identifier = "minecraft:allow_off_hand"
 
     def __init__(self, value: bool) -> None:
@@ -790,7 +794,7 @@ class ItemAllowOffHand(_BaseComponent):
         self._set_value(value)
 
 
-class ItemShouldDespawn(_BaseComponent):
+class ItemShouldDespawn(Component):
     _identifier = "minecraft:should_despawn"
 
     def __init__(self, value: bool) -> None:
@@ -808,7 +812,7 @@ class ItemShouldDespawn(_BaseComponent):
         self._set_value(value)
 
 
-class ItemLiquidClipped(_BaseComponent):
+class ItemLiquidClipped(Component):
     _identifier = "minecraft:liquid_clipped"
 
     def __init__(self, value: bool) -> None:
@@ -826,7 +830,7 @@ class ItemLiquidClipped(_BaseComponent):
         self._set_value(value)
 
 
-class ItemDamage(_BaseComponent):
+class ItemDamage(Component):
     _identifier = "minecraft:damage"
 
     def __init__(self, value: int) -> None:
@@ -847,7 +851,7 @@ class ItemDamage(_BaseComponent):
         self._set_value(value)
 
 
-class ItemDigger(_BaseComponent):
+class ItemDigger(Component):
     _identifier = "minecraft:digger"
 
     def __init__(
@@ -876,7 +880,7 @@ class ItemDigger(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.20.10
-class ItemRepairable(_BaseComponent):
+class ItemRepairable(Component):
     _identifier = "minecraft:repairable"
 
     def __init__(
@@ -912,7 +916,7 @@ class ItemRepairable(_BaseComponent):
         return self
 
 
-class ItemMaxStackSize(_BaseComponent):
+class ItemMaxStackSize(Component):
     _identifier = "minecraft:max_stack_size"
 
     def __init__(self, stack_size: int) -> None:
@@ -930,7 +934,7 @@ class ItemMaxStackSize(_BaseComponent):
         self._set_value(clamp(stack_size, 1, 64))
 
 
-class ItemBlockPlacer(_BaseComponent):
+class ItemBlockPlacer(Component):
     _identifier = "minecraft:block_placer"
 
     def __init__(
@@ -966,7 +970,7 @@ class ItemBlockPlacer(_BaseComponent):
         return self
 
 
-class ItemSeed(_BaseComponent):
+class ItemSeed(Component):
     _identifier = "minecraft:seed"
 
     def __init__(
@@ -1005,7 +1009,7 @@ class ItemSeed(_BaseComponent):
             self._add_field("plant_at_face", plant_at_face)
 
 
-class ItemRecord(_BaseComponent):
+class ItemRecord(Component):
     _identifier = "minecraft:record"
 
     def __init__(
@@ -1029,7 +1033,7 @@ class ItemRecord(_BaseComponent):
         self._add_field("comparator_signal", clamp(comparator_signal, 1, 13))
 
 
-class ItemShooter(_BaseComponent):
+class ItemShooter(Component):
     _identifier = "minecraft:shooter"
 
     def __init__(
@@ -1054,7 +1058,7 @@ class ItemShooter(_BaseComponent):
         self._add_field("ammunition", [])
         if charge_on_draw:
             self._add_field("charge_on_draw", charge_on_draw)
-        if not max_draw_duration == 0.0:
+        if max_draw_duration != 0.0:
             self._add_field("max_draw_duration", max_draw_duration)
         if scale_power_by_draw_duration:
             self._add_field(
@@ -1079,7 +1083,7 @@ class ItemShooter(_BaseComponent):
         return self
 
 
-class ItemProjectile(_BaseComponent):
+class ItemProjectile(Component):
     _identifier = "minecraft:projectile"
 
     def __init__(
@@ -1105,7 +1109,7 @@ class ItemProjectile(_BaseComponent):
         self._add_field("minimum_critical_power", minimum_critical_power)
 
 
-class ItemThrowable(_BaseComponent):
+class ItemThrowable(Component):
     _identifier = "minecraft:throwable"
 
     def __init__(
@@ -1135,13 +1139,13 @@ class ItemThrowable(_BaseComponent):
 
         if do_swing_animation:
             self._add_field("do_swing_animation", do_swing_animation)
-        if not launch_power_scale == 1.0:
+        if launch_power_scale != 1.0:
             self._add_field("launch_power_scale", launch_power_scale)
-        if not max_draw_duration == 0.0:
+        if max_draw_duration != 0.0:
             self._add_field("max_draw_duration", max_draw_duration)
-        if not max_launch_power == 1.0:
+        if max_launch_power != 1.0:
             self._add_field("max_launch_power", max_launch_power)
-        if not min_draw_duration == 0.0:
+        if min_draw_duration != 0.0:
             self._add_field("min_draw_duration", min_draw_duration)
         if scale_power_by_draw_duration:
             self._add_field(
@@ -1150,7 +1154,7 @@ class ItemThrowable(_BaseComponent):
 
 
 # Require ITEM_SERVER_VERSION >= 1.19.80
-class ItemDurability(_BaseComponent):
+class ItemDurability(Component):
     _identifier = "minecraft:durability"
 
     def __init__(
@@ -1181,7 +1185,7 @@ class ItemDurability(_BaseComponent):
             )
 
 
-class ItemDisplayName(_BaseComponent):
+class ItemDisplayName(Component):
     _identifier = "minecraft:display_name"
 
     def __init__(self, display_name: str, localized_key: str = None) -> None:
@@ -1203,7 +1207,7 @@ class ItemDisplayName(_BaseComponent):
         self._add_field("value", localized_key)
 
 
-class ItemFuel(_BaseComponent):
+class ItemFuel(Component):
     _identifier = "minecraft:fuel"
 
     def __init__(self, duration: float) -> None:
@@ -1220,7 +1224,7 @@ class ItemFuel(_BaseComponent):
         self._add_field("duration", clamp(duration, 0.05, inf))
 
 
-class ItemEntityPlacer(_BaseComponent):
+class ItemEntityPlacer(Component):
     _identifier = "minecraft:entity_placer"
 
     def __init__(self, entity: MinecraftEntityDescriptor | Identifier) -> None:
@@ -1247,7 +1251,7 @@ class ItemEntityPlacer(_BaseComponent):
         return self
 
 
-class ItemIcon(_BaseComponent):
+class ItemIcon(Component):
     _identifier = "minecraft:icon"
 
     @overload

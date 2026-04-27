@@ -4,9 +4,9 @@ import json
 import os
 import traceback
 import uuid
-from typing import Dict, Mapping
+from typing import Dict, List, Mapping
 
-from anvil.api.core.types import Identifier
+from anvil.api.core.types import Identifier, Vector2D
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA, AnvilIO, salt_from_str
@@ -18,15 +18,24 @@ class JsonSchemes:
 
     @staticmethod
     def pack_name_lang(name, description):
-        return load_file(
-            "pack_name_lang.jsont", {"name": name, "description": description}
-        ).splitlines()
+        file = str(
+            load_file(
+                "pack_name_lang.jsont", {"name": name, "description": description}
+            )
+        )
+        file = file.splitlines()
+        return file
 
     @staticmethod
     def skin_pack_name_lang(name, display_name):
-        return load_file(
-            "skin_pack_name_lang.jsont", {"name": name, "display_name": display_name}
-        ).splitlines()
+        file = str(
+            load_file(
+                "skin_pack_name_lang.jsont",
+                {"name": name, "display_name": display_name},
+            )
+        )
+        file = file.splitlines()
+        return file
 
     @staticmethod
     def esbuild_config_js(outDir, minify):
@@ -38,13 +47,15 @@ class JsonSchemes:
 
     @staticmethod
     def manifest_bp(version):
-        content: dict = load_file(
+        content = load_file(
             "manifest_bp.jsont",
             {
                 "format_version": MANIFEST_VERSION,
                 "bp_uuid": CONFIG._BP_UUID[0],
                 "version": version,
-                "min_engine_version": MANIFEST_BUILD,
+                "min_engine_version": (
+                    MANIFEST_BUILD if not CONFIG._PREVIEW else MANIFEST_BUILD_PREVIEW
+                ),
                 "data_module_uuid": CONFIG._DATA_MODULE_UUID,
                 "rp_uuid": CONFIG._RP_UUID[0],
                 "company": CONFIG.COMPANY,
@@ -55,17 +66,18 @@ class JsonSchemes:
 
     @staticmethod
     def manifest_rp(version):
-        config = CONFIG
-        content: dict = load_file(
+        content = load_file(
             "manifest_rp.jsont",
             {
                 "format_version": MANIFEST_VERSION,
-                "rp_uuid": config._RP_UUID[0],
+                "rp_uuid": CONFIG._RP_UUID[0],
                 "version": version,
-                "min_engine_version": MANIFEST_BUILD,
+                "min_engine_version": (
+                    MANIFEST_BUILD if not CONFIG._PREVIEW else MANIFEST_BUILD_PREVIEW
+                ),
                 "resource_module_uuid": str(uuid.uuid4()),
-                "bp_uuid": config._BP_UUID[0],
-                "company": config.COMPANY,
+                "bp_uuid": CONFIG._BP_UUID[0],
+                "company": CONFIG.COMPANY,
             },
             is_json=True,
         )
@@ -73,23 +85,22 @@ class JsonSchemes:
 
     @staticmethod
     def manifest_world(version):
-        config = CONFIG
-        m = load_file(
+        file = load_file(
             "manifest_world.jsont",
             {
-                "world_uuid": config._PACK_UUID,
+                "world_uuid": CONFIG._PACK_UUID,
                 "version": version,
                 "engine_version": [int(i) for i in MANIFEST_BUILD.split(".")],
                 "world_module_uuid": str(uuid.uuid4()),
-                "company": config.COMPANY,
+                "company": CONFIG.COMPANY,
             },
             is_json=True,
         )
 
-        if config._RANDOM_SEED:
-            m["header"]["allow_random_seed"] = True
+        if CONFIG._RANDOM_SEED:
+            file["header"]["allow_random_seed"] = True
 
-        return m
+        return file
 
     @staticmethod
     def world_packs(version, pack_ids):
@@ -253,15 +264,14 @@ class JsonSchemes:
     def geometry(
         model_name: str,
         texture_size: list[int],
-        visible_box: list[int],
+        visible_box: Vector2D,
         visible_offset: list[int],
     ):
-        config = CONFIG
         return load_file(
             "geometry.jsont",
             {
                 "format_version": GEOMETRY_VERSION,
-                "namespace": config.NAMESPACE,
+                "namespace": CONFIG.NAMESPACE,
                 "model_name": model_name,
                 "texture_width": texture_size[0],
                 "texture_height": texture_size[1],
@@ -803,7 +813,7 @@ class AddonDescriptor:
             and is_vanilla
             and not is_vanilla_allowed
         ):
-            raise RuntimeError(
+            raise ValueError(
                 f"Overriding vanilla features is not allowed for packages of type '{CONFIG._TARGET}'. {self._object_type}[{name}]"
             )
 
@@ -906,7 +916,6 @@ class AddonObject(AddonDescriptor):
     _extension = ".json"
     _path = ""
     _object_type = "addon_object"
-    _config = CONFIG
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """
@@ -977,8 +986,8 @@ class MinecraftBlockDescriptor(AddonDescriptor):
         self,
         name,
         is_vanilla=False,
-        states: Mapping[str, str | int | float | bool] = None,
-        tags: set[str] = None,
+        states: Mapping[str, str | int | float | bool | None] | None = None,
+        tags: set[str] | None = None,
         is_vanilla_allowed=True,
     ) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)

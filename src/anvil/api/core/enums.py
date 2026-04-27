@@ -1,4 +1,5 @@
 from enum import StrEnum
+from typing import List
 
 
 class Target(StrEnum):
@@ -22,27 +23,27 @@ class Style(StrEnum):
     Enumeration for the different styles of text in the game.
     """
 
-    Black: str = "§0"
-    DarkBlue: str = "§1"
-    DarkGreen: str = "§2"
-    DarkAqua: str = "§3"
-    DarkRed: str = "§4"
-    DarkPurple: str = "§5"
-    Gold: str = "§6"
-    Gray: str = "§7"
-    DarkGray: str = "§8"
-    Blue: str = "§9"
-    Green: str = "§a"
-    Aqua: str = "§b"
-    Red: str = "§c"
-    Purple: str = "§d"
-    Yellow: str = "§e"
-    White: str = "§f"
-    MineconGold: str = "§g"
-    Obfuscated: str = "§k"
-    Bold: str = "§l"
-    Italic: str = "§o"
-    Reset: str = "§r"
+    Black = "§0"
+    DarkBlue = "§1"
+    DarkGreen = "§2"
+    DarkAqua = "§3"
+    DarkRed = "§4"
+    DarkPurple = "§5"
+    Gold = "§6"
+    Gray = "§7"
+    DarkGray = "§8"
+    Blue = "§9"
+    Green = "§a"
+    Aqua = "§b"
+    Red = "§c"
+    Purple = "§d"
+    Yellow = "§e"
+    White = "§f"
+    MineconGold = "§g"
+    Obfuscated = "§k"
+    Bold = "§l"
+    Italic = "§o"
+    Reset = "§r"
 
 
 class FogCameraLocation(StrEnum):
@@ -228,8 +229,8 @@ class CameraShakeType(StrEnum):
     Enumeration representing the types of camera shakes that can occur in Minecraft.
     """
 
-    positional = "positional"
-    rotational = "rotational"
+    Positional = "positional"
+    Rotational = "rotational"
 
 
 class MaskMode(StrEnum):
@@ -237,8 +238,8 @@ class MaskMode(StrEnum):
     Enumeration representing the different mask modes that can be applied in Minecraft.
     """
 
-    replace = "replace"
-    masked = "masked"
+    Replace = "replace"
+    Masked = "masked"
 
 
 class CloneMode(StrEnum):
@@ -246,9 +247,9 @@ class CloneMode(StrEnum):
     Enumeration representing the different modes that can be used when cloning in Minecraft.
     """
 
-    force = "force"
-    move = "move"
-    normal = "normal"
+    Force = "force"
+    Move = "move"
+    Normal = "normal"
 
 
 class InputPermissions(StrEnum):
@@ -406,6 +407,38 @@ class BlockFaces(StrEnum):
     West = "west"
     Side = "side"
     All = "all"
+
+
+_CARDINAL_FACES = [BlockFaces.North, BlockFaces.South, BlockFaces.East, BlockFaces.West]
+_ALL_FACES = [
+    BlockFaces.North,
+    BlockFaces.South,
+    BlockFaces.East,
+    BlockFaces.West,
+    BlockFaces.Up,
+    BlockFaces.Down,
+]
+
+
+def expand_block_face_sides(faces: List[BlockFaces]) -> List[BlockFaces]:
+    """Expand ``BlockFaces.Side`` and ``BlockFaces.All`` into explicit face lists.
+
+    ``Side`` expands to the four cardinal directions (North, South, East, West).
+    ``All`` expands to all six faces.
+    The input list is not mutated; a new list is returned.
+    """
+    has_all = BlockFaces.All in faces
+    has_side = BlockFaces.Side in faces
+
+    if not has_all and not has_side:
+        return list(faces)
+
+    result = [f for f in faces if f is not BlockFaces.Side and f is not BlockFaces.All]
+    if has_all:
+        result.extend(_ALL_FACES)
+    else:
+        result.extend(_CARDINAL_FACES)
+    return result
 
 
 class BlockMaterial(StrEnum):

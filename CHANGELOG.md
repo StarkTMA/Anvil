@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.7**](#version-097)
+- [**Version 0.9.7.1**](#version-0971)
+- [Version 0.9.7](#version-097)
 - [Version 0.9.6.6](#version-0966)
 - [Version 0.9.6.5](#version-0965)
 - [Version 0.9.6.4](#version-0964)
@@ -89,6 +90,29 @@
 ---
 
 ## Release Series 0.9.x
+
+### Version 0.9.7.1
+
+#### Anvil
+
+- Added community contribution support with new issue templates, an updated `CONTRIBUTING.md`, and refreshed README guidance.
+- Work is being done to add strict typing to the entire Anvil framework.
+
+#### CLI
+
+- Split the cli file into smaller focused command files in `./cli_commands`.
+- Added command aliases to existing commands, the old commands still work fine.
+- Added a new command `anvil process-sounds`/`anvil sounds`. This command will take all of your sounds in `assets/sounds` of the formats `.wav`, `.mp3` and `.ogg` and processes them using `ffmpeg`. The script will convert them all to `.ogg`, normalizes loudness, lufs and sample rate. NOTE: this is a destructive process, run `anvil sounds --help` for more information.
+
+### Features & Feature Rules.
+
+- Added `DistributionMixin` to `ScatterFeature` allowing the configuration of the feature distribution. #1
+- Removed unused `DistributionMixin` from `SearchFeature`. #1
+- `DistributionMixin` iteration now allows Molang. #2
+
+### Vanilla
+
+- Changed how vanilla Items, Entities and Blocks are accessed. This will not break existing scripts but should improve performance negligibly.
 
 ### Version 0.9.7
 

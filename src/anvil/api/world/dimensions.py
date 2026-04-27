@@ -25,7 +25,7 @@ class DimensionConfiguration(AddonObject):
 
         super().__init__(str(dimension.removeprefix("minecraft:")))
 
-    def heigh_bounds(self, range: tuple[int, int]) -> "DimensionConfiguration":
+    def heigh_bounds(self, range: tuple[int, int]):
         """Set the height bounds for the dimension.
 
         Args:
@@ -48,6 +48,8 @@ class DimensionConfiguration(AddonObject):
         bounds = {"minecraft:dimension_bounds": {"min": range[0], "max": range[1]}}
 
         self._content["minecraft:dimension"]["components"].update(bounds)
+
+        return self
 
     def generator_type(
         self, generator: Literal["void"] = "void"

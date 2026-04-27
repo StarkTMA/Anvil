@@ -3,25 +3,30 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Literal, Optional, Union, overload
 
-from anvil.api.core.components import List, _BaseComponent
+from anvil.api.core.components import Component, List
 from anvil.api.core.core import TerrainTexturesObject
 from anvil.api.core.enums import (
+    _CARDINAL_FACES,
     BlockCardinalConnection,
     BlockFaces,
     BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
     TintMethod,
+    expand_block_face_sides,
 )
 from anvil.api.core.textures import FlipBookTexturesObject
 from anvil.api.core.types import Identifier
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
-from anvil.api.vanilla.blocks import BlockFace
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.blockbench import BlockBenchSource, _Blockbench, blockbench_geometry_name
 from anvil.lib.config import CONFIG
-from anvil.lib.format_versions import BLOCK_JSON_FORMAT_VERSION, BLOCK_SERVER_VERSION, ITEM_SERVER_VERSION
+from anvil.lib.format_versions import (
+    BLOCK_JSON_FORMAT_VERSION,
+    BLOCK_SERVER_VERSION,
+    ITEM_SERVER_VERSION,
+)
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import MinecraftBlockDescriptor
 from anvil.lib.translator import AnvilTranslator
@@ -43,10 +48,14 @@ class FlipbookParams:
             raise ValueError("FlipbookParams.ticks_per_frame must be positive.")
         if self.replicate <= 0 or (self.replicate & (self.replicate - 1)) != 0:
             # power-of-two check; matches Bedrock expectations for replicate granularity
-            raise ValueError("FlipbookParams.replicate must be a power of two (1,2,4,8,...)")
+            raise ValueError(
+                "FlipbookParams.replicate must be a power of two (1,2,4,8,...)"
+            )
         if self.atlas_tile_variant is not None:
             if self.atlas_tile_variant < 0 or self.atlas_tile_variant >= variant_count:
-                raise ValueError("FlipbookParams.atlas_tile_variant out of range for variations.")
+                raise ValueError(
+                    "FlipbookParams.atlas_tile_variant out of range for variations."
+                )
 
 
 @dataclass(frozen=True)
@@ -88,7 +97,9 @@ class InstanceSpec:
 
     def validate(self) -> None:
         if self.face == BlockFaces.Side:
-            raise ValueError("BlockFaces.Side is not supported; use All or explicit faces.")
+            raise ValueError(
+                "BlockFaces.Side is not supported; use All or explicit faces."
+            )
         if not self.variations:
             raise ValueError("At least one VariantPackage is required.")
         if any(v.weight <= 0 for v in self.variations):
@@ -105,7 +116,9 @@ class InstanceSpec:
         base_sig = sig(self.variations[0])
         for v in self.variations[1:]:
             if sig(v) != base_sig:
-                raise ValueError("All variants must provide the same set of PBR maps (present/absent).")
+                raise ValueError(
+                    "All variants must provide the same set of PBR maps (present/absent)."
+                )
 
         if self.flipbooks:
             for fb in self.flipbooks:
@@ -118,7 +131,7 @@ class InstanceSpec:
         return self.variations[index].color
 
 
-class BlockMaterialInstance(_BaseComponent):
+class BlockMaterialInstance(Component):
     _identifier = "minecraft:material_instances"
 
     def __init__(self) -> None:
@@ -126,12 +139,16 @@ class BlockMaterialInstance(_BaseComponent):
         self._require_components(BlockGeometry)
         self._parsed_textures: Dict[str, List[str]] = {}
 
-    def add_instance(self, spec: InstanceSpec, force_vanilla: bool = False) -> "BlockMaterialInstance":
+    def add_instance(
+        self, spec: InstanceSpec, force_vanilla: bool = False
+    ) -> "BlockMaterialInstance":
         spec.validate()
         spec.params.validate(self._enforce_version)
 
         if len(spec.variations) > 1:
-            variations_payload = [{"weight": vp.weight, "texture": vp.color} for vp in spec.variations]
+            variations_payload = [
+                {"weight": vp.weight, "texture": vp.color} for vp in spec.variations
+            ]
             TerrainTexturesObject().add_block_variations(
                 block_name=spec.color_texture(),
                 directory=spec.blockbench_name,
@@ -141,10 +158,19 @@ class BlockMaterialInstance(_BaseComponent):
         else:
             only = spec.variations[0]
             TerrainTexturesObject().add_block(
-                spec.color_texture(), spec.blockbench_name, [only.color], force_vanilla=force_vanilla
+                spec.color_texture(),
+                spec.blockbench_name,
+                [only.color],
+                force_vanilla=force_vanilla,
             )
 
-        self._add_dict({("*" if spec.face == BlockFaces.All else spec.face): self._material_payload(spec)})
+        self._add_dict(
+            {
+                (
+                    "*" if spec.face == BlockFaces.All else spec.face
+                ): self._material_payload(spec)
+            }
+        )
 
         for vp in spec.variations:
             self._texture_set = TextureSet(vp.color, BlockBenchSource.BLOCK)
@@ -172,8 +198,12 @@ class BlockMaterialInstance(_BaseComponent):
         p = spec.params
         return {
             "texture": f"{CONFIG.NAMESPACE}:{spec.color_texture()}",
-            "render_method": (p.render_method if p.render_method != BlockMaterial.Opaque else {}),
-            "ambient_occlusion": (p.ambient_occlusion if p.ambient_occlusion is not None else {}),
+            "render_method": (
+                p.render_method if p.render_method != BlockMaterial.Opaque else {}
+            ),
+            "ambient_occlusion": (
+                p.ambient_occlusion if p.ambient_occlusion is not None else {}
+            ),
             "face_dimming": p.face_dimming if p.face_dimming is not None else {},
             "tint_method": p.tint_method if p.tint_method != TintMethod.None_ else {},
             "isotropic": p.isotropic if p.isotropic else {},
@@ -185,7 +215,7 @@ class BlockMaterialInstance(_BaseComponent):
         return super()._export()
 
 
-class BlockFlowerPottable(_BaseComponent):
+class BlockFlowerPottable(Component):
     _identifier = "minecraft:flower_pottable"
 
     def __init__(self) -> None:
@@ -198,7 +228,7 @@ class BlockFlowerPottable(_BaseComponent):
         super().__init__("flower_pottable")
 
 
-class BlockEmbeddedVisual(_BaseComponent):
+class BlockEmbeddedVisual(Component):
     _identifier = "minecraft:embedded_visual"
 
     @overload
@@ -272,12 +302,14 @@ class BlockEmbeddedVisual(_BaseComponent):
 
         self._get_field("material_instances", {})[face_key] = {
             "texture": f"{CONFIG.NAMESPACE}:{texture}",
-            "render_method": (render_method if not render_method == BlockMaterial.Opaque else {}),
+            "render_method": (
+                render_method if render_method != BlockMaterial.Opaque else {}
+            ),
         }
         return self
 
 
-class BlockRedstoneProducer(_BaseComponent):
+class BlockRedstoneProducer(Component):
     _identifier = "minecraft:redstone_producer"
 
     def __init__(
@@ -306,22 +338,7 @@ class BlockRedstoneProducer(_BaseComponent):
         self._add_field("power", int(power))
 
         if connected_faces is not None:
-            # Expand shorthand faces if provided (Side -> N,S,E,W). If All present, keep as [All].
-            faces = list(connected_faces)
-            if BlockFaces.Side in faces:
-                # replace Side with cardinal faces
-                faces = [f for f in faces if f is not BlockFaces.Side]
-                faces.extend(
-                    [
-                        BlockFaces.North,
-                        BlockFaces.South,
-                        BlockFaces.East,
-                        BlockFaces.West,
-                    ]
-                )
-            if BlockFaces.All in faces:
-                faces.remove(BlockFaces.All)
-
+            faces = expand_block_face_sides(connected_faces)
             self._add_field("connected_faces", faces)
 
         if strongly_powered_face is not None:
@@ -332,7 +349,7 @@ class BlockRedstoneProducer(_BaseComponent):
             self._add_field("transform_relative", True)
 
 
-class BlockDestructionParticles(_BaseComponent):
+class BlockDestructionParticles(Component):
     _identifier = "minecraft:destruction_particles"
 
     def __init__(
@@ -365,7 +382,7 @@ class BlockDestructionParticles(_BaseComponent):
             self._add_field("tint_method", tint_method)
 
 
-class BlockMovable(_BaseComponent):
+class BlockMovable(Component):
     _identifier = "minecraft:movable"
 
     def __init__(
@@ -388,10 +405,12 @@ class BlockMovable(_BaseComponent):
         self._add_field("sticky", sticky)
 
 
-class BlockRedstoneConductivity(_BaseComponent):
+class BlockRedstoneConductivity(Component):
     _identifier = "minecraft:redstone_conductivity"
 
-    def __init__(self, allows_wire_to_step_down: bool = True, redstone_conductor: bool = False) -> None:
+    def __init__(
+        self, allows_wire_to_step_down: bool = True, redstone_conductor: bool = False
+    ) -> None:
         """Specifies whether a block has redstone properties. If the component is not provided, the default values are used.
 
         Parameters:
@@ -407,7 +426,7 @@ class BlockRedstoneConductivity(_BaseComponent):
         self._add_field("redstone_conductor", redstone_conductor)
 
 
-class BlockCustomComponents(_BaseComponent):
+class BlockCustomComponents(Component):
     _identifier = "minecraft:custom_components"
 
     def __init__(self, component_name: str) -> None:
@@ -422,7 +441,7 @@ class BlockCustomComponents(_BaseComponent):
         super().__init__(component_name, False)
 
 
-class BlockDestructibleByExplosion(_BaseComponent):
+class BlockDestructibleByExplosion(Component):
     _identifier = "minecraft:destructible_by_explosion"
 
     def __init__(self, explosion_resistance: int = None) -> None:
@@ -439,7 +458,7 @@ class BlockDestructibleByExplosion(_BaseComponent):
             self._add_field("explosion_resistance", explosion_resistance)
 
 
-class BlockDestructibleByMining(_BaseComponent):
+class BlockDestructibleByMining(Component):
     _identifier = "minecraft:destructible_by_mining"
 
     def __init__(self, seconds_to_destroy: int = None) -> None:
@@ -458,17 +477,23 @@ class BlockDestructibleByMining(_BaseComponent):
 
     def item_specific_speeds_name(self, destroy_speed: float, item_name: str):
         if "item_specific_speeds" in self._component:
-            self._component["item_specific_speeds"].append({"item": item_name, "destroy_speed": destroy_speed})
+            self._component["item_specific_speeds"].append(
+                {"item": item_name, "destroy_speed": destroy_speed}
+            )
 
     def item_specific_speeds_tag(self, destroy_speed: float, item_tag: str | Molang):
         if "item_specific_speeds" in self._component:
-            self._component["item_specific_speeds"].append({"item": {"tags": item_tag}, "destroy_speed": destroy_speed})
+            self._component["item_specific_speeds"].append(
+                {"item": {"tags": item_tag}, "destroy_speed": destroy_speed}
+            )
 
 
-class BlockFlammable(_BaseComponent):
+class BlockFlammable(Component):
     _identifier = "minecraft:flammable"
 
-    def __init__(self, catch_chance_modifier: int, destroy_chance_modifier: int) -> None:
+    def __init__(
+        self, catch_chance_modifier: int, destroy_chance_modifier: int
+    ) -> None:
         """Describes the flammable properties for this block.
 
         Parameters:
@@ -480,7 +505,7 @@ class BlockFlammable(_BaseComponent):
         self._add_field("destroy_chance_modifier", destroy_chance_modifier)
 
 
-class BlockFriction(_BaseComponent):
+class BlockFriction(Component):
     _identifier = "minecraft:friction"
 
     def __init__(self, friction: float = 0.4) -> None:
@@ -493,7 +518,7 @@ class BlockFriction(_BaseComponent):
         self._set_value(clamp(friction, 0, 0.9))
 
 
-class BlockLightDampening(_BaseComponent):
+class BlockLightDampening(Component):
     _identifier = "minecraft:light_dampening"
 
     def __init__(self, light_dampening: int = 15) -> None:
@@ -506,7 +531,7 @@ class BlockLightDampening(_BaseComponent):
         self._set_value(clamp(light_dampening, 0, 15))
 
 
-class BlockLightEmission(_BaseComponent):
+class BlockLightEmission(Component):
     _identifier = "minecraft:light_emission"
 
     def __init__(self, light_emission: int = 0) -> None:
@@ -519,7 +544,7 @@ class BlockLightEmission(_BaseComponent):
         self._set_value(clamp(light_emission, 0, 15))
 
 
-class BlockLootTable(_BaseComponent):
+class BlockLootTable(Component):
     _identifier = "minecraft:loot"
 
     def __init__(self, loot_table: LootTable | str) -> None:
@@ -529,10 +554,12 @@ class BlockLootTable(_BaseComponent):
             loot_table (LootTable | str): The loot table to use for this block.
         """
         super().__init__("loot")
-        self._set_value(loot_table.table_path if isinstance(loot_table, LootTable) else loot_table)
+        self._set_value(
+            loot_table.table_path if isinstance(loot_table, LootTable) else loot_table
+        )
 
 
-class BlockMapColor(_BaseComponent):
+class BlockMapColor(Component):
     _identifier = "minecraft:map_color"
 
     def __init__(self, color: str, tint_method: TintMethod = TintMethod.None_) -> None:
@@ -552,11 +579,13 @@ class BlockMapColor(_BaseComponent):
             self._add_field("tint_method", tint_method)
 
 
-class BlockGeometry(_BaseComponent):
+class BlockGeometry(Component):
     _identifier = "minecraft:geometry"
 
     @overload
-    def __init__(self, blockbench_name: str, uv_lock: bool = False, collection: str | None = None) -> None:
+    def __init__(
+        self, blockbench_name: str, uv_lock: bool = False, collection: str | None = None
+    ) -> None:
         """The description identifier of the geometry file to use to render this block.
 
         Parameters:
@@ -590,13 +619,17 @@ class BlockGeometry(_BaseComponent):
 
         if blockbench_name is None:
             if collection is not None:
-                raise ValueError("Collection selection is only supported for custom Blockbench geometries.")
+                raise ValueError(
+                    "Collection selection is only supported for custom Blockbench geometries."
+                )
             self._add_field("identifier", "minecraft:geometry.full_block")
 
         else:
             self._require_components(BlockMaterialInstance)
             geometry_name = blockbench_geometry_name(blockbench_name, collection)
-            self._add_field("identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}")
+            self._add_field(
+                "identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"
+            )
 
             self._geometry_name = geometry_name
             if uv_lock:
@@ -623,13 +656,15 @@ class BlockGeometry(_BaseComponent):
         if self._is_default:
             raise ValueError("Cannot set block culling on default geometry.")
         if self._collection is not None:
-            raise ValueError("Blockbench collection geometries do not support block culling yet.")
+            raise ValueError(
+                "Blockbench collection geometries do not support block culling yet."
+            )
 
         self._add_field("culling", f"{CONFIG.NAMESPACE}:{self._geometry_name}")
         return self._bb.model.block_culling()
 
 
-class BlockCollisionBox(_BaseComponent):
+class BlockCollisionBox(Component):
     _identifier = "minecraft:collision_box"
 
     def _register_box(self, size: list[float], origin: list[float]):
@@ -638,8 +673,13 @@ class BlockCollisionBox(_BaseComponent):
         if size == (0, 0, 0):
             self._set_value(False)
         else:
-            if any(o < min_o or o > max_o for o, min_o, max_o in zip(origin, min_origin, max_origin)):
-                raise ValueError(f"Origin {origin} must be within {min_origin} and {max_origin}.")
+            if any(
+                o < min_o or o > max_o
+                for o, min_o, max_o in zip(origin, min_origin, max_origin)
+            ):
+                raise ValueError(
+                    f"Origin {origin} must be within {min_origin} and {max_origin}."
+                )
             box = {
                 "size": size,
                 "origin": origin,
@@ -669,7 +709,7 @@ class BlockCollisionBox(_BaseComponent):
         return self
 
 
-class BlockSelectionBox(_BaseComponent):
+class BlockSelectionBox(Component):
     _identifier = "minecraft:selection_box"
 
     @overload
@@ -699,7 +739,7 @@ class BlockSelectionBox(_BaseComponent):
             self._add_field("origin", origin)
 
 
-class BlockPlacementFilter(_BaseComponent):
+class BlockPlacementFilter(Component):
     _identifier = "minecraft:placement_filter"
 
     def __init__(self) -> None:
@@ -718,24 +758,19 @@ class BlockPlacementFilter(_BaseComponent):
             allowed_faces (list[BlockFaces]): The faces of the block that are allowed to be placed on.
             block_filter (list[MinecraftBlockDescriptor | str]): The blocks that are allowed to be placed on.
         """
-        if BlockFaces.Side in allowed_faces:
-            allowed_faces.remove(BlockFaces.Side)
-            allowed_faces.append(BlockFaces.North)
-            allowed_faces.append(BlockFaces.South)
-            allowed_faces.append(BlockFaces.East)
-            allowed_faces.append(BlockFaces.West)
-        if BlockFaces.All in allowed_faces:
-            allowed_faces = [BlockFaces.All]
+        allowed_faces = expand_block_face_sides(allowed_faces)
         self._component["conditions"].append(
             {
                 "allowed_faces": allowed_faces,
-                "block_filter": [str(f) for f in block_filter] if block_filter is not None else None,
+                "block_filter": (
+                    [str(f) for f in block_filter] if block_filter is not None else None
+                ),
             }
         )
         return self
 
 
-class BlockTransformation(_BaseComponent):
+class BlockTransformation(Component):
     _identifier = "minecraft:transformation"
 
     def __init__(self) -> None:
@@ -786,7 +821,7 @@ class BlockTransformation(_BaseComponent):
         return self
 
 
-class BlockDisplayName(_BaseComponent):
+class BlockDisplayName(Component):
     _identifier = "minecraft:display_name"
 
     def __init__(self, display_name: str, localized_key: str = None) -> None:
@@ -805,7 +840,7 @@ class BlockDisplayName(_BaseComponent):
         self._set_value(localized_key)
 
 
-class BlockCraftingTable(_BaseComponent):
+class BlockCraftingTable(Component):
     _identifier = "minecraft:crafting_table"
 
     def __init__(self, table_name: str, crafting_tags: list[str]) -> None:
@@ -820,7 +855,9 @@ class BlockCraftingTable(_BaseComponent):
             ValueError: The crafting table tags are limited to 64 characters.
         """
         super().__init__("crafting_table")
-        localized_key = f'tile.{CONFIG.NAMESPACE}:{table_name.lower().replace(" ", "_")}.name'
+        localized_key = (
+            f'tile.{CONFIG.NAMESPACE}:{table_name.lower().replace(" ", "_")}.name'
+        )
         AnvilTranslator().add_localization_entry(
             localized_key,
             table_name,
@@ -837,7 +874,7 @@ class BlockCraftingTable(_BaseComponent):
         self._add_field("crafting_tags", crafting_tags)
 
 
-class BlockItemVisual(_BaseComponent):
+class BlockItemVisual(Component):
     _identifier = "minecraft:item_visual"
 
     @overload
@@ -910,12 +947,14 @@ class BlockItemVisual(_BaseComponent):
 
         self._component["material_instances"][face_key] = {
             "texture": f"{CONFIG.NAMESPACE}:{texture}",
-            "render_method": (render_method if not render_method == BlockMaterial.Opaque else {}),
+            "render_method": (
+                render_method if render_method != BlockMaterial.Opaque else {}
+            ),
         }
         return self
 
 
-class BlockLiquidDetection(_BaseComponent):
+class BlockLiquidDetection(Component):
     _identifier = "minecraft:liquid_detection"
 
     def __init__(self) -> None:
@@ -941,28 +980,13 @@ class BlockLiquidDetection(_BaseComponent):
             use_liquid_clipping (bool, optional): Whether this block uses the encompassing collider to visually clip the liquid. The encompassing collider is the smallest single AABB that contains all of the block's colliders. Defaults to False.
 
         """
-        if not liquid_type == "minecraft:water":
-            raise ValueError("Currently, only 'minecraft:water' is supported as a liquid type.")
-        if BlockFaces.Side in stops_liquid_flowing_from_direction:
-            stops_liquid_flowing_from_direction.remove(BlockFaces.Side)
-            stops_liquid_flowing_from_direction.extend(
-                [
-                    BlockFaces.North,
-                    BlockFaces.South,
-                    BlockFaces.East,
-                    BlockFaces.West,
-                ]
+        if liquid_type != "minecraft:water":
+            raise ValueError(
+                "Currently, only 'minecraft:water' is supported as a liquid type."
             )
-        if BlockFaces.All in stops_liquid_flowing_from_direction:
-            stops_liquid_flowing_from_direction.remove(BlockFaces.All)
-            stops_liquid_flowing_from_direction = [
-                BlockFaces.North,
-                BlockFaces.South,
-                BlockFaces.East,
-                BlockFaces.West,
-                BlockFaces.Up,
-                BlockFaces.Down,
-            ]
+        stops_liquid_flowing_from_direction = expand_block_face_sides(
+            stops_liquid_flowing_from_direction
+        )
 
         self._component["detection_rules"].append(
             {
@@ -976,7 +1000,7 @@ class BlockLiquidDetection(_BaseComponent):
         return self
 
 
-class BlockDestructionParticles(_BaseComponent):
+class BlockDestructionParticles(Component):
     _identifier = "minecraft:destruction_particles"
 
     def __init__(
@@ -1003,7 +1027,7 @@ class BlockDestructionParticles(_BaseComponent):
             self._add_field("tint_method", tint_method)
 
 
-class BlockTick(_BaseComponent):
+class BlockTick(Component):
     _identifier = "minecraft:tick"
 
     def __init__(
@@ -1029,7 +1053,7 @@ class BlockTick(_BaseComponent):
         self._add_field("looping", looping)
 
 
-class BlockConnectionRule(_BaseComponent):
+class BlockConnectionRule(Component):
     _identifier = "minecraft:connection_rule"
 
     def __init__(
@@ -1050,15 +1074,18 @@ class BlockConnectionRule(_BaseComponent):
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.0")
         self._add_field("accepts_connections_from", accepts_connections_from)
 
-        if BlockFaces.Side in enabled_directions or BlockFaces.All in enabled_directions:
-            enabled_directions = [BlockFaces.North, BlockFaces.South, BlockFaces.East, BlockFaces.West]
-        if BlockFaces.Up in enabled_directions or BlockFaces.Down in enabled_directions:
-            raise ValueError("Invalid enabled_directions: Up and Down are not valid directions for connections.")
+        enabled_directions = expand_block_face_sides(enabled_directions)
+        if enabled_directions in [BlockFaces.Up, BlockFaces.Down]:
+            raise ValueError(
+                "Invalid enabled_directions: Up and Down are not valid directions for connections."
+            )
 
-        self._add_field("enabled_directions", [direction.value for direction in enabled_directions])
+        self._add_field(
+            "enabled_directions", [direction.value for direction in enabled_directions]
+        )
 
 
-class BlockRedstoneConsumer(_BaseComponent):
+class BlockRedstoneConsumer(Component):
     _identifier = "minecraft:redstone_consumer"
 
     def __init__(
@@ -1084,7 +1111,7 @@ class BlockRedstoneConsumer(_BaseComponent):
         self._add_field("propagate_power", propagate_power)
 
 
-class BlockSupport(_BaseComponent):
+class BlockSupport(Component):
     _identifier = "minecraft:support"
 
     def __init__(self, shape: Literal["fence", "stair"]) -> None:
@@ -1101,7 +1128,7 @@ class BlockSupport(_BaseComponent):
         self._add_field("shape", shape)
 
 
-class BlockLeashable(_BaseComponent):
+class BlockLeashable(Component):
     _identifier = "minecraft:leashable"
 
     def __init__(self) -> None:

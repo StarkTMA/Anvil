@@ -304,8 +304,8 @@ class AnvilTranslator:
         """
         self._sync_csv()
 
-        languages = []
-        skipped = []
+        languages: list[str] = []
+        skipped: list[str] = []
 
         for lang_code in self._languages:
             entries = self._entries.get(lang_code, {})

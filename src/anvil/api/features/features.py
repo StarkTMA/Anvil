@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import os
 from collections.abc import Sequence
+from dataclasses import dataclass
 from math import inf
 from typing import Any, Literal, overload
 
@@ -87,7 +87,7 @@ class DistributionMixin:
 
     def distribution(
         self,
-        iteration: int,
+        iteration: int | Molang,
         scatter_chance: float | tuple[int, int],
         x: int | Molang | CoordinateRange,
         y: int | Molang | CoordinateRange,
@@ -797,7 +797,7 @@ class PartiallyExposedBlobFeature(Feature):
             feature_content["exposed_face"] = str(exposed_face)
 
 
-class ScatterFeature(Feature):
+class ScatterFeature(Feature, DistributionMixin):
     """Places a referenced feature using scatter distribution parameters.
 
     ## Documentation reference:
@@ -836,7 +836,7 @@ class ScatterFeature(Feature):
         return self._content[self._feature_name]
 
 
-class SearchFeature(Feature, DistributionMixin):
+class SearchFeature(Feature):
     """Searches a volume along an axis for valid positions before placing another feature.
 
     ## Documentation reference:

@@ -1,0 +1,25 @@
+name: ✨ Feature Request
+description: Propose a new Bedrock schema abstraction
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The Problem
+      description: Is there a specific Bedrock component Anvil does not yet abstract efficiently?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How should the Python interface look for this feature?
+      placeholder: |
+        I suggest adding a 'WorldGenManager' method that handles...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: How are you currently handling this in your Python code?

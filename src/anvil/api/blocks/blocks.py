@@ -2,9 +2,12 @@ import os
 from typing import Any, Dict, List, Literal, Mapping
 
 from anvil import ANVIL
-from anvil.api.actors.actors import _Components
-from anvil.api.blocks.components import BlockDisplayName, BlockGeometry, BlockMaterialInstance
-from anvil.api.core.components import _BaseComponent
+from anvil.api.core.components import Component, _Components
+from anvil.api.blocks.components import (
+    BlockDisplayName,
+    BlockGeometry,
+    BlockMaterialInstance,
+)
 from anvil.api.core.core import SoundEvent
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
@@ -19,7 +22,12 @@ from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor, MinecraftDescription
+from anvil.lib.schemas import (
+    AddonObject,
+    JsonSchemes,
+    MinecraftBlockDescriptor,
+    MinecraftDescription,
+)
 from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["Block"]
@@ -39,8 +47,8 @@ class _tag:
             tag (MinecraftBlockTags): The vanilla tag to assign to the block.
         """
         self._identifier = f"tag:{tag}"
-        self._dependencies: List["_BaseComponent"] = []
-        self._clashes: List["_BaseComponent"] = []
+        self._dependencies: List["Component"] = []
+        self._clashes: List["Component"] = []
         self._component: Dict[str, Any] = {f"tag:{tag}": {}}
 
     def __iter__(self):
@@ -110,7 +118,10 @@ class _BlockTraits:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_direction-example
         """
 
-        if blocks_to_corner_with and PlacementPositionTrait.CornerAndCardinal not in traits:
+        if (
+            blocks_to_corner_with
+            and PlacementPositionTrait.CornerAndCardinal not in traits
+        ):
             raise ValueError(
                 "blocks_to_corner_with can only be used if PlacementPositionTrait.CornerAndCardinal is in traits."
             )
@@ -185,7 +196,9 @@ class _BlockServerDescription(MinecraftDescription):
         """
         super().__init__(name, is_vanilla)
         self._traits = _BlockTraits()
-        self._description["description"].update({"states": {}, "traits": {}, "menu_category": {}})
+        self._description["description"].update(
+            {"states": {}, "traits": {}, "menu_category": {}}
+        )
 
     def add_state(self, name: str, range: set[float | str | bool]):
         """Adds a state to the block.
@@ -196,7 +209,9 @@ class _BlockServerDescription(MinecraftDescription):
 
         """
         if len(range) > 16:
-            raise ValueError(f"A block state can only have up to 16 values. {self._object_type}[{self.name}].")
+            raise ValueError(
+                f"A block state can only have up to 16 values. {self._object_type}[{self.name}]."
+            )
 
         state_name = name if ":" in name else f"{CONFIG.NAMESPACE}:{name}"
         self._description["description"]["states"][state_name] = range
@@ -220,9 +235,11 @@ class _BlockServerDescription(MinecraftDescription):
 
         """
         self._description["description"]["menu_category"]["category"] = (
-            str(category) if not category == ItemCategory.none else {}
+            str(category) if category != ItemCategory.none else {}
         )
-        self._description["description"]["menu_category"]["group"] = str(group) if not group == ItemGroups.none else {}
+        self._description["description"]["menu_category"]["group"] = (
+            str(group) if group != ItemGroups.none else {}
+        )
         self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
             is_hidden_in_commands if is_hidden_in_commands else {}
         )
@@ -292,11 +309,20 @@ class _BlockServer(AddonObject):
         ]
 
         if not BlockMaterialInstance._identifier in comps:
-            raise RuntimeError(f"Block {self.identifier} missing default component. Block [{self.identifier}]")
+            raise RuntimeError(
+                f"Block {self.identifier} missing default component. Block [{self.identifier}]"
+            )
         if not BlockGeometry._identifier in comps:
-            raise RuntimeError(f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]")
-        if not BlockDisplayName._identifier in self._server_block["minecraft:block"]["components"]:
-            self._server_block["minecraft:block"]["components"][BlockDisplayName._identifier] = self._display_name
+            raise RuntimeError(
+                f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]"
+            )
+        if (
+            not BlockDisplayName._identifier
+            in self._server_block["minecraft:block"]["components"]
+        ):
+            self._server_block["minecraft:block"]["components"][
+                BlockDisplayName._identifier
+            ] = self._display_name
 
         self.content(self._server_block)
         super()._export()
@@ -392,7 +418,9 @@ class Block(MinecraftBlockDescriptor):
         ANVIL._queue(self)
 
     def _export(self):
-        block_name_comp = self.server._server_block["minecraft:block"]["components"][BlockDisplayName._identifier]
+        block_name_comp = self.server._server_block["minecraft:block"]["components"][
+            BlockDisplayName._identifier
+        ]
         if block_name_comp.startswith("tile."):
             display_name = AnvilTranslator().get_localization_value(block_name_comp)
         else:
@@ -405,6 +433,8 @@ class Block(MinecraftBlockDescriptor):
             col1=self.identifier,
             col2=[
                 f"{key}: {[', '.join(str(v) for v in value)]}"
-                for key, value in self.server.description._description["description"]["states"].items()
+                for key, value in self.server.description._description["description"][
+                    "states"
+                ].items()
             ],
         )

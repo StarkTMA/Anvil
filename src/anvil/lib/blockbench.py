@@ -11,10 +11,27 @@ import click
 from packaging.version import Version
 
 from anvil.api.core.enums import BlockFaces
-from anvil.api.core.types import Vector2D
+from anvil.api.core.types import Vector2D, Vector3D
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject, JsonSchemes
+
+
+class ChannelType(StrEnum):
+    """Blockbench animation channel names used in keyframe data."""
+
+    POSITION = "position"
+    ROTATION = "rotation"
+    SCALE = "scale"
+    PARTICLE = "particle"
+    SOUND = "sound"
+    TIMELINE = "timeline"
+
+
+class BlockBenchSource(StrEnum):
+    ACTOR = "actors"
+    BLOCK = "blocks"
+    ITEM = "items"
 
 
 def blockbench_geometry_name(model_name: str, collection: Optional[str] = None) -> str:
@@ -53,13 +70,7 @@ def process_vector(
     return [adjust_value(v, i in negate_indices) for i, v in enumerate(values)]
 
 
-class BlockBenchSource(StrEnum):
-    ACTOR = "actors"
-    BLOCK = "blocks"
-    ITEM = "items"
-
-
-class _BlockCulling(AddonObject):
+class BlockCulling(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.RP_PATH, "block_culling")
 
@@ -87,8 +98,8 @@ class _BlockCulling(AddonObject):
         self,
         direction: BlockFaces,
         bone: str,
-        face: BlockFaces = None,
-        cube_index: int = None,
+        face: BlockFaces | None = None,
+        cube_index: int | None = None,
         # condition: Literal["same_block", "same_block_permutation", "same_culling_layer"] = "",
         # cull_against_full_and_opaque: bool = False,
     ) -> None:
@@ -176,7 +187,7 @@ class Animation:
     timeline: Dict[float, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: dict, model_name: str) -> "Animation":
+    def from_dict(cls, data: Dict[str, Any], model_name: str) -> "Animation":
         loop_map = {
             "once": False,
             "loop": True,
@@ -188,7 +199,7 @@ class Animation:
             length=round(data.get("length", 0.0), 4),
             loop=loop_map.get(data.get("loop", "once"), False),
             anim_time_update=data.get("anim_time_update"),
-            override_previous_animation=data.get("override", None),
+            override_previous_animation=data.get("override", False),
         )
         # Fix override being strictly boolean or None? Original code checked logic.
 
@@ -212,24 +223,24 @@ class Animation:
             for channel_name, kfs in channels.items():
                 kfs.sort(key=lambda k: float(k.get("time")))
 
-                if channel_name == "position":
+                if channel_name == ChannelType.POSITION:
                     cls._process_vector_channel(
                         bone.position, kfs, [0]
                     )  # Negate X. Verify indices?
                     # Original code: adjust_keyframe_sign(..., num=1) => indices < 1 => index 0. Correct.
-                elif channel_name == "rotation":
+                elif channel_name == ChannelType.ROTATION:
                     cls._process_vector_channel(
                         bone.rotation, kfs, [0, 1]
                     )  # Negate X, Y.
                     # Original code: adjust_keyframe_sign(..., num=2) => indices < 2 => 0, 1. Correct.
-                elif channel_name == "scale":
+                elif channel_name == ChannelType.SCALE:
                     cls._process_vector_channel(bone.scale, kfs, [])
                     # Original: adjust_keyframe_type => no negation. Correct.
-                elif channel_name == "particle":
+                elif channel_name == ChannelType.PARTICLE:
                     cls._process_particle_channel(anim.particles, kfs)
-                elif channel_name == "sound":
+                elif channel_name == ChannelType.SOUND:
                     cls._process_sound_channel(anim.sounds, kfs)
-                elif channel_name == "timeline":
+                elif channel_name == ChannelType.TIMELINE:
                     cls._process_timeline_channel(anim.timeline, kfs)
 
             if not bone.is_empty():
@@ -895,8 +906,8 @@ class _ModelManager:
         self._queued = False
         self._source = source
         self._is_wavefront = self._bbmodel["meta"]["model_format"] == "free"
-        self._bounding_box = None
-        self._model_center_offset = None
+        self.bounding_box: Vector2D | None = None
+        self._model_center_offset: Vector3D | None = None
         self._culling = None
         self._prepared = False
         self._cubes = {}
@@ -1103,8 +1114,8 @@ class _ModelManager:
             height * (64 if self._is_wavefront else 1),
         ]
         bounding_box = (
-            self._bounding_box
-            if self._bounding_box
+            self.bounding_box
+            if self.bounding_box
             else (
                 self._bbmodel["visible_box"] if not self._is_wavefront else [1024, 1024]
             )
@@ -1156,9 +1167,9 @@ class _ModelManager:
             collection_data["export_name"], collection_data["children"]
         )
 
-    def block_culling(self) -> _BlockCulling:
+    def block_culling(self) -> BlockCulling:
         if not self._culling:
-            self._culling = _BlockCulling(self._name, self._bbmodel)
+            self._culling = BlockCulling(self._name, self._bbmodel)
         return self._culling
 
     def _export(self) -> None:
@@ -1217,7 +1228,7 @@ class _Blockbench:
         self.textures = _TexturesManager(filename, source, self.bbmodel)
 
     def override_bounding_box(self, bounding_box: Vector2D) -> None:
-        self.model._bounding_box = bounding_box
+        self.model.bounding_box = bounding_box
 
     @classmethod
     def _export(cls):

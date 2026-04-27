@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG
@@ -7,34 +7,43 @@ from anvil.lib.schemas import AddonObject, MinecraftItemDescriptor
 
 from .loot_tables import _LootPoolEntryFunctions
 
-__all__ = ["TradeTable"]
+__all__: List[Identifier] = ["TradeTable"]
 
 
 class _TradeItemWants:
     """Represents an item that a trader wants."""
 
     def __init__(
-        self, item: Union[MinecraftItemDescriptor, Identifier, str], quantity: int = 1, price_multiplier: float = 0.05
-    ):
-        self.item = item
-        self.quantity = quantity
-        self.price_multiplier = price_multiplier
+        self,
+        item: Union[MinecraftItemDescriptor, Identifier, str],
+        quantity: int = 1,
+        price_multiplier: float = 0.05,
+    ) -> None:
+        self.item: MinecraftItemDescriptor | str = item
+        self.quantity: int = quantity
+        self.price_multiplier: float = price_multiplier
 
-    def to_json(self):
-        return {"item": str(self.item), "quantity": self.quantity, "price_multiplier": self.price_multiplier}
+    def to_json(self):  # -> dict[str, Any]:
+        return {
+            "item": str(self.item),
+            "quantity": self.quantity,
+            "price_multiplier": self.price_multiplier,
+        }
 
 
 class _TradeItemGives(_LootPoolEntryFunctions):
     """Represents an item that a trader gives, supporting functions like enchantments."""
 
-    def __init__(self, item: Union[MinecraftItemDescriptor, Identifier, str], quantity: int = 1):
+    def __init__(
+        self, item: Union[MinecraftItemDescriptor, Identifier, str], quantity: int = 1
+    ) -> None:
         super().__init__()
-        self.item = item
-        self.quantity = quantity
+        self.item: MinecraftItemDescriptor | str = item
+        self.quantity: int = quantity
         # self._function is initialized by super().__init__()
 
-    def to_json(self):
-        data = {"item": str(self.item), "quantity": self.quantity}
+    def to_json(self) -> dict[str, Any]:
+        data: dict[str, Any] = {"item": str(self.item), "quantity": self.quantity}
         if self._function:
             data["functions"] = self._function
         return data
@@ -43,15 +52,20 @@ class _TradeItemGives(_LootPoolEntryFunctions):
 class _Trade:
     """Represents a single trade definition."""
 
-    def __init__(self, max_uses: int = 7, reward_exp: bool = True, trader_exp: int = 1):
+    def __init__(
+        self, max_uses: int = 7, reward_exp: bool = True, trader_exp: int = 1
+    ) -> None:
         self.wants_list: List[_TradeItemWants] = []
         self.gives_list: List[_TradeItemGives] = []
-        self.max_uses = max_uses
-        self.reward_exp = reward_exp
-        self.trader_exp = trader_exp
+        self.max_uses: int = max_uses
+        self.reward_exp: bool = reward_exp
+        self.trader_exp: int = trader_exp
 
     def wants(
-        self, item: Union[MinecraftItemDescriptor, Identifier, str], quantity: int = 1, price_multiplier: float = 0.05
+        self,
+        item: Union[MinecraftItemDescriptor, str],
+        quantity: int = 1,
+        price_multiplier: float = 0.05,
     ):
         """Adds an item cost to this trade.
 
@@ -63,11 +77,14 @@ class _Trade:
         Returns:
             _Trade: Self for chaining (e.g. .wants(...).wants(...)).
         """
+        if item is None:
+            raise ValueError("Item cannot be None.")
+
         obj = _TradeItemWants(item, quantity, price_multiplier)
         self.wants_list.append(obj)
         return self
 
-    def gives(self, item: Union[MinecraftItemDescriptor, Identifier, str], quantity: int = 1):
+    def gives(self, item: Union[MinecraftItemDescriptor, str], quantity: int = 1):
         """Adds an item reward to this trade.
 
         Args:
@@ -77,6 +94,8 @@ class _Trade:
         Returns:
             _TradeItemGives: The created item object, to allow adding functions (e.g. .gives(...).Enchant(...)).
         """
+        if item is None:
+            raise ValueError("Item cannot be None.")
         obj = _TradeItemGives(item, quantity)
         self.gives_list.append(obj)
         return obj
@@ -114,7 +133,10 @@ class _TradeGroup:
         return t
 
     def to_json(self):
-        return {"num_to_select": self.num_to_select, "trades": [t.to_json() for t in self.trades_list]}
+        return {
+            "num_to_select": self.num_to_select,
+            "trades": [t.to_json() for t in self.trades_list],
+        }
 
 
 class _TradeTier:
@@ -138,7 +160,10 @@ class _TradeTier:
         return g
 
     def to_json(self):
-        return {"total_exp_required": self.total_exp_required, "groups": [g.to_json() for g in self.groups_list]}
+        return {
+            "total_exp_required": self.total_exp_required,
+            "groups": [g.to_json() for g in self.groups_list],
+        }
 
 
 class TradeTable(AddonObject):

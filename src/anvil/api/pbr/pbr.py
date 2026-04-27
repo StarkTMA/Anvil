@@ -8,7 +8,6 @@ from anvil.api.core.types import (
     RGB255,
     RGBA,
     RGBA255,
-    Block,
     Color,
     HexRGB,
     HexRGBA,
@@ -18,7 +17,7 @@ from anvil.api.core.types import (
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import Directory, clamp, convert_color
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
 
 
 def _is_color_value(value) -> bool:
@@ -746,13 +745,13 @@ class LocalLighting(AddonObject):
         self.content(JsonSchemes.local_lighting())
 
     def add_point_light(
-        self, block_identifier: Block | Identifier, color: HexRGB
+        self, block_identifier: MinecraftBlockDescriptor | Identifier, color: HexRGB
     ) -> None:
         """
         Adds a point light to the point lights configuration.
 
         Parameters:
-            block_identifier (Block | Identifier): The identifier of the block that emits the light.
+            block_identifier (MinecraftBlockDescriptor | Identifier): The identifier of the block that emits the light.
             color (ColorHex): The color of the light in hexadecimal format (e.g., "#RRGGBB").
         """
 

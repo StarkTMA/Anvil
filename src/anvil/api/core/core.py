@@ -8,6 +8,9 @@ import zipfile
 from typing import Literal, Optional
 
 import click
+from halo import Halo
+from PIL import Image
+
 from anvil.api.actors.materials import MaterialsObject
 from anvil.api.core.sounds import (
     BlocksJSONObject,
@@ -25,20 +28,20 @@ from anvil.lib.config import CONFIG, ConfigPackageTarget, _AnvilConfig
 from anvil.lib.format_versions import (
     MANIFEST_VERSION,
     MODULE_MINECRAFT_SERVER,
+    MODULE_MINECRAFT_SERVER_PREVIEW,
     MODULE_MINECRAFT_SERVER_UI,
+    MODULE_MINECRAFT_SERVER_UI_PREVIEW,
 )
 from anvil.lib.lib import (
     AnvilArchive,
     AnvilIO,
+    AnvilValidator,
     Directory,
     process_subcommand,
-    validate_namespace_project_name,
 )
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
-from halo import Halo
-from PIL import Image
 
 from ...__version__ import __version__
 
@@ -99,9 +102,6 @@ def format_bytes(size_bytes: int) -> str:
 
 def output_development_pack_sizes(config: _AnvilConfig) -> None:
     """Outputs the uncompressed size of the generated development packs."""
-    if config._TARGET != ConfigPackageTarget.ADDON:
-        return
-
     behavior_pack_size = development_pack_size(config.BP_PATH)
     resource_pack_size = development_pack_size(config.RP_PATH)
     total_pack_size = behavior_pack_size + resource_pack_size
@@ -503,6 +503,7 @@ def mcaddon_core(config):
     process_art(config, False, False)
 
     AnvilArchive.mcaddon()
+    output_development_pack_sizes(CONFIG)
 
 
 @Halo(text="Packaging mcworld", spinner="dots")
@@ -601,8 +602,6 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None):
         resize(placeholder_image, "pack_icon.png", CONFIG.BP_PATH, pack_icon_size)
         resize(placeholder_image, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
 
-    output_development_pack_sizes(CONFIG)
-
     anvil._compiled = True
 
 
@@ -687,14 +686,22 @@ class ManifestBP(AddonObject):
             self._content["dependencies"].append(
                 {
                     "module_name": "@minecraft/server",
-                    "version": MODULE_MINECRAFT_SERVER,
+                    "version": (
+                        MODULE_MINECRAFT_SERVER
+                        if not CONFIG._PREVIEW
+                        else MODULE_MINECRAFT_SERVER_PREVIEW
+                    ),
                 }
             )
             if CONFIG._SCRIPT_UI:
                 self._content["dependencies"].append(
                     {
                         "module_name": "@minecraft/server-ui",
-                        "version": MODULE_MINECRAFT_SERVER_UI,
+                        "version": (
+                            MODULE_MINECRAFT_SERVER_UI
+                            if not CONFIG._PREVIEW
+                            else MODULE_MINECRAFT_SERVER_UI_PREVIEW
+                        ),
                     }
                 )
 
@@ -796,9 +803,9 @@ class _Anvil:
     """A class representing an Anvil instance."""
 
     _instance = None
-    _objects_list: list[AddonObject] = []
+    _objects_list: list[object] = []
 
-    def _queue(self, object: AddonObject):
+    def _queue(self, object: object):
         """Queues an object to be compiled."""
         self._objects_list.append(object)
 
@@ -815,7 +822,9 @@ class _Anvil:
 
         self._compiled = False
         self.config = CONFIG
-        validate_namespace_project_name(CONFIG.NAMESPACE, CONFIG.PROJECT_NAME)
+        AnvilValidator.validate_namespace_project_name(
+            CONFIG.NAMESPACE, CONFIG.PROJECT_NAME
+        )
 
     def translate(self, languages: Optional[list[str]] = None) -> None:
         """Translates the project."""

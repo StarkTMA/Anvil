@@ -18,6 +18,18 @@ class MolangMeta(type):
 
 
 class Molang(str):
+    prefixes = (
+        "q.",
+        "v.",
+        "c.",
+        "t.",
+        "query.",
+        "variable.",
+        "context.",
+        "temp.",
+        "math.",
+    )
+
     def __parse_other(self, other):
         if isinstance(other, (str, StrEnum)) and not isinstance(other, Molang):
             o = f"'{other}'"
@@ -123,7 +135,7 @@ class Molang(str):
                     f"'{arg}'"
                     if isinstance(arg, (str, StrEnum))
                     and not isinstance(arg, Molang)
-                    and not arg.startswith(MOLANG_PREFIXES)
+                    and not any(arg.startswith(v) for v in Molang.prefixes)
                     else f"{arg}"
                 )
                 for arg in arguments

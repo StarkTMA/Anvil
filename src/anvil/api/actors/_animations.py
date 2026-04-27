@@ -1,8 +1,7 @@
 import os
 
-from anvil.api.logic.molang import Query
+from anvil.api.logic.molang import Molang, Query
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import MOLANG_PREFIXES
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -40,7 +39,7 @@ class _BPAnimation:
                 self._animation[self._animation_key]["timeline"][timestamp].append(
                     f"{command}"
                 )
-            elif any(str(command).startswith(v) for v in MOLANG_PREFIXES):
+            elif any(str(command).startswith(v) for v in Molang.prefixes):
                 self._animation[self._animation_key]["timeline"][timestamp].append(
                     f"{command};"
                 )

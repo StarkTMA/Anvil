@@ -51,7 +51,7 @@ def add_entity_outline(xray_mode: bool = False):
         MaterialDefinitions.MULTI_COLOR_TINT, MaterialDefinitions.USE_OVERLAY
     )
     entity_outline.remove_states(MaterialStates.DisableCulling)
-    entity_outline.remove_defines(MaterialDefinitions.Fancy)
+    entity_outline.remove_defines(MaterialDefinitions.FANCY)
     entity_outline.frontFace(MaterialFunc.NotEqual)
     entity_outline.stencilRef(3)
     entity_outline.depthFunc(
