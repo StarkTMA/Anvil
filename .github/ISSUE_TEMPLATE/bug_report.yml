@@ -39,16 +39,14 @@ body:
       label: Optional reference link
       description: Add a link to a Minecraft Learn article, feature docs, or engine bug report if this issue relates to a specific feature.
       placeholder: https://learn.microsoft.com/minecraft/creator/
-      validations:
-        required: false
+    validations:
+      required: false
   - type: checkboxes
     id: checks
     attributes:
       label: Validation Checks
       options:
         - label: I have checked the Minecraft Content Log for engine-side errors.
-          validations:
-            required: true
+          required: true
         - label: I have verified this is an Anvil generation error, not an engine limitation.
-          validations:
-            required: true
+          required: true
