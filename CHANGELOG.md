@@ -4,7 +4,9 @@
 
 ### Latest Releases
 
-- [**Version 0.9.7.2**](#version-0972)
+- [**Version 0.9.7.4**](#version-0974)
+- [Version 0.9.7.3](#version-0973)
+- [Version 0.9.7.2](#version-0972)
 - [Version 0.9.7.1](#version-0971)
 - [Version 0.9.7](#version-097)
 - [Version 0.9.6.6](#version-0966)
@@ -92,9 +94,16 @@
 
 ## Release Series 0.9.x
 
+### Version 0.9.7.4
+
+#### Anvil
+
+- Added missing **init** files.
+
 ### Version 0.9.7.3
 
 #### CLI
+
 - Fixed command launch on github workflows.
 
 ### Version 0.9.7.2

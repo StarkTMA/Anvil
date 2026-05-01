@@ -1,6 +1,5 @@
 import os
-from pickle import FALSE
-from typing import Any, Dict, List, Literal, Mapping
+from typing import Literal, Mapping
 
 from anvil.api.blocks.components import (
     BlockDisplayName,
