@@ -331,6 +331,8 @@ class AnvilArchive:
     def marketplace_zip(cls):
         from anvil.lib.config import CONFIG, ConfigPackageTarget
 
+        Directory.create("output")
+
         content_structure = {
             os.path.join("output", "Store Art"): os.path.join("Store Art"),
             os.path.join("output", "Marketing Art"): os.path.join("Marketing Art"),
@@ -410,6 +412,8 @@ class AnvilArchive:
     def mcworld(cls):
         from anvil.api.core.core import CONFIG
 
+        Directory.create("output")
+
         content_structure = {
             CONFIG.RP_PATH: os.path.join("resource_packs", f"RP_{CONFIG.PROJECT_NAME}"),
             CONFIG.BP_PATH: os.path.join("behavior_packs", f"BP_{CONFIG.PROJECT_NAME}"),
@@ -430,6 +434,8 @@ class AnvilArchive:
     @classmethod
     def mcaddon(cls) -> None:
         from anvil.api.core.core import CONFIG
+
+        Directory.create("output")
 
         content_structure = {
             CONFIG.RP_PATH: f"RP_{CONFIG.PROJECT_NAME}",
