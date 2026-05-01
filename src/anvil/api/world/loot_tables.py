@@ -643,7 +643,7 @@ class _LootPoolEntryFunctions:
         )
         return self
 
-    def _export(self):
+    def __export__(self):
         """Export the list of functions for JSON serialization.
 
         Returns:
@@ -718,14 +718,14 @@ class _LootPoolEntry:
         self._functions = _LootPoolEntryFunctions()
         return self._functions
 
-    def _export(self):
+    def __export__(self):
         """Export the entry data for JSON serialization.
 
         Returns:
             dict: Entry data including functions.
         """
         if self._functions:
-            self._LootPoolEntry["functions"] = self._functions._export()
+            self._LootPoolEntry["functions"] = self._functions.__export__()
         return self._LootPoolEntry
 
 
@@ -802,7 +802,7 @@ class _LootPool:
         self._entries.append(pool_entry)
         return pool_entry
 
-    def _export(self):
+    def __export__(self):
         """Export the pool data for JSON serialization.
 
         Returns:
@@ -811,7 +811,7 @@ class _LootPool:
         for entry in self._entries:
             if "entries" not in self._pool:
                 self._pool.update({"entries": []})
-            self._pool["entries"].append(entry._export())
+            self._pool["entries"].append(entry.__export__())
         return self._pool
 
 
@@ -889,6 +889,6 @@ class LootTable(AddonObject):
             LootTable: Self for method chaining.
         """
         for pool in self._pools:
-            self._content["pools"].append(pool._export())
+            self._content["pools"].append(pool.__export__())
         self.content(self._content)
         return super().queue()

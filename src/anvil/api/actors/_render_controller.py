@@ -195,8 +195,7 @@ class _RenderController:
             "scale": scale,
         }
 
-    @property
-    def _export(self):
+    def __export__(self):
         if len(self._controller[self.controller_identifier]["materials"]) == 0:
             self.material("*", "default")
         return self._controller
@@ -226,6 +225,8 @@ class _RenderControllers(AddonObject):
     def queue(self, directory: str = ""):
         if len(self._controllers) > 0:
             for controller in self._controllers:
-                self.render_controller["render_controllers"].update(controller._export)
+                self.render_controller["render_controllers"].update(
+                    controller.__export__()
+                )
             self.content(self.render_controller)
             return super().queue(directory=directory)

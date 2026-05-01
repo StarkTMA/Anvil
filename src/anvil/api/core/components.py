@@ -50,7 +50,7 @@ class Component(AddonDescriptor):
         """Iterates over the component's fields."""
         return iter({self.identifier: self._component}.items())
 
-    def __export_dict__(self) -> Dict[str, Any]:
+    def __export__(self) -> Dict[str, Any]:
         """Exports the component as a dictionary.
 
         Returns:
@@ -140,7 +140,7 @@ class _Components:
             self._remove(component)
         return self
 
-    def _export(self) -> Dict[str, Any]:
+    def __export__(self) -> Dict[str, Any]:
         component_classes = {
             component.__component_identifier__() for component in self._components
         }
@@ -170,7 +170,7 @@ class _Components:
                     f"{conflicting} in '{self._component_group_name}' group. Remove the conflicting component(s)."
                 )
 
-            cmp_dict.update(component)
+            cmp_dict.update(component.__export__())
         return {self._component_group_name: cmp_dict}
 
 

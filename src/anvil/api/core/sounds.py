@@ -119,8 +119,7 @@ class _SoundDescription:
         """
         return self._sound_definition
 
-    @property
-    def _export(self):
+    def __export__(self):
         """Returns the sound description.
 
         Returns:
@@ -206,15 +205,15 @@ class SoundDefinition(AddonObject):
         """
         return super().queue("")
 
-    def _export(self):
+    def __export__(self):
         """Returns the sound definition.
 
         Returns:
             dict: The sound definition.
         """
         for sound in self._sounds:
-            self._content["sound_definitions"].update(sound._export)
-        return super()._export()
+            self._content["sound_definitions"].update(sound.__export__())
+        return super().__export__()
 
 
 class MusicDefinition(AddonObject):
@@ -279,13 +278,13 @@ class MusicDefinition(AddonObject):
         """
         return super().queue("")
 
-    def _export(self):
+    def __export__(self):
         """Returns the music definition.
 
         Returns:
             dict: The music definition.
         """
-        return super()._export()
+        return super().__export__()
 
 
 class SoundEvent(AddonObject):
@@ -371,7 +370,7 @@ class SoundEvent(AddonObject):
             block_identifier,
             {"events": {}},
         )
-        self._content["block_sounds"][block_identifier]["events"][sound_event] = {
+        self._content["block_sounds"][block_identifier]["events"][sound_event.value] = {
             "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}",
             "pitch": pitch,
             "volume": volume,
@@ -402,7 +401,7 @@ class SoundEvent(AddonObject):
             {"events": {}},
         )
         self._content["interactive_sounds"]["block_sounds"][block_identifier]["events"][
-            sound_event
+            sound_event.value
         ] = {
             "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}",
             "pitch": pitch,

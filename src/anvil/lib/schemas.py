@@ -880,6 +880,15 @@ class AddonDescriptor:
         self._data = data
         return self
 
+    def __export__(self):
+        """
+        Exports the addon object. This method should be overridden by subclasses to provide specific export functionality.
+
+        Returns:
+            dict: The exported data of the addon object.
+        """
+        return {"identifier": self.identifier}
+
 
 # For the description property of json files
 class MinecraftDescription(AddonDescriptor):
@@ -894,7 +903,7 @@ class MinecraftDescription(AddonDescriptor):
         super().__init__(name, is_vanilla)
         self._description: dict = JsonSchemes.description(self._namespace, self._name)
 
-    def _export(self) -> dict:
+    def __export__(self) -> dict:
         """Returns the description of the Minecraft object.
 
         Returns:
@@ -952,14 +961,14 @@ class AddonObject(AddonDescriptor):
         Returns:
             self: The instance of the current AddonObject.
         """
-        from anvil import ANVIL
+        from anvil.api.core.core import ANVIL
 
         self._directory = directory if not directory is None else ""
         self._path = os.path.join(self._path, self._directory)
-        ANVIL._queue(self)
+        ANVIL.__queue__(self)
         return self
 
-    def _export(self):
+    def __export__(self):
         """
         Exports the addon object after potentially shortening its content and replacing backslashes.
         Logs the event and writes the object to a file.

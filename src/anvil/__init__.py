@@ -1,6 +1,13 @@
 __all__ = ["ANVIL", "CONFIG"]
 
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .api.core.core import ANVIL
+    from .lib.config import CONFIG
+
+
 def __getattr__(name: str):
     if name == "CONFIG":
         from .lib.config import CONFIG as _CONFIG

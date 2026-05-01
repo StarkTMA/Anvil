@@ -151,6 +151,18 @@ class JsonSchemes:
             "tsconstants.jsont", {"namespace": namespace, "project_name": project_name}
         )
 
+    @staticmethod
+    def github_release_workflow(project_name: str, display_name: str):
+        return load_file(
+            "github_release_workflow.ymlt",
+            {
+                "project_name": project_name,
+                "display_name": display_name,
+                "gha": "${{",
+                "end": "}}",
+            },
+        )
+
 
 def handle_configuration(
     namespace: str,
@@ -160,7 +172,7 @@ def handle_configuration(
     scriptapi: bool,
     addon: bool,
 ):
-    config = Config()
+    config = Config(allow_missing=True)
 
     config.add_option(
         ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
@@ -419,6 +431,13 @@ def init(
     DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
     AnvilIO.file("main.py", JsonSchemes.python(), "scripts/python/", "w")
     AnvilIO.file(".gitignore", JsonSchemes.gitignore(), "", "w")
+    AnvilIO.file(
+        "release.yml",
+        JsonSchemes.github_release_workflow(project_name, display_name),
+        os.path.join(".github", "workflows"),
+        "w",
+        True,
+    )
     AnvilIO.file("CHANGELOG.md", "", "", "w")
     if scriptapi:
         handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR, vscode)

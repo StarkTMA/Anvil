@@ -251,7 +251,7 @@ class TextureSet(AddonObject):
         self._path = os.path.join(self._path, self._target, blockbench_name)
         self._content["minecraft:texture_set"].update(color_map)
 
-    def _export(self):
+    def __export__(self):
         if hasattr(self, "_queued_textures"):
             for source, textures in self._queued_textures.items():
                 for color, texture_list in textures.items():
@@ -269,7 +269,7 @@ class TextureSet(AddonObject):
                         )
 
         if len(self._content["minecraft:texture_set"].keys()) > 1:
-            super()._export()
+            super().__export__()
 
 
 class AtmosphericSettings(AddonObject):

@@ -133,7 +133,7 @@ class ItemTexturesObject(AddonObject):
         """
         return super().queue("")
 
-    def _export(self):
+    def __export__(self):
         """Exports the item textures if at least one item was added.
 
         Returns:
@@ -150,7 +150,7 @@ class ItemTexturesObject(AddonObject):
                         ),
                         sprite.split("/")[-1] + ".png",
                     )
-            return super()._export()
+            return super().__export__()
 
 
 class TerrainTexturesObject(AddonObject):
@@ -255,14 +255,14 @@ class TerrainTexturesObject(AddonObject):
         """
         return super().queue()
 
-    def _export(self):
+    def __export__(self):
         """Exports the block textures if at least one block texture was added.
 
         Returns:
             object: The parent's export method result, or None if no textures to export.
         """
         if len(self._content.get("texture_data", {})) > 0:
-            return super()._export()
+            return super().__export__()
         return None
 
 
@@ -363,7 +363,7 @@ class FlipBookTexturesObject(AddonObject):
         """
         return super().queue()
 
-    def _export(self):
+    def __export__(self):
         """Exports the block textures if at least one block texture was added.
 
         Returns:
@@ -380,5 +380,5 @@ class FlipBookTexturesObject(AddonObject):
             #            ),
             #            sprite.split("/")[-1] + ".png",
             #        )
-            return super()._export()
+            return super().__export__()
         return None

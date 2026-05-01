@@ -1,8 +1,11 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Union
 
-from anvil import CONFIG
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.actors import (
+    Entity,
+    EntityPushableByBlock,
+    EntityPushableByEntity,
+)
 from anvil.api.actors.components import (
     EntityBodyRotationBlocked,
     EntityCollisionBox,
@@ -12,6 +15,7 @@ from anvil.api.actors.components import (
     EntityPushable,
 )
 from anvil.api.blocks.blocks import Block
+from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import ItemCategory
 from anvil.api.core.types import RGBA, Vector3D
 from anvil.api.items.components import (
@@ -78,7 +82,8 @@ def create_universal_potion_projectile() -> Entity:
     entity.server.components.add(
         EntityCollisionBox(0.25, 0.25),
         EntityPhysics(has_gravity=False),
-        EntityPushable(),
+        EntityPushableByBlock(True),
+        EntityPushableByEntity(True),
         EntityProjectile(
             angle_offset=-18, gravity=0.02, hit_sound="glass", power=0.35, inertia=0.96
         ).on_hit(douse_fire=True),

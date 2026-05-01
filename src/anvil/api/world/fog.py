@@ -100,7 +100,7 @@ class _FogDistance:
         ] = render_distance_type.value
         return self
 
-    def _export(self):
+    def __export__(self):
         """
         Return the instance's distance data.
 
@@ -147,7 +147,9 @@ class Fog(AddonObject):
     def queue(self):
         """Queues the fog to be exported."""
         for location in self._locations:
-            self._fog["minecraft:fog_settings"]["distance"].update(location._export())
-        self._fog["minecraft:fog_settings"].update(self._description._export())
+            self._fog["minecraft:fog_settings"]["distance"].update(
+                location.__export__()
+            )
+        self._fog["minecraft:fog_settings"].update(self._description.__export__())
         self.content(self._fog)
         return super().queue()

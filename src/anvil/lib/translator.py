@@ -298,7 +298,7 @@ class AnvilTranslator:
             formatted = "_" + formatted
         return formatted
 
-    def _export(self) -> None:
+    def __export__(self) -> None:
         """
         Export translations to Anvil's .lang file format.
         """

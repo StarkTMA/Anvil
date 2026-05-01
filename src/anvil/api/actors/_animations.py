@@ -73,8 +73,7 @@ class _BPAnimation:
         self._animation[self._animation_key]["anim_time_update"] = anim_time_update
         return self
 
-    @property
-    def _export(self):
+    def __export__(self):
         """Exports the animation data.
 
         Returns:
@@ -115,6 +114,6 @@ class _BPAnimations(AddonObject):
         """
         if len(self._animations_list) > 0:
             for animation in self._animations_list:
-                self._animations["animations"].update(animation._export)
+                self._animations["animations"].update(animation.__export__())
             self.content(self._animations)
             return super().queue(directory=directory)

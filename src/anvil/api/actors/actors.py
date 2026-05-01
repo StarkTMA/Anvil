@@ -2,15 +2,19 @@ import os
 from ast import Dict
 from typing import Literal, overload
 
-from anvil import ANVIL
 from anvil.api.actors._animations import _BPAnimations
 from anvil.api.actors._component_group import _Properties
 from anvil.api.actors._events import _Event
 from anvil.api.actors._render_controller import _RenderControllers
-from anvil.api.actors.components import EntityInstantDespawn, EntityRideable
+from anvil.api.actors.components import (
+    EntityInstantDespawn,
+    EntityPushableByBlock,
+    EntityPushableByEntity,
+    EntityRideable,
+)
 from anvil.api.actors.spawn_rules import SpawnRule
 from anvil.api.core.components import _Components
-from anvil.api.core.core import SoundDefinition, SoundEvent
+from anvil.api.core.core import ANVIL, SoundDefinition, SoundEvent
 from anvil.api.core.enums import DamageSensor, Target
 from anvil.api.core.sounds import EntitySoundEvent, SoundCategory, _SoundDescription
 from anvil.api.core.textures import ItemTexturesObject
@@ -126,8 +130,7 @@ class _BP_ControllerState:
         self._default = False
         return self
 
-    @property
-    def _export(self):
+    def __export__(self):
         return self._controller_state
 
 
@@ -376,8 +379,7 @@ class _RP_ControllerState:
         self._default = False
         return self
 
-    @property
-    def _export(self):
+    def __export__(self):
         return self._controller_state
 
 
@@ -411,15 +413,14 @@ class _BP_Controller:
         self._controller_states.append(self._controller_state)
         return self._controller_state
 
-    @property
-    def _export(self):
+    def __export__(self):
         collected_states = []
         for state in self._controller_states:
             if not state._default:
                 self._controllers[self._controller_namespace]["states"].update(
-                    state._export
+                    state.__export__()
                 )
-                for tr in state._export.values():
+                for tr in state.__export__().values():
                     if "transitions" in tr:
                         for st in tr["transitions"]:
                             collected_states.extend(st.keys())
@@ -483,7 +484,7 @@ class _BP_AnimationControllers(AddonObject):
         if len(self._controllers_list) > 0:
             for controller in self._controllers_list:
                 self._animation_controllers["animation_controllers"].update(
-                    controller._export
+                    controller.__export__()
                 )
             self.content(self._animation_controllers)
             return super().queue(directory=directory)
@@ -528,7 +529,7 @@ class _RP_AnimationControllers(AddonObject):
         if self._is_populated():
             for controller in self._controllers_list:
                 self._animation_controllers["animation_controllers"].update(
-                    controller._export
+                    controller.__export__()
                 )
             self.content(self._animation_controllers)
             return super().queue(directory=directory)
@@ -1034,7 +1035,7 @@ class _ActorClientDescription(_ActorDescription):
             variant_map,
         )
 
-    def _export(self, directory: str = None):
+    def __export__(self, directory: str = None):
         """Queues the entity for export.
 
         Parameters:
@@ -1080,7 +1081,7 @@ class _ActorClientDescription(_ActorDescription):
             )
 
         for controller in self._animation_controllers._controllers_list:
-            if controller._export == {}:
+            if controller.__export__() == {}:
                 self._description["description"]["animations"].pop(
                     controller._controller_shortname
                 )
@@ -1098,7 +1099,7 @@ class _ActorClientDescription(_ActorDescription):
                     )
                     anims.remove(d)
 
-        return super()._export()
+        return super().__export__()
 
 
 class _EntityClientDescription(_ActorClientDescription):
@@ -1171,14 +1172,14 @@ class _EntityClientDescription(_ActorClientDescription):
         if scale != 1:
             self._description["description"]["held_item_scale"] = scale
 
-    def _export(self, directory: str):
+    def __export__(self, directory: str):
         """Queues the entity for export.
 
         Parameters:
             directory (str): The directory to export the entity to.
 
         """
-        super()._export(directory)
+        super().__export__(directory)
         if "spawn_egg" not in self._description["description"] and not self._is_vanilla:
             self._description["description"]["spawn_egg"] = {
                 "base_color": "#FFFFFF",
@@ -1302,11 +1303,10 @@ class _EntityServerDescription(_ActorDescription):
         """Sets the spawn category of the entity."""
         self._description["description"]["spawn_category"] = "none"
 
-    @property
-    def _export(self):
+    def __export__(self):
         """Exports the entity description."""
-        self._description["description"]["properties"] = self._properties._export
-        return super()._export()
+        self._description["description"]["properties"] = self._properties.__export__()
+        return super().__export__()
 
 
 class _EntityServer(AddonObject):
@@ -1482,7 +1482,8 @@ class _EntityServer(AddonObject):
             EntityCollisionBox(1, 1),
             EntityBreathable(),
             EntityDamageSensor().add_trigger(DamageCause.All, DamageSensor.No),
-            EntityPushable(False, False),
+            EntityPushableByBlock(True),
+            EntityPushableByEntity(True),
             EntityPushThrough(1),
         )
 
@@ -1494,7 +1495,7 @@ class _EntityServer(AddonObject):
         """
         super().queue(directory=directory)
 
-    def _export(self):
+    def __export__(self):
         if len(self._vars) > 0:
             self.animation_controller("variables", True).add_state("default").on_entry(
                 *self._vars
@@ -1503,17 +1504,17 @@ class _EntityServer(AddonObject):
         self._animation_controllers.queue(directory=self._directory)
         self._spawn_rule.queue(directory=self._directory)
 
-        self._server_entity["minecraft:entity"].update(self.description._export)
+        self._server_entity["minecraft:entity"].update(self.description.__export__())
         self._server_entity["minecraft:entity"]["components"].update(
-            self._components._export()["components"]
+            self._components.__export__()["components"]
         )
 
         for event in self._events.values():
-            self._server_entity["minecraft:entity"]["events"].update(event._export)
+            self._server_entity["minecraft:entity"]["events"].update(event.__export__())
 
         for component_group in self._component_groups:
             self._server_entity["minecraft:entity"]["component_groups"].update(
-                component_group._export()
+                component_group.__export__()
             )
 
         self.content(self._server_entity)
@@ -1539,7 +1540,7 @@ class _EntityServer(AddonObject):
             AnvilTranslator().add_localization_entry(
                 f"action.hint.exit.{self.identifier}", "Sneak to exit"
             )
-        return super()._export()
+        return super().__export__()
 
 
 class _EntityClient(AddonObject):
@@ -1578,13 +1579,13 @@ class _EntityClient(AddonObject):
         """
         super().queue(directory=directory)
 
-    def _export(self):
+    def __export__(self):
         self._client_entity["minecraft:client_entity"].update(
-            self._description._export(self._directory)
+            self._description.__export__(self._directory)
         )
 
         self.content(self._client_entity)
-        return super()._export()
+        return super().__export__()
 
 
 class Entity(MinecraftEntityDescriptor):
@@ -1621,9 +1622,9 @@ class Entity(MinecraftEntityDescriptor):
         )
         self.client.queue(directory)
         self.server.queue(directory)
-        ANVIL._queue(self)
+        ANVIL.__queue__(self)
 
-    def _export(self):
+    def __export__(self):
         CONFIG.Report.add_report(
             ReportType.ENTITY,
             vanilla=self._is_vanilla,
@@ -1657,7 +1658,7 @@ class Attachable(AddonObject):
     def queue(self):
         """Queues the attachable."""
 
-        self._attachable["minecraft:attachable"].update(self._description._export())
+        self._attachable["minecraft:attachable"].update(self._description.__export__())
         self.content(self._attachable)
 
         CONFIG.Report.add_report(

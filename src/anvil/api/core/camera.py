@@ -35,7 +35,7 @@ class AimAssistPreset(AddonObject):
         self._content["minecraft:aim_assist_preset"]["liquid_targeting_list"] = targets
         return self
 
-    def _export(self):
+    def __export__(self):
         return self._content
 
     def queue(self, directory: str = None):
@@ -86,10 +86,10 @@ class AimAssistCategories(AddonObject):
         self._categories.append(category)
         return category
 
-    def _export(self):
+    def __export__(self):
         for category in self._categories:
             self._content["minecraft:aim_assist_categories"]["categories"].append(
-                category.export()
+                category.__export__()
             )
         return self._content
 
@@ -273,7 +273,7 @@ class CameraPreset(AddonObject):
         self.content(self._camera_preset)
         return super().queue()
 
-    def _export(self):
+    def __export__(self):
         if self._replace_reticle:
             if os.path.exists(
                 os.path.join(
@@ -296,4 +296,4 @@ class CameraPreset(AddonObject):
                     "aimassist_entity_highlight.png",
                 )
 
-        return super()._export()
+        return super().__export__()

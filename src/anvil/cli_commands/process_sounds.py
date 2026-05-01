@@ -84,7 +84,7 @@ def process_file(
     show_default=True,
     help="Vorbis quality (0-10, higher is better).",
 )
-def sound(target_lufs, sample_rate, quality) -> None:
+def process_sounds(target_lufs, sample_rate, quality) -> None:
     input_root = Path("assets/sounds")
     output_root = Path("assets/sounds")
 

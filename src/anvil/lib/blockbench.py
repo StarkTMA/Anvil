@@ -459,7 +459,7 @@ class _AnimationsManager:
             self._content["animations"].update(anim.compile(full_name))
             self._queued = True
 
-    def _export(self) -> None:
+    def __export__(self) -> None:
         if self._queued:
             _Animation(self._name, self._content).queue(self._source)
 
@@ -492,7 +492,7 @@ class _TexturesManager:
                 f"Texture '{texture}' not found in blockbench model '{self._bbmodel['model_identifier']}'."
             )
 
-    def _export(self) -> None:
+    def __export__(self) -> None:
         os.makedirs(self._path, exist_ok=True)
         for texture in self._queued_textures:
             image_data = base64.b64decode(
@@ -1172,7 +1172,7 @@ class _ModelManager:
             self._culling = BlockCulling(self._name, self._bbmodel)
         return self._culling
 
-    def _export(self) -> None:
+    def __export__(self) -> None:
         for model_name, content in self._queued_geometries.items():
             _Geometry(model_name, content).queue(self._source)
 
@@ -1231,12 +1231,12 @@ class _Blockbench:
         self.model.bounding_box = bounding_box
 
     @classmethod
-    def _export(cls):
+    def __export__(cls):
         meshes = []
         for bb in _Blockbench._loaded_blockbench_models.values():
-            bb.model._export()
-            bb.animations._export()
-            bb.textures._export()
+            bb.model.__export__()
+            bb.animations.__export__()
+            bb.textures.__export__()
             if bb.model._is_wavefront:
                 meshes.append(bb.model._name)
         if len(meshes) > 0:

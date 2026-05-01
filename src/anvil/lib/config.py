@@ -83,13 +83,13 @@ class ConfigPackageTarget(StrEnum):
 class Config:
     """A class used to read and write to the config.ini file."""
 
-    def __init__(self) -> None:
+    def __init__(self, allow_missing: bool = False) -> None:
         """Initializes a Config object."""
         self._config: dict[str, Any] = {}
         if os.path.exists("anvilconfig.json"):
             with open("anvilconfig.json", "r", encoding="utf-8") as f:
                 self._config = json.loads(f.read())
-        else:
+        elif not allow_missing:
             click.echo(
                 click.style(
                     "Not a valid anvil project. run 'anvil --help' for more info.",

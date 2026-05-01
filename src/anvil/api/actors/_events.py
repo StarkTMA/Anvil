@@ -18,26 +18,39 @@ class _BaseEvent:
         }
 
     def add(self, *component_groups: str):
-        self._event[self._event_name]["add"]["component_groups"].extend(component_groups)
+        self._event[self._event_name]["add"]["component_groups"].extend(
+            component_groups
+        )
         return self
 
     def remove(self, *component_groups: str):
-        self._event[self._event_name]["remove"]["component_groups"].extend(component_groups)
+        self._event[self._event_name]["remove"]["component_groups"].extend(
+            component_groups
+        )
         return self
 
     def trigger(self, event: str):
         if "trigger" in self._event[self._event_name]:
-            click.echo(click.style("An event can only have one trigger. Use sequences instead.", fg="yellow"))
+            click.echo(
+                click.style(
+                    "An event can only have one trigger. Use sequences instead.",
+                    fg="yellow",
+                )
+            )
 
         self._event[self._event_name]["trigger"] = event
         return self
 
     def set_property(self, property, value):
-        self._event[self._event_name]["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
+        self._event[self._event_name]["set_property"].update(
+            {f"{CONFIG.NAMESPACE}:{property}": value}
+        )
         return self
 
     def queue_command(self, *commands: str):
-        self._event[self._event_name]["queue_command"]["command"].extend(str(cmd) for cmd in commands)
+        self._event[self._event_name]["queue_command"]["command"].extend(
+            str(cmd) for cmd in commands
+        )
         return self
 
     def emit_vibration(self, vibration: Vibrations):
@@ -52,8 +65,7 @@ class _BaseEvent:
         self._event[self._event_name]["emit_particle"] = {"particle": particle}
         return self
 
-    @property
-    def _export(self):
+    def __export__(self):
         return self._event
 
 
@@ -84,7 +96,9 @@ class _Randomize(_BaseEvent):
         return self
 
     def queue_command(self, *commands: str):
-        self._event.update({"queue_command": {"command": [str(cmd) for cmd in commands]}})
+        self._event.update(
+            {"queue_command": {"command": [str(cmd) for cmd in commands]}}
+        )
         return self
 
     def emit_vibration(self, vibration: Vibrations):
@@ -109,12 +123,11 @@ class _Randomize(_BaseEvent):
         self._sequences.append(sequence)
         return sequence
 
-    @property
-    def _export(self):
+    def __export__(self):
         if len(self._sequences) > 0:
             self._event.update({"sequence": []})
             for sequence in self._sequences:
-                self._event["sequence"].append(sequence._export)
+                self._event["sequence"].append(sequence.__export__())
         return self._event
 
 
@@ -145,7 +158,9 @@ class _Sequence(_BaseEvent):
         return self
 
     def queue_command(self, *commands: str):
-        self._event.update({"queue_command": {"command": [str(cmd) for cmd in commands]}})
+        self._event.update(
+            {"queue_command": {"command": [str(cmd) for cmd in commands]}}
+        )
         return self
 
     def emit_vibration(self, vibration: Vibrations):
@@ -170,12 +185,11 @@ class _Sequence(_BaseEvent):
         self._randomizes.append(randomize)
         return randomize
 
-    @property
-    def _export(self):
+    def __export__(self):
         if len(self._randomizes) > 0:
             self._event.update({"randomize": []})
             for randomize in self._randomizes:
-                self._event["randomize"].append(randomize._export)
+                self._event["randomize"].append(randomize.__export__())
         return self._event
 
 
@@ -197,16 +211,19 @@ class _Event(_BaseEvent):
         self._randomizes.append(randomize)
         return randomize
 
-    @property
-    def _export(self):
+    def __export__(self):
         if len(self._sequences) > 0 and len(self._randomizes) > 0:
-            raise SyntaxError("Sequences and Randomizes cannot coexist in the same event.")
+            raise SyntaxError(
+                "Sequences and Randomizes cannot coexist in the same event."
+            )
         if len(self._sequences) > 0:
             self._event[self._event_name].update({"sequence": []})
             for sequence in self._sequences:
-                self._event[self._event_name]["sequence"].append(sequence._export)
+                self._event[self._event_name]["sequence"].append(sequence.__export__())
         if len(self._randomizes) > 0:
             self._event[self._event_name].update({"randomize": []})
             for randomize in self._randomizes:
-                self._event[self._event_name]["randomize"].append(randomize._export)
-        return super()._export
+                self._event[self._event_name]["randomize"].append(
+                    randomize.__export__()
+                )
+        return super().__export__()

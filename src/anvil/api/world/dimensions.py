@@ -1,7 +1,7 @@
 import os
 from typing import Literal
 
-from anvil import CONFIG
+from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import Dimension
 from anvil.lib.config import ConfigPackageTarget
 from anvil.lib.schemas import AddonObject, JsonSchemes

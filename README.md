@@ -1,6 +1,6 @@
 # Anvil Documentation
 
-![Python 3.11](https://img.shields.io/badge/python-+3.11%20%20-g.svg)
+![Python 3.13](https://img.shields.io/badge/python-+3.13%20%20-g.svg)
 ![Anvil Version](https://img.shields.io/github/v/release/StarkTMA/Anvil?label=version)
 ![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -30,7 +30,7 @@ Anvil is intended to grow as a community-driven project. Contributions are very 
 
 To use Anvil, ensure you have the following installed:
 
-- [**Python 3.11**](https://www.python.org/downloads/) or higher.
+- [**Python 3.13**](https://www.python.org/downloads/) or higher.
 - **Windows OS**: Anvil is designed specifically for Windows, as Minecraft Bedrock development is primarily done on this platform.
 
 ### Installation
@@ -72,6 +72,7 @@ This command will:
 
 - Create a folder named `awesome_project` in your working directory.
 - Set up the initial project structure, including JSON and Python files.
+- Generate `.github/workflows/release.yml` so version bumps in `anvilconfig.json` can build archives and publish a GitHub release.
 
 ### Project Structure
 
@@ -79,6 +80,9 @@ Once you create your project, the structure will look like this:
 
 ```
 awesome_project/
+├── .github/
+│   └── workflows/
+│       └── release.yml
 ├── assets/
 │   ├── bbmodels/
 │   ├── particles/

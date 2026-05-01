@@ -4,6 +4,7 @@
         "module": "es2020",
         "declaration": false,
         "outDir": "{{ out_dir|path }}",
+		"rootDir": "./scripts/javascript",
         "strict": true,
         "pretty": true,
         "esModuleInterop": true,

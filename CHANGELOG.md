@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.7.1**](#version-0971)
+- [**Version 0.9.7.2**](#version-0972)
+- [Version 0.9.7.1](#version-0971)
 - [Version 0.9.7](#version-097)
 - [Version 0.9.6.6](#version-0966)
 - [Version 0.9.6.5](#version-0965)
@@ -90,6 +91,17 @@
 ---
 
 ## Release Series 0.9.x
+
+### Version 0.9.7.2
+
+#### Anvil
+
+- Added a new github workflow generated with your projects, the workflow will automatically compiles and creates an `.mcaddon` and `.zip`. Then creates a new release in your repository using the latest push version and changelog.
+- Setting up the ground work for unit tests.
+
+#### Blocks
+
+- Improved the TagComponent.
 
 ### Version 0.9.7.1
 

@@ -1,6 +1,11 @@
 import os
 
-from anvil.api.core.enums import MaterialDefinitions, MaterialFunc, MaterialOperation, MaterialStates
+from anvil.api.core.enums import (
+    MaterialDefinitions,
+    MaterialFunc,
+    MaterialOperation,
+    MaterialStates,
+)
 from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject, JsonSchemes
@@ -44,7 +49,7 @@ class MaterialsObject(AddonObject):
         """
         if (len(self._materials)) > 0:
             for m in self._materials:
-                self._content["materials"].update(m._export())
+                self._content["materials"].update(m.__export__())
             super().queue()
 
 
@@ -65,7 +70,11 @@ class Material:
             baseMaterial (str): The base material's name, if any.
         """
         self._identifier = f"{CONFIG.NAMESPACE}.{material_name}"
-        self._material_name = f"{self._identifier}" if baseMaterial == None else f"{self._identifier}:{baseMaterial}"
+        self._material_name = (
+            f"{self._identifier}"
+            if baseMaterial == None
+            else f"{self._identifier}:{baseMaterial}"
+        )
         self._material = {self._material_name: {}}
 
     @property
@@ -186,7 +195,9 @@ class Material:
             "stencilPassOp": stencilPassOp,
             "stencilPass": stencilPass,
         }
-        self._material[self._material_name]["backFace"] = {key: value for key, value in a.items() if value != None}
+        self._material[self._material_name]["backFace"] = {
+            key: value for key, value in a.items() if value != None
+        }
         return self
 
     def stencilRef(self, stencilRef: int):
@@ -527,7 +538,7 @@ class Material:
     def queue(self):
         MaterialsObject().add_material(self)
 
-    def _export(self) -> dict:
+    def __export__(self) -> dict:
         """Exports the material as a dictionary.
 
         Returns:

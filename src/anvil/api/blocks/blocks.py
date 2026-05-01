@@ -1,14 +1,14 @@
 import os
+from pickle import FALSE
 from typing import Any, Dict, List, Literal, Mapping
 
-from anvil import ANVIL
-from anvil.api.core.components import Component, _Components
 from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockGeometry,
     BlockMaterialInstance,
 )
-from anvil.api.core.core import SoundEvent
+from anvil.api.core.components import Component, _Components
+from anvil.api.core.core import ANVIL, SoundEvent
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
@@ -33,31 +33,24 @@ from anvil.lib.translator import AnvilTranslator
 __all__ = ["Block"]
 
 
-class _tag:
+class TagComponent(Component):
     """Represents a block tag component.
 
     Handles the creation and management of Minecraft block tags
     with associated dependencies and clashes.
     """
 
+    _object_type = "Block Tag Component"
+    _identifier = "minecraft:tag"
+
     def __init__(self, tag: MinecraftBlockTags):
-        """Initializes a block tag component.
+        """Initializes the block tag component.
 
         Args:
-            tag (MinecraftBlockTags): The vanilla tag to assign to the block.
+            tag (MinecraftBlockTags): The block tag to be added as a component.
         """
-        self._identifier = f"tag:{tag}"
-        self._dependencies: List["Component"] = []
-        self._clashes: List["Component"] = []
-        self._component: Dict[str, Any] = {f"tag:{tag}": {}}
-
-    def __iter__(self):
-        """Iterates over the tag component items.
-
-        Returns:
-            iterator: An iterator over the component dictionary items.
-        """
-        return iter(self._component.items())
+        super().__init__(f"tag:{tag.value}", False)
+        self._set_value({})
 
 
 # Core
@@ -85,12 +78,12 @@ class _PermutationComponents(_Components):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
         """
         for tag in tags:
-            self._set(_tag(tag))
+            self._set(TagComponent(tag))
 
         return self
 
-    def _export(self):
-        cmp = super()._export()
+    def __export__(self):
+        cmp = super().__export__()
         if self._condition:
             cmp["condition"] = self._condition
         return cmp
@@ -254,9 +247,9 @@ class _BlockServerDescription(MinecraftDescription):
         """
         return self._traits
 
-    def _export(self):
+    def __export__(self):
         self._description["description"]["traits"] = self._traits.export
-        return super()._export()
+        return super().__export__()
 
 
 class _BlockServer(AddonObject):
@@ -299,13 +292,13 @@ class _BlockServer(AddonObject):
         self._permutations.append(self._permutation)
         return self._permutation
 
-    def _export(self):
+    def __export__(self):
         """Queues the block to be exported."""
-        self._server_block["minecraft:block"].update(self.description._export())
-        self._server_block["minecraft:block"].update(self._components._export())
+        self._server_block["minecraft:block"].update(self.description.__export__())
+        self._server_block["minecraft:block"].update(self._components.__export__())
         comps: dict = self._server_block["minecraft:block"]["components"]
         self._server_block["minecraft:block"]["permutations"] = [
-            permutation._export() for permutation in self._permutations
+            permutation.__export__() for permutation in self._permutations
         ]
 
         if not BlockMaterialInstance._identifier in comps:
@@ -325,7 +318,7 @@ class _BlockServer(AddonObject):
             ] = self._display_name
 
         self.content(self._server_block)
-        super()._export()
+        super().__export__()
 
 
 class _BlockClient(AddonObject):
@@ -415,9 +408,9 @@ class Block(MinecraftBlockDescriptor):
         if self._item:
             self._item.queue()
 
-        ANVIL._queue(self)
+        ANVIL.__queue__(self)
 
-    def _export(self):
+    def __export__(self):
         block_name_comp = self.server._server_block["minecraft:block"]["components"][
             BlockDisplayName._identifier
         ]

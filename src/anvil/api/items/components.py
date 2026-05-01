@@ -346,13 +346,13 @@ class ItemDurabilitySensor(Component):
         self._component["durability_thresholds"].append(entry)
         return self
 
-    def _export(self):
+    def __export__(self):
         if not self._component["durability_thresholds"]:
             raise ValueError(
                 "ItemDurabilitySensor requires at least one durability threshold"
             )
 
-        return super()._export()
+        return super().__export__()
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.60
@@ -942,6 +942,7 @@ class ItemBlockPlacer(Component):
         block: MinecraftItemDescriptor | Identifier,
         replace_block_item: bool = False,
         aligned_placement: bool = False,
+        use_on: list[MinecraftBlockDescriptor | Identifier | str] = None,
     ) -> None:
         """Sets the item as a Planter item component for blocks. Planter items are items that can be planted into another block.
 
@@ -963,6 +964,8 @@ class ItemBlockPlacer(Component):
             self._add_field("replace_block_item", replace_block_item)
         if aligned_placement:
             self._add_field("aligned_placement", aligned_placement)
+        if use_on:
+            self._add_field("use_on", use_on)
 
     def use_on(self, *blocks: str):
         """List of block descriptors that contain blocks that this item can be used on."""
@@ -1309,6 +1312,3 @@ class ItemIcon(Component):
         self._component["textures"] = {
             "default": f"{CONFIG.NAMESPACE}:{component.color}",
         }
-
-    def _export(self):
-        return super()._export()

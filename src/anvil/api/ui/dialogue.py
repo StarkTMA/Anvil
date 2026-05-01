@@ -25,9 +25,12 @@ class _DialogueButton:
         AnvilTranslator().add_localization_entry(key, button_name)
 
         self._button_name = key
-        self._commands = [f"/{command}" if not str(command).startswith("/") else command for command in commands]
+        self._commands = [
+            f"/{command}" if not str(command).startswith("/") else command
+            for command in commands
+        ]
 
-    def _export(self):
+    def __export__(self):
         """Returns the dialogue button.
 
         Returns:
@@ -130,7 +133,7 @@ class _DialogueScene:
         self._on_close_commands = commands
         return self
 
-    def _export(self):
+    def __export__(self):
         """Returns the dialogue scene.
 
         Returns:
@@ -142,7 +145,7 @@ class _DialogueScene:
             self._text,
             self._on_open_commands,
             self._on_close_commands,
-            [button._export() for button in self._buttons],
+            [button.__export__() for button in self._buttons],
         )
 
 
@@ -154,7 +157,7 @@ class Dialogue(AddonObject):
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self._dialogues = JsonSchemes.dialogues()
-        self._scenes = []
+        self._scenes: list[_DialogueScene] = []
 
     def add_scene(self, scene_tag: str):
         scene = _DialogueScene(scene_tag)
@@ -163,6 +166,8 @@ class Dialogue(AddonObject):
 
     def queue(self, directory: str = None):
         for scene in self._scenes:
-            self._dialogues["minecraft:npc_dialogue"]["scenes"].append(scene._export())
+            self._dialogues["minecraft:npc_dialogue"]["scenes"].append(
+                scene.__export__()
+            )
         self.content(self._dialogues)
         return super().queue(directory)

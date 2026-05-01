@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import path from "path";
 import { fileURLToPath } from "url";
+import os from "os";
 import { mkdirSync, writeFileSync, readFileSync } from "fs";
 
 // Read anvilconfig.json next to this file
@@ -10,9 +11,20 @@ const projectPascalName = anvilConfig.package.project_name;
 const preview = anvilConfig.anvil.preview;
 
 const target = preview ? "Minecraft Bedrock Preview" : "Minecraft Bedrock";
+const appData = process.env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming");
 
 // Construct outDir as required
-const outDir = `C:/Users/yasse/AppData/Roaming/${target}/Users/Shared/games/com.mojang/development_behavior_packs/BP_${projectPascalName}/scripts`;
+const outDir = path.join(
+	appData,
+	target,
+	"Users",
+	"Shared",
+	"games",
+	"com.mojang",
+	"development_behavior_packs",
+	`BP_${projectPascalName}`,
+	"scripts",
+);
 
 const removeFileSchemePlugin = {
 	name: "remove-file-scheme",

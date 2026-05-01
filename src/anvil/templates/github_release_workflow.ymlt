@@ -1,0 +1,272 @@
+name: Release {{ project_name }}
+
+on:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect version bump
+        id: version
+        shell: bash
+        env:
+          GITHUB_TOKEN: {{ gha }} secrets.GITHUB_TOKEN {{ end }}
+          GITHUB_REPOSITORY: {{ gha }} github.repository {{ end }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          config_path = Path("anvilconfig.json")
+          if not config_path.exists():
+              raise SystemExit("anvilconfig.json not found")
+
+          current_config = json.loads(config_path.read_text(encoding="utf-8"))
+          current_version = str(current_config["build"]["release"]).strip()
+          current_target = str(current_config["package"].get("target", "addon")).strip().lower()
+          current_project_name = str(current_config["package"]["project_name"]).strip()
+          preview_enabled = bool(current_config["anvil"].get("preview", False))
+          random_seed_enabled = bool(current_config["anvil"].get("random_seed", False))
+
+          def parse_version(value: str) -> tuple[int, ...]:
+              parts = [int(part) for part in value.split(".") if part]
+              while len(parts) < 3:
+                  parts.append(0)
+              return tuple(parts)
+
+          def normalize_version(value: str) -> str:
+              return value.strip().removeprefix("v")
+
+          previous_version = ""
+          repository = os.environ.get("GITHUB_REPOSITORY", "")
+          token = os.environ.get("GITHUB_TOKEN", "")
+
+          if repository and token:
+              request = urllib.request.Request(
+                  f"https://api.github.com/repos/{repository}/releases/latest",
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": f"Bearer {token}",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(request) as response:
+                      latest_release = json.loads(response.read().decode("utf-8"))
+                  previous_version = normalize_version(
+                      str(latest_release.get("tag_name", ""))
+                  )
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise
+
+          should_release = not previous_version or parse_version(current_version) > parse_version(previous_version)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"version={current_version}\n")
+              output.write(f"target={current_target}\n")
+              output.write(f"project_name={current_project_name}\n")
+              output.write(f"preview={'true' if preview_enabled else 'false'}\n")
+              output.write(f"random_seed={'true' if random_seed_enabled else 'false'}\n")
+              output.write(f"previous_version={previous_version}\n")
+              output.write(f"should_release={'true' if should_release else 'false'}\n")
+
+          if should_release:
+              print(f"Releasing version {current_version} (previous: {previous_version or 'none'})")
+          else:
+              raise Exception(f"Version {current_version} has not been bumped since the previous release ({previous_version}). Please bump your version.")
+          PY
+
+      - name: Set up Python
+        if: {{ gha }} steps.version.outputs.should_release == 'true' {{ end }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Set up Node.js
+        if: {{ gha }} steps.version.outputs.should_release == 'true' {{ end }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install build dependencies
+        if: {{ gha }} steps.version.outputs.should_release == 'true' {{ end }}
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mcanvil
+
+          if [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Build release artifacts
+        if: {{ gha }} steps.version.outputs.should_release == 'true' {{ end }}
+        id: build
+        shell: bash
+        env:
+          TARGET: {{ gha }} steps.version.outputs.target {{ end }}
+          PROJECT_NAME: {{ gha }} steps.version.outputs.project_name {{ end }}
+          PREVIEW: {{ gha }} steps.version.outputs.preview {{ end }}
+          RANDOM_SEED: {{ gha }} steps.version.outputs.random_seed {{ end }}
+        run: |
+          did_zip=false
+
+          printf 'Running: %s\n' 'anvil build --mcaddon'
+          anvil build --mcaddon
+
+          if [ "$TARGET" = "addon" ]; then
+            printf 'Running: %s\n' 'anvil build --zip'
+            anvil build --zip
+            did_zip=true
+          elif python - <<'PY'
+          import os
+          from pathlib import Path
+
+          appdata = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
+          target_dir = (
+              "Minecraft Bedrock Preview"
+              if os.environ.get("PREVIEW") == "true"
+              else "Minecraft Bedrock"
+          )
+          world_path = (
+              appdata
+              / target_dir
+              / "Users"
+              / "Shared"
+              / "games"
+              / "com.mojang"
+              / "minecraftWorlds"
+              / os.environ["PROJECT_NAME"]
+          )
+
+          required_entries = [
+              ("level.dat", (world_path / "level.dat").is_file()),
+              ("levelname.txt", (world_path / "levelname.txt").is_file()),
+              ("manifest.json", (world_path / "manifest.json").is_file()),
+              (
+                  "world_behavior_packs.json",
+                  (world_path / "world_behavior_packs.json").is_file(),
+              ),
+              (
+                  "world_resource_packs.json",
+                  (world_path / "world_resource_packs.json").is_file(),
+              ),
+              ("texts/", (world_path / "texts").is_dir()),
+          ]
+
+          if os.environ.get("RANDOM_SEED") != "true":
+              required_entries.append(("db/", (world_path / "db").is_dir()))
+
+          missing = [name for name, exists in required_entries if not exists]
+          if missing:
+              print(
+                  f"Skipping zip for world target; world output is incomplete at {world_path}: "
+                  + ", ".join(missing)
+              )
+              raise SystemExit(1)
+
+          print(f"World output detected at {world_path}")
+          PY
+          then
+            printf 'Running: %s\n' 'anvil build --zip'
+            anvil build --zip
+            did_zip=true
+          fi
+
+          echo "did_zip=$did_zip" >> "$GITHUB_OUTPUT"
+
+      - name: Collect release artifacts
+        if: {{ gha }} steps.version.outputs.should_release == 'true' {{ end }}
+        id: artifacts
+        shell: bash
+        env:
+          TARGET: {{ gha }} steps.version.outputs.target {{ end }}
+          DID_ZIP: {{ gha }} steps.build.outputs.did_zip {{ end }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          output_dir = Path("output")
+          files = []
+
+          mcaddons = sorted(output_dir.glob("*.mcaddon"))
+          if not mcaddons:
+              raise SystemExit("No .mcaddon artifact was generated")
+          files.extend(path.as_posix() for path in mcaddons)
+
+            if os.environ.get("DID_ZIP") == "true":
+              zips = sorted(output_dir.glob("*.zip"))
+              if not zips:
+                raise SystemExit("No .zip artifact was generated after zip packaging ran")
+              files.extend(path.as_posix() for path in zips)
+            elif os.environ.get("TARGET") == "addon":
+              raise SystemExit("Addon target did not produce a .zip artifact")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write("files<<EOF\n")
+              output.write("\n".join(files) + "\n")
+              output.write("EOF\n")
+          PY
+
+      - name: Prepare release notes
+        if: {{ gha }} steps.version.outputs.should_release == 'true' {{ end }}
+        shell: bash
+        env:
+          RELEASE_VERSION: {{ gha }} steps.version.outputs.version {{ end }}
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          version = os.environ["RELEASE_VERSION"]
+          changelog_path = Path("CHANGELOG.md")
+          notes = f"Release {version}"
+
+          if changelog_path.exists():
+              changelog = changelog_path.read_text(encoding="utf-8")
+              heading = re.compile(
+                  rf"^##+\s*\[?v?{re.escape(version)}\]?(?:\s*[-:]\s*.*)?$",
+                  re.MULTILINE,
+              )
+              match = heading.search(changelog)
+
+              if match:
+                  start = match.end()
+                  next_heading = re.search(r"^##+\s+", changelog[start:], re.MULTILINE)
+                  section = (
+                      changelog[start : start + next_heading.start()]
+                      if next_heading
+                      else changelog[start:]
+                  ).strip()
+                  notes = f"## {version}\n\n{section}" if section else f"## {version}"
+              elif changelog.strip():
+                  notes = changelog.strip()
+
+          Path("release-notes.md").write_text(notes + "\n", encoding="utf-8")
+          PY
+
+      - name: Create GitHub release
+        if: {{ gha }} steps.version.outputs.should_release == 'true' {{ end }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v{{ gha }} steps.version.outputs.version {{ end }}
+          name: {{ display_name }} v{{ gha }} steps.version.outputs.version {{ end }}
+          body_path: release-notes.md
+          fail_on_unmatched_files: true
+          files: {{ gha }} steps.artifacts.outputs.files {{ end }}

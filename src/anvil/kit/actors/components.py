@@ -1,7 +1,7 @@
 from typing import Optional
 from xml.dom.minidom import Entity
 
-from anvil import CONFIG
+from anvil.api.core.core import CONFIG
 from anvil.api.core.types import Vector3D
 from anvil.api.items.components import ItemCustomComponents
 from anvil.lib.lib import clamp

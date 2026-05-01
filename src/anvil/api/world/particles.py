@@ -66,9 +66,9 @@ class Particle(AddonObject):
 
         return super().queue()
 
-    def _export(self):
+    def __export__(self):
         # Export texture set if configured
         if self._texture_set is not None:
             self._texture_set.queue()
 
-        super()._export()
+        super().__export__()

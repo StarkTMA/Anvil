@@ -211,8 +211,8 @@ class BlockMaterialInstance(Component):
             "emissive": p.emissive if p.emissive else {},
         }
 
-    def _export(self):
-        return super()._export()
+    def __export__(self):
+        return super().__export__()
 
 
 class BlockFlowerPottable(Component):

@@ -595,7 +595,7 @@ class _SpawnRuleCondition:
         self._condition.update({"minecraft:spawn_event": {"event": event}})
         return self
 
-    def export(self):
+    def __export__(self):
         """Export the condition data for JSON serialization.
 
         Returns:
@@ -661,10 +661,10 @@ class SpawnRule(AddonObject):
         if len(self._conditions) > 0:
             return super().queue(directory=directory)
 
-    def _export(self):
-        self._spawn_rule["minecraft:spawn_rules"].update(self._description._export())
+    def __export__(self):
+        self._spawn_rule["minecraft:spawn_rules"].update(self._description.__export__())
         self._spawn_rule["minecraft:spawn_rules"]["conditions"] = [
-            condition.export() for condition in self._conditions
+            condition.__export__() for condition in self._conditions
         ]
         self.content(self._spawn_rule)
-        return super()._export()
+        return super().__export__()

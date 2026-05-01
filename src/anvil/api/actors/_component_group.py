@@ -2,7 +2,6 @@ from anvil.api.core.components import ComponentGroup, _Components
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
 
-
 # _Components and ComponentGroup are defined in anvil.api.core.components
 # and re-exported here for backward compatibility with existing imports.
 __all__ = ["_Components", "ComponentGroup", "_Properties"]
@@ -73,6 +72,5 @@ class _Properties:
         }
         return self
 
-    @property
-    def _export(self):
+    def __export__(self):
         return self._properties

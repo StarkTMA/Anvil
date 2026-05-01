@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import zipfile
 from datetime import datetime
+from enum import StrEnum
 from typing import Any, Dict, List
 
 import click
@@ -155,6 +156,9 @@ class AnvilIO:
 
         if isinstance(value, tuple):
             return [cls._normalize_json_like(item) for item in value]
+
+        if isinstance(value, StrEnum):
+            return value.value
 
         if isinstance(value, str):
             return value.replace("\\", "/")
@@ -404,7 +408,7 @@ class AnvilArchive:
 
     @classmethod
     def mcworld(cls):
-        from anvil import CONFIG
+        from anvil.api.core.core import CONFIG
 
         content_structure = {
             CONFIG.RP_PATH: os.path.join("resource_packs", f"RP_{CONFIG.PROJECT_NAME}"),
@@ -424,8 +428,8 @@ class AnvilArchive:
         )
 
     @classmethod
-    def mcaddon(cls):
-        from anvil import CONFIG
+    def mcaddon(cls) -> None:
+        from anvil.api.core.core import CONFIG
 
         content_structure = {
             CONFIG.RP_PATH: f"RP_{CONFIG.PROJECT_NAME}",
@@ -576,7 +580,7 @@ class AnvilValidator:
 
         try:
             request = requests.get(
-                "https://raw.githubusercontent.com/Mojang/bedrock-samples/version.json"
+                "https://raw.githubusercontent.com/Mojang/bedrock-samples/refs/heads/main/version.json"
             )
             vanilla_latest_build: str = commentjson.loads(request.text)["latest"][
                 "version"

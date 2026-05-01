@@ -3,7 +3,7 @@ from tkinter.filedialog import Directory
 
 from PIL import Image, ImageDraw, ImageFont
 
-from anvil import ANVIL
+from anvil.api.core.core import ANVIL
 from anvil.lib.config import CONFIG
 
 
@@ -142,9 +142,9 @@ class Fonts:
 
     def queue(self):
         """Queues the font to be exported."""
-        ANVIL._queue(self)
+        ANVIL.__queue__(self)
 
-    def _export(self):
+    def __export__(self):
         """Exports the font configuration."""
         for file in ["glyph_E1.png", "default8.png"]:
             if os.path.exists(os.path.join("assets", "textures", "ui", file)):

@@ -68,6 +68,8 @@ For project-specific tests, use the `scripts/python/main.py` example flow or any
 - [ ] I have tested the change locally.
 - [ ] I have updated documentation if needed.
 - [ ] I have followed the repository style and formatting conventions.
+- [ ] I have used strong type hints for all public and internal APIs.
+- [ ] I have added argument validation where appropriate.
 - [ ] I have included links to any relevant Bedrock documentation if the change involves engine-specific behavior.
 
 ## Documentation and Style

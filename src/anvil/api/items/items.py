@@ -1,6 +1,6 @@
 import os
 
-from anvil import ANVIL
+from anvil.api.core.core import ANVIL
 from anvil.api.actors._component_group import _Components
 from anvil.api.actors.actors import Attachable
 from anvil.api.core.enums import ItemCategory, ItemGroups
@@ -52,8 +52,8 @@ class _ItemServerDescription(MinecraftDescription):
         )
         return self
 
-    def _export(self):
-        return super()._export()
+    def __export__(self):
+        return super().__export__()
 
 
 class _ItemServer(AddonObject):
@@ -75,12 +75,12 @@ class _ItemServer(AddonObject):
     def components(self):
         return self._components
 
-    def _export(self):
+    def __export__(self):
         from anvil.api.items.components import ItemDisplayName
 
-        self._server_item["minecraft:item"].update(self.description._export())
+        self._server_item["minecraft:item"].update(self.description.__export__())
         self._server_item["minecraft:item"]["components"].update(
-            self._components._export()["components"]
+            self._components.__export__()["components"]
         )
 
         if not self._components._has(ItemDisplayName):
@@ -94,7 +94,7 @@ class _ItemServer(AddonObject):
             )
 
         self.content(self._server_item)
-        super()._export()
+        super().__export__()
 
 
 class Item(MinecraftItemDescriptor):
@@ -116,9 +116,9 @@ class Item(MinecraftItemDescriptor):
         if self._attachable:
             self._attachable.queue()
 
-        ANVIL._queue(self)
+        ANVIL.__queue__(self)
 
-    def _export(self):
+    def __export__(self):
         item_name_comp = self.server._server_item["minecraft:item"]["components"][
             ItemDisplayName._identifier
         ]["value"]

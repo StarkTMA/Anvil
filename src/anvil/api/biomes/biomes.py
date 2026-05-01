@@ -34,9 +34,6 @@ class _BiomeDescription(MinecraftDescription):
         """
         super().__init__(name, is_vanilla)
 
-    def _export(self):
-        return super()._export()
-
 
 class _BiomeServer(AddonObject):
     """The biome server object."""
@@ -69,8 +66,8 @@ class _BiomeServer(AddonObject):
 
     def queue(self):
         """Queues the biome to be exported."""
-        self._content["minecraft:biome"].update(self.description._export())
-        self._content["minecraft:biome"].update(self._components._export())
+        self._content["minecraft:biome"].update(self.description.__export__())
+        self._content["minecraft:biome"].update(self._components.__export__())
 
         self.content(self._content)
         super().queue()

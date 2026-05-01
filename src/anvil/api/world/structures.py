@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Literal, Tuple
 
-from anvil import ANVIL
+from anvil.api.core.core import ANVIL
 from anvil.api.core.filters import Filter
 from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG
@@ -287,7 +287,7 @@ class Structure:
 
     def queue(self):
         """Queues the structure to be exported."""
-        ANVIL._queue(self)
+        ANVIL.__queue__(self)
 
     @property
     def identifier(self) -> Identifier:
@@ -299,7 +299,7 @@ class Structure:
         """Returns the reference path of the structure."""
         return self._path.removesuffix(".mcstructure").removeprefix("structures\\")
 
-    def _export(self):
+    def __export__(self):
         """Exports the structure to the file system."""
         Directory.copy_files(
             os.path.join("assets", "structures", *self._sub_path),
@@ -325,9 +325,9 @@ class _JigsawStructureProcess(AddonObject, _processor_builder):
         _processor_builder.__init__(self)
         self.content(JsonSchemes.jigsaw_structure_process(self.identifier))
 
-    def _export(self):
+    def __export__(self):
         self._content["minecraft:processor_list"]["processors"] = self.build()
-        super()._export()
+        super().__export__()
 
 
 class _JigsawStructure(AddonObject):
@@ -385,10 +385,10 @@ class _JigsawStructure(AddonObject):
             self._pools.append(pool)
             return pool
 
-        def _export(self):
+        def __export__(self):
             """Exports the pool aliases to the content."""
             return {
-                "pool_aliases": [pool._export() for pool in self._pools],
+                "pool_aliases": [pool.__export__() for pool in self._pools],
             }
 
     class _direct_pool_alias:
@@ -405,7 +405,7 @@ class _JigsawStructure(AddonObject):
                 raise TypeError("target must be a string")
             self._pool = {"type": "direct", "alias": alias, "target": target}
 
-        def _export(self):
+        def __export__(self):
             """Exports the direct pool alias to the content."""
             return self._pool
 
@@ -426,7 +426,7 @@ class _JigsawStructure(AddonObject):
                 raise TypeError("weight must be an integer")
             self._pool["targets"].append({"data": target, "weight": weight})
 
-        def _export(self):
+        def __export__(self):
             """Exports the random pool alias to the content."""
             return self._pool
 
@@ -435,9 +435,9 @@ class _JigsawStructure(AddonObject):
             super().__init__()
             self._weight = weight
 
-        def _export(self):
+        def __export__(self):
             return {
-                "data": super()._export()["pool_aliases"],
+                "data": super().__export__()["pool_aliases"],
                 "weight": self._weight,
             }
 
@@ -594,9 +594,11 @@ class _JigsawStructure(AddonObject):
     def queue(self):
         return super().queue()
 
-    def _export(self):
-        self._content["minecraft:jigsaw"]["pool_aliases"] = self.pool_aliases._export()
-        return super()._export()
+    def __export__(self):
+        self._content["minecraft:jigsaw"][
+            "pool_aliases"
+        ] = self.pool_aliases.__export__()
+        return super().__export__()
 
 
 class JigsawStructureTemplatePool(AddonObject):
