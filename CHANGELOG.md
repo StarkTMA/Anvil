@@ -4,7 +4,8 @@
 
 ### Latest Releases
 
-- [**Version 0.9.7.4**](#version-0974)
+- [**Version 0.9.7.5**](#version-0975)
+- [Version 0.9.7.4](#version-0973)
 - [Version 0.9.7.3](#version-0973)
 - [Version 0.9.7.2](#version-0972)
 - [Version 0.9.7.1](#version-0971)
@@ -93,6 +94,12 @@
 ---
 
 ## Release Series 0.9.x
+
+### Version 0.9.7.5
+
+#### Anvil
+
+- Fixed python build tool skipping over template files.
 
 ### Version 0.9.7.4
 
