@@ -92,6 +92,11 @@
 
 ## Release Series 0.9.x
 
+### Version 0.9.7.3
+
+#### CLI
+- Fixed command launch on github workflows.
+
 ### Version 0.9.7.2
 
 #### Anvil

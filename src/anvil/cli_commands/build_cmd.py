@@ -1,4 +1,5 @@
 import os
+import sys
 
 import click
 
@@ -77,7 +78,7 @@ def build(
         )
         return
 
-    command = [f"py {entry_point}"]
+    command = [f'"{sys.executable}" "{entry_point}"']
     if js_only:
         command.append("--js-only")
     if no_arch:
