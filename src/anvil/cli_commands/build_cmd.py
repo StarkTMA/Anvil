@@ -16,7 +16,14 @@ from anvil.lib.lib import process_subcommand
     help="Skip archive steps (zip, mcaddon, etc.).",
 )
 @click.option(
-    "--no-arch",
+    "--noarch",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Skip archive steps (zip, mcaddon, etc.).",
+)
+@click.option(
+    "--nocompile",
     is_flag=True,
     default=False,
     show_default=True,
@@ -50,19 +57,36 @@ from anvil.lib.lib import process_subcommand
     show_default=True,
     help="Generate technical notes for the project.",
 )
+@click.option(
+    "--workflow",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Update the project's GitHub workflow file with the latest build command.",
+)
+@click.option(
+    "--minify",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Minify the project's JSON and JavaScript files.",
+)
 def build(
     js_only: bool,
-    no_arch: bool,
+    nocompile: bool,
+    noarch: bool,
     mcaddon: bool,
     mcworld: bool,
     zip: bool,
     tech_notes: bool,
+    workflow: bool,
+    minify: bool,
 ) -> None:
     if not os.path.exists("anvilconfig.json"):
         click.echo(
             click.style(
                 "No valid Anvil project found, to create a new project run: `anvil create --help`",
-                fg="orange",
+                fg="yellow",
             )
         )
         return None
@@ -81,8 +105,10 @@ def build(
     command = [f'"{sys.executable}" "{entry_point}"']
     if js_only:
         command.append("--js-only")
-    if no_arch:
-        command.append("--no-arch")
+    if nocompile:
+        command.append("--nocompile")
+    if noarch:
+        command.append("--noarch")
     if mcaddon:
         command.append("--mcaddon")
     if mcworld:
@@ -91,6 +117,10 @@ def build(
         command.append("--zip")
     if tech_notes:
         command.append("--tech-notes")
+    if workflow:
+        command.append("--workflow")
+    if minify:
+        command.append("--minify")
 
     process_subcommand(
         " ".join(command),

@@ -4,7 +4,7 @@ import json
 import os
 import traceback
 import uuid
-from typing import Dict, List, Mapping
+from typing import Dict, Mapping
 
 from anvil.api.core.types import Identifier, Vector2D
 from anvil.lib.config import CONFIG, ConfigPackageTarget
@@ -771,6 +771,18 @@ class JsonSchemes:
             "vv_cubemap.jsont",
             {"format_version": MANIFEST_BUILD, "identifier": identifier},
             is_json=True,
+        )
+
+    @staticmethod
+    def github_release_workflow(project_name: str, display_name: str):
+        return load_file(
+            "github_release_workflow.ymlt",
+            {
+                "project_name": project_name,
+                "display_name": display_name,
+                "gha": "${{",
+                "end": "}}",
+            },
         )
 
 

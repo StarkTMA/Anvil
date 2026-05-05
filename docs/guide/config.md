@@ -1,8 +1,8 @@
 # Understanding Your anvilconfig.json File
 
-The `anvilconfig.json` file is the main configuration file for your project. It defines key details about your project, including the project name, namespace, version, and more.
+This is the canonical reference for `anvilconfig.json`. The overview pages link here instead of repeating the configuration tables.
 
-This file is crucial for your project's setup as it is used to generate most of the files in your project. The `anvilconfig.json` is divided into sections, each providing specific configuration options you can modify to suit your project's requirements.
+The file defines the project name, namespace, versioning, and runtime flags that Anvil uses while generating packs and bundles.
 
 ## Sections
 
@@ -24,10 +24,10 @@ This section contains metadata about your project.
 | `namespace`            | `str` | Namespace for the project.                                | `namespace`                | Must not exceed 8 characters.                                           | Not Advised    |
 | `project_name`         | `str` | Name of the project.                                      | `my_project`               | Must not exceed 16 characters. Changing might cause unexpected results. | Not Advised    |
 | `display_name`         | `str` | Display name of the project.                              | `My Project`               | None                                                                    | Yes            |
-| `project_description`  | `str` | Description used in localized text.                       | `My Project Essentials`    | None                                                                    | Yes            |
+| `project_description`  | `str` | Description used in localized text.                       | `My Project Packs`         | None                                                                    | Yes            |
 | `behavior_description` | `str` | Description of the behavior pack.                         | `My Project behavior Pack` | None                                                                    | Yes            |
 | `resource_description` | `str` | Description of the resource pack.                         | `My Project Resource Pack` | None                                                                    | Yes            |
-| `target`               | `str` | Packaging target; can be `world` or `addon`.              | `My Project Packs`         | None                                                                    | Yes            |
+| `target`               | `str` | Packaging target; can be `world` or `addon`.              | `world`                    | None                                                                    | Yes            |
 
 ### `[BUILD]`
 
@@ -61,10 +61,6 @@ This section contains settings related to the Anvil tool.
 | `js_bundle_script`    | `str`  | The JavaScript bundle script for the project.                              | `node esbuild.js` | None        | Yes            |
 | `minify`              | `bool` | Whether to minify the JavaScript code and JSONs during the build process.  | `false`           | None        | Yes            |
 
-### `[NAMESPACE]`
-
-Additional configuration options you can add.
-
 ## Example
 
 ```json
@@ -84,11 +80,11 @@ Additional configuration options you can add.
 	},
 	"build": {
 		"release": "1.0.0",
-		"rp_uuid": ["38ec2836-ad50-49c1-bd60-479522b61cc3"],
-		"bp_uuid": ["6264fa55-70e8-4e24-a7ff-52a2c4f435ca"],
-		"pack_uuid": "5e9f2140-11c6-47f4-a267-25af5ad92e5a"
-        "data_module_uuid": "b0c8f1d2-3c4e-4a5b-9f6d-7e8f9a0b1c2d",
-        "script_module_uuid": "d1e2f3a4-5b6c-7d8e-9f0a-b1c2d3e4f5g6"
+		"rp_uuid": ["00000000-0000-0000-0000-000000000000"],
+		"bp_uuid": ["00000000-0000-0000-0000-000000000000"],
+		"pack_uuid": "00000000-0000-0000-0000-000000000000",
+		"data_module_uuid": "00000000-0000-0000-0000-000000000000",
+		"script_module_uuid": "00000000-0000-0000-0000-000000000000"
 	},
 	"anvil": {
 		"debug": false,
@@ -99,12 +95,11 @@ Additional configuration options you can add.
 		"pascal_project_name": "MP",
 		"last_check": "2024-01-16 19:06:58",
 		"experimental": false,
-        "preview": false,
+		"preview": false,
 		"entry_point": "main.py",
 		"js_bundle_script": "node esbuild.js",
 		"minify": false
-	},
-	"stark_mp": {}
+	}
 }
 ```
 

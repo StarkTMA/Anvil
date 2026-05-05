@@ -1,5 +1,5 @@
 import os
-from typing import Any, List, Optional, Union
+from typing import Any, List, Union
 
 from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG

@@ -1,42 +1,44 @@
 # API Reference
 
-Complete API reference for Anvil, exposing all available classes, functions, and modules.
+Anvil’s API is grouped by domain. Start with the relevant guide page for examples, then use these module references when you need the exact classes or functions.
 
-## API Modules
+## Content APIs
 
-### Actors API
+### Actors
 
 ::: anvil.api.actors
 
-### Logic API
-
-::: anvil.api.logic
-
-### Blocks API
+### Blocks
 
 ::: anvil.api.blocks
 
-### Items API
+### Items
 
 ::: anvil.api.items
 
-### World API
+## Runtime APIs
+
+### Logic
+
+::: anvil.api.logic
+
+### World
 
 ::: anvil.api.world
 
-### Biomes API
+### Biomes
 
 ::: anvil.api.biomes
 
-### UI API
+### UI
 
 ::: anvil.api.ui
 
-### PBR API
+### PBR
 
 ::: anvil.api.pbr
 
-### Vanilla API
+### Vanilla
 
 ::: anvil.api.vanilla
 

@@ -1,20 +1,41 @@
 from enum import StrEnum
 from typing import Optional, overload
 
+from deprecated import deprecated
+
 from anvil.api.core.enums import InputModes, Slots
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import MANIFEST_VERSION
 from anvil.lib.lib import *
 from anvil.lib.schemas import MinecraftBiomeDescriptor
 
+__all__ = [
+    "Molang",
+    "Query",
+    "Context",
+    "Variable",
+    "TempVar",
+    "Math",
+    "molang_conditions",
+    "arrow_operator",
+]
 
-class MolangMeta(type):
+
+class _VarMeta(type):
     def __getattr__(cls, name):
         if name.startswith("_"):
             raise AttributeError(name)
-        val = cls._query(cls, cls.handle, name)
+        val = cls.__query__(cls, cls.handle, name)
         setattr(cls, name, val)
         return val
+
+
+class MolangProperty:
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, instance, owner):
+        return self.func()
 
 
 class Molang(str):
@@ -30,7 +51,60 @@ class Molang(str):
         "math.",
     )
 
-    def __parse_other(self, other):
+    @staticmethod
+    def molang_arrow(left: "Molang", right: "Molang") -> "Molang":
+        """Returns a Molang object representing the arrow operator for Molang."""
+        return Molang(f"({left}) -> ({right})")
+
+    @staticmethod
+    def molang_condition(
+        condition: "Molang",
+        expression: "Molang",
+        expression2: Optional["Molang"] = None,
+    ) -> "Molang":
+        """Returns a Molang object representing a conditional expression for Molang."""
+        if expression2 is not None:
+            return Molang(f"({condition} ? {expression} : {expression2})")
+        else:
+            return Molang(f"({condition} ? {expression})")
+
+    @staticmethod
+    def molang_return(molang: "Molang") -> "Molang":
+        return Molang(f"return {molang}")
+
+    @staticmethod
+    def molang_block(statements: list["Molang"]) -> "Molang":
+        body = "; ".join(str(s) for s in statements)
+        return Molang(f"{{ {body}; }}")
+
+    @staticmethod
+    def molang_loop(n: int, statements: list["Molang"]) -> "Molang":
+        return Molang(f"loop({n}, {Molang.molang_block(statements)})")
+
+    @staticmethod
+    def molang_for_each(
+        variable: "Molang", array: "Molang", statements: list["Molang"]
+    ) -> "Molang":
+        return Molang(
+            f"for_each({variable}, {array}, {Molang.molang_block(statements)})"
+        )
+
+    @MolangProperty
+    def this():
+        return Molang("this")
+
+    @MolangProperty
+    def break_():
+        return Molang("break")
+
+    @MolangProperty
+    def continue_():
+        return Molang("continue")
+
+    def __getitem__(self, molang: "Molang") -> "Molang":
+        return Molang(f"{self}[{molang}]")
+
+    def __parse_other__(self, other):
         if isinstance(other, (str, StrEnum)) and not isinstance(other, Molang):
             o = f"'{other}'"
         elif isinstance(other, bool):
@@ -43,28 +117,28 @@ class Molang(str):
         return Molang(f"!({self})")
 
     def __eq__(self, other):
-        o = self.__parse_other(other)
+        o = self.__parse_other__(other)
         return Molang(f"{self} == {o}")
 
     def __ne__(self, other):
-        o = self.__parse_other(other)
+        o = self.__parse_other__(other)
 
         return Molang(f"{self} != {o}")
 
     def __lt__(self, other):
-        o = self.__parse_other(other)
+        o = self.__parse_other__(other)
         return Molang(f"{self} < {o}")
 
     def __gt__(self, other):
-        o = self.__parse_other(other)
+        o = self.__parse_other__(other)
         return Molang(f"{self} > {o}")
 
     def __le__(self, other):
-        o = self.__parse_other(other)
+        o = self.__parse_other__(other)
         return Molang(f"{self} <= {o}")
 
     def __ge__(self, other):
-        o = self.__parse_other(other)
+        o = self.__parse_other__(other)
         return Molang(f"{self} >= {o}")
 
     def __and__(self, other):
@@ -110,7 +184,7 @@ class Molang(str):
         return Molang(f"({other} / {self})")
 
     def __rfloordiv__(self, other):
-        return Math.floor(f"({other} / {self})")
+        return Math.floor(other / self)
 
     def __rmod__(self, other):
         return Math.mod(other, self)
@@ -124,10 +198,13 @@ class Molang(str):
     def __round__(self):
         return Math.round(self)
 
-    def _struct(self, *Parameters):
+    def __xor__(self, other):
+        return Molang(f"({self} ?? {other})")
+
+    def __struct__(self, *Parameters):
         return Molang(f"{self}.{'.'.join(Parameters)}")
 
-    def _query(self, qtype, query, *arguments):
+    def __query__(self, qtype, query, *arguments):
         a = f"{qtype}.{query}"
         if len(arguments):
             Parameters = ", ".join(
@@ -145,44 +222,95 @@ class Molang(str):
         return Molang(a)
 
 
-class vec3:
-    def __init__(self, molang: Molang) -> None:
-        self.m = molang
+class _Vec3Struct(Molang):
+    """Molang struct with x, y, z component access."""
+
+    def __new__(cls, molang: "Molang | str") -> "_Vec3Struct":
+        return super().__new__(cls, str(molang))
 
     @property
-    def x(self):
-        return self.m._struct("x")
+    def x(self) -> "Molang":
+        return Molang(self.__struct__("x"))
 
     @property
-    def y(self):
-        return self.m._struct("y")
+    def y(self) -> "Molang":
+        return Molang(self.__struct__("y"))
 
     @property
-    def z(self):
-        return self.m._struct("z")
-
-    def __str__(self) -> str:
-        return self.m
+    def z(self) -> "Molang":
+        return Molang(self.__struct__("z"))
 
 
-class _TRS:
-    def __init__(self, molang: Molang) -> None:
-        self.m = molang
+class _AabbStruct(Molang):
+    """Molang struct for axis-aligned bounding boxes, with .min and .max each returning a Vec3Struct."""
 
-    @property
-    def translation(self):
-        return vec3(self.m._struct("t"))
+    def __new__(cls, molang: "Molang | str") -> "_AabbStruct":
+        return super().__new__(cls, str(molang))
 
     @property
-    def rotation(self):
-        return vec3(self.m._struct("r"))
+    def min(self) -> "_Vec3Struct":
+        return _Vec3Struct(self.__struct__("min"))
 
     @property
-    def scale(self):
-        return vec3(self.m._struct("s"))
+    def max(self) -> "_Vec3Struct":
+        return _Vec3Struct(self.__struct__("max"))
 
-    def __str__(self) -> str:
-        return self.m
+
+class _ColorStruct(Molang):
+    """Molang struct with r, g, b, a color component access, each 0.0 to 1.0."""
+
+    def __new__(cls, molang: "Molang | str") -> "_ColorStruct":
+        return super().__new__(cls, str(molang))
+
+    @property
+    def r(self) -> "Molang":
+        return Molang(self.__struct__("r"))
+
+    @property
+    def g(self) -> "Molang":
+        return Molang(self.__struct__("g"))
+
+    @property
+    def b(self) -> "Molang":
+        return Molang(self.__struct__("b"))
+
+    @property
+    def a(self) -> "Molang":
+        return Molang(self.__struct__("a"))
+
+
+class _UVStruct(Molang):
+    """Molang struct with u, v texture coordinate/size component access."""
+
+    def __new__(cls, molang: "Molang | str") -> "_UVStruct":
+        return super().__new__(cls, str(molang))
+
+    @property
+    def u(self) -> "Molang":
+        return Molang(self.__struct__("u"))
+
+    @property
+    def v(self) -> "Molang":
+        return Molang(self.__struct__("v"))
+
+
+class _TRSStruct(Molang):
+    """Molang struct with translation, rotation, and scale component access, each returning a Vec3Struct."""
+
+    def __new__(cls, molang: "Molang | str") -> "_TRSStruct":
+        return super().__new__(cls, str(molang))
+
+    @property
+    def translation(self) -> "_Vec3Struct":
+        return _Vec3Struct(self.__struct__("t"))
+
+    @property
+    def rotation(self) -> "_Vec3Struct":
+        return _Vec3Struct(self.__struct__("r"))
+
+    @property
+    def scale(self) -> "_Vec3Struct":
+        return _Vec3Struct(self.__struct__("s"))
 
 
 class Query(Molang):
@@ -199,7 +327,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "above_top_solid", x, z)
+        return self.__query__(self, self.handle, "above_top_solid", x, z)
 
     @classmethod
     def ActorCount(self):
@@ -208,7 +336,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "actor_count")
+        return self.__query__(self, self.handle, "actor_count")
 
     @classmethod
     def All(self, query: "Query", target: "Query", *Parameters):
@@ -224,7 +352,7 @@ class Query(Molang):
         if len(Parameters) < 2:
             raise ValueError("Query.All requires at least 3 arguments.")
 
-        return self._query(self, self.handle, "all", query, target, *Parameters)
+        return self.__query__(self, self.handle, "all", query, target, *Parameters)
 
     @classmethod
     def AllAnimationsFinished(self):
@@ -233,7 +361,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "all_animations_finished")
+        return self.__query__(self, self.handle, "all_animations_finished")
 
     @classmethod
     def AllTags(self, *tags: str):
@@ -245,7 +373,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "all_tags", *tags)
+        return self.__query__(self, self.handle, "all_tags", *tags)
 
     @classmethod
     def AngerLevel(self):
@@ -254,7 +382,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "anger_level")
+        return self.__query__(self, self.handle, "anger_level")
 
     @classmethod
     def AnimTime(self):
@@ -263,7 +391,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "anim_time")
+        return self.__query__(self, self.handle, "anim_time")
 
     @classmethod
     def Any(self, query: "Query", *Parameters):
@@ -276,7 +404,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "any", query, *Parameters)
+        return self.__query__(self, self.handle, "any", query, *Parameters)
 
     @classmethod
     def AnyAnimationFinished(self):
@@ -285,7 +413,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "any_animation_finished")
+        return self.__query__(self, self.handle, "any_animation_finished")
 
     @classmethod
     def AnyTag(self, *tags: str):
@@ -297,7 +425,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "any_tag", *tags)
+        return self.__query__(self, self.handle, "any_tag", *tags)
 
     @classmethod
     def ApproxEq(self, *Parameters):
@@ -309,7 +437,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "approx_eq", *Parameters)
+        return self.__query__(self, self.handle, "approx_eq", *Parameters)
 
     @classmethod
     def ArmorColorSlot(self, index: int, colorChannel: int):
@@ -321,7 +449,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self,
             self.handle,
             "armor_color_slot",
@@ -339,7 +467,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "armor_material_slot", index)
+        return self.__query__(self, self.handle, "armor_material_slot", index)
 
     @classmethod
     def ArmorTextureSlot(self, index: int):
@@ -351,7 +479,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "armor_texture_slot", index)
+        return self.__query__(self, self.handle, "armor_texture_slot", index)
 
     @classmethod
     def AverageFrameTime(self, frame: int = 0):
@@ -370,7 +498,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "average_frame_time", clamp(frame, 0, 30))
+        return self.__query__(
+            self, self.handle, "average_frame_time", clamp(frame, 0, 30)
+        )
 
     @classmethod
     def BaseSwingDuration(self):
@@ -379,7 +509,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "base_swing_duration")
+        return self.__query__(self, self.handle, "base_swing_duration")
 
     @classmethod
     def BlockFace(self):
@@ -388,7 +518,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "block_face")
+        return self.__query__(self, self.handle, "block_face")
 
     @classmethod
     def BlockState(self, state: str):
@@ -403,7 +533,7 @@ class Query(Molang):
         state = (
             f"{state}" if isinstance(state, StrEnum) else f"{CONFIG.NAMESPACE}:{state}"
         )
-        return self._query(self, self.handle, "block_state", state)
+        return self.__query__(self, self.handle, "block_state", state)
 
     @classmethod
     def Property(self, property: str):
@@ -416,7 +546,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "property", f"{CONFIG.NAMESPACE}:{property}"
         )
 
@@ -430,7 +560,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "has_property", f"{CONFIG.NAMESPACE}:{property}"
         )
 
@@ -441,7 +571,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "blocking")
+        return self.__query__(self, self.handle, "blocking")
 
     @classmethod
     def BodyXRotation(self):
@@ -450,7 +580,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "body_x_rotation")
+        return self.__query__(self, self.handle, "body_x_rotation")
 
     @classmethod
     def BodyYRotation(self):
@@ -459,7 +589,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "body_y_rotation")
+        return self.__query__(self, self.handle, "body_y_rotation")
 
     # More info needed
     @classmethod
@@ -467,9 +597,9 @@ class Query(Molang):
         """Returns the axis aligned bounding box of a bone as a struct with members '.min', '.max', along with '.x', '.y', and '.z' values for each.
 
         Returns:
-            Molang(Molang): A Molang Instance
+            AabbStruct: A struct with .min and .max, each a Vec3Struct
         """
-        return self._query(self, self.handle, "bone_aabb")
+        return _AabbStruct(self.__query__(self, self.handle, "bone_aabb"))
 
     # More info needed
     @classmethod
@@ -477,9 +607,9 @@ class Query(Molang):
         """Returns the initial (from the .geo) pivot of a bone as a struct with members '.x', '.y', and '.z'.
 
         Returns:
-            Molang(Molang): A Molang Instance
+            Vec3Struct: A struct with .x, .y, .z components
         """
-        return self._query(self, self.handle, "bone_origin")
+        return _Vec3Struct(self.__query__(self, self.handle, "bone_origin"))
 
     # More info needed
     @classmethod
@@ -489,7 +619,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return vec3(self._query(self, self.handle, "bone_rotation", bone_name))
+        return _Vec3Struct(
+            self.__query__(self, self.handle, "bone_rotation", bone_name)
+        )
 
     @classmethod
     def CameraDistanceRangeLerp(self, d1: int, d2: int):
@@ -501,7 +633,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "camera_distance_range_lerp", d1, d2)
+        return self.__query__(self, self.handle, "camera_distance_range_lerp", d1, d2)
 
     @classmethod
     def CameraRotation(self, axis: int):
@@ -513,7 +645,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "camera_rotation", clamp(axis, 0, 1))
+        return self.__query__(self, self.handle, "camera_rotation", clamp(axis, 0, 1))
 
     @classmethod
     def CanClimb(self):
@@ -522,7 +654,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "can_climb")
+        return self.__query__(self, self.handle, "can_climb")
 
     @classmethod
     def CanDamageNearbyMobs(self):
@@ -531,7 +663,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "can_damage_nearby_mobs")
+        return self.__query__(self, self.handle, "can_damage_nearby_mobs")
 
     @classmethod
     def CanFly(self):
@@ -540,7 +672,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "can_fly")
+        return self.__query__(self, self.handle, "can_fly")
 
     @classmethod
     def CanPowerJump(self):
@@ -549,7 +681,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "can_power_jump")
+        return self.__query__(self, self.handle, "can_power_jump")
 
     @classmethod
     def CanSwim(self):
@@ -558,7 +690,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "can_swim")
+        return self.__query__(self, self.handle, "can_swim")
 
     @classmethod
     def CanWalk(self):
@@ -567,7 +699,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "can_walk")
+        return self.__query__(self, self.handle, "can_walk")
 
     @classmethod
     def CapeFlapAmount(self):
@@ -576,7 +708,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "cape_flap_amount")
+        return self.__query__(self, self.handle, "cape_flap_amount")
 
     @classmethod
     def CardinalBlockFacePlacedOn(self):
@@ -585,7 +717,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "cardinal_block_face_placed_on")
+        return self.__query__(self, self.handle, "cardinal_block_face_placed_on")
 
     @classmethod
     def CardinalFacing(self):
@@ -602,7 +734,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "cardinal_facing")
+        return self.__query__(self, self.handle, "cardinal_facing")
 
     @classmethod
     def CardinalFacing2D(self):
@@ -617,7 +749,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "cardinal_facing_2d")
+        return self.__query__(self, self.handle, "cardinal_facing_2d")
 
     @classmethod
     def CardinalPlayerFacing(self):
@@ -634,7 +766,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "cardinal_player_facing")
+        return self.__query__(self, self.handle, "cardinal_player_facing")
 
     # More info needed
     @classmethod
@@ -644,7 +776,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "combine_entities")
+        return self.__query__(self, self.handle, "combine_entities")
 
     @classmethod
     def Count(self, *element):
@@ -653,7 +785,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "count", *element)
+        return self.__query__(self, self.handle, "count", *element)
 
     @classmethod
     def CurrentSquishValue(self):
@@ -662,7 +794,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "current_squish_value")
+        return self.__query__(self, self.handle, "current_squish_value")
 
     @classmethod
     def Day(self):
@@ -671,7 +803,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "day")
+        return self.__query__(self, self.handle, "day")
 
     @classmethod
     def DeathTicks(self):
@@ -680,7 +812,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "death_ticks")
+        return self.__query__(self, self.handle, "death_ticks")
 
     @classmethod
     def DebugOutput(self):
@@ -691,7 +823,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "debug_output")
+        return self.__query__(self, self.handle, "debug_output")
 
     @classmethod
     def DeltaTime(self):
@@ -700,7 +832,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "delta_time")
+        return self.__query__(self, self.handle, "delta_time")
 
     @classmethod
     def DistanceFromCamera(self):
@@ -709,7 +841,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "distance_from_camera")
+        return self.__query__(self, self.handle, "distance_from_camera")
 
     @classmethod
     def EffectEmitterCount(self):
@@ -718,7 +850,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "effect_emitter_count")
+        return self.__query__(self, self.handle, "effect_emitter_count")
 
     @classmethod
     def EffectParticleCount(self):
@@ -727,7 +859,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "effect_particle_count")
+        return self.__query__(self, self.handle, "effect_particle_count")
 
     @classmethod
     def EquipmentCount(self):
@@ -736,7 +868,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "equipment_count")
+        return self.__query__(self, self.handle, "equipment_count")
 
     @classmethod
     def EquippedItemAllTags(self, slot: Slots, *tags: str):
@@ -745,7 +877,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "equipped_item_all_tags", slot, *tags)
+        return self.__query__(self, self.handle, "equipped_item_all_tags", slot, *tags)
 
     @classmethod
     def EquippedItemAnyTag(self, slot: Slots, *tags: str):
@@ -754,7 +886,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "equipped_item_any_tag", slot, *tags)
+        return self.__query__(self, self.handle, "equipped_item_any_tag", slot, *tags)
 
     @classmethod
     def EquippedItemIsAttachable(self, hand: int = 0):
@@ -766,7 +898,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "equipped_item_is_attachable", clamp(hand, 0, 1)
         )
 
@@ -777,7 +909,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "eye_target_x_rotation")
+        return self.__query__(self, self.handle, "eye_target_x_rotation")
 
     @classmethod
     def EyeTargetYRotation(self):
@@ -786,7 +918,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "eye_target_y_rotation")
+        return self.__query__(self, self.handle, "eye_target_y_rotation")
 
     @classmethod
     def FacingTargetToRangeAttack(self):
@@ -795,7 +927,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "facing_target_to_range_attack")
+        return self.__query__(self, self.handle, "facing_target_to_range_attack")
 
     @classmethod
     def FrameAlpha(self):
@@ -804,7 +936,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "frame_alpha")
+        return self.__query__(self, self.handle, "frame_alpha")
 
     @classmethod
     def GetActorInfoId(self):
@@ -813,7 +945,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_actor_info_id")
+        return self.__query__(self, self.handle, "get_actor_info_id")
 
     @classmethod
     def GetAnimationFrame(self):
@@ -822,7 +954,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_animation_frame")
+        return self.__query__(self, self.handle, "get_animation_frame")
 
     # More info needed
     @classmethod
@@ -832,7 +964,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_default_bone_pivot")
+        return self.__query__(self, self.handle, "get_default_bone_pivot")
 
     @classmethod
     def GetEquippedItemName(self, hand_slot: int, index=0):
@@ -841,7 +973,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "get_equipped_item_name", clamp(hand_slot, 0, 1), index
         )
 
@@ -853,7 +985,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_locator_offset")
+        return self.__query__(self, self.handle, "get_locator_offset")
 
     @classmethod
     def GetName(self):
@@ -862,7 +994,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_name")
+        return self.__query__(self, self.handle, "get_name")
 
     # More info needed
     @classmethod
@@ -872,7 +1004,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_root_locator_offset")
+        return self.__query__(self, self.handle, "get_root_locator_offset")
 
     @classmethod
     def GroundSpeed(self):
@@ -881,7 +1013,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "ground_speed")
+        return self.__query__(self, self.handle, "ground_speed")
 
     @classmethod
     def HadComponentGroup(self, component_group: str):
@@ -892,7 +1024,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "had_component_group", component_group)
+        return self.__query__(self, self.handle, "had_component_group", component_group)
 
     @classmethod
     def HasAnyFamily(self, *family: str):
@@ -901,7 +1033,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_any_family", *family)
+        return self.__query__(self, self.handle, "has_any_family", *family)
 
     @classmethod
     def HasArmorSlot(self, slot: Slots):
@@ -910,7 +1042,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_armor_slot", slot)
+        return self.__query__(self, self.handle, "has_armor_slot", slot)
 
     @classmethod
     def HasBiomeTag(self, tag: str):
@@ -919,7 +1051,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_biome_tag", tag)
+        return self.__query__(self, self.handle, "has_biome_tag", tag)
 
     @classmethod
     def has_block_state(self, state: str):
@@ -931,7 +1063,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "has_block_state", f"{CONFIG.NAMESPACE}:{state}"
         )
 
@@ -942,7 +1074,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_cape")
+        return self.__query__(self, self.handle, "has_cape")
 
     @classmethod
     def HasCollision(self):
@@ -951,7 +1083,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_collision")
+        return self.__query__(self, self.handle, "has_collision")
 
     @classmethod
     def HasGravity(self):
@@ -960,7 +1092,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_gravity")
+        return self.__query__(self, self.handle, "has_gravity")
 
     @classmethod
     def HasOwner(self):
@@ -969,7 +1101,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_owner")
+        return self.__query__(self, self.handle, "has_owner")
 
     @classmethod
     def HasRider(self):
@@ -978,7 +1110,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_rider")
+        return self.__query__(self, self.handle, "has_rider")
 
     @classmethod
     def HasTarget(self):
@@ -987,7 +1119,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_target")
+        return self.__query__(self, self.handle, "has_target")
 
     @classmethod
     def HeadRollAngle(self):
@@ -996,7 +1128,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "head_roll_angle")
+        return self.__query__(self, self.handle, "head_roll_angle")
 
     @classmethod
     def HeadXRotation(self, head_number: int = 0):
@@ -1005,7 +1137,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "head_x_rotation", head_number)
+        return self.__query__(self, self.handle, "head_x_rotation", head_number)
 
     @classmethod
     def HeadYRotation(self, head_number: int = 0):
@@ -1014,7 +1146,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "head_y_rotation", head_number)
+        return self.__query__(self, self.handle, "head_y_rotation", head_number)
 
     @classmethod
     def Health(self):
@@ -1023,7 +1155,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "health")
+        return self.__query__(self, self.handle, "health")
 
     @classmethod
     def HeartbeatInterval(self):
@@ -1032,7 +1164,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "heartbeat_interval")
+        return self.__query__(self, self.handle, "heartbeat_interval")
 
     @classmethod
     def HeartbeatPhase(self):
@@ -1043,7 +1175,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "heartbeat_phase")
+        return self.__query__(self, self.handle, "heartbeat_phase")
 
     @classmethod
     def Heightmap(self, x: int, z: int):
@@ -1052,7 +1184,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "heightmap", x, z)
+        return self.__query__(self, self.handle, "heightmap", x, z)
 
     @classmethod
     def HurtDirection(self):
@@ -1061,7 +1193,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "hurt_direction")
+        return self.__query__(self, self.handle, "hurt_direction")
 
     @classmethod
     def HurtTime(self):
@@ -1070,7 +1202,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "hurt_time")
+        return self.__query__(self, self.handle, "hurt_time")
 
     @classmethod
     def InRange(self, value: float, min: float, max: float):
@@ -1079,7 +1211,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "in_range", value, min, max)
+        return self.__query__(self, self.handle, "in_range", value, min, max)
 
     @classmethod
     def InvulnerableTicks(self):
@@ -1088,7 +1220,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "invulnerable_ticks")
+        return self.__query__(self, self.handle, "invulnerable_ticks")
 
     @classmethod
     def IsAdmiring(self):
@@ -1097,7 +1229,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_admiring")
+        return self.__query__(self, self.handle, "is_admiring")
 
     @classmethod
     def IsAlive(self):
@@ -1106,7 +1238,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_alive")
+        return self.__query__(self, self.handle, "is_alive")
 
     @classmethod
     def IsAngry(self):
@@ -1115,7 +1247,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_angry")
+        return self.__query__(self, self.handle, "is_angry")
 
     @classmethod
     def IsAttachedToEntity(self):
@@ -1124,7 +1256,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_attached_to_entity")
+        return self.__query__(self, self.handle, "is_attached_to_entity")
 
     @classmethod
     def IsAvoidingBlock(self):
@@ -1133,7 +1265,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_avoiding_block")
+        return self.__query__(self, self.handle, "is_avoiding_block")
 
     @classmethod
     def IsAvoidingMobs(self):
@@ -1142,7 +1274,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_avoiding_mobs")
+        return self.__query__(self, self.handle, "is_avoiding_mobs")
 
     @classmethod
     def IsBaby(self):
@@ -1151,7 +1283,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_baby")
+        return self.__query__(self, self.handle, "is_baby")
 
     @classmethod
     def IsBreathing(self):
@@ -1160,7 +1292,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_breathing")
+        return self.__query__(self, self.handle, "is_breathing")
 
     @classmethod
     def IsBribed(self):
@@ -1169,7 +1301,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_bribed")
+        return self.__query__(self, self.handle, "is_bribed")
 
     @classmethod
     def IsCarryingBlock(self):
@@ -1178,7 +1310,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_carrying_block")
+        return self.__query__(self, self.handle, "is_carrying_block")
 
     @classmethod
     def IsCasting(self):
@@ -1187,7 +1319,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_casting")
+        return self.__query__(self, self.handle, "is_casting")
 
     @classmethod
     def IsCelebrating(self):
@@ -1196,7 +1328,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_celebrating")
+        return self.__query__(self, self.handle, "is_celebrating")
 
     @classmethod
     def IsCelebratingSpecial(self):
@@ -1205,7 +1337,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_celebrating_special")
+        return self.__query__(self, self.handle, "is_celebrating_special")
 
     @classmethod
     def IsCharged(self):
@@ -1214,7 +1346,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_charged")
+        return self.__query__(self, self.handle, "is_charged")
 
     @classmethod
     def IsCharging(self):
@@ -1223,7 +1355,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_charging")
+        return self.__query__(self, self.handle, "is_charging")
 
     @classmethod
     def IsChested(self):
@@ -1232,7 +1364,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_chested")
+        return self.__query__(self, self.handle, "is_chested")
 
     @classmethod
     def IsCritical(self):
@@ -1241,7 +1373,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_critical")
+        return self.__query__(self, self.handle, "is_critical")
 
     @classmethod
     def IsCroaking(self):
@@ -1250,7 +1382,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_croaking")
+        return self.__query__(self, self.handle, "is_croaking")
 
     @classmethod
     def IsDancing(self):
@@ -1259,7 +1391,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_dancing")
+        return self.__query__(self, self.handle, "is_dancing")
 
     @classmethod
     def IsDelayedAttacking(self):
@@ -1268,7 +1400,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_delayed_attacking")
+        return self.__query__(self, self.handle, "is_delayed_attacking")
 
     @classmethod
     def IsDigging(self):
@@ -1277,7 +1409,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_digging")
+        return self.__query__(self, self.handle, "is_digging")
 
     @classmethod
     def IsEating(self):
@@ -1286,7 +1418,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_eating")
+        return self.__query__(self, self.handle, "is_eating")
 
     @classmethod
     def IsEatingMob(self):
@@ -1295,7 +1427,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_eating_mob")
+        return self.__query__(self, self.handle, "is_eating_mob")
 
     @classmethod
     def IsElder(self):
@@ -1304,7 +1436,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_elder")
+        return self.__query__(self, self.handle, "is_elder")
 
     @classmethod
     def IsEmerging(self):
@@ -1313,7 +1445,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_emerging")
+        return self.__query__(self, self.handle, "is_emerging")
 
     @classmethod
     def IsEmoting(self):
@@ -1322,7 +1454,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_emoting")
+        return self.__query__(self, self.handle, "is_emoting")
 
     @classmethod
     def IsEnchanted(self):
@@ -1331,7 +1463,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_enchanted")
+        return self.__query__(self, self.handle, "is_enchanted")
 
     @classmethod
     def IsFireImmune(self):
@@ -1340,7 +1472,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_fire_immune")
+        return self.__query__(self, self.handle, "is_fire_immune")
 
     @classmethod
     def IsFirstPerson(self):
@@ -1349,7 +1481,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_first_person")
+        return self.__query__(self, self.handle, "is_first_person")
 
     @classmethod
     def IsGhost(self):
@@ -1358,7 +1490,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_ghost")
+        return self.__query__(self, self.handle, "is_ghost")
 
     @classmethod
     def IsGliding(self):
@@ -1367,7 +1499,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_gliding")
+        return self.__query__(self, self.handle, "is_gliding")
 
     @classmethod
     def IsGrazing(self):
@@ -1376,7 +1508,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_grazing")
+        return self.__query__(self, self.handle, "is_grazing")
 
     @classmethod
     def IsIdling(self):
@@ -1385,7 +1517,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_idling")
+        return self.__query__(self, self.handle, "is_idling")
 
     @classmethod
     def IsIgnited(self):
@@ -1394,7 +1526,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_ignited")
+        return self.__query__(self, self.handle, "is_ignited")
 
     @classmethod
     def IsIllagerCaptain(self):
@@ -1403,7 +1535,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_illager_captain")
+        return self.__query__(self, self.handle, "is_illager_captain")
 
     @classmethod
     def IsInContactWithWater(self):
@@ -1412,7 +1544,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_in_contact_with_water")
+        return self.__query__(self, self.handle, "is_in_contact_with_water")
 
     @classmethod
     def IsInLove(self):
@@ -1421,7 +1553,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_in_love")
+        return self.__query__(self, self.handle, "is_in_love")
 
     @classmethod
     def IsInUI(self):
@@ -1430,7 +1562,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_in_ui")
+        return self.__query__(self, self.handle, "is_in_ui")
 
     @classmethod
     def IsInWater(self):
@@ -1439,7 +1571,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_in_water")
+        return self.__query__(self, self.handle, "is_in_water")
 
     @classmethod
     def IsInWaterOrRain(self):
@@ -1448,7 +1580,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_in_water_or_rain")
+        return self.__query__(self, self.handle, "is_in_water_or_rain")
 
     @classmethod
     def IsInterested(self):
@@ -1457,7 +1589,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_interested")
+        return self.__query__(self, self.handle, "is_interested")
 
     @classmethod
     def IsInvisible(self):
@@ -1466,7 +1598,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_invisible")
+        return self.__query__(self, self.handle, "is_invisible")
 
     @classmethod
     def IsItemEquipped(self, hand: int = 0):
@@ -1478,7 +1610,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_item_equipped", clamp(hand, 0, 1))
+        return self.__query__(self, self.handle, "is_item_equipped", clamp(hand, 0, 1))
 
     @classmethod
     def IsItemNameAny(self, slot: Slots, index: int, item_identifiers: list[str]):
@@ -1487,7 +1619,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self,
             self.handle,
             "is_item_name_any",
@@ -1503,7 +1635,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_jumping")
+        return self.__query__(self, self.handle, "is_jumping")
 
     @classmethod
     def IsLayingDown(self):
@@ -1512,7 +1644,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_laying_down")
+        return self.__query__(self, self.handle, "is_laying_down")
 
     @classmethod
     def IsLayingEgg(self):
@@ -1521,7 +1653,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_laying_egg")
+        return self.__query__(self, self.handle, "is_laying_egg")
 
     @classmethod
     def IsLeashed(self):
@@ -1530,7 +1662,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_leashed")
+        return self.__query__(self, self.handle, "is_leashed")
 
     @classmethod
     def IsLevitating(self):
@@ -1539,7 +1671,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_levitating")
+        return self.__query__(self, self.handle, "is_levitating")
 
     @classmethod
     def IsLingering(self):
@@ -1548,7 +1680,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_lingering")
+        return self.__query__(self, self.handle, "is_lingering")
 
     @classmethod
     def IsLocalPlayer(self):
@@ -1558,7 +1690,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_local_player")
+        return self.__query__(self, self.handle, "is_local_player")
 
     @classmethod
     def IsMoving(self):
@@ -1567,7 +1699,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_moving")
+        return self.__query__(self, self.handle, "is_moving")
 
     @classmethod
     def IsNameAny(self, *names: str):
@@ -1578,7 +1710,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_name_any", *names)
+        return self.__query__(self, self.handle, "is_name_any", *names)
 
     @classmethod
     def IsOnFire(self):
@@ -1587,7 +1719,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_on_fire")
+        return self.__query__(self, self.handle, "is_on_fire")
 
     @classmethod
     def IsOnGround(self):
@@ -1596,7 +1728,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_on_ground")
+        return self.__query__(self, self.handle, "is_on_ground")
 
     @classmethod
     def IsOnScreen(self):
@@ -1605,7 +1737,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_on_screen")
+        return self.__query__(self, self.handle, "is_on_screen")
 
     @classmethod
     def IsOnfire(self):
@@ -1614,7 +1746,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_onfire")
+        return self.__query__(self, self.handle, "is_onfire")
 
     @classmethod
     def IsOrphaned(self):
@@ -1623,7 +1755,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_orphaned")
+        return self.__query__(self, self.handle, "is_orphaned")
 
     @classmethod
     def IsOwnerIdentifierAny(self, *identifiers: str):
@@ -1632,7 +1764,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_owner_identifier_any", *identifiers)
+        return self.__query__(
+            self, self.handle, "is_owner_identifier_any", *identifiers
+        )
 
     @classmethod
     def IsPersonaOrPremiumSkin(self):
@@ -1641,7 +1775,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_persona_or_premium_skin")
+        return self.__query__(self, self.handle, "is_persona_or_premium_skin")
 
     @classmethod
     def IsPlayingDead(self):
@@ -1650,7 +1784,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_playing_dead")
+        return self.__query__(self, self.handle, "is_playing_dead")
 
     @classmethod
     def IsPowered(self):
@@ -1659,7 +1793,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_powered")
+        return self.__query__(self, self.handle, "is_powered")
 
     @classmethod
     def IsPregnant(self):
@@ -1668,7 +1802,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_pregnant")
+        return self.__query__(self, self.handle, "is_pregnant")
 
     @classmethod
     def IsRamAttacking(self):
@@ -1677,7 +1811,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_ram_attacking")
+        return self.__query__(self, self.handle, "is_ram_attacking")
 
     @classmethod
     def IsResting(self):
@@ -1686,7 +1820,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_resting")
+        return self.__query__(self, self.handle, "is_resting")
 
     @classmethod
     def IsRiding(self):
@@ -1695,7 +1829,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_riding")
+        return self.__query__(self, self.handle, "is_riding")
 
     @classmethod
     def IsRoaring(self):
@@ -1704,7 +1838,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_roaring")
+        return self.__query__(self, self.handle, "is_roaring")
 
     @classmethod
     def IsRolling(self):
@@ -1713,7 +1847,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_rolling")
+        return self.__query__(self, self.handle, "is_rolling")
 
     @classmethod
     def IsSaddled(self):
@@ -1722,7 +1856,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_saddled")
+        return self.__query__(self, self.handle, "is_saddled")
 
     @classmethod
     def IsScared(self):
@@ -1731,7 +1865,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_scared")
+        return self.__query__(self, self.handle, "is_scared")
 
     @classmethod
     def IsSelectedItem(self):
@@ -1740,7 +1874,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_selected_item")
+        return self.__query__(self, self.handle, "is_selected_item")
 
     @classmethod
     def IsShaking(self):
@@ -1749,7 +1883,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_shaking")
+        return self.__query__(self, self.handle, "is_shaking")
 
     @classmethod
     def IsShakingWetness(self):
@@ -1758,16 +1892,16 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_shaking_wetness")
+        return self.__query__(self, self.handle, "is_shaking_wetness")
 
     @classmethod
     def IsSheared(self):
-        """Returns 1.0 if the entity is able to be sheared and is sheared, else it returns 0.0.
+        """Returns 1.0 if the entity is able to be sheared and is
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_sheared")
+        return self.__query__(self, self.handle, "is_sheared")
 
     @classmethod
     def IsShieldPowered(self):
@@ -1776,7 +1910,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_shield_powered")
+        return self.__query__(self, self.handle, "is_shield_powered")
 
     @classmethod
     def IsSilent(self):
@@ -1785,7 +1919,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_silent")
+        return self.__query__(self, self.handle, "is_silent")
 
     @classmethod
     def IsSitting(self):
@@ -1794,7 +1928,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_sitting")
+        return self.__query__(self, self.handle, "is_sitting")
 
     @classmethod
     def IsSleeping(self):
@@ -1803,7 +1937,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_sleeping")
+        return self.__query__(self, self.handle, "is_sleeping")
 
     @classmethod
     def IsSneaking(self):
@@ -1812,7 +1946,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_sneaking")
+        return self.__query__(self, self.handle, "is_sneaking")
 
     @classmethod
     def IsSneezing(self):
@@ -1821,7 +1955,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_sneezing")
+        return self.__query__(self, self.handle, "is_sneezing")
 
     @classmethod
     def IsSniffing(self):
@@ -1830,7 +1964,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_sniffing")
+        return self.__query__(self, self.handle, "is_sniffing")
 
     @classmethod
     def IsSonicBoom(self):
@@ -1839,7 +1973,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_sonic_boom")
+        return self.__query__(self, self.handle, "is_sonic_boom")
 
     @classmethod
     def IsSprinting(self):
@@ -1848,7 +1982,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_sprinting")
+        return self.__query__(self, self.handle, "is_sprinting")
 
     @classmethod
     def IsStackable(self):
@@ -1857,7 +1991,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_stackable")
+        return self.__query__(self, self.handle, "is_stackable")
 
     @classmethod
     def IsStalking(self):
@@ -1866,7 +2000,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_stalking")
+        return self.__query__(self, self.handle, "is_stalking")
 
     @classmethod
     def IsStanding(self):
@@ -1875,7 +2009,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_standing")
+        return self.__query__(self, self.handle, "is_standing")
 
     @classmethod
     def IsStunned(self):
@@ -1884,7 +2018,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_stunned")
+        return self.__query__(self, self.handle, "is_stunned")
 
     @classmethod
     def IsSwimming(self):
@@ -1893,7 +2027,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_swimming")
+        return self.__query__(self, self.handle, "is_swimming")
 
     @classmethod
     def IsTamed(self):
@@ -1902,7 +2036,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_tamed")
+        return self.__query__(self, self.handle, "is_tamed")
 
     @classmethod
     def IsTransforming(self):
@@ -1911,7 +2045,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_transforming")
+        return self.__query__(self, self.handle, "is_transforming")
 
     @classmethod
     def IsUsingItem(self):
@@ -1920,7 +2054,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_using_item")
+        return self.__query__(self, self.handle, "is_using_item")
 
     @classmethod
     def IsWallClimbing(self):
@@ -1929,7 +2063,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_wall_climbing")
+        return self.__query__(self, self.handle, "is_wall_climbing")
 
     @classmethod
     def ItemInUseDuration(self):
@@ -1940,7 +2074,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "item_in_use_duration") / 200
+        return self.__query__(self, self.handle, "item_in_use_duration") / 200
 
     @classmethod
     def ItemIsCharged(self, hand: int = 0):
@@ -1952,7 +2086,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "item_is_charged", clamp(hand, 0, 1))
+        return self.__query__(self, self.handle, "item_is_charged", clamp(hand, 0, 1))
 
     @classmethod
     def ItemMaxUseDuration(self):
@@ -1961,7 +2095,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "item_max_use_duration")
+        return self.__query__(self, self.handle, "item_max_use_duration")
 
     @classmethod
     def ItemRemainingUseDuration(self, hand: int = 0):
@@ -1973,7 +2107,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "item_remaining_use_duration", clamp(hand, 0, 1)
         )
 
@@ -1984,7 +2118,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "item_slot_to_bone_name", slot)
+        return self.__query__(self, self.handle, "item_slot_to_bone_name", slot)
 
     @classmethod
     def KeyFrameLerpTime(self):
@@ -1993,7 +2127,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "key_frame_lerp_time")
+        return self.__query__(self, self.handle, "key_frame_lerp_time")
 
     @classmethod
     def LastFrameTime(self, frame: int = 0):
@@ -2010,7 +2144,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "last_frame_time", clamp(frame, 0, 30))
+        return self.__query__(self, self.handle, "last_frame_time", clamp(frame, 0, 30))
 
     @classmethod
     def LastHitByPlayer(self):
@@ -2021,7 +2155,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "last_hit_by_player")
+        return self.__query__(self, self.handle, "last_hit_by_player")
 
     @classmethod
     def LieAmount(self):
@@ -2030,7 +2164,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "lie_amount")
+        return self.__query__(self, self.handle, "lie_amount")
 
     @classmethod
     def LifeSpan(self):
@@ -2039,7 +2173,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "life_span")
+        return self.__query__(self, self.handle, "life_span")
 
     @classmethod
     def LifeTime(self):
@@ -2048,7 +2182,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "life_time")
+        return self.__query__(self, self.handle, "life_time")
 
     @classmethod
     def LodIndex(self, d1: int, d2: int, d3: int):
@@ -2059,7 +2193,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "lod_index", d1, d2, d3)
+        return self.__query__(self, self.handle, "lod_index", d1, d2, d3)
 
     @classmethod
     def Log(self, query):
@@ -2068,7 +2202,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "log", query)
+        return self.__query__(self, self.handle, "log", query)
 
     @classmethod
     def MainHandItemMaxDuration(self):
@@ -2077,7 +2211,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "main_hand_item_max_duration")
+        return self.__query__(self, self.handle, "main_hand_item_max_duration")
 
     @classmethod
     def MainHandItemUseDuration(self):
@@ -2086,7 +2220,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "main_hand_item_use_duration")
+        return self.__query__(self, self.handle, "main_hand_item_use_duration")
 
     @classmethod
     def MarkVariant(self):
@@ -2095,7 +2229,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "mark_variant")
+        return self.__query__(self, self.handle, "mark_variant")
 
     @classmethod
     def MaxDurability(self):
@@ -2104,7 +2238,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "max_durability")
+        return self.__query__(self, self.handle, "max_durability")
 
     @classmethod
     def MaxHealth(self):
@@ -2113,7 +2247,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "max_health")
+        return self.__query__(self, self.handle, "max_health")
 
     @classmethod
     def MaxTradeTier(self):
@@ -2122,7 +2256,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "max_trade_tier")
+        return self.__query__(self, self.handle, "max_trade_tier")
 
     @classmethod
     def MaximumFrameTime(self, frame: int = 0):
@@ -2138,7 +2272,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "maximum_frame_time", clamp(frame, 0, 30))
+        return self.__query__(
+            self, self.handle, "maximum_frame_time", clamp(frame, 0, 30)
+        )
 
     @classmethod
     def MinimumFrameTime(self, frame: int = 0):
@@ -2154,7 +2290,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "minimum_frame_time", clamp(frame, 0, 30))
+        return self.__query__(
+            self, self.handle, "minimum_frame_time", clamp(frame, 0, 30)
+        )
 
     @classmethod
     def ModelScale(self):
@@ -2163,7 +2301,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "model_scale")
+        return self.__query__(self, self.handle, "model_scale")
 
     @classmethod
     def ModifiedDistanceMoved(self):
@@ -2172,7 +2310,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "modified_distance_moved")
+        return self.__query__(self, self.handle, "modified_distance_moved")
 
     @classmethod
     def ModifiedMoveSpeed(self):
@@ -2181,7 +2319,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "modified_move_speed")
+        return self.__query__(self, self.handle, "modified_move_speed")
 
     @classmethod
     def ModifierSwingDuration(self):
@@ -2190,7 +2328,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "modifier_swing_duration")
+        return self.__query__(self, self.handle, "modifier_swing_duration")
 
     @classmethod
     def MoonBrightness(self):
@@ -2208,7 +2346,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "moon_brightness")
+        return self.__query__(self, self.handle, "moon_brightness")
 
     @classmethod
     def MoonPhase(self):
@@ -2226,7 +2364,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "moon_phase")
+        return self.__query__(self, self.handle, "moon_phase")
 
     @classmethod
     def MovementDirection(self, axis: int):
@@ -2235,7 +2373,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "movement_direction", axis)
+        return self.__query__(self, self.handle, "movement_direction", axis)
 
     @classmethod
     def Noise(self):
@@ -2244,7 +2382,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "noise")
+        return self.__query__(self, self.handle, "noise")
 
     @classmethod
     def OnFireTime(self):
@@ -2253,7 +2391,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "on_fire_time")
+        return self.__query__(self, self.handle, "on_fire_time")
 
     @classmethod
     def OutOfControl(self):
@@ -2262,7 +2400,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "out_of_control")
+        return self.__query__(self, self.handle, "out_of_control")
 
     @classmethod
     def OverlayAlpha(self):
@@ -2271,7 +2409,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "overlay_alpha")
+        return self.__query__(self, self.handle, "overlay_alpha")
 
     @classmethod
     def OwnerIdentifier(self):
@@ -2280,7 +2418,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "owner_identifier")
+        return self.__query__(self, self.handle, "owner_identifier")
 
     @classmethod
     def PlayerLevel(self):
@@ -2289,7 +2427,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "player_level")
+        return self.__query__(self, self.handle, "player_level")
 
     @classmethod
     def Position(self, axis: int):
@@ -2298,7 +2436,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "position", clamp(axis, 0, 2))
+        return self.__query__(self, self.handle, "position", clamp(axis, 0, 2))
 
     @classmethod
     def PositionDelta(self, axis: int):
@@ -2307,7 +2445,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "position_delta", clamp(axis, 0, 2))
+        return self.__query__(self, self.handle, "position_delta", clamp(axis, 0, 2))
 
     @classmethod
     def PreviousSquishValue(self):
@@ -2316,7 +2454,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "previous_squish_value")
+        return self.__query__(self, self.handle, "previous_squish_value")
 
     @classmethod
     def RemainingDurability(self):
@@ -2325,7 +2463,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "remaining_durability")
+        return self.__query__(self, self.handle, "remaining_durability")
 
     @classmethod
     def RollCounter(self):
@@ -2334,7 +2472,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "roll_counter")
+        return self.__query__(self, self.handle, "roll_counter")
 
     @classmethod
     def RotationToCamera(self, axis: int):
@@ -2343,7 +2481,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "rotation_to_camera", clamp(axis, 0, 1))
+        return self.__query__(
+            self, self.handle, "rotation_to_camera", clamp(axis, 0, 1)
+        )
 
     @classmethod
     def ShakeAngle(self):
@@ -2352,7 +2492,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "shake_angle")
+        return self.__query__(self, self.handle, "shake_angle")
 
     @classmethod
     def ShakeTime(self):
@@ -2361,7 +2501,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "shake_time")
+        return self.__query__(self, self.handle, "shake_time")
 
     @classmethod
     def ShieldBlockingBob(self):
@@ -2370,7 +2510,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "shield_blocking_bob")
+        return self.__query__(self, self.handle, "shield_blocking_bob")
 
     @classmethod
     def ShowBottom(self):
@@ -2379,7 +2519,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "show_bottom")
+        return self.__query__(self, self.handle, "show_bottom")
 
     @classmethod
     def SitAmount(self):
@@ -2388,7 +2528,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "sit_amount")
+        return self.__query__(self, self.handle, "sit_amount")
 
     @classmethod
     def SkinId(self):
@@ -2397,7 +2537,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "skin_id")
+        return self.__query__(self, self.handle, "skin_id")
 
     @classmethod
     def SleepRotation(self):
@@ -2406,7 +2546,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "sleep_rotation")
+        return self.__query__(self, self.handle, "sleep_rotation")
 
     @classmethod
     def SneezeCounter(self):
@@ -2415,7 +2555,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "sneeze_counter")
+        return self.__query__(self, self.handle, "sneeze_counter")
 
     @classmethod
     def Spellcolor(self):
@@ -2424,7 +2564,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "spellcolor")
+        return _ColorStruct(self.__query__(self, self.handle, "spellcolor"))
 
     @classmethod
     def StandingScale(self):
@@ -2433,7 +2573,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "standing_scale")
+        return self.__query__(self, self.handle, "standing_scale")
 
     @classmethod
     def StructuralIntegrity(self):
@@ -2442,7 +2582,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "structural_integrity")
+        return self.__query__(self, self.handle, "structural_integrity")
 
     @classmethod
     def SurfaceParticleColor(self):
@@ -2453,7 +2593,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "surface_particle_color")
+        return _ColorStruct(self.__query__(self, self.handle, "surface_particle_color"))
 
     @classmethod
     def SurfaceParticleTextureCoordinate(self):
@@ -2464,7 +2604,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "surface_particle_texture_coordinate")
+        return _UVStruct(
+            self.__query__(self, self.handle, "surface_particle_texture_coordinate")
+        )
 
     @classmethod
     def SurfaceParticleTextureSize(self):
@@ -2475,7 +2617,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "surface_particle_texture_size")
+        return _UVStruct(
+            self.__query__(self, self.handle, "surface_particle_texture_size")
+        )
 
     @classmethod
     def SwellAmount(self):
@@ -2484,7 +2628,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "swell_amount")
+        return self.__query__(self, self.handle, "swell_amount")
 
     @classmethod
     def SwellingDir(self):
@@ -2493,7 +2637,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "swelling_dir")
+        return self.__query__(self, self.handle, "swelling_dir")
 
     @classmethod
     def SwimAmount(self):
@@ -2502,7 +2646,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "swim_amount")
+        return self.__query__(self, self.handle, "swim_amount")
 
     @classmethod
     def TailAngle(self):
@@ -2511,7 +2655,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "tail_angle")
+        return self.__query__(self, self.handle, "tail_angle")
 
     @classmethod
     def TargetXRotation(self):
@@ -2520,7 +2664,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "target_x_rotation")
+        return self.__query__(self, self.handle, "target_x_rotation")
 
     @classmethod
     def TargetYRotation(self):
@@ -2529,7 +2673,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "target_y_rotation")
+        return self.__query__(self, self.handle, "target_y_rotation")
 
     @classmethod
     def TextureFrameIndex(self):
@@ -2538,7 +2682,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "texture_frame_index")
+        return self.__query__(self, self.handle, "texture_frame_index")
 
     @classmethod
     def TimeOfDay(self):
@@ -2547,7 +2691,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "time_of_day")
+        return self.__query__(self, self.handle, "time_of_day")
 
     @classmethod
     def TimeSinceLastVibrationDetection(self):
@@ -2558,7 +2702,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "time_since_last_vibration_detection")
+        return self.__query__(self, self.handle, "time_since_last_vibration_detection")
 
     @classmethod
     def TimeStamp(self):
@@ -2567,7 +2711,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "time_stamp")
+        return self.__query__(self, self.handle, "time_stamp")
 
     @classmethod
     def TotalEmitterCount(self):
@@ -2576,7 +2720,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "total_emitter_count")
+        return self.__query__(self, self.handle, "total_emitter_count")
 
     @classmethod
     def TotalParticleCount(self):
@@ -2585,7 +2729,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "total_particle_count")
+        return self.__query__(self, self.handle, "total_particle_count")
 
     @classmethod
     def TradeTier(self):
@@ -2594,7 +2738,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "trade_tier")
+        return self.__query__(self, self.handle, "trade_tier")
 
     @classmethod
     def UnhappyCounter(self):
@@ -2603,7 +2747,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "unhappy_counter")
+        return self.__query__(self, self.handle, "unhappy_counter")
 
     @classmethod
     def Variant(self):
@@ -2612,7 +2756,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "variant")
+        return self.__query__(self, self.handle, "variant")
 
     @classmethod
     def VerticalSpeed(self):
@@ -2621,7 +2765,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "vertical_speed")
+        return self.__query__(self, self.handle, "vertical_speed")
 
     @classmethod
     def WalkDistance(self):
@@ -2630,7 +2774,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "walk_distance")
+        return self.__query__(self, self.handle, "walk_distance")
 
     @classmethod
     def WingFlapPosition(self):
@@ -2639,7 +2783,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "wing_flap_position")
+        return self.__query__(self, self.handle, "wing_flap_position")
 
     @classmethod
     def WingFlapSpeed(self):
@@ -2648,7 +2792,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "wing_flap_speed")
+        return self.__query__(self, self.handle, "wing_flap_speed")
 
     @classmethod
     def YawSpeed(self):
@@ -2657,7 +2801,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "yaw_speed")
+        return self.__query__(self, self.handle, "yaw_speed")
 
     @classmethod
     def TimerFlag1(self):
@@ -2666,7 +2810,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "timer_flag_1")
+        return self.__query__(self, self.handle, "timer_flag_1")
 
     @classmethod
     def TimerFlag2(self):
@@ -2675,7 +2819,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "timer_flag_2")
+        return self.__query__(self, self.handle, "timer_flag_2")
 
     @classmethod
     def TimerFlag3(self):
@@ -2684,7 +2828,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "timer_flag_3")
+        return self.__query__(self, self.handle, "timer_flag_3")
 
     @classmethod
     def IsSpectator(self):
@@ -2693,7 +2837,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_spectator")
+        return self.__query__(self, self.handle, "is_spectator")
 
     @classmethod
     def IsCooldownCategory(self, cooldown_name: str, slot: Slots, slot_id: int = 0):
@@ -2702,7 +2846,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "is_cooldown_category", cooldown_name, slot, slot_id
         )
 
@@ -2713,7 +2857,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "cooldown_time", slot, slot_id)
+        return self.__query__(self, self.handle, "cooldown_time", slot, slot_id)
 
     @overload
     @classmethod
@@ -2742,7 +2886,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "cooldown_time_remaining", arg1, arg2)
+        return self.__query__(self, self.handle, "cooldown_time_remaining", arg1, arg2)
 
     @classmethod
     def RelativeBlockHasAnyTags(self, x: int, y: int, z: int, *tags: str):
@@ -2751,7 +2895,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "relative_block_has_any_tags", x, y, z, *tags
         )
 
@@ -2762,7 +2906,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "relative_block_has_all_tags", x, y, z, *tags
         )
 
@@ -2773,7 +2917,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "block_neighbor_has_any_tags", x, y, z, *tags
         )
 
@@ -2784,7 +2928,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "block_neighbor_has_all_tags", x, y, z, *tags
         )
 
@@ -2795,7 +2939,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "block_has_all_tags", x, y, z, *tags)
+        return self.__query__(self, self.handle, "block_has_all_tags", x, y, z, *tags)
 
     @classmethod
     def BlockHasAnyTags(self, x: int, y: int, z: int, *tags: str):
@@ -2804,7 +2948,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "block_has_any_tags", x, y, z, *tags)
+        return self.__query__(self, self.handle, "block_has_any_tags", x, y, z, *tags)
 
     @classmethod
     def BoneOrientationTrs(self, bone_name: str):
@@ -2813,7 +2957,9 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return _TRS(self._query(self, self.handle, "bone_orientation_trs", bone_name))
+        return _TRSStruct(
+            self.__query__(self, self.handle, "bone_orientation_trs", bone_name)
+        )
 
     @classmethod
     def BoneOrientationMatrix(self, bone_name: str):
@@ -2822,7 +2968,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "bone_orientation_matrix", bone_name)
+        return self.__query__(self, self.handle, "bone_orientation_matrix", bone_name)
 
     @classmethod
     def IsAttached(self):
@@ -2833,7 +2979,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "is_attached")
+        return self.__query__(self, self.handle, "is_attached")
 
     @classmethod
     def HasPlayerRider(self):
@@ -2842,7 +2988,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "has_player_rider")
+        return self.__query__(self, self.handle, "has_player_rider")
 
     @classmethod
     def Scoreboard(self, score):
@@ -2855,7 +3001,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "scoreboard", score)
+        return self.__query__(self, self.handle, "scoreboard", score)
 
     @classmethod
     def RideBodyXRotation(self):
@@ -2864,7 +3010,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "ride_body_x_rotation")
+        return self.__query__(self, self.handle, "ride_body_x_rotation")
 
     @classmethod
     def RideBodyYRotation(self):
@@ -2873,7 +3019,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "ride_body_y_rotation")
+        return self.__query__(self, self.handle, "ride_body_y_rotation")
 
     @classmethod
     def RideHeadXRotation(self):
@@ -2882,7 +3028,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "ride_head_x_rotation")
+        return self.__query__(self, self.handle, "ride_head_x_rotation")
 
     @classmethod
     def RideHeadYRotation(self, clamp: int = 0):
@@ -2891,7 +3037,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "ride_head_y_rotation", clamp)
+        return self.__query__(self, self.handle, "ride_head_y_rotation", clamp)
 
     @classmethod
     def RiderBodyXRotation(self, rider: int = 0):
@@ -2900,7 +3046,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "rider_body_x_rotation", rider)
+        return self.__query__(self, self.handle, "rider_body_x_rotation", rider)
 
     @classmethod
     def RiderBodyYRotation(self, rider: int = 0):
@@ -2909,7 +3055,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "rider_body_y_rotation", rider)
+        return self.__query__(self, self.handle, "rider_body_y_rotation", rider)
 
     @classmethod
     def RiderHeadXRotation(self, head: int = 0):
@@ -2918,7 +3064,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "rider_head_x_rotation", head)
+        return self.__query__(self, self.handle, "rider_head_x_rotation", head)
 
     @classmethod
     def RiderHeadYRotation(self, head: int = 0, clamp: int = 0):
@@ -2927,7 +3073,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "rider_head_y_rotation", head, clamp)
+        return self.__query__(self, self.handle, "rider_head_y_rotation", head, clamp)
 
     @classmethod
     def ArmorSlotDamage(self, slot: Slots, slot_id: int = 0):
@@ -2936,7 +3082,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "armor_slot_damage", slot, slot_id)
+        return self.__query__(self, self.handle, "armor_slot_damage", slot, slot_id)
 
     @classmethod
     def ClientMemoryTier(self):
@@ -2945,7 +3091,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "client_memory_tier")
+        return self.__query__(self, self.handle, "client_memory_tier")
 
     @classmethod
     def ServerMemoryTier(self):
@@ -2954,7 +3100,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "server_memory_tier")
+        return self.__query__(self, self.handle, "server_memory_tier")
 
     @classmethod
     def ClientMaxRenderDistance(self):
@@ -2963,7 +3109,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "client_max_render_distance")
+        return self.__query__(self, self.handle, "client_max_render_distance")
 
     @classmethod
     def LastInputModeIsAny(self, input: InputModes):
@@ -2972,7 +3118,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "last_input_mode_is_any", input)
+        return self.__query__(self, self.handle, "last_input_mode_is_any", input)
 
     @classmethod
     def TouchOnlyAffectsHotbar(self):
@@ -2981,7 +3127,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "touch_only_affects_hotbar")
+        return self.__query__(self, self.handle, "touch_only_affects_hotbar")
 
     @classmethod
     def GetPackSetting(self, id: str):
@@ -3011,7 +3157,7 @@ class Query(Molang):
                 f"Pack Setting '{id}' does not exist in sliders, make sure to register it using `ManifestRP()`."
             )
 
-        return self._query(self, self.handle, "get_pack_setting", id)
+        return self.__query__(self, self.handle, "get_pack_setting", id)
 
     @classmethod
     def IsPackSettingEnabled(self, id: str):
@@ -3042,7 +3188,7 @@ class Query(Molang):
                 f"Pack Setting '{id}' does not exist in toggles, make sure to register it using `ManifestRP()`."
             )
 
-        return self._query(self, self.handle, "is_pack_setting_enabled", id)
+        return self.__query__(self, self.handle, "is_pack_setting_enabled", id)
 
     @classmethod
     def IsPackSettingSelected(self, id: str, option: str):
@@ -3087,7 +3233,7 @@ class Query(Molang):
                 f"Option '{option}' does not exist in dropdown '{id}', available options are: {', '.join(dropdown.get("options", {}).values())}."
             )
 
-        return self._query(self, self.handle, "is_pack_setting_selected", id, option)
+        return self.__query__(self, self.handle, "is_pack_setting_selected", id, option)
 
     @classmethod
     def EntityBiomeHasAllTags(self, tags: tuple[str]):
@@ -3096,7 +3242,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "entity_biome_has_all_tags", *tags)
+        return self.__query__(self, self.handle, "entity_biome_has_all_tags", *tags)
 
     @classmethod
     def EntityBiomeHasAnyTags(self, tags: tuple[str]):
@@ -3105,7 +3251,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "entity_biome_has_any_tags", *tags)
+        return self.__query__(self, self.handle, "entity_biome_has_any_tags", *tags)
 
     @classmethod
     def EntityBiomeHasAnyIdentifier(
@@ -3116,7 +3262,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(
+        return self.__query__(
             self, self.handle, "entity_biome_has_any_identifier", *identifiers
         )
 
@@ -3127,7 +3273,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_kinetic_item_delay")
+        return self.__query__(self, self.handle, "get_kinetic_item_delay")
 
     @classmethod
     def GetKineticItemDamageDuration(self):
@@ -3136,7 +3282,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_kinetic_item_damage_duration")
+        return self.__query__(self, self.handle, "get_kinetic_item_damage_duration")
 
     @classmethod
     def GetKineticItemKnockbackDuration(self):
@@ -3145,7 +3291,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_kinetic_item_knockback_duration")
+        return self.__query__(self, self.handle, "get_kinetic_item_knockback_duration")
 
     @classmethod
     def GetKineticItemDismountDuration(self):
@@ -3154,7 +3300,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_kinetic_item_dismount_duration")
+        return self.__query__(self, self.handle, "get_kinetic_item_dismount_duration")
 
     @classmethod
     def KineticWeaponDelay(self):
@@ -3163,7 +3309,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "kinetic_weapon_delay")
+        return self.__query__(self, self.handle, "kinetic_weapon_delay")
 
     @classmethod
     def KineticWeaponDamageDuration(self):
@@ -3172,7 +3318,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "kinetic_weapon_damage_duration")
+        return self.__query__(self, self.handle, "kinetic_weapon_damage_duration")
 
     @classmethod
     def KineticWeaponKnockbackDuration(self):
@@ -3181,7 +3327,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "kinetic_weapon_knockback_duration")
+        return self.__query__(self, self.handle, "kinetic_weapon_knockback_duration")
 
     @classmethod
     def KineticWeaponDismountDuration(self):
@@ -3190,7 +3336,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "kinetic_weapon_dismount_duration")
+        return self.__query__(self, self.handle, "kinetic_weapon_dismount_duration")
 
     @classmethod
     def TicksSinceLastKineticWeaponHit(self):
@@ -3200,7 +3346,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "ticks_since_last_kinetic_weapon_hit")
+        return self.__query__(self, self.handle, "ticks_since_last_kinetic_weapon_hit")
 
     @classmethod
     def StateTime(self):
@@ -3209,7 +3355,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "state_time")
+        return self.__query__(self, self.handle, "state_time")
 
     @classmethod
     def get_level_seed_based_fraction(self):
@@ -3218,7 +3364,7 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self._query(self, self.handle, "get_level_seed_based_fraction")
+        return self.__query__(self, self.handle, "get_level_seed_based_fraction")
 
 
 class Context(Query):
@@ -3226,25 +3372,25 @@ class Context(Query):
 
     @classmethod
     def _set_var(self, name):
-        setattr(self, name, self._query(self, self.handle, name))
+        setattr(self, name, self.__query__(self, self.handle, name))
 
     @classmethod
     def OwningEntity(self, molang: Optional[Molang]):
         if molang:
-            return Molang(
-                f"({self._query(self, self.handle, "owning_entity")} -> {molang})"
+            return arrow_operator(
+                self.__query__(self, self.handle, "owning_entity"), molang
             )
-        return Molang._query(self, self.handle, "owning_entity")
+        return Molang.__query__(self, self.handle, "owning_entity")
 
     @classmethod
     def Other(self, molang: Optional[Molang]):
         if molang:
-            return Molang(f"({self._query(self, self.handle, "other")} -> {molang})")
-        return Molang._query(self, self.handle, "other")
+            return arrow_operator(self.__query__(self, self.handle, "other"), molang)
+        return Molang.__query__(self, self.handle, "other")
 
     @classmethod
     def ItemSlot(self):
-        return self._query(self, self.handle, "item_slot")
+        return self.__query__(self, self.handle, "item_slot")
 
 
 class Variable(Molang):
@@ -3252,23 +3398,23 @@ class Variable(Molang):
 
     @classmethod
     def _set_var(self, name):
-        setattr(self, name, self._query(self, "v", name))
+        setattr(self, name, self.__query__(self, "v", name))
         Context._set_var(name)
 
     @classmethod
     def IsFirstPerson(self):
-        return self._query(self, "v", "is_first_person")
+        return self.__query__(self, "v", "is_first_person")
 
     @classmethod
     def IsPaperdoll(self):
-        return self._query(self, "v", "is_paperdoll")
+        return self.__query__(self, "v", "is_paperdoll")
 
     @classmethod
     def AttackTime(self):
-        return self._query(self, "v", "attack_time")
+        return self.__query__(self, "v", "attack_time")
 
 
-class TempVar(Molang, metaclass=MolangMeta):
+class TempVar(Molang, metaclass=_VarMeta):
     handle = "t"
 
 
@@ -3277,59 +3423,59 @@ class Math(Molang):
 
     @classmethod
     def abs(self, value):
-        return self._query(self, self.handle, "abs", value)
+        return self.__query__(self, self.handle, "abs", value)
 
     @classmethod
     def acos(self, value):
-        return self._query(self, self.handle, "acos", value)
+        return self.__query__(self, self.handle, "acos", value)
 
     @classmethod
     def asin(self, value):
-        return self._query(self, self.handle, "asin", value)
+        return self.__query__(self, self.handle, "asin", value)
 
     @classmethod
     def atan(self, value):
-        return self._query(self, self.handle, "atan", value)
+        return self.__query__(self, self.handle, "atan", value)
 
     @classmethod
     def atan2(self, y: str, x):
-        return self._query(self, self.handle, "atan2", y, x)
+        return self.__query__(self, self.handle, "atan2", y, x)
 
     @classmethod
     def ceil(self, value):
-        return self._query(self, self.handle, "ceil", value)
+        return self.__query__(self, self.handle, "ceil", value)
 
     @classmethod
     def clamp(self, value, min, max):
-        return self._query(self, self.handle, "clamp", value, min, max)
+        return self.__query__(self, self.handle, "clamp", value, min, max)
 
     @classmethod
     def cos(self, value):
-        return self._query(self, self.handle, "cos", value)
+        return self.__query__(self, self.handle, "cos", value)
 
     @classmethod
     def die_roll(self, num, low, high):
-        return self._query(self, self.handle, "die_roll", num, low, high)
+        return self.__query__(self, self.handle, "die_roll", num, low, high)
 
     @classmethod
     def die_roll_integer(self, num, low, high):
-        return self._query(self, self.handle, "die_roll_integer", num, low, high)
+        return self.__query__(self, self.handle, "die_roll_integer", num, low, high)
 
     @classmethod
     def exp(self, value):
-        return self._query(self, self.handle, "exp", value)
+        return self.__query__(self, self.handle, "exp", value)
 
     @classmethod
     def floor(self, value):
-        return self._query(self, self.handle, "floor", value)
+        return self.__query__(self, self.handle, "floor", value)
 
     @classmethod
     def hermite_blend(self, value):
-        return self._query(self, self.handle, "hermite_blend", value)
+        return self.__query__(self, self.handle, "hermite_blend", value)
 
     @classmethod
     def lerp(self, start, end, factor):
-        return self._query(
+        return self.__query__(
             self,
             self.handle,
             "lerp",
@@ -3340,7 +3486,7 @@ class Math(Molang):
 
     @classmethod
     def lerprotate(self, start, end, factor):
-        return self._query(
+        return self.__query__(
             self,
             self.handle,
             "lerprotate",
@@ -3351,185 +3497,199 @@ class Math(Molang):
 
     @classmethod
     def ln(self, value):
-        return self._query(self, self.handle, "ln", value)
+        return self.__query__(self, self.handle, "ln", value)
 
     @classmethod
     def max(self, A, B):
-        return self._query(self, self.handle, "max", A, B)
+        return self.__query__(self, self.handle, "max", A, B)
 
     @classmethod
     def min(self, A, B):
-        return self._query(self, self.handle, "min", A, B)
+        return self.__query__(self, self.handle, "min", A, B)
 
     @classmethod
     def min_angle(self, value):
-        return self._query(self, self.handle, "min_angle", value)
+        return self.__query__(self, self.handle, "min_angle", value)
 
     @classmethod
     def mod(self, value, denominator):
-        return self._query(self, self.handle, "mod", value, denominator)
+        return self.__query__(self, self.handle, "mod", value, denominator)
 
     @classmethod
     def pi(self):
-        return self._query(self, self.handle, "pi")
+        return self.__query__(self, self.handle, "pi")
 
     @classmethod
     def pow(self, base, exponent):
-        return self._query(self, self.handle, "pow", base, exponent)
+        return self.__query__(self, self.handle, "pow", base, exponent)
 
     @classmethod
     def random(self, low, high):
-        return self._query(self, self.handle, "random", low, high)
+        return self.__query__(self, self.handle, "random", low, high)
 
     @classmethod
     def random_integer(self, low, high):
-        return self._query(self, self.handle, "random_integer", low, high)
+        return self.__query__(self, self.handle, "random_integer", low, high)
 
     @classmethod
     def round(self, value):
-        return self._query(self, self.handle, "round", value)
+        return self.__query__(self, self.handle, "round", value)
 
     @classmethod
     def sin(self, value):
-        return self._query(self, self.handle, "sin", value)
+        return self.__query__(self, self.handle, "sin", value)
 
     @classmethod
     def sqrt(self, value):
-        return self._query(self, self.handle, "sqrt", value)
+        return self.__query__(self, self.handle, "sqrt", value)
 
     @classmethod
     def trunc(self, value):
-        return self._query(self, self.handle, "trunc", value)
+        return self.__query__(self, self.handle, "trunc", value)
 
     @classmethod
     def inverse_lerp(self, start, end, factor):
-        return self._query(self, self.handle, "inverse_lerp", start, end, factor)
+        return self.__query__(self, self.handle, "inverse_lerp", start, end, factor)
 
     @classmethod
     def ease_in_quad(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_quad", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_quad", start, end, factor)
 
     @classmethod
     def ease_out_quad(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_quad", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_quad", start, end, factor)
 
     @classmethod
     def ease_in_out_quad(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_quad", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_out_quad", start, end, factor)
 
     @classmethod
     def ease_in_cubic(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_cubic", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_cubic", start, end, factor)
 
     @classmethod
     def ease_out_cubic(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_cubic", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_cubic", start, end, factor)
 
     @classmethod
     def ease_in_out_cubic(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_cubic", start, end, factor)
+        return self.__query__(
+            self, self.handle, "ease_in_out_cubic", start, end, factor
+        )
 
     @classmethod
     def ease_in_quart(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_quart", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_quart", start, end, factor)
 
     @classmethod
     def ease_out_quart(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_quart", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_quart", start, end, factor)
 
     @classmethod
     def ease_in_out_quart(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_quart", start, end, factor)
+        return self.__query__(
+            self, self.handle, "ease_in_out_quart", start, end, factor
+        )
 
     @classmethod
     def ease_in_quint(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_quint", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_quint", start, end, factor)
 
     @classmethod
     def ease_out_quint(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_quint", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_quint", start, end, factor)
 
     @classmethod
     def ease_in_out_quint(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_quint", start, end, factor)
+        return self.__query__(
+            self, self.handle, "ease_in_out_quint", start, end, factor
+        )
 
     @classmethod
     def ease_in_sine(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_sine", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_sine", start, end, factor)
 
     @classmethod
     def ease_out_sine(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_sine", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_sine", start, end, factor)
 
     @classmethod
     def ease_in_out_sine(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_sine", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_out_sine", start, end, factor)
 
     @classmethod
     def ease_in_expo(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_expo", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_expo", start, end, factor)
 
     @classmethod
     def ease_out_expo(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_expo", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_expo", start, end, factor)
 
     @classmethod
     def ease_in_out_expo(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_expo", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_out_expo", start, end, factor)
 
     @classmethod
     def ease_in_circ(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_circ", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_circ", start, end, factor)
 
     @classmethod
     def ease_out_circ(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_circ", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_circ", start, end, factor)
 
     @classmethod
     def ease_in_out_circ(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_circ", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_out_circ", start, end, factor)
 
     @classmethod
     def ease_in_bounce(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_bounce", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_bounce", start, end, factor)
 
     @classmethod
     def ease_out_bounce(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_bounce", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_bounce", start, end, factor)
 
     @classmethod
     def ease_in_out_bounce(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_bounce", start, end, factor)
+        return self.__query__(
+            self, self.handle, "ease_in_out_bounce", start, end, factor
+        )
 
     @classmethod
     def ease_in_back(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_back", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_back", start, end, factor)
 
     @classmethod
     def ease_out_back(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_back", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_back", start, end, factor)
 
     @classmethod
     def ease_in_out_back(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_back", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_out_back", start, end, factor)
 
     @classmethod
     def ease_in_elastic(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_elastic", start, end, factor)
+        return self.__query__(self, self.handle, "ease_in_elastic", start, end, factor)
 
     @classmethod
     def ease_out_elastic(self, start, end, factor):
-        return self._query(self, self.handle, "ease_out_elastic", start, end, factor)
+        return self.__query__(self, self.handle, "ease_out_elastic", start, end, factor)
 
     @classmethod
     def ease_in_out_elastic(self, start, end, factor):
-        return self._query(self, self.handle, "ease_in_out_elastic", start, end, factor)
+        return self.__query__(
+            self, self.handle, "ease_in_out_elastic", start, end, factor
+        )
 
 
-def molang_conditions(condition, expression, expression2):
-    return Molang(f"({condition} ? {expression} : ({expression2}))")
+@deprecated("arrow_operator is deprecated and will be removed in a future version. Use `Molang.molang_arrow()` instead for better readability and maintainability.")
+def arrow_operator(left: Molang, right: Molang) -> Molang:
+    """Returns a Molang object representing the arrow operator for Molang."""
+    return Molang(f"({left}) -> ({right})")
 
 
-def arrow_operator(left, right):
-    """Returns a string representing the arrow operator for Molang."""
-    return f"{left} -> {right}"
+@deprecated("molang_conditions is deprecated and will be removed in a future version. Use `Molang.molang_arrow()` instead for better readability and maintainability.")
+def molang_conditions(
+    condition: Molang, expression: Molang, expression2: Optional[Molang] = None
+) -> Molang:
+    return Molang.molang_condition(condition, expression, expression2)

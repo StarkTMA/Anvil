@@ -6,7 +6,7 @@ import shutil
 import sys
 import traceback as tb
 import zipfile
-from typing import Literal, Optional
+from typing import Optional
 
 import click
 from halo import Halo
@@ -539,7 +539,13 @@ def mcworld_core(config: _AnvilConfig):
 
 
 @Halo(text="Compiling", spinner="dots")
-def compile_objects(anvil: "_Anvil", extract_world: str = None, js_only: bool = False):
+def compile_objects(
+    anvil: "_Anvil",
+    extract_world: str = None,
+    js_only: bool = False,
+    no_compile: bool = False,
+    workflow: bool = False,
+):
     extract_world_pack(extract_world)
     manifests(extract_world)
     pack_art()
@@ -549,15 +555,24 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None, js_only: bool = 
     ManifestRP().queue()
 
     if CONFIG._SCRIPT_API:
+        args = [
+            CONFIG._SCRIPT_BUNDLE_SCRIPT,
+            f'--outdir="{os.path.join(CONFIG.BP_PATH, "scripts")}"',
+        ]
+        if "--minify" in sys.argv:
+            args.append("--minify")
+
         process_subcommand(
-            CONFIG._SCRIPT_BUNDLE_SCRIPT
-            + f' --outdir="{os.path.join(CONFIG.BP_PATH, "scripts")}"',
+            " ".join(args),
             "Building scripts error",
         )
 
     if js_only:
         ManifestBP().__export__()
         ManifestRP().__export__()
+        return
+
+    if no_compile:
         return
 
     ItemTexturesObject().queue()
@@ -570,6 +585,17 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None, js_only: bool = 
     MaterialsObject().queue()
     _Blockbench.__export__()
     anvil.__queue__(AnvilTranslator())
+
+    if workflow:
+        AnvilIO.file(
+            "release.yml",
+            JsonSchemes.github_release_workflow(
+                CONFIG.PROJECT_NAME, CONFIG.DISPLAY_NAME
+            ),
+            os.path.join(".github", "workflows"),
+            "w",
+            True,
+        )
 
     from anvil.api.blocks.blocks import _PermutationComponents
 
@@ -611,8 +637,6 @@ def compile_objects(anvil: "_Anvil", extract_world: str = None, js_only: bool = 
             raise RuntimeError(
                 "Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack."
             )
-
-    anvil._compiled = True
 
 
 @Halo(text="Translating", spinner="dots")
@@ -826,7 +850,6 @@ class _Anvil:
         else:
             raise Exception("Anvil instance already exists.")
 
-        self._compiled = False
         self.config = CONFIG
         AnvilValidator.validate_namespace_project_name(
             CONFIG.NAMESPACE, CONFIG.PROJECT_NAME
@@ -847,9 +870,13 @@ class _Anvil:
         generate_technical_notes: bool = False,
     ) -> None:
         """Compiles the project."""
-        compile_objects(self, extract_world, "--js-only" in sys.argv)
+        js_only = "--js-only" in sys.argv
+        no_compile = "--nocompile" in sys.argv
+        workflow = "--workflow" in sys.argv
 
-        if "--no-arch" in sys.argv:
+        compile_objects(self, extract_world, js_only, no_compile, workflow)
+
+        if "--noarch" in sys.argv:
             return
 
         if mcaddon or "--mcaddon" in sys.argv:
@@ -864,5 +891,6 @@ class _Anvil:
     def __queue__(self, object: object):
         """Queues an object to be compiled."""
         self._objects_list.append(object)
+
 
 ANVIL = _Anvil()

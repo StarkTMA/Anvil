@@ -54,12 +54,14 @@ const removeFileSchemePlugin = {
 	},
 };
 
+const minifyArg = process.argv.includes("--minify")
+
 const result = await esbuild.build({
 	entryPoints: ["scripts/javascript/main.ts"],
 	bundle: true,
 	format: "esm",
 	sourcemap: true,
-	minify: {{ minify|lower }},
+	minify: {{ minify|lower }} || minifyArg,
 	outdir: outDir,
 	external: ["@minecraft/server", "@minecraft/server-ui"],
 	write: false,

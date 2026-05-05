@@ -1,31 +1,47 @@
 name: docs
 
 on:
-  push:
-    branches:
-      - main
+    push:
+        branches:
+            - main
 
 permissions:
-  contents: write
-  
+    contents: write
+
 jobs:
-  build-docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-      - name: Install package
-        run: pip install -e .
-      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
-      - uses: actions/cache@v4
-        with:
-          key: mkdocs-material-${{ env.cache_id }}
-          path: .cache
-          restore-keys: |
-            mkdocs-material-
-      - run: pip install mkdocs-material 
-      - run: pip install "mkdocstrings[python]"
-      - run: echo "anvil.starktma.net" > docs/CNAME
-      - run: mkdocs gh-deploy --force
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: "3.13"
+            - name: Install package and test dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -e .
+                  pip install pytest
+            - name: Run tests
+              run: python -m pytest tests/
+
+    build-docs:
+        needs: test
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: 3.x
+            - name: Install package
+              run: pip install -e .
+            - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+            - uses: actions/cache@v4
+              with:
+                  key: mkdocs-material-${{ env.cache_id }}
+                  path: .cache
+                  restore-keys: |
+                      mkdocs-material-
+            - run: pip install mkdocs-material
+            - run: pip install "mkdocstrings[python]"
+            - run: echo "anvil.starktma.net" > docs/CNAME
+            - run: mkdocs gh-deploy --force

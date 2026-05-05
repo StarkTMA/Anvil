@@ -5,8 +5,9 @@ from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockGeometry,
     BlockMaterialInstance,
+    TagComponent,
 )
-from anvil.api.core.components import Component, _Components
+from anvil.api.core.components import _Components
 from anvil.api.core.core import ANVIL, SoundEvent
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
@@ -30,26 +31,6 @@ from anvil.lib.schemas import (
 from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["Block"]
-
-
-class TagComponent(Component):
-    """Represents a block tag component.
-
-    Handles the creation and management of Minecraft block tags
-    with associated dependencies and clashes.
-    """
-
-    _object_type = "Block Tag Component"
-    _identifier = "minecraft:tag"
-
-    def __init__(self, tag: MinecraftBlockTags):
-        """Initializes the block tag component.
-
-        Args:
-            tag (MinecraftBlockTags): The block tag to be added as a component.
-        """
-        super().__init__(f"tag:{tag.value}", False)
-        self._set_value({})
 
 
 # Core

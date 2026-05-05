@@ -82,7 +82,7 @@ class _BPAnimation:
         return self._animation
 
 
-class _BPAnimations(AddonObject):
+class BPAnimations(AddonObject):
     _extension = ".animation.json"
     _path = os.path.join(CONFIG.BP_PATH, "animations")
     _object_type = "behavior Pack Animation"

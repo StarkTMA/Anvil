@@ -19,6 +19,7 @@ from anvil.api.core.textures import FlipBookTexturesObject
 from anvil.api.core.types import Identifier
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
+from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.blockbench import BlockBenchSource, _Blockbench, blockbench_geometry_name
 from anvil.lib.config import CONFIG
@@ -129,6 +130,27 @@ class InstanceSpec:
 
     def color_texture(self, index: int = 0) -> str:
         return self.variations[index].color
+
+
+
+class TagComponent(Component):
+    """Represents a block tag component.
+
+    Handles the creation and management of Minecraft block tags
+    with associated dependencies and clashes.
+    """
+
+    _object_type = "Block Tag Component"
+    _identifier = "minecraft:tag"
+
+    def __init__(self, tag: MinecraftBlockTags):
+        """Initializes the block tag component.
+
+        Args:
+            tag (MinecraftBlockTags): The block tag to be added as a component.
+        """
+        super().__init__(f"tag:{tag.value}", False)
+        self._set_value({})
 
 
 class BlockMaterialInstance(Component):

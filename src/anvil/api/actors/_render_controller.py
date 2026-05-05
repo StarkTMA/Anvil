@@ -67,36 +67,35 @@ class _RenderController:
         )
         self.controller_identifier = f"controller.render.{self._identifier.replace(':', '.')}.{self._controller_name}"
 
+    def material(self, bone: Literal["*"] | str, material_shortname: str):
+        variable = Molang().__query__("material", material_shortname)
+
+        self._controller[self.controller_identifier]["materials"].append(
+            {
+                bone: (
+                    material_shortname
+                    if isinstance(material_shortname, Molang)
+                    else variable
+                )
+            }
+        )
+        return self
+
     def texture_array(
         self,
         array_name: str,
         textures_short_names: list[str],
         query: Molang | str = None,
     ):
+        variable = Molang().__query__("array", array_name)
         self._controller[self.controller_identifier]["arrays"]["textures"].update(
-            {
-                f"Array.{array_name}": [
-                    f"Texture.{texture}" for texture in textures_short_names
-                ]
-            }
+            {str(variable): [f"Texture.{texture}" for texture in textures_short_names]}
         )
         if query is not None:
             self._controller[self.controller_identifier]["textures"].append(
-                f"Array.{array_name}[{query}]"
+                variable[query]
             )
 
-        return self
-
-    def material(self, bone: Literal["*"] | str, material_shortname: str):
-        self._controller[self.controller_identifier]["materials"].append(
-            {
-                bone: (
-                    material_shortname
-                    if isinstance(material_shortname, Molang)
-                    else f"Material.{material_shortname}"
-                )
-            }
-        )
         return self
 
     def geometry_array(
@@ -105,17 +104,17 @@ class _RenderController:
         geometries_short_names: list[str],
         query: Molang | str = None,
     ):
+        variable = Molang().__query__("array", array_name)
+
         self._controller[self.controller_identifier]["arrays"]["geometries"].update(
             {
-                f"Array.{array_name}": [
+                str(variable): [
                     f"Geometry.{geometry}" for geometry in geometries_short_names
                 ]
             }
         )
         if query is not None:
-            self._controller[self.controller_identifier][
-                "geometry"
-            ] = f"Array.{array_name}[{query}]"
+            self._controller[self.controller_identifier]["geometry"] = variable[query]
         return self
 
     def geometry(self, short_name):
@@ -201,7 +200,7 @@ class _RenderController:
         return self._controller
 
 
-class _RenderControllers(AddonObject):
+class RenderControllers(AddonObject):
     _extension = ".rc.json"
     _path = os.path.join(
         CONFIG.RP_PATH,

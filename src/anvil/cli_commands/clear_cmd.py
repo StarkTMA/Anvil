@@ -24,7 +24,7 @@ def clear() -> None:
         click.echo(
             click.style(
                 "No valid Anvil project found, to create a new project run: `anvil create --help`",
-                fg="orange",
+                fg="yellow",
             )
         )
         return None

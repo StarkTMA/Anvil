@@ -1,19 +1,19 @@
 from math import inf
 from typing import Dict, Literal, Tuple, overload
 
-from anvil.api.actors.actors import Entity, ItemTexturesObject
+from anvil.api.actors.actors import ItemTexturesObject
 from anvil.api.core.components import Component
 from anvil.api.core.enums import DamageCause, EnchantsSlots, Rarity, Slots
 from anvil.api.core.textures import ItemTexturesObject
-from anvil.api.core.types import RGB, RGBA, Identifier, Seconds, Tick
+from anvil.api.core.types import Identifier, Seconds, Tick
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.pbr import TextureComponents, TextureSet
 from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.blockbench import BlockBenchSource, _Blockbench
+from anvil.lib.blockbench import BlockBenchSource
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
-from anvil.lib.lib import AnvilFormatter, Color, HexRGB, clamp, convert_color
+from anvil.lib.lib import AnvilFormatter, Color, HexRGB, clamp
 from anvil.lib.schemas import (
     MinecraftBlockDescriptor,
     MinecraftEntityDescriptor,
@@ -493,7 +493,9 @@ class ItemDyeable(Component):
         """
         super().__init__("dyeable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.30")
-        self._add_field("default_color", convert_color(default_color, HexRGB))
+        self._add_field(
+            "default_color", AnvilFormatter.convert_color(default_color, HexRGB)
+        )
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.20

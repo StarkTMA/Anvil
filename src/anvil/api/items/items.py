@@ -1,7 +1,7 @@
 import os
 
 from anvil.api.core.core import ANVIL
-from anvil.api.actors._component_group import _Components
+from anvil.api.core.components import _Components
 from anvil.api.actors.actors import Attachable
 from anvil.api.core.enums import ItemCategory, ItemGroups
 from anvil.api.items.components import ItemDisplayName

@@ -6,15 +6,15 @@ Anvil lets you build Bedrock addons the same way you write gameplay logic: **in 
 
 ## How Anvil Helps You Ship Faster
 
-A typical Bedrock project involves hundreds of JSON fragments that must all line up with Mojang’s ever‑shifting schemas. One typo breaks everything. Anvil collapses that surface area to a single Python DSL and gives you proper IDE support—autocomplete, static checks, refactors—plus Marketplace rule validation baked in. When Anvil finishes a build you know your packs load and for partners Microsoft won’t bounce the upload.
+A typical Bedrock project involves hundreds of JSON fragments that must all line up with Mojang’s ever‑shifting schemas. One typo breaks everything. Anvil collapses that surface area to a single Python DSL and gives you proper IDE support autocomplete, static checks, refactors—plus Marketplace rule validation baked in. When Anvil finishes a build you know your packs load and for partners Microsoft won’t bounce the upload.
 
 ---
 
 ## Zero‑to‑Pack Workflow
 
 1. **`anvil create <namespace> <project_name>`** scaffolds a project folder, generates all required UUIDs, and writes `anvilconfig.json`.
-2. Drop assets—Blockbench models, textures, mcstructure files, sounds, Script API code—into the `assets` tree. Put gameplay Python in `assets/python/`.
-3. **`anvil run`** compiles Python ➞ JSON, optionally compiles TypeScript ➞ JavaScript, validates everything, and exports your chosen package format.
+2. Drop assets, Blockbench models, textures, mcstructure files, sounds into the `assets` tree. Put gameplay Python and Typescript in `assets/`.
+3. **`anvil build`** compiles Python ➞ JSON, optionally compiles TypeScript ➞ JavaScript, validates everything, and exports your chosen package format.
 
 ---
 
@@ -40,36 +40,19 @@ project/
 └── tsconfig.json
 ```
 
-Source stays put; `anvil run` copies only what Bedrock needs into dev Behaviour/Resource packs.
+Source stays put; `anvil build` copies only what Bedrock needs into dev Behaviour/Resource packs.
 
 ---
 
-## `anvilconfig.json` Reference
+## Configuration
 
-All project metadata lives in one file and auto‑propagates—no duplicated strings.
-
-| Section           | Keys                                                                                                                                                                                  | Purpose / Restrictions                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| **`[MINECRAFT]`** | `vanilla_version`                                                                                                                                                                     | Target engine version. Auto‑pulled, read‑only.               |
-| **`[PACKAGE]`**   | `company`, `namespace` (≤ 8 chars), `project_name` (≤ 16 chars), `display_name`, `project_description`, `behavior_description`, `resource_description`, `target` (`world` or `addon`) | Marketplace metadata.                                        |
-| **`[BUILD]`**     | `release` (semver), `rp_uuid[]`, `bp_uuid[]`, `pack_uuid`, `data_module_uuid`, `script_module_uuid`                                                                                   | Identity & versioning. Missing IDs regenerate automatically. |
-| **`[ANVIL]`**     | `debug`, `scriptapi`, `scriptui`, `pbr`, `random_seed`, `pascal_project_name`, `last_check`, `experimental`, `preview`, `entry_point`, `js_bundle_script`, `minify`.                  | Feature toggles.                                             |
-| **`[NAMESPACE]`** | _(reserved for future per‑namespace overrides)_                                                                                                                                       |                                                              |
+`anvilconfig.json` is documented in the [project configuration guide](guide/config.md). That page is the single source of truth for the file layout and default values.
 
 ---
 
-## Anvil Flags
+## CLI Flags
 
-| Flag            | Action                                                              |
-| --------------- | ------------------------------------------------------------------- |
-| `--preview`     | Target Minecraft Preview paths instead of release.                  |
-| `--scriptapi`   | Enable Script API; compiles sources from `assets/javascript/`.      |
-| `--scriptui`    | Same, but for the UI module.                                        |
-| `--pbr`         | Insert the PBR capability token and copy normal/spec maps.          |
-| `--random_seed` | Enables procedural‐world hooks; limits packaging to dynamic worlds. |
-| `--addon`       | Force addon mode; extra Marketplace naming constraints apply.       |
-
-`--help` and `--version` behave conventionally.
+The command options used by `anvil create`, `anvil build`, and the other CLI commands are documented in the [CLI reference](guide/cli.md).
 
 ---
 
@@ -89,8 +72,6 @@ All literal strings are stored in `localization.csv` in the project root with on
 
 • **Namespacing** — `minecraft` is forbidden; namespace ≤ 8 chars; project name ≤ 16.
 
-• **Component ranges** — numeric arguments are clamped or hard‑failed when outside Mojang bounds.
-
 • **Manifest sanity** — UUID format, duplicates, required icons/marketing art, capability flags.
 
 Any failure raises a Python exception with file‑exact context; exit code 1 indicates “build failed.”
@@ -99,21 +80,21 @@ Any failure raises a Python exception with file‑exact context; exit code 1 i
 
 ## Extensibility
 
-Place new modules in `assets/python/` and inherit from core classes (`Entity`, `Block`, `Item`, …). Mixins and helper libraries are plain Python; Anvil introspects them automatically. Define post‑build hooks with `@anvil.hook` decorators when you need custom packaging logic.
+Place new modules in `assets/python/` and inherit from core classes (`Entity`, `Block`, `Item`, …). Mixins and helper libraries are plain Python; Anvil introspects them automatically.
 
 ---
 
 ## Packaging Targets
 
-Call `ANVIL.package_zip()` and set `target` in `anvilconfig.json`.
+Use `Anvil.compile(zip=True)` or call `anvil build --zip` and set `target` in `anvilconfig.json`.
 
 | Target  | Output                               |
 | ------- | ------------------------------------ |
 | `addon` | Marketplace‑ready addon ZIP.         |
 | `world` | Marketplace‑ready world template ZIP |
 
-Call `ANVIL.mcaddon()` to get a ready‑to‑use `.mcaddon` file, which is a ZIP containing both resource and behavior packs.
-Call `ANVIL.mcworld()` to get a ready‑to‑use `.mcworld` file, which is a ZIP containing the world template and its resource and behavior packs.
+Use `Anvil.compile(mcaddon=True)` or call `anvil build --mcaddon` to get a ready‑to‑use `.mcaddon` file.
+Use `Anvil.compile(mcworld=True)` or call `anvil build --mcworld` to get a ready‑to‑use `.mcworld` file.
 
 Icon/Marketing requirements differ per target; Anvil refuses to package until mandatory art exists.
 
@@ -121,23 +102,11 @@ Icon/Marketing requirements differ per target; Anvil refuses to package until ma
 
 ## Version Support & Performance
 
-- **Python ≥ 3.10** on **Windows 10/11** (Bedrock’s official dev OS).
+- **Python ≥ 3.13** on **Windows 10/11** (Bedrock’s official dev OS).
 - Always tracks the **latest Bedrock release**; back‑targets are intentionally unsupported.
-
----
-
-## Current Gaps
-
-Several new entity components and commands are stubbed; Contributions are welcome—open a PR.
-
----
-
-## Licence
-
-Anvil is released under **GPL v3**. No proprietary code, no bundled assets.
 
 ---
 
 ## Should You Use It?
 
-If you’re tired of JSON busy‑work and comfortable writing Python, yes. Anvil keeps you in a real programming language, auto‑validates Marketplace constraints, and ships in seconds. If you prefer visual node editors or must target old Bedrock versions, look elsewhere. Otherwise, `pip install mcanvil`, scaffold, script, run—done.
+If you’re tired of JSON busy‑work and comfortable writing Python, yes. Anvil keeps you in a real programming language, auto‑validates Marketplace constraints, and ships in seconds. Otherwise, `pip install mcanvil`, scaffold, script, build, publish.

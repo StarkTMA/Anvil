@@ -1,13 +1,10 @@
 import os
-from ast import List
 from dataclasses import dataclass
-from typing import Dict, Literal, overload
+from typing import Literal, overload
 
 from anvil.api.core.types import (
     RGB,
-    RGB255,
     RGBA,
-    RGBA255,
     Color,
     HexRGB,
     HexRGBA,
@@ -16,42 +13,8 @@ from anvil.api.core.types import (
 )
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG
-from anvil.lib.lib import Directory, clamp, convert_color
+from anvil.lib.lib import AnvilFormatter, AnvilValidator, Directory, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
-
-
-def _is_color_value(value) -> bool:
-    """
-    Check if a value is a color value (not a texture file name).
-    Returns True for RGB/RGBA tuples and hex color strings.
-    Returns False for texture file names (plain strings without # prefix).
-    """
-    if value is None:
-        return False
-
-    # Check for tuple types (RGB, RGBA)
-    if isinstance(value, tuple):
-        return True
-
-    # Check for hex color strings (start with #)
-    if isinstance(value, str) and value.startswith("#"):
-        return True
-
-    # Everything else (including plain strings) are treated as texture file names
-    return False
-
-
-def _is_texture_filename(value) -> bool:
-    """
-    Check if a value is a texture filename (not a color value).
-    Returns True for strings that don't start with # (texture file names).
-    Returns False for color values (tuples, hex strings, None).
-    """
-    if value is None:
-        return False
-
-    # Only plain strings (not starting with #) are texture filenames
-    return isinstance(value, str) and not value.startswith("#")
 
 
 @dataclass
@@ -124,19 +87,23 @@ class TextureSet(AddonObject):
                 "Metalness, emissive, roughness and subsurface textures are mutually exclusive."
             )
 
-        if _is_color_value(components.color):
-            color_map["color"] = convert_color(components.color, HexRGB)
-        if _is_color_value(components.normal):
-            color_map["normal"] = convert_color(components.normal, HexRGB)
-        if _is_color_value(components.height):
-            color_map["heightmap"] = convert_color(components.height, HexRGB)
-        if _is_color_value(components.mer):
-            color_map["metalness_emissive_roughness"] = convert_color(
+        if AnvilValidator.is_color_value(components.color):
+            color_map["color"] = AnvilFormatter.convert_color(components.color, HexRGB)
+        if AnvilValidator.is_color_value(components.normal):
+            color_map["normal"] = AnvilFormatter.convert_color(
+                components.normal, HexRGB
+            )
+        if AnvilValidator.is_color_value(components.height):
+            color_map["heightmap"] = AnvilFormatter.convert_color(
+                components.height, HexRGB
+            )
+        if AnvilValidator.is_color_value(components.mer):
+            color_map["metalness_emissive_roughness"] = AnvilFormatter.convert_color(
                 components.mer, HexRGB
             )
-        if _is_color_value(components.mers):
-            color_map["metalness_emissive_roughness_subsurface"] = convert_color(
-                components.mers, HexRGBA
+        if AnvilValidator.is_color_value(components.mers):
+            color_map["metalness_emissive_roughness_subsurface"] = (
+                AnvilFormatter.convert_color(components.mers, HexRGBA)
             )
 
         return color_map
@@ -159,7 +126,7 @@ class TextureSet(AddonObject):
                 f"Color texture file '{components.color}.png' does not exist in 'assets/{source}'. {self._object_type}[{self._name}]"
             )
 
-        if _is_texture_filename(components.normal):
+        if isinstance(components.normal, str) and not components.normal.startswith("#"):
             if not os.path.exists(
                 os.path.join("assets", source, f"{components.normal}.png")
             ):
@@ -171,7 +138,7 @@ class TextureSet(AddonObject):
                 components.normal
             )
 
-        if _is_texture_filename(components.height):
+        if isinstance(components.height, str) and not components.height.startswith("#"):
             if not os.path.exists(
                 os.path.join("assets", source, f"{components.height}.png")
             ):
@@ -183,7 +150,7 @@ class TextureSet(AddonObject):
                 components.height
             )
 
-        if _is_texture_filename(components.mer):
+        if isinstance(components.mer, str) and not components.mer.startswith("#"):
             if not os.path.exists(
                 os.path.join("assets", source, f"{components.mer}.png")
             ):
@@ -195,7 +162,7 @@ class TextureSet(AddonObject):
                 components.mer
             )
 
-        if _is_texture_filename(components.mers):
+        if isinstance(components.mers, str) and not components.mers.startswith("#"):
             if not os.path.exists(
                 os.path.join("assets", source, f"{components.mers}.png")
             ):
@@ -235,16 +202,16 @@ class TextureSet(AddonObject):
         self._blockbench = _Blockbench(blockbench_name, self._target)
         self._blockbench.textures.queue_texture(components.color)
         color_map["color"] = components.color
-        if _is_texture_filename(components.normal):
+        if isinstance(components.normal, str) and not components.normal.startswith("#"):
             self._blockbench.textures.queue_texture(components.normal)
             color_map["normal"] = components.normal
-        if _is_texture_filename(components.height):
+        if isinstance(components.height, str) and not components.height.startswith("#"):
             self._blockbench.textures.queue_texture(components.height)
             color_map["heightmap"] = components.height
-        if _is_texture_filename(components.mer):
+        if isinstance(components.mer, str) and not components.mer.startswith("#"):
             self._blockbench.textures.queue_texture(components.mer)
             color_map["metalness_emissive_roughness"] = components.mer
-        if _is_texture_filename(components.mers):
+        if isinstance(components.mers, str) and not components.mers.startswith("#"):
             self._blockbench.textures.queue_texture(components.mers)
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
 
@@ -695,7 +662,7 @@ class LightingSettings(AddonObject):
                     if type(sun_illuminance) is float
                     else KeyFrame.keyframe_dict(sun_illuminance)
                 ),
-                "color": convert_color(sun_color),
+                "color": AnvilFormatter.convert_color(sun_color),
             },
             "moon": {
                 "illuminance": (
@@ -703,7 +670,7 @@ class LightingSettings(AddonObject):
                     if type(moon_illuminance) is float
                     else KeyFrame.keyframe_dict(moon_illuminance)
                 ),
-                "color": convert_color(moon_color),
+                "color": AnvilFormatter.convert_color(moon_color),
             },
             "orbital_offset_degrees": orbital_offset_degrees,
         }
@@ -711,7 +678,7 @@ class LightingSettings(AddonObject):
     def flash_light(self, illuminance: float, color: RGB | HexRGB) -> None:
         self._content["minecraft:lighting_settings"]["directional_lights"]["flash"] = {
             "illuminance": illuminance,
-            "color": convert_color(color),
+            "color": AnvilFormatter.convert_color(color),
         }
 
     def emissive(self, desaturation: float) -> None:
@@ -722,7 +689,7 @@ class LightingSettings(AddonObject):
     def ambient(self, illuminance: float, color: RGB | HexRGB) -> None:
         self._content["minecraft:lighting_settings"]["ambient"] = {
             "illuminance": clamp(illuminance, 0.0, 5.0),
-            "color": convert_color(color),
+            "color": AnvilFormatter.convert_color(color),
         }
 
     def sky(self, intensity: float) -> None:
@@ -756,7 +723,7 @@ class LocalLighting(AddonObject):
         """
 
         self._content["minecraft:point_light_settings"][str(block_identifier)] = {
-            "light_color": convert_color(color, HexRGB),
+            "light_color": AnvilFormatter.convert_color(color, HexRGB),
             "light_type": "static_light",
         }
 
@@ -782,7 +749,9 @@ class PBRFallback(AddonObject):
             MERS (RGBA): The RGBA values representing the fallback MERS.
         """
         self._content["minecraft:pbr_fallback_settings"]["blocks"] = {
-            "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
+            "global_metalness_emissive_roughness_subsurface": AnvilFormatter.convert_color(
+                MERS
+            )
         }
 
     def actors_fallback(self, MERS: RGBA) -> None:
@@ -793,7 +762,9 @@ class PBRFallback(AddonObject):
             MERS (RGBA): The RGBA values representing the fallback MERS.
         """
         self._content["minecraft:pbr_fallback_settings"]["actors"] = {
-            "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
+            "global_metalness_emissive_roughness_subsurface": AnvilFormatter.convert_color(
+                MERS
+            )
         }
 
     def particles_fallback(self, MERS: RGBA) -> None:
@@ -804,7 +775,9 @@ class PBRFallback(AddonObject):
             MERS (RGBA): The RGBA values representing the fallback MERS.
         """
         self._content["minecraft:pbr_fallback_settings"]["particles"] = {
-            "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
+            "global_metalness_emissive_roughness_subsurface": AnvilFormatter.convert_color(
+                MERS
+            )
         }
 
     def items_fallback(self, MERS: RGBA) -> None:
@@ -815,7 +788,9 @@ class PBRFallback(AddonObject):
             MERS (RGBA): The RGBA values representing the fallback MERS.
         """
         self._content["minecraft:pbr_fallback_settings"]["items"] = {
-            "global_metalness_emissive_roughness_subsurface": convert_color(MERS)
+            "global_metalness_emissive_roughness_subsurface": AnvilFormatter.convert_color(
+                MERS
+            )
         }
 
 
