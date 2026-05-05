@@ -96,6 +96,12 @@
 
 ## 0.9.8
 
+### Molang
+
+- Fixed `deprecated` module import.
+
+## 0.9.8
+
 ### CLI
 
 - Added new build arguments:

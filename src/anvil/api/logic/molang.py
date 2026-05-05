@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import Optional, overload
 
-from deprecated import deprecated
+from warnings import deprecated
 
 from anvil.api.core.enums import InputModes, Slots
 from anvil.lib.config import CONFIG
@@ -3682,13 +3682,17 @@ class Math(Molang):
         )
 
 
-@deprecated("arrow_operator is deprecated and will be removed in a future version. Use `Molang.molang_arrow()` instead for better readability and maintainability.")
+@deprecated(
+    "arrow_operator is deprecated and will be removed in a future version. Use `Molang.molang_arrow()` instead for better readability and maintainability."
+)
 def arrow_operator(left: Molang, right: Molang) -> Molang:
     """Returns a Molang object representing the arrow operator for Molang."""
     return Molang(f"({left}) -> ({right})")
 
 
-@deprecated("molang_conditions is deprecated and will be removed in a future version. Use `Molang.molang_arrow()` instead for better readability and maintainability.")
+@deprecated(
+    "molang_conditions is deprecated and will be removed in a future version. Use `Molang.molang_arrow()` instead for better readability and maintainability."
+)
 def molang_conditions(
     condition: Molang, expression: Molang, expression2: Optional[Molang] = None
 ) -> Molang:
