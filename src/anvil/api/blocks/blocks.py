@@ -1,13 +1,13 @@
 import os
 from typing import Literal, Mapping
 
-from anvil.api.blocks.components import (
-    BlockDisplayName,
-    BlockGeometry,
-    BlockMaterialInstance,
-    TagComponent,
+from anvil.api.blocks.components import BlockDisplayName
+from anvil.api.core.components import (
+    PermutationGroup,
+    RootComponent,
+    component_block_visuals,
+    components_validations,
 )
-from anvil.api.core.components import _Components
 from anvil.api.core.core import ANVIL, SoundEvent
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
@@ -19,7 +19,6 @@ from anvil.api.core.enums import (
     PlacementPositionTrait,
 )
 from anvil.api.logic.molang import Molang
-from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
@@ -31,42 +30,6 @@ from anvil.lib.schemas import (
 from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["Block"]
-
-
-# Core
-class _PermutationComponents(_Components):
-    _count = 0
-
-    def __init__(self, condition: str | Molang = None):
-        """The permutation components.
-
-        Args:
-            condition (str | Molang, optional): The condition for the permutation.
-        """
-        super().__init__()
-        _PermutationComponents._count += 1
-        self._component_group_name = "components"
-        self._condition = condition
-
-    def tag(self, *tags: MinecraftBlockTags):
-        """The tags for the block.
-
-        Args:
-            *tags (MinecraftBlockTags): The tags for the block.
-
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
-        """
-        for tag in tags:
-            self._set(TagComponent(tag))
-
-        return self
-
-    def __export__(self):
-        cmp = super().__export__()
-        if self._condition:
-            cmp["condition"] = self._condition
-        return cmp
 
 
 class _BlockTraits:
@@ -98,6 +61,17 @@ class _BlockTraits:
             raise ValueError(
                 "blocks_to_corner_with can only be used if PlacementPositionTrait.CornerAndCardinal is in traits."
             )
+
+        if y_rotation_offset % 90 != 0:
+            raise ValueError("y_rotation_offset must be a multiple of 90.")
+        if not 360 >= y_rotation_offset >= 0:
+            raise ValueError("y_rotation_offset must be between 0 and 360.")
+
+        if blocks_to_corner_with:
+            if PlacementDirectionTrait.CornerAndCardinalDirection not in traits:
+                raise ValueError(
+                    "blocks_to_corner_with requires PlacementDirectionTrait.CornerAndCardinalDirection to be in traits."
+                )
 
         self._traits["minecraft:placement_direction"] = {
             "enabled_states": traits,
@@ -192,26 +166,24 @@ class _BlockServerDescription(MinecraftDescription):
 
     def menu_category(
         self,
-        category: ItemCategory = ItemCategory.none,
-        group: ItemGroups | str = ItemGroups.none,
+        category: ItemCategory,
+        group: ItemGroups | None = None,
         is_hidden_in_commands: bool = False,
     ):
         """Sets the menu category for the Block.
 
         Parameters:
-            category (ItemCategory, optional): The category of the Block. Defaults to ItemCategory.none.
-            group (str, optional): The group of the Block. Defaults to None.
+            category (ItemCategory): The category of the Block.
+            group (ItemGroups | None, optional): The group of the Block. Defaults to None.
             is_hidden_in_commands (bool, optional): Whether the Block is hidden in commands. Defaults to False.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
 
         """
-        self._description["description"]["menu_category"]["category"] = (
-            str(category) if category != ItemCategory.none else {}
-        )
+        self._description["description"]["menu_category"]["category"] = str(category)
         self._description["description"]["menu_category"]["group"] = (
-            str(group) if group != ItemGroups.none else {}
+            group if group else None
         )
         self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
             is_hidden_in_commands if is_hidden_in_commands else {}
@@ -232,7 +204,7 @@ class _BlockServerDescription(MinecraftDescription):
         return super().__export__()
 
 
-class _BlockServer(AddonObject):
+class BlockServer(AddonObject):
     """The block server object."""
 
     _extension = ".block.json"
@@ -249,8 +221,8 @@ class _BlockServer(AddonObject):
         super().__init__(name)
         self._server_block = JsonSchemes.server_block()
         self._description = _BlockServerDescription(name, is_vanilla)
-        self._components = _PermutationComponents(None)
-        self._permutations: list[_PermutationComponents] = []
+        self._components = PermutationGroup()
+        self._permutations: list[PermutationGroup] = []
 
     @property
     def description(self):
@@ -268,40 +240,37 @@ class _BlockServer(AddonObject):
         Parameters:
             condition (str | Molang): The condition for the permutation.
         """
-        self._permutation = _PermutationComponents(condition)
+        self._permutation = PermutationGroup(condition)
         self._permutations.append(self._permutation)
         return self._permutation
 
     def __export__(self):
         """Queues the block to be exported."""
+        components_validations(
+            self, self._components, self._permutations, is_block=True
+        )
+        component_block_visuals(self, self._components, self._permutations)
+
         self._server_block["minecraft:block"].update(self.description.__export__())
         self._server_block["minecraft:block"].update(self._components.__export__())
-        comps: dict = self._server_block["minecraft:block"]["components"]
         self._server_block["minecraft:block"]["permutations"] = [
             permutation.__export__() for permutation in self._permutations
         ]
 
-        if not BlockMaterialInstance._identifier in comps:
-            raise RuntimeError(
-                f"Block {self.identifier} missing default component. Block [{self.identifier}]"
-            )
-        if not BlockGeometry._identifier in comps:
-            raise RuntimeError(
-                f"Block {self.identifier} missing at least one geometry. Block [{self.identifier}]"
-            )
-        if (
-            not BlockDisplayName._identifier
-            in self._server_block["minecraft:block"]["components"]
-        ):
+        components = [
+            component.__component_identifier__() for component in self._components
+        ]
+
+        if not BlockDisplayName.__component_identifier__() in components:
             self._server_block["minecraft:block"]["components"][
-                BlockDisplayName._identifier
+                BlockDisplayName.__component_identifier__()
             ] = self._display_name
 
         self.content(self._server_block)
         super().__export__()
 
 
-class _BlockClient(AddonObject):
+class BlockClient(AddonObject):
     def __init__(self, name: str, is_vanilla: bool = False):
         super().__init__(name, is_vanilla)
 
@@ -353,8 +322,8 @@ class Block(MinecraftBlockDescriptor):
     def __init__(self, name, is_vanilla=False):
         super().__init__(name, is_vanilla)
 
-        self.server = _BlockServer(name, is_vanilla)
-        self.client = _BlockClient(name, is_vanilla)
+        self.server = BlockServer(name, is_vanilla)
+        self.client = BlockClient(name, is_vanilla)
 
         self._item = None
 
@@ -391,8 +360,11 @@ class Block(MinecraftBlockDescriptor):
         ANVIL.__queue__(self)
 
     def __export__(self):
+
+        from anvil.api.blocks.components import BlockDisplayName
+
         block_name_comp = self.server._server_block["minecraft:block"]["components"][
-            BlockDisplayName._identifier
+            BlockDisplayName.__component_identifier__()
         ]
         if block_name_comp.startswith("tile."):
             display_name = AnvilTranslator().get_localization_value(block_name_comp)

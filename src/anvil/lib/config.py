@@ -386,7 +386,7 @@ class _AnvilConfig:
                 self._instance = _AnvilConfig()
             return self._instance
 
-        def __getattr__(self, name: str):
+        def __getattr__(self, name: str) -> "_AnvilConfig":
             return getattr(self._resolve(), name)
 
         def __repr__(self) -> str:
@@ -396,4 +396,4 @@ class _AnvilConfig:
             return dir(self._resolve())
 
 
-CONFIG = _AnvilConfig._Proxy()
+CONFIG: "_AnvilConfig" = _AnvilConfig._Proxy()

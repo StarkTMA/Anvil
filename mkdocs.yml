@@ -4,129 +4,129 @@ site_author: StarkTMA
 site_url: https://anvil.starktma.net
 repo_url: https://github.com/StarkTMA/Anvil
 remote_branch: generated
-copyright: Copyright © 2025 StarkTMA
+copyright: Copyright © 2026 StarkTMA
 
 theme:
-  name: material
-  logo: assets/logo.png
-  favicon: assets/logo.ico
-  palette:
-    scheme: slate
-    primary: black
+    name: material
+    logo: assets/logo.png
+    favicon: assets/logo.ico
+    palette:
+        scheme: slate
+        primary: black
 
-  features:
-    - search.suggest
-    - navigation.tabs
-    - navigation.sections
-    - navigation.footer
-    - content.code.copy
+    features:
+        - search.suggest
+        - navigation.tabs
+        - navigation.sections
+        - navigation.footer
+        - content.code.copy
 
 extra:
-  homepage: https://starktma.net
-  generator: false
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/starktma
+    homepage: https://starktma.net
+    generator: false
+    social:
+        - icon: fontawesome/brands/github
+          link: https://github.com/starktma
 
-    - icon: fontawesome/brands/discord
-      link: https://discord.com/invite/qKsKWbB
+        - icon: fontawesome/brands/discord
+          link: https://discord.com/invite/qKsKWbB
 
-    - icon: fontawesome/brands/linkedin
-      link: https://linkedin.com/in/yasser-benfoughal
+        - icon: fontawesome/brands/linkedin
+          link: https://linkedin.com/in/yasser-benfoughal
 
-    - icon: fontawesome/brands/twitter
-      link: https://x.com/@starktma_
+        - icon: fontawesome/brands/twitter
+          link: https://x.com/@starktma_
 
 plugins:
-  - search
-  - autorefs
-  - mkdocstrings:
-      default_handler: python
-      handlers:
-        python:
-          options:
-            show_symbol_type_toc: true
-            show_symbol_type_heading: true
-            show_source: false
-            show_root_heading: true
-            inherited_members: true
+    - search
+    - autorefs
+    - mkdocstrings:
+          default_handler: python
+          handlers:
+              python:
+                  options:
+                      show_symbol_type_toc: true
+                      show_symbol_type_heading: true
+                      show_source: false
+                      show_root_heading: true
+                      inherited_members: true
 
 markdown_extensions:
-  - admonition
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
-  - pymdownx.details
+    - admonition
+    - pymdownx.highlight:
+          anchor_linenums: true
+          line_spans: __span
+          pygments_lang_class: true
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.superfences
+    - pymdownx.details
 
 nav:
-  - Home:
-      - Overview: index.md
-      - CLI Reference: guide/cli.md
-      - Anvil: anvil.md
-      - Config: guide/config.md
-      - Adding a Custom Entity: guide/adding_entity.md
-      - Adding a Custom Block: guide/adding_block.md
-      - Adding a Custom Item: guide/adding_item.md
-      - Custom Components: guide/custom_components.md
-      - Creating Trade Tables: guide/trade_tables.md
-      - Localization: guide/localization.md
-  - API Reference:
-      - Overview: api/index.md
-      - Actors:
-          - Overview: api/actors/index.md
-          - Actors: api/actors/actors.md
-          - Components: api/actors/components.md
-          - Materials: api/actors/materials.md
-          - Spawn Rules: api/actors/spawn_rules.md
-      - Logic:
-          - Overview: api/logic/index.md
-          - Molang: api/logic/molang.md
-      - Blocks:
-          - Overview: api/blocks/index.md
-          - Blocks: api/blocks/blocks.md
-          - Components: api/blocks/components.md
-      - Items:
-          - Overview: api/items/index.md
-          - Items: api/items/items.md
-          - Components: api/items/components.md
-          - Crafting: api/items/crafting.md
-      - PBR & Textures: guide/pbr.md
-      - World:
-          - Overview: api/world/index.md
-          - Using Jigsaw Structures: guide/using_jigsaw.md
-          - Adding a Custom Camera: guide/adding_camera.md
-          - Camera: api/world/camera.md
-          - Fog: api/world/fog.md
-          - Loot Tables: api/world/loot_tables.md
-          - Camera: api/core/camera.md
-          - Structures: api/world/structures.md
-          - Particles: api/world/particles.md
-      - Biomes:
-          - Overview: api/biomes/index.md
-      - UI:
-          - Overview: api/ui/index.md
-      - PBR:
-          - Overview: api/pbr/index.md
-      - Vanilla:
-          - Overview: api/vanilla/index.md
-          - Entities: api/vanilla/entities.md
-          - Items: api/vanilla/items.md
-      - Core Library:
-          - Overview: api/core/index.md
-          - Config: api/core/config.md
-          - Schemas: api/core/schemas.md
-          - Types: api/core/types.md
-          - Enums: api/core/enums.md
-          - Filters: api/core/filters.md
-          - Lib: api/core/lib.md
-          - Reports: api/core/reports.md
-          - Sounds: api/core/sounds.md
-          - Textures: api/core/textures.md
-          - Templater: api/core/templater.md
-          - Translator: api/core/translator.md
-          - Blockbench: api/core/blockbench.md
-          - Format Versions: api/core/format_versions.md
+    - Home:
+          - Overview: index.md
+          - CLI Reference: guide/cli.md
+          - Anvil: anvil.md
+          - Config: guide/config.md
+          - Adding a Custom Entity: guide/adding_entity.md
+          - Adding a Custom Block: guide/adding_block.md
+          - Adding a Custom Item: guide/adding_item.md
+          - Custom Components: guide/custom_components.md
+          - Creating Trade Tables: guide/trade_tables.md
+          - Localization: guide/localization.md
+    - API Reference:
+          - Overview: api/index.md
+          - Actors:
+                - Overview: api/actors/index.md
+                - Actors: api/actors/actors.md
+                - Components: api/actors/components.md
+                - Materials: api/actors/materials.md
+                - Spawn Rules: api/actors/spawn_rules.md
+          - Logic:
+                - Overview: api/logic/index.md
+                - Molang: api/logic/molang.md
+          - Blocks:
+                - Overview: api/blocks/index.md
+                - Blocks: api/blocks/blocks.md
+                - Components: api/blocks/components.md
+          - Items:
+                - Overview: api/items/index.md
+                - Items: api/items/items.md
+                - Components: api/items/components.md
+                - Crafting: api/items/crafting.md
+          - PBR & Textures: guide/pbr.md
+          - World:
+                - Overview: api/world/index.md
+                - Using Jigsaw Structures: guide/using_jigsaw.md
+                - Adding a Custom Camera: guide/adding_camera.md
+                - Camera: api/world/camera.md
+                - Fog: api/world/fog.md
+                - Loot Tables: api/world/loot_tables.md
+                - Camera: api/core/camera.md
+                - Structures: api/world/structures.md
+                - Particles: api/world/particles.md
+          - Biomes:
+                - Overview: api/biomes/index.md
+          - UI:
+                - Overview: api/ui/index.md
+          - PBR:
+                - Overview: api/pbr/index.md
+          - Vanilla:
+                - Overview: api/vanilla/index.md
+                - Entities: api/vanilla/entities.md
+                - Items: api/vanilla/items.md
+          - Core Library:
+                - Overview: api/core/index.md
+                - Config: api/core/config.md
+                - Schemas: api/core/schemas.md
+                - Types: api/core/types.md
+                - Enums: api/core/enums.md
+                - Filters: api/core/filters.md
+                - Lib: api/core/lib.md
+                - Reports: api/core/reports.md
+                - Sounds: api/core/sounds.md
+                - Textures: api/core/textures.md
+                - Templater: api/core/templater.md
+                - Translator: api/core/translator.md
+                - Blockbench: api/core/blockbench.md
+                - Format Versions: api/core/format_versions.md

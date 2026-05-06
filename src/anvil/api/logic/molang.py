@@ -3366,7 +3366,6 @@ class Query(Molang):
         """
         return self.__query__(self, self.handle, "get_level_seed_based_fraction")
 
-
 class Context(Query):
     handle = "context"
 

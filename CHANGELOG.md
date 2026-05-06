@@ -100,9 +100,52 @@
 
 ### Anvil
 
-- Fixed github workflows executing on linux.
+- Dropped the following libraries: numpy, pygithub, halo, pandas.
+- Updated format versions.
+- Improved component clashes and dependency validation.
+
+### Actors
+
+- Updated entity component scheme.
+- Added `on_pickup_item_start` and `on_pickup_item_end` to `EntityAIPickupItems`.
+- Added `EntityOnEquipmentChanged`, `EntitySpawnOnDeath` Components.
+- Added `EntityAirDragModifier`, `EntityUseUniformAirDrag`, `EntityApplyKnockbackRules` Components. Require Experimental toggle.
+- Refactored `EntityAIFollowTargetCaptain` to `EntityAIFollowTargetLead`.
+- Updated `EntityKnockbackResistance`, ``
+- Added `has_same_equipment_in_slot_as` filter.
+
+### Blocks
+
+- Added validation for placement_direction `y_rotation_offset`.
+- Block tags have been completely changed, now requiring the use of `BlockTagComponent` with a new format. Anvil will handle old code using the permutation tag method so no immediate changes are need, but that will be removed in `v1.0`. Updating the code is advised.
+- Added `BlockChestObstruction` component.
+
+#### Items
+
+- Added new sulfur item tags.
+
+### Features
+
+- Added `embed_in_surface` to `SnapToSurfaceFeature` feature.
+- Added `rotate_around_center` to `StructureTemplateFeature` feature.
+- Feature can now be used in `JigsawStructureTemplatePool`.
+
+#### Vanilla
+
+- Added `SulfurCaves` biome type under the experimental flag.
+- Added `SulfurCube` entity type under the experimental flag.
+- Added `ChiseledCinnabar`, `ChiseledSulfur`, `Cinnabar`, `CinnabarBrickSlab`, `CinnabarBrickStairs`, `CinnabarBrickWall`, `CinnabarBricks`, `CinnabarSlab`, `CinnabarStairs`, `CinnabarWall`, `PolishedCinnabar`, `PolishedCinnabarSlab`, `PolishedCinnabarStairs`,`PolishedSulfur`, `PolishedSulfurSlab`, `PolishedSulfurStairs`, `PolishedSulfurWall`, `PotentSulfur`, `Sulfur`, `SulfurBrickSlab`, `SulfurBrickWall`, `SulfurBricks`, `SulfurCubeBucket`, `SulfurCubeSpawnEgg`, `SulfurSlab`, `SulfurStairs` items under the experimental flag.
+
+#### Biomes
+
+- Added `BiomeSubSurfaceBuilder` biome component. Details are virtually non existent on the component, until further information can be found, the component inherits from `BiomeSurfaceBuilder`.
+- Added `BiomeNoiseGradient` component. Note: The `noise_descriptor` field is completely undocumented on the learning portal.
 
 ## 0.9.8.1
+
+### Anvil
+
+- Fixed github workflows executing on linux.
 
 ### Molang
 
@@ -1230,7 +1273,7 @@
 ### Blocks
 
 - Added `BlockFace` and `VerticalHalf` block states.
-- Removed `_BlockClient()` class.
+- Removed `BlockClient()` class.
 - Added `traits` property to blocks server description.
 - Added the following enums: `PlacementDirectionTrait`, `PlacementPositionTrait`, `CardinalDirections`, `FacingDirections`, `BlockFaces`, `VerticalHalf`.
 - Renamed `property` keys to `state`.

@@ -1,5 +1,6 @@
 from math import inf
 from typing import Dict, Literal, Tuple, overload
+from warnings import deprecated
 
 from anvil.api.actors.actors import ItemTexturesObject
 from anvil.api.core.components import Component
@@ -71,7 +72,7 @@ class ItemKineticWeapon(Component):
         """
         super().__init__("kinetic_weapon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
-        self._require_components(ItemUseModifiers)
+        self._dependencies = [ItemUseModifiers]
 
         if reach:
             self._add_field("reach", AnvilFormatter.min_max_dict(reach, "reach"))
@@ -299,7 +300,7 @@ class ItemDamageAbsorption(Component):
         """
         super().__init__("damage_absorption")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.111")
-        self._require_components(ItemDurability)
+        self._dependencies = [ItemDurability]
 
         if not absorbable_causes:
             raise ValueError("absorbable_causes must have at least 1 item")
@@ -320,7 +321,7 @@ class ItemDurabilitySensor(Component):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor
         """
         super().__init__("durability_sensor")
-        self._require_components(ItemDurability)
+        self._dependencies = [ItemDurability]
         self._add_field("durability_thresholds", [])
 
     def add_threshold(
@@ -455,7 +456,7 @@ class ItemBundleInteraction(Component):
         """
         super().__init__("bundle_interaction")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.30")
-        self._require_components(ItemStorageItem, ItemMaxStackSize)
+        self._dependencies = [ItemStorageItem, ItemMaxStackSize]
 
         self._add_field("num_viewable_slots", clamp(num_viewable_slots, 1, 64))
 
@@ -569,7 +570,7 @@ class ItemFood(Component):
         """
         super().__init__("food")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
-        self._require_components(ItemUseModifiers)
+        self._dependencies = [ItemUseModifiers]
 
         self._add_field("effects", [])
         self._add_field("can_always_eat", can_always_eat)
@@ -578,6 +579,7 @@ class ItemFood(Component):
         if using_converts_to:
             self._add_field("using_converts_to", str(using_converts_to))
 
+    @deprecated("This method is deprecated and will be removed in a future version.")
     def effects(
         self,
         effect: MinecraftEffects,
@@ -942,7 +944,7 @@ class ItemBlockPlacer(Component):
     def __init__(
         self,
         block: MinecraftItemDescriptor | Identifier,
-        replace_block_item: bool = False,
+        replace_block_item: bool = True,
         aligned_placement: bool = False,
         use_on: list[MinecraftBlockDescriptor | Identifier | str] = None,
     ) -> None:

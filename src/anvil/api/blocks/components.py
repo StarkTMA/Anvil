@@ -6,8 +6,6 @@ from typing import Dict, List, Literal, Optional, Union, overload
 from anvil.api.core.components import Component, List
 from anvil.api.core.core import TerrainTexturesObject
 from anvil.api.core.enums import (
-    _CARDINAL_FACES,
-    BlockCardinalConnection,
     BlockFaces,
     BlockLiquidDetectionTouching,
     BlockMaterial,
@@ -86,6 +84,9 @@ class MaterialParams:
                 raise ValueError("alpha_masked_tint requires render_method = Opaque")
         if self.emissive:
             enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
+        if self.ambient_occlusion:
+            if not (0.0 <= self.ambient_occlusion <= 1.0):
+                raise ValueError("ambient_occlusion must be between 0.0 and 1.0.")
 
 
 @dataclass(kw_only=True)
@@ -132,33 +133,12 @@ class InstanceSpec:
         return self.variations[index].color
 
 
-
-class TagComponent(Component):
-    """Represents a block tag component.
-
-    Handles the creation and management of Minecraft block tags
-    with associated dependencies and clashes.
-    """
-
-    _object_type = "Block Tag Component"
-    _identifier = "minecraft:tag"
-
-    def __init__(self, tag: MinecraftBlockTags):
-        """Initializes the block tag component.
-
-        Args:
-            tag (MinecraftBlockTags): The block tag to be added as a component.
-        """
-        super().__init__(f"tag:{tag.value}", False)
-        self._set_value({})
-
-
 class BlockMaterialInstance(Component):
     _identifier = "minecraft:material_instances"
 
     def __init__(self) -> None:
         super().__init__("material_instances")
-        self._require_components(BlockGeometry)
+        self._dependencies = [BlockGeometry]
         self._parsed_textures: Dict[str, List[str]] = {}
 
     def add_instance(
@@ -248,6 +228,8 @@ class BlockFlowerPottable(Component):
         """
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
         super().__init__("flower_pottable")
+        self._allowed_in_group = False
+        self._dependencies = [BlockGeometry, BlockMaterialInstance]
 
 
 class BlockEmbeddedVisual(Component):
@@ -550,6 +532,10 @@ class BlockLightDampening(Component):
             light_dampening (int, optional): The amount of light dampening. Defaults to 15.
         """
         super().__init__("light_dampening")
+        if not isinstance(light_dampening, int):
+            raise ValueError("light_dampening must be an integer.")
+        if not 0 <= light_dampening <= 15:
+            raise ValueError("light_dampening must be between 0 and 15.")
         self._set_value(clamp(light_dampening, 0, 15))
 
 
@@ -562,6 +548,10 @@ class BlockLightEmission(Component):
         Parameters:
             light_emission (int, optional): The amount of light emission. Defaults to 0.
         """
+        if not isinstance(light_emission, int):
+            raise ValueError("light_emission must be an integer.")
+        if not 0 <= light_emission <= 15:
+            raise ValueError("light_emission must be between 0 and 15.")
         super().__init__("light_emission")
         self._set_value(clamp(light_emission, 0, 15))
 
@@ -647,7 +637,7 @@ class BlockGeometry(Component):
             self._add_field("identifier", "minecraft:geometry.full_block")
 
         else:
-            self._require_components(BlockMaterialInstance)
+            self._dependencies = [BlockMaterialInstance]
             geometry_name = blockbench_geometry_name(blockbench_name, collection)
             self._add_field(
                 "identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"
@@ -757,6 +747,11 @@ class BlockSelectionBox(Component):
         if size == (0, 0, 0):
             self._set_value(False)
         else:
+            if not all(isinstance(i, (int, float)) for i in size):
+                raise ValueError("All elements in size must be numbers.")
+            if not all(0 <= i <= 16 for i in size):
+                raise ValueError("All elements in size must be between 0 and 16.")
+
             self._add_field("size", size)
             self._add_field("origin", origin)
 
@@ -1161,3 +1156,63 @@ class BlockLeashable(Component):
         """
         super().__init__("leashable")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.0")
+
+
+class BlockTagComponent(Component):
+    _identifier = "minecraft:tag"
+
+    def __init__(self, tags: list[MinecraftBlockTags | str]) -> None:
+        """Indicates that this block can be leashed by a lead.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_tag
+        """
+        super().__init__("tag")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.20")
+        new_tags = []
+        for tag in tags:
+
+            if isinstance(tag, MinecraftBlockTags):
+                tag = tag.value
+            elif isinstance(tag, str):
+                if not tag.startswith(CONFIG.NAMESPACE):
+                    raise ValueError(
+                        f"Tag '{tag}' must start with the namespace '{CONFIG.NAMESPACE}'."
+                    )
+                if len(tag) > 16:
+                    raise ValueError("Tag must be less than 16 characters.")
+            else:
+                raise ValueError("Tag must be a string.")
+
+            new_tags.append(tag)
+
+        self._set_value(new_tags)
+
+
+class BlockChestObstruction(Component):
+    _identifier = "minecraft:chest_obstruction"
+
+    def __init__(
+        self,
+        obstruction_rule: Literal["always", "never", "shape"] = "shape",
+    ) -> None:
+        """Defines how this block obstructs a chest directly below it from opening.
+
+        Parameters:
+            obstruction_rule (Literal["always", "never", "shape"], optional): How the block should be evaluated by a chest during chest opening.
+                - "always": Will always obstruct a chest from opening when directly above it.
+                - "never": Will never obstruct a chest from opening when directly above it.
+                - "shape": Will use the block's AABB shape to determine if the chest is obstructed..
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_chest_obstruction
+        """
+        super().__init__("chest_obstruction")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.20")
+
+        if obstruction_rule not in ("always", "never", "shape"):
+            raise ValueError(
+                "obstruction_rule must be one of: 'always', 'never', 'shape'."
+            )
+        if obstruction_rule != "shape":
+            self._add_field("obstruction_rule", obstruction_rule)

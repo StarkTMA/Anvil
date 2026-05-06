@@ -1,4 +1,5 @@
 from enum import StrEnum
+from anvil import CONFIG
 
 
 class MinecraftBiomeTypes(StrEnum):
@@ -89,6 +90,8 @@ class MinecraftBiomeTypes(StrEnum):
     TheEnd = "minecraft:the_end"
     WarmOcean = "minecraft:warm_ocean"
     WarpedForest = "minecraft:warped_forest"
+    if CONFIG._EXPERIMENTAL:
+        SulfurCaves = "minecraft:sulfur_caves"
 
 
 class MinecraftBiomeTags(StrEnum):

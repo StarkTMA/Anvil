@@ -20,6 +20,8 @@ from packaging.version import Version
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 from anvil.lib.format_versions import MANIFEST_BUILD
 
+from functools import wraps
+
 from ..__version__ import __version__
 
 if os.name != "nt":
@@ -27,8 +29,8 @@ if os.name != "nt":
         "Anvil is only supported on Windows due to its reliance on Minecraft Bedrock's file structure and APIs."
     )
 
-USERPORFILE: str = os.getenv("USERPROFILE", os.path.expanduser("~"))
-APPDATA: str = os.getenv("APPDATA", os.path.join(USERPORFILE, "AppData", "Roaming"))
+USERPROFILE: str = os.getenv("USERPROFILE", os.path.expanduser("~"))
+APPDATA: str = os.getenv("APPDATA", os.path.join(USERPROFILE, "AppData", "Roaming"))
 
 RELEASE_COM_MOJANG = os.path.join(
     APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang"
@@ -37,7 +39,7 @@ PREVIEW_COM_MOJANG = os.path.join(
     APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang"
 )
 
-DESKTOP: str = os.path.join(USERPORFILE, "Desktop")
+DESKTOP: str = os.path.join(USERPROFILE, "Desktop")
 IMAGE_EXTENSIONS_PRIORITY = [".tga", ".png", ".jpg", ".jpeg"]
 
 
@@ -909,3 +911,22 @@ def extract_ids_from_factory_class(cls) -> set[str]:
             continue
         ids.update(m.group(1) for m in _IDENT_RE.finditer(src))
     return ids
+
+
+def experimental(func):
+    """
+    Decorator that ensures a function is only executed
+    if the CONFIG._EXPERIMENTAL flag is enabled.
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        from anvil.lib.config import CONFIG
+
+        if not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                f"{func.__name__} requires experimental features to be enabled in the config."
+            )
+        return func(*args, **kwargs)
+
+    return wrapper

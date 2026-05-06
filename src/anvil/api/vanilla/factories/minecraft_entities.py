@@ -1,3 +1,5 @@
+from anvil.lib.config import CONFIG
+from anvil.lib.lib import experimental
 from anvil.lib.schemas import MinecraftEntityDescriptor
 
 
@@ -387,6 +389,11 @@ def Stray() -> MinecraftEntityDescriptor:
 
 def Strider() -> MinecraftEntityDescriptor:
     return MinecraftEntityDescriptor("minecraft:strider", True)
+
+
+@experimental
+def SulfurCube() -> MinecraftEntityDescriptor:
+    return MinecraftEntityDescriptor("minecraft:sulfur_cube", True)
 
 
 def Tadpole() -> MinecraftEntityDescriptor:

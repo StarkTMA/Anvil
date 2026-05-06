@@ -1153,6 +1153,7 @@ class SnapToSurfaceFeature(Feature):
         allowed_surface_blocks: (
             list[MinecraftBlockDescriptor | Identifier] | None
         ) = None,
+        embed_in_surface: bool = False,
     ):
         """Snaps the y-value of a feature placement position to the floor or ceiling within the provided vertical search range.
 
@@ -1170,6 +1171,7 @@ class SnapToSurfaceFeature(Feature):
                 allowed.
             allowed_surface_blocks (list[MinecraftBlockDescriptor | Identifier] | None):
                 Optional block reference array limiting valid surfaces.
+            embed_in_surface (bool): Allows specifying whether the snapped feature should be embedded in the located surface
 
         ## Documentation reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsnap_to_surface_feature
@@ -1184,6 +1186,9 @@ class SnapToSurfaceFeature(Feature):
 
         if allowed_surface_blocks is not None:
             self.allowed_surface_blocks(allowed_surface_blocks)
+
+        if embed_in_surface:
+            feature_content["embed_in_surface"] = embed_in_surface
 
     def allowed_surface_blocks(
         self, blocks: list[MinecraftBlockDescriptor | Identifier]
@@ -1210,6 +1215,7 @@ class StructureTemplateFeature(Feature):
         facing_direction: (
             Literal["north", "south", "east", "west", "random"] | None
         ) = None,
+        rotate_around_center: bool = False,
     ):
         """Places a structure in the world.
 
@@ -1223,7 +1229,7 @@ class StructureTemplateFeature(Feature):
                 placement.
             facing_direction (Literal["north", "south", "east", "west", "random"] | None): Optional facing
                 direction for the structure.
-
+            rotate_around_center (bool, optional): If true, the structure will be rotated around its center. Defaults to False.
         ## Documentation reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftstructure_template_feature
         """
@@ -1237,6 +1243,9 @@ class StructureTemplateFeature(Feature):
         if facing_direction is not None:
             feature_content["facing_direction"] = facing_direction
 
+        if rotate_around_center:
+            feature_content["rotate_around_center"] = rotate_around_center
+            
     def grounded(self):
         """Adds the grounded constraint object."""
         self._content[self._feature_name].setdefault("constraints", {})["grounded"] = {}

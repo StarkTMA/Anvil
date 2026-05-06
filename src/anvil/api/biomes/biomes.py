@@ -1,7 +1,7 @@
 import os
 from typing import Literal
 
-from anvil.api.actors.actors import _Components
+from anvil.api.actors.actors import RootComponent
 from anvil.api.core.enums import MusicCategory, SoundCategory
 from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
 from anvil.api.core.types import RGB, Color, Identifier
@@ -14,7 +14,7 @@ from anvil.api.pbr.pbr import (
 )
 from anvil.api.world.fog import Fog
 from anvil.lib.config import CONFIG, ConfigPackageTarget
-from anvil.lib.lib import clamp, convert_color
+from anvil.lib.lib import AnvilFormatter, clamp
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
     AddonObject,
@@ -23,8 +23,10 @@ from anvil.lib.schemas import (
     MinecraftDescription,
 )
 
+__all__ = ["Biome"]
 
-class _BiomeDescription(MinecraftDescription):
+
+class BiomeDescription(MinecraftDescription):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """The biome description.
 
@@ -35,7 +37,7 @@ class _BiomeDescription(MinecraftDescription):
         super().__init__(name, is_vanilla)
 
 
-class _BiomeServer(AddonObject):
+class BiomeServer(AddonObject):
     """The biome server object."""
 
     _extension = ".biome.json"
@@ -51,8 +53,8 @@ class _BiomeServer(AddonObject):
         """
         super().__init__(name)
         self.content(JsonSchemes.biome_server())
-        self._description = _BiomeDescription(name, is_vanilla)
-        self._components = _Components()
+        self._description = BiomeDescription(name, is_vanilla)
+        self._components = RootComponent()
 
     @property
     def description(self):
@@ -73,7 +75,7 @@ class _BiomeServer(AddonObject):
         super().queue()
 
 
-class _BiomeClient(AddonObject):
+class BiomeClient(AddonObject):
     """The biome client object."""
 
     _extension = ".biome.json"
@@ -83,7 +85,7 @@ class _BiomeClient(AddonObject):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         super().__init__(name)
         self.content(JsonSchemes.biome_client())
-        self._description = _BiomeDescription(name, is_vanilla)
+        self._description = BiomeDescription(name, is_vanilla)
 
     def ambient_sounds(
         self,
@@ -207,7 +209,7 @@ class _BiomeClient(AddonObject):
         """
         self._content["minecraft:client_biome"]["components"][
             "minecraft:dry_foliage_color"
-        ] = {"color": convert_color(color, RGB)}
+        ] = {"color": AnvilFormatter.convert_color(color, RGB)}
 
     def fog_appearance(self, fog: str | Fog):
         """
@@ -237,7 +239,7 @@ class _BiomeClient(AddonObject):
         """
         self._content["minecraft:client_biome"]["components"][
             "minecraft:foliage_appearance"
-        ] = {"color": convert_color(color, RGB)}
+        ] = {"color": AnvilFormatter.convert_color(color, RGB)}
 
     def grass_appearance(self, color: RGB):
         """Set the grass color or color map used during rendering. Biomes without this component will have default grass appearance.
@@ -250,7 +252,7 @@ class _BiomeClient(AddonObject):
 
         self._content["minecraft:client_biome"]["components"][
             "minecraft:grass_appearance"
-        ] = {"color": convert_color(color, RGB)}
+        ] = {"color": AnvilFormatter.convert_color(color, RGB)}
 
     def lighting_identifier(self, lighting_identifier: LightingSettings) -> None:
         """Set the identifier used for lighting in Vibrant Visuals mode. Identifiers must resolve to identifiers in valid Lighting JSON schemas under the "lighting" directory. Biomes without this component will have default lighting settings.
@@ -308,7 +310,7 @@ class _BiomeClient(AddonObject):
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_sky_color)
         """
         self._content["minecraft:client_biome"]["components"]["minecraft:sky_color"] = {
-            "sky_color": convert_color(color, RGB)
+            "sky_color": AnvilFormatter.convert_color(color, RGB)
         }
 
     def water_appearance(self, surface_color: Color, surface_opacity: float = 0.8):
@@ -325,7 +327,7 @@ class _BiomeClient(AddonObject):
         self._content["minecraft:client_biome"]["components"][
             "minecraft:water_appearance"
         ] = {
-            "surface_color": convert_color(surface_color, RGB),
+            "surface_color": AnvilFormatter.convert_color(surface_color, RGB),
             "surface_opacity": clamp(surface_opacity, 0, 1),
         }
 
@@ -387,13 +389,13 @@ class Biome(MinecraftBiomeDescriptor):
     @property
     def server(self):
         if self._server is None:
-            self._server = _BiomeServer(self._name, self._is_vanilla)
+            self._server = BiomeServer(self._name, self._is_vanilla)
         return self._server
 
     @property
     def client(self):
         if self._client is None:
-            self._client = _BiomeClient(self._name, self._is_vanilla)
+            self._client = BiomeClient(self._name, self._is_vanilla)
         return self._client
 
     def queue(self):

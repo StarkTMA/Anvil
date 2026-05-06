@@ -7,6 +7,7 @@ from anvil.api.core.enums import (
     FilterOperation,
     FilterSubject,
     PlayerAbilities,
+    Slots,
     Weather,
 )
 from anvil.api.core.types import Identifier
@@ -2247,3 +2248,34 @@ class Filter:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_tamed
         """
         return Filter("is_tamed", subject, operator, None, value)
+
+    @classmethod
+    def has_same_equipment_in_slot_as(
+        cls,
+        slot: Slots,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        """Returns true if the subject entity has the same equipment in the specified slot as the caller.
+
+        Parameters:
+            slot (Slots): The equipment slot to compare (e.g., Slots.Head, Slots.Chest, Slots.Legs, Slots.Feet, Slots.Mainhand, Slots.Offhand)
+            subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
+            operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
+
+        Returns:
+            dict: Filter testing for matching equipment
+
+        """
+        if slot not in [
+            Slots.Head,
+            Slots.Chest,
+            Slots.Legs,
+            Slots.Feet,
+            Slots.Mainhand,
+            Slots.Offhand,
+        ]:
+            raise ValueError("Slot must be a valid equipment slot")
+
+        return Filter("has_same_equipment_in_slot_as", subject, operator, slot)

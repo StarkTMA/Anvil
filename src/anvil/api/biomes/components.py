@@ -6,7 +6,7 @@ from anvil.api.core.enums import Dimension
 from anvil.api.core.types import Color, HexRGB
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.format_versions import BIOME_SERVER_VERSION
-from anvil.lib.lib import convert_color
+from anvil.lib.lib import AnvilFormatter
 from anvil.lib.schemas import MinecraftBlockDescriptor
 
 BiomeNoiseType = Literal[
@@ -26,6 +26,288 @@ BiomeNoiseType = Literal[
     "swamp",
     "taiga",
 ]
+
+BiomeNoiseGradientBuilderType = Literal[
+    "minecraft:capped",
+    "minecraft:frozen_ocean",
+    "minecraft:mesa",
+    "minecraft:noise_gradient",
+    "minecraft:overworld",
+    "minecraft:swamp",
+    "minecraft:the_end",
+]
+
+
+class _BaseBiomeSurfaceBuilder(Component):
+    def _validate_materials(self, materials: list[MinecraftBlockDescriptor]):
+        for material in materials:
+            if not isinstance(material, MinecraftBlockDescriptor):
+                raise ValueError(
+                    "All materials must be MinecraftBlockDescriptor instances"
+                )
+
+    def _validate_sea_floor_depth(self, sea_floor_depth: int = None):
+        if sea_floor_depth is not None:
+            if not isinstance(sea_floor_depth, int):
+                raise ValueError("Sea floor depth must be an integer")
+            if sea_floor_depth > 127:
+                raise ValueError("Sea floor depth must be <= 127")
+
+    def set_overworld_builder(
+        self,
+        foundation_material: MinecraftBlockDescriptor,
+        mid_material: MinecraftBlockDescriptor,
+        sea_floor_material: MinecraftBlockDescriptor,
+        sea_material: MinecraftBlockDescriptor,
+        top_material: MinecraftBlockDescriptor,
+        sea_floor_depth: int = None,
+    ):
+        """Controls the blocks used for the default Minecraft Overworld terrain generation."""
+        self._validate_materials(
+            [
+                foundation_material,
+                mid_material,
+                top_material,
+                sea_floor_material,
+                sea_material,
+            ]
+        )
+        self._validate_sea_floor_depth(sea_floor_depth)
+
+        builder = {
+            "type": "minecraft:overworld",
+            "foundation_material": foundation_material,
+            "mid_material": mid_material,
+            "top_material": top_material,
+            "sea_floor_material": sea_floor_material,
+            "sea_material": sea_material,
+        }
+        if sea_floor_depth is not None:
+            builder["sea_floor_depth"] = sea_floor_depth
+
+        self._add_field("builder", builder)
+        return self
+
+    def set_frozen_ocean_builder(
+        self,
+        foundation_material: MinecraftBlockDescriptor,
+        mid_material: MinecraftBlockDescriptor,
+        sea_floor_material: MinecraftBlockDescriptor,
+        sea_material: MinecraftBlockDescriptor,
+        top_material: MinecraftBlockDescriptor,
+        sea_floor_depth: int = None,
+    ):
+        """Similar to overworld_surface. Adds icebergs."""
+        self._validate_materials(
+            [
+                foundation_material,
+                mid_material,
+                top_material,
+                sea_floor_material,
+                sea_material,
+            ]
+        )
+        self._validate_sea_floor_depth(sea_floor_depth)
+
+        builder = {
+            "type": "minecraft:frozen_ocean",
+            "foundation_material": foundation_material,
+            "mid_material": mid_material,
+            "top_material": top_material,
+            "sea_floor_material": sea_floor_material,
+            "sea_material": sea_material,
+        }
+        if sea_floor_depth is not None:
+            builder["sea_floor_depth"] = sea_floor_depth
+
+        self._add_field("builder", builder)
+        return self
+
+    def set_mesa_builder(
+        self,
+        clay_material: MinecraftBlockDescriptor,
+        foundation_material: MinecraftBlockDescriptor,
+        hard_clay_material: MinecraftBlockDescriptor,
+        mid_material: MinecraftBlockDescriptor,
+        sea_floor_material: MinecraftBlockDescriptor,
+        sea_material: MinecraftBlockDescriptor,
+        top_material: MinecraftBlockDescriptor,
+        bryce_pillars: bool = None,
+        has_forest: bool = None,
+        sea_floor_depth: int = None,
+    ):
+        """Similar to overworld_surface. Adds colored strata and optional pillars."""
+        self._validate_materials(
+            [
+                foundation_material,
+                mid_material,
+                top_material,
+                sea_floor_material,
+                sea_material,
+                clay_material,
+                hard_clay_material,
+            ]
+        )
+        self._validate_sea_floor_depth(sea_floor_depth)
+
+        if bryce_pillars is not None and not isinstance(bryce_pillars, bool):
+            raise ValueError("Bryce pillars must be a boolean")
+        if has_forest is not None and not isinstance(has_forest, bool):
+            raise ValueError("Has forest must be a boolean")
+
+        builder = {
+            "type": "minecraft:mesa",
+            "foundation_material": foundation_material,
+            "mid_material": mid_material,
+            "top_material": top_material,
+            "sea_floor_material": sea_floor_material,
+            "sea_material": sea_material,
+            "clay_material": clay_material,
+            "hard_clay_material": hard_clay_material,
+        }
+        if bryce_pillars is not None:
+            builder["bryce_pillars"] = bryce_pillars
+        if has_forest is not None:
+            builder["has_forest"] = has_forest
+        if sea_floor_depth is not None:
+            builder["sea_floor_depth"] = sea_floor_depth
+
+        self._add_field("builder", builder)
+        return self
+
+    def set_swamp_builder(
+        self,
+        foundation_material: MinecraftBlockDescriptor,
+        mid_material: MinecraftBlockDescriptor,
+        sea_floor_material: MinecraftBlockDescriptor,
+        sea_material: MinecraftBlockDescriptor,
+        top_material: MinecraftBlockDescriptor,
+        sea_floor_depth: int = None,
+        max_puddle_depth_below_sea_level: int = None,
+    ):
+        """Used to add decoration to the surface of swamp biomes such as water lilies."""
+        self._validate_materials(
+            [
+                foundation_material,
+                mid_material,
+                top_material,
+                sea_floor_material,
+                sea_material,
+            ]
+        )
+        self._validate_sea_floor_depth(sea_floor_depth)
+
+        if max_puddle_depth_below_sea_level is not None:
+            if not isinstance(max_puddle_depth_below_sea_level, int):
+                raise ValueError("Max puddle depth below sea level must be an integer")
+            if max_puddle_depth_below_sea_level > 127:
+                raise ValueError("Max puddle depth below sea level must be <= 127")
+
+        builder = {
+            "type": "minecraft:swamp",
+            "foundation_material": foundation_material,
+            "mid_material": mid_material,
+            "top_material": top_material,
+            "sea_floor_material": sea_floor_material,
+            "sea_material": sea_material,
+        }
+        if sea_floor_depth is not None:
+            builder["sea_floor_depth"] = sea_floor_depth
+        if max_puddle_depth_below_sea_level is not None:
+            builder["max_puddle_depth_below_sea_level"] = (
+                max_puddle_depth_below_sea_level
+            )
+
+        self._add_field("builder", builder)
+        return self
+
+    def set_capped_builder(
+        self,
+        beach_material: MinecraftBlockDescriptor,
+        ceiling_materials: list[MinecraftBlockDescriptor],
+        floor_materials: list[MinecraftBlockDescriptor],
+        foundation_material: MinecraftBlockDescriptor,
+        sea_material: MinecraftBlockDescriptor,
+    ):
+        """Generates surface on blocks with non-solid blocks above or below."""
+        if not isinstance(ceiling_materials, list) or len(ceiling_materials) < 1:
+            raise ValueError("Ceiling materials must be a list with at least 1 item")
+        if not isinstance(floor_materials, list) or len(floor_materials) < 1:
+            raise ValueError("Floor materials must be a list with at least 1 item")
+        self._validate_materials(
+            [
+                foundation_material,
+                sea_material,
+                beach_material,
+                *ceiling_materials,
+                *floor_materials,
+            ]
+        )
+
+        builder = {
+            "type": "minecraft:capped",
+            "foundation_material": foundation_material,
+            "sea_material": sea_material,
+            "beach_material": beach_material,
+            "ceiling_materials": [material for material in ceiling_materials],
+            "floor_materials": [material for material in floor_materials],
+        }
+        self._add_field("builder", builder)
+        return self
+
+    def set_end_builder(self):
+        """Use default Minecraft End terrain generation."""
+        self._add_field("builder", {"type": "minecraft:the_end"})
+        return self
+
+    def set_noise_gradient_builder(
+        self,
+        noise_block_specifiers: list[dict],
+        noise_descriptor: dict = None,
+        non_replaceable_blocks: list[MinecraftBlockDescriptor] = None,
+    ):
+        """Places continuous bands of blocks according to a noise distribution.
+
+        Parameters:
+            noise_block_specifiers (list[dict]): The noise block specifiers defining which ranges
+                of noise are associated with which blocks. Each dict should contain 'noise_range'
+                (a [min, max] pair valid on [0, 1]) and 'block' (a MinecraftBlockDescriptor).
+                Must have at least 1 item.
+            noise_descriptor (dict, optional): The specification for the noise used by the
+                surface builder. Defaults to None.
+            non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks that the
+                surface builder is not allowed to replace. Defaults to None.
+        """
+        if (
+            not isinstance(noise_block_specifiers, list)
+            or len(noise_block_specifiers) < 1
+        ):
+            raise ValueError(
+                "noise_block_specifiers must be a list with at least 1 item"
+            )
+
+        builder = {
+            "type": "minecraft:noise_gradient",
+            "noise_block_specifiers": noise_block_specifiers,
+        }
+
+        if noise_descriptor is not None:
+            if not isinstance(noise_descriptor, dict):
+                raise ValueError("noise_descriptor must be a dictionary")
+            builder["noise_descriptor"] = noise_descriptor
+
+        if non_replaceable_blocks is not None:
+            if not isinstance(non_replaceable_blocks, list):
+                raise ValueError("non_replaceable_blocks must be a list")
+            for block in non_replaceable_blocks:
+                if not isinstance(block, MinecraftBlockDescriptor):
+                    raise ValueError(
+                        "All non_replaceable_blocks must be MinecraftBlockDescriptor instances"
+                    )
+            builder["non_replaceable_blocks"] = non_replaceable_blocks
+
+        self._add_field("builder", builder)
+        return self
 
 
 class BiomeClimate(Component):
@@ -130,7 +412,7 @@ class BiomeMapTints(Component):
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
 
         if foliage is not None:
-            self._add_field("foliage", convert_color(foliage, HexRGB))
+            self._add_field("foliage", AnvilFormatter.convert_color(foliage, HexRGB))
 
         if grass is not None:
             if not isinstance(grass, dict):
@@ -456,7 +738,7 @@ class BiomeSurfaceMaterialAdjustments(Component):
         return self
 
 
-class BiomeSurfaceBuilder(Component):
+class BiomeSurfaceBuilder(_BaseBiomeSurfaceBuilder):
     _identifier = "minecraft:surface_builder"
 
     def __init__(self):
@@ -468,304 +750,113 @@ class BiomeSurfaceBuilder(Component):
         super().__init__("surface_builder")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
 
-    def set_overworld_builder(
-        self,
-        foundation_material: MinecraftBlockDescriptor,
-        mid_material: MinecraftBlockDescriptor,
-        sea_floor_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-        top_material: MinecraftBlockDescriptor,
-        sea_floor_depth: int = None,
-    ):
-        """Controls the blocks used for the default Minecraft Overworld terrain generation.
+
+class BiomeSubSurfaceBuilder(_BaseBiomeSurfaceBuilder):
+    _identifier = "minecraft:subsurface_builder"
+
+    def __init__(self):
+        """Allow specifying a minecraft:surface_builder to be applied to biomes located underneath regular terrain surface.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_subsurface_builder
+        """
+        super().__init__("subsurface_builder")
+        self._enforce_version(BIOME_SERVER_VERSION, "1.26.20")
+
+
+class BiomeNoiseGradient(Component):
+    _identifier = "minecraft:noise_gradient"
+
+    def __init__(self):
+        """Places continuous bands of blocks according to a noise distribution.
+        This surface builder's processing has been implemented with sub-terrain height ranges in mind.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_noise_gradient
+        """
+        super().__init__("noise_gradient")
+        self._enforce_version(BIOME_SERVER_VERSION, "1.26.20")
+        self._noise_block_specifiers = []
+
+    def noise_type(self, builder_type: BiomeNoiseGradientBuilderType):
+        """Sets the builder type for this noise gradient component.
 
         Parameters:
-            foundation_material (MinecraftBlockDescriptor): Controls the block type used deep underground in this biome.
-            mid_material (MinecraftBlockDescriptor): Controls the block type used in a layer below the surface of this biome.
-            top_material (MinecraftBlockDescriptor): Controls the block type used for the surface of this biome.
-            sea_floor_material (MinecraftBlockDescriptor): Controls the block type used as a floor for bodies of water in this biome.
-            sea_material (MinecraftBlockDescriptor): Controls the block type used for the bodies of water in this biome.
-            sea_floor_depth (int, optional): Controls how deep below the world water level the floor should occur. Value must be <= 127. Defaults to None.
+            builder_type (BiomeNoiseGradientBuilderType): The type of builder to use.
         """
-
-        for material in [
-            foundation_material,
-            mid_material,
-            top_material,
-            sea_floor_material,
-            sea_material,
-        ]:
-            if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
-
-        if sea_floor_depth is not None:
-            if not isinstance(sea_floor_depth, int):
-                raise ValueError("Sea floor depth must be an integer")
-            if sea_floor_depth > 127:
-                raise ValueError("Sea floor depth must be <= 127")
-
-        builder = {
-            "type": "minecraft:overworld",
-            "foundation_material": foundation_material,
-            "mid_material": mid_material,
-            "top_material": top_material,
-            "sea_floor_material": sea_floor_material,
-            "sea_material": sea_material,
-        }
-
-        if sea_floor_depth is not None:
-            builder["sea_floor_depth"] = sea_floor_depth
-
-        self._add_field("builder", builder)
+        valid_types = [
+            "minecraft:capped",
+            "minecraft:frozen_ocean",
+            "minecraft:mesa",
+            "minecraft:noise_gradient",
+            "minecraft:overworld",
+            "minecraft:swamp",
+            "minecraft:the_end",
+        ]
+        if builder_type not in valid_types:
+            raise ValueError(f"Builder type must be one of: {valid_types}")
+        self._add_field("type", builder_type)
         return self
 
-    def set_frozen_ocean_builder(
+    def noise_block_specifier(
         self,
-        foundation_material: MinecraftBlockDescriptor,
-        mid_material: MinecraftBlockDescriptor,
-        sea_floor_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-        top_material: MinecraftBlockDescriptor,
-        sea_floor_depth: int = None,
+        noise_range: tuple[float, float],
+        block: MinecraftBlockDescriptor,
     ):
-        """Similar to overworld_surface. Adds icebergs.
+        """Add a noise block specifier associating a noise range with a block.
+        The ranges provided are valid on the interval [0, 1] and may overlap at their endpoints.
+        At least 1 specifier is required.
 
         Parameters:
-            foundation_material (MinecraftBlockDescriptor): Controls the block type used deep underground in this biome.
-            mid_material (MinecraftBlockDescriptor): Controls the block type used in a layer below the surface of this biome.
-            top_material (MinecraftBlockDescriptor): Controls the block type used for the surface of this biome.
-            sea_floor_material (MinecraftBlockDescriptor): Controls the block type used as a floor for bodies of water in this biome.
-            sea_material (MinecraftBlockDescriptor): Controls the block type used for the bodies of water in this biome.
-            sea_floor_depth (int, optional): Controls how deep below the world water level the floor should occur. Value must be <= 127. Defaults to None.
+            noise_range (tuple[float, float]): The [min, max] noise range valid on [0.0, 1.0].
+            block (MinecraftBlockDescriptor): The block to place within this noise range.
         """
-        for material in [
-            foundation_material,
-            mid_material,
-            top_material,
-            sea_floor_material,
-            sea_material,
-        ]:
-            if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+        if (
+            not isinstance(noise_range, (list, tuple))
+            or len(noise_range) != 2
+            or any(not isinstance(v, (int, float)) for v in noise_range)
+        ):
+            raise ValueError("noise_range must be a list or tuple of two numbers")
+        for val in noise_range:
+            if not (0.0 <= val <= 1.0):
+                raise ValueError("noise_range values must be in [0.0, 1.0]")
+        if not isinstance(block, MinecraftBlockDescriptor):
+            raise ValueError("block must be a MinecraftBlockDescriptor instance")
 
-        if sea_floor_depth is not None:
-            if not isinstance(sea_floor_depth, int):
-                raise ValueError("Sea floor depth must be an integer")
-            if sea_floor_depth > 127:
-                raise ValueError("Sea floor depth must be <= 127")
-
-        builder = {
-            "type": "minecraft:frozen_ocean",
-            "foundation_material": foundation_material,
-            "mid_material": mid_material,
-            "top_material": top_material,
-            "sea_floor_material": sea_floor_material,
-            "sea_material": sea_material,
-        }
-
-        if sea_floor_depth is not None:
-            builder["sea_floor_depth"] = sea_floor_depth
-
-        self._add_field("builder", builder)
+        self._noise_block_specifiers.append(
+            {"noise_range": list(noise_range), "block": block}
+        )
+        self._add_field("noise_block_specifiers", self._noise_block_specifiers)
         return self
 
-    def set_mesa_builder(
-        self,
-        clay_material: MinecraftBlockDescriptor,
-        foundation_material: MinecraftBlockDescriptor,
-        hard_clay_material: MinecraftBlockDescriptor,
-        mid_material: MinecraftBlockDescriptor,
-        sea_floor_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-        top_material: MinecraftBlockDescriptor,
-        bryce_pillars: bool = None,
-        has_forest: bool = None,
-        sea_floor_depth: int = None,
-    ):
-        """Similar to overworld_surface. Adds colored strata and optional pillars.
+    def noise_descriptor(self, noise_descriptor: dict):
+        """Set the noise descriptor specification for the surface builder.
 
         Parameters:
-            foundation_material (MinecraftBlockDescriptor): Controls the block type used deep underground in this biome.
-            mid_material (MinecraftBlockDescriptor): Controls the block type used in a layer below the surface of this biome.
-            top_material (MinecraftBlockDescriptor): Controls the block type used for the surface of this biome.
-            sea_floor_material (MinecraftBlockDescriptor): Controls the block type used as a floor for bodies of water in this biome.
-            sea_material (MinecraftBlockDescriptor): Controls the block type used for the bodies of water in this biome.
-            clay_material (MinecraftBlockDescriptor): Base clay block to use.
-            hard_clay_material (MinecraftBlockDescriptor): Hardened clay block to use.
-            bryce_pillars (bool, optional): Whether the mesa generates with pillars. Defaults to None.
-            has_forest (bool, optional): Places coarse dirt and grass at high altitudes. Defaults to None.
-            sea_floor_depth (int, optional): Controls how deep below the world water level the floor should occur. Value must be <= 127. Defaults to None.
+            noise_descriptor (dict): The specification for the noise used by the surface builder.
         """
-        for material in [
-            foundation_material,
-            mid_material,
-            top_material,
-            sea_floor_material,
-            sea_material,
-            clay_material,
-            hard_clay_material,
-        ]:
-            if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
-
-        if bryce_pillars is not None and not isinstance(bryce_pillars, bool):
-            raise ValueError("Bryce pillars must be a boolean")
-
-        if has_forest is not None and not isinstance(has_forest, bool):
-            raise ValueError("Has forest must be a boolean")
-
-        if sea_floor_depth is not None:
-            if not isinstance(sea_floor_depth, int):
-                raise ValueError("Sea floor depth must be an integer")
-            if sea_floor_depth > 127:
-                raise ValueError("Sea floor depth must be <= 127")
-
-        builder = {
-            "type": "minecraft:mesa",
-            "foundation_material": foundation_material,
-            "mid_material": mid_material,
-            "top_material": top_material,
-            "sea_floor_material": sea_floor_material,
-            "sea_material": sea_material,
-            "clay_material": clay_material,
-            "hard_clay_material": hard_clay_material,
-        }
-
-        if bryce_pillars is not None:
-            builder["bryce_pillars"] = bryce_pillars
-
-        if has_forest is not None:
-            builder["has_forest"] = has_forest
-
-        if sea_floor_depth is not None:
-            builder["sea_floor_depth"] = sea_floor_depth
-
-        self._add_field("builder", builder)
+        if not isinstance(noise_descriptor, dict):
+            raise ValueError("noise_descriptor must be a dictionary")
+        self._add_field("noise_descriptor", noise_descriptor)
         return self
 
-    def set_swamp_builder(
-        self,
-        foundation_material: MinecraftBlockDescriptor,
-        mid_material: MinecraftBlockDescriptor,
-        sea_floor_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-        top_material: MinecraftBlockDescriptor,
-        sea_floor_depth: int = None,
-        max_puddle_depth_below_sea_level: int = None,
-    ):
-        """Used to add decoration to the surface of swamp biomes such as water lilies.
+    def non_replaceable_block(self, blocks: list[MinecraftBlockDescriptor]):
+        """Add a block to the list of blocks that the surface builder is not allowed to replace.
+        Leaving this list empty allows replacement of any non-air block.
 
         Parameters:
-            foundation_material (MinecraftBlockDescriptor): Controls the block type used deep underground in this biome.
-            mid_material (MinecraftBlockDescriptor): Controls the block type used in a layer below the surface of this biome.
-            top_material (MinecraftBlockDescriptor): Controls the block type used for the surface of this biome.
-            sea_floor_material (MinecraftBlockDescriptor): Controls the block type used as a floor for bodies of water in this biome.
-            sea_material (MinecraftBlockDescriptor): Controls the block type used for the bodies of water in this biome.
-            sea_floor_depth (int, optional): Controls how deep below the world water level the floor should occur. Value must be <= 127. Defaults to None.
-            max_puddle_depth_below_sea_level (int, optional): Controls the depth at which surface level blocks can be replaced with water for puddles. The number represents the number of blocks (0, 127) below sea level that we will go down to look for a surface block. Value must be <= 127. Defaults to None.
+            blocks (list[MinecraftBlockDescriptor]): The blocks to prevent replacement of.
         """
-        for material in [
-            foundation_material,
-            mid_material,
-            top_material,
-            sea_floor_material,
-            sea_material,
-        ]:
-            if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
-
-        if sea_floor_depth is not None:
-            if not isinstance(sea_floor_depth, int):
-                raise ValueError("Sea floor depth must be an integer")
-            if sea_floor_depth > 127:
-                raise ValueError("Sea floor depth must be <= 127")
-
-        if max_puddle_depth_below_sea_level is not None:
-            if not isinstance(max_puddle_depth_below_sea_level, int):
-                raise ValueError("Max puddle depth below sea level must be an integer")
-            if max_puddle_depth_below_sea_level > 127:
-                raise ValueError("Max puddle depth below sea level must be <= 127")
-
-        builder = {
-            "type": "minecraft:swamp",
-            "foundation_material": foundation_material,
-            "mid_material": mid_material,
-            "top_material": top_material,
-            "sea_floor_material": sea_floor_material,
-            "sea_material": sea_material,
-        }
-
-        if sea_floor_depth is not None:
-            builder["sea_floor_depth"] = sea_floor_depth
-
-        if max_puddle_depth_below_sea_level is not None:
-            builder["max_puddle_depth_below_sea_level"] = (
-                max_puddle_depth_below_sea_level
+        if not isinstance(blocks, list):
+            raise ValueError(
+                "blocks must be a list of MinecraftBlockDescriptor instances"
+            )
+        if not all(isinstance(block, MinecraftBlockDescriptor) for block in blocks):
+            raise ValueError(
+                "All elements in blocks must be MinecraftBlockDescriptor instances"
             )
 
-        self._add_field("builder", builder)
-        return self
-
-    def set_capped_builder(
-        self,
-        beach_material: MinecraftBlockDescriptor,
-        ceiling_materials: list[MinecraftBlockDescriptor],
-        floor_materials: list[MinecraftBlockDescriptor],
-        foundation_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-    ):
-        """Generates surface on blocks with non-solid blocks above or below.
-
-        Parameters:
-            foundation_material (MinecraftBlockDescriptor): Material used to replace solid blocks that are not surface blocks.
-            sea_material (MinecraftBlockDescriptor): Material used to replace air blocks below sea level.
-            beach_material (MinecraftBlockDescriptor): Material used to decorate surface near sea level.
-            ceiling_materials (list[MinecraftBlockDescriptor]): Materials used for the surface ceiling. Value must have at least 1 items.
-            floor_materials (list[MinecraftBlockDescriptor]): Materials used for the surface floor. Value must have at least 1 items.
-        """
-        for material in [foundation_material, sea_material, beach_material]:
-            if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
-
-        if not isinstance(ceiling_materials, list) or len(ceiling_materials) < 1:
-            raise ValueError("Ceiling materials must be a list with at least 1 item")
-
-        if not isinstance(floor_materials, list) or len(floor_materials) < 1:
-            raise ValueError("Floor materials must be a list with at least 1 item")
-
-        for material in ceiling_materials + floor_materials:
-            if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
-
-        builder = {
-            "type": "minecraft:capped",
-            "foundation_material": foundation_material,
-            "sea_material": sea_material,
-            "beach_material": beach_material,
-            "ceiling_materials": [material for material in ceiling_materials],
-            "floor_materials": [material for material in floor_materials],
-        }
-
-        self._add_field("builder", builder)
-        return self
-
-    def set_end_builder(self):
-        """Use default Minecraft End terrain generation."""
-        builder = {"type": "minecraft:the_end"}
-
-        self._add_field("builder", builder)
+        self._add_field("non_replaceable_blocks", blocks)
         return self
 
 

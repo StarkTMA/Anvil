@@ -4,7 +4,6 @@ import os
 import amulet
 from amulet.api.block import Block as amuletBlock
 from amulet.api.block import StringTag
-from halo import Halo
 
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.lib.config import CONFIG
@@ -164,13 +163,16 @@ class LDtk:
         self._collect_level_data()
         # self._dump_dictionary()
 
-    @Halo(text="Converting LDtk world", spinner="dots")
     def convert(
         self,
         plane: str = "yz",
         offset: tuple[float, float, float] = (0, 0, 0),
         export_entities: bool = True,
     ):
+        import click
+
+        click.echo(click.style(f"\\r[INFO]: Converting LDtk world...", fg="cyan"))
+
         def map_coordinates(level_origin, x, y, layer):
             if plane in ["yx", "xy"]:
                 return (

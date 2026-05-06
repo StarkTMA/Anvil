@@ -11,7 +11,11 @@ from anvil.api.actors.components import (
     EntityRideable,
 )
 from anvil.api.actors._spawn_rules import SpawnRule
-from anvil.api.core.components import _Components, ComponentGroup
+from anvil.api.core.components import (
+    RootComponent,
+    ComponentGroup,
+    components_validations,
+)
 from anvil.api.core.core import ANVIL, SoundDefinition, SoundEvent
 from anvil.api.core.enums import DamageSensor
 from anvil.api.core.sounds import EntitySoundEvent, SoundCategory
@@ -906,7 +910,7 @@ class _EntityServer(AddonObject):
         self._animation_controllers = BPAnimationControllers(self.identifier)
         self._animations = BPAnimations(self.identifier)
         self._spawn_rule = SpawnRule(self.name, self._is_vanilla)
-        self._components = _Components()
+        self._components = RootComponent()
         self._events: dict[str, _Event] = {}
         self._component_groups: list[ComponentGroup] = []
         self._vars = []
@@ -1007,7 +1011,7 @@ class _EntityServer(AddonObject):
             component_group_name (str): The name of the component group.
 
         """
-        self._component_groups.append(_Components(group_name=component_group_name))
+        self._component_groups.append(RootComponent(group_name=component_group_name))
         return self._component_groups[-1]
 
     def add_basic_components(self):
@@ -1075,6 +1079,8 @@ class _EntityServer(AddonObject):
         self._animations.queue(directory=self._directory)
         self._animation_controllers.queue(directory=self._directory)
         self._spawn_rule.queue(directory=self._directory)
+
+        components_validations(self, self._components, self._component_groups)
 
         self._server_entity["minecraft:entity"].update(self.description.__export__())
         self._server_entity["minecraft:entity"]["components"].update(

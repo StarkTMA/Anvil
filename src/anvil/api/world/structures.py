@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal, Tuple
 from anvil.api.core.core import ANVIL
 from anvil.api.core.filters import Filter
 from anvil.api.core.types import Identifier
+from anvil.api.features.features import Feature
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import Directory, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
@@ -618,11 +619,12 @@ class JigsawStructureTemplatePool(AddonObject):
         super().__init__(name)  # "structure_template_pool"
         self.content(JsonSchemes.jigsaw_template_pools(self.identifier, fallback))
         self._structures: list[Structure] = []
+        self._features: list[Feature] = []
         self._processors: list[_JigsawStructureProcess] = []
 
     def add_structure_element(
         self,
-        structure: Structure | str | None,
+        structure: Structure | Feature | str | None,
         processors: str | _JigsawStructureProcess | None = None,
         weight: int = 1,
         projection: Literal["rigid", "terrain_matching"] = "rigid",
@@ -630,13 +632,15 @@ class JigsawStructureTemplatePool(AddonObject):
         """Adds a structure to the template pool.
 
         Parameters:
-            structure (str | Structure | None): The structure to add to the pool.
+            structure (str | Structure | Feature | None): The structure to add to the pool.
             weight (int, optional): The weight of the structure. Defaults to 1.
             processors (str | _JigsawStructureProcess | None, optional): The processors for the structure. Defaults to None.
             projection (Literal["minecraft:rigid", "minecraft:terrain_matching"], optional): The projection type. Defaults to "minecraft:rigid".
         """
-        if not isinstance(structure, (Structure, str, type(None))):
-            raise TypeError("structure must be an instance of Structure or str")
+        if not isinstance(structure, (Structure, Feature, str, type(None))):
+            raise TypeError(
+                "structure must be an instance of Structure, Feature, or str"
+            )
 
         if not isinstance(processors, (str, _JigsawStructureProcess, type(None))):
             raise TypeError(
@@ -646,6 +650,9 @@ class JigsawStructureTemplatePool(AddonObject):
         if isinstance(structure, str):
             structure = Structure(structure)
             self._structures.append(structure)
+        elif isinstance(structure, Feature):
+            structure = structure
+            self._features.append(structure)
 
         processors_obj: _JigsawStructureProcess | None = None
 
@@ -657,15 +664,22 @@ class JigsawStructureTemplatePool(AddonObject):
         if not processors_obj is None:
             self._processors.append(processors_obj)
 
+        element_type = "minecraft:empty_pool_element"
+
+        reference = None
+
+        if structure and isinstance(structure, Structure):
+            element_type = "minecraft:single_pool_element"
+            reference = structure.reference
+        elif structure and isinstance(structure, Feature):
+            element_type = "minecraft:feature_pool_element"
+            reference = structure.identifier
+
         self._content["minecraft:template_pool"]["elements"].append(
             {
                 "element": {
-                    "element_type": (
-                        "minecraft:single_pool_element"
-                        if structure
-                        else "minecraft:empty_pool_element"
-                    ),
-                    "location": structure.reference if structure else None,
+                    "element_type": element_type,
+                    "location": reference,
                     "processors": processors_obj.identifier if processors_obj else None,
                     "projection": projection if projection else None,
                 },
@@ -680,6 +694,8 @@ class JigsawStructureTemplatePool(AddonObject):
             processor.queue()
         for structure in self._structures:
             structure.queue()
+        for feature in self._features:
+            feature.queue()
         super().queue()
 
 

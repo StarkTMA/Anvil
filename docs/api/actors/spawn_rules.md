@@ -1,3 +1,3 @@
 # Actors - Spawn Rules Module
 
-::: anvil.api.actors.spawn_rules
+::: anvil.api.actors._spawn_rules

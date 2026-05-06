@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 
 MANIFEST_VERSION: int = 3
-MANIFEST_BUILD: str = "1.26.10"
+MANIFEST_BUILD: str = "1.26.20"
 MANIFEST_BUILD_PREVIEW: str = "1.26.20"
 
 # ---------------------------------------------------------------------------
@@ -49,10 +49,12 @@ DIALOGUE_VERSION: str = "1.18.0"
 # Script API module versions
 # ---------------------------------------------------------------------------
 
-MODULE_MINECRAFT_SERVER: str = "2.6.0"
-MODULE_MINECRAFT_SERVER_UI: str = "2.0.0"
+MODULE_MINECRAFT_SERVER: str = "2.7.0"
 MODULE_MINECRAFT_SERVER_PREVIEW: str = "2.8.0-beta"
+
+MODULE_MINECRAFT_SERVER_UI: str = "2.0.0"
 MODULE_MINECRAFT_SERVER_UI_PREVIEW: str = "2.1.0-beta"
+
 MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"
 MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"
 MODULE_MINECRAFT_SERVER_GRAPHICS: str = "1.0.0-beta"

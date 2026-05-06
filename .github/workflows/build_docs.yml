@@ -41,7 +41,6 @@ jobs:
                   path: .cache
                   restore-keys: |
                       mkdocs-material-
-            - run: pip install mkdocs-material
-            - run: pip install "mkdocstrings[python]"
+            - run: pip install "mkdocs<2" mkdocs-material "mkdocstrings[python]"
             - run: echo "anvil.starktma.net" > docs/CNAME
             - run: mkdocs gh-deploy --force

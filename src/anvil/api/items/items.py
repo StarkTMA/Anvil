@@ -1,7 +1,7 @@
 import os
 
 from anvil.api.core.core import ANVIL
-from anvil.api.core.components import _Components
+from anvil.api.core.components import RootComponent, components_validations
 from anvil.api.actors.actors import Attachable
 from anvil.api.core.enums import ItemCategory, ItemGroups
 from anvil.api.items.components import ItemDisplayName
@@ -26,8 +26,8 @@ class _ItemServerDescription(MinecraftDescription):
 
     def menu_category(
         self,
-        category: ItemCategory = ItemCategory.none,
-        group: ItemGroups | str = ItemGroups.none,
+        category: ItemCategory,
+        group: ItemGroups | None = None,
         is_hidden_in_commands: bool = False,
     ):
         """Sets the menu category for the item.
@@ -41,12 +41,8 @@ class _ItemServerDescription(MinecraftDescription):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemdefinition?view=minecraft-bedrock-stable
 
         """
-        self._description["description"]["menu_category"]["category"] = (
-            str(category) if category != ItemCategory.none else {}
-        )
-        self._description["description"]["menu_category"]["group"] = (
-            str(group) if group != ItemGroups.none else {}
-        )
+        self._description["description"]["menu_category"]["category"] = category
+        self._description["description"]["menu_category"]["group"] = group
         self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
             is_hidden_in_commands if is_hidden_in_commands else {}
         )
@@ -65,7 +61,7 @@ class _ItemServer(AddonObject):
         super().__init__(name)
         self._server_item = JsonSchemes.server_item()
         self._description = _ItemServerDescription(name, is_vanilla)
-        self._components = _Components()
+        self._components = RootComponent()
 
     @property
     def description(self):
@@ -76,6 +72,8 @@ class _ItemServer(AddonObject):
         return self._components
 
     def __export__(self):
+        components_validations(self, self._components, [])
+
         from anvil.api.items.components import ItemDisplayName
 
         self._server_item["minecraft:item"].update(self.description.__export__())

@@ -36,7 +36,7 @@ from anvil.api.logic.molang import Query
 from anvil.api.pbr.pbr import TextureComponents
 from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.kit.actors.components import ItemCustomProjectile
-from anvil.lib.lib import Color, clamp, convert_color
+from anvil.lib.lib import Color, clamp, AnvilFormatter
 
 # ========================== Utility Functions ===============================
 
@@ -216,7 +216,7 @@ class Splash(PotionVariant):
     ) -> None:
         """Setup splash projectile event."""
         event_name = f"{config.effect_key}_splash_{index}"
-        red, green, blue, alpha = convert_color(config.color_hex, RGBA)
+        red, green, blue, alpha = AnvilFormatter.convert_color(config.color_hex, RGBA)
         event = projectile.server.event(event_name)
 
         properties = {
@@ -270,7 +270,7 @@ class Lingering(PotionVariant):
         """Setup lingering projectile event."""
         event_name = f"{config.effect_key}_lingering_{index}"
         cloud_duration = int(self.duration)
-        red, green, blue, alpha = convert_color(config.color_hex, RGBA)
+        red, green, blue, alpha = AnvilFormatter.convert_color(config.color_hex, RGBA)
         event = projectile.server.event(event_name)
 
         properties = {
@@ -373,7 +373,9 @@ class PotionAPI:
                 super().__init__(self._identifier)
                 self._add_field("amplifier", clamp(amplifier, 0.0, 255.0))
                 self._add_field("duration", duration)
-                self._add_field("potion_color", convert_color(potion_color, RGBA))
+                self._add_field(
+                    "potion_color", AnvilFormatter.convert_color(potion_color, RGBA)
+                )
 
         cls._component_cache[effect_key] = DynamicPotionEffect
         return DynamicPotionEffect

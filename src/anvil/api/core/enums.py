@@ -329,6 +329,7 @@ class Population(StrEnum):
 class PlacementDirectionTrait(StrEnum):
     CardinalDirection = "minecraft:cardinal_direction"  # North, South, East, West
     FacingDirection = "minecraft:facing_direction"  # Up, Down, North, South, East, West
+    CornerAndCardinalDirection = "minecraft:corner_and_cardinal_direction"  # North, South, East, West, Northeast, Northwest, Southeast, Southwest
 
 
 class PlacementPositionTrait(StrEnum):
@@ -466,7 +467,6 @@ class ItemCategory(StrEnum):
     Equipment = "equipment"
     Items = "items"
     Nature = "nature"
-    none = "none"
 
 
 class ItemGroups(StrEnum):
@@ -549,7 +549,6 @@ class ItemGroups(StrEnum):
     Wood = "minecraft:itemGroup.name.wood"
     Wool = "minecraft:itemGroup.name.wool"
     WoolCarpet = "minecraft:itemGroup.name.woolCarpet"
-    none = "None"
 
 
 class Weather(StrEnum):
@@ -996,6 +995,7 @@ class DamageSensor(StrEnum):
     Yes = "yes"
     No = "no"
     NoButSideEffectsApply = "no_but_side_effects_apply"
+    NoButEntityEffectsApply = "no_but_entity_effects_apply"
 
 
 class LineOfSightObstructionType(StrEnum):

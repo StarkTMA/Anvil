@@ -1,5 +1,5 @@
 import math
-from typing import Any
+from typing import Any, Literal
 
 from anvil.api.blocks.components import LootTable
 from anvil.api.core.components import (
@@ -32,7 +32,7 @@ from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.api.world.trade_tables import TradeTable
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
-from anvil.lib.lib import AnvilFormatter, clamp
+from anvil.lib.lib import AnvilFormatter, clamp, experimental
 from anvil.lib.schemas import (
     MinecraftBlockDescriptor,
     MinecraftEntityDescriptor,
@@ -62,7 +62,7 @@ class EntityAddRider(Component):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_addrider
         """
         super().__init__("addrider")
-        # self._require_components(EntityRideable)
+        # self._dependencies = [EntityRideable]
         self._add_field(
             "riders", [{"entity_type": entity_type, "spawn_event": spawn_event}]
         )
@@ -216,13 +216,13 @@ class EntityKnockbackResistance(Component):
         """Determines an entity's resistance to knockback from melee attacks. A value of 0.0 means no resistance, while 1.0 provides full immunity to knockback (like iron golems).
 
         Parameters:
-            value (float): The amount of knockback resistance, from 0.0 (none) to 1.0 (full immunity).
+            value (float): The amount of knockback resistance, from -2.0 to 1.0 (full immunity).
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_knockback_resistance
         """
         super().__init__("knockback_resistance")
-        self._add_field("value", max(0, min(1, value)))
+        self._add_field("value", clamp(value, -2.0, 1.0))
 
 
 class EntityPushableByBlock(Component):
@@ -7131,6 +7131,202 @@ class EntityVibrationListener(Component):
         super().__init__("vibration_listener")
 
 
+class EntityUseUniformAirDrag(Component):
+    _identifier = "minecraft:use_uniform_air_drag"
+
+    def __init__(self) -> None:
+        """Causes air drag is applied uniformly on both the vertical and horizontal axes, instead of being biased toward horizontal movement.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_use_uniform_air_drag
+        """
+        super().__init__("use_uniform_air_drag")
+
+
+class EntityOnEquipmentChanged(Component):
+    _identifier = "minecraft:on_equipment_changed"
+
+    def __init__(self) -> None:
+        """Allows to specify events to execute when equipment is set in the entity's default equipment slots.
+        Does not apply to ``minecraft:inventory``; use ``minecraft:equippable`` instead.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_on_equipment_changed
+        """
+        super().__init__("on_equipment_changed")
+        self._add_field("slots", [])
+
+    def add_slot(
+        self,
+        slot: Slots = Slots.Mainhand,
+        on_equip: str | None = None,
+        on_unequip: str | None = None,
+    ) -> "EntityOnEquipmentChanged":
+        """Adds a slot entry to monitor for equipment changes.
+
+        Parameters:
+            slot (Slots, optional): The equipment slot to monitor. Defaults to Slots.Mainhand.
+            on_equip (str, optional): Event to execute when the slot is changed to a non-empty item.
+            on_unequip (str, optional): Event to execute when the slot is changed to an empty item.
+        """
+        entry: dict = {"slot": str(slot)}
+        if on_equip is not None:
+            entry["on_equip"] = on_equip
+        if on_unequip is not None:
+            entry["on_unequip"] = on_unequip
+        self._component["slots"].append(entry)
+        return self
+
+
+class EntitySpawnOnDeath(Component):
+    _identifier = "minecraft:spawn_on_death"
+
+    def __init__(
+        self,
+        entity_to_spawn: MinecraftEntityDescriptor | str,
+        spawn_amount: int = 1,
+        spawn_method: Literal["born", "spawned", "summoned"] = "spawned",
+        inherit_parent_name: bool = True,
+        filters: Filter | None = None,
+        additional_spawn_range: tuple[int, int] = (0, 0),
+    ) -> None:
+        """Component for spawning entities when an entity perishes.
+
+        Parameters:
+            entity_to_spawn (MinecraftEntityDescriptor | str, optional): What entity to spawn.
+            spawn_amount (int, optional): How many entities to spawn. Must be > 0. Defaults to 1.
+            spawn_method (Literal["born", "spawned", "summoned"], optional): Spawn method. Defaults to "spawned".
+            inherit_parent_name (bool, optional): If true, the spawned entity inherits the parent's name. Defaults to True.
+            filters (Filter, optional): Conditions that need to be met for the component to trigger.
+            additional_spawn_range (tuple[int, int], optional): Additional random spawn range. Defaults to (0, 0).
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_spawn_on_death
+        """
+        super().__init__("spawn_on_death")
+
+        if spawn_amount < 1:
+            raise ValueError("spawn_amount must be > 0.")
+        if spawn_method not in ("born", "spawned", "summoned"):
+            raise ValueError("spawn_method must be 'born', 'spawned', or 'summoned'.")
+
+        if entity_to_spawn is not None:
+            self._add_field("entity_to_spawn", entity_to_spawn)
+        if spawn_amount != 1:
+            self._add_field("spawn_amount", spawn_amount)
+        if spawn_method != "spawned":
+            self._add_field("spawn_method", spawn_method)
+        if not inherit_parent_name:
+            self._add_field("inherit_parent_name", inherit_parent_name)
+        if filters is not None:
+            self._add_field("filters", filters)
+        if additional_spawn_range != (0, 0):
+            self._add_field(
+                "additional_spawn_range",
+                AnvilFormatter.min_max_dict(
+                    additional_spawn_range,
+                    "additional_spawn_range",
+                    value_types=(int,),
+                    clamp_min=0,
+                ),
+            )
+
+
+class EntityBounciness(Component):
+    _identifier = "minecraft:bounciness"
+
+    @experimental
+    def __init__(self, value: float = 0.0) -> None:
+        """Controls how an entity bounces when colliding with surfaces.
+
+        Parameters:
+            value (float, optional): The strength of the bounce, where 0.0 means no bounce and 1.0 means a full bounce that retains all momentum. Defaults to 0.0.
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_bounciness
+        """
+        super().__init__("bounciness")
+        if value != 0.0:
+            self._add_field("strength", clamp(value, 0.0, 1.0))
+
+
+class EntityAirDragModifier(Component):
+    _identifier = "minecraft:air_drag_modifier"
+
+    @experimental
+    def __init__(self, value: float = 0.0) -> None:
+        """Controls how an entity is affected by air drag.
+
+        Parameters:
+            value (float, optional): The strength of the air drag, where 0.0 means no air drag and 1.0 means regular air drag. Defaults to 0.0.
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_air_drag_modifier
+        """
+        super().__init__("air_drag_modifier")
+        if value != 0.0:
+            self._add_field("strength", clamp(value, 0.0, 1.0))
+
+
+class EntityApplyKnockbackRules(Component):
+    _identifier = "minecraft:apply_knockback_rules"
+
+    @experimental
+    def __init__(self) -> None:
+        """Defines how an entity applies knockback.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_apply_knockback_rules
+        """
+        super().__init__("apply_knockback_rules")
+        self._add_field("presets", [])
+
+    def add_preset(
+        self,
+        horizontal_power: float = None,
+        vertical_power: float = None,
+        vertical_velocity_cap: float = None,
+        scale_previous_velocity: float = None,
+        horizontal_hit_angle_scale: float = None,
+        vertical_hit_angle_scale: float = None,
+        vertical_position_angle_scale: float = None,
+        scale_with_damage: bool = None,
+        filter: Filter = None,
+    ):
+        """Adds a knockback rule preset.
+
+        Parameters:
+            horizontal_power (float, optional): Horizontal knockback power.
+            vertical_power (float, optional): Vertical knockback power.
+            vertical_velocity_cap (float, optional): Cap on vertical velocity.
+            scale_previous_velocity (float, optional): Scaling factor for previous velocity.
+            horizontal_hit_angle_scale (float, optional): Scaling based on horizontal hit angle.
+            vertical_hit_angle_scale (float, optional): Scaling based on vertical hit angle.
+            vertical_position_angle_scale (float, optional): Scaling based on vertical position angle.
+            scale_with_damage (bool, optional): Whether knockback scales with damage dealt.
+            filter (Filter, optional): Filter to determine when this preset applies.
+        """
+        preset = {}
+        if filter is not None:
+            preset["filter"] = filter
+        if horizontal_power is not None:
+            preset["horizontal_power"] = horizontal_power
+        if vertical_power is not None:
+            preset["vertical_power"] = vertical_power
+        if vertical_velocity_cap is not None:
+            preset["vertical_velocity_cap"] = vertical_velocity_cap
+        if scale_previous_velocity is not None:
+            preset["scale_previous_velocity"] = scale_previous_velocity
+        if horizontal_hit_angle_scale is not None:
+            preset["horizontal_hit_angle_scale"] = horizontal_hit_angle_scale
+        if vertical_hit_angle_scale is not None:
+            preset["vertical_hit_angle_scale"] = vertical_hit_angle_scale
+        if vertical_position_angle_scale is not None:
+            preset["vertical_position_angle_scale"] = vertical_position_angle_scale
+        if scale_with_damage is not None:
+            preset["scale_with_damage"] = scale_with_damage
+        self._component["presets"].append(preset)
+        return self
+
+
 # AI Goals ==========================================================================
 
 
@@ -9357,7 +9553,7 @@ class EntityAIRandomHover(AIGoal):
         super().__init__("behavior.random_hover")
 
         if hover_height != (0.0, 0.0):
-            self._add_field("hover_height", hover_height)
+            self._add_field("hover_height", AnvilFormatter.min_max_dict(hover_height))
         if interval != 120:
             self._add_field("interval", interval)
         if speed_multiplier != 1.0:
@@ -10357,6 +10553,30 @@ class EntityAIPickupItems(AIGoal):
         if track_target:
             self._add_field("track_target", track_target)
 
+    def on_pickup_item_start(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ):
+        """Sets an event to run when the mob starts picking up an item.
+
+        Parameters:
+            event (str): The event name to trigger.
+            target (FilterSubject, optional): The event target. Defaults to FilterSubject.Self.
+        """
+        self._add_field("on_pickup_item", {"event": event, "target": target.value})
+
+    def on_pickup_item_end(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ):
+        """Sets an event to run when the mob finishes picking up an item.
+
+        Parameters:
+            event (str): The event name to trigger.
+            target (FilterSubject, optional): The event target. Defaults to FilterSubject.Self.
+        """
+        self._add_field(
+            "on_finish_pickup_item", {"event": event, "target": target.value}
+        )
+
 
 class EntityAIMoveIndoors(AIGoal):
     _identifier = "minecraft:behavior.move_indoors"
@@ -10472,7 +10692,7 @@ class EntityAIMoveTowardsDwellingRestriction(AIGoal):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_dwelling_restriction
         """
         super().__init__("behavior.move_towards_dwelling_restriction")
-        # self._require_components(EntityDweller)
+        # self._dependencies = [EntityDweller]
 
         if speed_multiplier != 1.0:
             self._add_field("speed_multiplier", speed_multiplier)
@@ -10691,7 +10911,7 @@ class EntityAIHarvestFarmBlock(AIGoal):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_harvest_farm_block
         """
         super().__init__("behavior.harvest_farm_block")
-        self._require_components(EntityInventory)
+        self._dependencies = [EntityInventory]
 
         if goal_radius != 1.5:
             self._add_field("goal_radius", goal_radius)
@@ -10927,7 +11147,7 @@ class EntityAIExploreOutskirts(AIGoal):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_explore_outskirts
         """
         super().__init__("behavior.explore_outskirts")
-        # self._require_components(EntityDweller)
+        # self._dependencies = [EntityDweller]
 
         if dist_from_boundary != (5, 0, 5):
             self._add_field("dist_from_boundary", dist_from_boundary)
@@ -11166,7 +11386,7 @@ class EntityAISwimUpForBreath(AIGoal):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_up_for_breath
         """
         super().__init__("behavior.swim_up_for_breath")
-        self._require_components(EntityBreathable)
+        self._dependencies = [EntityBreathable]
 
         if material_type != "water":
             self._add_field("material_type", material_type)
@@ -11200,7 +11420,7 @@ class EntityAIAdmireItem(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_admire_item
         """
         super().__init__("behavior.admire_item")
-        self._require_components(EntityAdmireItem)
+        self._dependencies = [EntityAdmireItem]
 
         if admire_item_sound is not None:
             self._add_field("admire_item_sound", admire_item_sound)
@@ -11212,6 +11432,7 @@ class EntityAIAdmireItem(AIGoal):
                 )
             else:
                 self._add_field("sound_interval", max(0.0, sound_interval))
+
         if control_flags != ():
             self._add_field("control_flags", control_flags)
 
@@ -11255,7 +11476,7 @@ class EntityAIBarter(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_barter
         """
         super().__init__("behavior.barter")
-        self._require_components(EntityBarter)
+        self._dependencies = [EntityBarter]
 
         if control_flags != ():
             self._add_field("control_flags", control_flags)
@@ -11341,7 +11562,7 @@ class EntityAIControlledByPlayer(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_controlled_by_player
         """
         super().__init__("behavior.controlled_by_player")
-        self._require_components(EntityRideable, EntityItemControllable)
+        self._dependencies = [EntityRideable, EntityItemControllable]
 
         if fractional_rotation != 0.5:
             self._add_field(
@@ -11479,7 +11700,7 @@ class EntityAILayEgg(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_lay_egg
         """
         super().__init__("behavior.lay_egg")
-        self._require_components(EntityIsPregnant)
+        self._dependencies = [EntityIsPregnant]
 
         if allow_laying_from_below:
             self._add_field("allow_laying_from_below", allow_laying_from_below)
@@ -11844,7 +12065,7 @@ class EntityAIMoveTowardsHomeRestriction(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_home_restriction
         """
         super().__init__("behavior.move_towards_home_restriction")
-        self._require_components(EntityHome)
+        self._dependencies = [EntityHome]
 
         if speed_multiplier != 1.0:
             self._add_field("speed_multiplier", max(0.0, speed_multiplier))
@@ -12365,7 +12586,7 @@ class EntityAIJumpAroundTarget(AIGoal):
         jump_angles: tuple[float, ...] = (40.0, 55.0, 60.0, 75.0, 80.0),
         jump_cooldown_duration: Seconds = 0.5,
         jump_cooldown_when_hurt_duration: Seconds = 0.1,
-        landing_distance_from_target: tuple[int, int] | None = None,
+        landing_distance_from_target: tuple[float, float] | None = None,
         landing_position_spread_degrees: int = 90,
         last_hurt_duration: Seconds = 2.0,
         line_of_sight_obstruction_height_ignore: int = 4,
@@ -12373,7 +12594,7 @@ class EntityAIJumpAroundTarget(AIGoal):
         prepare_jump_duration: Seconds = 0.5,
         required_vertical_space: int = 4,
         snap_to_surface_block_range: int = 10,
-        valid_distance_to_target: tuple[int, int] | None = None,
+        valid_distance_to_target: tuple[float, float] | None = None,
     ) -> None:
         """Allows an entity to jump around a target.
 
@@ -12384,7 +12605,7 @@ class EntityAIJumpAroundTarget(AIGoal):
             jump_angles (tuple[float, ...], optional): The jump angles in float degrees that are allowed when performing the jump. The order in which the angles are chosen is randomized. Defaults to (40.0, 55.0, 60.0, 75.0, 80.0).
             jump_cooldown_duration (Seconds, optional): The time in seconds to spend in cooldown before this goal can be used again. Defaults to 0.5.
             jump_cooldown_when_hurt_duration (Seconds, optional): The time in seconds to spend in cooldown after being hurt before this goal can be used again. Defaults to 0.1.
-            landing_distance_from_target (tuple[int, int] | None, optional): The range deciding how close to and how far away from the target the landing position can be when jumping. Defaults to None.
+            landing_distance_from_target (tuple[float, float] | None, optional): The range deciding how close to and how far away from the target the landing position can be when jumping. Defaults to None.
             landing_position_spread_degrees (int, optional): This angle (in degrees) is used for controlling the spread when picking a landing position behind the target. A zero spread angle means the landing position will be straight behind the target with no variance. A 90 degree spread angle means the landing position can be up to 45 degrees to the left and to the right of the position straight behind the target's view direction. Defaults to 90.
             last_hurt_duration (Seconds, optional): If the entity was hurt within these last seconds, the jump_cooldown_when_hurt_duration will be used instead of jump_cooldown_duration. Defaults to 2.0.
             line_of_sight_obstruction_height_ignore (int, optional): If the entity's line of sight towards its target is obstructed by an obstacle with a height below this number, the obstacle will be ignored, and the goal will try to find a valid landing position. Defaults to 4.
@@ -12392,7 +12613,7 @@ class EntityAIJumpAroundTarget(AIGoal):
             prepare_jump_duration (Seconds, optional): The time in seconds to spend preparing for the jump. Defaults to 0.5.
             required_vertical_space (int, optional): The number of blocks above the entity's head that has to be air for this goal to be usable. Defaults to 4.
             snap_to_surface_block_range (int, optional): The number of blocks above and below from the jump target position that will be checked to find a surface to land on. Defaults to 10.
-            valid_distance_to_target (tuple[int, int] | None, optional): Target needs to be within this range for the jump to happen. Defaults to None.
+            valid_distance_to_target (tuple[float, float] | None, optional): Target needs to be within this range for the jump to happen. Defaults to None.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_jump_around_target
@@ -12418,7 +12639,12 @@ class EntityAIJumpAroundTarget(AIGoal):
             )
         if landing_distance_from_target is not None:
             self._add_field(
-                "landing_distance_from_target", list(landing_distance_from_target)
+                "landing_distance_from_target",
+                AnvilFormatter.min_max_dict(
+                    landing_distance_from_target,
+                    "landing_distance_from_target",
+                    clamp_min=0.0,
+                ),
             )
         if landing_position_spread_degrees != 90:
             self._add_field(
@@ -12444,7 +12670,12 @@ class EntityAIJumpAroundTarget(AIGoal):
                 max(0, snap_to_surface_block_range),
             )
         if valid_distance_to_target is not None:
-            self._add_field("valid_distance_to_target", list(valid_distance_to_target))
+            self._add_field(
+                "valid_distance_to_target",
+                AnvilFormatter.min_max_dict(
+                    valid_distance_to_target, "valid_distance_to_target", clamp_min=0.0
+                ),
+            )
 
 
 class EntityAIJumpToBlock(AIGoal):
@@ -12452,7 +12683,7 @@ class EntityAIJumpToBlock(AIGoal):
 
     def __init__(
         self,
-        cooldown_range: tuple[Seconds, Seconds] | None = None,
+        cooldown_range: tuple[float, float] | None = None,
         forbidden_blocks: list[str] | None = None,
         max_velocity: float = 1.5,
         minimum_distance: int = 2,
@@ -12466,7 +12697,7 @@ class EntityAIJumpToBlock(AIGoal):
         """Allows an entity to jump to another random block.
 
         Parameters:
-            cooldown_range (tuple[Seconds, Seconds] | None, optional): Minimum and maximum cooldown time-range (positive, in seconds) between each attempted jump. Defaults to None.
+            cooldown_range (tuple[float, float] | None, optional): Minimum and maximum cooldown time-range (positive, in seconds) between each attempted jump. Defaults to None.
             forbidden_blocks (list[str] | None, optional): Blocks that the mob can't jump to. Defaults to None.
             max_velocity (float, optional): The maximum velocity with which the mob can jump. Defaults to 1.5.
             minimum_distance (int, optional): The minimum distance (in blocks) from the mob to a block, in order to consider jumping to it. Defaults to 2.
@@ -12483,7 +12714,12 @@ class EntityAIJumpToBlock(AIGoal):
         super().__init__("behavior.jump_to_block")
 
         if cooldown_range is not None:
-            self._add_field("cooldown_range", list(cooldown_range))
+            self._add_field(
+                "cooldown_range",
+                AnvilFormatter.min_max_dict(
+                    cooldown_range, "cooldown_range", clamp_min=0.0
+                ),
+            )
         if forbidden_blocks is not None:
             self._add_field("forbidden_blocks", forbidden_blocks)
         if max_velocity != 1.5:
@@ -12590,7 +12826,7 @@ class EntityAIDefendTrustedTarget(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_defend_trusted_target
         """
         super().__init__("behavior.defend_trusted_target")
-        self._require_components(EntityTrust)
+        self._dependencies = [EntityTrust]
         self._add_field("entity_types", [])
 
         if aggro_sound is not None:
@@ -13541,7 +13777,7 @@ class EntityAISniff(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sniff
         """
         super().__init__("behavior.sniff")
-        self._require_components(EntitySuspectTracking)
+        self._dependencies = [EntitySuspectTracking]
 
         if cooldown_range != (3.0, 10.0):
             self._add_field(
@@ -14009,30 +14245,43 @@ class EntityAIFindMount(AIGoal):
             self._add_field("control_flags", control_flags)
 
 
-class EntityAIFollowTargetCaptain(AIGoal):
-    _identifier = "minecraft:behavior.follow_target_captain"
+class EntityAIFollowTargetLead(AIGoal):
+    _identifier = "minecraft:behavior.follow_target_lead"
 
     def __init__(
-        self, follow_distance: float = 0.0, within_radius: float = 0.0
+        self,
+        follow_distance: float = 0.0,
+        within_radius: float = 0.0,
+        always_look_for_leader: bool = False,
+        leader_filters: Filter = None,
+        search_cooldown: Seconds = 20.0,
     ) -> None:
-        """Allows mob to move towards its current target captain.
+        """Allows mob to move towards its current target lead.
 
         Parameters:
             follow_distance (float, optional): Defines the distance in blocks the mob will stay from its target while following. Defaults to 0.0.
-            within_radius (float, optional): Defines the maximum distance in blocks a mob can get from its target captain before giving up trying to follow it. Defaults to 0.0.
-
+            within_radius (float, optional): Defines the maximum distance in blocks a mob can get from its target lead before giving up trying to follow it. Defaults to 0.0.
+            always_look_for_leader (bool, optional): If true, the mob always searches for a valid leader to follow if none is found or the current leader is not valid anymore. Defaults to False.
+            leader_filters (Filter, optional): Filters to apply when searching for a leader. Defaults to None.
+            search_cooldown (Seconds, optional): Number of ticks that must pass before a new search is initiated after a target is not found, lost, or becomes invalid. Defaults to 20.0.
         Note:
             Requires an entity to be labeled as a captain in a group.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_target_captain
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_target_lead
         """
-        super().__init__("behavior.follow_target_captain")
+        super().__init__("behavior.follow_target_lead")
 
         if follow_distance != 0.0:
             self._add_field("follow_distance", max(0.0, follow_distance))
         if within_radius != 0.0:
             self._add_field("within_radius", max(0.0, within_radius))
+        if always_look_for_leader:
+            self._add_field("always_look_for_leader", always_look_for_leader)
+        if leader_filters is not None:
+            self._add_field("leader_filters", leader_filters)
+        if search_cooldown != 20.0:
+            self._add_field("search_cooldown", max(0.0, search_cooldown))
 
 
 class EntityAIGuardianAttack(AIGoal):
@@ -14488,7 +14737,7 @@ class EntityAIInvestigateSuspiciousLocation(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_investigate_suspicious_location
         """
         super().__init__("behavior.investigate_suspicious_location")
-        self._require_components(EntitySuspectTracking)
+        self._dependencies = [EntitySuspectTracking]
 
         if goal_radius != 1.5:
             self._add_field("goal_radius", max(0.0, goal_radius))
@@ -14564,7 +14813,7 @@ class EntityAIStalkAndPounceOnTarget(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stalk_and_pounce_on_target
         """
         super().__init__("behavior.stalk_and_pounce_on_target")
-        self._require_components(EntityAttack)
+        self._dependencies = [EntityAttack]
 
         if interest_time != 2.0:
             self._add_field("interest_time", max(0.0, interest_time))
@@ -14957,7 +15206,7 @@ class EntityAISlimeAttack(AIGoal):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_attack
         """
         super().__init__("behavior.slime_attack")
-        self._require_components(EntityAttack, EntityVariant)
+        self._dependencies = [EntityAttack, EntityVariant]
 
         if grow_tired_cooldown_time != 15.0:
             self._add_field(

@@ -9,7 +9,6 @@ import zipfile
 from typing import Optional
 
 import click
-from halo import Halo
 from PIL import Image
 
 from anvil.api.actors.materials import MaterialsObject
@@ -260,13 +259,16 @@ def pack_art():
         resize(placeholder_image, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
 
 
-@Halo(text="Processing Art", spinner="dots")
 def process_art(
     config: _AnvilConfig,
     apply_overlay: bool = False,
     zip: bool = True,
 ):
     """Process marketing art for packaging."""
+    import click
+
+    click.echo(click.style(f"\r[INFO]: Processing Art...", fg="cyan"))
+
     pack_icon_size = (256, 256)
     store_screenshot_size = (800, 450)
     marketing_screenshot_size = (1920, 1080)
@@ -402,9 +404,12 @@ def process_art(
             )
 
 
-@Halo(text="Generating technical notes", spinner="dots")
 def generate_technical_notes_pdf(config: _AnvilConfig):
     """Generates a technical notes PDF that contains information about included entities, blocks, items, sounds and more."""
+    import click
+
+    click.echo(click.style(f"\r[INFO]: Generating technical notes...", fg="cyan"))
+
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet
@@ -508,12 +513,15 @@ def generate_technical_notes_pdf(config: _AnvilConfig):
     doc.build(elements)
 
 
-@Halo(text="Packaging ZIP", spinner="dots")
 def package_zip_core(
     config: _AnvilConfig,
     apply_overlay: bool = False,
 ):
     """Core logic for packaging the project into a zip file for Marketplace."""
+    import click
+
+    click.echo(click.style(f"\r[INFO]: Packaging ZIP...", fg="cyan"))
+
     process_art(config, apply_overlay)
 
     AnvilArchive.marketplace_zip()
@@ -522,23 +530,28 @@ def package_zip_core(
     shutil.rmtree(os.path.join("output", "Marketing Art"))
 
 
-@Halo(text="Packaging mcaddon", spinner="dots")
 def mcaddon_core(config):
     """Core logic for packaging the project into a .mcaddon file."""
+    import click
+
+    click.echo(click.style(f"\r[INFO]: Packaging mcaddon...", fg="cyan"))
+
     process_art(config, False, False)
 
     AnvilArchive.mcaddon()
     output_development_pack_sizes(CONFIG)
 
 
-@Halo(text="Packaging mcworld", spinner="dots")
 def mcworld_core(config: _AnvilConfig):
     """Core logic for packaging the project into a .mcworld file."""
+    import click
+
+    click.echo(click.style(f"\r[INFO]: Packaging mcworld...", fg="cyan"))
+
     process_art(config, False, False)
     AnvilArchive.mcworld()
 
 
-@Halo(text="Compiling", spinner="dots")
 def compile_objects(
     anvil: "_Anvil",
     extract_world: str = None,
@@ -546,6 +559,11 @@ def compile_objects(
     no_compile: bool = False,
     workflow: bool = False,
 ):
+    import click
+
+    if not js_only and not no_compile:
+        click.echo(click.style(f"\r[INFO]: Compiling projects...", fg="cyan"))
+
     extract_world_pack(extract_world)
     manifests(extract_world)
     pack_art()
@@ -597,17 +615,17 @@ def compile_objects(
             True,
         )
 
-    from anvil.api.blocks.blocks import _PermutationComponents
+    from anvil.api.blocks.blocks import PermutationGroup
 
-    if _PermutationComponents._count > 10000:
+    if PermutationGroup._count > 10000:
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
             raise RuntimeError(
-                f"\rTotal Block permutations exceeded 10000 ({_PermutationComponents._count}). Addons must not exceed this limit."
+                f"\rTotal Block permutations exceeded 10000 ({PermutationGroup._count}). Addons must not exceed this limit."
             )
         else:
             click.echo(
                 click.style(
-                    f"\r[INFO]: Total Block permutations exceeded 10000 ({_PermutationComponents._count}). This may cause issues when submitting to the Marketplace.",
+                    f"\r[INFO]: Total Block permutations exceeded 10000 ({PermutationGroup._count}). This may cause issues when submitting to the Marketplace.",
                     fg="yellow",
                 )
             )
@@ -639,9 +657,12 @@ def compile_objects(
             )
 
 
-@Halo(text="Translating", spinner="dots")
 def translate(languages: Optional[list[str]] = None) -> None:
     """Translates the project."""
+    import click
+
+    click.echo(click.style(f"\r[INFO]: Translating in progress...", fg="cyan"))
+
     AnvilTranslator().auto_translate_all(languages)
 
 
