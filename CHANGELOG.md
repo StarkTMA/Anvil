@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.8.2**](#0982)
+- [**0.9.8.3**](#0983)
+- [0.9.8.2](#0982)
 - [0.9.8.1](#0981)
 - [0.9.8](#098)
 - [0.9.7.5](#0975)
@@ -95,6 +96,13 @@
 ---
 
 # 0.9.x
+
+## 0.9.8.3
+
+### Actors
+
+- Fixed `EntityPushableByBlock` and `EntityPushableByEntity` scheme forcing objects rather than booleans.
+- Removed `goal_radius` from `EntityAISleep` as it seems to be silently removed.
 
 ## 0.9.8.2
 

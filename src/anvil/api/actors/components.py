@@ -238,7 +238,7 @@ class EntityPushableByBlock(Component):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_block
         """
         super().__init__("pushable_by_block")
-        self._set_value(value)
+        self._set_value({})
 
 
 class EntityPushableByEntity(Component):
@@ -254,7 +254,7 @@ class EntityPushableByEntity(Component):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_entity
         """
         super().__init__("pushable_by_entity")
-        self._set_value(value)
+        self._set_value({})
 
 
 class EntityPushThrough(Component):
@@ -11069,7 +11069,6 @@ class EntityAISleep(AIGoal):
         self,
         can_sleep_while_riding: bool = False,
         cooldown_time: float = 0.0,
-        goal_radius: float = None,
         sleep_collider_height: float = 1.0,
         sleep_collider_width: float = 1.0,
         sleep_y_offset: float = 1.0,
@@ -11097,8 +11096,6 @@ class EntityAISleep(AIGoal):
             self._add_field("can_sleep_while_riding", can_sleep_while_riding)
         if cooldown_time != 0.0:
             self._add_field("cooldown_time", cooldown_time)
-        if goal_radius is not None:
-            self._add_field("goal_radius", goal_radius)
         if sleep_collider_height != 1.0:
             self._add_field("sleep_collider_height", sleep_collider_height)
         if sleep_collider_width != 1.0:
