@@ -13,6 +13,7 @@ from anvil.lib.config import CONFIG
 from anvil.lib.lib import Directory
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.translator import AnvilTranslator
 
 
 class _SoundDescription:
@@ -29,6 +30,7 @@ class _SoundDescription:
         use_legacy_max_distance: bool = False,
         max_distance: float = 0,
         min_distance: float = 9999,
+        subtitle: str = None,
     ) -> None:
         """Initializes a _SoundDescription instance.
 
@@ -38,6 +40,7 @@ class _SoundDescription:
             use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
             max_distance (int, optional): The maximum distance for the sound. Defaults to 0.
             min_distance (int, optional): The minimum distance for the sound. Defaults to 9999.
+            subtitle (str, optional): The subtitle for the sound. Defaults to None.
         """
         self._category = category
         self._sound_reference = sound_reference
@@ -52,6 +55,8 @@ class _SoundDescription:
             self._sound[self._sound_definition]["max_distance"] = max_distance
         if min_distance != 9999:
             self._sound[self._sound_definition]["min_distance"] = min_distance
+        if subtitle is not None:
+            self._sound[self._sound_definition]["subtitle"] = subtitle
         self._sounds = []
 
     def add_sound(
@@ -89,6 +94,8 @@ class _SoundDescription:
             "target": target_path,
         }
         if pitch != 1:
+            if not isinstance(pitch, (int, float)):
+                raise ValueError("Pitch must be an int or float.")
             sound_dict.update({"pitch": pitch})
         if not is_3d is None:
             sound_dict.update({"is3D": is_3d})
@@ -174,6 +181,7 @@ class SoundDefinition(AddonObject):
         use_legacy_max_distance: bool = False,
         max_distance: float = 0,
         min_distance: float = 9999,
+        subtitle: str = None,
     ):
         """Defines a sound for the SoundDefinition instance.
 
@@ -183,16 +191,23 @@ class SoundDefinition(AddonObject):
             use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
             max_distance (int, optional): The maximum distance for the sound. Defaults to 0.
             min_distance (int, optional): The minimum distance for the sound. Defaults to 9999.
-
+            subtitle (str, optional): The subtitle for the sound. Defaults to None.
         Returns:
             _SoundDescription: The created sound description instance.
         """
+
+        if subtitle is not None and not subtitle.startswith("subtitle."):
+            key = f"subtitle.{sound_reference}"
+            AnvilTranslator().add_localization_entry(key, subtitle)
+            subtitle = key
+
         sound = _SoundDescription(
             sound_reference,
             category,
             use_legacy_max_distance,
             max_distance=max_distance,
             min_distance=min_distance,
+            subtitle=subtitle,
         )
         self._sounds.append(sound)
         return sound
@@ -323,6 +338,7 @@ class SoundEvent(AddonObject):
         min_distance: float = 9999,
         variant_query: Molang = None,
         variant_map: str = None,
+        subtitle: str = None,
     ):
         self._content["entity_sounds"]["entities"].setdefault(
             entity_identifier,
@@ -348,12 +364,17 @@ class SoundEvent(AddonObject):
                 "volume": volume,
             }
 
+        key = f"subtitle.entity.{entity_identifier}.{sound_event.value}"
+        if subtitle is not None:
+            AnvilTranslator().add_localization_entry(key, subtitle)
+
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
             sound_identifier,
             category,
             max_distance=max_distance,
             min_distance=min_distance,
+            subtitle=key if subtitle is not None else None,
         )
 
     def add_block_event(
@@ -365,6 +386,7 @@ class SoundEvent(AddonObject):
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: float = 0,
         min_distance: float = 9999,
+        subtitle: str = None,
     ):
         self._content["block_sounds"].setdefault(
             block_identifier,
@@ -378,12 +400,17 @@ class SoundEvent(AddonObject):
 
         BlocksJSONObject().add_block(block_identifier)
 
+        key = f"subtitle.block.{block_identifier}.{sound_event.value}"
+        if subtitle is not None:
+            AnvilTranslator().add_localization_entry(key, subtitle)
+
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
             sound_identifier,
             SoundCategory.Block,
             max_distance=max_distance,
             min_distance=min_distance,
+            subtitle=key if subtitle is not None else None,
         )
 
     def add_block_interactive_event(
@@ -395,6 +422,7 @@ class SoundEvent(AddonObject):
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: float = 0,
         min_distance: float = 9999,
+        subtitle: str = None,
     ):
         self._content["interactive_sounds"]["block_sounds"].setdefault(
             block_identifier,
@@ -410,12 +438,17 @@ class SoundEvent(AddonObject):
 
         BlocksJSONObject().add_block(block_identifier)
 
+        key = f"subtitle.block.{block_identifier}.{sound_event.value}"
+        if subtitle is not None:
+            AnvilTranslator().add_localization_entry(key, subtitle)
+
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
             sound_identifier,
             SoundCategory.Block,
             max_distance=max_distance,
             min_distance=min_distance,
+            subtitle=key if subtitle is not None else None,
         )
 
     def add_individual_event(
@@ -426,6 +459,7 @@ class SoundEvent(AddonObject):
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: float = 0,
         min_distance: float = 9999,
+        subtitle: str = None,
     ):
         self._content["individual_event_sounds"]["events"][sound_identifier] = {
             "sound": sound_identifier,
@@ -433,12 +467,17 @@ class SoundEvent(AddonObject):
             "volume": volume,
         }
 
+        key = f"subtitle.individual.{sound_identifier}"
+        if subtitle is not None:
+            AnvilTranslator().add_localization_entry(key, subtitle)
+
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
             sound_identifier,
             category,
             max_distance,
             min_distance,
+            subtitle=key if subtitle is not None else None,
         )
 
     def queue(self):

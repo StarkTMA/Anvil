@@ -4,6 +4,7 @@ from typing import List, Literal
 from anvil.api.core.enums import Difficulty, Population
 from anvil.api.core.filters import Filter
 from anvil.lib.config import CONFIG
+from anvil.lib.lib import AnvilFormatter
 from anvil.lib.schemas import (
     AddonObject,
     JsonSchemes,
@@ -47,7 +48,7 @@ class _SpawnRuleDescription(MinecraftDescription):
             SpawnRule: The parent spawn rule for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/cliententitydocumentation/datadrivenspawning?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/cliententitydocumentation/datadrivenspawning
         """
         self._description["description"]["population_control"] = population.value
         return self._spawn_rule_obj
@@ -86,7 +87,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/biome_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/biome_filter
         """
         if "minecraft:biome_filter" not in self._condition:
             self._condition.update({"minecraft:biome_filter": []})
@@ -115,7 +116,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/brightness_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/brightness_filter
         """
         min_brightness = max(0, min_brightness)
         max_brightness = min(15, max_brightness)
@@ -148,7 +149,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/delay_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/delay_filter
         """
         self._condition.update(
             {
@@ -179,7 +180,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/density_limit?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/density_limit
         """
         density = {"minecraft:density_limit": {}}
         if surface != -1:
@@ -187,26 +188,6 @@ class _SpawnRuleCondition:
         if underground != -1:
             density["minecraft:density_limit"]["underground"] = underground
         self._condition.update(density)
-        return self
-
-    def distance_filter(self, min: int, max: int):
-        """Sets the distance range from players where entities can spawn.
-
-        Entities will only spawn within this distance range from the nearest player.
-        Typical values are 24-128 blocks for most mobs to prevent spawning too close
-        or too far from players.
-
-        Parameters:
-            min (int): Minimum distance from a player for spawning (in blocks).
-            max (int): Maximum distance from a player for spawning (in blocks).
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
-
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/distance_filter?view=minecraft-bedrock-stable
-        """
-        self._condition.update({"minecraft:distance_filter": {"min": min, "max": max}})
         return self
 
     def difficulty_filter(
@@ -229,7 +210,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/difficulty_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/difficulty_filter
         """
         self._condition.update(
             {
@@ -243,6 +224,46 @@ class _SpawnRuleCondition:
                         else None
                     ),
                 }
+            }
+        )
+        return self
+
+    def disallow_spawns_in_bubble(self):
+        """Prevents the entity from spawning in water bubble columns.
+
+        Blocks spawning in bubble columns created by magma blocks or soul sand underwater.
+        Useful for aquatic entities that should avoid these special water areas.
+
+        Returns:
+            _SpawnRuleCondition: Self for method chaining.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/disallow_spawns_in_bubble
+        """
+        self._condition.update({"minecraft:disallow_spawns_in_bubble": {}})
+        return self
+
+    def distance_filter(self, range: tuple[int, int] = (24, 128)):
+        """Sets the distance range from players where entities can spawn.
+
+        Entities will only spawn within this distance range from the nearest player.
+        Typical values are 24-128 blocks for most mobs to prevent spawning too close
+        or too far from players.
+
+        Parameters:
+            range (tuple[int, int]): Distance range from a player for spawning (min, max) in blocks. Defaults to (24, 128).
+
+        Returns:
+            _SpawnRuleCondition: Self for method chaining.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/distance_filter
+        """
+        self._condition.update(
+            {
+                "minecraft:distance_filter": AnvilFormatter.min_max_dict(
+                    range, "minecraft:distance_filter", clamp_min=0
+                )
             }
         )
         return self
@@ -273,7 +294,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/entity_types?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/entity_types
         """
         entity_types = {
             "max_dist": max_dist,
@@ -303,7 +324,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/height_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/height_filter
         """
         self._condition.update({"minecraft:height_filter": {"min": min, "max": max}})
         return self
@@ -331,7 +352,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/herd?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/herd
         """
         if "minecraft:herd" not in self._condition:
             self._condition.update({"minecraft:herd": []})
@@ -366,7 +387,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/mob_event_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/mob_event_filter
         """
         self._condition.update({"minecraft:mob_event_filter": {"event": event}})
 
@@ -409,7 +430,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/player_in_village_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/player_in_village_filter
         """
         self._condition.update(
             {
@@ -419,6 +440,36 @@ class _SpawnRuleCondition:
                 }
             }
         )
+        return self
+
+    def spawns_above_block_filter(
+        self, blocks: tuple[MinecraftBlockDescriptor | str], distance: int = 1
+    ):
+        """Restricts spawning to areas above specific block types.
+
+        Entity will only spawn above the specified blocks, at a distance defined by the `distance` parameter.
+
+        Parameters:
+            blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types the entity can spawn above.
+            distance (int): Distance above the block to check for spawning. Defaults to 1.
+
+        Returns:
+            _SpawnRuleCondition: Self for method chaining.
+
+        ## Documentation reference:
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_above_block_filter
+        """
+        self._condition["minecraft:spawns_above_block_filter"] = {
+            "blocks": [
+                (
+                    block.identifier
+                    if isinstance(block, MinecraftBlockDescriptor)
+                    else str(block)
+                )
+                for block in blocks
+            ],
+            "distance": distance,
+        }
         return self
 
     def spawns_in_lava(self):
@@ -431,49 +482,57 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_lava?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_lava
         """
         self._condition.update({"minecraft:spawns_lava": {}})
         return self
 
-    def spawns_on_block_filter(self, blocks: tuple[MinecraftBlockDescriptor]):
+    def spawns_on_block_filter(self, blocks: tuple[MinecraftBlockDescriptor | str]):
         """Restricts spawning to specific block types.
 
         Entity will only spawn on top of the specified blocks. Useful for creating
         specialized spawning requirements like mushroom island mobs or desert creatures.
 
         Parameters:
-            blocks (tuple[MinecraftBlockDescriptor]): Tuple of block types the entity can spawn on.
+            blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types the entity can spawn on.
 
         Returns:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_block_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_block_filter
         """
-        if "minecraft:spawns_on_block_filter" not in self._condition:
-            self._condition.update({"minecraft:spawns_on_block_filter": []})
         self._condition["minecraft:spawns_on_block_filter"] = [
-            block.identifier for block in blocks
+            (
+                block.identifier
+                if isinstance(block, MinecraftBlockDescriptor)
+                else str(block)
+            )
+            for block in blocks
         ]
         return self
 
-    def spawns_on_block_prevented_filter(self, blocks: tuple[MinecraftBlockDescriptor]):
+    def spawns_on_block_prevented_filter(
+        self, blocks: tuple[MinecraftBlockDescriptor | str]
+    ):
         """Prevents spawning on specific block types.
 
         Entity will not spawn on the specified blocks, even if other conditions are met.
         Useful for preventing spawning on inappropriate surfaces.
 
         Parameters:
-            blocks (tuple[MinecraftBlockDescriptor]): Tuple of block types to prevent spawning on.
+            blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types to prevent spawning on.
 
         Returns:
             _SpawnRuleCondition: Self for method chaining.
         """
-        if "minecraft:spawns_on_block_prevented_filter" not in self._condition:
-            self._condition.update({"minecraft:spawns_on_block_prevented_filter": []})
         self._condition["minecraft:spawns_on_block_prevented_filter"] = [
-            block.identifier for block in blocks
+            (
+                block.identifier
+                if isinstance(block, MinecraftBlockDescriptor)
+                else str(block)
+            )
+            for block in blocks
         ]
         return self
 
@@ -487,7 +546,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_surface?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_surface
         """
         self._condition.update({"minecraft:spawns_on_surface": {}})
         return self
@@ -502,7 +561,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underground?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underground
         """
         self._condition.update({"minecraft:spawns_underground": {}})
         return self
@@ -517,7 +576,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underwater?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underwater
         """
         self._condition.update({"minecraft:spawns_underwater": {}})
         return self
@@ -537,7 +596,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/weight?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/weight
         """
         self._condition.update({"minecraft:weight": {"default": weight}})
         return self
@@ -555,25 +614,10 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/world_age_filter?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/world_age_filter
         """
         self._condition.update({"minecraft:world_age_filter": {"min": min}})
 
-        return self
-
-    def disallow_spawns_in_bubble(self):
-        """Prevents the entity from spawning in water bubble columns.
-
-        Blocks spawning in bubble columns created by magma blocks or soul sand underwater.
-        Useful for aquatic entities that should avoid these special water areas.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
-
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/disallow_spawns_in_bubble?view=minecraft-bedrock-stable
-        """
-        self._condition.update({"minecraft:disallow_spawns_in_bubble": {}})
         return self
 
     def spawn_event(self, event: str = "minecraft:entity_spawned"):
@@ -590,7 +634,7 @@ class _SpawnRuleCondition:
             _SpawnRuleCondition: Self for method chaining.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawn_event?view=minecraft-bedrock-stable
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawn_event
         """
         self._condition.update({"minecraft:spawn_event": {"event": event}})
         return self

@@ -282,6 +282,7 @@ class BlockClient(AddonObject):
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: float = 0,
         min_distance: float = 9999,
+        subtitle: str = None,
     ):
         sound_event_obj = SoundEvent()
         if isinstance(sound_event, BlockSoundEvent):
@@ -293,6 +294,7 @@ class BlockClient(AddonObject):
                 pitch,
                 max_distance,
                 min_distance,
+                subtitle,
             )
             return sound_def
         elif isinstance(sound_event, BlockInteractiveSoundEvent):
@@ -304,6 +306,7 @@ class BlockClient(AddonObject):
                 pitch,
                 max_distance,
                 min_distance,
+                subtitle,
             )
             return sound_def
         else:

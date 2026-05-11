@@ -320,10 +320,12 @@ class Population(StrEnum):
     Enumeration for the different types of in-game populations.
     """
 
-    Animal = "animal"
-    UnderwaterAnimal = "underwater_animal"
-    Monster = "monster"
     Ambient = "ambient"
+    Animal = "animal"
+    Cat = "cat"
+    Monster = "monster"
+    Pillager = "pillager"
+    WaterAnimal = "water_animal"
 
 
 class PlacementDirectionTrait(StrEnum):

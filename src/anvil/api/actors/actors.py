@@ -551,6 +551,7 @@ class _ActorClientDescription(_ActorDescription):
         category: SoundCategory = SoundCategory.Neutral,
         max_distance: int = 0,
         min_distance: int = 9999,
+        subtitle: str = None,
     ):
         """This method manages the sound effects for an entity.
 
@@ -558,11 +559,18 @@ class _ActorClientDescription(_ActorDescription):
             sound_shortname (str): The shortname of the sound effect.
             sound_path (str): The path to the sound effects from the assets/sounds folder.
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
-
+            max_distance (int, optional): The maximum distance of the sound effect. Defaults to 0.
+            min_distance (int, optional): The minimum distance of the sound effect. Defaults to 9999.
+            subtitle (str, optional): The subtitle of the sound effect. Defaults to None.
         """
         self._description["description"]["sound_effects"].update(
             {sound_identifier: f"{CONFIG.NAMESPACE}:{sound_identifier}"}
         )
+
+        key = f"subtitle.generic.{sound_identifier}"
+
+        if subtitle is not None:
+            AnvilTranslator().add_localization_entry(key, subtitle)
 
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
@@ -570,6 +578,7 @@ class _ActorClientDescription(_ActorDescription):
             category,
             max_distance=max_distance,
             min_distance=min_distance,
+            subtitle=key if subtitle else None,
         )
 
     def sound_event(
@@ -583,6 +592,7 @@ class _ActorClientDescription(_ActorDescription):
         min_distance: int = 9999,
         variant_query: Molang = None,
         variant_map: str = None,
+        subtitle: str = None,
     ):
         """This method manages the sound events for an entity.
 
@@ -596,6 +606,7 @@ class _ActorClientDescription(_ActorDescription):
             min_distance (int, optional): The minimum distance of the sound effect. Defaults to 9999.
             variant_query (Molang, optional): The variant query of the sound effect. Defaults to None.
             variant_map (str, optional): The variant map of the sound effect. Defaults to None.
+            subtitle (str, optional): The subtitle of the sound effect. Defaults to None.
         """
         sound_event_obj = SoundEvent()
         return sound_event_obj.add_entity_event(
@@ -609,6 +620,7 @@ class _ActorClientDescription(_ActorDescription):
             min_distance,
             variant_query,
             variant_map,
+            subtitle,
         )
 
     def __export__(self, directory: str = None):

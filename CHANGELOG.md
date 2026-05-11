@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.8.3**](#0983)
+- [**0.9.8.4**](#0984)
+- [0.9.8.3](#0982)
 - [0.9.8.2](#0982)
 - [0.9.8.1](#0981)
 - [0.9.8](#098)
@@ -96,6 +97,16 @@
 ---
 
 # 0.9.x
+
+## 0.9.8.4
+
+### Anvil
+
+- Added `subtitle` support to all sound events. You can now add your subtitle to your entity, block or individual sound event. Subtitles are localized automatically.
+
+### Actors
+
+- Added `spawns_above_block_filter` method to Entity Spawn rules.
 
 ## 0.9.8.3
 
