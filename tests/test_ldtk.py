@@ -17,6 +17,7 @@ anvil.lib.config.CONFIG = mock_config
 
 import anvil.lib.schemas
 anvil.lib.schemas.CONFIG = mock_config
+is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
 
 try:
     import amulet
@@ -26,7 +27,9 @@ try:
 except ImportError:
     has_amulet = False
 
-if not has_amulet:
+if is_github_actions:
+    pytestmark = pytest.mark.skip(reason="ldtk test is disabled on GitHub Actions (local only)")
+elif not has_amulet:
     pytestmark = pytest.mark.skip(reason="amulet is not installed")
 
 
