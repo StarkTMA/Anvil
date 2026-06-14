@@ -133,7 +133,7 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
     )
 
     # Output path for entity JSON
-    entities_dir = os.path.join("scripts", "javascript", "content", "entities")
+    entities_dir = os.path.join("scripts", "javascript", "content", "levels")
     empty_level_json = os.path.join(entities_dir, "Level_Empty.json")
     entities_level_json = os.path.join(entities_dir, "Level_With_Entities.json")
 
@@ -264,7 +264,7 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
     )
 
     # Output path for entity JSON
-    entities_dir = os.path.join("scripts", "javascript", "content", "entities")
+    entities_dir = os.path.join("scripts", "javascript", "content", "levels")
     entities_level_json = os.path.join(entities_dir, "Level_With_Entities.json")
 
     assert os.path.exists(entities_level_json)
@@ -360,7 +360,7 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
     )
 
     # Output path for entity JSON
-    entities_dir = os.path.join("scripts", "javascript", "content", "entities")
+    entities_dir = os.path.join("scripts", "javascript", "content", "levels")
     entities_level_json = os.path.join(entities_dir, "Level_With_Entities.json")
 
     assert os.path.exists(entities_level_json)

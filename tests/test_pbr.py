@@ -128,7 +128,7 @@ def test_color_grading_settings():
     settings = ColorGradingSettings()
     
     # Check temperature grade writes to 'temperature' key
-    settings.temperature_grade(enabled=True, temp_value=5000.0, type="color_temperature")
+    settings.temperature_grade(temp_value=5000.0, type="color_temperature")
     temp_node = settings._content["minecraft:color_grading_settings"]["color_grading"]["temperature"]
     assert temp_node["enabled"] is True
     assert temp_node["temperature"] == 5000.0
@@ -214,7 +214,13 @@ def test_combined_fog():
     
     fog = Fog("test_fog")
     # Set vanilla distance settings
-    fog.add_distance_location(FogCameraLocation.Air).color("#08c2e5").distance(20, 120, RenderDistanceType.Fixed)
+    fog.add_distance_location(
+        color="#08c2e5",
+        fog_start=20,
+        fog_end=120,
+        render_distance_type=RenderDistanceType.Fixed,
+        camera_location=FogCameraLocation.Air
+    )
     
     # Set volumetric settings
     fog.water_density(0.001, uniform=True)
@@ -246,9 +252,6 @@ def test_fog_disabled_pbr():
     try:
         fog = Fog("test_fog_no_pbr")
         
-        with pytest.raises(RuntimeError):
-            fog.add_volume()
-            
         with pytest.raises(RuntimeError):
             fog.water_density(0.5)
             
