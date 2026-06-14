@@ -102,7 +102,6 @@ nav:
                 - Camera: api/world/camera.md
                 - Fog: api/world/fog.md
                 - Loot Tables: api/world/loot_tables.md
-                - Camera: api/core/camera.md
                 - Structures: api/world/structures.md
                 - Particles: api/world/particles.md
           - Biomes:
@@ -118,6 +117,7 @@ nav:
           - Core Library:
                 - Overview: api/core/index.md
                 - Config: api/core/config.md
+                - Camera: api/core/camera.md
                 - Schemas: api/core/schemas.md
                 - Types: api/core/types.md
                 - Enums: api/core/enums.md

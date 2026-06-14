@@ -1,3 +1,3 @@
 # World - Fog Module
 
-::: anvil.api.world.fog
+::: anvil.api.pbr.fog

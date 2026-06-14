@@ -1,3 +1,3 @@
-# World - Camera Module
+# Core - Camera Module
 
 ::: anvil.api.core.camera
