@@ -196,7 +196,7 @@ class _AnvilConfig:
     _PACK_UUID: str
     _SCRIPT_API: bool
     _SCRIPT_UI: bool
-    _PBR: bool
+    PBR: bool
     _RANDOM_SEED: bool
     _EXPERIMENTAL: bool
     _DATA_MODULE_UUID: str
@@ -318,7 +318,7 @@ class _AnvilConfig:
         self._SCRIPT_UI = self._handle_config(
             ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, False
         )
-        self._PBR = self._handle_config(ConfigSection.ANVIL, ConfigOption.PBR, False)
+        self.PBR = self._handle_config(ConfigSection.ANVIL, ConfigOption.PBR, False)
 
         self._RANDOM_SEED = self._handle_config(
             ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False

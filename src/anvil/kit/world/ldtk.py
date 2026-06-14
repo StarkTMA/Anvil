@@ -4,10 +4,10 @@ import os
 import amulet
 from amulet.api.block import Block as amuletBlock
 from amulet.api.block import StringTag
-
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import MANIFEST_BUILD
+from anvil.lib.lib import Directory
 
 
 # Requires Amulet core to build the world
@@ -17,8 +17,8 @@ class LDtk:
         # much faster at loading json compared to commentjson
         # and ldtk is a very big json file
 
-        with open(self._file, "r") as File:
-            self._data = json.load(File)
+        with open(self._file, "r") as f:
+            self._data = json.load(f)
 
         if self._data["defaultGridSize"] != 16:
             raise ValueError("Grid size incompatible, must be 16px.")
@@ -56,16 +56,21 @@ class LDtk:
     def _collect_level_data(self):
         # Collecting level Data
         for level in self._data["levels"]:
+            origin = [level["worldX"] // 16, level["worldY"] // 16]
+            size = [abs(level["pxWid"]) // 16, abs(level["pxHei"]) // 16]
+
             self.dictionary["levels"][level["identifier"]] = {
-                "origin": [abs(level["worldX"]) // 16, abs(level["worldY"]) // 16],
-                "size": [abs(level["pxWid"]) // 16, abs(level["pxHei"]) // 16],
+                "origin": origin,
+                "size": size,
                 "layer": level["worldDepth"],
                 "entities": [],
                 "tiles": [],
+                "corner_0": [origin[0], origin[1] - 64],
+                "corner_1": [origin[0] + size[0], origin[1] - 64 + size[1]],
             }
             level_data = {}
             # Levels saved in the same file
-            if level["layerInstances"]:
+            if level.get("layerInstances") is not None:
                 level_data = level["layerInstances"]
 
             else:
@@ -110,12 +115,12 @@ class LDtk:
                         dat[tile_custom_data["__identifier"]] = tile_custom_data[
                             "__value"
                         ]
-                    id = f'{"minecraft" if dat["vanilla"] else CONFIG.NAMESPACE}:{entity["__identifier"].lower()}'
+                    id = f'{"minecraft" if dat.get("vanilla", False) else CONFIG.NAMESPACE}:{entity["__identifier"].lower()}'
                     self.dictionary["levels"][level["identifier"]]["entities"].append(
                         {
                             "x": entity["px"][0] / 16,
                             "y": entity["px"][1] / 16,
-                            "tileset_id": entity["__tile"]["tilesetUid"],
+                            "tileset_id": entity["__tile"]["tilesetUid"] if entity.get("__tile") is not None else None,
                             "entity_id": id,
                             "data": dat,
                         }
@@ -168,16 +173,17 @@ class LDtk:
         plane: str = "yz",
         offset: tuple[float, float, float] = (0, 0, 0),
         export_entities: bool = True,
+        export_world: bool = True,
     ):
         import click
 
-        click.echo(click.style(f"\\r[INFO]: Converting LDtk world...", fg="cyan"))
+        click.echo(click.style(f"\r[INFO]: Converting LDtk world...", fg="cyan"))
 
         def map_coordinates(level_origin, x, y, layer):
             if plane in ["yx", "xy"]:
                 return (
                     int(level_origin[0] + x + offset[0]),
-                    int(-64 + level_origin[1] - y + offset[1]),
+                    int(-64 - level_origin[1] - y + offset[1]),
                     int(offset[2] - layer),
                 )
             elif plane in ["xz", "zx"]:
@@ -186,82 +192,116 @@ class LDtk:
                     int(offset[1] - layer),
                     int(level_origin[1] + y + offset[2]),
                 )
+            elif plane in ["yz", "zy"]:
+                return (
+                    int(offset[0] - layer),
+                    int(-64 - level_origin[1] - y + offset[1]),
+                    int(level_origin[0] + x + offset[2]),
+                )
             else:
                 raise ValueError(f"Unsupported plane: {plane}")
 
         game_version = ("bedrock", [int(i) for i in MANIFEST_BUILD.split(".")])
-        world = self._prepare_level()
 
-        for level_name, level in self.dictionary["levels"].items():
-            for tile in level["tiles"]:
-                functions = {k: [] for k in self.dictionary["enums"]}
-                mapped_coords = map_coordinates(
-                    level["origin"], tile["x"], tile["y"], level["layer"]
-                )
-
-                try:
-                    prop_get = (
-                        self.dictionary.get("tilesets")
-                        .get(tile["tileset_id"])
-                        .get(tile["id"])
-                        .get("properties")
-                    )
-                except:
-                    raise KeyError(
-                        f"Error retrieving custom data for tile id: [{tile['id']}]"
+        if export_world:
+            world = self._prepare_level()
+            for level_name, level in self.dictionary["levels"].items():
+                for tile in level["tiles"]:
+                    functions = {k: [] for k in self.dictionary["enums"]}
+                    mapped_coords = map_coordinates(
+                        level["origin"], tile["x"], tile["y"], level["layer"]
                     )
 
-                properties = {
-                    str(k): StringTag(v)
-                    for k, v in [p.split("=") for p in prop_get]
-                    if type(prop_get) is list
-                }
-
-                origin_block = amuletBlock(
-                    *self.dictionary["tilesets"][tile["tileset_id"]][tile["id"]][
-                        "origin"
-                    ].split(":"),
-                    properties,
-                )
-                block = amuletBlock(
-                    *self.dictionary["tilesets"][tile["tileset_id"]][tile["id"]][
-                        "id"
-                    ].split(":"),
-                    properties,
-                )
-
-                world.set_version_block(
-                    *mapped_coords, "minecraft:overworld", game_version, origin_block
-                )
-                world.set_version_block(
-                    *mapped_coords, "minecraft:overworld", game_version, block
-                )
-
-        with open(os.path.join("scripts", "javascript", "entities.ts"), "w") as File:
-            entities = {}
-            if export_entities:
-                for level_name, level in self.dictionary["levels"].items():
-                    entities[level_name] = []
-                    for entity in level["entities"]:
-                        mapped_coords = map_coordinates(
-                            level["origin"], entity["x"], entity["y"], level["layer"]
+                    try:
+                        prop_get = (
+                            self.dictionary.get("tilesets")
+                            .get(tile["tileset_id"])
+                            .get(tile["id"])
+                            .get("properties")
+                        )
+                    except:
+                        raise KeyError(
+                            f"Error retrieving custom data for tile id: [{tile['id']}]"
                         )
 
-                        point = entity["data"].get("point")
-                        if point != None:
-                            cy = point.get("cy")
-                            cx = point.get("cx")
-                            if plane in ["yx", "xy"]:
-                                cy = -64 + level["origin"][1] - cy + offset[1]
-                            elif plane in ["xz", "zx"]:
-                                cy = level["origin"][1] + cy + offset[2]
+                    properties = {
+                        str(k): StringTag(v)
+                        for k, v in [p.split("=") for p in prop_get]
+                        if type(prop_get) is list
+                    }
 
-                            entity["data"]["point"]["cy"] = cy
-                            entity["data"]["point"]["cx"] = (
-                                cx + level["origin"][0] + offset[0]
-                            )
+                    origin_block = amuletBlock(
+                        *self.dictionary["tilesets"][tile["tileset_id"]][tile["id"]][
+                            "origin"
+                        ].split(":"),
+                        properties,
+                    )
+                    block = amuletBlock(
+                        *self.dictionary["tilesets"][tile["tileset_id"]][tile["id"]][
+                            "id"
+                        ].split(":"),
+                        properties,
+                    )
 
-                        entities[level_name].append(
+                    world.set_version_block(
+                        *mapped_coords,
+                        "minecraft:overworld",
+                        game_version,
+                        origin_block,
+                    )
+                    world.set_version_block(
+                        *mapped_coords, "minecraft:overworld", game_version, block
+                    )
+
+            world.save()
+            world.close()
+        if export_entities:
+            import copy
+
+            entities = {}
+            for level_name, level in self.dictionary["levels"].items():
+                level_entities = []
+                spawn_point = None
+
+                # Calculate corners in Minecraft coordinates using map_coordinates
+                corner_0_mc = map_coordinates(
+                    level["origin"], 0, 0, level["layer"]
+                )
+                corner_1_mc = map_coordinates(
+                    level["origin"], level["size"][0], level["size"][1], level["layer"]
+                )
+
+                for entity in level["entities"]:
+                    mapped_coords = map_coordinates(
+                        level["origin"], entity["x"], entity["y"], level["layer"]
+                    )
+
+                    entity_data = copy.deepcopy(entity["data"])
+                    point = entity_data.get("point")
+                    if point != None:
+                        cy = point.get("cy")
+                        cx = point.get("cx")
+                        if plane in ["yx", "xy", "yz", "zy"]:
+                            cy = -64 - level["origin"][1] - cy + offset[1]
+                        elif plane in ["xz", "zx"]:
+                            cy = level["origin"][1] + cy + offset[2]
+
+                        point["cy"] = cy
+                        if plane in ["yz", "zy"]:
+                            point["cx"] = cx + level["origin"][0] + offset[2]
+                        else:
+                            point["cx"] = cx + level["origin"][0] + offset[0]
+
+                    # Check if the entity is called "spawn"
+                    if entity["entity_id"].split(":")[-1] == "spawn":
+                        spawn_point = {
+                            "x": mapped_coords[0],
+                            "y": mapped_coords[1],
+                            "z": mapped_coords[2],
+                        }
+
+                    if not entity_data.get("do_not_spawn"):
+                        level_entities.append(
                             {
                                 "id": entity["entity_id"],
                                 "location": {
@@ -269,10 +309,40 @@ class LDtk:
                                     "y": mapped_coords[1],
                                     "z": mapped_coords[2],
                                 },
-                                "data": entity["data"],
+                                "data": entity_data,
                             }
                         )
-            File.write(f"export const entities = {json.dumps(entities, indent=4)}")
 
-        world.save()
-        world.close()
+                entities[level_name] = {
+                    "corner_0": {
+                        "x": corner_0_mc[0],
+                        "y": corner_0_mc[1],
+                        "z": corner_0_mc[2],
+                    },
+                    "corner_1": {
+                        "x": corner_1_mc[0],
+                        "y": corner_1_mc[1],
+                        "z": corner_1_mc[2],
+                    },
+                    "spawn_point": spawn_point,
+                    "entities": level_entities,
+                }
+
+            path = os.path.join(
+                "scripts",
+                "javascript",
+                "content",
+                "levels",
+            )
+            Directory.create(path)
+            for level_name, level_data in entities.items():
+                if len(level_data["entities"]) == 0:
+                    continue
+                with open(
+                    os.path.join(
+                        path,
+                        level_name + ".json",
+                    ),
+                    "w",
+                ) as File:
+                    File.write(json.dumps(level_data, indent=4))

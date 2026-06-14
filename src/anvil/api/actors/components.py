@@ -228,7 +228,7 @@ class EntityKnockbackResistance(Component):
 class EntityPushableByBlock(Component):
     _identifier = "minecraft:pushable_by_block"
 
-    def __init__(self, value: bool) -> None:
+    def __init__(self) -> None:
         """Allows the entity to be pushed by certain blocks, like Shulker Boxes and Pistons.
 
         Parameters:
@@ -244,7 +244,7 @@ class EntityPushableByBlock(Component):
 class EntityPushableByEntity(Component):
     _identifier = "minecraft:pushable_by_entity"
 
-    def __init__(self, value: bool) -> None:
+    def __init__(self) -> None:
         """Allows an entity to be pushed by other entities.
 
         Parameters:
@@ -1669,21 +1669,26 @@ class EntityProjectile(Component):
         destroy_on_hurt: bool = False,
         fire_affected_by_griefing: bool = False,
         gravity: float = 0.05,
+        hit_nearest_passenger: bool = False,
         hit_sound: str = "",
         hit_ground_sound: str = "",
         hit_water: bool = False,
         homing: bool = False,
+        ignored_entities: list[str] = None,
         inertia: float = 0.99,
         is_dangerous: bool = False,
+        isolated_physics: bool = True,
         knockback: bool = True,
         lightning: bool = False,
         liquid_inertia: float = 0.6,
         multiple_targets: bool = True,
         offset: Coordinates = (0, 0.5, 0),
         on_fire_time: float = 5.0,
+        owner_launch_immunity_ticks: int = 5,
         particle: str = "iconcrack",
         potion_effect: int = -1,
         power: float = 1.3,
+        reflect_immunity: float = 0.0,
         reflect_on_hurt: bool = False,
         semi_random_diff_damage: bool = False,
         shoot_sound: str = "",
@@ -1705,21 +1710,26 @@ class EntityProjectile(Component):
             destroy_on_hurt (bool, optional): If true, this entity will be destroyed when hit. Defaults to False.
             fire_affected_by_griefing (bool, optional): If true, whether the projectile causes fire is affected by the mob griefing game rule. Defaults to False.
             gravity (float, optional): The gravity applied to this entity when thrown. The higher the value, the faster the entity falls. Defaults to 0.05.
+            hit_nearest_passenger (bool, optional): If true, damage is dealt to closest passenger when hitting a vehicle. Defaults to False.
             hit_sound (str, optional): The sound that plays when the projectile hits something. Defaults to ''.
             hit_ground_sound (str, optional): . Defaults to ''.
             hit_water (bool, optional): . Defaults to False.
             homing (bool, optional): If true, the projectile homes in to the nearest entity. Defaults to False.
+            ignored_entities (list of str, optional): Entity types that this projectile does not collide with. Defaults to None.
             inertia (float, optional): The fraction of the projectile's speed maintained every frame while traveling in air. Defaults to 0.99.
             is_dangerous (bool, optional): If true, the projectile will be treated as dangerous to the players. Defaults to False.
+            isolated_physics (bool, optional): If true, projectile is not affected by outside forces. Defaults to True.
             knockback (bool, optional): If true, the projectile will knock back the entity it hits. Defaults to True.
             lightning (bool, optional): If true, the entity hit will be struck by lightning. Defaults to False.
             liquid_inertia (float, optional): The fraction of the projectile's speed maintained every frame while traveling in water. Defaults to 0.6.
             multiple_targets (bool, optional): If true, the projectile can hit multiple entities per flight. Defaults to True.
             offset (Coordinates, optional): The offset from the entity's anchor where the projectile will spawn. Defaults to (0, 0.5, 0).
             on_fire_time (float, optional): Time in seconds that the entity hit will be on fire for. Defaults to 5.0.
+            owner_launch_immunity_ticks (int, optional): Number of ticks after launch projectile cannot hit its owner. Defaults to 5.
             particle (str, optional): Particle to use upon collision. Defaults to 'iconcrack'.
             potion_effect (int, optional): Defines the effect the arrow will apply to the entity it hits. Defaults to -1.
             power (float, optional): Determines the velocity of the projectile. Defaults to 1.3.
+            reflect_immunity (float, optional): Time in seconds during which the projectile cannot be reflected. Defaults to 0.0.
             reflect_on_hurt (bool, optional): If true, this entity will be reflected back when hit. Defaults to False.
             semi_random_diff_damage (bool, optional): If true, damage will be randomized based on damage and speed. Defaults to False.
             shoot_sound (str, optional): The sound that plays when the projectile is shot. Defaults to ''.
@@ -1732,7 +1742,7 @@ class EntityProjectile(Component):
             uncertainty_multiplier (float, optional): Determines how much difficulty affects accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier. Defaults to 0.0.
 
         ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_projectile
+            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_projectile?view=minecraft-bedrock-stable
         """
         super().__init__("projectile")
         if anchor != 0:
@@ -1749,6 +1759,8 @@ class EntityProjectile(Component):
             self._add_field("fire_affected_by_griefing", fire_affected_by_griefing)
         if gravity != 0.05:
             self._add_field("gravity", gravity)
+        if hit_nearest_passenger:
+            self._add_field("hit_nearest_passenger", hit_nearest_passenger)
         if hit_sound != "":
             self._add_field("hit_sound", hit_sound)
         if hit_ground_sound != "":
@@ -1757,10 +1769,14 @@ class EntityProjectile(Component):
             self._add_field("hit_water", hit_water)
         if homing:
             self._add_field("homing", homing)
+        if ignored_entities:
+            self._add_field("ignored_entities", ignored_entities)
         if inertia != 0.99:
             self._add_field("inertia", inertia)
         if is_dangerous:
             self._add_field("is_dangerous", is_dangerous)
+        if not isolated_physics:
+            self._add_field("isolated_physics", isolated_physics)
         if not knockback:
             self._add_field("knockback", knockback)
         if lightning:
@@ -1773,12 +1789,16 @@ class EntityProjectile(Component):
             self._add_field("offset", offset)
         if on_fire_time != 5.0:
             self._add_field("on_fire_time", on_fire_time)
+        if owner_launch_immunity_ticks != 5:
+            self._add_field("owner_launch_immunity_ticks", owner_launch_immunity_ticks)
         if particle != "iconcrack":
             self._add_field("particle", particle)
         if potion_effect != -1:
             self._add_field("potion_effect", potion_effect)
         if power != 1.3:
             self._add_field("power", power)
+        if reflect_immunity != 0.0:
+            self._add_field("reflect_immunity", reflect_immunity)
         if reflect_on_hurt:
             self._add_field("reflect_on_hurt", reflect_on_hurt)
         if semi_random_diff_damage:

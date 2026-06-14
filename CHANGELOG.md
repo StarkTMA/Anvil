@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.8.4**](#0984)
+- [**0.9.8.5**](#0985)
+- [0.9.8.4](#0984)
 - [0.9.8.3](#0982)
 - [0.9.8.2](#0982)
 - [0.9.8.1](#0981)
@@ -97,6 +98,62 @@
 ---
 
 # 0.9.x
+
+## 0.9.8.5
+
+### Anvil
+
+- Added a `--clean` command-line flag to the build CLI command to clear previous project development packs before compiling.
+- Improved the `CameraPreset` to support setting `listener` to a boolean or custom position string, configuring input `control_scheme`, setting search cones for targeting assist limits, validating rotation boundaries, and improved docstrings.
+- Added the `ControlSchemes` enumeration representing different Bedrock camera control schemes (`camera_relative`, `camera_relative_strafe`, `player_relative`, `player_relative_strafe`, `locked_player_relative_strafe`).
+- Updated the packaging system to bundle the `db` directory for world templates.
+- Enhanced color validation system to properly support RGB/RGBA lists and corrected hex string checks.
+- Simplified the generated GitHub Release Workflow template to directly pull the package target settings from `anvilconfig.json`.
+- Added unit tests covering blockbench parsing, camera presets, components, LDtk levels, PBR settings, and world icons.
+
+### Actors
+
+- Added a new `.config(...)` method to the entity server description to set configurations like `summonable`, `spawnable`, `experimental`, `runtime_identifier`, and `spawn_category` in a single call.
+- Deprecated properties `Summonable`, `Spawnable`, `Experimental`, and `RuntimeIdentifier` on the server description.
+- Added support for configuring a custom `initial_state` for animation controllers via `.animation_controller` and `add_controller` (defaults to `"default"`).
+- Refactored `add()`, `remove()`, and `queue_command()` on `_BaseEvent`, `_Randomize`, and `_Sequence` classes to accept a list of strings (`list[str]`) instead of varargs, with added type enforcement.
+- Updated sound event registrations to avoid queueing empty sound definitions, automatically prepending the namespace to music references, and tracking modification state.
+- Enhanced the `EntityProjectile` component constructor with support for configuration parameters: `hit_nearest_passenger`, `ignored_entities`, `isolated_physics`, `owner_launch_immunity_ticks`, and `reflect_immunity`.
+
+### Blocks
+
+- Added `Block.override_vanilla_texture(...)` to extract textures from a Blockbench model and export them as a block's texture layout (as a `.texture_set.json` file), bypassing the generation of block configuration files (server/client JSON files) for doing vanilla texture updates.
+- Updated `Block.descriptor(...)` to guarantee all block state keys are serialized as strings.
+- Renamed the block tag component identifier to `"minecraft:tags"` (previously `"minecraft:tag"`).
+
+### Biomes
+
+- Updated client biome files to use the `.client_biome.json` extension (previously `.biome.json`).
+- Updated component identifiers to use their string representations instead of the `.identifier` attribute.
+- Simplified `fog_appearance` to take a `Fog` object directly.
+- Automatically queue client biomes when the parent biome is queued.
+
+### Blockbench
+
+- Added advanced support for rendering layered/blended textures from Blockbench files, with native blending using Pillow (supporting blend modes such as overlay, multiply, hard_light, screen, darken, lighten, default, behind, alpha_mask, set_opacity, divide, and color).
+- Support exporting textures in formats other than PNG (including WebP, TGA, JPEG/JPG).
+- Support specifying a custom destination directory when queueing textures.
+
+### PBR
+
+- Completely modularized the PBR API. The monolithic `pbr.py` has been split into multiple dedicated modules: `atmosphere`, `color_grading`, `cubemap`, `fallback`, `fog` (moved to the PBR namespace), `lighting`, `shadow`, `texture_set`, and `water`.
+- Introduced granular Minecraft version configuration mapping for each PBR settings file type.
+- Updated PBR JSON templates (`vv_atmosphere_settings.jsont`, `vv_fog_settings.jsont`, and `vv_local_lighting.jsont`) to align with current Bedrock schema requirements, including wrapping identifiers under description blocks and updating local light settings.
+- Updated all API guides and examples to reference the correct sub-modules.
+
+### UI & Dialogues
+
+- Updated NPC screen dialogue components (`npc_name`, `text`) and dialogue buttons (`name`) to wrap user-provided text/names inside the translation schema format (`{"rawtext": [{"translate": ...}]}`).
+
+### World / LDtk
+
+- Updated the LDtk world generator tool to write separate `<level_name>.json` files under `scripts/javascript/content/levels/` instead of writing a single massive `entities.ts` file.
+- Added support for calculating Minecraft coordinates (`corner_0`, `corner_1`), capturing custom spawn points, and ignoring entities configured with `do_not_spawn`.
 
 ## 0.9.8.4
 

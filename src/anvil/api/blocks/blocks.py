@@ -19,6 +19,7 @@ from anvil.api.core.enums import (
     PlacementPositionTrait,
 )
 from anvil.api.logic.molang import Molang
+from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
@@ -329,6 +330,7 @@ class Block(MinecraftBlockDescriptor):
         self.client = BlockClient(name, is_vanilla)
 
         self._item = None
+        self._texture_only = False
 
     def descriptor(
         self,
@@ -338,7 +340,7 @@ class Block(MinecraftBlockDescriptor):
         if any([states, tags]):
             return {
                 "name": self.identifier,
-                "states": states if states else {},
+                "states": {str(k): v for k, v in states.items()} if states else {},
                 "tags": tags if tags else {},
             }
         return self.identifier
@@ -352,8 +354,29 @@ class Block(MinecraftBlockDescriptor):
 
         return self._item
 
+    def override_vanilla_texture(
+        self, blockbench_name: str, component: TextureComponents, subfolder: str = ""
+    ) -> None:
+        """Extracts textures from a Blockbench model and exports them as the block's texture layout,
+        bypassing the generation of block configuration files (server/client JSON files).
+        Generates a .texture_set.json file under RP_PATH/textures/blocks/{subfolder}.
+
+        Parameters:
+            blockbench_name (str): The name of the Blockbench model (without extension).
+            component (TextureComponents): A TextureComponents object containing color/normal/height/MER/MERS map names.
+            subfolder (str, optional): Subfolder under RP_PATH/textures/blocks. Defaults to "".
+        """
+        self._texture_only = True
+        texture_set = TextureSet(self.name, "blocks", overriding_vanilla=True)
+        texture_set.content(JsonSchemes.texture_set())
+        texture_set.set_vanilla_texture(blockbench_name, component, subfolder)
+        texture_set.queue(subfolder)
+
     def queue(self):
         """Queues the block to be exported."""
+        if self._texture_only:
+            return
+
         self.server.queue()
         self.client.queue()
 

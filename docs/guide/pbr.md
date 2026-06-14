@@ -71,7 +71,7 @@ This example shows a **Mystic Wisp** entity using PBR textures defined in its cl
 
 ```python title="entities/mystic_wisp.py"
 from anvil.api.actors.actors import Entity
-from anvil.api.pbr.pbr import TextureComponents
+from anvil.api.pbr.texture_set import TextureComponents
 
 def mystic_wisp():
     entity = Entity("mystic_wisp")
@@ -120,7 +120,7 @@ Unlike Blocks and Entities, **Items** typically use standalone texture files.
 
 ```python
 from anvil.api.items.components import ItemIcon
-from anvil.api.pbr.pbr import TextureComponents
+from anvil.api.pbr.texture_set import TextureComponents
 
 # References 'assets/textures/items/my_item.png'
 ItemIcon(TextureComponents(color="my_item"))

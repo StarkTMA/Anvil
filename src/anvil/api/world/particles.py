@@ -1,7 +1,7 @@
 import json
 import os
 
-from anvil.api.pbr.pbr import TextureComponents, TextureSet
+from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject

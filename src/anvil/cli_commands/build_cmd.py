@@ -2,7 +2,6 @@ import os
 import sys
 
 import click
-
 from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.lib import process_subcommand
 
@@ -71,6 +70,13 @@ from anvil.lib.lib import process_subcommand
     show_default=True,
     help="Minify the project's JSON and JavaScript files.",
 )
+@click.option(
+    "--clean",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Compile a clean new build (Clears previous build artifacts).",
+)
 def build(
     js_only: bool,
     nocompile: bool,
@@ -81,6 +87,7 @@ def build(
     tech_notes: bool,
     workflow: bool,
     minify: bool,
+    clean: bool,
 ) -> None:
     if not os.path.exists("anvilconfig.json"):
         click.echo(
@@ -121,6 +128,8 @@ def build(
         command.append("--workflow")
     if minify:
         command.append("--minify")
+    if clean:
+        command.append("--clean")
 
     process_subcommand(
         " ".join(command),

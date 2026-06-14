@@ -1,19 +1,24 @@
 import os
 from typing import Literal
+from warnings import deprecated
 
+from anvil.api.actors._animation_controllers import (
+    BPAnimationControllers,
+    RPAnimationControllers,
+)
 from anvil.api.actors._animations import BPAnimations
 from anvil.api.actors._events import _Event
 from anvil.api.actors._render_controller import RenderControllers
+from anvil.api.actors._spawn_rules import SpawnRule
 from anvil.api.actors.components import (
     EntityInstantDespawn,
     EntityPushableByBlock,
     EntityPushableByEntity,
     EntityRideable,
 )
-from anvil.api.actors._spawn_rules import SpawnRule
 from anvil.api.core.components import (
-    RootComponent,
     ComponentGroup,
+    RootComponent,
     components_validations,
 )
 from anvil.api.core.core import ANVIL, SoundDefinition, SoundEvent
@@ -21,8 +26,8 @@ from anvil.api.core.enums import DamageSensor
 from anvil.api.core.sounds import EntitySoundEvent, SoundCategory
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import Vector2D
-from anvil.api.logic.molang import Molang, Variable
-from anvil.api.pbr.pbr import TextureComponents, TextureSet
+from anvil.api.logic.molang import Molang, Variable, molang_conditions
+from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.vanilla.entities import vanilla_entity_ids
 from anvil.lib.blockbench import BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG, ConfigPackageTarget
@@ -34,10 +39,6 @@ from anvil.lib.schemas import (
     MinecraftEntityDescriptor,
 )
 from anvil.lib.translator import AnvilTranslator
-from anvil.api.actors._animation_controllers import (
-    BPAnimationControllers,
-    RPAnimationControllers,
-)
 
 __all__ = ["Entity", "Attachable"]
 
@@ -308,6 +309,7 @@ class _ActorClientDescription(_ActorDescription):
         controller_shortname: str,
         animate: bool = False,
         condition: str | Molang = None,
+        initial_state: str = "default",
     ):
         """Sets the mapping of internal animation controller references to actual animations.
 
@@ -315,10 +317,12 @@ class _ActorClientDescription(_ActorDescription):
             controller_shortname (str): The name of the animation controller.
             animate (bool, optional): Whether or not to animate the animation controller. Defaults to False.
             condition (str| Molang, optional): The condition to animate the animation controller. Defaults to None.
-
+            initial_state (str, optional): The initial state of the animation controller. Defaults to "default".
         """
         self._animation_controller(controller_shortname, animate, condition)
-        return self._animation_controllers.add_controller(controller_shortname)
+        return self._animation_controllers.add_controller(
+            controller_shortname, initial_state
+        )
 
     def animation(
         self,
@@ -563,6 +567,11 @@ class _ActorClientDescription(_ActorDescription):
             min_distance (int, optional): The minimum distance of the sound effect. Defaults to 9999.
             subtitle (str, optional): The subtitle of the sound effect. Defaults to None.
         """
+        if not isinstance(category, SoundCategory):
+            raise ValueError(
+                f"Invalid sound category '{category}' for sound effect '{sound_identifier}' in entity {self.identifier}. Entity [{self.identifier}]"
+            )
+
         self._description["description"]["sound_effects"].update(
             {sound_identifier: f"{CONFIG.NAMESPACE}:{sound_identifier}"}
         )
@@ -816,6 +825,9 @@ class _EntityServerDescription(_ActorDescription):
         )
 
     @property
+    @deprecated(
+        "The Summonable property is deprecated and will be removed in a future version. Please use the config method instead.",
+    )
     def Summonable(self):
         """Sets whether or not we can summon this entity using commands such as /summon.
 
@@ -828,6 +840,9 @@ class _EntityServerDescription(_ActorDescription):
         return self
 
     @property
+    @deprecated(
+        "The Spawnable property is deprecated and will be removed in a future version. Please use the config method instead.",
+    )
     def Spawnable(self):
         """Sets whether or not this entity has a spawn egg in the creative ui.
 
@@ -840,6 +855,9 @@ class _EntityServerDescription(_ActorDescription):
         return self
 
     @property
+    @deprecated(
+        "The Experimental property is deprecated and will be removed in a future version. Please use the config method instead.",
+    )
     def Experimental(self):
         """Sets whether or not this entity is experimental. Experimental entities are only enabled when the experimental toggle is enabled.
 
@@ -857,6 +875,9 @@ class _EntityServerDescription(_ActorDescription):
         self._description["description"]["is_experimental"] = True
         return self
 
+    @deprecated(
+        "The RuntimeIdentifier property is deprecated and will be removed in a future version. Please use the config method instead.",
+    )
     def RuntimeIdentifier(self, entity: "MinecraftEntityDescriptor"):
         """Sets the runtime identifier of the entity.
 
@@ -881,6 +902,48 @@ class _EntityServerDescription(_ActorDescription):
             raise RuntimeError(
                 f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]"
             )
+
+    def config(
+        self,
+        summonable: bool = True,
+        spawnable: bool = True,
+        experimental: bool = False,
+        runtime_identifier: "MinecraftEntityDescriptor" = None,
+        spawn_category: str = "misc",
+    ):
+        """Sets the config of the entity.
+
+        Parameters:
+            summonable (bool, optional): Whether or not we can summon this entity using commands such as /summon. Defaults to True.
+            spawnable (bool, optional): Whether or not this entity has a spawn egg in the creative ui. Defaults to True.
+            experimental (bool, optional): Whether or not this entity is experimental. Experimental entities are only enabled when the experimental toggle is enabled. Defaults to False.
+            runtime_identifier (MinecraftEntityDescriptor, optional): The vanilla entity to get the runtime identifier from. Defaults to None.
+            spawn_category (str, optional): The spawn category of the entity. Defaults to "misc".
+        """
+        self._description["description"]["is_summonable"] = summonable
+        self._description["description"]["is_spawnable"] = spawnable
+        self._description["description"]["is_experimental"] = experimental
+        self._description["description"]["spawn_category"] = spawn_category
+        if runtime_identifier is not None:
+            if CONFIG._TARGET != ConfigPackageTarget.ADDON:
+                if type(runtime_identifier) is MinecraftEntityDescriptor:
+                    if runtime_identifier._allow_runtime:
+                        self._description["description"][
+                            "runtime_identifier"
+                        ] = runtime_identifier.identifier
+                    else:
+                        raise RuntimeError(
+                            f"Entity {runtime_identifier.identifier} does not allow runtime identifier usage. Entity [{self.identifier}]."
+                        )
+                else:
+                    raise TypeError(
+                        f"Expected Entity, got {type(runtime_identifier).__name__}. Entity [{self.identifier}]"
+                    )
+            else:
+                raise RuntimeError(
+                    f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]"
+                )
+        return self
 
     @property
     def add_property(self):
@@ -907,7 +970,7 @@ class _EntityServer(AddonObject):
     def _add_despawn_function(self):
         """Adds a despawn function to the entity."""
         self.component_group("despawn").add(EntityInstantDespawn())
-        self.event("despawn").add("despawn")
+        self.event("despawn").add(["despawn"])
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """Base class for all server entities.

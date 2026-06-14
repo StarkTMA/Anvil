@@ -1,10 +1,9 @@
 import os
-from tkinter.filedialog import Directory
-
-from PIL import Image, ImageDraw, ImageFont
 
 from anvil.api.core.core import ANVIL
 from anvil.lib.config import CONFIG
+from anvil.lib.lib import Directory
+from PIL import Image, ImageDraw, ImageFont
 
 
 class Fonts:

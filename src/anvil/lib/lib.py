@@ -9,18 +9,16 @@ import sys
 import zipfile
 from datetime import datetime
 from enum import StrEnum
+from functools import wraps
 from typing import Any, Dict, List
 
 import click
 import commentjson
 import orjson
 import requests
-from packaging.version import Version
-
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 from anvil.lib.format_versions import MANIFEST_BUILD
-
-from functools import wraps
+from packaging.version import Version
 
 from ..__version__ import __version__
 
@@ -424,6 +422,7 @@ class AnvilArchive:
             CONFIG.RP_PATH: os.path.join("resource_packs", f"RP_{CONFIG.PROJECT_NAME}"),
             CONFIG.BP_PATH: os.path.join("behavior_packs", f"BP_{CONFIG.PROJECT_NAME}"),
             os.path.join(CONFIG._WORLD_PATH, "texts"): "texts",
+            os.path.join(CONFIG._WORLD_PATH, "db"): "db",
             os.path.join(CONFIG._WORLD_PATH, "level.dat"): "",
             os.path.join(CONFIG._WORLD_PATH, "levelname.txt"): "",
             os.path.join(CONFIG._WORLD_PATH, "manifest.json"): "",
@@ -783,14 +782,14 @@ class AnvilValidator:
         if value is None:
             return False
 
-        # Check for tuple types (RGB, RGBA)
+        # Check for tuple/list types (RGB, RGBA)
         if (
-            isinstance(value, tuple)
+            isinstance(value, (tuple, list))
             and len(value) in (3, 4)
-            and any(
+            and any([
                 all(isinstance(c, int) and 0 <= c <= 255 for c in value),
                 all(isinstance(c, float) and 0.0 <= c <= 1.0 for c in value),
-            )
+            ])
         ):
             return True
 
@@ -798,10 +797,13 @@ class AnvilValidator:
         if (
             isinstance(value, str)
             and value.startswith("#")
-            and len(value) in (3, 4, 6, 8)
-            and all(c in "0123456789abcdefABCDEF" for c in value[1:])
         ):
-            return True
+            hex_val = value[1:]
+            if (
+                len(hex_val) in (3, 4, 6, 8)
+                and all(c in "0123456789abcdefABCDEF" for c in hex_val)
+            ):
+                return True
 
         # Everything else (including plain strings) are treated as texture file names
         return False

@@ -16,7 +16,7 @@ from anvil.api.core.enums import (
 from anvil.api.core.textures import FlipBookTexturesObject
 from anvil.api.core.types import Identifier
 from anvil.api.logic.molang import Molang
-from anvil.api.pbr.pbr import TextureComponents, TextureSet
+from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.blockbench import BlockBenchSource, _Blockbench, blockbench_geometry_name
@@ -1159,7 +1159,7 @@ class BlockLeashable(Component):
 
 
 class BlockTagComponent(Component):
-    _identifier = "minecraft:tag"
+    _identifier = "minecraft:tags"
 
     def __init__(self, tags: list[MinecraftBlockTags | str]) -> None:
         """Indicates that this block can be leashed by a lead.
@@ -1167,7 +1167,7 @@ class BlockTagComponent(Component):
         ## Documentation reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_tag
         """
-        super().__init__("tag")
+        super().__init__("tags")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.20")
         new_tags = []
         for tag in tags:

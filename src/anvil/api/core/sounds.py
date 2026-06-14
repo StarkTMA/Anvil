@@ -226,6 +226,8 @@ class SoundDefinition(AddonObject):
         Returns:
             dict: The sound definition.
         """
+        if len(self._sounds) == 0:
+            return
         for sound in self._sounds:
             self._content["sound_definitions"].update(sound.__export__())
         return super().__export__()
@@ -254,6 +256,7 @@ class MusicDefinition(AddonObject):
         super().__init__("music_definitions")
         self.content(JsonSchemes.music_definitions())
         self._initialized = True
+        self._music = []
 
     def music_definition(
         self,
@@ -271,10 +274,10 @@ class MusicDefinition(AddonObject):
         Returns:
             _SoundDescription: The created sound description instance.
         """
-        self._content.update(
+        self._music.append(
             {
-                music_reference: {
-                    "event_name": music_reference,
+                str(music_reference): {
+                    "event_name": f"{CONFIG.NAMESPACE}:music.{music_reference}",
                     "max_delay": max_delay,
                     "min_delay": min_delay,
                 }
@@ -299,6 +302,10 @@ class MusicDefinition(AddonObject):
         Returns:
             dict: The music definition.
         """
+        if len(self._music) == 0:
+            return
+
+        self._content.update({k: v for d in self._music for k, v in d.items()})
         return super().__export__()
 
 
@@ -325,6 +332,7 @@ class SoundEvent(AddonObject):
         super().__init__("sounds")
         self.content(JsonSchemes.sounds_json())
         self._initialized = True
+        self._changed = False
 
     def add_entity_event(
         self,
@@ -340,6 +348,7 @@ class SoundEvent(AddonObject):
         variant_map: str = None,
         subtitle: str = None,
     ):
+        self._changed = True
         self._content["entity_sounds"]["entities"].setdefault(
             entity_identifier,
             {"events": {}, "variants": {"key": {}, "map": {}}},
@@ -388,6 +397,7 @@ class SoundEvent(AddonObject):
         min_distance: float = 9999,
         subtitle: str = None,
     ):
+        self._changed = True
         self._content["block_sounds"].setdefault(
             block_identifier,
             {"events": {}},
@@ -424,6 +434,7 @@ class SoundEvent(AddonObject):
         min_distance: float = 9999,
         subtitle: str = None,
     ):
+        self._changed = True
         self._content["interactive_sounds"]["block_sounds"].setdefault(
             block_identifier,
             {"events": {}},
@@ -461,6 +472,7 @@ class SoundEvent(AddonObject):
         min_distance: float = 9999,
         subtitle: str = None,
     ):
+        self._changed = True
         self._content["individual_event_sounds"]["events"][sound_identifier] = {
             "sound": sound_identifier,
             "pitch": pitch if pitch != (0.8, 1.2) else {},
@@ -481,6 +493,8 @@ class SoundEvent(AddonObject):
         )
 
     def queue(self):
+        if not self._changed:
+            return
         return super().queue()
 
 
@@ -501,9 +515,15 @@ class BlocksJSONObject(AddonObject):
         super().__init__("blocks")
         self.content(JsonSchemes.blocks_json())
         self._initialized = True
+        self._blocks = []
 
     def add_block(self, block: Identifier):
-        self._content.update({str(block): {"sound": str(block)}})
+        self._blocks.append({str(block): {"sound": str(block)}})
 
     def queue(self):
+        if len(self._blocks) == 0:
+            return
+        self._content["blocks"].update(
+            {k: v for d in self._blocks for k, v in d.items()}
+        )
         return super().queue()

@@ -33,7 +33,7 @@ from anvil.api.items.components import (
 from anvil.api.items.crafting import PotionMixingRecipe
 from anvil.api.items.items import Item
 from anvil.api.logic.molang import Query
-from anvil.api.pbr.pbr import TextureComponents
+from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.kit.actors.components import ItemCustomProjectile
 from anvil.lib.lib import Color, clamp, AnvilFormatter

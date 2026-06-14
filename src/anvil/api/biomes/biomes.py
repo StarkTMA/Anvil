@@ -5,14 +5,12 @@ from anvil.api.actors.actors import RootComponent
 from anvil.api.core.enums import MusicCategory, SoundCategory
 from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
 from anvil.api.core.types import RGB, Color, Identifier
-from anvil.api.pbr.pbr import (
-    AtmosphericSettings,
-    ColorGradingSettings,
-    CubeMapSettings,
-    LightingSettings,
-    WaterSettings,
-)
-from anvil.api.world.fog import Fog
+from anvil.api.pbr.atmosphere import AtmosphericSettings
+from anvil.api.pbr.color_grading import ColorGradingSettings
+from anvil.api.pbr.cubemap import CubeMapSettings
+from anvil.api.pbr.fog import Fog
+from anvil.api.pbr.lighting import LightingSettings
+from anvil.api.pbr.water import WaterSettings
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.lib import AnvilFormatter, clamp
 from anvil.lib.reports import ReportType
@@ -78,7 +76,7 @@ class BiomeServer(AddonObject):
 class BiomeClient(AddonObject):
     """The biome client object."""
 
-    _extension = ".biome.json"
+    _extension = ".client_biome.json"
     _path = os.path.join(CONFIG.RP_PATH, "biomes")
     _object_type = "Biome Client"
 
@@ -147,7 +145,7 @@ class BiomeClient(AddonObject):
         """
         self._content["minecraft:client_biome"]["components"][
             "minecraft:atmosphere_identifier"
-        ] = {"atmosphere_identifier": atmosphere_identifier.identifier}
+        ] = {"atmosphere_identifier": str(atmosphere_identifier)}
 
     def biome_music(
         self,
@@ -196,7 +194,7 @@ class BiomeClient(AddonObject):
         """
         self._content["minecraft:client_biome"]["components"][
             "minecraft:color_grading_identifier"
-        ] = {"color_grading_identifier": color_grading_identifier.identifier}
+        ] = {"color_grading_identifier": str(color_grading_identifier)}
 
     def dry_foliage_appearance(self, color: Color):
         """
@@ -211,7 +209,7 @@ class BiomeClient(AddonObject):
             "minecraft:dry_foliage_color"
         ] = {"color": AnvilFormatter.convert_color(color, RGB)}
 
-    def fog_appearance(self, fog: str | Fog):
+    def fog_appearance(self, fog: Fog):
         """
         Sets the fog settings used during rendering. Biomes without this component will have default fog settings.
 
@@ -220,14 +218,10 @@ class BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_fog_appearance)
         """
-        if isinstance(fog, str):
-            self._fog = Fog(fog)
-        elif isinstance(fog, Fog):
-            self._fog = fog
 
         self._content["minecraft:client_biome"]["components"][
             "minecraft:fog_appearance"
-        ] = {"fog_appearance": self._fog.identifier}
+        ] = {"fog_appearance": str(fog)}
 
     def foliage_appearance(self, color: RGB):
         """Sets the foliage color or color map used during rendering. Biomes without this component will have default foliage appearance.
@@ -264,7 +258,7 @@ class BiomeClient(AddonObject):
         """
         self._content["minecraft:client_biome"]["components"][
             "minecraft:lighting_identifier"
-        ] = {"lighting_identifier": lighting_identifier}
+        ] = {"lighting_identifier": str(lighting_identifier)}
 
     def precipitation(
         self,
@@ -341,7 +335,7 @@ class BiomeClient(AddonObject):
         """
         self._content["minecraft:client_biome"]["components"][
             "minecraft:water_identifier"
-        ] = {"water_identifier": water_identifier.identifier}
+        ] = {"water_identifier": str(water_identifier)}
 
     def cubemap_identifier(
         self, cubemap_identifier: CubeMapSettings | Identifier
@@ -353,18 +347,12 @@ class BiomeClient(AddonObject):
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_cubemap_identifier)
         """
-        if isinstance(cubemap_identifier, CubeMapSettings):
-            identifier = cubemap_identifier.identifier
-        else:
-            identifier = cubemap_identifier
-
         self._content["minecraft:client_biome"]["components"][
             "minecraft:cubemap_identifier"
-        ] = {"cubemap_identifier": identifier}
+        ] = {"cubemap_identifier": str(cubemap_identifier)}
 
     def queue(self):
-        if self._fog:
-            self._fog.queue()
+        self._content["minecraft:client_biome"].update(self._description.__export__())
         return super().queue()
 
 
@@ -402,6 +390,9 @@ class Biome(MinecraftBiomeDescriptor):
         """Queues the biome to be exported."""
         if self._server:
             self.server.queue()
+
+        if self._client:
+            self.client.queue()
 
         CONFIG.Report.add_report(
             ReportType.BIOME,

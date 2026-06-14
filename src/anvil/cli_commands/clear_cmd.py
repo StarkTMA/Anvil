@@ -1,8 +1,8 @@
 import os
 import shutil
-import click
 
-from anvil.lib.config import Config, ConfigOption, ConfigSection, ConfigOption
+import click
+from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.lib import PREVIEW_COM_MOJANG, RELEASE_COM_MOJANG
 
 

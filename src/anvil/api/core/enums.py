@@ -271,6 +271,18 @@ class CameraPresets(StrEnum):
     ThirdPersonFront = "minecraft:third_person_front"
 
 
+class ControlSchemes(StrEnum):
+    """
+    Enumeration representing the different control schemes in Minecraft Bedrock.
+    """
+
+    CameraRelative = "camera_relative"
+    CameraRelativeStrafe = "camera_relative_strafe"
+    PlayerRelative = "player_relative"
+    PlayerRelativeStrafe = "player_relative_strafe"
+    LockedPlayerRelativeStrafe = "locked_player_relative_strafe"
+
+
 class CameraEasing(StrEnum):
     Linear = "linear"
     Spring = "spring"

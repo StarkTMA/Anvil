@@ -17,13 +17,18 @@ class _BaseEvent:
             }
         }
 
-    def add(self, *component_groups: str):
+    def add(self, component_groups: list[str]):
+        if not isinstance(component_groups, list):
+            raise TypeError("Component groups must be provided as a list of strings.")
+
         self._event[self._event_name]["add"]["component_groups"].extend(
             component_groups
         )
         return self
 
-    def remove(self, *component_groups: str):
+    def remove(self, component_groups: list[str]):
+        if not isinstance(component_groups, list):
+            raise TypeError("Component groups must be provided as a list of strings.")
         self._event[self._event_name]["remove"]["component_groups"].extend(
             component_groups
         )
@@ -47,9 +52,11 @@ class _BaseEvent:
         )
         return self
 
-    def queue_command(self, *commands: str):
+    def queue_command(self, commands: list[str]):
+        if not isinstance(commands, list):
+            raise TypeError("Commands must be provided as a list of strings.")
         self._event[self._event_name]["queue_command"]["command"].extend(
-            str(cmd) for cmd in commands
+            [str(cmd) for cmd in commands]
         )
         return self
 
@@ -75,12 +82,12 @@ class _Randomize(_BaseEvent):
         self._sequences: list[_Sequence] = []
         self._parent_class: _Event = parent
 
-    def add(self, *component_groups):
-        self._event.update({"add": {"component_groups": [*component_groups]}})
+    def add(self, component_groups: list[str]):
+        self._event.update({"add": {"component_groups": component_groups}})
         return self
 
-    def remove(self, *component_groups):
-        self._event.update({"remove": {"component_groups": [*component_groups]}})
+    def remove(self, component_groups: list[str]):
+        self._event.update({"remove": {"component_groups": component_groups}})
         return self
 
     def trigger(self, event: str):
@@ -95,7 +102,7 @@ class _Randomize(_BaseEvent):
         self._event["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
         return self
 
-    def queue_command(self, *commands: str):
+    def queue_command(self, commands: list[str]):
         self._event.update(
             {"queue_command": {"command": [str(cmd) for cmd in commands]}}
         )
@@ -137,12 +144,12 @@ class _Sequence(_BaseEvent):
         self._parent_class: _Event = parent_event
         self._event = {"set_property": {}}
 
-    def add(self, *component_groups):
-        self._event.update({"add": {"component_groups": [*component_groups]}})
+    def add(self, component_groups: list[str]):
+        self._event.update({"add": {"component_groups": component_groups}})
         return self
 
-    def remove(self, *component_groups):
-        self._event.update({"remove": {"component_groups": [*component_groups]}})
+    def remove(self, component_groups: list[str]):
+        self._event.update({"remove": {"component_groups": component_groups}})
         return self
 
     def trigger(self, event: str):
@@ -157,7 +164,7 @@ class _Sequence(_BaseEvent):
         self._event["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
         return self
 
-    def queue_command(self, *commands: str):
+    def queue_command(self, commands: list[str]):
         self._event.update(
             {"queue_command": {"command": [str(cmd) for cmd in commands]}}
         )

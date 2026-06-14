@@ -363,11 +363,13 @@ class _RP_ControllerState:
 
 
 class _BP_Controller:
-    def __init__(self, identifier, controller_shortname):
+    def __init__(
+        self, identifier, controller_shortname, initial_state: str = "default"
+    ):
         self._identifier = identifier
         self._controller_shortname = controller_shortname
         self._controllers = JsonSchemes.animation_controller(
-            self._identifier, self._controller_shortname
+            self._identifier, self._controller_shortname, initial_state
         )
         self._controller_states: list[_BP_ControllerState] = []
         self._controller_namespace = f"controller.animation.{self._identifier.replace(':', '.')}.{self._controller_shortname}"
@@ -416,8 +418,14 @@ class _BP_Controller:
 
 
 class _RP_Controller(_BP_Controller):
-    def __init__(self, actor: "_ActorClientDescription", name, controller_shortname):
-        super().__init__(name, controller_shortname)
+    def __init__(
+        self,
+        actor: "_ActorClientDescription",
+        name,
+        controller_shortname,
+        initial_state: str = "default",
+    ):
+        super().__init__(name, controller_shortname, initial_state)
         self._actor = actor
         self._side = "Client"
         self._controller_states: list[_RP_ControllerState] = []
@@ -480,13 +488,17 @@ class RPAnimationControllers(AddonObject):
         self._animation_controllers = JsonSchemes.animation_controllers()
         self._controllers_list: list[_RP_Controller] = []
 
-    def add_controller(self, controller_shortname: str) -> _RP_Controller:
+    def add_controller(
+        self, controller_shortname: str, initial_state: str = "default"
+    ) -> _RP_Controller:
         """Adds a new animation controller to the current actor with `default` as the `initial_state`.
 
         Parameters
         ----------
         controller_shortname : str
             The shortname of the controller you want to add.
+        initial_state : str, optional
+            The initial state of the controller, by default "default".
 
         Returns
         -------
@@ -494,7 +506,7 @@ class RPAnimationControllers(AddonObject):
 
         """
         self._animation_controller = _RP_Controller(
-            self._actor, self.identifier, controller_shortname
+            self._actor, self.identifier, controller_shortname, initial_state
         )
         self._controllers_list.append(self._animation_controller)
         return self._animation_controller

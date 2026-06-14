@@ -45,11 +45,10 @@ Example:
 from enum import StrEnum
 
 import click
-from PIL import Image
-
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.lib import *
 from anvil.lib.schemas import AddonObject
+from PIL import Image
 
 __all__ = [
     "UIBindingType",
@@ -2591,7 +2590,8 @@ class _AnvilNPCScreen(_UIScreen):
         if keyword:
             self._ignored_panel_texts.append(f"$anvil.npc_screen.{element_name}.text")
             self._variables.add_variable(
-                f"$anvil.npc_screen.{element_name}.text", keyword
+                f"$anvil.npc_screen.{element_name}.text",
+                keyword,
             )
             self._variables.add_variable(
                 f"$anvil.npc_screen.{element_name}.bool",

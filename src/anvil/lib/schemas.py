@@ -244,10 +244,12 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def animation_controller(identifier, controller_shortname):
+    def animation_controller(
+        identifier, controller_shortname, initial_state: str = "default"
+    ):
         return {
             f"controller.animation.{identifier.replace(':', '.')}.{controller_shortname}": {
-                "initial_state": "default",
+                "initial_state": initial_state,
                 "states": {},
             }
         }
@@ -354,8 +356,8 @@ class JsonSchemes:
     ):
         return {
             "scene_tag": scene_tag,
-            "npc_name": npc_name,
-            "text": text,
+            "npc_name": {"rawtext": [{"translate": npc_name}]},
+            "text": {"rawtext": [{"translate": text}]},
             "on_open_commands": on_open_commands,
             "on_close_commands": on_close_commands,
             "buttons": buttons,
@@ -363,7 +365,10 @@ class JsonSchemes:
 
     @staticmethod
     def dialogue_button(name, commands):
-        return {"name": name, "commands": commands}
+        return {
+            "name": {"rawtext": [{"translate": name}]},
+            "commands": commands,
+        }
 
     @staticmethod
     def server_item():
@@ -426,7 +431,7 @@ class JsonSchemes:
     def atmosphere_settings(identifier: str):
         return load_file(
             "vv_atmosphere_settings.jsont",
-            {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
+            {"format_version": ATMOSPHERE_SETTINGS_VERSION, "identifier": identifier},
             is_json=True,
         )
 
@@ -442,7 +447,7 @@ class JsonSchemes:
     def shadow_settings():
         return load_file(
             "vv_shadow_settings.jsont",
-            {"format_version": PBR_SETTINGS_VERSION},
+            {"format_version": SHADOW_SETTINGS_VERSION},
             is_json=True,
         )
 
@@ -450,7 +455,7 @@ class JsonSchemes:
     def water_settings(identifier: str):
         return load_file(
             "vv_water_settings.jsont",
-            {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
+            {"format_version": WATER_SETTINGS_VERSION, "identifier": identifier},
             is_json=True,
         )
 
@@ -458,7 +463,10 @@ class JsonSchemes:
     def color_grading_settings(identifier: str):
         return load_file(
             "vv_color_grading_settings.jsont",
-            {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
+            {
+                "format_version": COLOR_GRADING_SETTINGS_VERSION,
+                "identifier": identifier,
+            },
             is_json=True,
         )
 
@@ -466,7 +474,7 @@ class JsonSchemes:
     def lighting_settings(identifier: str):
         return load_file(
             "vv_lighting_settings.jsont",
-            {"format_version": PBR_SETTINGS_VERSION, "identifier": identifier},
+            {"format_version": LIGHTING_SETTINGS_VERSION, "identifier": identifier},
             is_json=True,
         )
 
@@ -474,7 +482,7 @@ class JsonSchemes:
     def local_lighting():
         return load_file(
             "vv_local_lighting.jsont",
-            {"format_version": PBR_SETTINGS_VERSION},
+            {"format_version": LOCAL_LIGHTING_SETTINGS_VERSION},
             is_json=True,
         )
 
@@ -482,7 +490,7 @@ class JsonSchemes:
     def pbr_fallback_settings():
         return load_file(
             "vv_pbr_fallback_settings.jsont",
-            {"format_version": PBR_SETTINGS_VERSION},
+            {"format_version": PBR_FALLBACK_SETTINGS_VERSION},
             is_json=True,
         )
 

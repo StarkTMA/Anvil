@@ -6,7 +6,7 @@
 
 ```python
 from anvil.api.world.particles import Particle
-from anvil.api.pbr.pbr import TextureComponents
+from anvil.api.pbr.texture_set import TextureComponents
 
 # Define a particle using a texture from assets/textures/particles
 Particle(

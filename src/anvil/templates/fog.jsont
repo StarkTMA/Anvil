@@ -1,7 +1,4 @@
 {
     "format_version": "{{ format_version }}",
-    "minecraft:fog_settings": {
-        "distance": {},
-        "volumetric": {}
-    }
+    "minecraft:fog_settings": {}
 }

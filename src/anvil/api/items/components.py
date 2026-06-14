@@ -8,7 +8,7 @@ from anvil.api.core.enums import DamageCause, EnchantsSlots, Rarity, Slots
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import Identifier, Seconds, Tick
 from anvil.api.logic.molang import Molang
-from anvil.api.pbr.pbr import TextureComponents, TextureSet
+from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.lib.blockbench import BlockBenchSource

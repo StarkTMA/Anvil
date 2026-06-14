@@ -126,7 +126,7 @@ class _RenderController:
         return self
 
     def textures(self, short_name):
-        if "Array" not in short_name:
+        if not any(prefix in short_name for prefix in ["Texture.", "Array."]):
             name = f"Texture.{short_name}"
         else:
             name = short_name

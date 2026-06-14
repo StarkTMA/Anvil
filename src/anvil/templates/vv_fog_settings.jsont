@@ -1,7 +1,12 @@
 {
     "format_version": "{{ format_version }}",
     "minecraft:fog_settings": {
-        "identifier": "{{ identifier }}",
-        "volumetric": {}
+        "description": {
+            "identifier": "{{ identifier }}"
+        },
+        "volumetric": {
+            "density": {},
+            "media_coefficients": {}
+        }
     }
 }

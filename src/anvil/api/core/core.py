@@ -6,11 +6,10 @@ import shutil
 import sys
 import traceback as tb
 import zipfile
+from os import path
 from typing import Optional
 
 import click
-from PIL import Image
-
 from anvil.api.actors.materials import MaterialsObject
 from anvil.api.core.sounds import (
     BlocksJSONObject,
@@ -24,7 +23,13 @@ from anvil.api.core.textures import (
     TerrainTexturesObject,
 )
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.config import CONFIG, ConfigPackageTarget, _AnvilConfig
+from anvil.lib.config import (
+    CONFIG,
+    ConfigOption,
+    ConfigPackageTarget,
+    ConfigSection,
+    _AnvilConfig,
+)
 from anvil.lib.format_versions import (
     MANIFEST_VERSION,
     MODULE_MINECRAFT_SERVER,
@@ -33,6 +38,8 @@ from anvil.lib.format_versions import (
     MODULE_MINECRAFT_SERVER_UI_PREVIEW,
 )
 from anvil.lib.lib import (
+    PREVIEW_COM_MOJANG,
+    RELEASE_COM_MOJANG,
     AnvilArchive,
     AnvilIO,
     AnvilValidator,
@@ -42,6 +49,7 @@ from anvil.lib.lib import (
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
+from PIL import Image
 
 from ...__version__ import __version__
 
@@ -131,35 +139,42 @@ def output_development_pack_sizes(config: _AnvilConfig) -> None:
 
 
 def extract_world_pack(extract_world: str | None = None):
-    if extract_world != None and type(extract_world) is str:
-        shutil.rmtree(CONFIG._WORLD_PATH)
-        with zipfile.ZipFile(
-            os.path.join("world", f"{extract_world}.mcworld"), "r"
-        ) as zip_ref:
-            zip_ref.extractall(CONFIG._WORLD_PATH)
+    if not isinstance(extract_world, str):
+        return
+
+    if not path.exists(os.path.join("world", f"{extract_world}.mcworld")):
+        raise FileNotFoundError(
+            f"'{extract_world}.mcworld' not found. Please ensure the mcworld exists in the world directory."
+        )
+
+    shutil.rmtree(CONFIG._WORLD_PATH, ignore_errors=True)
+    Directory.create(CONFIG._WORLD_PATH)
+    with zipfile.ZipFile(
+        os.path.join("world", f"{extract_world}.mcworld"), "r"
+    ) as zip_ref:
+        zip_ref.extractall(CONFIG._WORLD_PATH)
 
 
-def manifests(extract_world: str | None = None):
+def manifests():
     release_list = [int(i) for i in CONFIG._RELEASE.split(".")]
-    if extract_world != None and type(extract_world) is str:
-        AnvilIO.file(
-            "manifest.json",
-            JsonSchemes.manifest_world(release_list),
-            CONFIG._WORLD_PATH,
-            "w",
-        )
-        AnvilIO.file(
-            "world_resource_packs.json",
-            JsonSchemes.world_packs(release_list, CONFIG._RP_UUID),
-            CONFIG._WORLD_PATH,
-            "w",
-        )
-        AnvilIO.file(
-            "world_behavior_packs.json",
-            JsonSchemes.world_packs(release_list, CONFIG._BP_UUID),
-            CONFIG._WORLD_PATH,
-            "w",
-        )
+    AnvilIO.file(
+        "manifest.json",
+        JsonSchemes.manifest_world(release_list),
+        CONFIG._WORLD_PATH,
+        "w",
+    )
+    AnvilIO.file(
+        "world_resource_packs.json",
+        JsonSchemes.world_packs(release_list, CONFIG._RP_UUID),
+        CONFIG._WORLD_PATH,
+        "w",
+    )
+    AnvilIO.file(
+        "world_behavior_packs.json",
+        JsonSchemes.world_packs(release_list, CONFIG._BP_UUID),
+        CONFIG._WORLD_PATH,
+        "w",
+    )
 
 
 def scriptapi():
@@ -236,7 +251,7 @@ def addon_object_exception(object: AddonObject, e: Exception):
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
 
 
-def pack_art():
+def pack_art(apply_overlay: bool = False):
     source = os.path.join("marketing")
     pack_icon_size = (256, 256)
     if os.path.exists(os.path.join(source, "pack_icon.png")):
@@ -257,6 +272,34 @@ def pack_art():
 
         resize(placeholder_image, "pack_icon.png", CONFIG.BP_PATH, pack_icon_size)
         resize(placeholder_image, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
+
+    if CONFIG._TARGET == ConfigPackageTarget.WORLD:
+        if os.path.exists(os.path.join(source, "keyart.png")):
+            original = Image.open(os.path.join(source, "keyart.png")).convert("RGB")
+            overlay = None
+
+            if apply_overlay and os.path.exists(
+                os.path.join(source, "keyart_overlay.png")
+            ):
+                overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
+
+            store_screenshot_size = (800, 450)
+            resize(
+                original,
+                "world_icon.jpeg",
+                CONFIG._WORLD_PATH,
+                store_screenshot_size,
+                95,
+                72,
+                overlay,
+            )
+        else:
+            click.echo(
+                click.style(
+                    f"\r[INFO]: keyart.png not found in marketing directory. Cannot compile world icon.",
+                    fg="yellow",
+                )
+            )
 
 
 def process_art(
@@ -520,9 +563,9 @@ def package_zip_core(
     """Core logic for packaging the project into a zip file for Marketplace."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Packaging ZIP...", fg="cyan"))
-
     process_art(config, apply_overlay)
+
+    click.echo(click.style(f"\r[INFO]: Packaging ZIP...", fg="cyan"))
 
     AnvilArchive.marketplace_zip()
 
@@ -536,8 +579,6 @@ def mcaddon_core(config):
 
     click.echo(click.style(f"\r[INFO]: Packaging mcaddon...", fg="cyan"))
 
-    process_art(config, False, False)
-
     AnvilArchive.mcaddon()
     output_development_pack_sizes(CONFIG)
 
@@ -548,7 +589,6 @@ def mcworld_core(config: _AnvilConfig):
 
     click.echo(click.style(f"\r[INFO]: Packaging mcworld...", fg="cyan"))
 
-    process_art(config, False, False)
     AnvilArchive.mcworld()
 
 
@@ -558,6 +598,7 @@ def compile_objects(
     js_only: bool = False,
     no_compile: bool = False,
     workflow: bool = False,
+    apply_overlay: bool = False,
 ):
     import click
 
@@ -565,12 +606,13 @@ def compile_objects(
         click.echo(click.style(f"\r[INFO]: Compiling projects...", fg="cyan"))
 
     extract_world_pack(extract_world)
-    manifests(extract_world)
-    pack_art()
     scriptapi()
 
     ManifestBP().queue()
     ManifestRP().queue()
+
+    if CONFIG._TARGET == ConfigPackageTarget.WORLD:
+        manifests()
 
     if CONFIG._SCRIPT_API:
         args = [
@@ -603,6 +645,8 @@ def compile_objects(
     MaterialsObject().queue()
     _Blockbench.__export__()
     anvil.__queue__(AnvilTranslator())
+
+    pack_art(apply_overlay=apply_overlay)
 
     if workflow:
         AnvilIO.file(
@@ -666,6 +710,29 @@ def translate(languages: Optional[list[str]] = None) -> None:
     AnvilTranslator().auto_translate_all(languages)
 
 
+def clean_old_dev(config: _AnvilConfig):
+    com_mojang = PREVIEW_COM_MOJANG if config._PREVIEW else RELEASE_COM_MOJANG
+
+    pack_paths = [
+        os.path.join(
+            com_mojang, "development_resource_packs", f"RP_{config.PROJECT_NAME}"
+        ),
+        os.path.join(
+            com_mojang, "development_behavior_packs", f"BP_{config.PROJECT_NAME}"
+        ),
+    ]
+
+    for pack_path in pack_paths:
+        if os.path.exists(pack_path):
+            shutil.rmtree(pack_path)
+    click.echo(
+        click.style(
+            f"\r[INFO]: Cleared {len(pack_paths)} project development pack(s).",
+            fg="green",
+        )
+    )
+
+
 class ManifestRP(AddonObject):
     _instance = None
     _extension = ".json"
@@ -690,7 +757,7 @@ class ManifestRP(AddonObject):
         return _ManifestSettings(self)
 
     def queue(self):
-        if CONFIG._PBR:
+        if CONFIG.PBR:
             self._content.update({"capabilities": ["pbr"]})
 
         if CONFIG._TARGET == "addon":
@@ -876,6 +943,9 @@ class _Anvil:
             CONFIG.NAMESPACE, CONFIG.PROJECT_NAME
         )
 
+        if "--clean" in sys.argv:
+            clean_old_dev(CONFIG)
+
     def translate(self, languages: Optional[list[str]] = None) -> None:
         """Translates the project."""
         translate(languages)
@@ -894,19 +964,42 @@ class _Anvil:
         js_only = "--js-only" in sys.argv
         no_compile = "--nocompile" in sys.argv
         workflow = "--workflow" in sys.argv
+        no_arch = "--noarch" in sys.argv
+        mcaddon = mcaddon or "--mcaddon" in sys.argv
+        mcworld = mcworld or "--mcworld" in sys.argv
+        zip = zip or "--zip" in sys.argv
+        generate_technical_notes = (
+            generate_technical_notes or "--tech-notes" in sys.argv
+        )
+        clean_dev = "--clean" in sys.argv
 
-        compile_objects(self, extract_world, js_only, no_compile, workflow)
+        if clean_dev and js_only:
+            raise ValueError(
+                "Cannot compile javascript into an empty dev packs (with js_only)."
+            )
 
-        if "--noarch" in sys.argv:
+        compile_objects(
+            self,
+            extract_world,
+            js_only,
+            no_compile,
+            workflow,
+            apply_overlay=apply_overlay,
+        )
+
+        if no_arch:
             return
 
-        if mcaddon or "--mcaddon" in sys.argv:
+        if mcaddon:
             mcaddon_core(self.config)
-        if mcworld or "--mcworld" in sys.argv:
+
+        if mcworld:
             mcworld_core(self.config)
-        if zip or "--zip" in sys.argv:
+
+        if zip:
             package_zip_core(self.config, apply_overlay)
-        if generate_technical_notes or "--tech-notes" in sys.argv:
+
+        if generate_technical_notes:
             generate_technical_notes_pdf(self.config)
 
     def __queue__(self, object: object):
