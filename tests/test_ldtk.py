@@ -18,8 +18,16 @@ anvil.lib.config.CONFIG = mock_config
 import anvil.lib.schemas
 anvil.lib.schemas.CONFIG = mock_config
 
-import anvil.kit.world.ldtk as ldtk
-from anvil.kit.world.ldtk import LDtk
+try:
+    import amulet
+    import anvil.kit.world.ldtk as ldtk
+    from anvil.kit.world.ldtk import LDtk
+    has_amulet = True
+except ImportError:
+    has_amulet = False
+
+if not has_amulet:
+    pytestmark = pytest.mark.skip(reason="amulet is not installed")
 
 
 def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
