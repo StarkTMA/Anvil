@@ -2279,3 +2279,21 @@ class Filter:
             raise ValueError("Slot must be a valid equipment slot")
 
         return Filter("has_same_equipment_in_slot_as", subject, operator, slot)
+
+    @classmethod
+    def redstone_strength_at_position(
+        cls,
+        value: int,
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ):
+        """Tests the redstone signal strength at the subject entity's position.
+
+        Parameters:
+            value (int): Redstone strength to test (0 to 15).
+            subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
+            operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
+        """
+        return Filter("redstone_strength_at_position", subject, operator, None, value)
+

@@ -227,6 +227,7 @@ class ItemUseModifiers(Component):
         movement_modifier: float = 1.0,
         emit_vibrations: bool = True,
         start_sound: str = None,
+        start_using: Literal["always", "if_first"] = "if_first",
     ) -> None:
         """Determines how long an item takes to use in combination with components such as Shooter, Throwable, or Food.
 
@@ -235,6 +236,7 @@ class ItemUseModifiers(Component):
             movement_modifier (float): Modifier value to scale the players movement speed when item is in use. Defaults to 1.0.
             emit_vibrations (bool): Whether vibrations are emitted when the item starts or stops being used. Defaults to True.
             start_sound (str): Sound event played when the item starts being used.
+            start_using (Literal["always", "if_first"]): When the item should start using. Defaults to "if_first".
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers?view=minecraft-bedrock-stable
@@ -248,6 +250,9 @@ class ItemUseModifiers(Component):
             self._add_field("emit_vibrations", emit_vibrations)
         if start_sound:
             self._add_field("start_sound", start_sound)
+        if start_using != "if_first":
+            self._enforce_version(ITEM_SERVER_VERSION, "1.26.30")
+            self._add_field("start_using", start_using)
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.120

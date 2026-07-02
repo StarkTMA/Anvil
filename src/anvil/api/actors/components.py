@@ -247,14 +247,70 @@ class EntityPushableByEntity(Component):
     def __init__(self) -> None:
         """Allows an entity to be pushed by other entities.
 
-        Parameters:
-            value (bool): Description.
-
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_entity
         """
         super().__init__("pushable_by_entity")
         self._set_value({})
+
+    def add_preset(
+        self,
+        filter: Filter = None,
+        push_mode: Literal["default", "legacy_boat", "legacy_minecart", "none"] = None,
+        strength_multiplier: float = None,
+        min_distance: float = None,
+        max_distance: float = None,
+        push_scale_self: float = None,
+        push_scale_other: float = None,
+        play_sound_cooldown_in_seconds: float = None,
+        play_sound_impulse_threshold: float = None,
+        play_sound: bool = None,
+    ):
+        """Adds a customization preset for push behavior.
+
+        Parameters:
+            filter (Filter, optional): Conditions that must be met for the preset to be applied.
+            push_mode (str, optional): The type of push calculation ("default", "legacy_boat", "legacy_minecart", or "none").
+            strength_multiplier (float, optional): Scales the push force applied to the entity.
+            min_distance (float, optional): Minimum distance between entities for push forces to be applied.
+            max_distance (float, optional): Maximum distance between entities for push forces to be applied.
+            push_scale_self (float, optional): Scales how much push force this entity applies to itself away on collision.
+            push_scale_other (float, optional): Scales how much push force this entity applies to the other entity on collision.
+            play_sound_cooldown_in_seconds (float, optional): Cooldown in seconds between sounds.
+            play_sound_impulse_threshold (float, optional): Minimum change of velocity needed to trigger the push sound.
+            play_sound (bool, optional): Controls whether the pushed_by_player sound is played.
+        """
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
+
+        preset = {}
+        if filter is not None:
+            preset["filter"] = filter
+        if push_mode is not None:
+            if push_mode not in ["default", "legacy_boat", "legacy_minecart", "none"]:
+                raise ValueError("push_mode must be 'default', 'legacy_boat', 'legacy_minecart', or 'none'")
+            preset["push_mode"] = push_mode
+        if strength_multiplier is not None:
+            preset["strength_multiplier"] = strength_multiplier
+        if min_distance is not None:
+            preset["min_distance"] = min_distance
+        if max_distance is not None:
+            preset["max_distance"] = max_distance
+        if push_scale_self is not None:
+            preset["push_scale_self"] = push_scale_self
+        if push_scale_other is not None:
+            preset["push_scale_other"] = push_scale_other
+        if play_sound_cooldown_in_seconds is not None:
+            preset["play_sound_cooldown_in_seconds"] = play_sound_cooldown_in_seconds
+        if play_sound_impulse_threshold is not None:
+            preset["play_sound_impulse_threshold"] = play_sound_impulse_threshold
+        if play_sound is not None:
+            preset["play_sound"] = play_sound
+
+        presets = self._get_field("presets", [])
+        presets.append(preset)
+        self._add_field("presets", presets)
+        return self
+
 
 
 class EntityPushThrough(Component):
@@ -635,6 +691,7 @@ class EntityAreaAttack(Component):
         damage_per_tick: int = 2,
         damage_range: float = 0.2,
         damage_cooldown: Seconds | None = None,
+        use_self_as_damage_source: bool = True,
     ) -> None:
         """A component that does damage to entities that get within range.
 
@@ -643,6 +700,7 @@ class EntityAreaAttack(Component):
             damage_per_tick (int, optional): How much damage per tick is applied to entities that enter the damage range. Defaults to 2.
             damage_range (float, optional): How close a hostile entity must be to have the damage applied. Defaults to 0.2.
             damage_cooldown (Seconds | None, optional): Attack cooldown (in seconds) for how often this entity can attack a target. Defaults to None.
+            use_self_as_damage_source (bool, optional): If set to false, other entities won't retaliate against the attacking entity. Defaults to True.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_area_attack
@@ -657,6 +715,9 @@ class EntityAreaAttack(Component):
             self._add_field("damage_range", damage_range)
         if damage_cooldown is not None:
             self._add_field("damage_cooldown", max(0.0, damage_cooldown))
+        if not use_self_as_damage_source:
+            self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
+            self._add_field("use_self_as_damage_source", use_self_as_damage_source)
 
     def filter(self, entity_filter: dict):
         self._add_field("entity_filter", entity_filter)
@@ -4495,6 +4556,7 @@ class EntityLeashable(Component):
         max_distance: int = None,
         soft_distance: int = 4,
         on_unleash_interact_only: bool = False,
+        unleash_on_removal: bool = None,
     ) -> None:
         """Describes how this mob can be leashed to other items.
 
@@ -4505,6 +4567,7 @@ class EntityLeashable(Component):
             max_distance (int, optional): Distance in blocks at which the leash breaks. Defaults to None.
             soft_distance (int, optional): Distance (in blocks) over which the entity starts pathfinding toward the leash holder, if able. Defaults to 4.
             on_unleash_interact_only (bool, optional): When set to true, "on_unleash" does not trigger when the entity gets unleashed for reasons other than the player directly interacting with it. Defaults to False.
+            unleash_on_removal (bool, optional): When set to true, the entity is unleashed from the entity it is leashed to once the component is removed. Defaults to None.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable
@@ -4525,6 +4588,9 @@ class EntityLeashable(Component):
             self._add_field("soft_distance", soft_distance)
         if on_unleash_interact_only:
             self._add_field("on_unleash_interact_only", on_unleash_interact_only)
+        if unleash_on_removal is not None:
+            self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
+            self._add_field("unleash_on_removal", unleash_on_removal)
 
     def on_leash(self, event: str, target: FilterSubject = FilterSubject.Self) -> dict:
         self._add_field("on_leash", {"event": event, "target": target})
@@ -5528,32 +5594,6 @@ class EntityDespawn(Component):
         if remove_child_entities:
             self._add_field("remove_child_entities", remove_child_entities)
 
-    def despawn_from_distance(self, range: tuple[int, int] = (32, 128)):
-        """Sets the despawn distance properties.
-
-        Parameters:
-            range (tuple[int, int], optional): A tuple containing the minimum and maximum distance for despawning. Defaults to (32, 128).
-
-        Returns:
-            EntityDespawn: Returns the EntityDespawn component to allow for method chaining.
-        """
-        if (
-            not isinstance(range, tuple)
-            or not len(range) == 2
-            or not all(isinstance(i, int) for i in range)
-        ):
-            raise ValueError("range must be a tuple of 2 integers")
-        if range[0] < 0 or range[1] < 0:
-            raise ValueError("range values must be non-negative")
-        if range[0] > range[1]:
-            raise ValueError("range minimum must be less than or equal to maximum")
-        if range != (32, 128):
-            min_distance, max_distance = range
-            self._add_field(
-                "despawn_from_distance",
-                {"min_distance": min_distance, "max_distance": max_distance},
-            )
-        return self
 
 
 class EntityGameEventMovementTracking(Component):
@@ -6100,11 +6140,12 @@ class EntityInsomnia(Component):
 class EntityLeashableTo(Component):
     _identifier = "minecraft:leashable_to"
 
-    def __init__(self, can_retrieve_from: bool = False) -> None:
+    def __init__(self, can_retrieve_from: bool = False, unleash_on_removal: bool = None) -> None:
         """Allows players to leash entities to this entity, retrieve entities already leashed to it, or free them using shears. For the last interaction to work, the leashed entities must have "can_be_cut" set to true in their "minecraft:leashable" component.
 
         Parameters:
             can_retrieve_from (bool, optional): Allows players to retrieve entities that are leashed to this entity. Defaults to False.
+            unleash_on_removal (bool, optional): When set to true, entities leashed to the entity are unleashed once the component is removed. Defaults to None.
 
         ## Documentation reference:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable_to
@@ -6112,6 +6153,9 @@ class EntityLeashableTo(Component):
         super().__init__("leashable_to")
         if can_retrieve_from:
             self._add_field("can_retrieve_from", can_retrieve_from)
+        if unleash_on_removal is not None:
+            self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
+            self._add_field("unleash_on_removal", unleash_on_removal)
 
 
 class EntityMobEffectImmunity(Component):
@@ -7255,7 +7299,6 @@ class EntitySpawnOnDeath(Component):
 class EntityBounciness(Component):
     _identifier = "minecraft:bounciness"
 
-    @experimental
     def __init__(self, value: float = 0.0) -> None:
         """Controls how an entity bounces when colliding with surfaces.
 
@@ -7265,6 +7308,7 @@ class EntityBounciness(Component):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_bounciness
         """
         super().__init__("bounciness")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
         if value != 0.0:
             self._add_field("strength", clamp(value, 0.0, 1.0))
 
@@ -7272,7 +7316,6 @@ class EntityBounciness(Component):
 class EntityAirDragModifier(Component):
     _identifier = "minecraft:air_drag_modifier"
 
-    @experimental
     def __init__(self, value: float = 0.0) -> None:
         """Controls how an entity is affected by air drag.
 
@@ -7282,6 +7325,7 @@ class EntityAirDragModifier(Component):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_air_drag_modifier
         """
         super().__init__("air_drag_modifier")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
         if value != 0.0:
             self._add_field("strength", clamp(value, 0.0, 1.0))
 
@@ -7289,7 +7333,6 @@ class EntityAirDragModifier(Component):
 class EntityApplyKnockbackRules(Component):
     _identifier = "minecraft:apply_knockback_rules"
 
-    @experimental
     def __init__(self) -> None:
         """Defines how an entity applies knockback.
 
@@ -7297,6 +7340,7 @@ class EntityApplyKnockbackRules(Component):
             https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_apply_knockback_rules
         """
         super().__init__("apply_knockback_rules")
+        self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
         self._add_field("presets", [])
 
     def add_preset(
@@ -7310,6 +7354,7 @@ class EntityApplyKnockbackRules(Component):
         vertical_position_angle_scale: float = None,
         scale_with_damage: bool = None,
         filter: Filter = None,
+        extra_knockback_approach: Literal["reapply_default", "multiply"] = None,
     ):
         """Adds a knockback rule preset.
 
@@ -7323,6 +7368,7 @@ class EntityApplyKnockbackRules(Component):
             vertical_position_angle_scale (float, optional): Scaling based on vertical position angle.
             scale_with_damage (bool, optional): Whether knockback scales with damage dealt.
             filter (Filter, optional): Filter to determine when this preset applies.
+            extra_knockback_approach (str, optional): Handling extra knockback from enchantments, sprinting, and swimming ("reapply_default" or "multiply").
         """
         preset = {}
         if filter is not None:
@@ -7343,6 +7389,10 @@ class EntityApplyKnockbackRules(Component):
             preset["vertical_position_angle_scale"] = vertical_position_angle_scale
         if scale_with_damage is not None:
             preset["scale_with_damage"] = scale_with_damage
+        if extra_knockback_approach is not None:
+            if extra_knockback_approach not in ["reapply_default", "multiply"]:
+                raise ValueError("extra_knockback_approach must be 'reapply_default' or 'multiply'")
+            preset["extra_knockback_approach"] = extra_knockback_approach
         self._component["presets"].append(preset)
         return self
 
@@ -10522,6 +10572,7 @@ class EntityAIPickupItems(AIGoal):
         pickup_same_items_as_in_hand: bool = False,
         search_height: float = 0.0,
         speed_multiplier: float = 1.0,
+        stop_if_holding_item: bool = False,
         track_target: bool = False,
     ) -> None:
         """Allows the mob to pick up items on the ground.
@@ -10537,6 +10588,7 @@ class EntityAIPickupItems(AIGoal):
             pickup_same_items_as_in_hand (bool, optional): If true, the mob will only pick up items that match what it is already holding. Defaults to False.
             search_height (float, optional): Description. Defaults to 0.0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
+            stop_if_holding_item (bool, optional): If true, the mob will not pick up another item if the item's preferred slot matches. Defaults to False.
             track_target (bool, optional): If true, this mob will chase after the target as long as it's a valid target. Defaults to False.
 
         ## Documentation reference:
@@ -10570,6 +10622,8 @@ class EntityAIPickupItems(AIGoal):
             self._add_field("search_height", search_height)
         if speed_multiplier != 1.0:
             self._add_field("speed_multiplier", speed_multiplier)
+        if stop_if_holding_item:
+            self._add_field("stop_if_holding_item", stop_if_holding_item)
         if track_target:
             self._add_field("track_target", track_target)
 

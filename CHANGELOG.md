@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.8.5**](#0985)
+- [**0.9.8.6**](#0986)
+- [0.9.8.5](#0985)
 - [0.9.8.4](#0984)
 - [0.9.8.3](#0982)
 - [0.9.8.2](#0982)
@@ -98,6 +99,43 @@
 ---
 
 # 0.9.x
+
+## 0.9.8.6
+
+### Anvil & Schemas
+
+- Added core schema classes `NoiseDescriptor` and `NoiseBlockSpecifier` to represent surface/subsurface builder schemas with validation supporting the Bedrock 1.26.30 interval rules.
+
+### Biomes
+
+- Updated surface and subsurface builders (`_BaseBiomeSurfaceBuilder.set_noise_gradient_builder`) to support new noise gradient schemas.
+- Enhanced the `BiomeNoiseGradient` component with `noise`, `noise_block_specifiers`, and `non_replaceable_blocks` builders while maintaining legacy list-style compatibility.
+- Promoted `minecraft:sulfur_caves` to `MinecraftBiomeTypes`.
+
+### Items
+
+- Added item factories for `SulfurSpike` and `MusicDiscBounce`.
+- Added promoted tags for `minecraft:sulfur_cube_archetype_bouncy`, `minecraft:sulfur_cube_archetype_regular`, and `minecraft:sulfur_cube_archetype_sticky` under `MinecraftItemTags`.
+- Updated `ItemUseModifiers` with the `start_using` parameter.
+
+### Blocks
+
+- Added block factories for `Cinnabar`, `CinnabarBrickSlab`, `CinnabarBrickStairs`, `CinnabarBrickWall`, `Sulfur`, `SulfurSpike`, and `PotentSulfur`.
+- Added `BlockPrecipitationInteractions` component.
+- Supported `n_way_visual_rotation` for `BlockGeometry`, `BlockItemVisual`, and `BlockEmbeddedVisual`.
+- Exposed `PlacementDirectionTrait.SixteenWayRotation`.
+- Added the `lava_flammable` parameter on `BlockFlammable`.
+
+### Actors & Entities
+
+- Added the `SulfurCube` entity factory.
+- Added `hide_held_items` option to the entity client description.
+- Updated `EntityAIPickupItems` with the `stop_if_holding_item` field.
+- Added `execute_event_on_home_block` to entity events, sequence steps, and randomize steps.
+- Supported direct definition of `play_sound` and `emit_particle` in sequence and randomize event builders.
+- Added new actor components: `EntityBounciness`, `EntityAirDragModifier`, `EntityApplyKnockbackRules`, `EntityPushableByEntity` (with full preset options), `EntityAreaAttack`, `EntityLeashable`, and `EntityLeashableTo`.
+- Added `unleash` event response capabilities for entity server events.
+- Added `redstone_strength_at_position` query filter.
 
 ## 0.9.8.5
 

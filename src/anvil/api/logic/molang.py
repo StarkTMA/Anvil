@@ -939,6 +939,15 @@ class Query(Molang):
         return self.__query__(self, self.handle, "frame_alpha")
 
     @classmethod
+    def FuseTime(self):
+        """Returns the remaining fuse time of an entity, or -1 if the entity doesn't have a "minecraft:explode" component.
+
+        Returns:
+            Molang(Molang): A Molang Instance
+        """
+        return self.__query__(self, self.handle, "fuse_time")
+
+    @classmethod
     def GetActorInfoId(self):
         """Returns the integer ID of an actor by its string name.
 

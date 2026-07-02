@@ -391,7 +391,6 @@ def Strider() -> MinecraftEntityDescriptor:
     return MinecraftEntityDescriptor("minecraft:strider", True)
 
 
-@experimental
 def SulfurCube() -> MinecraftEntityDescriptor:
     return MinecraftEntityDescriptor("minecraft:sulfur_cube", True)
 

@@ -512,6 +512,19 @@ class _ActorClientDescription(_ActorDescription):
             self._description["description"]["scripts"]["scaley"] = str(y)
             self._description["description"]["scripts"]["scalez"] = str(z)
 
+    def hide_held_items(self, expression: Molang | str | bool = True):
+        """Sets the hide_held_items script expression. When this Molang expression evaluates to a non-zero value, it hides any items held by the entity.
+
+        Parameters:
+            expression (str | Molang | bool, optional): The Molang expression or boolean. Defaults to True.
+        """
+        if isinstance(expression, bool):
+            val = str(int(expression))
+        else:
+            val = str(expression)
+
+        self._description["description"]["scripts"]["hide_held_items"] = val
+
     def render_controller(self, controller_name: str, condition: str = None):
         """This method manages the render controllers for an entity.
 
@@ -1133,8 +1146,8 @@ class _EntityServer(AddonObject):
             EntityCollisionBox(1, 1),
             EntityBreathable(),
             EntityDamageSensor().add_trigger(DamageCause.All, DamageSensor.No),
-            EntityPushableByBlock(True),
-            EntityPushableByEntity(True),
+            EntityPushableByBlock(),
+            EntityPushableByEntity(),
             EntityPushThrough(1),
         )
 

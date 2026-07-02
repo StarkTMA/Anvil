@@ -53,7 +53,7 @@ jobs:
           current_config = json.loads(config_path.read_text(encoding="utf-8"))
           current_version = str(current_config["build"]["release"]).strip()
           current_target = str(current_config["package"].get("target", "addon")).strip().lower()
-          current_project_name = str(current_config["package"]["project_name"]).strip()
+          current_project_name = str(current_config["package"]["display_name"]).strip()
           
           def parse_version(v): return tuple(int(p) for p in v.split(".") if p)
           

@@ -112,7 +112,9 @@ class AnvilIO:
         "mcfunction": "#",
         "lang": "##",
     }
-    _BLOCK_DESCRIPTOR_NAMES = frozenset({"MinecraftBlockDescriptor", "Block"})
+    _BLOCK_DESCRIPTOR_NAMES = frozenset(
+        {"MinecraftBlockDescriptor", "Block", "NoiseDescriptor", "NoiseBlockSpecifier"}
+    )
     _IDENTIFIER_NAMES = frozenset(
         {
             "MinecraftItemDescriptor",
@@ -172,7 +174,7 @@ class AnvilIO:
         from anvil.api.core.components import Component
 
         if isinstance(value, Component):
-            return cls._normalize_json_like(value.__export_dict__())
+            return cls._normalize_json_like(value.__export__())
 
         if isinstance(value, type) and issubclass(value, Component):
             return cls._normalize_json_like(value.__component_identifier__())

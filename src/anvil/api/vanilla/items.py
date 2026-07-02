@@ -64,15 +64,14 @@ class MinecraftItemTags(StrEnum):
     WoodenSlabs = "minecraft:wooden_slabs"
     WoodenTier = "minecraft:wooden_tier"
     Wool = "minecraft:wool"
-    if CONFIG._EXPERIMENTAL:
-        SulfurCubeArchetypeBouncy = "minecraft:sulfur_cube_archetype_bouncy"
-        SulfurCubeArchetypeRegular = "minecraft:sulfur_cube_archetype_regular"
-        SulfurCubeArchetypeSlowFlat = "minecraft:sulfur_cube_archetype_slow_flat"
-        SulfurCubeArchetypeFastFlat = "minecraft:sulfur_cube_archetype_fast_flat"
-        SulfurCubeArchetypeLight = "minecraft:sulfur_cube_archetype_light"
-        SulfurCubeArchetypeFastSliding = "minecraft:sulfur_cube_archetype_fast_sliding"
-        SulfurCubeArchetypeSlowSliding = "minecraft:sulfur_cube_archetype_slow_sliding"
-        SulfurCubeArchetypeSticky = "minecraft:sulfur_cube_archetype_sticky"
-        SulfurCubeArchetypeHighResistance = (
-            "minecraft:sulfur_cube_archetype_high_resistance"
-        )
+    SulfurCubeArchetypeBouncy = "minecraft:sulfur_cube_archetype_bouncy"
+    SulfurCubeArchetypeRegular = "minecraft:sulfur_cube_archetype_regular"
+    SulfurCubeArchetypeSlowFlat = "minecraft:sulfur_cube_archetype_slow_flat"
+    SulfurCubeArchetypeFastFlat = "minecraft:sulfur_cube_archetype_fast_flat"
+    SulfurCubeArchetypeLight = "minecraft:sulfur_cube_archetype_light"
+    SulfurCubeArchetypeFastSliding = "minecraft:sulfur_cube_archetype_fast_sliding"
+    SulfurCubeArchetypeSlowSliding = "minecraft:sulfur_cube_archetype_slow_sliding"
+    SulfurCubeArchetypeSticky = "minecraft:sulfur_cube_archetype_sticky"
+    SulfurCubeArchetypeHighResistance = (
+        "minecraft:sulfur_cube_archetype_high_resistance"
+    )

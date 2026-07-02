@@ -265,7 +265,7 @@ class BlockEmbeddedVisual(Component):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_embedded_visual
         """
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
-        super().__init__("item_visual")
+        super().__init__("embedded_visual")
         self._is_default = blockbench_name is None
 
         if blockbench_name is None:
@@ -278,6 +278,8 @@ class BlockEmbeddedVisual(Component):
                 "geometry",
                 {"identifier": f"geometry.{CONFIG.NAMESPACE}.{blockbench_name}"},
             )
+
+        self._add_field("material_instances", {})
 
     def material_instance(
         self,
@@ -304,12 +306,32 @@ class BlockEmbeddedVisual(Component):
 
         TerrainTexturesObject().add_block(texture, blockbench_name, [texture])
 
-        self._get_field("material_instances", {})[face_key] = {
+        self._component["material_instances"][face_key] = {
             "texture": f"{CONFIG.NAMESPACE}:{texture}",
             "render_method": (
                 render_method if render_method != BlockMaterial.Opaque else {}
             ),
         }
+        return self
+
+    def n_way_visual_rotation(self, **axes: str):
+        """Specifies the visual rotation mapping for the embedded visual geometry.
+
+        Parameters:
+            **axes: Axes to state mappings (e.g. y="minecraft:cardinal_direction").
+        """
+        valid_axes = ["x", "y", "z"]
+        for axis, state in axes.items():
+            if axis not in valid_axes:
+                raise ValueError(f"Invalid axis: {axis}. Must be one of {valid_axes}")
+            if not isinstance(state, str):
+                raise ValueError("State name must be a string")
+
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
+        
+        geom = self._component.get("geometry", {})
+        geom["n_way_visual_rotation"] = {axis: state for axis, state in axes.items()}
+        self._add_field("geometry", geom)
         return self
 
 
@@ -496,17 +518,55 @@ class BlockFlammable(Component):
     _identifier = "minecraft:flammable"
 
     def __init__(
-        self, catch_chance_modifier: int, destroy_chance_modifier: int
+        self,
+        catch_chance_modifier: int,
+        destroy_chance_modifier: int,
+        lava_flammable: Optional[Literal["always", "never"]] = None,
     ) -> None:
         """Describes the flammable properties for this block.
 
         Parameters:
             catch_chance_modifier (int): The chance that this block will catch fire in a range of 0 to 100.
             destroy_chance_modifier (int): The chance that this block will be destroyed when on fire in a range of 0 to 100.
+            lava_flammable (Literal["always", "never"], optional): Whether fire can spread to this block specifically from adjacent lava. Defaults to None.
         """
         super().__init__("flammable")
         self._add_field("catch_chance_modifier", catch_chance_modifier)
         self._add_field("destroy_chance_modifier", destroy_chance_modifier)
+        if lava_flammable is not None:
+            if lava_flammable not in ("always", "never"):
+                raise ValueError("lava_flammable must be 'always' or 'never'")
+            self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
+            self._add_field("lava_flammable", lava_flammable)
+
+
+class BlockPrecipitationInteractions(Component):
+    _identifier = "minecraft:precipitation_interactions"
+
+    def __init__(
+        self,
+        precipitation_behavior: Literal[
+            "obstruct_rain", "obstruct_rain_accumulate_snow", "none", "snowlogging"
+        ],
+    ) -> None:
+        """Determines how this block interacts with rain and snow.
+
+        Parameters:
+            precipitation_behavior (Literal["obstruct_rain", "obstruct_rain_accumulate_snow", "none", "snowlogging"]): The precipitation behavior.
+        """
+        super().__init__("precipitation_interactions")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
+
+        valid_behaviors = [
+            "obstruct_rain",
+            "obstruct_rain_accumulate_snow",
+            "none",
+            "snowlogging",
+        ]
+        if precipitation_behavior not in valid_behaviors:
+            raise ValueError(f"precipitation_behavior must be one of: {valid_behaviors}")
+
+        self._add_field("precipitation_behavior", precipitation_behavior)
 
 
 class BlockFriction(Component):
@@ -674,6 +734,24 @@ class BlockGeometry(Component):
 
         self._add_field("culling", f"{CONFIG.NAMESPACE}:{self._geometry_name}")
         return self._bb.model.block_culling()
+
+    def n_way_visual_rotation(self, **axes: str):
+        """Specifies the visual rotation mapping for the geometry.
+
+        Parameters:
+            **axes: Axes to state mappings (e.g. y="minecraft:cardinal_direction").
+        """
+        valid_axes = ["x", "y", "z"]
+        for axis, state in axes.items():
+            if axis not in valid_axes:
+                raise ValueError(f"Invalid axis: {axis}. Must be one of {valid_axes}")
+            if not isinstance(state, str):
+                raise ValueError("State name must be a string")
+
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
+        
+        self._add_field("n_way_visual_rotation", {axis: state for axis, state in axes.items()})
+        return self
 
 
 class BlockCollisionBox(Component):
@@ -968,6 +1046,26 @@ class BlockItemVisual(Component):
                 render_method if render_method != BlockMaterial.Opaque else {}
             ),
         }
+        return self
+
+    def n_way_visual_rotation(self, **axes: str):
+        """Specifies the visual rotation mapping for the item visual geometry.
+
+        Parameters:
+            **axes: Axes to state mappings (e.g. y="minecraft:cardinal_direction").
+        """
+        valid_axes = ["x", "y", "z"]
+        for axis, state in axes.items():
+            if axis not in valid_axes:
+                raise ValueError(f"Invalid axis: {axis}. Must be one of {valid_axes}")
+            if not isinstance(state, str):
+                raise ValueError("State name must be a string")
+
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
+        
+        geom = self._component.get("geometry", {})
+        geom["n_way_visual_rotation"] = {axis: state for axis, state in axes.items()}
+        self._add_field("geometry", geom)
         return self
 
 

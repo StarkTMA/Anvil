@@ -82,6 +82,7 @@ class MinecraftBiomeTypes(StrEnum):
     StoneBeach = "minecraft:stone_beach"
     StonyPeaks = "minecraft:stony_peaks"
     SunflowerPlains = "minecraft:sunflower_plains"
+    SulfurCaves = "minecraft:sulfur_caves"
     Swampland = "minecraft:swampland"
     SwamplandMutated = "minecraft:swampland_mutated"
     Taiga = "minecraft:taiga"
@@ -90,8 +91,6 @@ class MinecraftBiomeTypes(StrEnum):
     TheEnd = "minecraft:the_end"
     WarmOcean = "minecraft:warm_ocean"
     WarpedForest = "minecraft:warped_forest"
-    if CONFIG._EXPERIMENTAL:
-        SulfurCaves = "minecraft:sulfur_caves"
 
 
 class MinecraftBiomeTags(StrEnum):

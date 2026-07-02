@@ -2263,12 +2263,12 @@ class _HUDScreen(_UIScreen):
         self._ignored_actionbar_texts = ["$anvil.hide.text"]
         self._hides_hud = ["$anvil.hide.text"]
 
-    def disable_mouse(self):
-        self.add_element(
-            "hud_screen@common.base_screen"
-        ).should_steal_mouse.absorbs_input
-        self.root_panel.modification.remove("curor_rend")
-        return self
+    #def disable_mouse(self):
+    #    self.add_element(
+    #        "hud_screen@common.base_screen"
+    #    ).should_steal_mouse.absorbs_input
+    #    self.root_panel.modification.remove("curor_rend")
+    #    return self
 
     def disable_mob_effect(self):
         self.root_panel.modification.remove("mob_effects_renderer")

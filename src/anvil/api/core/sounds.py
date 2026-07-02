@@ -132,7 +132,9 @@ class _SoundDescription:
         Returns:
             dict: The sound description
         """
+        self._sound[self._sound_definition]["sounds"] = []
         for sound in self._sounds:
+            sound = dict(sound)
             sound_name = (sound["name"] if "name" in sound else sound).split("\\")[-1]
             Directory.copy_files(
                 sound["source"],

@@ -395,6 +395,7 @@ class TestQuery:
             ("EyeTargetYRotation", "q.eye_target_y_rotation"),
             ("FacingTargetToRangeAttack", "q.facing_target_to_range_attack"),
             ("FrameAlpha", "q.frame_alpha"),
+            ("FuseTime", "q.fuse_time"),
             ("GetActorInfoId", "q.get_actor_info_id"),
             ("GetAnimationFrame", "q.get_animation_frame"),
             ("GetDefaultBonePivot", "q.get_default_bone_pivot"),

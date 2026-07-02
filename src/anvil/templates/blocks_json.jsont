@@ -1,3 +1,4 @@
 {
-    "format_version": "{{ format_version }}"
+    "format_version": "{{ format_version }}",
+    "blocks":{}
 }

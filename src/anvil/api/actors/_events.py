@@ -72,6 +72,25 @@ class _BaseEvent:
         self._event[self._event_name]["emit_particle"] = {"particle": particle}
         return self
 
+    def execute_event_on_home_block(self, event: str):
+        self._event[self._event_name]["execute_event_on_home_block"] = {"event": event}
+        return self
+
+    def unleash(self, unleash_self: bool = False, unleash_others: bool = False):
+        """Unleashes the entity.
+
+        Parameters:
+            unleash_self (bool, optional): If true, unleashes the entity from the entity it is leashed to. Defaults to False.
+            unleash_others (bool, optional): If true, unleashes all entities that are leashed to the entity. Defaults to False.
+        """
+        payload = {}
+        if unleash_self:
+            payload["unleash_self"] = unleash_self
+        if unleash_others:
+            payload["unleash_others"] = unleash_others
+        self._event[self._event_name]["unleash"] = payload
+        return self
+
     def __export__(self):
         return self._event
 
@@ -113,12 +132,33 @@ class _Randomize(_BaseEvent):
         return self
 
     def play_sound(self, sound: str):
-        self._event[self._event_name]["play_sound"] = {"sound": sound}
+        self._event["play_sound"] = {"sound": sound}
         return self
 
     def emit_particle(self, particle: str):
-        self._event[self._event_name]["emit_particle"] = {"particle": particle}
+        self._event["emit_particle"] = {"particle": particle}
         return self
+
+    def execute_event_on_home_block(self, event: str):
+        self._event["execute_event_on_home_block"] = {"event": event}
+        return self
+
+    def unleash(self, unleash_self: bool = False, unleash_others: bool = False):
+        """Unleashes the entity.
+
+        Parameters:
+            unleash_self (bool, optional): If true, unleashes the entity from the entity it is leashed to. Defaults to False.
+            unleash_others (bool, optional): If true, unleashes all entities that are leashed to the entity. Defaults to False.
+        """
+        payload = {}
+        if unleash_self:
+            payload["unleash_self"] = unleash_self
+        if unleash_others:
+            payload["unleash_others"] = unleash_others
+        self._event["unleash"] = payload
+        return self
+
+
 
     @property
     def randomize(self):
@@ -175,12 +215,33 @@ class _Sequence(_BaseEvent):
         return self
 
     def play_sound(self, sound: str):
-        self._event[self._event_name]["play_sound"] = {"sound": sound}
+        self._event["play_sound"] = {"sound": sound}
         return self
 
     def emit_particle(self, particle: str):
-        self._event[self._event_name]["emit_particle"] = {"particle": particle}
+        self._event["emit_particle"] = {"particle": particle}
         return self
+
+    def execute_event_on_home_block(self, event: str):
+        self._event["execute_event_on_home_block"] = {"event": event}
+        return self
+
+    def unleash(self, unleash_self: bool = False, unleash_others: bool = False):
+        """Unleashes the entity.
+
+        Parameters:
+            unleash_self (bool, optional): If true, unleashes the entity from the entity it is leashed to. Defaults to False.
+            unleash_others (bool, optional): If true, unleashes all entities that are leashed to the entity. Defaults to False.
+        """
+        payload = {}
+        if unleash_self:
+            payload["unleash_self"] = unleash_self
+        if unleash_others:
+            payload["unleash_others"] = unleash_others
+        self._event["unleash"] = payload
+        return self
+
+
 
     @property
     def sequence(self):

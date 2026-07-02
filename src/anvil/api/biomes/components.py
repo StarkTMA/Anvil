@@ -7,7 +7,7 @@ from anvil.api.core.types import Color, HexRGB
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.format_versions import BIOME_SERVER_VERSION
 from anvil.lib.lib import AnvilFormatter
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.schemas import MinecraftBlockDescriptor, NoiseDescriptor, NoiseBlockSpecifier
 
 BiomeNoiseType = Literal[
     "beach",
@@ -262,22 +262,21 @@ class _BaseBiomeSurfaceBuilder(Component):
 
     def set_noise_gradient_builder(
         self,
-        noise_block_specifiers: list[dict],
-        noise_descriptor: dict = None,
+        noise: NoiseDescriptor,
+        noise_block_specifiers: list[NoiseBlockSpecifier],
         non_replaceable_blocks: list[MinecraftBlockDescriptor] = None,
     ):
         """Places continuous bands of blocks according to a noise distribution.
 
         Parameters:
-            noise_block_specifiers (list[dict]): The noise block specifiers defining which ranges
-                of noise are associated with which blocks. Each dict should contain 'noise_range'
-                (a [min, max] pair valid on [0, 1]) and 'block' (a MinecraftBlockDescriptor).
-                Must have at least 1 item.
-            noise_descriptor (dict, optional): The specification for the noise used by the
-                surface builder. Defaults to None.
+            noise (NoiseDescriptor): The NoiseDescriptor used by the surface builder.
+            noise_block_specifiers (list[NoiseBlockSpecifier]): The noise block specifiers defining which ranges
+                of noise are associated with which blocks.
             non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks that the
                 surface builder is not allowed to replace. Defaults to None.
         """
+        if not isinstance(noise, NoiseDescriptor):
+            raise ValueError("noise must be a NoiseDescriptor instance")
         if (
             not isinstance(noise_block_specifiers, list)
             or len(noise_block_specifiers) < 1
@@ -285,16 +284,17 @@ class _BaseBiomeSurfaceBuilder(Component):
             raise ValueError(
                 "noise_block_specifiers must be a list with at least 1 item"
             )
+        for specifier in noise_block_specifiers:
+            if not isinstance(specifier, NoiseBlockSpecifier):
+                raise ValueError(
+                    "All noise_block_specifiers must be NoiseBlockSpecifier instances"
+                )
 
         builder = {
             "type": "minecraft:noise_gradient",
+            "noise": noise,
             "noise_block_specifiers": noise_block_specifiers,
         }
-
-        if noise_descriptor is not None:
-            if not isinstance(noise_descriptor, dict):
-                raise ValueError("noise_descriptor must be a dictionary")
-            builder["noise_descriptor"] = noise_descriptor
 
         if non_replaceable_blocks is not None:
             if not isinstance(non_replaceable_blocks, list):
@@ -748,7 +748,7 @@ class BiomeSurfaceBuilder(_BaseBiomeSurfaceBuilder):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_builder
         """
         super().__init__("surface_builder")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
+        self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
 
 
 class BiomeSubSurfaceBuilder(_BaseBiomeSurfaceBuilder):
@@ -761,7 +761,7 @@ class BiomeSubSurfaceBuilder(_BaseBiomeSurfaceBuilder):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_subsurface_builder
         """
         super().__init__("subsurface_builder")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.26.20")
+        self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
 
 
 class BiomeNoiseGradient(Component):
@@ -775,7 +775,7 @@ class BiomeNoiseGradient(Component):
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_noise_gradient
         """
         super().__init__("noise_gradient")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.26.20")
+        self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
         self._noise_block_specifiers = []
 
     def noise_type(self, builder_type: BiomeNoiseGradientBuilderType):
@@ -798,51 +798,34 @@ class BiomeNoiseGradient(Component):
         self._add_field("type", builder_type)
         return self
 
-    def noise_block_specifier(
-        self,
-        noise_range: tuple[float, float],
-        block: MinecraftBlockDescriptor,
-    ):
-        """Add a noise block specifier associating a noise range with a block.
-        The ranges provided are valid on the interval [0, 1] and may overlap at their endpoints.
-        At least 1 specifier is required.
+    def noise(self, noise: NoiseDescriptor):
+        """Sets the noise descriptor specification for the surface builder.
 
         Parameters:
-            noise_range (tuple[float, float]): The [min, max] noise range valid on [0.0, 1.0].
-            block (MinecraftBlockDescriptor): The block to place within this noise range.
+            noise (NoiseDescriptor): The specification for the noise used by the surface builder.
         """
-        if (
-            not isinstance(noise_range, (list, tuple))
-            or len(noise_range) != 2
-            or any(not isinstance(v, (int, float)) for v in noise_range)
-        ):
-            raise ValueError("noise_range must be a list or tuple of two numbers")
-        for val in noise_range:
-            if not (0.0 <= val <= 1.0):
-                raise ValueError("noise_range values must be in [0.0, 1.0]")
-        if not isinstance(block, MinecraftBlockDescriptor):
-            raise ValueError("block must be a MinecraftBlockDescriptor instance")
+        if not isinstance(noise, NoiseDescriptor):
+            raise ValueError("noise must be a NoiseDescriptor instance")
+        self._add_field("noise", noise)
+        return self
 
-        self._noise_block_specifiers.append(
-            {"noise_range": list(noise_range), "block": block}
-        )
+    def noise_block_specifiers(self, specifiers: list[NoiseBlockSpecifier]):
+        """Sets the noise block specifiers defining which ranges of noise are associated with which blocks.
+
+        Parameters:
+            specifiers (list[NoiseBlockSpecifier]): The noise block specifiers.
+        """
+        if not isinstance(specifiers, list) or len(specifiers) < 1:
+            raise ValueError("specifiers must be a non-empty list of NoiseBlockSpecifier instances")
+        for specifier in specifiers:
+            if not isinstance(specifier, NoiseBlockSpecifier):
+                raise ValueError("All specifiers must be NoiseBlockSpecifier instances")
+        self._noise_block_specifiers = list(specifiers)
         self._add_field("noise_block_specifiers", self._noise_block_specifiers)
         return self
 
-    def noise_descriptor(self, noise_descriptor: dict):
-        """Set the noise descriptor specification for the surface builder.
-
-        Parameters:
-            noise_descriptor (dict): The specification for the noise used by the surface builder.
-        """
-        if not isinstance(noise_descriptor, dict):
-            raise ValueError("noise_descriptor must be a dictionary")
-        self._add_field("noise_descriptor", noise_descriptor)
-        return self
-
-    def non_replaceable_block(self, blocks: list[MinecraftBlockDescriptor]):
-        """Add a block to the list of blocks that the surface builder is not allowed to replace.
-        Leaving this list empty allows replacement of any non-air block.
+    def non_replaceable_blocks(self, blocks: list[MinecraftBlockDescriptor]):
+        """Sets the list of blocks that the surface builder is not allowed to replace.
 
         Parameters:
             blocks (list[MinecraftBlockDescriptor]): The blocks to prevent replacement of.
@@ -858,6 +841,63 @@ class BiomeNoiseGradient(Component):
 
         self._add_field("non_replaceable_blocks", blocks)
         return self
+
+    def noise_block_specifier(
+        self,
+        noise_range_or_specifier: tuple[float, float] | NoiseBlockSpecifier,
+        block: MinecraftBlockDescriptor = None,
+    ):
+        """Add a noise block specifier associating a noise range/condition with a block.
+        Supports both the new NoiseBlockSpecifier object and the legacy (noise_range, block) signature.
+
+        Parameters:
+            noise_range_or_specifier: The NoiseBlockSpecifier instance, or the [min, max] range (legacy).
+            block (MinecraftBlockDescriptor, optional): The block for the legacy signature.
+        """
+        if isinstance(noise_range_or_specifier, NoiseBlockSpecifier):
+            self._noise_block_specifiers.append(noise_range_or_specifier)
+        else:
+            # Legacy signature compatibility
+            noise_range = noise_range_or_specifier
+            if (
+                not isinstance(noise_range, (list, tuple))
+                or len(noise_range) != 2
+                or any(not isinstance(v, (int, float)) for v in noise_range)
+            ):
+                raise ValueError("noise_range must be a list or tuple of two numbers")
+            for val in noise_range:
+                if not (-1.0 <= val <= 1.0):
+                    raise ValueError("noise_range values must be in [-1.0, 1.0]")
+            if not isinstance(block, MinecraftBlockDescriptor):
+                raise ValueError("block must be a MinecraftBlockDescriptor instance")
+
+            self._noise_block_specifiers.append(
+                {"noise_range": list(noise_range), "block": block}
+            )
+        self._add_field("noise_block_specifiers", self._noise_block_specifiers)
+        return self
+
+    def noise_descriptor(self, noise_descriptor: dict):
+        """Set the noise descriptor specification for the surface builder.
+        Deprecated: Use the `noise` method instead.
+
+        Parameters:
+            noise_descriptor (dict): The specification for the noise used by the surface builder.
+        """
+        if not isinstance(noise_descriptor, dict):
+            raise ValueError("noise_descriptor must be a dictionary")
+        self._add_field("noise_descriptor", noise_descriptor)
+        return self
+
+    def non_replaceable_block(self, blocks: list[MinecraftBlockDescriptor]):
+        """Add a block to the list of blocks that the surface builder is not allowed to replace.
+        Deprecated: Use `non_replaceable_blocks` instead.
+
+        Parameters:
+            blocks (list[MinecraftBlockDescriptor]): The blocks to prevent replacement of.
+        """
+        return self.non_replaceable_blocks(blocks)
+
 
 
 class BiomeTags(Component):

@@ -344,6 +344,7 @@ class PlacementDirectionTrait(StrEnum):
     CardinalDirection = "minecraft:cardinal_direction"  # North, South, East, West
     FacingDirection = "minecraft:facing_direction"  # Up, Down, North, South, East, West
     CornerAndCardinalDirection = "minecraft:corner_and_cardinal_direction"  # North, South, East, West, Northeast, Northwest, Southeast, Southwest
+    SixteenWayRotation = "minecraft:sixteen_way_rotation"  # 16 distinct rotational positions (0-15)
 
 
 class PlacementPositionTrait(StrEnum):

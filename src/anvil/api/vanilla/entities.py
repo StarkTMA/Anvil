@@ -100,6 +100,7 @@ def vanilla_entity_ids():
         "minecraft:squid",
         "minecraft:stray",
         "minecraft:strider",
+        "minecraft:sulfur_cube",
         "minecraft:tadpole",
         "minecraft:thrown_trident",
         "minecraft:tnt",

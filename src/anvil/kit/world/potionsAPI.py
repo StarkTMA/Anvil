@@ -82,8 +82,8 @@ def create_universal_potion_projectile() -> Entity:
     entity.server.components.add(
         EntityCollisionBox(0.25, 0.25),
         EntityPhysics(has_gravity=False),
-        EntityPushableByBlock(True),
-        EntityPushableByEntity(True),
+        EntityPushableByBlock(),
+        EntityPushableByEntity(),
         EntityProjectile(
             angle_offset=-18, gravity=0.02, hit_sound="glass", power=0.35, inertia=0.96
         ).on_hit(douse_fire=True),

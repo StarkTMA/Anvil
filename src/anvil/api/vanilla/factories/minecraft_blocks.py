@@ -2530,6 +2530,11 @@ def ChiseledBookshelf(
     )
 
 
+def ChiseledCinnabar() -> MinecraftBlockDescriptor:
+    """Factory for ChiseledCinnabar"""
+    return MinecraftBlockDescriptor("minecraft:chiseled_cinnabar", True)
+
+
 def ChiseledCopper() -> MinecraftBlockDescriptor:
     """Factory for ChiseledCopper"""
     return MinecraftBlockDescriptor("minecraft:chiseled_copper", True)
@@ -2581,6 +2586,11 @@ def ChiseledStoneBricks() -> MinecraftBlockDescriptor:
     return MinecraftBlockDescriptor("minecraft:chiseled_stone_bricks", True)
 
 
+def ChiseledSulfur() -> MinecraftBlockDescriptor:
+    """Factory for ChiseledSulfur"""
+    return MinecraftBlockDescriptor("minecraft:chiseled_sulfur", True)
+
+
 def ChiseledTuff() -> MinecraftBlockDescriptor:
     """Factory for ChiseledTuff"""
     return MinecraftBlockDescriptor("minecraft:chiseled_tuff", True)
@@ -2601,6 +2611,110 @@ def ChorusFlower(age: Optional[Age] = None) -> MinecraftBlockDescriptor:
 def ChorusPlant() -> MinecraftBlockDescriptor:
     """Factory for ChorusPlant"""
     return MinecraftBlockDescriptor("minecraft:chorus_plant", True)
+
+
+def Cinnabar() -> MinecraftBlockDescriptor:
+    """Factory for Cinnabar"""
+    return MinecraftBlockDescriptor("minecraft:cinnabar", True)
+
+
+def CinnabarBrickSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CinnabarBrickSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cinnabar_brick_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def CinnabarBrickStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CinnabarBrickStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cinnabar_brick_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
+def CinnabarBrickWall(
+    wall_connection_type_east: Optional[WallConnectionTypeEast] = None,
+    wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
+    wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
+    wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
+    wall_post_bit: Optional[WallPostBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CinnabarBrickWall"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cinnabar_brick_wall",
+        True,
+        {
+            BlockStateKeys.WallConnectionTypeEast: wall_connection_type_east,
+            BlockStateKeys.WallConnectionTypeNorth: wall_connection_type_north,
+            BlockStateKeys.WallConnectionTypeSouth: wall_connection_type_south,
+            BlockStateKeys.WallConnectionTypeWest: wall_connection_type_west,
+            BlockStateKeys.WallPostBit: wall_post_bit,
+        },
+    )
+
+
+def CinnabarBricks() -> MinecraftBlockDescriptor:
+    """Factory for CinnabarBricks"""
+    return MinecraftBlockDescriptor("minecraft:cinnabar_bricks", True)
+
+
+def CinnabarSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CinnabarSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cinnabar_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def CinnabarStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CinnabarStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cinnabar_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
+def CinnabarWall(
+    wall_connection_type_east: Optional[WallConnectionTypeEast] = None,
+    wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
+    wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
+    wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
+    wall_post_bit: Optional[WallPostBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CinnabarWall"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cinnabar_wall",
+        True,
+        {
+            BlockStateKeys.WallConnectionTypeEast: wall_connection_type_east,
+            BlockStateKeys.WallConnectionTypeNorth: wall_connection_type_north,
+            BlockStateKeys.WallConnectionTypeSouth: wall_connection_type_south,
+            BlockStateKeys.WallConnectionTypeWest: wall_connection_type_west,
+            BlockStateKeys.WallPostBit: wall_post_bit,
+        },
+    )
 
 
 def Clay() -> MinecraftBlockDescriptor:
@@ -8466,6 +8580,58 @@ def PolishedBlackstoneWall(
     )
 
 
+def PolishedCinnabar() -> MinecraftBlockDescriptor:
+    """Factory for PolishedCinnabar"""
+    return MinecraftBlockDescriptor("minecraft:polished_cinnabar", True)
+
+
+def PolishedCinnabarSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PolishedCinnabarSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:polished_cinnabar_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def PolishedCinnabarStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PolishedCinnabarStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:polished_cinnabar_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
+def PolishedCinnabarWall(
+    wall_connection_type_east: Optional[WallConnectionTypeEast] = None,
+    wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
+    wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
+    wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
+    wall_post_bit: Optional[WallPostBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PolishedCinnabarWall"""
+    return MinecraftBlockDescriptor(
+        "minecraft:polished_cinnabar_wall",
+        True,
+        {
+            BlockStateKeys.WallConnectionTypeEast: wall_connection_type_east,
+            BlockStateKeys.WallConnectionTypeNorth: wall_connection_type_north,
+            BlockStateKeys.WallConnectionTypeSouth: wall_connection_type_south,
+            BlockStateKeys.WallConnectionTypeWest: wall_connection_type_west,
+            BlockStateKeys.WallPostBit: wall_post_bit,
+        },
+    )
+
+
 def PolishedDeepslate() -> MinecraftBlockDescriptor:
     """Factory for PolishedDeepslate"""
     return MinecraftBlockDescriptor("minecraft:polished_deepslate", True)
@@ -8609,6 +8775,58 @@ def PolishedGraniteStairs(
         {
             BlockStateKeys.UpsideDownBit: upside_down_bit,
             BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
+def PolishedSulfur() -> MinecraftBlockDescriptor:
+    """Factory for PolishedSulfur"""
+    return MinecraftBlockDescriptor("minecraft:polished_sulfur", True)
+
+
+def PolishedSulfurSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PolishedSulfurSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:polished_sulfur_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def PolishedSulfurStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PolishedSulfurStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:polished_sulfur_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
+def PolishedSulfurWall(
+    wall_connection_type_east: Optional[WallConnectionTypeEast] = None,
+    wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
+    wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
+    wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
+    wall_post_bit: Optional[WallPostBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PolishedSulfurWall"""
+    return MinecraftBlockDescriptor(
+        "minecraft:polished_sulfur_wall",
+        True,
+        {
+            BlockStateKeys.WallConnectionTypeEast: wall_connection_type_east,
+            BlockStateKeys.WallConnectionTypeNorth: wall_connection_type_north,
+            BlockStateKeys.WallConnectionTypeSouth: wall_connection_type_south,
+            BlockStateKeys.WallConnectionTypeWest: wall_connection_type_west,
+            BlockStateKeys.WallPostBit: wall_post_bit,
         },
     )
 
@@ -10583,6 +10801,130 @@ def StructureBlock(
 def StructureVoid() -> MinecraftBlockDescriptor:
     """Factory for StructureVoid"""
     return MinecraftBlockDescriptor("minecraft:structure_void", True)
+
+
+def PotentSulfur() -> MinecraftBlockDescriptor:
+    """Factory for PotentSulfur"""
+    return MinecraftBlockDescriptor("minecraft:potent_sulfur", True)
+
+
+def Sulfur() -> MinecraftBlockDescriptor:
+    """Factory for Sulfur"""
+    return MinecraftBlockDescriptor("minecraft:sulfur", True)
+
+
+def SulfurBrickSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for SulfurBrickSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:sulfur_brick_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def SulfurBrickStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for SulfurBrickStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:sulfur_brick_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
+def SulfurBrickWall(
+    wall_connection_type_east: Optional[WallConnectionTypeEast] = None,
+    wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
+    wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
+    wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
+    wall_post_bit: Optional[WallPostBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for SulfurBrickWall"""
+    return MinecraftBlockDescriptor(
+        "minecraft:sulfur_brick_wall",
+        True,
+        {
+            BlockStateKeys.WallConnectionTypeEast: wall_connection_type_east,
+            BlockStateKeys.WallConnectionTypeNorth: wall_connection_type_north,
+            BlockStateKeys.WallConnectionTypeSouth: wall_connection_type_south,
+            BlockStateKeys.WallConnectionTypeWest: wall_connection_type_west,
+            BlockStateKeys.WallPostBit: wall_post_bit,
+        },
+    )
+
+
+def SulfurBricks() -> MinecraftBlockDescriptor:
+    """Factory for SulfurBricks"""
+    return MinecraftBlockDescriptor("minecraft:sulfur_bricks", True)
+
+
+def SulfurSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for SulfurSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:sulfur_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def SulfurSpike(
+    dripstone_thickness: Optional[DripstoneThickness] = None,
+    hanging: Optional[Hanging] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for SulfurSpike"""
+    return MinecraftBlockDescriptor(
+        "minecraft:sulfur_spike",
+        True,
+        {
+            BlockStateKeys.DripstoneThickness: dripstone_thickness,
+            BlockStateKeys.Hanging: hanging,
+        },
+    )
+
+
+def SulfurStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for SulfurStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:sulfur_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
+def SulfurWall(
+    wall_connection_type_east: Optional[WallConnectionTypeEast] = None,
+    wall_connection_type_north: Optional[WallConnectionTypeNorth] = None,
+    wall_connection_type_south: Optional[WallConnectionTypeSouth] = None,
+    wall_connection_type_west: Optional[WallConnectionTypeWest] = None,
+    wall_post_bit: Optional[WallPostBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for SulfurWall"""
+    return MinecraftBlockDescriptor(
+        "minecraft:sulfur_wall",
+        True,
+        {
+            BlockStateKeys.WallConnectionTypeEast: wall_connection_type_east,
+            BlockStateKeys.WallConnectionTypeNorth: wall_connection_type_north,
+            BlockStateKeys.WallConnectionTypeSouth: wall_connection_type_south,
+            BlockStateKeys.WallConnectionTypeWest: wall_connection_type_west,
+            BlockStateKeys.WallPostBit: wall_post_bit,
+        },
+    )
 
 
 def Sunflower(

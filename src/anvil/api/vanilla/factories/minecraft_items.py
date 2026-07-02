@@ -925,7 +925,6 @@ def ChiseledBookshelf() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:chiseled_bookshelf")
 
 
-@experimental
 def ChiseledCinnabar() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:chiseled_cinnabar")
 
@@ -966,7 +965,6 @@ def ChiseledStoneBricks() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:chiseled_stone_bricks")
 
 
-@experimental
 def ChiseledSulfur() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:chiseled_sulfur")
 
@@ -991,42 +989,34 @@ def ChorusPlant() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:chorus_plant")
 
 
-@experimental
 def Cinnabar() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cinnabar")
 
 
-@experimental
 def CinnabarBrickSlab() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cinnabar_brick_slab")
 
 
-@experimental
 def CinnabarBrickStairs() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cinnabar_brick_stairs")
 
 
-@experimental
 def CinnabarBrickWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cinnabar_brick_wall")
 
 
-@experimental
 def CinnabarBricks() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cinnabar_bricks")
 
 
-@experimental
 def CinnabarSlab() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cinnabar_slab")
 
 
-@experimental
 def CinnabarStairs() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cinnabar_stairs")
 
 
-@experimental
 def CinnabarWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cinnabar_wall")
 
@@ -3311,6 +3301,10 @@ def MusicDiscBlocks() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:music_disc_blocks")
 
 
+def MusicDiscBounce() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:music_disc_bounce")
+
+
 def MusicDiscCat() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:music_disc_cat")
 
@@ -4003,22 +3997,18 @@ def PolishedBlackstoneWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_blackstone_wall")
 
 
-@experimental
 def PolishedCinnabar() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_cinnabar")
 
 
-@experimental
 def PolishedCinnabarSlab() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_cinnabar_slab")
 
 
-@experimental
 def PolishedCinnabarStairs() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_cinnabar_stairs")
 
 
-@experimental
 def PolishedCinnabarWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_cinnabar_wall")
 
@@ -4063,22 +4053,18 @@ def PolishedGraniteStairs() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_granite_stairs")
 
 
-@experimental
 def PolishedSulfur() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_sulfur")
 
 
-@experimental
 def PolishedSulfurSlab() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_sulfur_slab")
 
 
-@experimental
 def PolishedSulfurStairs() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_sulfur_stairs")
 
 
-@experimental
 def PolishedSulfurWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_sulfur_wall")
 
@@ -4115,7 +4101,6 @@ def Potato() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:potato")
 
 
-@experimental
 def PotentSulfur() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:potent_sulfur")
 
@@ -5149,52 +5134,46 @@ def SugarCane() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sugar_cane")
 
 
-@experimental
 def Sulfur() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur")
 
 
-@experimental
 def SulfurBrickSlab() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_brick_slab")
 
 
-@experimental
 def SulfurBrickStairs() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_brick_stairs")
 
 
-@experimental
 def SulfurBrickWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_brick_wall")
 
 
-@experimental
 def SulfurBricks() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_bricks")
 
 
-@experimental
 def SulfurCubeBucket() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_cube_bucket")
 
 
-@experimental
 def SulfurCubeSpawnEgg() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_cube_spawn_egg")
 
 
-@experimental
 def SulfurSlab() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_slab")
 
 
-@experimental
+def SulfurSpike() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:sulfur_spike")
+
+
 def SulfurStairs() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_stairs")
 
 
-@experimental
 def SulfurWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sulfur_wall")
 
