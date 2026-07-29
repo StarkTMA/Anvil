@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List
 from warnings import deprecated
 
-
 from anvil.api.core.enums import ComponentTarget, FilterSubject
 from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Molang
@@ -126,7 +125,7 @@ class RootComponent:
         self.add(component)
 
     def _remove(self, component: Component) -> None:
-        if self._has(component):
+        if component in self._components:
             self._components.remove(component)
 
     def _has(self, component: Component) -> bool:

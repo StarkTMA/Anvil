@@ -450,7 +450,9 @@ class BPAnimationControllers(AddonObject):
         self._animation_controllers = JsonSchemes.animation_controllers()
         self._controllers_list: list[_BP_Controller] = []
 
-    def add_controller(self, controller_shortname: str) -> _BP_Controller:
+    def add_controller(
+        self, controller_shortname: str, initial_state: str = "default"
+    ) -> _BP_Controller:
         """Adds a new animation controller to the current actor with `default` as the `initial_state`.
 
         Parameters
@@ -463,7 +465,7 @@ class BPAnimationControllers(AddonObject):
             Animation controller.
 
         """
-        ctrl = _BP_Controller(self.identifier, controller_shortname)
+        ctrl = _BP_Controller(self.identifier, controller_shortname, initial_state)
         self._controllers_list.append(ctrl)
         return ctrl
 

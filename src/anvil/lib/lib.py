@@ -788,22 +788,20 @@ class AnvilValidator:
         if (
             isinstance(value, (tuple, list))
             and len(value) in (3, 4)
-            and any([
-                all(isinstance(c, int) and 0 <= c <= 255 for c in value),
-                all(isinstance(c, float) and 0.0 <= c <= 1.0 for c in value),
-            ])
+            and any(
+                [
+                    all(isinstance(c, int) and 0 <= c <= 255 for c in value),
+                    all(isinstance(c, float) and 0.0 <= c <= 1.0 for c in value),
+                ]
+            )
         ):
             return True
 
         # Check for hex color strings (start with #)
-        if (
-            isinstance(value, str)
-            and value.startswith("#")
-        ):
+        if isinstance(value, str) and value.startswith("#"):
             hex_val = value[1:]
-            if (
-                len(hex_val) in (3, 4, 6, 8)
-                and all(c in "0123456789abcdefABCDEF" for c in hex_val)
+            if len(hex_val) in (3, 4, 6, 8) and all(
+                c in "0123456789abcdefABCDEF" for c in hex_val
             ):
                 return True
 

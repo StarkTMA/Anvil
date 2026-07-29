@@ -110,12 +110,9 @@ class TextureSet(AddonObject):
             target (Literal["blocks", "items"]): The target directory layout/namespace.
 
         Raises:
-            RuntimeError: If PBR is not enabled in the configuration.
+            RuntimeError: If PBR is not enabled in the configuration and auxiliary maps are specified.
         """
         super().__init__(texture_name)
-        if not CONFIG.PBR:
-            raise RuntimeError("Texture sets require PBR to be enabled in the config.")
-
         self.content(JsonSchemes.texture_set())
         self._target = target
         self._overriding_vanilla = overriding_vanilla
@@ -147,7 +144,13 @@ class TextureSet(AddonObject):
 
         Raises:
             ValueError: If mutually exclusive components are provided.
+            RuntimeError: If auxiliary maps are used when PBR is disabled in configuration.
         """
+        if not CONFIG.PBR and components.has_aux():
+            raise RuntimeError(
+                "PBR maps (normal, height, MER, MERS) require PBR to be enabled in the config."
+            )
+
         color_map: dict[str, str] = {}
         if components.normal is not None and components.height is not None:
             raise ValueError("Normal and heightmap textures are mutually exclusive.")
@@ -368,7 +371,7 @@ class TextureSet(AddonObject):
                             f"{texture}.png",
                         )
 
-        if (
+        if CONFIG.PBR and (
             len(self._content["minecraft:texture_set"].keys()) > 1
             or self._target == "particle"
             or self._overriding_vanilla

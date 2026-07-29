@@ -120,7 +120,11 @@ class LDtk:
                         {
                             "x": entity["px"][0] / 16,
                             "y": entity["px"][1] / 16,
-                            "tileset_id": entity["__tile"]["tilesetUid"] if entity.get("__tile") is not None else None,
+                            "tileset_id": (
+                                entity["__tile"]["tilesetUid"]
+                                if entity.get("__tile") is not None
+                                else None
+                            ),
                             "entity_id": id,
                             "data": dat,
                         }
@@ -264,9 +268,7 @@ class LDtk:
                 spawn_point = None
 
                 # Calculate corners in Minecraft coordinates using map_coordinates
-                corner_0_mc = map_coordinates(
-                    level["origin"], 0, 0, level["layer"]
-                )
+                corner_0_mc = map_coordinates(level["origin"], 0, 0, level["layer"])
                 corner_1_mc = map_coordinates(
                     level["origin"], level["size"][0], level["size"][1], level["layer"]
                 )
@@ -327,6 +329,9 @@ class LDtk:
                     "spawn_point": spawn_point,
                     "entities": level_entities,
                 }
+
+            if entities.keys() == 0:
+                return
 
             path = os.path.join(
                 "scripts",

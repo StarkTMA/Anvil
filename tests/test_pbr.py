@@ -311,3 +311,77 @@ def test_textureset_vanilla_override():
         assert tset._content["minecraft:texture_set"]["metalness_emissive_roughness"] == "test_mer"
 
 
+def test_textureset_pbr_disabled_color_only():
+    from anvil.api.pbr.texture_set import TextureSet, TextureComponents
+    from unittest.mock import patch
+
+    mock_config.PBR = False
+    try:
+        with patch("anvil.api.pbr.texture_set._Blockbench") as MockBlockbench, patch(
+            "anvil.lib.schemas.AnvilIO.file"
+        ) as mock_file:
+            tset = TextureSet("test_block", "blocks")
+            components = TextureComponents(color="test_color")
+            tset.set_blockbench_textures("test_model", components)
+
+            tset.__export__()
+            # Verify json export was NOT called because PBR is False
+            mock_file.assert_not_called()
+    finally:
+        mock_config.PBR = True
+
+
+def test_textureset_pbr_disabled_aux_map_raises_error():
+    from anvil.api.pbr.texture_set import TextureSet, TextureComponents
+    from unittest.mock import patch
+
+    mock_config.PBR = False
+    try:
+        with patch("anvil.api.pbr.texture_set._Blockbench"):
+            tset = TextureSet("test_block", "blocks")
+            
+            # Normal map
+            with pytest.raises(RuntimeError, match="PBR maps"):
+                tset.set_blockbench_textures(
+                    "test_model", TextureComponents(color="test_color", normal="test_normal")
+                )
+
+            # Height map
+            with pytest.raises(RuntimeError, match="PBR maps"):
+                tset.set_blockbench_textures(
+                    "test_model", TextureComponents(color="test_color", height="test_height")
+                )
+
+            # MER map
+            with pytest.raises(RuntimeError, match="PBR maps"):
+                tset.set_blockbench_textures(
+                    "test_model", TextureComponents(color="test_color", mer="test_mer")
+                )
+
+            # MERS map
+            with pytest.raises(RuntimeError, match="PBR maps"):
+                tset.set_blockbench_textures(
+                    "test_model", TextureComponents(color="test_color", mers="test_mers")
+                )
+    finally:
+        mock_config.PBR = True
+
+
+def test_textureset_pbr_enabled_export():
+    from anvil.api.pbr.texture_set import TextureSet, TextureComponents
+    from unittest.mock import patch
+
+    mock_config.PBR = True
+    with patch("anvil.api.pbr.texture_set._Blockbench"), patch(
+        "anvil.lib.schemas.AnvilIO.file"
+    ) as mock_file:
+        tset = TextureSet("test_block", "blocks")
+        components = TextureComponents(color="test_color", normal="test_normal")
+        tset.set_blockbench_textures("test_model", components)
+
+        tset.__export__()
+        # Verify json export WAS called because PBR is True and aux maps are present
+        mock_file.assert_called_once()
+
+
+

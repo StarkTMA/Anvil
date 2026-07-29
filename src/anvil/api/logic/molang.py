@@ -57,7 +57,7 @@ class Molang(str):
         return Molang(f"({left}) -> ({right})")
 
     @staticmethod
-    def molang_condition(
+    def condition(
         condition: "Molang",
         expression: "Molang",
         expression2: Optional["Molang"] = None,

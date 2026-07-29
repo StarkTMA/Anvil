@@ -10,6 +10,8 @@ from os import path
 from typing import Optional
 
 import click
+from PIL import Image
+
 from anvil.api.actors.materials import MaterialsObject
 from anvil.api.core.sounds import (
     BlocksJSONObject,
@@ -49,7 +51,6 @@ from anvil.lib.lib import (
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
-from PIL import Image
 
 from ...__version__ import __version__
 

@@ -8,13 +8,12 @@ from enum import StrEnum
 from typing import Any, Dict, List, Optional, Union
 
 import click
-from packaging.version import Version
-
 from anvil.api.core.enums import BlockFaces
 from anvil.api.core.types import Vector2D, Vector3D
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject, JsonSchemes
+from packaging.version import Version
 
 
 class ChannelType(StrEnum):
@@ -387,7 +386,7 @@ class Animation:
             ]:
                 if not kv_dict:
                     continue
-                if len(kv_dict) == 1:
+                if len(kv_dict) == 1 and kv_dict.get("lerp_mode") != None:
                     # Static value optimization
                     val = list(kv_dict.values())[0]
                     # Check if val is dict (complex keyframe) -> then we might need to keep it as time?
@@ -484,9 +483,7 @@ class _TexturesManager:
         }
         self._queued_textures: dict[str, str | None] = {}
 
-    def queue_texture(
-        self, texture: str, dest_dir: str | None = None
-    ) -> None:
+    def queue_texture(self, texture: str, dest_dir: str | None = None) -> None:
         if texture in self._textures:
             self._queued_textures[texture] = dest_dir
         else:
@@ -495,9 +492,10 @@ class _TexturesManager:
             )
 
     def _blend_layers(self, texture_data: dict):
-        from PIL import Image, ImageChops
-        import io
         import colorsys
+        import io
+
+        from PIL import Image, ImageChops
 
         width = texture_data.get("width", 16)
         height = texture_data.get("height", 16)
@@ -533,12 +531,16 @@ class _TexturesManager:
                 new_width = int(round(layer_img.width * scale[0]))
                 new_height = int(round(layer_img.height * scale[1]))
                 if new_width != layer_img.width or new_height != layer_img.height:
-                    layer_img = layer_img.resize((new_width, new_height), Image.Resampling.NEAREST)
+                    layer_img = layer_img.resize(
+                        (new_width, new_height), Image.Resampling.NEAREST
+                    )
 
             # Apply opacity directly to the alpha channel
             opacity = layer.get("opacity", 100) / 100.0
             if opacity < 1.0:
-                layer_img.putalpha(layer_img.getchannel("A").point(lambda p: int(p * opacity)))
+                layer_img.putalpha(
+                    layer_img.getchannel("A").point(lambda p: int(p * opacity))
+                )
 
             ox, oy = map(int, layer.get("offset", [0, 0]))
             blend_mode = layer.get("blend_mode", "default")
@@ -551,24 +553,34 @@ class _TexturesManager:
                 continue
 
             crop_base = base_img.crop((start_x, start_y, end_x, end_y))
-            crop_layer = layer_img.crop((start_x - ox, start_y - oy, end_x - ox, end_y - oy))
+            crop_layer = layer_img.crop(
+                (start_x - ox, start_y - oy, end_x - ox, end_y - oy)
+            )
 
             if blend_mode == "default":
                 blended_region = Image.alpha_composite(crop_base, crop_layer)
             elif blend_mode == "behind":
                 blended_region = Image.alpha_composite(crop_layer, crop_base)
             elif blend_mode == "alpha_mask":
-                mask = ImageChops.multiply(crop_layer.convert("L"), crop_layer.getchannel("A"))
+                mask = ImageChops.multiply(
+                    crop_layer.convert("L"), crop_layer.getchannel("A")
+                )
                 r, g, b, a = crop_base.split()
-                blended_region = Image.merge("RGBA", (r, g, b, ImageChops.multiply(a, mask)))
+                blended_region = Image.merge(
+                    "RGBA", (r, g, b, ImageChops.multiply(a, mask))
+                )
             elif blend_mode == "set_opacity":
                 r, g, b, a = crop_base.split()
-                blended_region = Image.merge("RGBA", (r, g, b, crop_layer.getchannel("A")))
+                blended_region = Image.merge(
+                    "RGBA", (r, g, b, crop_layer.getchannel("A"))
+                )
             elif blend_mode in blend_ops:
                 rgb_base = crop_base.convert("RGB")
                 rgb_layer = crop_layer.convert("RGB")
                 rgb_m = blend_ops[blend_mode](rgb_layer, rgb_base)
-                blended_layer = Image.merge("RGBA", (*rgb_m.split(), crop_layer.getchannel("A")))
+                blended_layer = Image.merge(
+                    "RGBA", (*rgb_m.split(), crop_layer.getchannel("A"))
+                )
                 blended_region = Image.alpha_composite(crop_base, blended_layer)
             else:
                 # Custom HSL color and divide modes fallback
@@ -581,13 +593,16 @@ class _TexturesManager:
                     for x_idx in range(crop_base.width):
                         r_b, g_b, b_b, a_b = px_b[x_idx, y_idx]
                         r_t, g_t, b_t, a_t = px_l[x_idx, y_idx]
-                        
+
                         cb = [c / 255.0 for c in (r_b, g_b, b_b)]
                         ct = [c / 255.0 for c in (r_t, g_t, b_t)]
                         ab, at = a_b / 255.0, a_t / 255.0
 
                         if blend_mode == "divide":
-                            cm = [min(b / t, 1.0) if t > 0.0 else 1.0 for b, t in zip(cb, ct)]
+                            cm = [
+                                min(b / t, 1.0) if t > 0.0 else 1.0
+                                for b, t in zip(cb, ct)
+                            ]
                         elif blend_mode == "color":
                             h_b, l_b, s_b = colorsys.rgb_to_hls(*cb)
                             h_t, l_t, s_t = colorsys.rgb_to_hls(*ct)
@@ -596,22 +611,34 @@ class _TexturesManager:
                             cm = ct
 
                         a_out = at + ab * (1.0 - at)
-                        c_out = [(m * at + b * ab * (1.0 - at)) / a_out if a_out > 0.0 else 0.0 for m, b in zip(cm, cb)]
-                        
-                        px_out[x_idx, y_idx] = tuple(max(0, min(255, int(round(c * 255.0)))) for c in c_out) + (max(0, min(255, int(round(a_out * 255.0)))),)
+                        c_out = [
+                            (
+                                (m * at + b * ab * (1.0 - at)) / a_out
+                                if a_out > 0.0
+                                else 0.0
+                            )
+                            for m, b in zip(cm, cb)
+                        ]
+
+                        px_out[x_idx, y_idx] = tuple(
+                            max(0, min(255, int(round(c * 255.0)))) for c in c_out
+                        ) + (
+                            max(0, min(255, int(round(a_out * 255.0)))),
+                        )
 
             base_img.paste(blended_region, (start_x, start_y))
 
         return base_img
 
     def __export__(self) -> None:
-        from PIL import Image
         import io
+
+        from PIL import Image
 
         for texture, dest_dir in self._queued_textures.items():
             path = dest_dir if dest_dir is not None else self._path
             os.makedirs(path, exist_ok=True)
-            
+
             tex_data = self._textures[texture]
             if tex_data.get("layers_enabled", False) and tex_data.get("layers"):
                 img = self._blend_layers(tex_data)
@@ -627,21 +654,21 @@ class _TexturesManager:
                 if not is_blended:
                     img = Image.open(io.BytesIO(image_data))
                 out_bytes = io.BytesIO()
-                
+
                 pil_format = {
                     "tga": "TGA",
                     "jpeg": "JPEG",
                     "jpg": "JPEG",
                     "webp": "WEBP",
-                    "png": "PNG"
+                    "png": "PNG",
                 }.get(file_format, "PNG")
-                
+
                 ext = {
                     "tga": "tga",
                     "jpeg": "jpeg",
                     "jpg": "jpg",
                     "webp": "webp",
-                    "png": "png"
+                    "png": "png",
                 }.get(file_format, "png")
 
                 if pil_format == "JPEG" and img.mode in ("RGBA", "LA", "P"):
@@ -653,7 +680,6 @@ class _TexturesManager:
             else:
                 with open(os.path.join(path, f"{texture}.png"), "wb") as file:
                     file.write(image_data)
-
 
 
 @dataclass
@@ -1398,6 +1424,3 @@ class _Blockbench:
                     fg="yellow",
                 )
             )
-
-
-

@@ -1,5 +1,5 @@
 import os
-from typing import Literal
+from typing import Dict, Literal
 
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
@@ -210,20 +210,22 @@ class RenderControllers(AddonObject):
 
     def __init__(self, identifier: str, actor_type: str) -> None:
         self._actor_type = actor_type
-        self._controllers: list[_RenderController] = []
+        self._controllers: Dict[str, _RenderController] = {}
         self.render_controller = JsonSchemes.render_controllers()
         super().__init__(identifier)
 
     def add_controller(self, controller_name: str):
-        self._render_controller = _RenderController(
-            self.identifier, controller_name, self._actor_type
-        )
-        self._controllers.append(self._render_controller)
-        return self._render_controller
+        if not controller_name in self._controllers.keys():
+            controller = _RenderController(
+                self.identifier, controller_name, self._actor_type
+            )
+            self._controllers[controller_name] = controller
+
+        return self._controllers[controller_name]
 
     def queue(self, directory: str = ""):
         if len(self._controllers) > 0:
-            for controller in self._controllers:
+            for controller in self._controllers.values():
                 self.render_controller["render_controllers"].update(
                     controller.__export__()
                 )

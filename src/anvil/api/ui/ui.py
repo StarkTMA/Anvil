@@ -43,6 +43,7 @@ Example:
 """
 
 from enum import StrEnum
+from typing import Literal
 
 import click
 from anvil.lib.config import CONFIG, ConfigPackageTarget
@@ -279,6 +280,18 @@ class UIFontSize(StrEnum):
 # Subclasses ==========================================================
 
 
+class NinesliceJson(AddonObject):
+    _extension = ".json"
+    _path = os.path.join(CONFIG.RP_PATH, "textures", "ui")
+    _object_type = "Nineslice Json"
+
+    def __init__(self, name):
+        super().__init__(name)
+
+    def queue(self):
+        return super().queue()
+
+
 class _UIBinding:
     """Manages data binding configuration for UI elements.
 
@@ -399,7 +412,17 @@ class _UIBinding:
         self._content["resolve_sibling_scope"] = True
         return self
 
-    def binding_condition(self, binding_condition: str):
+    def binding_condition(
+        self,
+        binding_condition: Literal[
+            "always",
+            "always_when_visible",
+            "visible",
+            "once",
+            "none",
+            "visibility_changed",
+        ],
+    ):
         """Set a condition for the binding activation.
 
         Args:
@@ -409,6 +432,18 @@ class _UIBinding:
             _UIBinding: Self for method chaining
         """
         self._content["binding_condition"] = binding_condition
+        return self
+
+    def ignored(self, ignored: bool):
+        """Set whether the binding should be ignored.
+
+        Args:
+            ignored (bool): Whether to ignore this binding
+
+        Returns:
+            _UIBinding: Self for method chaining
+        """
+        self._content["ignored"] = ignored
         return self
 
 
@@ -570,7 +605,6 @@ class _UIElement:
         self._bindings: list[_UIBinding] = []
         self._controls: list[_UIElement] = []
         self._modifications: list[_UIModifications] = []
-        self.layer(1)
 
     def inherit(self, element_name: str):
         """Inherit properties from an existing element.
@@ -619,6 +653,26 @@ class _UIElement:
             _UIElement: Self for method chaining
         """
         self.element["visible"] = visible
+        return self
+
+    def focus_identifier(self, identifier: str):
+        self.element["focus_identifier"] = identifier
+        return self
+
+    def focus_change_down(self, identifier: str):
+        self.element["focus_change_down"] = identifier
+        return self
+
+    def focus_change_up(self, identifier: str):
+        self.element["focus_change_up"] = identifier
+        return self
+
+    def focus_change_left(self, identifier: str):
+        self.element["focus_change_left"] = identifier
+        return self
+
+    def focus_change_right(self, identifier: str):
+        self.element["focus_change_right"] = identifier
         return self
 
     def fill(self, fill: bool | str):
@@ -747,7 +801,7 @@ class _UIElement:
         self.element["text_alignment"] = text_alignment.value
         return self
 
-    def color(self, color: tuple[float, float, float]):
+    def color(self, color: str | Color):
         """Set the color of the element.
 
         Args:
@@ -756,7 +810,11 @@ class _UIElement:
         Returns:
             _UIElement: Self for method chaining
         """
-        self.element["color"] = color
+        if isinstance(color, str) and color.startswith("$"):
+            self.element["color"] = color
+            return self
+
+        self.element["color"] = AnvilFormatter.convert_color(color, RGB)
         return self
 
     def font_size(self, font_size: UIFontSize):
@@ -809,7 +867,14 @@ class _UIElement:
         self.element["font_scale_factor"] = font_scale_factor
         return self
 
-    def texture(self, texture: str, scale_factor: int = 1, *nineslice_size: int):
+    def texture(
+        self,
+        texture: str,
+        scale_factor: int = 1,
+        nineslice_size: int | tuple[int, int, int, int] | None = None,
+        tiled: bool = False,
+        tiled_scale: float | tuple[float, float] = 1
+    ):
         """Set the texture for image elements with optional scaling and nineslice.
 
         Args:
@@ -837,29 +902,36 @@ class _UIElement:
         else:
             self.element["texture"] = texture
 
-        if len(nineslice_size) > 0 or scale_factor != 1:
-            AnvilIO.file(
-                f"{texture}.json",
-                {
-                    "nineslice_size": (
-                        nineslice_size[0] * scale_factor
-                        if len(nineslice_size) == 1
-                        else [i * scale_factor for i in nineslice_size]
-                    ),
-                    "base_size": [
-                        i * scale_factor
-                        for i in Image.open(
-                            os.path.join("assets", "textures", "ui", f"{texture}.png")
-                        ).size
-                    ],
-                },
-                os.path.join(CONFIG.RP_PATH, "textures", "ui"),
-                "w",
-            )
+        if not nineslice_size and scale_factor == 1:
+            return self
+
+        if nineslice_size and scale_factor != 1:
+            if isinstance(nineslice_size, (tuple, list)):
+                nineslice_size = [i * scale_factor for i in nineslice_size]
+            elif isinstance(nineslice_size, int):
+                nineslice_size = nineslice_size * scale_factor
+
+        image_size = Image.open(
+            os.path.join("assets", "textures", "ui", f"{texture}.png")
+        ).size
+        base_size = [i * scale_factor for i in image_size]
+
+        content = {"nineslice_size": nineslice_size, "base_size": base_size}
+
+        if tiled:
+            self.tiled(tiled)
+        if tiled_scale != 1:
+            self.tiled_scale(tiled_scale)
+
+        NinesliceJson(texture).content(content).queue()
         return self
 
     def texture_key(
-        self, key: str, texture: str, scale_factor: int = 1, *nineslice_size: int
+        self,
+        key: str,
+        texture: str,
+        scale_factor: int = 1,
+        nineslice_size: int | tuple[int, int, int, int] | None = None,
     ):
         """Set a texture using a custom key for variable substitution.
 
@@ -875,30 +947,32 @@ class _UIElement:
         Raises:
             FileNotFoundError: If texture file doesn't exist in assets/textures/ui/
         """
+
         if os.path.exists(os.path.join("assets", "textures", "ui", f"{texture}.png")):
             self.element[f"${key}"] = os.path.join("textures", "ui", texture)
             self._textures.append(texture)
-            if len(nineslice_size) > 0 or scale_factor != 1:
-                AnvilIO.file(
-                    f"{texture}.json",
-                    {
-                        "nineslice_size": nineslice_size,
-                        "base_size": [
-                            i * scale_factor
-                            for i in Image.open(
-                                os.path.join(
-                                    "assets", "textures", "ui", f"{texture}.png"
-                                )
-                            ).size
-                        ],
-                    },
-                    os.path.join(CONFIG.RP_PATH, "textures", "ui"),
-                    "w",
-                )
         else:
             raise FileNotFoundError(
                 f"{texture}.png not found in {os.path.join('assets', 'textures', 'ui')}. Please ensure the file exists."
             )
+
+        if not nineslice_size and scale_factor == 1:
+            return self
+
+        if nineslice_size and scale_factor != 1:
+            if isinstance(nineslice_size, (tuple, list)):
+                nineslice_size = [i * scale_factor for i in nineslice_size]
+            elif isinstance(nineslice_size, int):
+                nineslice_size = nineslice_size * scale_factor
+
+        image_size = Image.open(
+            os.path.join("assets", "textures", "ui", f"{texture}.png")
+        ).size
+        base_size = [i * scale_factor for i in image_size]
+
+        content = {"nineslice_size": nineslice_size, "base_size": base_size}
+
+        NinesliceJson(texture).content(content).queue()
         return self
 
     def aseprite_texture(self, texture: str):
@@ -1048,9 +1122,9 @@ class _UIElement:
         Returns:
             _UIElement: New child element for further configuration
         """
+
         if "controls" not in self.element:
             self.element["controls"] = []
-
         ctrl = _UIElement(element_name)
         self._controls.append(ctrl)
         return ctrl
@@ -1095,6 +1169,18 @@ class _UIElement:
             _UIElement: Self for method chaining
         """
         self.element["tiled"] = bool
+        return self
+
+    def tiled_scale(self, scale: float | tuple[float, float]):
+        if isinstance(scale, tuple):
+            if len(scale) != 2 or all(isinstance(x, (float, int)) for x in scale):
+                raise TypeError("Tiled scale must be a float or tuple[float, float]")
+            else:
+                self.element["tiled_scale"] = scale
+        elif isinstance(scale, (float, int)):
+            self.element["tiled_scale"] = [scale, scale]
+        else:
+            raise TypeError("Tiled scale must be a float or tuple[float, float]")
         return self
 
     def max_size(self, max_size: str | tuple):
@@ -1473,6 +1559,10 @@ class _UIElement:
             self.element["modifications"].append(mod._content)
         for ctrl in self._controls:
             self.element["controls"].append(ctrl.queue())
+
+        if self.element == {}:
+            self.keys("skip_shortening", True)
+
         return {self._element_name: self.element}
 
 
@@ -2263,7 +2353,7 @@ class _HUDScreen(_UIScreen):
         self._ignored_actionbar_texts = ["$anvil.hide.text"]
         self._hides_hud = ["$anvil.hide.text"]
 
-    #def disable_mouse(self):
+    # def disable_mouse(self):
     #    self.add_element(
     #        "hud_screen@common.base_screen"
     #    ).should_steal_mouse.absorbs_input
@@ -2283,7 +2373,9 @@ class _HUDScreen(_UIScreen):
     def disable_hotbar(self):
         self.root_panel.modification.remove("centered_gui_elements")
         self.root_panel.modification.remove("centered_gui_elements_at_bottom_middle")
-        self.root_panel.modification.remove("centered_ridingvr_gui_elements")
+        self.root_panel.modification.remove(
+            "centered_gui_elements_at_bottom_middle_touch"
+        )
         self.root_panel.modification.remove("not_centered_gui_elements")
         self.root_panel.modification.remove("exp_rend")
         self.root_panel.modification.remove("exp_rend_resizable")
@@ -2704,9 +2796,12 @@ class _AnvilCommon(_UIScreen):
         image_label.size(("100%c + 8px", "100%c + 4px"))
         image_label.keys("text", "PLACEHOLDER TEXT")
         image_label.keys("localize", False)
+        image_label.keys("text_color", "#0f0f0f")
+
         label = image_label.controls("label@anvil_common.label")
         label.text("$text")
         label.localize("$localize")
+        label.color("$text_color")
 
         # ---------------------------
         # Image Label Binding
@@ -2715,9 +2810,12 @@ class _AnvilCommon(_UIScreen):
         # ---------------------------
         image_label_binding = self.add_element("image_label_binding@anvil_common.image")
         image_label_binding.size(("100%c + 8px", "100%c + 4px"))
+        image_label_binding.keys("text_color", "#0f0f0f")
+
         label_binding = image_label_binding.controls("text@anvil_common.label")
         label_binding.text("#text")
         label_binding.layer(1)
+        label_binding.color("$text_color")
         label_binding.binding.binding_type(UIBindingType.View).source_control_name(
             "$control_name"
         ).source_property_name("#text").target_property_name("#text")
@@ -2741,7 +2839,8 @@ class _AnvilCommon(_UIScreen):
 
     def scoreboard_retrieve(self):
         """Use ``retrieve_score`` as the element. A few variables must be passed.
-        To retrieve the score value, you must call the source_control_name using the element based on``retrieve_score``, then call the property ``score`` for the int value, or ``text`` for the string value.
+        To retrieve the score value, you must call the source_control_name using the element based on ``retrieve_score``,
+        then call the property ``score`` for the int value, or ``text`` for the string value.
 
         - index: this is the index of the score in the sidebar scoreboard.
         - score_offset: the number to subtract from the score.
@@ -2750,19 +2849,22 @@ class _AnvilCommon(_UIScreen):
         scoreboard_score = self.add_element(
             "scoreboard_score_element@anvil_common.label"
         )
-        scoreboard_score.text("#text")
+        scoreboard_score.text("#score_string")
         scoreboard_score.color("$color")
         scoreboard_score.shadow("$shadow")
         scoreboard_score.layer(1)
-        scoreboard_score.binding.binding_name("#player_score_sidebar").binding_type(
-            UIBindingType.Collection
-        ).binding_collection_name("scoreboard_scores")
-        scoreboard_score.binding.binding_type(UIBindingType.View).source_property_name(
-            "('§z' + ((#player_score_sidebar * 1) - $score_offset))"
-        ).target_property_name("#text")
-        scoreboard_score.binding.binding_type(UIBindingType.View).source_property_name(
-            "((#player_score_sidebar * 1) - $score_offset)"
-        ).target_property_name("#score")
+
+        binding = scoreboard_score.binding.binding_type(UIBindingType.Collection)
+        binding.binding_name("#player_score_sidebar")
+        binding.binding_collection_name("scoreboard_scores")
+
+        binding = scoreboard_score.binding.binding_type(UIBindingType.View)
+        binding.source_property_name("(0 + #player_score_sidebar - $score_offset)")
+        binding.target_property_name("#score_integer")
+
+        binding = scoreboard_score.binding.binding_type(UIBindingType.View)
+        binding.source_property_name("('§z' + #score_integer)")
+        binding.target_property_name("#score_string")
 
         retrieve_score = self.add_element("retrieve_score@anvil_common.stack_panel")
         retrieve_score.size(("100%c", "100%c"))
@@ -2778,10 +2880,10 @@ class _AnvilCommon(_UIScreen):
         retrieve_score.visible(False)
         retrieve_score.binding.binding_type(UIBindingType.View).source_control_name(
             "$name"
-        ).source_property_name("#text").target_property_name("#text")
+        ).source_property_name("#score_string").target_property_name("#score_string")
         retrieve_score.binding.binding_type(UIBindingType.View).source_control_name(
             "$name"
-        ).source_property_name("#score").target_property_name("#score")
+        ).source_property_name("#score_integer").target_property_name("#score_integer")
 
     def queue(self, directory: str = ""):
         return super().queue("anvil")

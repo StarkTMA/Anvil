@@ -8,7 +8,7 @@ from anvil.api.core.types import RGB, Color, Identifier
 from anvil.api.pbr.atmosphere import AtmosphericSettings
 from anvil.api.pbr.color_grading import ColorGradingSettings
 from anvil.api.pbr.cubemap import CubeMapSettings
-from anvil.api.pbr.fog import Fog
+from anvil.api.pbr.fog import Fog, FogSettings
 from anvil.api.pbr.lighting import LightingSettings
 from anvil.api.pbr.water import WaterSettings
 from anvil.lib.config import CONFIG, ConfigPackageTarget
@@ -209,7 +209,7 @@ class BiomeClient(AddonObject):
             "minecraft:dry_foliage_color"
         ] = {"color": AnvilFormatter.convert_color(color, RGB)}
 
-    def fog_appearance(self, fog: Fog):
+    def fog_appearance(self, fog: FogSettings):
         """
         Sets the fog settings used during rendering. Biomes without this component will have default fog settings.
 
@@ -221,7 +221,7 @@ class BiomeClient(AddonObject):
 
         self._content["minecraft:client_biome"]["components"][
             "minecraft:fog_appearance"
-        ] = {"fog_appearance": str(fog)}
+        ] = {"fog_identifier": str(fog)}
 
     def foliage_appearance(self, color: RGB):
         """Sets the foliage color or color map used during rendering. Biomes without this component will have default foliage appearance.

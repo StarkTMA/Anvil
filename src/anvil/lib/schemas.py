@@ -995,9 +995,9 @@ class AddonObject(AddonDescriptor):
         """
         path = self._path.removeprefix(CONFIG.RP_PATH).removeprefix(CONFIG.BP_PATH)
         path = os.path.join(path, f"{self._name}{self._extension}")
-        if len(path) > 80:
+        if len(path) > 96:
             raise ValueError(
-                f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [80] characters."
+                f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [96] characters."
             )
 
         AnvilIO.file(f"{self._name}{self._extension}", self._content, self._path, "w")
@@ -1079,7 +1079,12 @@ class NoiseBlockSpecifier:
         *,
         noise: str | None = None,
         threshold: float | int | None = None,
-        range: tuple[float | int, float | int] | list[float | int] | dict[str, float | int] | None = None,
+        range: (
+            tuple[float | int, float | int]
+            | list[float | int]
+            | dict[str, float | int]
+            | None
+        ) = None,
     ):
         if not isinstance(block, MinecraftBlockDescriptor):
             raise ValueError("block must be a MinecraftBlockDescriptor instance")
@@ -1097,9 +1102,13 @@ class NoiseBlockSpecifier:
                 min_val = range[0]
                 max_val = range[1]
             else:
-                raise ValueError("range must be a list/tuple of two numbers or a dict with 'min' and 'max'")
+                raise ValueError(
+                    "range must be a list/tuple of two numbers or a dict with 'min' and 'max'"
+                )
 
-            if not isinstance(min_val, (int, float)) or not isinstance(max_val, (int, float)):
+            if not isinstance(min_val, (int, float)) or not isinstance(
+                max_val, (int, float)
+            ):
                 raise ValueError("range min and max values must be numbers")
             for val in [min_val, max_val]:
                 if not (-1.0 <= val <= 1.0):

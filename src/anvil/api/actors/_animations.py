@@ -16,7 +16,7 @@ class _BPAnimation:
             self._identifier, animation_short_name, loop
         )
 
-    def timeline(self, timestamp: float, *commands: str):
+    def timeline(self, timestamp: float, commands: list[str]):
         """Takes a timestamp and a list of events, command or molang to run at that time.
 
         Args:
@@ -34,7 +34,15 @@ class _BPAnimation:
         ] = self._animation_length
         if timestamp not in self._animation[self._animation_key]["timeline"]:
             self._animation[self._animation_key]["timeline"][timestamp] = []
+        if not isinstance(commands, list):
+            raise TypeError("Animation timeline expected a list of strings.")
+
         for command in commands:
+            if not isinstance(command, str):
+                raise TypeError(
+                    f"Animation timeline command must be a string. [{command}]"
+                )
+
             if str(command).startswith("@s"):
                 self._animation[self._animation_key]["timeline"][timestamp].append(
                     f"{command}"

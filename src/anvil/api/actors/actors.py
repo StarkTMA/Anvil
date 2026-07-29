@@ -474,6 +474,8 @@ class _ActorClientDescription(_ActorDescription):
         Parameters:
             scale (str | Molang, optional): The scale of the entity. Defaults to "1".
         """
+        if not (isinstance(scale, (str, Molang)) or isinstance(scale, (int, float))):
+            raise TypeError("Entity scale must be one of (str, Molang, int float).")
         if scale != 1:
             self._description["description"]["scripts"]["scale"] = scale
 
@@ -672,7 +674,7 @@ class _ActorClientDescription(_ActorDescription):
                     f"Entity {self.identifier} missing at least one render controller. Entity [{self.identifier}]"
                 )
 
-            for controller in self._render_controllers._controllers:
+            for controller in self._render_controllers._controllers.values():
                 controller._validate(
                     self._description["description"]["textures"].keys(),
                     self._description["description"]["geometry"].keys(),
@@ -1019,6 +1021,7 @@ class _EntityServer(AddonObject):
         controller_shortname: str,
         animate: bool = False,
         condition: str | Molang = None,
+        initial_state: str = "default",
     ):
         """Sets the mapping of internal animation controller references to actual animations.
 
@@ -1031,7 +1034,9 @@ class _EntityServer(AddonObject):
         self._description._animation_controller(
             controller_shortname, animate, condition
         )
-        return self._animation_controllers.add_controller(controller_shortname)
+        return self._animation_controllers.add_controller(
+            controller_shortname, initial_state
+        )
 
     def animation(
         self,

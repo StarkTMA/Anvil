@@ -1,5 +1,6 @@
 import math
 from typing import Any, Literal
+from warnings import deprecated
 
 from anvil.api.blocks.components import LootTable
 from anvil.api.core.components import (
@@ -287,7 +288,9 @@ class EntityPushableByEntity(Component):
             preset["filter"] = filter
         if push_mode is not None:
             if push_mode not in ["default", "legacy_boat", "legacy_minecart", "none"]:
-                raise ValueError("push_mode must be 'default', 'legacy_boat', 'legacy_minecart', or 'none'")
+                raise ValueError(
+                    "push_mode must be 'default', 'legacy_boat', 'legacy_minecart', or 'none'"
+                )
             preset["push_mode"] = push_mode
         if strength_multiplier is not None:
             preset["strength_multiplier"] = strength_multiplier
@@ -310,7 +313,6 @@ class EntityPushableByEntity(Component):
         presets.append(preset)
         self._add_field("presets", presets)
         return self
-
 
 
 class EntityPushThrough(Component):
@@ -565,7 +567,7 @@ class EntitySpellEffects(Component):
         display_on_screen_animation: bool = True,
     ):
         effect = {
-            "effect": effect,
+            "effect": str(effect).replace("minecraft:", ""),
             "duration": duration,
             "amplifier": amplifier,
         }
@@ -580,7 +582,9 @@ class EntitySpellEffects(Component):
         return self
 
     def remove_effects(self, *effects: MinecraftEffects):
-        self._component["remove_effects"] = [e.value for e in effects]
+        self._component["remove_effects"] = [
+            str(effect).replace("minecraft:", "") for effect in effects
+        ]
         return self
 
 
@@ -5595,7 +5599,6 @@ class EntityDespawn(Component):
             self._add_field("remove_child_entities", remove_child_entities)
 
 
-
 class EntityGameEventMovementTracking(Component):
     _identifier = "minecraft:game_event_movement_tracking"
 
@@ -6140,7 +6143,9 @@ class EntityInsomnia(Component):
 class EntityLeashableTo(Component):
     _identifier = "minecraft:leashable_to"
 
-    def __init__(self, can_retrieve_from: bool = False, unleash_on_removal: bool = None) -> None:
+    def __init__(
+        self, can_retrieve_from: bool = False, unleash_on_removal: bool = None
+    ) -> None:
         """Allows players to leash entities to this entity, retrieve entities already leashed to it, or free them using shears. For the last interaction to work, the leashed entities must have "can_be_cut" set to true in their "minecraft:leashable" component.
 
         Parameters:
@@ -6178,6 +6183,9 @@ class EntityMobEffectImmunity(Component):
             self._add_field("mob_effects", mob_effects)
 
 
+@deprecated(
+    "The EntityPushable component was removed in Minecraft version 1.26.10 and replaced with EntityPushableByEntity and EntityPushableByBlock. Please use those components instead."
+)
 class EntityPushable(Component):
     _identifier = "minecraft:pushable"
 
@@ -7391,7 +7399,9 @@ class EntityApplyKnockbackRules(Component):
             preset["scale_with_damage"] = scale_with_damage
         if extra_knockback_approach is not None:
             if extra_knockback_approach not in ["reapply_default", "multiply"]:
-                raise ValueError("extra_knockback_approach must be 'reapply_default' or 'multiply'")
+                raise ValueError(
+                    "extra_knockback_approach must be 'reapply_default' or 'multiply'"
+                )
             preset["extra_knockback_approach"] = extra_knockback_approach
         self._component["presets"].append(preset)
         return self
@@ -7874,8 +7884,8 @@ class EntityAIHurtByTarget(AIGoal):
             self._add_field("alert_same_type", alert_same_type)
         if entity_types != None:
             self._add_field("entity_types", {"filters": entity_types})
-        if max_dist != 16:
-            self._add_field("max_dist", max_dist)
+        # if max_dist != 16:
+        #    self._add_field("max_dist", max_dist)
         if must_see:
             self._add_field("must_see", must_see)
         if must_see_forget_duration != 3.0:
