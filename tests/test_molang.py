@@ -219,20 +219,20 @@ class TestMolang:
         )
 
     def test_molang_condition_ternary(self):
-        result = Molang.molang_condition(
+        result = Molang.condition(
             Molang("q.is_alive"), Molang("q.health"), Molang("0.0")
         )
         assert str(result) == "(q.is_alive ? q.health : 0.0)"
         assert isinstance(result, Molang)
 
     def test_molang_condition_binary(self):
-        result = Molang.molang_condition(Molang("q.is_alive"), Molang("q.health"))
+        result = Molang.condition(Molang("q.is_alive"), Molang("q.health"))
         assert str(result) == "(q.is_alive ? q.health)"
         assert isinstance(result, Molang)
 
     def test_molang_condition_string_args(self):
         assert (
-            str(Molang.molang_condition("q.is_alive", "1.0", "0.0"))
+            str(Molang.condition("q.is_alive", "1.0", "0.0"))
             == "(q.is_alive ? 1.0 : 0.0)"
         )
 

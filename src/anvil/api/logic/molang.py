@@ -1,6 +1,5 @@
 from enum import StrEnum
 from typing import Optional, overload
-
 from warnings import deprecated
 
 from anvil.api.core.enums import InputModes, Slots
@@ -3375,6 +3374,7 @@ class Query(Molang):
         """
         return self.__query__(self, self.handle, "get_level_seed_based_fraction")
 
+
 class Context(Query):
     handle = "context"
 
@@ -3704,4 +3704,4 @@ def arrow_operator(left: Molang, right: Molang) -> Molang:
 def molang_conditions(
     condition: Molang, expression: Molang, expression2: Optional[Molang] = None
 ) -> Molang:
-    return Molang.molang_condition(condition, expression, expression2)
+    return Molang.condition(condition, expression, expression2)

@@ -2,7 +2,7 @@
 
 ## 0.9.x
 
-- [**0.9.8.7**](#0987)
+- [**0.9.8.71**](#09871)
 - [0.9.8.6](#0986)
 - [0.9.8.5](#0985)
 - [0.9.8.4](#0984)
@@ -101,13 +101,14 @@
 
 # 0.9.x
 
-## 0.9.8.7
+## 0.9.8.71
 
 ### Anvil
 
 - The `Fonts` object will now create the `default8` texture in the resource pack instead of `/assets`
 - Update format version to `1.26.34`.
 - Increased the file path length from 80 to 96.
+- Fixed molang condition test unit.
 
 ### Actors
 
