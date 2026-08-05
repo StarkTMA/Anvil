@@ -2192,8 +2192,7 @@ class Filter:
             # Test if target is not a player
             Filter.is_controlling_passenger_family("player", subject=FilterSubject.Self, operator=FilterOperation.Not)
 
-        ## Documentation Reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_controlling_passenger_family?view=minecraft-bedrock-stable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_controlling_passenger_family?view=minecraft-bedrock-stable)
         """
         return Filter("is_family", subject, operator, None, value)
 

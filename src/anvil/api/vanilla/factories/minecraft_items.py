@@ -1,7 +1,5 @@
 from typing import Literal
 
-from anvil.lib.config import CONFIG
-from anvil.lib.lib import experimental
 from anvil.lib.schemas import MinecraftItemDescriptor
 
 
@@ -413,6 +411,10 @@ def BlackConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:black_concrete_powder")
 
 
+def BlackCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:black_cushion")
+
+
 def BlackDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:black_dye")
 
@@ -443,6 +445,18 @@ def BlackTerracotta() -> MinecraftItemDescriptor:
 
 def BlackWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:black_wool")
+
+
+def BlackWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:black_wool_double_slab")
+
+
+def BlackWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:black_wool_slab")
+
+
+def BlackWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:black_wool_stairs")
 
 
 def Blackstone() -> MinecraftItemDescriptor:
@@ -501,6 +515,10 @@ def BlueConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:blue_concrete_powder")
 
 
+def BlueCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:blue_cushion")
+
+
 def BlueDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:blue_dye")
 
@@ -543,6 +561,18 @@ def BlueTerracotta() -> MinecraftItemDescriptor:
 
 def BlueWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:blue_wool")
+
+
+def BlueWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:blue_wool_double_slab")
+
+
+def BlueWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:blue_wool_slab")
+
+
+def BlueWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:blue_wool_stairs")
 
 
 def BoggedSpawnEgg() -> MinecraftItemDescriptor:
@@ -661,6 +691,10 @@ def BrownConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:brown_concrete_powder")
 
 
+def BrownCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:brown_cushion")
+
+
 def BrownDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:brown_dye")
 
@@ -703,6 +737,18 @@ def BrownTerracotta() -> MinecraftItemDescriptor:
 
 def BrownWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:brown_wool")
+
+
+def BrownWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:brown_wool_double_slab")
+
+
+def BrownWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:brown_wool_slab")
+
+
+def BrownWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:brown_wool_stairs")
 
 
 def Brush() -> MinecraftItemDescriptor:
@@ -1417,6 +1463,10 @@ def CyanConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cyan_concrete_powder")
 
 
+def CyanCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:cyan_cushion")
+
+
 def CyanDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cyan_dye")
 
@@ -1447,6 +1497,18 @@ def CyanTerracotta() -> MinecraftItemDescriptor:
 
 def CyanWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:cyan_wool")
+
+
+def CyanWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:cyan_wool_double_slab")
+
+
+def CyanWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:cyan_wool_slab")
+
+
+def CyanWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:cyan_wool_stairs")
 
 
 def DamagedAnvil() -> MinecraftItemDescriptor:
@@ -2305,6 +2367,10 @@ def GrayConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:gray_concrete_powder")
 
 
+def GrayCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:gray_cushion")
+
+
 def GrayDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:gray_dye")
 
@@ -2337,6 +2403,18 @@ def GrayWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:gray_wool")
 
 
+def GrayWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:gray_wool_double_slab")
+
+
+def GrayWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:gray_wool_slab")
+
+
+def GrayWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:gray_wool_stairs")
+
+
 def GreenBundle() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:green_bundle")
 
@@ -2355,6 +2433,10 @@ def GreenConcrete() -> MinecraftItemDescriptor:
 
 def GreenConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:green_concrete_powder")
+
+
+def GreenCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:green_cushion")
 
 
 def GreenDye() -> MinecraftItemDescriptor:
@@ -2387,6 +2469,18 @@ def GreenTerracotta() -> MinecraftItemDescriptor:
 
 def GreenWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:green_wool")
+
+
+def GreenWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:green_wool_double_slab")
+
+
+def GreenWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:green_wool_slab")
+
+
+def GreenWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:green_wool_stairs")
 
 
 def Grindstone() -> MinecraftItemDescriptor:
@@ -2853,6 +2947,10 @@ def LightBlueConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:light_blue_concrete_powder")
 
 
+def LightBlueCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:light_blue_cushion")
+
+
 def LightBlueDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:light_blue_dye")
 
@@ -2885,6 +2983,18 @@ def LightBlueWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:light_blue_wool")
 
 
+def LightBlueWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:light_blue_wool_double_slab")
+
+
+def LightBlueWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:light_blue_wool_slab")
+
+
+def LightBlueWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:light_blue_wool_stairs")
+
+
 def LightGrayBundle() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:light_gray_bundle")
 
@@ -2903,6 +3013,10 @@ def LightGrayConcrete() -> MinecraftItemDescriptor:
 
 def LightGrayConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:light_gray_concrete_powder")
+
+
+def LightGrayCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:light_gray_cushion")
 
 
 def LightGrayDye() -> MinecraftItemDescriptor:
@@ -2931,6 +3045,18 @@ def LightGrayTerracotta() -> MinecraftItemDescriptor:
 
 def LightGrayWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:light_gray_wool")
+
+
+def LightGrayWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:light_gray_wool_double_slab")
+
+
+def LightGrayWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:light_gray_wool_slab")
+
+
+def LightGrayWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:light_gray_wool_stairs")
 
 
 def LightWeightedPressurePlate() -> MinecraftItemDescriptor:
@@ -2969,6 +3095,10 @@ def LimeConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:lime_concrete_powder")
 
 
+def LimeCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:lime_cushion")
+
+
 def LimeDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:lime_dye")
 
@@ -2999,6 +3129,18 @@ def LimeTerracotta() -> MinecraftItemDescriptor:
 
 def LimeWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:lime_wool")
+
+
+def LimeWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:lime_wool_double_slab")
+
+
+def LimeWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:lime_wool_slab")
+
+
+def LimeWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:lime_wool_stairs")
 
 
 def LingeringPotion() -> MinecraftItemDescriptor:
@@ -3049,6 +3191,10 @@ def MagentaConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:magenta_concrete_powder")
 
 
+def MagentaCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:magenta_cushion")
+
+
 def MagentaDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:magenta_dye")
 
@@ -3079,6 +3225,18 @@ def MagentaTerracotta() -> MinecraftItemDescriptor:
 
 def MagentaWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:magenta_wool")
+
+
+def MagentaWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:magenta_wool_double_slab")
+
+
+def MagentaWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:magenta_wool_slab")
+
+
+def MagentaWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:magenta_wool_stairs")
 
 
 def Magma() -> MinecraftItemDescriptor:
@@ -3613,6 +3771,10 @@ def OrangeConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:orange_concrete_powder")
 
 
+def OrangeCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:orange_cushion")
+
+
 def OrangeDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:orange_dye")
 
@@ -3623,6 +3785,10 @@ def OrangeGlazedTerracotta() -> MinecraftItemDescriptor:
 
 def OrangeHarness() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:orange_harness")
+
+
+def OrangePoplarLeaves() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:orange_poplar_leaves")
 
 
 def OrangeShulkerBox() -> MinecraftItemDescriptor:
@@ -3647,6 +3813,18 @@ def OrangeTulip() -> MinecraftItemDescriptor:
 
 def OrangeWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:orange_wool")
+
+
+def OrangeWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:orange_wool_double_slab")
+
+
+def OrangeWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:orange_wool_slab")
+
+
+def OrangeWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:orange_wool_stairs")
 
 
 def OxeyeDaisy() -> MinecraftItemDescriptor:
@@ -3865,6 +4043,10 @@ def PinkConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:pink_concrete_powder")
 
 
+def PinkCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:pink_cushion")
+
+
 def PinkDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:pink_dye")
 
@@ -3903,6 +4085,18 @@ def PinkTulip() -> MinecraftItemDescriptor:
 
 def PinkWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:pink_wool")
+
+
+def PinkWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:pink_wool_double_slab")
+
+
+def PinkWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:pink_wool_slab")
+
+
+def PinkWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:pink_wool_stairs")
 
 
 def Piston() -> MinecraftItemDescriptor:
@@ -4085,6 +4279,74 @@ def PolishedTuffWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:polished_tuff_wall")
 
 
+def PoplarBoat() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_boat")
+
+
+def PoplarButton() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_button")
+
+
+def PoplarChestBoat() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_chest_boat")
+
+
+def PoplarDoor() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_door")
+
+
+def PoplarFence() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_fence")
+
+
+def PoplarFenceGate() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_fence_gate")
+
+
+def PoplarHangingSign() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_hanging_sign")
+
+
+def PoplarLog() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_log")
+
+
+def PoplarPlanks() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_planks")
+
+
+def PoplarPressurePlate() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_pressure_plate")
+
+
+def PoplarSapling() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_sapling")
+
+
+def PoplarShelf() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_shelf")
+
+
+def PoplarSign() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_sign")
+
+
+def PoplarSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_slab")
+
+
+def PoplarStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_stairs")
+
+
+def PoplarTrapdoor() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_trapdoor")
+
+
+def PoplarWood() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:poplar_wood")
+
+
 def PoppedChorusFruit() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:popped_chorus_fruit")
 
@@ -4250,6 +4512,10 @@ def PurpleConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:purple_concrete_powder")
 
 
+def PurpleCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:purple_cushion")
+
+
 def PurpleDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:purple_dye")
 
@@ -4280,6 +4546,18 @@ def PurpleTerracotta() -> MinecraftItemDescriptor:
 
 def PurpleWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:purple_wool")
+
+
+def PurpleWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:purple_wool_double_slab")
+
+
+def PurpleWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:purple_wool_slab")
+
+
+def PurpleWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:purple_wool_stairs")
 
 
 def PurpurBlock() -> MinecraftItemDescriptor:
@@ -4406,6 +4684,10 @@ def RedConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:red_concrete_powder")
 
 
+def RedCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:red_cushion")
+
+
 def RedDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:red_dye")
 
@@ -4442,6 +4724,10 @@ def RedNetherBrickWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:red_nether_brick_wall")
 
 
+def RedPoplarLeaves() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:red_poplar_leaves")
+
+
 def RedSand() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:red_sand")
 
@@ -4460,6 +4746,10 @@ def RedSandstoneStairs() -> MinecraftItemDescriptor:
 
 def RedSandstoneWall() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:red_sandstone_wall")
+
+
+def RedShrub() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:red_shrub")
 
 
 def RedShulkerBox() -> MinecraftItemDescriptor:
@@ -4484,6 +4774,18 @@ def RedTulip() -> MinecraftItemDescriptor:
 
 def RedWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:red_wool")
+
+
+def RedWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:red_wool_double_slab")
+
+
+def RedWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:red_wool_slab")
+
+
+def RedWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:red_wool_stairs")
 
 
 def Redstone() -> MinecraftItemDescriptor:
@@ -4656,6 +4958,10 @@ def Shears() -> MinecraftItemDescriptor:
 
 def SheepSpawnEgg() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:sheep_spawn_egg")
+
+
+def ShelfMushroom() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:shelf_mushroom")
 
 
 def ShelterPotterySherd() -> MinecraftItemDescriptor:
@@ -5014,6 +5320,10 @@ def StonecutterBlock() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:stonecutter_block")
 
 
+def StrawBed() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:straw_bed")
+
+
 def StraySpawnEgg() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:stray_spawn_egg")
 
@@ -5100,6 +5410,14 @@ def StrippedPaleOakLog() -> MinecraftItemDescriptor:
 
 def StrippedPaleOakWood() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:stripped_pale_oak_wood")
+
+
+def StrippedPoplarLog() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:stripped_poplar_log")
+
+
+def StrippedPoplarWood() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:stripped_poplar_wood")
 
 
 def StrippedSpruceLog() -> MinecraftItemDescriptor:
@@ -5722,6 +6040,10 @@ def WhiteConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:white_concrete_powder")
 
 
+def WhiteCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:white_cushion")
+
+
 def WhiteDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:white_dye")
 
@@ -5756,6 +6078,18 @@ def WhiteTulip() -> MinecraftItemDescriptor:
 
 def WhiteWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:white_wool")
+
+
+def WhiteWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:white_wool_double_slab")
+
+
+def WhiteWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:white_wool_slab")
+
+
+def WhiteWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:white_wool_stairs")
 
 
 def WildArmorTrimSmithingTemplate() -> MinecraftItemDescriptor:
@@ -5858,6 +6192,10 @@ def YellowConcretePowder() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:yellow_concrete_powder")
 
 
+def YellowCushion() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:yellow_cushion")
+
+
 def YellowDye() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:yellow_dye")
 
@@ -5868,6 +6206,10 @@ def YellowGlazedTerracotta() -> MinecraftItemDescriptor:
 
 def YellowHarness() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:yellow_harness")
+
+
+def YellowPoplarLeaves() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:yellow_poplar_leaves")
 
 
 def YellowShulkerBox() -> MinecraftItemDescriptor:
@@ -5888,6 +6230,18 @@ def YellowTerracotta() -> MinecraftItemDescriptor:
 
 def YellowWool() -> MinecraftItemDescriptor:
     return MinecraftItemDescriptor("minecraft:yellow_wool")
+
+
+def YellowWoolDoubleSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:yellow_wool_double_slab")
+
+
+def YellowWoolSlab() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:yellow_wool_slab")
+
+
+def YellowWoolStairs() -> MinecraftItemDescriptor:
+    return MinecraftItemDescriptor("minecraft:yellow_wool_stairs")
 
 
 def ZoglinSpawnEgg() -> MinecraftItemDescriptor:

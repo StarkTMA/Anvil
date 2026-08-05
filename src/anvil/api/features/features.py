@@ -160,8 +160,7 @@ class AggregateFeature(Feature):
     - Succeeds if At least one feature is placed successfully.
     - Fails if All features fail to be placed.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftaggregate_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftaggregate_feature)
     """
 
     _template_name = "feature_aggregate"
@@ -175,8 +174,7 @@ class AggregateFeature(Feature):
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftaggregate_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftaggregate_feature)
         """
         super().__init__(name)
 
@@ -197,8 +195,7 @@ class AggregateFeature(Feature):
 class CaveCarverFeature(Feature):
     """Carves caves through the world during pregeneration.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftcave_carver_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftcave_carver_feature)
     """
 
     _template_name = "feature_cave_carver"
@@ -239,8 +236,7 @@ class CaveCarverFeature(Feature):
             floor_level (int | float | tuple[int | float, int | float] | list[int | float] | Mapping[str, int | float] | None):
                 Floor Level.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftcave_carver_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftcave_carver_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -279,8 +275,7 @@ class CaveCarverFeature(Feature):
 class FossilFeature(Feature):
     """Generates a fossil structure with a configurable ore block.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftfossil_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftfossil_feature)
     """
 
     _template_name = "feature_fossil"
@@ -302,8 +297,7 @@ class FossilFeature(Feature):
                 the fossil feature.
             max_empty_corners (int): Maximum number of empty corners allowed.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftfossil_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftfossil_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -314,8 +308,7 @@ class FossilFeature(Feature):
 class GeodeFeature(Feature):
     """Generates a geode with configurable shell layers, point distribution, and crack behavior.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftgeode_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftgeode_feature)
     """
 
     _template_name = "feature_geode"
@@ -401,8 +394,7 @@ class GeodeFeature(Feature):
                 A list of blocks that may be replaced during placement. Omit
                 this field to allow any block to be replaced.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftgeode_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftgeode_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -459,8 +451,7 @@ class GeodeFeature(Feature):
 class GrowingPlantFeature(Feature):
     """Places a growing plant column with weighted height, body, and head blocks.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftgrowing_plant_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftgrowing_plant_feature)
     """
 
     _template_name = "feature_growing_plant"
@@ -485,8 +476,7 @@ class GrowingPlantFeature(Feature):
                 Age of the head of the plant.
             allow_water (bool): Plant blocks can be placed in water.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftgrowing_plant_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftgrowing_plant_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -557,8 +547,7 @@ class GrowingPlantFeature(Feature):
 class MultifaceFeature(Feature):
     """Places multiface blocks on floors, walls, and ceilings.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftmultiface_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftmultiface_feature)
     """
 
     _template_name = "feature_multiface"
@@ -594,8 +583,7 @@ class MultifaceFeature(Feature):
             can_place_on (list[MinecraftBlockDescriptor | Identifier] | None):
                 Optional block reference array limiting valid support blocks.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftmultiface_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftmultiface_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -614,11 +602,84 @@ class MultifaceFeature(Feature):
         self._content[self._feature_name]["can_place_on"] = list(blocks)
 
 
+class MultiBlockFeature(Feature):
+    """Places a multi-block in the world as a biome decoration feature.
+
+    A multi-block must be defined with the ``minecraft:multi_block`` trait.
+    The required ``places_block`` field must reference the first part of a
+    multi-block (i.e. its ``minecraft:multi_block_part`` state must equal 0).
+
+    - The optional ``may_replace`` allowlist specifies which blocks each part
+      of the multi-block may replace. If omitted, multi-block parts can be
+      placed anywhere except on top of other multi-block parts.
+    - The optional ``randomize_rotation`` field randomizes the multi-block's
+      cardinal orientation. Requires the block to have a cardinal direction
+      state.
+    - The optional ``enforce_placement_rules`` field checks whether each part
+      of the multi-block may be placed on top of existing blocks, optionally
+      consulting the block's ``minecraft:placement_filter`` component.
+
+    Note:
+        Requires ``format_version`` of at least ``1.26.50``.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_multi_block_feature)
+    """
+
+    _template_name = "feature_multi_block"
+    _feature_name = "minecraft:multi_block_feature"
+
+    def __init__(
+        self,
+        name: str,
+        places_block: MinecraftBlockDescriptor | Identifier,
+        randomize_rotation: bool = False,
+        enforce_placement_rules: bool = False,
+    ):
+        """Places a multi-block in the world as a biome decoration feature.
+
+        Parameters:
+            name (str): The name of this feature. The resulting identifier uses
+                the format 'namespace_name:feature_name'. 'feature_name' must
+                match the filename.
+            places_block (MinecraftBlockDescriptor | Identifier): Reference to the multi-block to be
+                placed. Must be the identifier of the first part of a
+                multi-block (``minecraft:multi_block_part`` state == 0).
+            randomize_rotation (bool): If True, randomizes the multi-block's
+                cardinal orientation. The multi-block must have a cardinal
+                direction state.
+            enforce_placement_rules (bool): If True, checks each part of the
+                multi-block against the block's canPlace rules, optionally
+                including its ``minecraft:placement_filter`` component.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_multi_block_feature)
+        """
+        super().__init__(name)
+        feature_content = self._content[self._feature_name]
+        feature_content["places_block"] = str(places_block)
+
+        if randomize_rotation:
+            feature_content["randomize_rotation"] = randomize_rotation
+
+        if enforce_placement_rules:
+            feature_content["enforce_placement_rules"] = enforce_placement_rules
+
+    def may_replace(self, blocks: "list[MinecraftBlockDescriptor | Identifier]"):
+        """Sets the may_replace allowlist.
+
+        Specifies which blocks each part of the multi-block may replace.
+        Other multi-blocks can never be replaced regardless of this list.
+
+        Parameters:
+            blocks (list[MinecraftBlockDescriptor | Identifier]): List of
+                blocks that the multi-block parts are allowed to replace.
+        """
+        self._content[self._feature_name]["may_replace"] = list(blocks)
+
+
 class NetherCaveCarverFeature(Feature):
     """Carves cave systems through the Nether using the cave carver schema.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftnether_cave_carver_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftnether_cave_carver_feature)
     """
 
     _template_name = "feature_nether_cave_carver"
@@ -659,8 +720,7 @@ class NetherCaveCarverFeature(Feature):
             floor_level (int | float | tuple[int | float, int | float] | list[int | float] | Mapping[str, int | float] | None):
                 Floor Level.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftnether_cave_carver_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftnether_cave_carver_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -699,8 +759,7 @@ class NetherCaveCarverFeature(Feature):
 class OreFeature(Feature):
     """Places a vein of blocks using ordered replacement rules.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftore_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftore_feature)
     """
 
     _template_name = "feature_ore"
@@ -722,8 +781,7 @@ class OreFeature(Feature):
             discard_chance_on_air_exposure (float | None): Optional discard
                 chance applied when ore is exposed to air.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftore_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftore_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -750,8 +808,7 @@ class OreFeature(Feature):
 class PartiallyExposedBlobFeature(Feature):
     """Generates a blob where one face may remain exposed.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftpartially_exposed_blob_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftpartially_exposed_blob_feature)
     """
 
     _template_name = "feature_partially_exposed_blob"
@@ -780,8 +837,7 @@ class PartiallyExposedBlobFeature(Feature):
             exposed_face (BlockFaces | None): Defines a block face allowed to
                 be exposed.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftpartially_exposed_blob_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftpartially_exposed_blob_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -800,8 +856,7 @@ class PartiallyExposedBlobFeature(Feature):
 class ScatterFeature(Feature, DistributionMixin):
     """Places a referenced feature using scatter distribution parameters.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftscatter_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftscatter_feature)
     """
 
     _template_name = "feature_scatter"
@@ -824,8 +879,7 @@ class ScatterFeature(Feature, DistributionMixin):
             project_input_to_floor (bool): Whether the input position should be
                 projected to the floor before placement.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftscatter_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftscatter_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -839,8 +893,7 @@ class ScatterFeature(Feature, DistributionMixin):
 class SearchFeature(Feature):
     """Searches a volume along an axis for valid positions before placing another feature.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsearch_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsearch_feature)
     """
 
     _template_name = "feature_search"
@@ -871,8 +924,7 @@ class SearchFeature(Feature):
             required_successes (int | None): Optional number of successful
                 placements required.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsearch_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsearch_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -901,8 +953,7 @@ class SearchFeature(Feature):
 class SculkPatchFeature(Feature):
     """Places a sculk patch with cursor spread settings and an optional central block.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsculk_patch_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsculk_patch_feature)
     """
 
     _template_name = "feature_sculk_patch"
@@ -941,8 +992,7 @@ class SculkPatchFeature(Feature):
             extra_growth_chance (int | tuple[int, int] | list[int] | Mapping[str, int] | None):
                 Optional extra growth chance value or range.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsculk_patch_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsculk_patch_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -989,8 +1039,7 @@ class SculkPatchFeature(Feature):
 class SequenceFeature(Feature):
     """Places a collection of features sequentially, in the order they are defined.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsequence_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsequence_feature)
     """
 
     _template_name = "feature_sequence"
@@ -1020,8 +1069,7 @@ class SingleBlockFeature(Feature):
     - Succeeds if: The block is successfully placed in the world.
     - Fails if: The block fails to be placed.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsingle_block_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsingle_block_feature)
     """
 
     _template_name = "feature_single_block"
@@ -1047,8 +1095,7 @@ class SingleBlockFeature(Feature):
             randomize_rotation (bool): Whether the block's cardinal rotation
                 should be randomized.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsingle_block_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsingle_block_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -1135,8 +1182,7 @@ class SingleBlockFeature(Feature):
 class SnapToSurfaceFeature(Feature):
     """Snaps a referenced feature to a floor, ceiling, or random horizontal surface.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsnap_to_surface_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsnap_to_surface_feature)
     """
 
     _template_name = "feature_snap_to_surface"
@@ -1173,8 +1219,7 @@ class SnapToSurfaceFeature(Feature):
                 Optional block reference array limiting valid surfaces.
             embed_in_surface (bool): Allows specifying whether the snapped feature should be embedded in the located surface
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsnap_to_surface_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsnap_to_surface_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -1200,8 +1245,7 @@ class SnapToSurfaceFeature(Feature):
 class StructureTemplateFeature(Feature):
     """Places a saved structure template with optional facing and constraints.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftstructure_template_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftstructure_template_feature)
     """
 
     _template_name = "feature_structure_template"
@@ -1230,8 +1274,7 @@ class StructureTemplateFeature(Feature):
             facing_direction (Literal["north", "south", "east", "west", "random"] | None): Optional facing
                 direction for the structure.
             rotate_around_center (bool, optional): If true, the structure will be rotated around its center. Defaults to False.
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftstructure_template_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftstructure_template_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -1245,7 +1288,7 @@ class StructureTemplateFeature(Feature):
 
         if rotate_around_center:
             feature_content["rotate_around_center"] = rotate_around_center
-            
+
     def grounded(self):
         """Adds the grounded constraint object."""
         self._content[self._feature_name].setdefault("constraints", {})["grounded"] = {}
@@ -1264,8 +1307,7 @@ class StructureTemplateFeature(Feature):
 class SurfaceRelativeThresholdFeature(Feature):
     """Places a referenced feature only when the position is below the estimated surface.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsurface_relative_threshold_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsurface_relative_threshold_feature)
     """
 
     _template_name = "feature_surface_relative_threshold"
@@ -1288,8 +1330,7 @@ class SurfaceRelativeThresholdFeature(Feature):
             minimum_distance_below_surface (int): Minimum distance below the
                 estimated surface required for placement.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsurface_relative_threshold_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsurface_relative_threshold_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -1302,8 +1343,7 @@ class SurfaceRelativeThresholdFeature(Feature):
 class TreeFeature(Feature):
     """Builds a tree feature with optional base data, trunk, canopy, and mangrove roots.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecrafttree_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecrafttree_feature)
     """
 
     _template_name = "feature_tree"
@@ -1421,8 +1461,7 @@ class TreeFeature(Feature):
 class UnderwaterCaveCarverFeature(Feature):
     """Carves underwater caves below sea level during pregeneration.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftunderwater_cave_carver_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftunderwater_cave_carver_feature)
     """
 
     _template_name = "feature_underwater_cave_carver"
@@ -1466,8 +1505,7 @@ class UnderwaterCaveCarverFeature(Feature):
             replace_air_with (MinecraftBlockDescriptor | Identifier | None):
                 Optional block used to replace carved air.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftunderwater_cave_carver_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftunderwater_cave_carver_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -1509,8 +1547,7 @@ class UnderwaterCaveCarverFeature(Feature):
 class VegetationPatchFeature(Feature):
     """Creates a patch of ground blocks and scatters a vegetation feature over it.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftvegetation_patch_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftvegetation_patch_feature)
     """
 
     _template_name = "feature_vegetation_patch"
@@ -1554,8 +1591,7 @@ class VegetationPatchFeature(Feature):
                 extra edge columns.
             waterlogged (bool): Whether generated blocks should be waterlogged.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftvegetation_patch_feature
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftvegetation_patch_feature)
         """
         super().__init__(name)
         feature_content = self._content[self._feature_name]
@@ -1590,8 +1626,7 @@ class VegetationPatchFeature(Feature):
 class WeightedRandomFeature(Feature):
     """Places one feature chosen from a weighted list of feature references.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftweighted_random_feature
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftweighted_random_feature)
     """
 
     _template_name = "feature_weighted_random"

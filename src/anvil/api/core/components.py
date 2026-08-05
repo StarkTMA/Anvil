@@ -190,8 +190,7 @@ class PermutationGroup(RootComponent):
         Args:
             *tags (MinecraftBlockTags): The tags for the block.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktags)
         """
 
         from anvil.api.blocks.components import BlockTagComponent

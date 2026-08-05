@@ -1,0 +1,11 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:voxel_shape": {
+        "description": {
+            "identifier": "{{ namespace }}:{{ model_name }}"
+        },
+        "shape": {
+            "boxes": []
+        }
+    }
+}

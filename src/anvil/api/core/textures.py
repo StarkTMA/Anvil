@@ -320,8 +320,7 @@ class FlipBookTexturesObject(AddonObject):
             - atlas_tile_variant is used when terrain_texture.json has variations array
             - replicate value of 2 renders 1/4 pixels of frame, x renders 1/x² pixels
 
-        ## Documentation reference:
-            https://wiki.bedrock.dev/blocks/flipbook-textures.html
+        ## [Documentation reference](https://wiki.bedrock.dev/blocks/flipbook-textures.html)
         """
         path = os.path.join(
             "textures",

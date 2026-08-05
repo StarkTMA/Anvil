@@ -1,5 +1,3 @@
-from anvil.lib.config import CONFIG
-from anvil.lib.lib import experimental
 from anvil.lib.schemas import MinecraftEntityDescriptor
 
 
@@ -109,6 +107,10 @@ def Creaking() -> MinecraftEntityDescriptor:
 
 def Creeper() -> MinecraftEntityDescriptor:
     return MinecraftEntityDescriptor("minecraft:creeper", True)
+
+
+def Cushion() -> MinecraftEntityDescriptor:
+    return MinecraftEntityDescriptor("minecraft:cushion", True)
 
 
 def Dolphin() -> MinecraftEntityDescriptor:

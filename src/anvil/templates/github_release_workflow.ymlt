@@ -70,7 +70,7 @@ jobs:
 
           should_release = not previous_version or parse_version(current_version) > parse_version(previous_version)
 
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8", newline="\n") as f:
               f.write(f"version={current_version}\ntarget={current_target}\nproject_name={current_project_name}\nshould_release={'true' if should_release else 'false'}\n")
           PY
 
@@ -82,7 +82,7 @@ jobs:
           FLAGS="build"
           [ "$TARGET" == "addon" ] && FLAGS="$FLAGS --mcaddon"
           [ "$TARGET" == "world" ] && FLAGS="$FLAGS --mcworld"
-          FLAGS="$FLAGS --zip"
+          FLAGS="$FLAGS --zip --tech-notes"
           
           anvil $FLAGS
 
@@ -93,8 +93,8 @@ jobs:
           python - <<'PY'
           import os
           from pathlib import Path
-          files = [p.as_posix() for p in Path("output").glob("*") if p.suffix in [".mcaddon", ".mcworld", ".zip"]]
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+          files = [p.as_posix() for p in Path("output").glob("*") if p.suffix in [".mcaddon", ".mcworld", ".zip", ".pdf"]]
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8", newline="\n") as f:
               f.write("files<<EOF\n")
               for file in files:
                   f.write(f"{file}\n")
@@ -102,7 +102,7 @@ jobs:
           
           import subprocess
           notes = subprocess.check_output(["git", "log", "-1", "--pretty=%B"]).decode()
-          Path("release-notes.md").write_text(notes)
+          Path("release-notes.md").write_text(notes, encoding="utf-8")
           PY
 
       - name: Create GitHub release

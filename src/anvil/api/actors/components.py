@@ -33,7 +33,7 @@ from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.api.world.trade_tables import TradeTable
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ENTITY_SERVER_VERSION
-from anvil.lib.lib import AnvilFormatter, clamp, experimental
+from anvil.lib.lib import AnvilFormatter, clamp
 from anvil.lib.schemas import (
     MinecraftBlockDescriptor,
     MinecraftEntityDescriptor,
@@ -59,8 +59,7 @@ class EntityAddRider(Component):
             entity_type (MinecraftEntityDescriptor | Identifier): The entity type that will be riding this entity.
             spawn_event (str, optional): The spawn event that will be used when the riding entity is created. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_addrider
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_addrider)
         """
         super().__init__("addrider")
         # self._dependencies = [EntityRideable]
@@ -100,8 +99,7 @@ class EntityAdmireItem(Component):
             cooldown_after_being_attacked (Seconds): Duration, in seconds, for which mob won't admire items if it was hurt.
             duration (Seconds, optional): Duration, in seconds, that the mob is pacified. `Default: 10`. Defaults to 10.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_admire_item
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_admire_item)
         """
         super().__init__("admire_item")
         self._add_field("cooldown_after_being_attacked", cooldown_after_being_attacked)
@@ -119,8 +117,7 @@ class EntityCollisionBox(Component):
             height (float): Height of the collision box in blocks. A negative value will be assumed to be 0.
             width (float): Width of the collision box in blocks. A negative value will be assumed to be 0. Min value is -100000000.000000 Max value is 100000000.000000.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_collision_box
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_collision_box)
         """
         super().__init__("collision_box")
         self._add_field("height", max(0, height))
@@ -130,17 +127,21 @@ class EntityCollisionBox(Component):
 class EntityTypeFamily(Component):
     _identifier = "minecraft:type_family"
 
-    def __init__(self, family: list[str]) -> None:
+    def __init__(self, families: list[str]) -> None:
         """Defines the family categories this entity belongs to. Type families are used by filters and other game systems to group entities (e.g., 'mob', 'monster', 'undead', 'zombie').
 
         Parameters:
             family (list[str]): A set of tags that describe the categories of this entity.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_type_family
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_type_family)
         """
+        if not isinstance(families, (list, tuple)):
+            raise TypeError("families must be a list of str")
+        if any(not isinstance(fam, str) for fam in families):
+            raise TypeError("families must be a list of str")
+
         super().__init__("type_family")
-        self._add_field("family", family)
+        self._add_field("family", families)
 
 
 class EntityInstantDespawn(Component):
@@ -152,8 +153,7 @@ class EntityInstantDespawn(Component):
         Parameters:
             remove_child_entities (bool, optional): If true, all entities linked to this entity in a child relationship (eg. leashed) will also be despawned. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_instant_despawn
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_instant_despawn)
         """
         super().__init__("instant_despawn")
         if remove_child_entities:
@@ -171,8 +171,7 @@ class EntityHealth(Component):
             min (int, optional): Description. Defaults to None.
             max (int, optional): Maximum health this entity can have. Can be higher than the starting value to allow healing beyond initial health. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_health
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_health)
         """
         super().__init__("health")
         self._add_field("value", value)
@@ -198,8 +197,7 @@ class EntityPhysics(Component):
             has_gravity (bool, optional): Whether or not the entity is affected by gravity. Defaults to True.
             push_towards_closest_space (bool, optional): Whether or not the entity should be pushed towards the nearest open area when stuck inside a block. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_physics
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_physics)
         """
         super().__init__("physics")
         if not has_collision:
@@ -219,8 +217,7 @@ class EntityKnockbackResistance(Component):
         Parameters:
             value (float): The amount of knockback resistance, from -2.0 to 1.0 (full immunity).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_knockback_resistance
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_knockback_resistance)
         """
         super().__init__("knockback_resistance")
         self._add_field("value", clamp(value, -2.0, 1.0))
@@ -235,8 +232,7 @@ class EntityPushableByBlock(Component):
         Parameters:
             value (bool): Description.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_block
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_block)
         """
         super().__init__("pushable_by_block")
         self._set_value({})
@@ -248,8 +244,7 @@ class EntityPushableByEntity(Component):
     def __init__(self) -> None:
         """Allows an entity to be pushed by other entities.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_entity
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_entity)
         """
         super().__init__("pushable_by_entity")
         self._set_value({})
@@ -266,6 +261,7 @@ class EntityPushableByEntity(Component):
         play_sound_cooldown_in_seconds: float = None,
         play_sound_impulse_threshold: float = None,
         play_sound: bool = None,
+        require_collision_overlap: bool = False,
     ):
         """Adds a customization preset for push behavior.
 
@@ -280,6 +276,8 @@ class EntityPushableByEntity(Component):
             play_sound_cooldown_in_seconds (float, optional): Cooldown in seconds between sounds.
             play_sound_impulse_threshold (float, optional): Minimum change of velocity needed to trigger the push sound.
             play_sound (bool, optional): Controls whether the pushed_by_player sound is played.
+            require_collision_overlap (bool, optional): Determines whether the collision boxes of two entities must overlap for pushing to occur. Defaults to False.
+
         """
         self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
 
@@ -308,6 +306,8 @@ class EntityPushableByEntity(Component):
             preset["play_sound_impulse_threshold"] = play_sound_impulse_threshold
         if play_sound is not None:
             preset["play_sound"] = play_sound
+        if require_collision_overlap:
+            preset["require_collision_overlap"] = require_collision_overlap
 
         presets = self._get_field("presets", [])
         presets.append(preset)
@@ -324,8 +324,7 @@ class EntityPushThrough(Component):
         Parameters:
             value (float): The value of the entity's push-through, in blocks.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_push_through
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_push_through)
         """
         super().__init__("push_through")
         self._add_field("value", value)
@@ -341,8 +340,7 @@ class EntityMovement(Component):
             value (int): The base movement speed value. Higher values result in faster movement. Can be a single number or a range object with range_min and range_max properties.
             max (int, optional): Maximum movement speed this entity can have. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement)
         """
         super().__init__("movement")
         self._add_field("value", value)
@@ -366,8 +364,7 @@ class EntityTickWorld(Component):
             radius (int, optional): The area around the entity to tick. Value must be >= 2. Value must be <= 6. Defaults to 0.
             distance_to_players (int, optional): The distance at which the closest player has to be before this entity despawns. This option will be ignored if never_despawn is true. Value must be >= 128. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tick_world
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tick_world)
         """
         super().__init__("tick_world")
         self._add_field("never_despawn", never_despawn)
@@ -390,8 +387,7 @@ class EntityCustomHitTest(Component):
             width (float): Width of the hitbox.
             pivot (list[float, float, float], optional): Pivot point of the hitbox. Defaults to [0, 1, 0].
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_custom_hit_test
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_custom_hit_test)
         """
         super().__init__("custom_hit_test")
         self._add_field(
@@ -415,8 +411,7 @@ class EntityCanClimb(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_climb
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_climb)
         """
         super().__init__("can_climb")
 
@@ -434,8 +429,7 @@ class EntityAttack(Component):
             effect_duration (int, optional): Duration in seconds of the status ailment applied to the damaged entity. Defaults to None.
             effect_name (str, optional): Identifier of the status ailment to apply to an entity attacked by this entity's melee attack. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_attack)
         """
         super().__init__("attack")
         self._add_field("damage", damage)
@@ -454,8 +448,7 @@ class EntityJumpStatic(Component):
         Parameters:
             jump_power (float, optional): The initial vertical velocity for the jump. Defaults to 0.42.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_jump.static?view=minecraft-bedrock-stable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_jump.static?view=minecraft-bedrock-stable)
         """
         super().__init__("jump.static")
         self._add_field("jump_power", jump_power)
@@ -467,8 +460,7 @@ class EntityJumpDynamic(Component):
     def __init__(self) -> None:
         """Defines a dynamic type jump control that will change jump properties based on the speed modifier of the mob. Requires `minecraft:movement.skip` to be used.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/pt-br/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_jump.dynamic
+        ## [Documentation reference](https://learn.microsoft.com/pt-br/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_jump.dynamic)
         """
         super().__init__("jump.dynamic")
 
@@ -535,8 +527,7 @@ class EntityHorseJumpStrength(Component):
             range_min (float): Defines the minimum strength level.
             range_max (float): Defines the maximum strength level.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_horse.jump_strength?view=minecraft-bedrock-stable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_horse.jump_strength?view=minecraft-bedrock-stable)
         """
         super().__init__("horse.jump_strength")
         self._add_field("value", {"range_min": range_min, "range_max": range_max})
@@ -550,8 +541,7 @@ class EntitySpellEffects(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_spell_effects
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_spell_effects)
         """
         super().__init__("spell_effects")
         self._add_field("add_effects", [])
@@ -597,8 +587,7 @@ class EntityFrictionModifier(Component):
         Parameters:
             value (int): The higher the number, the more friction affects this entity. A value of 1.0 means regular friction, while 2.0 means twice as much.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_friction_modifier
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_friction_modifier)
         """
         super().__init__("friction_modifier")
         self._add_field("value", value)
@@ -613,8 +602,7 @@ class EntityVariant(Component):
         Parameters:
             value (int): The Id of the variant. By convention, 0 is the Id of the base entity/default appearance.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_variant
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_variant)
         """
         super().__init__("variant")
         self._add_field("value", value)
@@ -629,8 +617,7 @@ class EntityMarkVariant(Component):
         Parameters:
             value (int): The Id of the mark_variant. By convention, 0 is the Id of the base entity.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_mark_variant
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_mark_variant)
         """
         super().__init__("mark_variant")
         self._add_field("value", value)
@@ -645,8 +632,7 @@ class EntitySkinID(Component):
         Parameters:
             value (int): The ID of the skin. By convention, 0 is the ID of the base skin.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_skin_id
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_skin_id)
         """
         super().__init__("skin_id")
         self._add_field("value", value)
@@ -661,8 +647,7 @@ class EntityScale(Component):
         Parameters:
             value (int): The scale multiplier for visual size. 1.0 = normal, 0.5 = half (babies), 2.0 = double size.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_scale
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_scale)
         """
         super().__init__("scale")
         self._add_field("value", value)
@@ -678,8 +663,7 @@ class EntityScaleByAge(Component):
             start_scale (int): Initial scale of the newborn entity.
             end_scale (int): Ending scale of the entity when it's fully grown.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_scale_by_age
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_scale_by_age)
         """
         super().__init__("scale_by_age")
         self._add_field("end_scale", end_scale)
@@ -706,8 +690,7 @@ class EntityAreaAttack(Component):
             damage_cooldown (Seconds | None, optional): Attack cooldown (in seconds) for how often this entity can attack a target. Defaults to None.
             use_self_as_damage_source (bool, optional): If set to false, other entities won't retaliate against the attacking entity. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_area_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_area_attack)
         """
         super().__init__("area_attack")
 
@@ -736,8 +719,7 @@ class EntityIsStackable(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_stackable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_stackable)
         """
         super().__init__("is_stackable")
 
@@ -750,8 +732,7 @@ class EntityIsIllagerCaptain(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_illager_captain
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_illager_captain)
         """
         super().__init__("is_illager_captain")
 
@@ -764,8 +745,7 @@ class EntityIsBaby(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_baby
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_baby)
         """
         super().__init__("is_baby")
 
@@ -778,8 +758,7 @@ class EntityIsIgnited(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_ignited
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_ignited)
         """
         super().__init__("is_ignited")
 
@@ -792,8 +771,7 @@ class EntityIsTamed(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_tamed
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_tamed)
         """
         super().__init__("is_tamed")
 
@@ -806,8 +784,7 @@ class EntityIsCharged(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_charged
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_charged)
         """
         super().__init__("is_charged")
 
@@ -820,8 +797,7 @@ class EntityIsStunned(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_stunned
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_stunned)
         """
         super().__init__("is_stunned")
 
@@ -834,8 +810,7 @@ class EntityIsSaddled(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_saddled
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_saddled)
         """
         super().__init__("is_saddled")
 
@@ -848,8 +823,7 @@ class EntityIsSheared(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_sheared
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_sheared)
         """
         super().__init__("is_sheared")
 
@@ -862,8 +836,7 @@ class EntityCanFly(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_fly
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_fly)
         """
         super().__init__("can_fly")
 
@@ -876,8 +849,7 @@ class EntityCanPowerJump(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_power_jump
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_power_jump)
         """
         super().__init__("can_power_jump")
 
@@ -890,8 +862,7 @@ class EntityIsChested(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_chested
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_chested)
         """
         super().__init__("is_chested")
 
@@ -904,8 +875,7 @@ class EntityOutOfControl(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_out_of_control
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_out_of_control)
         """
         super().__init__("out_of_control")
 
@@ -918,8 +888,7 @@ class EntityDamageSensor(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_sensor
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_sensor)
         """
         super().__init__("damage_sensor")
         self._add_field("triggers", [])
@@ -962,8 +931,7 @@ class EntityFollowRange(Component):
             value (int): The default follow range in blocks. Entities will attempt to stay within this radius of their target.
             max_range (int, optional): Maximum follow distance in blocks. The entity will not pursue targets beyond this range. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_follow_range
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_follow_range)
         """
         super().__init__("follow_range")
         self._add_field("value", value)
@@ -1527,8 +1495,7 @@ class EntityEnvironmentSensor(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_environment_sensor
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_environment_sensor)
         """
         super().__init__("environment_sensor")
         self._add_field("triggers", [])
@@ -1551,8 +1518,7 @@ class EntityPreferredPath(Component):
             jump_cost (int, optional): Added cost for jumping up a node. Defaults to 0.
             max_fall_blocks (int, optional): Distance mob can fall without taking damage. Defaults to 3.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_preferred_path
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_preferred_path)
         """
         super().__init__("preferred_path")
         self._add_field("default_block_cost", default_block_cost)
@@ -1592,8 +1558,7 @@ class EntityTargetNearbySensor(Component):
             outside_range (int, optional): Maximum distance in blocks that another entity will be considered in the 'outside' range. Defaults to 5.
             must_see (bool, optional): Whether the other entity needs to be visible to trigger 'inside' events. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_target_nearby_sensor
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_target_nearby_sensor)
         """
         super().__init__("target_nearby_sensor")
         self._add_field("inside_range", inside_range)
@@ -1648,8 +1613,7 @@ class EntityRideable(Component):
             Removing a rider at any seat will shift all subsequent riders forward by one seat.
             Unless the rider is a Player in which case they will occupy the very first seat and shift all other riders back by one seat.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rideable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rideable)
         """
         super().__init__("rideable")
         self._seat_count = 0
@@ -1755,10 +1719,9 @@ class EntityProjectile(Component):
         power: float = 1.3,
         reflect_immunity: float = 0.0,
         reflect_on_hurt: bool = False,
-        semi_random_diff_damage: bool = False,
         shoot_sound: str = "",
         shoot_target: bool = True,
-        should_bounce: bool = False,
+        should_bounce: Literal["no", "if_invulnerable", "if_no_damage_dealt"] = "no",
         splash_potion: bool = False,
         splash_range: float = 4.0,
         stop_on_hurt: bool = False,
@@ -1796,18 +1759,16 @@ class EntityProjectile(Component):
             power (float, optional): Determines the velocity of the projectile. Defaults to 1.3.
             reflect_immunity (float, optional): Time in seconds during which the projectile cannot be reflected. Defaults to 0.0.
             reflect_on_hurt (bool, optional): If true, this entity will be reflected back when hit. Defaults to False.
-            semi_random_diff_damage (bool, optional): If true, damage will be randomized based on damage and speed. Defaults to False.
             shoot_sound (str, optional): The sound that plays when the projectile is shot. Defaults to ''.
             shoot_target (bool, optional): If true, the projectile will be shot towards the target of the entity firing it. Defaults to True.
-            should_bounce (bool, optional): If true, the projectile will bounce upon hit. Defaults to False.
+            should_bounce (Literal["no", "if_invulnerable", "if_no_damage_dealt"], optional): Determines when the projectile will bounce upon hit. Defaults to "no".
             splash_potion (bool, optional): If true, the projectile will be treated like a splash potion. Defaults to False.
             splash_range (float, optional): Radius in blocks of the 'splash' effect. Defaults to 4.0.
             stop_on_hurt (bool, optional): . Defaults to False.
             uncertainty_base (float, optional): The base accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier. Defaults to 0.0.
             uncertainty_multiplier (float, optional): Determines how much difficulty affects accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_projectile?view=minecraft-bedrock-stable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_projectile?view=minecraft-bedrock-stable)
         """
         super().__init__("projectile")
         if anchor != 0:
@@ -1866,13 +1827,11 @@ class EntityProjectile(Component):
             self._add_field("reflect_immunity", reflect_immunity)
         if reflect_on_hurt:
             self._add_field("reflect_on_hurt", reflect_on_hurt)
-        if semi_random_diff_damage:
-            self._add_field("semi_random_diff_damage", semi_random_diff_damage)
         if shoot_sound != "":
             self._add_field("shoot_sound", shoot_sound)
         if not shoot_target:
             self._add_field("shoot_target", shoot_target)
-        if should_bounce:
+        if should_bounce != "no":
             self._add_field("should_bounce", should_bounce)
         if splash_potion:
             self._add_field("splash_potion", splash_potion)
@@ -2065,10 +2024,13 @@ class EntityProjectile(Component):
         knockback: bool = True,
         max_critical_damage: int = 5,
         min_critical_damage: int = 0,
-        power_multiplier: float = 2,
-        semi_random_diff_damage: bool = False,
+        power_multiplier: float = 0,
+        difficulty_randomization: Literal[
+            "none", "additive", "multiplicative"
+        ] = "none",
         set_last_hurt_requires_damage: bool = False,
         apply_knockback_to_blocking_targets: bool = False,
+        ceil_pre_critical_damage: bool = False,
     ):
         """Deal damage on impact.
 
@@ -2082,58 +2044,47 @@ class EntityProjectile(Component):
             knockback: Whether the projectile will knock back the entity it hits. Default is True.
             max_critical_damage: Maximum critical damage. Default is 5.
             min_critical_damage: Minimum critical damage. Default is 0.
-            power_multiplier: How much the base damage is multiplied. Default is 2.
-            semi_random_diff_damage: If true, damage will be randomized based on damage and speed. Default is False.
+            power_multiplier: How much the base damage is multiplied. Default is 0.
+            difficulty_randomization: How damage is randomized based on difficulty. Default is "none".
             set_last_hurt_requires_damage: If true, hit must cause damage to update the last hurt property. Default is False.
             apply_knockback_to_blocking_targets: If true, knockback will be applied to any blocking targets. Default is False.
-
+            ceil_pre_critical_damage: Rounds the projectile's damage up to the next integer before the critical hit multiplier is applied. Default is False.
         Returns:
             Self for method chaining.
         """
-        self._component["on_hit"]["impact_damage"] = {}
+        impact = {}
         if not filter is None:
-            self._component["on_hit"]["impact_damage"]["filter"] = filter
+            impact["filter"] = filter
         if catch_fire:
-            self._component["on_hit"]["impact_damage"]["catch_fire"] = catch_fire
+            impact["catch_fire"] = catch_fire
         if not channeling:
-            self._component["on_hit"]["impact_damage"]["channeling"] = channeling
+            impact["channeling"] = channeling
         if damage != 1:
-            self._component["on_hit"]["impact_damage"]["damage"] = damage
+            impact["damage"] = damage
         if destroy_on_hit:
-            self._component["on_hit"]["impact_damage"][
-                "destroy_on_hit"
-            ] = destroy_on_hit
+            impact["destroy_on_hit"] = destroy_on_hit
         if not destroy_on_hit_requires_damage:
-            self._component["on_hit"]["impact_damage"][
-                "destroy_on_hit_requires_damage"
-            ] = destroy_on_hit_requires_damage
+            impact["destroy_on_hit_requires_damage"] = destroy_on_hit_requires_damage
         if not knockback:
-            self._component["on_hit"]["impact_damage"]["knockback"] = knockback
+            impact["knockback"] = knockback
         if max_critical_damage != 5:
-            self._component["on_hit"]["impact_damage"][
-                "max_critical_damage"
-            ] = max_critical_damage
+            impact["max_critical_damage"] = max_critical_damage
         if min_critical_damage != 0:
-            self._component["on_hit"]["impact_damage"][
-                "min_critical_damage"
-            ] = min_critical_damage
-        if power_multiplier != 2:
-            self._component["on_hit"]["impact_damage"][
-                "power_multiplier"
-            ] = power_multiplier
-        if semi_random_diff_damage:
-            self._component["on_hit"]["impact_damage"][
-                "semi_random_diff_damage"
-            ] = semi_random_diff_damage
+            impact["min_critical_damage"] = min_critical_damage
+        if power_multiplier != 0:
+            impact["power_multiplier"] = power_multiplier
+        if difficulty_randomization != "none":
+            impact["difficulty_randomization"] = difficulty_randomization
         if set_last_hurt_requires_damage:
-            self._component["on_hit"]["impact_damage"][
-                "set_last_hurt_requires_damage"
-            ] = set_last_hurt_requires_damage
+            impact["set_last_hurt_requires_damage"] = set_last_hurt_requires_damage
         if apply_knockback_to_blocking_targets:
-            self._component["on_hit"]["impact_damage"][
-                "apply_knockback_to_blocking_targets"
-            ] = apply_knockback_to_blocking_targets
+            impact["apply_knockback_to_blocking_targets"] = (
+                apply_knockback_to_blocking_targets
+            )
+        if ceil_pre_critical_damage:
+            impact["ceil_pre_critical_damage"] = ceil_pre_critical_damage
 
+        self._component["on_hit"]["impact_damage"] = impact
         return self
 
     def mob_effect(
@@ -2415,8 +2366,7 @@ class EntityExplode(Component):
             negates_fall_damage (bool, optional): Defines whether the explosion should apply fall damage negation to Players above the point of collision. This item requires a format version of at least 1.21.40. Defaults to False.
             allow_underwater (bool, optional): If true, the explosion will affect blocks and entities under water. This item requires a format version of at least 1.21.40. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_explode
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_explode)
         """
         super().__init__("explode")
 
@@ -2476,8 +2426,7 @@ class EntityMobEffect(Component):
             effect_time (int, optional): How long the applied mob effect lasts in seconds. Can also be set to "infinite". Defaults to 10.
             ambient (bool, optional): If the effect is considered an ambient effect (like the ones applied by Beacons or Conduits). Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_mob_effect
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_mob_effect)
         """
         super().__init__("mob_effect")
         self._add_field("mob_effect", mob_effect.value)
@@ -2501,8 +2450,7 @@ class EntitySpawnEntity(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_spawn_entity
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_spawn_entity)
         """
         super().__init__("spawn_entity")
         self._add_field("entities", [])
@@ -2603,8 +2551,7 @@ class EntityLoot(Component):
         Parameters:
             loot_table (LootTable | str): Path to the loot table JSON file, relative to the behavior pack's root (e.g., 'loot_tables/entities/zombie.json').
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_loot
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_loot)
         """
         super().__init__("loot")
         self._add_field(
@@ -2633,8 +2580,7 @@ class EntityShooter(Component):
             aux_value (int, optional): ID of the Potion effect for the default projectile to be applied on hit. Defaults to -1.
             sound (str, optional): Sound that is played when the shooter shoots a projectile. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_shooter
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_shooter)
         """
         super().__init__("shooter")
         self._add_field("def", identifier)
@@ -2656,8 +2602,7 @@ class EntityInsideBlockNotifier(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_inside_block_notifier
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_inside_block_notifier)
         """
         super().__init__("inside_block_notifier")
         self._add_field("block_list", [])
@@ -2723,8 +2668,7 @@ class EntityTransformation(Component):
             keep_owner (bool, optional): If this entity is owned by another entity, it should remain owned after transformation. Defaults to False.
             preserve_equipment (bool, optional): Cause the entity to keep equipment after going through transformation. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_transformation
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_transformation)
         """
         super().__init__("transformation")
         self._add_field(
@@ -2800,8 +2744,7 @@ class EntityNPC(Component):
         Parameters:
             skin_list (list[int]): Description.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_npc
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_npc)
         """
         super().__init__("npc")
         self._add_field("npc_data", {"skin_list": [{"variant": i} for i in skin_list]})
@@ -2830,8 +2773,7 @@ class EntityEquipment(Component):
         Parameters:
             table (LootTable | str): The file path to the equipment table, relative to the behavior pack's root.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_equipment
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_equipment)
         """
         super().__init__("equipment")
         if table:
@@ -2873,8 +2815,7 @@ class EntityEquipItem(Component):
             can_wear_armor (bool, optional): If true, the entity can pick up and wear armor items from the ground. Defaults to False.
             excluded_items (list[MinecraftItemDescriptor], optional): List of items that the entity should not equip. Defaults to [].
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_equip_item
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_equip_item)
         """
         super().__init__("equip_item")
         if can_wear_armor:
@@ -2897,8 +2838,7 @@ class EntityFireImmune(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_fire_immune
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_fire_immune)
         """
         super().__init__("fire_immune")
 
@@ -2940,8 +2880,7 @@ class EntitySensor(Component):
             cooldown (int, optional): How many seconds should elapse before the subsensor can once again sense for entities. The cooldown is applied on top of the base 1 tick (0.05 seconds) delay. Negative values will result in no cooldown being used. Defaults to -1.
             y_offset (float, optional): Vertical offset applied to the entity's position when computing the distance from other entities.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor)
         """
         sensor = {}
         sensor["event"] = event
@@ -2977,8 +2916,7 @@ class EntityAmbientSoundInterval(Component):
             event_name (str): Level sound event to be played as the ambient sound.
             sound_delay (tuple[float, float], optional): Minimum and maximum delay in seconds between playing the ambient sound. Defaults to (8, 16).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ambient_sound_interval
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ambient_sound_interval)
         """
         super().__init__("ambient_sound_interval")
 
@@ -3031,8 +2969,7 @@ class EntityUnderwaterMovement(Component):
         Parameters:
             value (int): Movement speed of the entity under water.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_underwater_movement
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_underwater_movement)
         """
         super().__init__("underwater_movement")
         self._add_field("value", value)
@@ -3048,13 +2985,12 @@ class EntityMovementMeters(Component):
             value (float): The base movement speed value. Higher values result in faster movement. Can be a single number or a range object with range_min and range_max properties.
             max (float, optional): Maximum movement speed this entity can have. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement)
         """
         super().__init__("movement")
-        self._add_field("value", round(0.152 * math.sqrt(value), 2))
+        self._add_field("value", round(0.152 * math.sqrt(value), 4))
         if not max is None:
-            self._add_field("max", round(0.152 * math.sqrt(max), 2))
+            self._add_field("max", round(0.152 * math.sqrt(max), 4))
 
 
 class EntityInputGroundControlled(Component):
@@ -3065,8 +3001,7 @@ class EntityInputGroundControlled(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_input_ground_controlled
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_input_ground_controlled)
         """
         super().__init__("input_ground_controlled")
 
@@ -3080,8 +3015,7 @@ class EntityWaterMovement(Component):
         Parameters:
             drag_factor (float, optional): Drag factor to determine movement speed when in water. Defaults to 0.8.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_water_movement
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_water_movement)
         """
         super().__init__("water_movement")
         if drag_factor != 0.8:
@@ -3120,8 +3054,7 @@ class EntityAngry(Component):
             filters (Filter, optional): Filter out mob types that it should not attack while angry (other Piglins). Defaults to None.
             sound_interval (list[Seconds], optional): The range of time in seconds to randomly wait before playing the sound again. Defaults to [0, 0].
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_angry
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_angry)
         """
         super().__init__("angry")
         if not angry_sound is None:
@@ -3163,8 +3096,7 @@ class EntityFlyingSpeed(Component):
         Parameters:
             value (int): Flying speed in blocks per tick.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flying_speed
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flying_speed)
         """
         super().__init__("flying_speed")
         self._add_field("value", value)
@@ -3178,8 +3110,7 @@ class EntityInteract(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact)
         """
         super().__init__("interact")
         self._add_field("interactions", [])
@@ -3228,8 +3159,7 @@ class EntityInteract(Component):
             vibration (str, optional): Vibration to emit when the interaction occurs. Admitted values are entity_interact (used by default), shear, and none (no vibration emitted). Defaults to None.
             repair_entity_item (tuple[Slots, int], optional): Slot and amount to repair the item used to interact with this entity. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#parameter
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#parameter)
         """
 
         interaction = {
@@ -3290,8 +3220,7 @@ class EntityInteract(Component):
             particle_offset_towards_interactor (bool, optional): Whether or not the particle will appear closer to who performed the interaction. Defaults to False.
             particle_y_offset (float, optional): Vertical offset of the particle system. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#particle_on_start
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_interact?view=minecraft-bedrock-stable#particle_on_start)
         """
 
         # add this to the last interaction, if none exists, raise an error
@@ -3333,8 +3262,7 @@ class EntityAngerLevel(Component):
             on_increase_sounds (list[dict[str, str]], optional): Sounds to play when the entity is getting provoked. Evaluated in order. First matching condition wins. Defaults to [].
             remove_targets_below_angry_threshold (bool, optional): Defines if the mob should remove target if it falls below 'angry' threshold. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_anger_level
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_anger_level)
         """
         super().__init__("anger_level")
 
@@ -3371,8 +3299,7 @@ class EntityCanJoinRaid(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_join_raid
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_join_raid)
         """
         super().__init__("can_join_raid")
 
@@ -3389,8 +3316,7 @@ class EntityTameable(Component):
         Parameters:
             probability (float, optional): The chance of taming the entity with each item use between 0.0 and 1.0, where 1.0 is 100%. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tameable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tameable)
         """
         super().__init__("tameable")
 
@@ -3454,8 +3380,7 @@ class EntityAgeable(Component):
             interact_filters (Filter, optional): List of conditions to meet so that the entity can be fed. Defaults to None.
             result_item (str, optional): The item identifier. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ageable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ageable)
         """
         super().__init__("ageable")
         self._component["feed_items"] = []
@@ -3566,8 +3491,7 @@ class EntityInventory(Component):
             private (bool, optional): If true, the entity will not drop its inventory on death. Defaults to False.
             restrict_to_owner (bool, optional): If true, the entity's inventory can only be accessed by its owner or itself. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_inventory
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_inventory)
         """
         super().__init__("inventory")
 
@@ -3606,8 +3530,7 @@ class EntityDashAction(Component):
             vertical_momentum (float, optional): Vertical momentum of the dash. Defaults to 1.0.
             can_dash_underwater (bool, optional): Whether the entity can dash underwater. Default value is false. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash_action
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash_action)
         """
         super().__init__("dash_action")
 
@@ -3655,8 +3578,7 @@ class EntityBreathable(Component):
             breathe_blocks (list[MinecraftBlockDescriptor], optional): List of blocks this entity can breathe in, in addition to the selected items above. Defaults to [].
             non_breathe_blocks (list[MinecraftBlockDescriptor], optional): List of blocks this entity cannot breathe in, in addition to the selected items above. Defaults to [].
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breathable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breathable)
         """
         super().__init__("breathable")
 
@@ -3700,8 +3622,7 @@ class EntityVariableMaxAutoStep(Component):
             controlled_value (float, optional): The maximum auto step height when on any other block and controlled by the player. Defaults to 0.5625.
             jump_prevented_value (float, optional): The maximum auto step height when on a block that prevents jumping. Defaults to 0.5625.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_variable_max_auto_step
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_variable_max_auto_step)
         """
         super().__init__("variable_max_auto_step")
 
@@ -3739,8 +3660,7 @@ class EntityBuoyant(Component):
             movement_type (Literal["waves", "bobbing", "none"], optional): Type of vertical movement applied to the entity: "waves", simulates wave movement based on the entity speed. "bobbing", simulates waves going through. "none", simulates waves going through. Defaults to "waves".
             can_auto_step_from_liquid (bool, optional): Whether the entity can move out of a liquid block to a neighboring solid block if pushed against it. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_buoyant
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_buoyant)
         """
         super().__init__("buoyant")
 
@@ -3772,8 +3692,7 @@ class EntityLavaMovement(Component):
         Parameters:
             value (float): The speed the mob moves over a lava block.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_lava_movement
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_lava_movement)
         """
         super().__init__("lava_movement")
         self._add_field("value", value)
@@ -3793,8 +3712,7 @@ class EntityExperienceReward(Component):
             on_bred (int | float | Molang, optional): A Molang expression defining the amount of experience rewarded when this entity is successfully bred. Defaults to 0.
             on_death (int | float | Molang, optional): A Molang expression defining the amount of experience rewarded when this entity dies. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_experience_reward
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_experience_reward)
         """
         super().__init__("experience_reward")
         if on_bred != 0:
@@ -3811,8 +3729,7 @@ class EntityEquippable(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_equippable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_equippable)
         """
         super().__init__("equippable")
         self._component["slots"] = []
@@ -3868,8 +3785,7 @@ class EntityColor(Component):
         Parameters:
             value (int): The Palette Color value of the entity.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color)
         """
         super().__init__("color")
         self._add_field("value", value)
@@ -3884,8 +3800,7 @@ class EntityColor2(Component):
         Parameters:
             value (int): The second Palette Color value of the entity.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color2
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_color2)
         """
         super().__init__("color2")
         self._add_field("value", value)
@@ -3900,8 +3815,7 @@ class EntityBurnsInDaylight(Component):
         Parameters:
             protection_slot (Slots, optional): The equipment slot that provides protection from burning in sunlight. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_burns_in_daylight
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_burns_in_daylight)
         """
         super().__init__("burns_in_daylight")
 
@@ -3939,8 +3853,7 @@ class EntityBoss(Component):
             hud_range (int, optional): The max distance from the boss at which the boss's health bar is present on the players screen. Defaults to 55.
             should_darken_sky (bool, optional): Whether the sky should darken in the presence of the boss. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_boss
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_boss)
         """
         super().__init__("boss")
 
@@ -3965,8 +3878,7 @@ class EntitySittable(Component):
             sit_event (str, optional): Event to run when the entity enters the 'sit' state. Can be an object with event and target properties, or a simple event string. Defaults to None.
             stand_event (str, optional): Event to run when the entity exits the 'sit' state. Can be an object with event and target properties, or a simple event string. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_sittable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_sittable)
         """
         super().__init__("sittable")
 
@@ -3986,8 +3898,7 @@ class EntityFlyingSpeedMeters(Component):
             value (float): Flying speed in blocks per tick.
             max (float, optional): Description. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flying_speed
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flying_speed)
         """
         super().__init__("flying_speed")
         self._add_field("value", round(0.152 * math.sqrt(value), 2))
@@ -4011,8 +3922,7 @@ class EntityConditionalBandwidthOptimization(Component):
             max_optimized_distance (int, optional): The maximum distance considered during bandwidth optimizations. Defaults to 0.
             use_motion_prediction_hints (bool, optional): When true, smaller motion packets will be sent during drop packet intervals. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_conditional_bandwidth_optimization
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_conditional_bandwidth_optimization)
         """
         super().__init__("conditional_bandwidth_optimization")
         a = {}
@@ -4062,8 +3972,7 @@ class EntityItemHopper(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_hopper
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_hopper)
         """
         super().__init__("item_hopper")
 
@@ -4078,8 +3987,7 @@ class EntityBodyRotationBlocked(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_blocked
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_blocked)
         """
         super().__init__("body_rotation_blocked")
 
@@ -4095,8 +4003,7 @@ class EntityDamageAbsorption(Component):
         Parameters:
             absorbable_causes (list[DamageCause], optional): Description. Defaults to DamageCause.Nothing.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_absorption
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_absorption)
         """
         super().__init__("damage_absorption")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.20")
@@ -4115,8 +4022,7 @@ class EntityDimensionBound(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dimension_bound
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dimension_bound)
         """
         super().__init__("dimension_bound")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.40")
@@ -4132,8 +4038,7 @@ class EntityTransient(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_transient
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_transient)
         """
         super().__init__("transient")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.40")
@@ -4149,8 +4054,7 @@ class EntityCannotBeAttacked(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_cannot_be_attacked
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_cannot_be_attacked)
         """
         super().__init__("cannot_be_attacked")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.51")
@@ -4165,8 +4069,7 @@ class EntityIgnoreCannotBeAttacked(Component):
         Parameters:
             filters (Filter, optional): Defines which entities are exceptions and are allowed to be attacked by the owner entity, potentially attacked entity is subject "other". Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ignore_cannot_be_attacked
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ignore_cannot_be_attacked)
         """
         super().__init__("ignore_cannot_be_attacked")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.51")
@@ -4207,8 +4110,7 @@ class EntityLookedAt(Component):
             search_radius (float, optional): Maximum distance the owner entity will search for entities looking at it. Defaults to 10.
             set_target (LootedAtSetTarget, optional): Defines if and how the owner entity will set entities that are looking at it as its combat targets. Valid values: 'never', 'once_and_stop_scanning', 'once_and_keep_scanning'. Defaults to LootedAtSetTarget.OnceAndStopScanning.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_looked_at
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_looked_at)
         """
         super().__init__("looked_at")
 
@@ -4247,8 +4149,7 @@ class EntityMovementSoundDistanceOffset(Component):
         Parameters:
             value (float): The higher the number, the less often the movement sound will be played.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement.sound_distance_offset?view=minecraft-bedrock-stable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement.sound_distance_offset?view=minecraft-bedrock-stable)
         """
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.60")
         super().__init__("movement_sound_distance_offset")
@@ -4263,8 +4164,7 @@ class EntityRendersWhenInvisible(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_renders_when_invisible
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_renders_when_invisible)
         """
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.60")
         super().__init__("renders_when_invisible")
@@ -4300,8 +4200,7 @@ class EntityBreedable(Component):
             require_tame (bool, optional): If true, the entities need to be tamed first before they can breed. Defaults to True.
             result_item (str, optional): The entity definition of this entity's babies. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breedable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_breedable)
         """
         super().__init__("breedable")
 
@@ -4411,8 +4310,7 @@ class EntityOffspring(Component):
             random_extra_variant_mutation_interval (tuple[int, int], optional): Range used to determine random extra variant. Defaults to (0, 0).
             random_variant_mutation_interval (tuple[int, int], optional): Range used to determine random variant. Defaults to (0, 0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_offspring
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_offspring)
         """
 
         super().__init__("offspring")
@@ -4505,8 +4403,7 @@ class EntityIsCollidable(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_collidable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_collidable)
         """
         super().__init__("is_collidable")
 
@@ -4519,8 +4416,7 @@ class EntityRotationAxisAligned(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rotation_axis_aligned
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rotation_axis_aligned)
         """
         super().__init__("rotation_axis_aligned")
 
@@ -4539,8 +4435,7 @@ class EntityFreeCameraControlled(Component):
             backwards_movement_modifier (float, optional): Modifies speed going backwards. Defaults to 0.5.
             strafe_speed_modifier (float, optional): Modifies the strafe speed. Defaults to 0.4.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_free_camera_controlled
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_free_camera_controlled)
         """
         super().__init__("free_camera_controlled")
         if backwards_movement_modifier != 0.5:
@@ -4573,8 +4468,7 @@ class EntityLeashable(Component):
             on_unleash_interact_only (bool, optional): When set to true, "on_unleash" does not trigger when the entity gets unleashed for reasons other than the player directly interacting with it. Defaults to False.
             unleash_on_removal (bool, optional): When set to true, the entity is unleashed from the entity it is leashed to once the component is removed. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable)
         """
         super().__init__("leashable")
 
@@ -4670,8 +4564,7 @@ class EntityBodyRotationAlwaysFollowsHead(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_always_follows_head
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_body_rotation_always_follows_head)
         """
         super().__init__("body_rotation_always_follows_head")
 
@@ -4696,8 +4589,7 @@ class EntityTimer(Component):
             randomInterval (bool, optional): If true, the amount of time on the timer will be random between the min and max values specified in time. Defaults to True.
             time (tuple[float, float] | float, optional): Amount of time in seconds for the timer. Can be specified as a number or a pair of numbers (min and max). Incompatible with random_time_choices. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_timer
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_timer)
         """
         super().__init__("timer")
 
@@ -4719,8 +4611,7 @@ class EntityPersistent(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_persistent
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_persistent)
         """
         super().__init__("persistent")
 
@@ -4734,8 +4625,7 @@ class EntityVerticalMovementAction(Component):
         Parameters:
             vertical_velocity (float, optional): Vertical velocity to apply when jump action is issued. Defaults to 0.5.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vertical_movement.action?view=minecraft-bedrock-stable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vertical_movement.action?view=minecraft-bedrock-stable)
         """
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.111")
         super().__init__("vertical_movement_action")
@@ -4759,8 +4649,7 @@ class EntityOnDeath(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_death
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_death)
         """
         super().__init__(event, filters, target)
 
@@ -4781,8 +4670,7 @@ class EntityOnFriendlyAnger(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_friendly_anger
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_friendly_anger)
         """
         super().__init__(event, filters, target)
 
@@ -4803,8 +4691,7 @@ class EntityOnHurt(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt)
         """
         super().__init__(event, filters, target)
 
@@ -4825,8 +4712,7 @@ class EntityOnHurtByPlayer(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt_by_player
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_hurt_by_player)
         """
         super().__init__(event, filters, target)
 
@@ -4847,8 +4733,7 @@ class EntityOnIgnite(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_ignite
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_ignite)
         """
         super().__init__(event, filters, target)
 
@@ -4869,8 +4754,7 @@ class EntityOnStartLanding(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_landing
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_landing)
         """
         super().__init__(event, filters, target)
 
@@ -4891,8 +4775,7 @@ class EntityOnStartTakeoff(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_takeoff
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_start_takeoff)
         """
         super().__init__(event, filters, target)
 
@@ -4913,8 +4796,7 @@ class EntityOnTargetAcquired(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_acquired
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_acquired)
         """
         super().__init__(event, filters, target)
 
@@ -4935,8 +4817,7 @@ class EntityOnTargetEscaped(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_escaped
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_target_escaped)
         """
         super().__init__(event, filters, target)
 
@@ -4957,8 +4838,7 @@ class EntityOnWakeWithOwner(EventTrigger):
             filters (Filter, optional): The list of conditions for this trigger to execute. Defaults to None.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_wake_with_owner
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_wake_with_owner)
         """
         super().__init__(event, filters, target)
 
@@ -4975,8 +4855,7 @@ class EntityNameable(Component):
             allow_name_tag_renaming (bool, optional): If true, this entity can be renamed with name tags. Defaults to True.
             always_show (bool, optional): If true, the name will always be shown. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_nameable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_nameable)
         """
         super().__init__("nameable")
 
@@ -5019,8 +4898,7 @@ class EntityRotationLockedToVehicle(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rotation_locked_to_vehicle
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rotation_locked_to_vehicle)
         """
         super().__init__("rotation_locked_to_vehicle")
 
@@ -5035,8 +4913,7 @@ class EntityHealable(Component):
             filters (Filter, optional): The filter group that defines the conditions for using this item to heal the entity. Defaults to None.
             force_use (bool, optional): Determines if item can be used regardless of entity being at full health. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_healable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_healable)
         """
         super().__init__("healable")
         if not filters is None:
@@ -5096,8 +4973,7 @@ class EntityExhaustionValues(Component):
             swim (float, optional): Amount of exhaustion applied when swimming. Defaults to 0.01.
             walk (float, optional): Amount of exhaustion applied when walking. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_exhaustion_values
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_exhaustion_values)
         """
         super().__init__("exhaustion_values")
 
@@ -5131,8 +5007,7 @@ class EntityIsHiddenWhenInvisible(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_hidden_when_invisible
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_hidden_when_invisible)
         """
         super().__init__("is_hidden_when_invisible")
 
@@ -5153,8 +5028,7 @@ class EntityHurtOnCondition(Component):
             filters (Filter, optional): The set of conditions that must be satisfied before the entity takes the defined damage. Defaults to None.
             damage_per_tick (int, optional): The amount of damage done each tick that the conditions are met. Defaults to 1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_hurt_on_condition
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_hurt_on_condition)
         """
         super().__init__("hurt_on_condition")
         self._add_field("damage_conditions", [])
@@ -5184,8 +5058,7 @@ class EntityHide(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_hide
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_hide)
         """
         super().__init__("hide")
 
@@ -5207,8 +5080,7 @@ class EntityAnnotationBreakDoor(Component):
         Note:
             Requires the entity's navigation component to have can_break_doors set to true.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_annotation_break_door
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_annotation_break_door)
         """
         super().__init__("annotation.break_door")
         if break_time != 12:
@@ -5225,8 +5097,7 @@ class EntityAnnotationOpenDoor(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_annotation_open_door
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_annotation_open_door)
         """
         super().__init__("minecraft:annotation.open_door")
 
@@ -5259,8 +5130,7 @@ class EntityDweller(Component):
             update_interval_base (float, optional): How often the entity checks on their dwelling status in ticks. Positive values only. Defaults to 0.0.
             update_interval_variant (float, optional): The variant value in ticks that will be added to the update_interval_base. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dweller
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dweller)
         """
         super().__init__("dweller")
 
@@ -5318,8 +5188,7 @@ class EntityEconomyTradeTable(Component):
             show_trade_screen (bool, optional): Show an in game trade screen when interacting with the mob. Defaults to True.
             use_legacy_price_formula (bool, optional): Determines whether the legacy formula is used to determines the trade prices. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_economy_trade_table
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_economy_trade_table)
         """
         super().__init__("economy_trade_table")
         self._add_field(
@@ -5369,8 +5238,7 @@ class EntityScheduler(Component):
             max_delay_secs (float, optional): Description. Defaults to 0.0.
             min_delay_secs (float, optional): Description. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_scheduler
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_scheduler)
         """
         super().__init__("scheduler")
 
@@ -5404,8 +5272,7 @@ class EntityTradeResupply(Component):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trade_resupply
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trade_resupply)
         """
         super().__init__("trade_resupply")
 
@@ -5430,8 +5297,7 @@ class EntityShareables(Component):
             all_items_want_amount (int, optional): Number of this item this entity wants to share. Defaults to -1.
             singular_pickup (bool, optional): Boolean value that controls if the mob is able to pick up more of the same item if it is already holding that item. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_shareables
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_shareables)
         """
         super().__init__("shareables")
 
@@ -5517,8 +5383,7 @@ class EntityArmorEquipmentSlotMapping(Component):
         Parameters:
             armor_slot (Slots): The armor slot an item equipped to 'minecraft:equippable''s second slot should be equipped to.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_armor_equipment_slot_mapping
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_armor_equipment_slot_mapping)
         """
         super().__init__("entity_armor_equipment_slot_mapping")
         if not armor_slot in [Slots.Chest, Slots.Body]:
@@ -5554,8 +5419,7 @@ class EntityDespawn(Component):
             min_range_random_chance (int, optional): A random chance between 1 and the given value. Defaults to 800.
             remove_child_entities (bool, optional): If true, all entities linked to this entity in a child relationship (eg. leashed) will also be despawned. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_despawn
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_despawn)
         """
         super().__init__("despawn")
 
@@ -5615,8 +5479,7 @@ class EntityGameEventMovementTracking(Component):
             emit_move (bool, optional): If true, the `entityMove` game event will be emitted when the entity moves on ground or through a solid. Defaults to True.
             emit_swim (bool, optional): If true, the `swim` game event will be emitted when the entity moves through a liquid. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_game_event_movement_tracking
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_game_event_movement_tracking)
         """
         super().__init__("game_event_movement_tracking")
 
@@ -5653,8 +5516,7 @@ class EntityAttackCooldown(Component):
             attack_cooldown_complete_event (str, optional): Event to be run when the cooldown is complete. Can be an object with event and target properties, or a simple event string. Defaults to None.
             attack_cooldown_complete_target (FilterSubject, optional): Target value to serialize when attack_cooldown_complete_event is written as an event object. Defaults to FilterSubject.Self.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_attack_cooldown
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_attack_cooldown)
         """
         super().__init__("attack_cooldown")
         if attack_cooldown_time is not None:
@@ -5701,8 +5563,7 @@ class EntityCombatRegeneration(Component):
             apply_to_self (bool, optional): Determines if the mob will grant itself the combat buffs if it kills the target. Defaults to False.
             regeneration_duration (int | Literal['infinite'], optional): The duration in seconds of Regeneration I added to the mob. Can also be set to "infinite". Defaults to 5.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_combat_regeneration
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_combat_regeneration)
         """
         super().__init__("combat_regeneration")
         if apply_to_family:
@@ -5727,8 +5588,7 @@ class EntityDamageOverTime(Component):
             damage_per_hurt (int, optional): Amount of damage caused each hurt. Defaults to 1.
             time_between_hurt (Seconds, optional): Time in seconds between damage. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_over_time
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_damage_over_time)
         """
         super().__init__("damage_over_time")
         if damage_per_hurt != 1:
@@ -5746,8 +5606,7 @@ class EntityDefaultLookAngle(Component):
         Parameters:
             value (float, optional): Angle in degrees. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_default_look_angle
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_default_look_angle)
         """
         super().__init__("default_look_angle")
         if value != 0:
@@ -5762,8 +5621,7 @@ class EntityFloatsInLiquid(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_floats_in_liquid
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_floats_in_liquid)
         """
         super().__init__("floats_in_liquid")
 
@@ -5777,8 +5635,7 @@ class EntityGroundOffset(Component):
         Parameters:
             value (float, optional): The value of the entity's offset from the terrain, in blocks. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ground_offset
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ground_offset)
         """
         super().__init__("ground_offset")
         if value != 0:
@@ -5799,8 +5656,7 @@ class EntityInputAirControlled(Component):
             backwards_movement_modifier (float, optional): Modifies speed going backwards. Defaults to 0.5.
             strafe_speed_modifier (float, optional): Modifies the strafe speed. Defaults to 0.4.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_input_air_controlled
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_input_air_controlled)
         """
         super().__init__("input_air_controlled")
         if backwards_movement_modifier != 0.5:
@@ -5817,8 +5673,7 @@ class EntityIsPregnant(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_pregnant
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_pregnant)
         """
         super().__init__("is_pregnant")
 
@@ -5831,8 +5686,7 @@ class EntityIsShaking(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_shaking
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_is_shaking)
         """
         super().__init__("is_shaking")
 
@@ -5845,8 +5699,7 @@ class EntityRemoveInPeaceful(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_remove_in_peaceful
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_remove_in_peaceful)
         """
         super().__init__("remove_in_peaceful")
 
@@ -5860,8 +5713,7 @@ class EntitySoundVolume(Component):
         Parameters:
             value (float, optional): The value of the volume the entity uses for sound effects. Defaults to 1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_sound_volume
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_sound_volume)
         """
         super().__init__("sound_volume")
         if value != 1:
@@ -5876,8 +5728,7 @@ class EntityUnderwaterMountBreathing(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_underwater_mount_breathing
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_underwater_mount_breathing)
         """
         super().__init__("underwater_mount_breathing")
 
@@ -5890,8 +5741,7 @@ class EntityUsesLegacyFriction(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_uses_legacy_friction
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_uses_legacy_friction)
         """
         super().__init__("uses_legacy_friction")
 
@@ -5904,8 +5754,7 @@ class EntityVibrationDamper(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vibration_damper
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vibration_damper)
         """
         super().__init__("vibration_damper")
 
@@ -5919,8 +5768,7 @@ class EntityWalkAnimationSpeed(Component):
         Parameters:
             value (float, optional): The higher the number, the faster the animation for walking plays. A value of 1.0 means normal speed, while 2.0 means twice as fast. Defaults to 1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_walk_animation_speed
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_walk_animation_speed)
         """
         super().__init__("walk_animation_speed")
         if value != 1:
@@ -5935,8 +5783,7 @@ class EntityWantsJockey(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_wants_jockey
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_wants_jockey)
         """
         super().__init__("wants_jockey")
 
@@ -5949,8 +5796,7 @@ class EntityBlockClimber(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_block_climber
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_block_climber)
         """
         super().__init__("block_climber")
 
@@ -5969,8 +5815,7 @@ class EntityBlockSensor(Component):
             sensor_radius (float, optional): The maximum radial distance in which a specified block can be detected. The biggest radius is 32.0. Defaults to 16.
             sources (Filter, optional): List of sources that break the block to listen for. If none are specified, all block breaks will be detected. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_block_sensor
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_block_sensor)
         """
         super().__init__("block_sensor")
         self._add_field("on_break", [])
@@ -6007,8 +5852,7 @@ class EntityBribeable(Component):
             bribe_items (str | list[MinecraftItemDescriptor | Identifier], optional): The list of items that can be used to bribe the entity. Can be an array or a single item string. Defaults to None.
             bribe_cooldown (Seconds, optional): Time in seconds before the Entity can be bribed again. Defaults to 2.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_bribeable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_bribeable)
         """
         super().__init__("bribeable")
         if bribe_items is not None:
@@ -6039,8 +5883,7 @@ class EntityCelebrateHunt(Component):
             radius (float, optional): If broadcast is enabled, specifies the radius in which it will notify other entities for celebration. Defaults to 16.
             sound_interval (int | tuple[int, int], optional): The range of time in seconds to randomly wait before playing the sound again. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_celebrate_hunt
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_celebrate_hunt)
         """
         super().__init__("celebrate_hunt")
         if not broadcast:
@@ -6082,8 +5925,7 @@ class EntityHeartbeat(Component):
             interval (Molang | str | float, optional): A Molang expression defining the inter-beat interval in seconds. A value of zero or less means no heartbeat. Defaults to 1.0.
             sound_event (str, optional): Level sound event to be played as the heartbeat sound. Defaults to "heartbeat".
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_heartbeat
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_heartbeat)
         """
         super().__init__("heartbeat")
         if interval not in (1, 1.0, "1", "1.0"):
@@ -6108,8 +5950,7 @@ class EntityHome(Component):
             restriction_radius (int, optional): Optional radius that the entity will be restricted to in relation to its home. Defaults to 0.
             restriction_type (Literal['none', 'random_movement', 'all_movement'], optional): Defines how the entity will be restricted to its home position. Defaults to "none".
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_home
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_home)
         """
         super().__init__("home")
         if home_block_list is not None:
@@ -6132,8 +5973,7 @@ class EntityInsomnia(Component):
         Parameters:
             days_until_insomnia (float, optional): Number of days the mob has to stay up until the insomnia effect begins. Defaults to 3.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_insomnia
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_insomnia)
         """
         super().__init__("insomnia")
         if days_until_insomnia != 3:
@@ -6152,8 +5992,7 @@ class EntityLeashableTo(Component):
             can_retrieve_from (bool, optional): Allows players to retrieve entities that are leashed to this entity. Defaults to False.
             unleash_on_removal (bool, optional): When set to true, entities leashed to the entity are unleashed once the component is removed. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable_to
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_leashable_to)
         """
         super().__init__("leashable_to")
         if can_retrieve_from:
@@ -6175,8 +6014,7 @@ class EntityMobEffectImmunity(Component):
         Parameters:
             mob_effects (list[MinecraftEffects | str], optional): List of names of effects the entity is immune to. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_mob_effect_immunity
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_mob_effect_immunity)
         """
         super().__init__("mob_effect_immunity")
         if mob_effects is not None:
@@ -6200,54 +6038,12 @@ class EntityPushable(Component):
             is_pushable (bool, optional): Whether the entity can be pushed by other entities. Defaults to True.
             is_pushable_by_piston (bool, optional): Whether the entity can be pushed by pistons safely. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable)
         """
         super().__init__("pushable")
         raise NotImplementedError(
             "The 'EntityPushable' component was removed in Minecraft version 1.26.10 and replaced with 'EntityPushableByEntity' and 'EntityPushableByBlock'. Please use those components instead."
         )
-
-
-class EntityReflectProjectiles(Component):
-    _identifier = "minecraft:reflect_projectiles"
-
-    def __init__(
-        self,
-        azimuth_angle: Molang | str = None,
-        elevation_angle: Molang | str = None,
-        reflected_projectiles: list[MinecraftEntityDescriptor | Identifier] = None,
-        reflection_scale: Molang | str = None,
-        reflection_sound: str = "reflect",
-    ) -> None:
-        """[EXPERIMENTAL] Allows an entity to reflect projectiles.
-
-        Parameters:
-            azimuth_angle (Molang | str, optional): [EXPERIMENTAL] A Molang expression defining the angle in degrees to add to the projectile's y axis rotation. Defaults to None.
-            elevation_angle (Molang | str, optional): [EXPERIMENTAL] A Molang expression defining the angle in degrees to add to the projectile's x axis rotation. Defaults to None.
-            reflected_projectiles (list[MinecraftEntityDescriptor | Identifier], optional): [EXPERIMENTAL] An array of strings defining the types of projectiles that are reflected when they hit the entity. Defaults to None.
-            reflection_scale (Molang | str, optional): [EXPERIMENTAL] A Molang expression defining the velocity scaling of the reflected projectile. Values below 1 decrease the projectile's velocity, and values above 1 increase it. Defaults to None.
-            reflection_sound (str, optional): [EXPERIMENTAL] A string defining the name of the sound event to be played when a projectile is reflected. "reflect" unless specified. Defaults to "reflect".
-
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_reflect_projectiles
-        """
-        if not CONFIG._EXPERIMENTAL:
-            raise NotImplementedError(
-                "The 'EntityReflectProjectiles' component is experimental and requires the experimental flag to be enabled in anvilconfig.json."
-            )
-
-        super().__init__("reflect_projectiles")
-        if azimuth_angle is not None:
-            self._add_field("azimuth_angle", azimuth_angle)
-        if elevation_angle is not None:
-            self._add_field("elevation_angle", elevation_angle)
-        if reflected_projectiles is not None:
-            self._add_field("reflected_projectiles", reflected_projectiles)
-        if reflection_scale is not None:
-            self._add_field("reflection_scale", reflection_scale)
-        if reflection_sound != "reflect":
-            self._add_field("reflection_sound", reflection_sound)
 
 
 class EntityStrength(Component):
@@ -6260,8 +6056,7 @@ class EntityStrength(Component):
             value (int, optional): The initial value of the strength. Defaults to 1.
             max (int, optional): The maximum strength of this entity. Defaults to 5.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_strength
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_strength)
         """
         super().__init__("strength")
         if value != 1:
@@ -6290,8 +6085,7 @@ class EntityTamemount(Component):
             min_temper (int, optional): The minimum value for the entity's random starting temper. Defaults to 0.
             ride_text (str, optional): The text that shows in the riding interact button. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tamemount
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_tamemount)
         """
         super().__init__("tamemount")
         self._add_field("feed_items", [])
@@ -6351,8 +6145,7 @@ class EntityTradeTable(Component):
             new_screen (bool, optional): Used to determine if trading with entity opens the new trade screen. Defaults to False.
             persist_trades (bool, optional): Determines if the trades should persist when the mob transforms. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trade_table
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trade_table)
         """
         super().__init__("trade_table")
         self._add_field(
@@ -6384,8 +6177,7 @@ class EntityBalloonable(Component):
             max_distance (float, optional): Distance in blocks at which the balloon breaks. Defaults to 10.0.
             soft_distance (float, optional): Distance in blocks at which the 'spring' effect that lifts it. Defaults to 2.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_balloonable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_balloonable)
         """
         super().__init__("balloonable")
         if mass != 1.0:
@@ -6418,8 +6210,7 @@ class EntityBarter(Component):
             barter_table (LootTable | str): Loot table that's used to drop a random item.
             cooldown_after_being_attacked (tuple[int, int] | int, optional): Duration, in seconds, for which mob won't barter items if it was hurt. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_barter
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_barter)
         """
         super().__init__("barter")
         self._add_field(
@@ -6461,8 +6252,7 @@ class EntityBoostable(Component):
             duration (Seconds, optional): Time in seconds for the boost. Defaults to 3.0.
             speed_multiplier (float, optional): Factor by which the entity's normal speed increases. E.g. 2.0 means go twice as fast. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_boostable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_boostable)
         """
         super().__init__("boostable")
         self._add_field("boost_items", [])
@@ -6494,8 +6284,7 @@ class EntityBreakBlocks(Component):
 
         This component has no configurable constructor properties. Use add_block to append breakable block identifiers.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_break_blocks
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_break_blocks)
         """
         super().__init__("break_blocks")
         self._add_field("breakable_blocks", [])
@@ -6521,8 +6310,7 @@ class EntityDash(Component):
             horizontal_momentum (float, optional): Horizontal momentum of the dash. Defaults to 1.0.
             vertical_momentum (float, optional): Vertical momentum of the dash. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_dash)
         """
         super().__init__("dash")
         if cooldown_time != 1.0:
@@ -6547,8 +6335,7 @@ class EntityDryingOutTimer(Component):
             total_time (Seconds, optional): Amount of time in seconds to dry out fully. Defaults to 0.0.
             water_bottle_refill_time (Seconds, optional): Optional amount of additional time in seconds given by using splash water bottle on entity. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_drying_out_timer
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_drying_out_timer)
         """
         super().__init__("drying_out_timer")
         if total_time != 0.0:
@@ -6627,8 +6414,7 @@ class EntityFlocking(Component):
             separation_weight (float, optional): The weight applied to the separation of the flock. Defaults to 1.0.
             use_center_of_mass (bool, optional): Tells the flockers that they will follow flocks based on the center of mass. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flocking
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flocking)
         """
         super().__init__("flocking")
         if block_distance != 0.0:
@@ -6678,8 +6464,7 @@ class EntityGenetics(Component):
         Parameters:
             mutation_rate (float, optional): If this value is non-negative, overrides the chance for this gene that an allele will be replaced with a random one instead of the parent's allele during birth. Defaults to 0.03125.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_genetics
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_genetics)
         """
         super().__init__("genetics")
         self._add_field("genes", [])
@@ -6765,8 +6550,7 @@ class EntityGiveable(Component):
         Parameters:
             cooldown (Seconds, optional): An optional cool down in seconds to prevent spamming interactions. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_giveable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_giveable)
         """
         super().__init__("giveable")
         self._add_field("items", [])
@@ -6792,8 +6576,7 @@ class EntityGrowsCrop(Component):
             chance (float, optional): Value between 0-1. Chance of success per tick. Defaults to 0.0.
             charges (int, optional): Number of charges. Defaults to 10.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_grows_crop
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_grows_crop)
         """
         super().__init__("grows_crop")
         if chance != 0.0:
@@ -6810,8 +6593,7 @@ class EntityItemControllable(Component):
 
         This component has no configurable constructor properties. Use add_control_item to append valid control items.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_controllable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_controllable)
         """
         super().__init__("item_controllable")
         self._add_field("control_items", [])
@@ -6829,8 +6611,7 @@ class EntityManagedWanderingTrader(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_managed_wandering_trader
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_managed_wandering_trader)
         """
         super().__init__("managed_wandering_trader")
 
@@ -6843,8 +6624,7 @@ class EntityPeek(Component):
 
         This component has no configurable constructor properties. Use on_close, on_open, and on_target_open to define the event triggers.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_peek
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_peek)
         """
         super().__init__("peek")
 
@@ -6871,8 +6651,7 @@ class EntityPlayerExhaustion(Component):
             value (float, optional): The initial value of a player's exhaustion level. Defaults to 0.0.
             max (float, optional): A maximum value for a player's exhaustion. Defaults to 20.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_player.exhaustion
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_player.exhaustion)
         """
         super().__init__("player.exhaustion")
         if max != 20.0:
@@ -6891,8 +6670,7 @@ class EntityPlayerExperience(Component):
             value (float, optional): The initial value of the player experience. Defaults to 0.0.
             max (float, optional): The maximum player experience of this entity. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_player.experience
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_player.experience)
         """
         super().__init__("player.experience")
         if max != 1.0:
@@ -6911,8 +6689,7 @@ class EntityPlayerLevel(Component):
             value (int, optional): The initial value of the player level. Defaults to 0.
             max (int, optional): The maximum player level value of the entity. Defaults to 24791.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_player.level
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_player.level)
         """
         super().__init__("player.level")
         if max != 24791:
@@ -6931,8 +6708,7 @@ class EntityPlayerSaturation(Component):
             value (float, optional): The initial value of player saturation. Defaults to 5.0.
             max (float, optional): The maximum player saturation value. Defaults to 20.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_player.saturation
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_player.saturation)
         """
         super().__init__("player.saturation")
         if max != 20.0:
@@ -6949,8 +6725,7 @@ class EntityRaidTrigger(Component):
 
         This component has no configurable constructor properties. Use triggered_event to define the raid event payload.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_raid_trigger
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_raid_trigger)
         """
         super().__init__("raid_trigger")
 
@@ -6968,8 +6743,7 @@ class EntityRailMovement(Component):
         Parameters:
             max_speed (float, optional): Maximum speed that this entity will move at when on the rail. Defaults to 0.4.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rail_movement
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rail_movement)
         """
         super().__init__("rail_movement")
         if max_speed != 0.4:
@@ -6999,8 +6773,7 @@ class EntityRailSensor(Component):
         Note:
             Use on_activate and on_deactivate to define the event payloads.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rail_sensor
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_rail_sensor)
         """
         super().__init__("rail_sensor")
         if check_block_types:
@@ -7036,8 +6809,7 @@ class EntityRavagerBlocked(Component):
         Parameters:
             knockback_strength (float, optional): The strength with which blocking entities should be knocked back. Defaults to 3.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ravager_blocked
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ravager_blocked)
         """
         super().__init__("ravager_blocked")
         self._add_field("reaction_choices", [])
@@ -7057,8 +6829,7 @@ class EntitySuspectTracking(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_suspect_tracking
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_suspect_tracking)
         """
         super().__init__("suspect_tracking")
 
@@ -7089,8 +6860,7 @@ class EntityTeleport(Component):
             target_distance (float, optional): Maximum distance the entity will teleport when chasing a target. Defaults to 16.0.
             target_teleport_chance (float, optional): The chance that the entity will teleport between 0.0 and 1.0. 1.0 means 100%. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_teleport
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_teleport)
         """
         super().__init__("teleport")
         if dark_teleport_chance != 0.01:
@@ -7137,8 +6907,7 @@ class EntityTrail(Component):
             spawn_filter (Filter, optional): One or more conditions that must be met in order to cause the chosen block type to spawn. Defaults to None.
             spawn_offset (tuple[float, float, float], optional): The distance from the entities current position to spawn the block. Defaults to (0, 0, 0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trail
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trail)
         """
         super().__init__("trail")
         if str(block_type) != str(MinecraftBlockTypes.Air()):
@@ -7157,8 +6926,7 @@ class EntityTrust(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trust
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trust)
         """
         super().__init__("trust")
 
@@ -7172,8 +6940,7 @@ class EntityTrusting(Component):
         Parameters:
             probability (float, optional): The chance of the entity trusting with each item use between 0.0 and 1.0, where 1.0 is 100%. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trusting
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trusting)
         """
         super().__init__("trusting")
         self._add_field("trust_items", [])
@@ -7197,8 +6964,7 @@ class EntityVibrationListener(Component):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vibration_listener
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_vibration_listener)
         """
         super().__init__("vibration_listener")
 
@@ -7209,8 +6975,7 @@ class EntityUseUniformAirDrag(Component):
     def __init__(self) -> None:
         """Causes air drag is applied uniformly on both the vertical and horizontal axes, instead of being biased toward horizontal movement.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_use_uniform_air_drag
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_use_uniform_air_drag)
         """
         super().__init__("use_uniform_air_drag")
 
@@ -7222,8 +6987,7 @@ class EntityOnEquipmentChanged(Component):
         """Allows to specify events to execute when equipment is set in the entity's default equipment slots.
         Does not apply to ``minecraft:inventory``; use ``minecraft:equippable`` instead.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_on_equipment_changed
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_on_equipment_changed)
         """
         super().__init__("on_equipment_changed")
         self._add_field("slots", [])
@@ -7272,8 +7036,7 @@ class EntitySpawnOnDeath(Component):
             filters (Filter, optional): Conditions that need to be met for the component to trigger.
             additional_spawn_range (tuple[int, int], optional): Additional random spawn range. Defaults to (0, 0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_spawn_on_death
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_spawn_on_death)
         """
         super().__init__("spawn_on_death")
 
@@ -7312,8 +7075,7 @@ class EntityBounciness(Component):
 
         Parameters:
             value (float, optional): The strength of the bounce, where 0.0 means no bounce and 1.0 means a full bounce that retains all momentum. Defaults to 0.0.
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_bounciness
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_bounciness)
         """
         super().__init__("bounciness")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
@@ -7329,8 +7091,7 @@ class EntityAirDragModifier(Component):
 
         Parameters:
             value (float, optional): The strength of the air drag, where 0.0 means no air drag and 1.0 means regular air drag. Defaults to 0.0.
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_air_drag_modifier
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_air_drag_modifier)
         """
         super().__init__("air_drag_modifier")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
@@ -7344,8 +7105,7 @@ class EntityApplyKnockbackRules(Component):
     def __init__(self) -> None:
         """Defines how an entity applies knockback.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_apply_knockback_rules
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_apply_knockback_rules)
         """
         super().__init__("apply_knockback_rules")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.26.30")
@@ -7356,10 +7116,10 @@ class EntityApplyKnockbackRules(Component):
         horizontal_power: float = None,
         vertical_power: float = None,
         vertical_velocity_cap: float = None,
-        scale_previous_velocity: float = None,
-        horizontal_hit_angle_scale: float = None,
-        vertical_hit_angle_scale: float = None,
-        vertical_position_angle_scale: float = None,
+        slowdown_scale: float = None,
+        knockback_mode: Literal[
+            "relative_horizontal", "hit_direction"
+        ] = "relative_horizontal",
         scale_with_damage: bool = None,
         filter: Filter = None,
         extra_knockback_approach: Literal["reapply_default", "multiply"] = None,
@@ -7370,10 +7130,8 @@ class EntityApplyKnockbackRules(Component):
             horizontal_power (float, optional): Horizontal knockback power.
             vertical_power (float, optional): Vertical knockback power.
             vertical_velocity_cap (float, optional): Cap on vertical velocity.
-            scale_previous_velocity (float, optional): Scaling factor for previous velocity.
-            horizontal_hit_angle_scale (float, optional): Scaling based on horizontal hit angle.
-            vertical_hit_angle_scale (float, optional): Scaling based on vertical hit angle.
-            vertical_position_angle_scale (float, optional): Scaling based on vertical position angle.
+            slowdown_scale (float, optional): Scaling factor for previous velocity.
+            knockback_mode (str, optional): The mode for determining knockback direction ("relative_horizontal" or "hit_direction"). Defaults to "relative_horizontal".
             scale_with_damage (bool, optional): Whether knockback scales with damage dealt.
             filter (Filter, optional): Filter to determine when this preset applies.
             extra_knockback_approach (str, optional): Handling extra knockback from enchantments, sprinting, and swimming ("reapply_default" or "multiply").
@@ -7387,14 +7145,10 @@ class EntityApplyKnockbackRules(Component):
             preset["vertical_power"] = vertical_power
         if vertical_velocity_cap is not None:
             preset["vertical_velocity_cap"] = vertical_velocity_cap
-        if scale_previous_velocity is not None:
-            preset["scale_previous_velocity"] = scale_previous_velocity
-        if horizontal_hit_angle_scale is not None:
-            preset["horizontal_hit_angle_scale"] = horizontal_hit_angle_scale
-        if vertical_hit_angle_scale is not None:
-            preset["vertical_hit_angle_scale"] = vertical_hit_angle_scale
-        if vertical_position_angle_scale is not None:
-            preset["vertical_position_angle_scale"] = vertical_position_angle_scale
+        if slowdown_scale is not None:
+            preset["slowdown_scale"] = slowdown_scale
+        if knockback_mode != "relative_horizontal":
+            preset["knockback_mode"] = knockback_mode
         if scale_with_damage is not None:
             preset["scale_with_damage"] = scale_with_damage
         if extra_knockback_approach is not None:
@@ -7405,6 +7159,17 @@ class EntityApplyKnockbackRules(Component):
             preset["extra_knockback_approach"] = extra_knockback_approach
         self._component["presets"].append(preset)
         return self
+
+
+class EntityNotPickableFromInside(Component):
+    _identifier = "minecraft:not_pickable_from_inside"
+
+    def __init__(self) -> None:
+        """When set, the entity cannot be targeted by a cursor hit-test while the picker's point of view lies inside the entity's collision box.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_not_pickable_from_inside)
+        """
+        super().__init__("not_pickable_from_inside")
 
 
 # AI Goals ==========================================================================
@@ -7451,8 +7216,7 @@ class EntityAINearestAttackableTarget(AIGoal):
             within_radius (float, optional): Maximum distance this entity can be from the target when following it, otherwise the target becomes invalid. This value is only used if the entity doesn't declare "minecraft:follow_range". Defaults to 0.0.
             target_acquisition_probability (float, optional): Probability (0.0 to 1.0) that this entity will accept a found target. Checked each time a valid target is found during scanning. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_nearest_attackable_target
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_nearest_attackable_target)
         """
         super().__init__("behavior.nearest_attackable_target")
         self._add_field("entity_types", [])
@@ -7568,8 +7332,7 @@ class EntityAINearestPrioritizedAttackableTarget(AIGoal):
             target_sneak_visibility_multiplier (float, optional): Description. Defaults to 0.8.
             within_radius (float, optional): Distance in blocks that the target can be within to launch an attack. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_nearest_prioritized_attackable_target
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_nearest_prioritized_attackable_target)
         """
         super().__init__("behavior.nearest_prioritized_attackable_target")
         self._add_field("entity_types", [])
@@ -7668,8 +7431,7 @@ class EntityAIKnockbackRoar(AIGoal):
             knockback_range (int, optional): The radius (in blocks) of the knockback effect. Defaults to 4.
             knockback_vertical_strength (int, optional): The strength of the vertical knockback. Defaults to 4.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_knockback_roar
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_knockback_roar)
         """
         super().__init__("behavior.knockback_roar")
 
@@ -7717,8 +7479,7 @@ class EntityAIFloat(AIGoal):
             chance_per_tick_to_float (float, optional): The chance per tick to cause an upward impulse. Defaults to 0.0.
             time_under_water_to_dismount_passengers (Seconds, optional): Time in seconds that a floating vehicles head can be underwater before it causes its passengers to dismount. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float)
         """
         super().__init__("behavior.float")
         if sink_with_passengers:
@@ -7750,8 +7511,7 @@ class EntityAIRandomStroll(AIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the mob will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_stroll
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_stroll)
         """
         super().__init__("behavior.random_stroll")
         if interval != 120:
@@ -7786,8 +7546,7 @@ class EntityAILookAtPlayer(AIGoal):
             probability (float, optional): The probability of looking at the target. A value of 1.00 is 100%. Value must be <= 1. Defaults to 0.02.
             target_distance (float, optional): Description. Defaults to 0.6.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_player
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_player)
         """
         super().__init__("behavior.look_at_player")
         if angle_of_view_horizontal != 360:
@@ -7829,8 +7588,7 @@ class EntityAIRandomLookAround(AIGoal):
             probability (float, optional): Description. Defaults to 0.02.
             target_distance (float, optional): Description. Defaults to 0.6.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_look_around
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_look_around)
         """
         super().__init__("behavior.random_look_around")
         if angle_of_view_horizontal != 360:
@@ -7875,8 +7633,7 @@ class EntityAIHurtByTarget(AIGoal):
             walk_speed_multiplier (float, optional): Multiplier for the walking speed. A value of 1.0 means the speed is unchanged. Defaults to 1.0.
             hurt_owner (bool, optional): If true, the mob will hurt its owner and other mobs with the same owner as itself. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_hurt_by_target
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_hurt_by_target)
         """
         super().__init__("behavior.hurt_by_target")
 
@@ -7947,8 +7704,7 @@ class EntityAIMeleeAttack(AIGoal):
             y_max_head_rotation (int, optional): Maximum rotation, in degrees, on the Y-axis while the mob is trying to look at its target. Defaults to 30.
             can_spread_on_fire (bool, optional): Allows the mob, if on fire and empty handed, to ignite its target upon a successful attack. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_melee_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_melee_attack)
         """
         super().__init__("behavior.melee_attack")
         if attack_once:
@@ -8060,8 +7816,7 @@ class EntityAIRangedAttack(AIGoal):
             x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Defaults to 30.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ranged_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ranged_attack)
         """
         super().__init__("behavior.ranged_attack")
 
@@ -8107,8 +7862,7 @@ class EntityAISummonEntity(AIGoal):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_summon_entity
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_summon_entity)
         """
         super().__init__("behavior.summon_entity")
         self._add_field("summon_choices", [])
@@ -8236,8 +7990,7 @@ class EntityAIDelayedAttack(AIGoal):
             y_max_head_rotation (int, optional): Maximum rotation, in degrees, on the Y-axis while the mob is trying to look at its target. Defaults to 30.
             can_spread_on_fire (bool, optional): Allows the mob, if on fire and empty handed, to ignite its target upon a successful attack. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_delayed_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_delayed_attack)
         """
 
         super().__init__("behavior.delayed_attack")
@@ -8339,8 +8092,7 @@ class EntityAIMoveToBlock(AIGoal):
             target_selection_method (str, optional): Kind of block to find fitting the specification. Valid values are "random" and "nearest". Defaults to 'nearest'.
             tick_interval (int, optional): Average interval in ticks to try to run this behavior. Defaults to 20.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_block
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_block)
         """
         super().__init__("behavior.move_to_block")
 
@@ -8395,8 +8147,7 @@ class EntityAIEquipItem(AIGoal):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_equip_item
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_equip_item)
         """
         super().__init__("behavior.equip_item")
 
@@ -8409,8 +8160,7 @@ class EntityAISendEvent(AIGoal):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_send_event
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_send_event)
         """
         super().__init__("behavior.send_event")
         self._add_field("event_choices", [])
@@ -8472,8 +8222,7 @@ class EntityAIMoveTowardsTarget(AIGoal):
             within_radius (float, optional): Defines the radius in blocks that the mob tries to be from the target. A value of 0 means it tries to occupy the same block as the target. Defaults to 0.0.
             speed_multiplier (float, optional): Description. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_target
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_target)
         """
         super().__init__("behavior.move_towards_target")
 
@@ -8501,8 +8250,7 @@ class EntityAIRandomSitting(AIGoal):
             start_chance (float, optional): This is the chance that the mob will start this goal, from 0 to 1. Defaults to 0.1.
             stop_chance (float, optional): This is the chance that the mob will stop this goal, from 0 to 1. Defaults to 0.3.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_sitting
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_sitting)
         """
         super().__init__("behavior.random_sitting")
 
@@ -8524,8 +8272,7 @@ class EntityAIStayWhileSitting(AIGoal):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stay_while_sitting
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stay_while_sitting)
         """
         super().__init__("behavior.stay_while_sitting")
 
@@ -8550,8 +8297,7 @@ class EntityAIRandomSwim(AIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the mob will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim)
         """
 
         super().__init__("behavior.random_swim")
@@ -8588,8 +8334,7 @@ class EntityAIRandomBreach(AIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the mob will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_breach
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_breach)
         """
 
         super().__init__("behavior.random_breach")
@@ -8626,8 +8371,7 @@ class EntityAIMoveToWater(AIGoal):
             search_range (int, optional): The distance in blocks it will look for water to move towards Value must be > 0. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_water
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_water)
         """
         super().__init__("behavior.move_to_water")
 
@@ -8663,8 +8407,7 @@ class EntityAIMoveToLand(AIGoal):
             search_range (int, optional): The distance in blocks it will look for land to move towards Value must be > 0. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_land
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_land)
         """
         super().__init__("behavior.move_to_land")
 
@@ -8700,8 +8443,7 @@ class EntityAIMoveToLava(AIGoal):
             search_range (int, optional): The distance in blocks it will look for lava to move towards Value must be > 0. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_lava
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_lava)
         """
         super().__init__("behavior.move_to_lava")
 
@@ -8739,8 +8481,7 @@ class EntityAILookAtTarget(AIGoal):
             probability (float, optional): The probability of looking at the target. A value of 1.00 is 100%. Value must be <= 1. Defaults to 0.02.
             target_distance (float, optional): Description. Defaults to 0.6.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_target
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_target)
         """
         super().__init__("behavior.look_at_target")
         if angle_of_view_horizontal != 360:
@@ -8771,8 +8512,7 @@ class EntityAIFollowParent(AIGoal):
         Parameters:
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_parent
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_parent)
         """
         super().__init__("behavior.follow_parent")
         if speed_multiplier != 1.0:
@@ -8787,8 +8527,7 @@ class EntityAIPlayerRideTamed(AIGoal):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_player_ride_tamed
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_player_ride_tamed)
         """
         super().__init__("behavior.player_ride_tamed")
 
@@ -8817,8 +8556,7 @@ class EntityAIFollowOwner(AIGoal):
             stop_distance (float, optional): The distance at which the mob will stop following its owner. Defaults to 2.0.
             post_teleport_distance (int, optional): Defines how far (in blocks) the entity will be from its owner after teleporting. If not specified, it defaults to "stop_distance" + 1, allowing the entity to seamlessly resume navigation. Defaults to 1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_owner
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_owner)
         """
         super().__init__("behavior.follow_owner")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.21.20")
@@ -8863,8 +8601,7 @@ class EntityAIPanic(AIGoal):
             sound_interval (float, optional): Description. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_panic
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_panic)
         """
         super().__init__("behavior.panic")
         if damage_sources != DamageCause.All:
@@ -8901,8 +8638,7 @@ class EntityAIChargeAttack(AIGoal):
             success_rate (float, optional): Percent chance this entity will start a charge attack, if not already attacking (1.0 = 100%). Defaults to 0.1428.
             speed_multiplier (float, optional): Modifies the entity's speed when charging toward the target. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_attack)
         """
         super().__init__("behavior.charge_attack")
         if max_distance != 3:
@@ -8945,8 +8681,7 @@ class EntityAIRamAttack(AIGoal):
             ram_speed (float, optional): Sets the entity's speed when charging toward the target. Defaults to 2.0.
             run_speed (float, optional): Sets the entity's speed when running toward the target. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ram_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ram_attack)
         """
         super().__init__("behavior.ram_attack")
         if baby_knockback_modifier != 0.333333:
@@ -9008,8 +8743,7 @@ class EntityAIAvoidMobType(AIGoal):
             check_if_outnumbered (bool, optional): If true, the mob will check if its outnumbered. Defaults to False.
             cooldown (float, optional): The amount of time in seconds that the mob has to wait before selecting a target of the same type again. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_avoid_mob_type
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_avoid_mob_type)
         """
         super().__init__("behavior.avoid_mob_type")
         self._add_field("entity_types", [])
@@ -9104,8 +8838,7 @@ class EntityAILeapAtTarget(AIGoal):
             target_dist (float, optional): The height in blocks the mob jumps when leaping at its target. Defaults to 0.3.
             yd (float, optional): The height in blocks the mob jumps when leaping at its target. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_leap_at_target
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_leap_at_target)
         """
 
         super().__init__("behavior.leap_at_target")
@@ -9149,8 +8882,7 @@ class EntityAIOcelotAttack(AIGoal):
             x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Value must be > 0. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity's head can rotate while trying to look at the target. Value must be > 0. Defaults to 30.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ocelotattack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ocelotattack)
         """
         super().__init__("behavior.ocelotattack")
         if cooldown_time != 5:
@@ -9203,8 +8935,7 @@ class EntityAIOwnerHurtByTarget(AIGoal):
             sprint_speed_multiplier (float, optional): Description. Defaults to 1.0.
             walk_speed_multiplier (float, optional): Description. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_owner_hurt_by_target
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_owner_hurt_by_target)
         """
         super().__init__("behavior.owner_hurt_by_target")
 
@@ -9256,8 +8987,7 @@ class EntityAIOwnerHurtTarget(AIGoal):
             sprint_speed_multiplier (float, optional): Multiplier for the running speed. A value of 1.0 means the speed is unchanged. Defaults to 1.0.
             walk_speed_multiplier (float, optional): Multiplier for the walking speed. A value of 1.0 means the speed is unchanged. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_owner_hurt_target
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_owner_hurt_target)
         """
         super().__init__("behavior.owner_hurt_target")
 
@@ -9315,8 +9045,7 @@ class EntityAIRandomSearchAndDig(AIGoal):
             target_blocks (list[str], optional): List of target block types the goal will look to dig on. Overrides the default list. Defaults to [].
             target_dig_position_offset (float, optional): Dig target position offset from the feet position of the mob in their facing direction. Defaults to 2.25.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_search_and_dig
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_search_and_dig)
         """
         super().__init__("behavior.random_search_and_dig")
 
@@ -9432,8 +9161,7 @@ class EntityAIStompAttack(AIGoal):
             x_max_rotation (int, optional): Maximum rotation, in degrees, on the X-axis while the mob is trying to look at its target. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation, in degrees, on the Y-axis while the mob is trying to look at its target. Defaults to 30.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stomp_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stomp_attack)
         """
         super().__init__("behavior.stomp_attack")
 
@@ -9511,8 +9239,7 @@ class EntityAIFollowMob(AIGoal):
             preferred_actor_type (str, optional): The type of actor to prefer following. If left unspecified, a random actor among those in range will be chosen. Defaults to None.
             use_home_position_restriction (bool, optional): If true, the mob will respect the 'minecraft:home' component's 'restriction_radius' field when choosing a target to follow. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_mob
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_mob)
         """
         super().__init__("behavior.follow_mob")
         if search_range != 0:
@@ -9551,8 +9278,7 @@ class EntityAIRandomSwim(AIGoal):
             xz_dist (int, optional): Distance in blocks on ground that the mob will look for a new spot to move to. Must be at least 1. Defaults to 10.
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_swim)
         """
         super().__init__("behavior.random_swim")
 
@@ -9588,8 +9314,7 @@ class EntityAIRandomBreach(AIGoal):
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
             cooldown_time (Seconds, optional): Time in seconds the mob has to wait before using the goal again. Defaults to 10.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_breach
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_breach)
         """
         super().__init__("behavior.random_breach")
 
@@ -9627,8 +9352,7 @@ class EntityAIRandomHover(AIGoal):
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
             y_offset (float, optional): Height in blocks to add to the selected target position. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_hover
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_hover)
         """
         super().__init__("behavior.random_hover")
 
@@ -9658,8 +9382,7 @@ class EntityAIRoar(AIGoal):
         Parameters:
             duration (Seconds, optional): The amount of time to roar for. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_roar
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_roar)
         """
         super().__init__("behavior.roar")
 
@@ -9703,8 +9426,7 @@ class EntityAIFloatWander(AIGoal):
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
             y_offset (float, optional): Height in blocks to add to the selected target position. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float_wander
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float_wander)
         """
         super().__init__("behavior.float_wander")
 
@@ -9756,8 +9478,7 @@ class EntityAILayDown(AIGoal):
             interval (int, optional): A random value to determine at what intervals something can occur. This has a 1/interval chance to choose this goal. Defaults to 120.
             random_stop_interval (int, optional): a random value in which the goal can use to pull out of the behavior. This is a 1/interval chance to play the sound. Defaults to 120.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_lay_down
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_lay_down)
         """
         super().__init__("behavior.lay_down")
 
@@ -9819,8 +9540,7 @@ class EntityAIMeleeBoxAttack(AIGoal):
             x_max_rotation (int, optional): Maximum rotation, in degrees, on the X-axis while the mob is trying to look at its target. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation, in degrees, on the Y-axis while the mob is trying to look at its target. Defaults to 30.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_melee_box_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_melee_box_attack)
         """
         super().__init__("behavior.melee_box_attack")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.20.50")
@@ -9892,8 +9612,7 @@ class EntityAITimerFlag1(AIGoal):
             cooldown_range (tuple[Seconds, Seconds], optional): Goal cooldown range in seconds. Can be a range object or a single number. Defaults to (10.0, 10.0).
             duration_range (tuple[Seconds, Seconds], optional): Goal duration range in seconds. Can be a range object or a single number. Defaults to (2.0, 2.0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_1
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_1)
         """
         super().__init__("behavior.timer_flag_1")
 
@@ -9934,8 +9653,7 @@ class EntityAITimerFlag2(AIGoal):
             cooldown_range (tuple[Seconds, Seconds], optional): Goal cooldown range in seconds. Can be a range object or a single number. Defaults to (10.0, 10.0).
             duration_range (tuple[Seconds, Seconds], optional): Goal duration range in seconds. Can be a range object or a single number. Defaults to (2.0, 2.0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_2
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_2)
         """
         super().__init__("behavior.timer_flag_2")
 
@@ -9976,8 +9694,7 @@ class EntityAITimerFlag3(AIGoal):
             cooldown_range (tuple[Seconds, Seconds], optional): Goal cooldown range in seconds. Can be a range object or a single number. Defaults to (10.0, 10.0).
             duration_range (tuple[Seconds, Seconds], optional): Goal duration range in seconds. Can be a range object or a single number. Defaults to (2.0, 2.0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_3
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_timer_flag_3)
         """
         super().__init__("behavior.timer_flag_3")
 
@@ -10015,8 +9732,7 @@ class EntityAIRunAroundLikeCrazy(AIGoal):
         Parameters:
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_run_around_like_crazy
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_run_around_like_crazy)
         """
         super().__init__("behavior.run_around_like_crazy")
 
@@ -10036,8 +9752,7 @@ class EntityAISlimeKeepOnJumping(AIGoal):
         Parameters:
             speed_multiplier (float, optional): Determines the multiplier this entity's speed is modified by when jumping around. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_keep_on_jumping
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_keep_on_jumping)
         """
         super().__init__("behavior.slime_keep_on_jumping")
 
@@ -10061,8 +9776,7 @@ class EntityAIRiseToLiquidLevel(AIGoal):
             rise_delta (float, optional): Movement up in Y per tick when below the liquid surface. Defaults to 0.0.
             sink_delta (float, optional): Movement down in Y per tick when above the liquid surface. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_rise_to_liquid_level
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_rise_to_liquid_level)
         """
         super().__init__("behavior.rise_to_liquid_level")
 
@@ -10098,8 +9812,7 @@ class EntityAITakeBlock(AIGoal):
             xz_range (Vector2D, optional): XZ range from which the entity will try and take blocks from. Defaults to (0, 0).
             y_range (Vector2D, optional): Y range from which the entity will try and take blocks from. Defaults to (0, 0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_block
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_block)
         """
         super().__init__("behavior.take_block")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.20.100")
@@ -10155,8 +9868,7 @@ class EntityAIPlaceBlock(AIGoal):
             xz_range (Vector2D, optional): XZ range from which the entity will try and place blocks in. Defaults to (0, 0).
             y_range (Vector2D, optional): Y range from which the entity will try and place blocks in. Defaults to (0, 0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_place_block
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_place_block)
         """
         super().__init__("behavior.place_block")
         self._enforce_version(ENTITY_SERVER_VERSION, "1.20.100")
@@ -10229,8 +9941,7 @@ class EntityAIMoveToRandomBlock(AIGoal):
             speed_multiplier (float, optional): Description. Defaults to 1.0.
             within_radius (float, optional): Defines the distance in blocks the mob has to be from the block for the movement to be finished. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_random_block
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_random_block)
         """
         super().__init__("behavior.move_to_random_block")
 
@@ -10264,8 +9975,7 @@ class EntityAIDig(AIGoal):
             suspicion_is_disturbance (bool, optional): If true, finding new suspicious locations count as disturbances that may delay the start of this goal. Defaults to False.
             vibration_is_disturbance (bool, optional): If true, vibrations count as disturbances that may delay the start of this goal. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_dig
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_dig)
         """
         super().__init__("behavior.dig")
 
@@ -10310,8 +10020,7 @@ class EntityAIDrinkMilk(AIGoal):
             cooldown_seconds (Seconds, optional): Time (in seconds) that the goal is on cooldown before it can be used again. Defaults to 5.
             filters (Filter, optional): Conditions that need to be met for the behavior to start. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_drink_milk
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_drink_milk)
         """
         super().__init__("behavior.drink_milk")
 
@@ -10349,8 +10058,7 @@ class EntityAIAvoidBlock(AIGoal):
             target_selection_method (Literal['nearest'], optional): Block search method. Defaults to 'nearest'.
             target_blocks (list[MinecraftBlockDescriptor], optional): List of block types this mob avoids. Defaults to [].
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_avoid_block
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_avoid_block)
         """
         super().__init__("behavior.avoid_block")
 
@@ -10454,8 +10162,7 @@ class EntityAIUseKineticWeapon(AIGoal):
             attack_once (bool, optional): Allows the mob to perform this melee attack behavior only once during its lifetime. Defaults to None.
             hijack_mount_navigation (bool, optional): Allows the mob to override its mount's navigation behavior with the logic defined by this goal. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_use_kinetic_weapon
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_use_kinetic_weapon)
         """
         super().__init__("behavior.use_kinetic_weapon")
         if approach_distance is not None:
@@ -10509,6 +10216,10 @@ class EntityAIUseKineticWeapon(AIGoal):
         if attack_once is not None:
             self._add_field("attack_once", attack_once)
 
+    def on_attack(self, event: str, target: FilterSubject = FilterSubject.Self):
+        self._add_field("on_attack", {"event": event, "target": target.value})
+        return self
+
 
 class EntityAIHide(AIGoal):
     _identifier = "minecraft:behavior.hide"
@@ -10528,8 +10239,7 @@ class EntityAIHide(AIGoal):
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
             timeout_cooldown (float, optional): The cooldown time in seconds before the goal can be reused after a internal failure or timeout condition. Defaults to 8.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_hide
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_hide)
         """
         super().__init__("behavior.hide")
         if duration != 1.0:
@@ -10556,8 +10266,7 @@ class EntityAITradeWithPlayer(AIGoal):
             filters (Filter, optional): Conditions that need to be met for the behavior to start. Defaults to None.
             max_distance_from_player (float, optional): The max distance that the mob can be from the player before exiting the goal. Defaults to 8.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_trade_with_player
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_trade_with_player)
         """
         super().__init__("behavior.trade_with_player")
 
@@ -10601,8 +10310,7 @@ class EntityAIPickupItems(AIGoal):
             stop_if_holding_item (bool, optional): If true, the mob will not pick up another item if the item's preferred slot matches. Defaults to False.
             track_target (bool, optional): If true, this mob will chase after the target as long as it's a valid target. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_pickup_items
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_pickup_items)
         """
         super().__init__("behavior.pickup_items")
 
@@ -10676,8 +10384,7 @@ class EntityAIMoveIndoors(AIGoal):
             speed_multiplier (float, optional): The movement speed modifier to apply to the entity while it is moving indoors. Defaults to 0.8.
             timeout_cooldown (float, optional): The cooldown time in seconds before the goal can be reused after pathfinding fails. Defaults to 8.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_indoors
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_indoors)
         """
         super().__init__("behavior.move_indoors")
 
@@ -10707,8 +10414,7 @@ class EntityAILookAtTradingPlayer(AIGoal):
             look_time (tuple[int, int], optional): Time range to look at the nearest entity. Defaults to None.
             probability (float, optional): The probability of looking at the target. A value of 1.00 is 100%. Value must be <= 1. Defaults to 0.02.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_trading_player
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_trading_player)
         """
         super().__init__("behavior.look_at_trading_player")
 
@@ -10745,8 +10451,7 @@ class EntityAIShareItems(AIGoal):
             max_dist (float, optional): Maximum distance this mob can be away to be a valid choice. Defaults to 0.0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_share_items
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_share_items)
         """
         super().__init__("behavior.share_items")
 
@@ -10772,8 +10477,7 @@ class EntityAIMoveTowardsDwellingRestriction(AIGoal):
         Parameters:
             speed_multiplier (float, optional): This multiplier modifies the entity's speed when moving towards its restriction. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_dwelling_restriction
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_dwelling_restriction)
         """
         super().__init__("behavior.move_towards_dwelling_restriction")
         # self._dependencies = [EntityDweller]
@@ -10802,8 +10506,7 @@ class EntityAITradeInterest(AIGoal):
             remove_item_time (float, optional): The max time in seconds that the trader will wait when you no longer have items to trade. Defaults to 1.0.
             within_radius (float, optional): Distance in blocks this mob can be interested by a player holding an item they like. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_trade_interest
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_trade_interest)
         """
         super().__init__("behavior.trade_interest")
 
@@ -10827,8 +10530,7 @@ class EntityAIMakeLove(AIGoal):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_make_love
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_make_love)
         """
         super().__init__("behavior.make_love")
 
@@ -10841,8 +10543,7 @@ class EntityAIReceiveLove(AIGoal):
 
         Parameters:
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_receive_love
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_receive_love)
         """
         super().__init__("behavior.receive_love")
 
@@ -10873,8 +10574,7 @@ class EntityAIWork(AIGoal):
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal Value must be > 0. Defaults to 0.5.
             work_in_rain_tolerance (int, optional): If "can_work_in_rain" is false, this is the maximum number of ticks left in the goal where rain will not interrupt the goal. Defaults to -1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_work
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_work)
         """
         super().__init__("behavior.work")
 
@@ -10932,8 +10632,7 @@ class EntityAIWorkComposter(AIGoal):
             use_block_min (int, optional): The minimum interval in which the mob will interact with the composter. Defaults to 100.
             work_in_rain_tolerance (int, optional): If "can_work_in_rain" is false, this is the maximum number of ticks left in the goal where rain will not interrupt the goal. Defaults to -1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_work_composter
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_work_composter)
         """
         super().__init__("behavior.work_composter")
 
@@ -10991,8 +10690,7 @@ class EntityAIHarvestFarmBlock(AIGoal):
             seconds_until_new_task (float, optional): The amount of time in seconds that the goal will cooldown after a successful reap/sow, before it can start again. Value must be > 0. Defaults to 0.5.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 0.5.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_harvest_farm_block
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_harvest_farm_block)
         """
         super().__init__("behavior.harvest_farm_block")
         self._dependencies = [EntityInventory]
@@ -11039,8 +10737,7 @@ class EntityAIFertilizeFarmBlock(AIGoal):
             search_range (int, optional): The distance in blocks the mob will search within to find a valid target position. Value must be > 0. Defaults to 1.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 0.5.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_fertilize_farm_block
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_fertilize_farm_block)
         """
         super().__init__("behavior.fertilize_farm_block")
 
@@ -11086,8 +10783,7 @@ class EntityAIPlay(AIGoal):
             random_pos_search_range (int, optional): The distance (in blocks) on ground that the mob will search within to find a random position to move to. Must be at least 1. Value must be >= 1. Defaults to 16.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_play
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_play)
         """
         super().__init__("behavior.play")
 
@@ -11129,8 +10825,7 @@ class EntityAIMingle(AIGoal):
             mingle_partner_type (list[str], optional): The entity type that this entity is allowed to mingle with. Defaults to [].
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_mingle
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_mingle)
         """
         super().__init__("behavior.mingle")
 
@@ -11171,8 +10866,7 @@ class EntityAISleep(AIGoal):
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
             timeout_cooldown (float, optional): The cooldown time in seconds before the goal can be reused after a internal failure or timeout condition. Defaults to 8.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sleep
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sleep)
         """
         super().__init__("behavior.sleep")
 
@@ -11224,8 +10918,7 @@ class EntityAIExploreOutskirts(AIGoal):
             speed_multiplier (float, optional): The multiplier for speed while using this goal. 1.0 maintains the speed. Defaults to 1.0.
             timer_ratio (float, optional): Each new explore point will be chosen on a random interval between the minimum and the maximum wait time, divided by this value. Defaults to 2.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_explore_outskirts
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_explore_outskirts)
         """
         super().__init__("behavior.explore_outskirts")
         # self._dependencies = [EntityDweller]
@@ -11263,8 +10956,7 @@ class EntityAIBreed(AIGoal):
         Parameters:
             speed_multiplier (float, optional): Movement speed multiplier applied to the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_breed
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_breed)
         """
         super().__init__("behavior.breed")
         if speed_multiplier != 1.0:
@@ -11291,8 +10983,7 @@ class EntityAIInspectBookshelf(AIGoal):
             search_range (int, optional): The distance in blocks the mob will look for books to inspect. Value must be > 0. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_inspect_bookshelf
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_inspect_bookshelf)
         """
         super().__init__("behavior.inspect_bookshelf")
 
@@ -11330,8 +11021,7 @@ class EntityAIRandomFly(AIGoal):
             y_dist (int, optional): Distance in blocks that the mob will look up or down for a new spot to move to. Must be at least 1. Defaults to 7.
             y_offset (float, optional): Description. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_fly
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_fly)
         """
         super().__init__("behavior.random_fly")
 
@@ -11377,8 +11067,7 @@ class EntityAICircleAroundAnchor(AIGoal):
             radius_range (tuple[int, int], optional): Horizontal distance from the anchor point this entity must stay within upon a successful radius adjustment. Defaults to None.
             speed_multiplier (float, optional): Multiplies the speed at which this entity travels to its next desired position. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_circle_around_anchor
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_circle_around_anchor)
         """
         super().__init__("behavior.circle_around_anchor")
 
@@ -11430,8 +11119,7 @@ class EntityAISwoopAttack(AIGoal):
             delay_range (tuple[Seconds, Seconds], optional): Minimum and maximum cooldown time-range (in seconds) between each attempted swoop attack. Defaults to None.
             speed_multiplier (float, optional): During swoop attack behavior, this determines the multiplier the entity's speed is modified by when moving toward the target. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swoop_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swoop_attack)
         """
         super().__init__("behavior.swoop_attack")
 
@@ -11463,8 +11151,7 @@ class EntityAISwimUpForBreath(AIGoal):
             search_radius (int, optional): The radius (in blocks) around the mob's current position that it will search for a valid air block to move to. Defaults to 4.
             speed_mod (float, optional): Movement speed multiplier of the mob when using this Goal. Defaults to 1.4.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_up_for_breath
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_up_for_breath)
         """
         super().__init__("behavior.swim_up_for_breath")
         self._dependencies = [EntityBreathable]
@@ -11497,8 +11184,7 @@ class EntityAIAdmireItem(AIGoal):
         Note:
             Requires `minecraft:admire_item` in order to work properly.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_admire_item
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_admire_item)
         """
         super().__init__("behavior.admire_item")
         self._dependencies = [EntityAdmireItem]
@@ -11553,8 +11239,7 @@ class EntityAIBarter(AIGoal):
         Note:
             Requires `minecraft:barter` and a barter table in order to work properly.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_barter
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_barter)
         """
         super().__init__("behavior.barter")
         self._dependencies = [EntityBarter]
@@ -11579,8 +11264,7 @@ class EntityAIBeg(AIGoal):
             look_distance (float, optional): Distance in blocks the mob will beg from. Defaults to 8.0.
             look_time (int | tuple[int, int], optional): The range of time in seconds this mob will stare at the player holding a food they like, begging for it. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_beg
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_beg)
         """
         super().__init__("behavior.beg")
         self._add_field("items", [str(item) for item in items])
@@ -11613,8 +11297,7 @@ class EntityAIBreakDoor(AIGoal):
         Note:
             Learn notes that vanilla Bedrock currently prefers `can_break_doors` on the navigation component for this capability.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_break_door
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_break_door)
         """
         super().__init__("behavior.break_door")
 
@@ -11639,8 +11322,7 @@ class EntityAIControlledByPlayer(AIGoal):
         Note:
             Requires `minecraft:rideable` and `minecraft:item_controllable`, and also expects an entity movement component to be present.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_controlled_by_player
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_controlled_by_player)
         """
         super().__init__("behavior.controlled_by_player")
         self._dependencies = [EntityRideable, EntityItemControllable]
@@ -11680,8 +11362,7 @@ class EntityAICroak(AIGoal):
             filters (Filter, optional): Conditions for the behavior to start and keep running. The interval between runs only starts after passing the filters. Defaults to None.
             interval (Seconds | tuple[Seconds, Seconds], optional): Random range in seconds between runs of this behavior. Can also be a constant. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_croak
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_croak)
         """
         super().__init__("behavior.croak")
 
@@ -11714,8 +11395,7 @@ class EntityAIDoorInteract(AIGoal):
         Note:
             Learn notes that this behavior is not currently used by vanilla Bedrock entities.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_door_interact
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_door_interact)
         """
         super().__init__("behavior.door_interact")
 
@@ -11733,8 +11413,7 @@ class EntityAIFleeSun(AIGoal):
         Parameters:
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_flee_sun
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_flee_sun)
         """
         super().__init__("behavior.flee_sun")
 
@@ -11777,8 +11456,7 @@ class EntityAILayEgg(AIGoal):
             target_materials_above_block (list[Literal["Air", "Water", "Lava"]], optional): Types of materials that can exist above the target block. Valid types are Air, Water, and Lava. Defaults to the engine default when omitted.
             use_default_animation (bool, optional): Specifies if the default lay-egg animation should be played when the egg is placed or not. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_lay_egg
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_lay_egg)
         """
         super().__init__("behavior.lay_egg")
         self._dependencies = [EntityIsPregnant]
@@ -11847,8 +11525,7 @@ class EntityAIMoveOutdoors(AIGoal):
             speed_multiplier (float, optional): The movement speed modifier to apply to the entity while it is moving outdoors. Defaults to 0.5.
             timeout_cooldown (Seconds, optional): The cooldown time in seconds before the goal can be reused after pathfinding fails. Defaults to 8.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_outdoors
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_outdoors)
         """
         super().__init__("behavior.move_outdoors")
 
@@ -11880,8 +11557,7 @@ class EntityAIOpenDoor(AIGoal):
         Note:
             Requires the mob to be able to path through doors, otherwise the mob will not try opening them.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_open_door
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_open_door)
         """
         super().__init__("behavior.open_door")
 
@@ -11914,8 +11590,7 @@ class EntityAIPlayDead(AIGoal):
             random_damage_range (tuple[int, int], optional): The range of damage that may cause the goal to start depending on randomness. Defaults to (0, 0).
             random_start_chance (float, optional): The likelihood of this goal starting upon taking damage. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_play_dead
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_play_dead)
         """
         super().__init__("behavior.play_dead")
 
@@ -11962,8 +11637,7 @@ class EntityAIRestrictOpenDoor(AIGoal):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_restrict_open_door
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_restrict_open_door)
         """
         super().__init__("behavior.restrict_open_door")
 
@@ -11976,8 +11650,7 @@ class EntityAIRestrictSun(AIGoal):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_restrict_sun
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_restrict_sun)
         """
         super().__init__("behavior.restrict_sun")
 
@@ -12010,8 +11683,7 @@ class EntityAITempt(AIGoal):
             tempt_sound (str, optional): Sound to play while the mob is being tempted. Defaults to None.
             within_radius (float, optional): Distance in blocks this mob can get tempted by a player holding an item they like. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_tempt
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_tempt)
         """
         super().__init__("behavior.tempt")
         self._add_field("items", [str(item) for item in items])
@@ -12068,8 +11740,7 @@ class EntityAIMoveToLiquid(AIGoal):
             search_range (int, optional): The distance in blocks it will look for the liquid block to move towards Value must be > 0. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_liquid
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_liquid)
         """
         super().__init__("behavior.move_to_liquid")
 
@@ -12109,8 +11780,7 @@ class EntityAIMoveToVillage(AIGoal):
             search_range (int, optional): The distance in blocks to search for villages. If <= 0, find the closest village regardless of distance. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_village
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_village)
         """
         super().__init__("behavior.move_to_village")
 
@@ -12142,8 +11812,7 @@ class EntityAIMoveTowardsHomeRestriction(AIGoal):
         Note:
             Requires `minecraft:home` in order to work properly.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_home_restriction
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_home_restriction)
         """
         super().__init__("behavior.move_towards_home_restriction")
         self._dependencies = [EntityHome]
@@ -12167,8 +11836,7 @@ class EntityAIMoveTowardsRestriction(AIGoal):
         Parameters:
             speed_multiplier (float, optional): This multiplier modifies the entity's speed when moving towards its restriction. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_restriction
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_towards_restriction)
         """
         super().__init__("behavior.move_towards_restriction")
 
@@ -12204,8 +11872,7 @@ class EntityAIOfferFlower(AIGoal):
         Note:
             Requires a flower item to be held by the entity.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_offer_flower
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_offer_flower)
         """
         super().__init__("behavior.offer_flower")
 
@@ -12246,8 +11913,7 @@ class EntityAIPetSleepWithOwner(AIGoal):
             search_range (int, optional): The distance in blocks from the owner the pet can be to sleep with owner. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_pet_sleep_with_owner
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_pet_sleep_with_owner)
         """
         super().__init__("behavior.pet_sleep_with_owner")
 
@@ -12294,8 +11960,7 @@ class EntityAIRandomLookAroundAndSit(AIGoal):
         Note:
             Must have a sitting animation set up to use this.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_look_around_and_sit
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_look_around_and_sit)
         """
         super().__init__("behavior.random_look_around_and_sit")
 
@@ -12344,8 +12009,7 @@ class EntityAISwell(AIGoal):
             start_distance (float, optional): This mob starts swelling when a target is at least this many blocks away. Defaults to 10.0.
             stop_distance (float, optional): This mob stops swelling when a target has moved away at least this many blocks. Defaults to 2.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swell
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swell)
         """
         super().__init__("behavior.swell")
 
@@ -12382,8 +12046,7 @@ class EntityAITakeFlower(AIGoal):
             search_area (Coordinates, optional): The dimensions of the AABB used to search for a potential mob to take a flower from. Defaults to (6, 2, 6).
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 0.5.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_flower
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_flower)
         """
         super().__init__("behavior.take_flower")
 
@@ -12437,8 +12100,7 @@ class EntityAITeleportToOwner(AIGoal):
             cooldown (Seconds, optional): The time in seconds that must pass for the entity to be able to try to teleport again. Defaults to 1.0.
             filters (Filter, optional): Conditions to be satisfied for the entity to teleport to its owner. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_teleport_to_owner
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_teleport_to_owner)
         """
         super().__init__("behavior.teleport_to_owner")
 
@@ -12473,8 +12135,7 @@ class EntityAIAquaticChargeAttack(AIGoal):
             knockback_force (float, optional): Knockback force applied to the target on hit. Defaults to 2.0.
             max_charge_distance (float, optional): Maximum distance at which the mob attempts a charge. Defaults to 16.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_aquatic_charge_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_aquatic_charge_attack)
         """
         super().__init__("behavior.aquatic_charge_attack")
 
@@ -12511,8 +12172,7 @@ class EntityAIChargeHeldItem(AIGoal):
         Parameters:
             *items (str): The list of items that can be used to charge the held item. At least one item is required.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_held_item
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_held_item)
         """
         super().__init__("behavior.charge_held_item")
 
@@ -12530,8 +12190,7 @@ class EntityAIDrinkPotion(AIGoal):
         Parameters:
             speed_modifier (float, optional): The movement speed modifier to apply to the entity while it is drinking a potion. A value of 0 represents no change in speed. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_drink_potion
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_drink_potion)
         """
         super().__init__("behavior.drink_potion")
         self._add_field("potions", [])
@@ -12568,8 +12227,7 @@ class EntityAIFollowCaravan(AIGoal):
             entity_count (int, optional): Number of entities that can be in the caravan. Defaults to 1.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_caravan
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_caravan)
         """
         super().__init__("behavior.follow_caravan")
         self._add_field("entity_types", [])
@@ -12629,8 +12287,7 @@ class EntityAIHoldGround(AIGoal):
         Note:
             Requires a target in order to work properly.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_hold_ground
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_hold_ground)
         """
         super().__init__("behavior.hold_ground")
 
@@ -12696,8 +12353,7 @@ class EntityAIJumpAroundTarget(AIGoal):
             snap_to_surface_block_range (int, optional): The number of blocks above and below from the jump target position that will be checked to find a surface to land on. Defaults to 10.
             valid_distance_to_target (tuple[float, float] | None, optional): Target needs to be within this range for the jump to happen. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_jump_around_target
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_jump_around_target)
         """
         super().__init__("behavior.jump_around_target")
 
@@ -12789,8 +12445,7 @@ class EntityAIJumpToBlock(AIGoal):
             search_height (int, optional): The height (in blocks, in range [2, 15]) of the search box, centered around the mob. Defaults to 10.
             search_width (int, optional): The width (in blocks, in range [2, 15]) of the search box, centered around the mob. Defaults to 8.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_jump_to_block
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_jump_to_block)
         """
         super().__init__("behavior.jump_to_block")
 
@@ -12843,8 +12498,7 @@ class EntityAICelebrate(AIGoal):
             jump_interval (tuple[Seconds, Seconds], optional): Minimum and maximum time between jumping (positive, in seconds). Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected. Defaults to (1.0, 3.5).
             sound_interval (tuple[Seconds, Seconds], optional): Minimum and maximum time between sound events (positive, in seconds). Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected. Defaults to (2.0, 7.0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_celebrate
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_celebrate)
         """
         super().__init__("behavior.celebrate")
 
@@ -12903,8 +12557,7 @@ class EntityAIDefendTrustedTarget(AIGoal):
         Note:
             Requires a trusted relationship in order to work properly.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_defend_trusted_target
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_defend_trusted_target)
         """
         super().__init__("behavior.defend_trusted_target")
         self._dependencies = [EntityTrust]
@@ -12996,8 +12649,7 @@ class EntityAIDefendVillageTarget(AIGoal):
         Note:
             This behavior is typically used with the `minecraft:dweller` component.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_defend_village_target
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_defend_village_target)
         """
         super().__init__("behavior.defend_village_target")
         self._add_field("entity_types", [])
@@ -13095,8 +12747,7 @@ class EntityAIFloatTempt(AIGoal):
         Note:
             Designed for mobs using `minecraft:navigation.float`.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float_tempt
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_float_tempt)
         """
         super().__init__("behavior.float_tempt")
         self._add_field("items", [str(item) for item in items])
@@ -13153,8 +12804,7 @@ class EntityAILookAtEntity(AIGoal):
             look_time (tuple[int, int], optional): Time range to look at the nearest entity. Defaults to (2, 4).
             probability (float, optional): The probability of looking at the target. A value of 1.00 is 100%. Value must be <= 1. Defaults to 0.02.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_entity
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_entity)
         """
         super().__init__("behavior.look_at_entity")
 
@@ -13204,8 +12854,7 @@ class EntityAIMoveAroundTarget(AIGoal):
         Note:
             Requires a format version of at least 1.21.30.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_around_target
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_around_target)
         """
         super().__init__("behavior.move_around_target")
 
@@ -13259,8 +12908,7 @@ class EntityAIMoveToPOI(AIGoal):
             poi_type (Literal["bed", "jobsite", "meeting_area"]): Tells the goal what POI type it should be looking for.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_poi
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_to_poi)
         """
         super().__init__("behavior.move_to_poi")
         self._add_field("poi_type", poi_type)
@@ -13293,8 +12941,7 @@ class EntityAINap(AIGoal):
             mob_detect_height (float, optional): The block distance in y that will be checked for mobs that this mob detects. Defaults to 6.0.
             wake_mob_exceptions (Filter, optional): Filters for mobs that will not wake this entity from napping. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_nap
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_nap)
         """
         super().__init__("behavior.nap")
 
@@ -13333,8 +12980,7 @@ class EntityAIStrollTowardsVillage(AIGoal):
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
             start_chance (float, optional): Chance that the mob will start this goal, from 0 to 1. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stroll_towards_village
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stroll_towards_village)
         """
         super().__init__("behavior.stroll_towards_village")
 
@@ -13367,8 +13013,7 @@ class EntityAICelebrateSurvive(AIGoal):
             duration (Seconds, optional): The duration in seconds that the celebration lasts for. Defaults to 30.0.
             fireworks_interval (tuple[Seconds, Seconds], optional): Minimum and maximum time between firework (positive, in seconds). Defaults to (10.0, 20.0).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_celebrate_survive
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_celebrate_survive)
         """
         super().__init__("behavior.celebrate_survive")
 
@@ -13410,8 +13055,7 @@ class EntityAIFindCover(AIGoal):
             cooldown_time (Seconds, optional): Time in seconds the mob has to wait before using the goal again. Defaults to 0.0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_find_cover
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_find_cover)
         """
         super().__init__("behavior.find_cover")
 
@@ -13440,8 +13084,7 @@ class EntityAIFindUnderwaterTreasure(AIGoal):
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
             stop_distance (float, optional): The distance the mob will move before stopping. Defaults to 2.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_find_underwater_treasure
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_find_underwater_treasure)
         """
         super().__init__("behavior.find_underwater_treasure")
 
@@ -13494,8 +13137,7 @@ class EntityAIFireAtTarget(AIGoal):
         Note:
             Requires a format version of at least 1.21.30.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_fire_at_target
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_fire_at_target)
         """
         super().__init__("behavior.fire_at_target")
         self._add_field("projectile_def", str(projectile_def))
@@ -13544,8 +13186,7 @@ class EntityAIGoHome(AIGoal):
             interval (int, optional): A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal. Defaults to 120.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_go_home
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_go_home)
         """
         super().__init__("behavior.go_home")
 
@@ -13599,8 +13240,7 @@ class EntityAIOcelotSitOnBlock(AIGoal):
         Parameters:
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ocelot_sit_on_block
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ocelot_sit_on_block)
         """
         super().__init__("behavior.ocelot_sit_on_block")
 
@@ -13642,8 +13282,7 @@ class EntityAIRaidGarden(AIGoal):
             search_range (int, optional): Distance in blocks the mob will look for crops to eat Value must be > 0. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_raid_garden
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_raid_garden)
         """
         super().__init__("behavior.raid_garden")
         self._add_field("blocks", [])
@@ -13689,8 +13328,7 @@ class EntityAISwimIdle(AIGoal):
             idle_time (Seconds, optional): Amount of time (in seconds) to stay idle. Defaults to 5.0.
             success_rate (float, optional): Percent chance this entity will go idle, 1.0 = 100%. Defaults to 0.10000000149011612.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_idle
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_idle)
         """
         super().__init__("behavior.swim_idle")
 
@@ -13711,8 +13349,7 @@ class EntityAIVexCopyOwnerTarget(AIGoal):
         Note:
             No longer used for the `vex` entity.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_vex_copy_owner_target
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_vex_copy_owner_target)
         """
         super().__init__("behavior.vex_copy_owner_target")
         self._add_field("entity_types", [])
@@ -13758,8 +13395,7 @@ class EntityAIVexRandomMove(AIGoal):
 
         This component has no configurable constructor properties.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_vex_random_move
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_vex_random_move)
         """
         super().__init__("behavior.vex_random_move")
 
@@ -13773,8 +13409,7 @@ class EntityAIRoll(AIGoal):
         Parameters:
             probability (float, optional): The probability that the mob will use the goal. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_roll
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_roll)
         """
         super().__init__("behavior.roll")
 
@@ -13791,8 +13426,7 @@ class EntityAIScared(AIGoal):
         Parameters:
             sound_interval (int, optional): The interval in which a sound will play when active in a 1/delay chance to kick off. Defaults to 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_scared
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_scared)
         """
         super().__init__("behavior.scared")
 
@@ -13810,8 +13444,7 @@ class EntityAIEmerge(AIGoal):
             cooldown_time (Seconds, optional): Time in seconds the mob has to wait before using the goal again. Defaults to 0.5.
             duration (Seconds, optional): Goal duration in seconds. Defaults to 5.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_emerge
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_emerge)
         """
         super().__init__("behavior.emerge")
 
@@ -13854,8 +13487,7 @@ class EntityAISniff(AIGoal):
             suspicion_radius_horizontal (float, optional): Mob suspicion horizontal radius. When a player is within this radius horizontally, the anger level towards that player is increased. Defaults to 3.0.
             suspicion_radius_vertical (float, optional): Mob suspicion vertical radius. When a player is within this radius vertically, the anger level towards that player is increased Value must be >= 1. Defaults to 3.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sniff
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sniff)
         """
         super().__init__("behavior.sniff")
         self._dependencies = [EntitySuspectTracking]
@@ -13909,8 +13541,7 @@ class EntityAISneeze(AIGoal):
             sound (str, optional): Sound to play when the sneeze occurs. Defaults to None.
             within_radius (float, optional): Distance in blocks that mobs will be startled. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sneeze
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sneeze)
         """
         super().__init__("behavior.sneeze")
         self._add_field("entity_types", [])
@@ -13983,8 +13614,7 @@ class EntityAISnacking(AIGoal):
             snacking_cooldown_min (Seconds, optional): The minimum time in seconds before the mob is able to snack again. Defaults to 0.5.
             snacking_stop_chance (float, optional): This is the chance that the mob will stop snacking, from 0 to 1. Defaults to 0.0017.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_snacking
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_snacking)
         """
         super().__init__("behavior.snacking")
         self._add_field("items", [])
@@ -14028,8 +13658,7 @@ class EntityAISwimWander(AIGoal):
             speed_multiplier (float, optional): This multiplier modifies the entity's speed when wandering. Defaults to 1.0.
             wander_time (Seconds, optional): Amount of time (in seconds) to wander after wandering behavior was successfully started. Defaults to 5.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_wander
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_wander)
         """
         super().__init__("behavior.swim_wander")
 
@@ -14073,8 +13702,7 @@ class EntityAISwimWithEntity(AIGoal):
             stop_distance (float, optional): Distance, from the entity being followed, at which this entity will stop following that entity. Defaults to 5.0.
             success_rate (float, optional): Percent chance to start following another entity, if not already doing so. 1.0 = 100%. Defaults to 0.1.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_with_entity
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swim_with_entity)
         """
         super().__init__("behavior.swim_with_entity")
         self._add_field("entity_types", [])
@@ -14178,8 +13806,7 @@ class EntityAIDropItemFor(AIGoal):
         Note:
             Requires a `minecraft:navigation` component in order to work properly.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_drop_item_for
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_drop_item_for)
         """
         super().__init__("behavior.drop_item_for")
         self._add_field("entity_types", [])
@@ -14305,8 +13932,7 @@ class EntityAIFindMount(AIGoal):
             target_needed (bool, optional): If true, the mob will only look for a mount if it has a target. Defaults to False.
             within_radius (float, optional): Distance in blocks within which the mob will look for a mount. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_find_mount
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_find_mount)
         """
         super().__init__("behavior.find_mount")
 
@@ -14348,8 +13974,7 @@ class EntityAIFollowTargetLead(AIGoal):
         Note:
             Requires an entity to be labeled as a captain in a group.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_target_lead
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_follow_target_lead)
         """
         super().__init__("behavior.follow_target_lead")
 
@@ -14393,8 +14018,7 @@ class EntityAIGuardianAttack(AIGoal):
         Note:
             Can only be used by Guardians and Elder Guardians.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_guardian_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_guardian_attack)
         """
         super().__init__("behavior.guardian_attack")
 
@@ -14440,8 +14064,7 @@ class EntityAIMoveThroughVillage(AIGoal):
         Note:
             Can only be used by Villagers.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_through_village
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_move_through_village)
         """
         super().__init__("behavior.move_through_village")
 
@@ -14486,8 +14109,7 @@ class EntityAISonicBoom(AIGoal):
             knockback_vertical_strength (float, optional): Vertical strength of the attack's knockback applied to the attack target. Defaults to 0.0.
             speed_multiplier (float, optional): This multiplier modifies the attacking entity's speed when moving toward the target. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sonic_boom
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_sonic_boom)
         """
         super().__init__("behavior.sonic_boom")
 
@@ -14553,8 +14175,7 @@ class EntityAIStayNearNoteblock(AIGoal):
             start_distance (float, optional): Sets the distance the entity needs to be away from the block to attempt to start the goal. Defaults to 10.0.
             stop_distance (float, optional): Sets the distance from the block the entity will attempt to reach. Defaults to 2.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stay_near_noteblock
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stay_near_noteblock)
         """
         super().__init__("behavior.stay_near_noteblock")
 
@@ -14593,8 +14214,7 @@ class EntityAIStompTurtleEgg(AIGoal):
             search_range (int, optional): The distance in blocks it will look for turtle eggs to move towards Value must be > 0. Defaults to 0.
             speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stomp_turtle_egg
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stomp_turtle_egg)
         """
         super().__init__("behavior.stomp_turtle_egg")
 
@@ -14630,8 +14250,7 @@ class EntityAIEatCarriedItem(AIGoal):
         Note:
             Requires food items to be present in the entity's inventory.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_eat_carried_item
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_eat_carried_item)
         """
         super().__init__("behavior.eat_carried_item")
 
@@ -14650,8 +14269,7 @@ class EntityAIEndermanLeaveBlock(AIGoal):
         Note:
             Can only be used by Endermen.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_enderman_leave_block
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_enderman_leave_block)
         """
         super().__init__("behavior.enderman_leave_block")
 
@@ -14665,8 +14283,7 @@ class EntityAIEndermanTakeBlock(AIGoal):
         Note:
             Can only be used by Endermen.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_enderman_take_block
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_enderman_take_block)
         """
         super().__init__("behavior.enderman_take_block")
 
@@ -14693,8 +14310,7 @@ class EntityAIGoAndGiveItemsToNoteblock(AIGoal):
             throw_sound (str, optional): Sound to play when this mob throws an item. Defaults to None.
             vertical_throw_mul (float, optional): Sets the vertical throw multiplier that is applied on top of the throw force in the vertical direction. Defaults to 1.5.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_go_and_give_items_to_noteblock
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_go_and_give_items_to_noteblock)
         """
         super().__init__("behavior.go_and_give_items_to_noteblock")
 
@@ -14757,8 +14373,7 @@ class EntityAIGoAndGiveItemsToOwner(AIGoal):
             throw_sound (str, optional): Sound to play when this mob throws an item. Defaults to "item_thrown".
             vertical_throw_mul (float, optional): Sets the vertical throw multiplier that is applied on top of the throw force in the vertical direction. Defaults to 1.5.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_go_and_give_items_to_owner
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_go_and_give_items_to_owner)
         """
         super().__init__("behavior.go_and_give_items_to_owner")
 
@@ -14814,8 +14429,7 @@ class EntityAIInvestigateSuspiciousLocation(AIGoal):
         Note:
             Requires `minecraft:suspect_tracking`.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_investigate_suspicious_location
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_investigate_suspicious_location)
         """
         super().__init__("behavior.investigate_suspicious_location")
         self._dependencies = [EntitySuspectTracking]
@@ -14844,8 +14458,7 @@ class EntityAIMountPathing(AIGoal):
             target_dist (float, optional): The distance at which this mob wants to be away from its target. Defaults to 0.0.
             track_target (bool, optional): If true, this mob will chase after the target as long as it's a valid target. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_mount_pathing
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_mount_pathing)
         """
         super().__init__("behavior.mount_pathing")
 
@@ -14890,8 +14503,7 @@ class EntityAIStalkAndPounceOnTarget(AIGoal):
         Note:
             Requires a target-producing behavior and `minecraft:attack`.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stalk_and_pounce_on_target
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_stalk_and_pounce_on_target)
         """
         super().__init__("behavior.stalk_and_pounce_on_target")
         self._dependencies = [EntityAttack]
@@ -14932,8 +14544,7 @@ class EntityAIEatBlock(AIGoal):
             success_chance (Molang | str | float, optional): A molang expression defining the success chance the entity has to consume a block. Defaults to 0.02.
             time_until_eat (Seconds, optional): The amount of time (in seconds) it takes for the block to be eaten upon a successful eat attempt. Defaults to 1.8.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_eat_block
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_eat_block)
         """
         super().__init__("behavior.eat_block")
 
@@ -15001,8 +14612,7 @@ class EntityAIEatMob(AIGoal):
             reach_mob_distance (float, optional): Sets the desired distance to be reached before eating the mob. Defaults to 1.0.
             run_speed (float, optional): Sets the entity's speed when running toward the target. Defaults to 1.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_eat_mob
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_eat_mob)
         """
         super().__init__("behavior.eat_mob")
 
@@ -15063,8 +14673,7 @@ class EntityAITransportItems(AIGoal):
             search_strategy (str, optional): The strategy to use for finding source or destination containers. The nearest valid container or a random valid container in range. Defaults to "random".
             source_container_types (list[MinecraftBlockDescriptor | Identifier | dict[str, Any]], optional): A list of block descriptors that should be container types to take items from. Can be simple block identifier strings or objects with name, states, and tags. Defaults to [].
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_transport_items
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_transport_items)
         """
         super().__init__("behavior.transport_items")
 
@@ -15220,8 +14829,7 @@ class EntityAISilverfishMergeWithStone(AIGoal):
     def __init__(self) -> None:
         """Allows the mob to go into stone blocks like Silverfish do.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_silverfish_merge_with_stone
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_silverfish_merge_with_stone)
         """
         super().__init__("behavior.silverfish_merge_with_stone")
 
@@ -15232,8 +14840,7 @@ class EntityAISilverfishWakeUpFriends(AIGoal):
     def __init__(self) -> None:
         """Allows the mob to alert mobs in nearby blocks to come out.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_silverfish_wake_up_friends
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_silverfish_wake_up_friends)
         """
         super().__init__("behavior.silverfish_wake_up_friends")
 
@@ -15248,8 +14855,7 @@ class EntityAISkeletonHorseTrap(AIGoal):
             duration (Seconds, optional): Amount of time in seconds the trap exists. After this amount of time is elapsed, the trap is removed from the world if it hasn't been activated. Defaults to 1.0.
             within_radius (float, optional): Distance in blocks that the player has to be within to trigger the horse trap. Defaults to 0.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_skeleton_horse_trap
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_skeleton_horse_trap)
         """
         super().__init__("behavior.skeleton_horse_trap")
 
@@ -15283,8 +14889,7 @@ class EntityAISlimeAttack(AIGoal):
         Note:
             Requires a target-producing behavior, `minecraft:attack`, and `minecraft:variant`.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_attack
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_attack)
         """
         super().__init__("behavior.slime_attack")
         self._dependencies = [EntityAttack, EntityVariant]
@@ -15321,8 +14926,7 @@ class EntityAISlimeFloat(AIGoal):
             jump_chance_percentage (float, optional): Percent chance a slime or magma cube has to jump while in water / lava. Defaults to 0.800000011920929.
             speed_multiplier (float, optional): Determines the multiplier the entity's speed is modified by when moving through water / lava. Defaults to 1.2000000476837158.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_float
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_float)
         """
         super().__init__("behavior.slime_float")
 
@@ -15351,8 +14955,7 @@ class EntityAISlimeRandomDirection(AIGoal):
             min_change_direction_time (Seconds, optional): Constant minimum time (in seconds) to wait before choosing a new direction. Defaults to 2.0.
             turn_range (int, optional): Maximum rotation angle range (in degrees) when randomly choosing a new direction. Defaults to 360.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_random_direction
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_slime_random_direction)
         """
         super().__init__("behavior.slime_random_direction")
 
@@ -15375,8 +14978,7 @@ class EntityAISquidDive(AIGoal):
     def __init__(self) -> None:
         """Allows the squid to dive down in water.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_dive
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_dive)
         """
         super().__init__("behavior.squid_dive")
 
@@ -15387,8 +14989,7 @@ class EntityAISquidFlee(AIGoal):
     def __init__(self) -> None:
         """Allows the squid to swim away.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_flee
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_flee)
         """
         super().__init__("behavior.squid_flee")
 
@@ -15399,8 +15000,7 @@ class EntityAISquidIdle(AIGoal):
     def __init__(self) -> None:
         """Allows the squid to swim in place idly.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_idle
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_idle)
         """
         super().__init__("behavior.squid_idle")
 
@@ -15411,8 +15011,7 @@ class EntityAISquidMoveAwayFromGround(AIGoal):
     def __init__(self) -> None:
         """Allows the squid to move away from ground blocks and back to water.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_move_away_from_ground
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_move_away_from_ground)
         """
         super().__init__("behavior.squid_move_away_from_ground")
 
@@ -15423,7 +15022,6 @@ class EntityAISquidOutOfWater(AIGoal):
     def __init__(self) -> None:
         """Allows the squid to stick to the ground when outside water.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_out_of_water
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_squid_out_of_water)
         """
         super().__init__("behavior.squid_out_of_water")

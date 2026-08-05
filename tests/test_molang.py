@@ -1,15 +1,15 @@
-import pytest
 from enum import StrEnum
 from unittest.mock import MagicMock
 
+import pytest
 from anvil.api.core.enums import InputModes, Slots
 from anvil.api.logic.molang import (
+    Context,
+    Math,
     Molang,
     Query,
-    Context,
-    Variable,
     TempVar,
-    Math,
+    Variable,
     _AabbStruct,
     _ColorStruct,
     _TRSStruct,
@@ -206,15 +206,13 @@ class TestMolang:
     # --- static methods ---
 
     def test_molang_arrow(self):
-        result = Molang.molang_arrow(
-            Molang("context.owning_entity"), Molang("q.health")
-        )
+        result = Molang.arrow(Molang("context.owning_entity"), Molang("q.health"))
         assert str(result) == "(context.owning_entity) -> (q.health)"
         assert isinstance(result, Molang)
 
     def test_molang_arrow_string_args(self):
         assert (
-            str(Molang.molang_arrow("context.other", "q.is_alive"))
+            str(Molang.arrow("context.other", "q.is_alive"))
             == "(context.other) -> (q.is_alive)"
         )
 
@@ -1258,26 +1256,26 @@ class TestMath:
 
 
 def test_molang_conditions():
-    result = molang_conditions(Molang("q.is_alive"), Molang("q.health"), Molang("0.0"))
+    result = Molang.condition(Molang("q.is_alive"), Molang("q.health"), Molang("0.0"))
     assert str(result) == "(q.is_alive ? q.health : 0.0)"
     assert isinstance(result, Molang)
 
 
 def test_molang_conditions_string_args():
     assert (
-        str(molang_conditions("q.is_alive", "1.0", "0.0")) == "(q.is_alive ? 1.0 : 0.0)"
+        str(Molang.condition("q.is_alive", "1.0", "0.0")) == "(q.is_alive ? 1.0 : 0.0)"
     )
 
 
 def test_arrow_operator():
     assert (
-        arrow_operator("context.owning_entity", "q.health")
+        Molang.arrow("context.owning_entity", "q.health")
         == "(context.owning_entity) -> (q.health)"
     )
 
 
 def test_arrow_operator_with_molang():
     assert (
-        arrow_operator(Molang("context.other"), Molang("q.is_alive"))
+        Molang.arrow(Molang("context.other"), Molang("q.is_alive"))
         == "(context.other) -> (q.is_alive)"
     )

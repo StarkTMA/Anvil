@@ -161,6 +161,15 @@ class _Animation(AddonObject):
         self.content(content)
 
 
+class _VoxelShape(AddonObject):
+    _extension = ".shape.json"
+    _path = os.path.join(CONFIG.BP_PATH, "shapes")
+
+    def __init__(self, name: str, content: dict) -> None:
+        super().__init__(name)
+        self.content(content)
+
+
 @dataclass
 class AnimBone:
     name: str
@@ -1069,6 +1078,38 @@ class Bone:
         return bone
 
 
+@dataclass
+class BoundingBox:
+    name: str
+    min: List[float]
+    max: List[float]
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "BoundingBox":
+        name = data["name"]
+        offset = [-8, 0, -8]
+
+        # Origin & Size
+        original_origin = list(data["from"])
+        original_to = list(data["to"])
+
+        min = [round(j - i, 2) for i, j in zip(offset, original_origin)]
+        max = [round(j - i, 2) for i, j in zip(offset, original_to)]
+
+        return cls(
+            name=name,
+            min=min,
+            max=max,
+        )
+
+    def compile(self) -> dict:
+        cube = {
+            "min": self.min,
+            "max": self.max,
+        }
+        return cube
+
+
 class _ModelManager:
     def __init__(self, filename, source: str, bbmodel: dict) -> None:
         """Handles loading and managing Blockbench models.
@@ -1091,6 +1132,7 @@ class _ModelManager:
         self._cubes = {}
         self._groups = {}
         self._queued_geometries: Dict[str, dict] = {}
+        self._queued_voxel_shapes: Dict[str, dict] = {}
         self._collection_aliases: Dict[str, str] = {}
         self._collections = self._index_collections()
 
@@ -1212,7 +1254,6 @@ class _ModelManager:
     ) -> None:
         for node in bones:
             resolved_node = self._resolve_tree_node(node)
-
             if isinstance(resolved_node, str):
                 parent_name = (
                     parent
@@ -1246,10 +1287,35 @@ class _ModelManager:
                 resolved_node.get("children", []), compiled_bones, bone_name
             )
 
+    def process_bounding_boxes(
+        self,
+        bones: List[Union[str, dict]],
+        compiled_boxes: List[BoundingBox],
+    ) -> None:
+        for node in bones:
+            resolved_node = self._resolve_tree_node(node)
+
+            if isinstance(resolved_node, str):
+                bone_dict = self._cubes[resolved_node]
+                if bone_dict["type"] == "bounding_box":
+                    compiled_boxes.append(BoundingBox.from_dict(bone_dict))
+                continue
+
+            self.process_bounding_boxes(
+                resolved_node.get("children", []), compiled_boxes
+            )
+
     def _build_bones(self, bones: List[Union[str, dict]]) -> Dict[str, Bone]:
         compiled_bones: Dict[str, Bone] = {}
         self.process_bones(bones, compiled_bones)
         return compiled_bones
+
+    def _build_bounding_boxes(
+        self, bones: List[Union[str, dict]]
+    ) -> Dict[str, BoundingBox]:
+        compiled_boxes: List[BoundingBox] = []
+        self.process_bounding_boxes(bones, compiled_boxes)
+        return compiled_boxes
 
     def _resolve_collection(self, collection: str) -> dict:
         collection_name = collection.strip()
@@ -1316,6 +1382,16 @@ class _ModelManager:
 
         return content
 
+    def process_voxel_shape_scheme(
+        self, model_name: str, boxes: List[BoundingBox]
+    ) -> dict:
+        content = JsonSchemes.voxel_shape(f"{model_name}_culling_shape")
+
+        content["minecraft:voxel_shape"]["shape"]["boxes"] = [
+            box.compile() for box in boxes
+        ]
+        return content
+
     def _queue_geometry(self, model_name: str, bones: List[Union[str, dict]]) -> None:
         if model_name in self._queued_geometries:
             return
@@ -1325,6 +1401,18 @@ class _ModelManager:
             self.process_block_display(content)
 
         self._queued_geometries[model_name] = content
+
+    def _queue_voxel_shape(
+        self, model_name: str, bones: List[Union[str, dict]]
+    ) -> None:
+        if model_name in self._queued_voxel_shapes:
+            return
+
+        content = self.process_voxel_shape_scheme(
+            model_name, self._build_bounding_boxes(bones)
+        )
+
+        self._queued_voxel_shapes[model_name] = content
 
     def queue_model(self, collection: Optional[str] = None) -> None:
         self._prepare_model()
@@ -1345,6 +1433,25 @@ class _ModelManager:
             collection_data["export_name"], collection_data["children"]
         )
 
+    def queue_voxel_shape(self, collection: Optional[str] = None) -> None:
+        self._prepare_model()
+
+        if collection is None:
+            self._queue_voxel_shape(
+                self._bbmodel["model_identifier"], self._bbmodel["outliner"]
+            )
+            return
+
+        collection_data = self._resolve_collection(collection)
+        if not collection_data["children"]:
+            raise ValueError(
+                f"Blockbench collection '{collection_data['name']}' in model '{self._name}' has no exportable children."
+            )
+
+        self._queue_voxel_shape(
+            collection_data["export_name"], collection_data["children"]
+        )
+
     def block_culling(self) -> BlockCulling:
         if not self._culling:
             self._culling = BlockCulling(self._name, self._bbmodel)
@@ -1353,6 +1460,9 @@ class _ModelManager:
     def __export__(self) -> None:
         for model_name, content in self._queued_geometries.items():
             _Geometry(model_name, content).queue(self._source)
+
+        for model_name, content in self._queued_voxel_shapes.items():
+            _VoxelShape(model_name, content).queue()
 
         if self._culling:
             self._culling.queue()

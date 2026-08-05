@@ -360,10 +360,6 @@ class Biome(MinecraftBiomeDescriptor):
     _object_type = "Biome"
 
     def __init__(self, name, is_vanilla=False):
-        # Released in 1.21.111
-        # if not CONFIG._EXPERIMENTAL:
-        #    raise RuntimeError("Biome support is experimental and must be enabled in the config.")
-
         if CONFIG._TARGET == ConfigPackageTarget.ADDON and is_vanilla:
             raise RuntimeError(
                 "Vanilla biomes overrides cannot be used in addons, use Partial overrides instead."

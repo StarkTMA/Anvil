@@ -30,6 +30,7 @@ def vanilla_entity_ids():
         "minecraft:cow",
         "minecraft:creaking",
         "minecraft:creeper",
+        "minecraft:cushion",
         "minecraft:dolphin",
         "minecraft:donkey",
         "minecraft:dragon_fireball",

@@ -1,8 +1,8 @@
 import os
 
-from anvil.api.core.core import ANVIL
-from anvil.api.core.components import RootComponent, components_validations
 from anvil.api.actors.actors import Attachable
+from anvil.api.core.components import RootComponent, components_validations
+from anvil.api.core.core import ANVIL
 from anvil.api.core.enums import ItemCategory, ItemGroups
 from anvil.api.items.components import ItemDisplayName
 from anvil.lib.config import CONFIG
@@ -37,8 +37,7 @@ class _ItemServerDescription(MinecraftDescription):
             group (str, optional): The group of the item. Defaults to None.
             is_hidden_in_commands (bool, optional): Whether the item is hidden in commands. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemdefinition?view=minecraft-bedrock-stable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemdefinition)
 
         """
         self._description["description"]["menu_category"]["category"] = category
@@ -72,6 +71,11 @@ class _ItemServer(AddonObject):
         return self._components
 
     def __export__(self):
+        if len(self._components._components) == 0:
+            raise ValueError(
+                f"Item '{self.name}' must have at least one component defined."
+            )
+        
         components_validations(self, self._components, [])
 
         from anvil.api.items.components import ItemDisplayName

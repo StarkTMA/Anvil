@@ -130,3 +130,6 @@ nav:
                 - Translator: api/core/translator.md
                 - Blockbench: api/core/blockbench.md
                 - Format Versions: api/core/format_versions.md
+    - Beta API Reference:
+          - Actors:
+                - Components: beta/actors/components.md

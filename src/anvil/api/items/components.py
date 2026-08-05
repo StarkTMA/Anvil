@@ -40,8 +40,7 @@ class ItemSwingSounds(Component):
             attack_hit (str): Sound event played when the item is swung and hits a target.
             attack_miss (str): Sound event played when the item is swung and misses a target.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_sounds
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_sounds)
         """
         super().__init__("swing_sounds")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
@@ -67,8 +66,7 @@ class ItemKineticWeapon(Component):
         Parameters:
             energy_per_use (int): The amount of kinetic energy consumed per use of the weapon. Default is 100.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_kinetic_weapon
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_kinetic_weapon)
         """
         super().__init__("kinetic_weapon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
@@ -176,8 +174,7 @@ class ItemPiercingWeapon(Component):
             creative_reach (Tuple[float, float], optional): The minimum and maximum reach of the weapon in creative mode. If not provided, defaults to the values defined in the Kinetic Weapon component if present, or standard melee reach values otherwise.
             hitbox_margin (float): Additional margin added to the hitbox size when detecting entities along the view vector. Default is 0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_piercing_weapon
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_piercing_weapon)
         """
         super().__init__("piercing_weapon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
@@ -206,8 +203,7 @@ class ItemCooldown(Component):
             duration (float): The duration of time (in Seconds) items with a matching category will spend cooling down before becoming usable again.
             type (Literal["attack", "use"]): The type of action the cooldown applies to. Options are mutually exclusive, so cooldown for one type of action does not affect the others. Values: "use" (when using an item), "attack" (when attack with an item). Defaults to "use".
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_cooldown
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_cooldown)
         """
         super().__init__("cooldown")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
@@ -238,8 +234,7 @@ class ItemUseModifiers(Component):
             start_sound (str): Sound event played when the item starts being used.
             start_using (Literal["always", "if_first"]): When the item should start using. Defaults to "if_first".
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers?view=minecraft-bedrock-stable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_modifiers?view=minecraft-bedrock-stable)
         """
         super().__init__("use_modifiers")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.130")
@@ -265,8 +260,7 @@ class ItemSwingDuration(Component):
         Parameters:
             value (float): Duration in seconds. Affects visuals only and does not impact gameplay mechanics.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_duration
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_duration)
         """
         super().__init__("swing_duration")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.120")
@@ -282,8 +276,7 @@ class ItemFireResistant(Component):
         Parameters:
             value (bool): Determines whether the item is immune to burning when dropped in fire or lava. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fire_resistant
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fire_resistant)
         """
         super().__init__("fire_resistant")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.120")
@@ -300,8 +293,7 @@ class ItemDamageAbsorption(Component):
         Parameters:
             absorbable_causes (str): List of damage causes that can be absorbed by the item. Must have at least 1 item.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage_absorption
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage_absorption)
         """
         super().__init__("damage_absorption")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.111")
@@ -322,8 +314,7 @@ class ItemDurabilitySensor(Component):
         This component requires ``minecraft:durability`` and at least one
         durability threshold entry.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor)
         """
         super().__init__("durability_sensor")
         self._dependencies = [ItemDurability]
@@ -371,8 +362,7 @@ class ItemCompostable(Component):
         Parameters:
             composting_chance (float): The chance of this item to create a layer upon composting with the composter. Valid value range is 1 - 100 inclusive Value must be >= 1. Value must be <= 100.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_compostable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_compostable)
         """
         super().__init__("compostable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.60")
@@ -393,8 +383,7 @@ class ItemStorageItem(Component):
             max_slots (int): The maximum allowed weight of the sum of all contained items. Maximum is 64. Default is 64.
             max_weight_limit (float): The maximum weight limit of the items in the storage item. Default is 64.0.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_item
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_item)
         """
         super().__init__("storage_item")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
@@ -422,8 +411,7 @@ class ItemStorageWeightLimit(Component):
         Parameters:
             max_weight_limit (float): The maximum allowed weight of the sum of all contained items. Maximum is 64. Default is 64. Value must be <= 64.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_limit
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_limit)
         """
         super().__init__("storage_weight_limit")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
@@ -439,8 +427,7 @@ class ItemStorageWeightModifier(Component):
         Parameters:
             weight_in_storage_item (int): The weight of this item when inside another Storage Item. Default is 4. 0 means item is not allowed in another Storage Item.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_modifier
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_modifier)
         """
         super().__init__("storage_weight_modifier")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.40")
@@ -456,8 +443,7 @@ class ItemBundleInteraction(Component):
         Parameters:
             num_viewable_slots (int): The maximum number of slots in the bundle viewable by the player. Can be from 1 to 64. Default is 12. Value must be >= 1 and <= 64.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_bundle_interaction
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_bundle_interaction)
         """
         super().__init__("bundle_interaction")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.30")
@@ -477,8 +463,7 @@ class ItemRarity(Component):
         Parameters:
             value (Rarity): The base rarity of the item.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_rarity
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_rarity)
         """
         super().__init__("rarity")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
@@ -494,8 +479,7 @@ class ItemDyeable(Component):
         Parameters:
             default_color (Color): The default color of the item.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_dyeable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_dyeable)
         """
         super().__init__("dyeable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.30")
@@ -514,8 +498,7 @@ class ItemCustomComponents(Component):
         Parameters:
             components (str): The components to register, if the namespace is not provided, the project namespace will be used.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components)
         """
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.20")
         super().__init__(component_name, False)
@@ -542,8 +525,7 @@ class ItemEnchantable(Component):
             type (str): What enchantments can be applied (ex. Using bow would allow this item to be enchanted as if it were a bow).
             value (int): The value of the enchantment (minimum of 0).
 
-        ### Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_enchantable
+        ### [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_enchantable)
         """
         super().__init__("enchantable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
@@ -570,8 +552,7 @@ class ItemFood(Component):
             saturation_modifier (float, optional): Saturation Modifier is used in this formula: (nutrition saturation_modifier 2) when applying the saturation buff. Defaults to 0.
             using_converts_to (str, optional): Saturation Modifier is used in this formula: (nutrition saturation_modifier 2) when applying the saturation buff. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_food
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_food)
         """
         super().__init__("food")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
@@ -621,8 +602,7 @@ class ItemInteractButton(Component):
         Parameters:
             value (bool | str): Determines if the interact button is shown in touch controls, and what text is displayed on the button. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_interact_button
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_interact_button)
         """
         super().__init__("interact_button")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.30")
@@ -647,8 +627,7 @@ class ItemCanDestroyInCreative(Component):
         Parameters:
             value (bool): If an item will break blocks in Creative Mode while swinging.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative)
         """
         super().__init__("can_destroy_in_creative")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -665,8 +644,7 @@ class ItemHoverTextColor(Component):
         Parameters:
             value (bool): The color of the item name when hovering over it.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hover_text_color
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hover_text_color)
         """
         super().__init__("hover_text_color")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -686,8 +664,7 @@ class ItemWearable(Component):
             protection (int, optional): How much protection the wearable has. Defaults to 0.
             dispensable (bool, optional): Whether or not the item can be dispensed from a dispenser. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_wearable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_wearable)
         """
         super().__init__("wearable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.70")
@@ -706,8 +683,7 @@ class ItemHandEquipped(Component):
         Parameters:
             value (bool): Determines if the item is rendered like a tool in-hand.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hand_equipped
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hand_equipped)
         """
         super().__init__("hand_equipped")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -724,8 +700,7 @@ class ItemGlint(Component):
         Parameters:
             value (bool): Whether the item has the enchanted glint render effect.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_glint
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_glint)
         """
         super().__init__("glint")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -742,8 +717,7 @@ class ItemStackedByData(Component):
         Parameters:
             value (bool): Sets whether the same item with different aux values can stack and merge while floating in the world.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_stacked_by_data
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_stacked_by_data)
         """
         super().__init__("stacked_by_data")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -776,8 +750,7 @@ class ItemUseAnimation(Component):
         Parameters:
             value (str): Which animation to play when using an item.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_animation
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_animation)
         """
         super().__init__("use_animation")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -794,8 +767,7 @@ class ItemAllowOffHand(Component):
         Parameters:
             value (bool): Whether the item can be placed in the off-hand slot.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_allow_off_hand
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_allow_off_hand)
         """
         super().__init__("allow_off_hand")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -812,8 +784,7 @@ class ItemShouldDespawn(Component):
         Parameters:
             value (bool): Sets whether the item should eventually despawn while floating in the world.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_should_despawn
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_should_despawn)
         """
         super().__init__("should_despawn")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -830,8 +801,7 @@ class ItemLiquidClipped(Component):
         Parameters:
             value (bool): Whether an item interacts with liquid blocks on use.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_liquid_clipped
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_liquid_clipped)
         """
         super().__init__("liquid_clipped")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -848,8 +818,7 @@ class ItemDamage(Component):
         Parameters:
             value (bool): How much extra damage the item does on attack. Note that this must be a positive value.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage)
         """
         super().__init__("damage")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -871,8 +840,7 @@ class ItemDigger(Component):
         Parameters:
             destroy_speeds (str): Destroy speed per block.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_digger
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_digger)
         """
         super().__init__("digger")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.20")
@@ -900,7 +868,7 @@ class ItemRepairable(Component):
         Parameters:
             on_repaired (Literal["minecraft:celebrate", None]): Event that is called when this item has been repaired.
 
-        Documentation reference: https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_repairable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_repairable)
         """
         super().__init__("repairable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
@@ -934,8 +902,7 @@ class ItemMaxStackSize(Component):
         Parameters:
             stack_size (int): How many of an item that can be stacked together.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_max_stack_size
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_max_stack_size)
         """
         super().__init__("max_stack_size")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
@@ -960,8 +927,7 @@ class ItemBlockPlacer(Component):
             replace_block_item (bool): If true, the item will be registered as the item for this block. This item will be returned by default when the block is broken/picked. Note: the identifier for this item must match the block's identifier for this field to be valid.
             aligned_placement (bool): When true, block placement through this item will be aligned while holding the interaction button down.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer)
         """
         super().__init__(
             "block_placer",
@@ -1000,8 +966,7 @@ class ItemSeed(Component):
             plant_at_any_solid_surface (bool): Deprecated legacy setting that allows planting on any solid surface.
             plant_at_face (Literal["UP", "DOWN"] | None): Deprecated legacy setting for the face the seed can be planted on.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_seed
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_seed)
         """
         super().__init__("seed")
         self._enforce_version(ITEM_SERVER_VERSION, "1.10.0")
@@ -1034,8 +999,7 @@ class ItemRecord(Component):
             duration (float): Duration of sound event in Seconds float value.
             comparator_signal (int): Signal strength for comparator blocks to use from 1 - 13.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_record
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_record)
         """
         super().__init__("record")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
@@ -1061,8 +1025,7 @@ class ItemShooter(Component):
             max_draw_duration (float, optional): How long can it be drawn before it will release automatically. Defaults to 0.0.
             scale_power_by_draw_duration (bool, optional): Scale the power by draw duration? When true, the longer you hold, the more power it will have when released.. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_shooter
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_shooter)
         """
         super().__init__("shooter")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
@@ -1111,8 +1074,7 @@ class ItemProjectile(Component):
             projectile_entity (Identifier): The entity to be fired as a projectile.
             minimum_critical_power (int): Defines the time a projectile needs to charge in order to critically hit.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_projectile
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_projectile)
         """
         super().__init__("projectile")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
@@ -1143,8 +1105,7 @@ class ItemThrowable(Component):
             min_draw_duration (float, optional): The minimum duration to draw a throwable item. Defaults to 0.0.
             scale_power_by_draw_duration (bool, optional): Whether or not the power of the throw increases with duration charged. When true, The longer you hold, the more power it will have when released. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_throwable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_throwable)
         """
         super().__init__("throwable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.20.10")
@@ -1178,8 +1139,7 @@ class ItemDurability(Component):
             max_durability (int): Max durability is the amount of damage that this item can take before breaking. The minimum value for this parameter is 0.
             damage_chance (int, optional): Damage chance is the percentage chance of this item losing durability. Default is set at 100 to 100.. Defaults to 100.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability)
         """
         super().__init__("durability")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
@@ -1207,8 +1167,7 @@ class ItemDisplayName(Component):
             display_name (str): Set the display name for an item.
             key (str): The localization key for the display name.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_display_name
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_display_name)
         """
         super().__init__("display_name")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
@@ -1228,8 +1187,7 @@ class ItemFuel(Component):
         Parameters:
             duration (float): How long in seconds will this fuel cook items for. Minimum value: 0.05.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fuel
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fuel)
         """
         super().__init__("fuel")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
@@ -1245,8 +1203,7 @@ class ItemEntityPlacer(Component):
         Parameters:
             entity (str): The entity to be placed in the world.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_entity_placer
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_entity_placer)
         """
         super().__init__("entity_placer")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")
@@ -1290,8 +1247,7 @@ class ItemIcon(Component):
             blockbench (str | TextureComponents): Either the Blockbench project file name (str) or TextureComponents directly.
             component (TextureComponents | None): The texture components if blockbench is a string, otherwise None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_icon
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_icon)
         """
         super().__init__("icon")
         self._enforce_version(ITEM_SERVER_VERSION, "1.19.80")

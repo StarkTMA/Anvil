@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Literal, Optional, Union, overload
+from typing import Dict, List, Literal, Optional, TypeAlias, Union, overload
 
 from anvil.api.core.components import Component, List
 from anvil.api.core.core import TerrainTexturesObject
@@ -14,7 +14,7 @@ from anvil.api.core.enums import (
     expand_block_face_sides,
 )
 from anvil.api.core.textures import FlipBookTexturesObject
-from anvil.api.core.types import Identifier
+from anvil.api.core.types import Identifier, InstrumentSound
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.vanilla.blocks import MinecraftBlockTags
@@ -223,8 +223,7 @@ class BlockFlowerPottable(Component):
     def __init__(self) -> None:
         """Indicates that this block can be placed in a flower pot.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_flower_pottable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_flower_pottable)
         """
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
         super().__init__("flower_pottable")
@@ -261,8 +260,7 @@ class BlockEmbeddedVisual(Component):
         Parameters:
             blockbench_name (str, optional): The geometry of the item. Defaults to None for default full block geometry.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_embedded_visual
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_embedded_visual)
         """
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
         super().__init__("embedded_visual")
@@ -328,7 +326,7 @@ class BlockEmbeddedVisual(Component):
                 raise ValueError("State name must be a string")
 
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
-        
+
         geom = self._component.get("geometry", {})
         geom["n_way_visual_rotation"] = {axis: state for axis, state in axes.items()}
         self._add_field("geometry", geom)
@@ -353,8 +351,7 @@ class BlockRedstoneProducer(Component):
             strongly_powered_face (BlockFaces | str, optional): The face that will be strongly powered by this block.
             transform_relative (bool, optional): If true, connected_faces and strongly_powered_face are transformed relative to the block's transformation. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_redstone_producer
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_redstone_producer)
         """
         super().__init__("redstone_producer")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
@@ -393,8 +390,7 @@ class BlockDestructionParticles(Component):
             particle_count (int): The number of particles to spawn on destruction.
             tint_method (TintMethod, optional): Tint multiplied to the color. Defaults to TintMethod.None_.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_destruction_particles
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_destruction_particles)
         """
         super().__init__("destruction_particles")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.100")
@@ -422,8 +418,7 @@ class BlockMovable(Component):
             movement_type (BlockMovementType, optional): How the block reacts to being pushed by another block like a piston. Defaults to BlockMovementType.PushPull.
             sticky (str, optional): How the block should handle adjacent blocks around it when being pushed by another block like a piston. Defaults to "none".
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_movable
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_movable)
         """
         super().__init__("movable")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.100")
@@ -443,8 +438,7 @@ class BlockRedstoneConductivity(Component):
             allows_wire_to_step_down (bool, optional): Specifies if redstone wire can stair-step downward on the block, Defaults to True.
             redstone_conductor (bool, optional): Specifies if the block can be powered by redstone, Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_redstone_conductivity
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraft_redstone_conductivity)
         """
         super().__init__("redstone_conductivity")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.30")
@@ -461,8 +455,7 @@ class BlockCustomComponents(Component):
         Parameters:
             component_name (str): The components name to register, if the namespace is not provided, the project namespace will be used.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components)
         """
         super().__init__(component_name, False)
 
@@ -564,7 +557,9 @@ class BlockPrecipitationInteractions(Component):
             "snowlogging",
         ]
         if precipitation_behavior not in valid_behaviors:
-            raise ValueError(f"precipitation_behavior must be one of: {valid_behaviors}")
+            raise ValueError(
+                f"precipitation_behavior must be one of: {valid_behaviors}"
+            )
 
         self._add_field("precipitation_behavior", precipitation_behavior)
 
@@ -641,8 +636,7 @@ class BlockMapColor(Component):
             color (str): The color is represented as a hex value in the format "#RRGGBB". May also be expressed as an array of [R, G, B] from 0 to 255.
             tint_method (str, optional): Optional, tint multiplied to the color. Tint method logic varies, but often refers to the "rain" and "temperature" of the biome the block is placed in to compute the tint. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_map_color
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_map_color)
         """
         self._enforce_version(BLOCK_JSON_FORMAT_VERSION, "1.21.70")
         super().__init__("map_color")
@@ -688,6 +682,7 @@ class BlockGeometry(Component):
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.80")
         self._is_default = blockbench_name is None
         self._collection = collection
+        self._culling_shape = None
 
         if blockbench_name is None:
             if collection is not None:
@@ -723,34 +718,42 @@ class BlockGeometry(Component):
         self._add_field("bone_visibility", {b: v for b, v in bone.items()})
         return self
 
-    def block_culling(self):
+    def block_culling(self, culling_shape: Literal["empty", "custom"] = "empty"):
         """Specifies the block culling rules for the geometry file."""
         if self._is_default:
             raise ValueError("Cannot set block culling on default geometry.")
-        if self._collection is not None:
-            raise ValueError(
-                "Blockbench collection geometries do not support block culling yet."
+        # if self._collection is not None:
+        #    raise ValueError(
+        #        "Blockbench collection geometries do not support block culling yet."
+        #    )
+
+        if culling_shape == "custom":
+            self._bb.model.queue_voxel_shape(self._collection)
+            self._add_field(
+                "culling_shape",
+                f"{CONFIG.NAMESPACE}:{self._geometry_name}_culling_shape",
             )
 
-        self._add_field("culling", f"{CONFIG.NAMESPACE}:{self._geometry_name}")
         return self._bb.model.block_culling()
 
-    def n_way_visual_rotation(self, **axes: str):
+    def n_way_visual_rotation(self, axis: Dict[str, Molang]):
         """Specifies the visual rotation mapping for the geometry.
 
         Parameters:
             **axes: Axes to state mappings (e.g. y="minecraft:cardinal_direction").
         """
         valid_axes = ["x", "y", "z"]
-        for axis, state in axes.items():
+        for axis, state in axis.items():
             if axis not in valid_axes:
                 raise ValueError(f"Invalid axis: {axis}. Must be one of {valid_axes}")
             if not isinstance(state, str):
                 raise ValueError("State name must be a string")
 
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
-        
-        self._add_field("n_way_visual_rotation", {axis: state for axis, state in axes.items()})
+
+        self._add_field(
+            "n_way_visual_rotation", {axis: state for axis, state in axis.items()}
+        )
         return self
 
 
@@ -1062,7 +1065,7 @@ class BlockItemVisual(Component):
                 raise ValueError("State name must be a string")
 
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
-        
+
         geom = self._component.get("geometry", {})
         geom["n_way_visual_rotation"] = {axis: state for axis, state in axes.items()}
         self._add_field("geometry", geom)
@@ -1156,8 +1159,7 @@ class BlockTick(Component):
             interval_range (tuple[int, int], optional): [min, max] ticks before next tick. Defaults to (0, 0).
             looping (bool, optional): If True, block will continue ticking; otherwise it ticks only once. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_tick
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_tick)
         """
         super().__init__("tick")
         # ensure first value <= second value
@@ -1182,8 +1184,7 @@ class BlockConnectionRule(Component):
             accepts_connections_from (Literal["all", "only_fences", "none"], optional): Determines which types of blocks this block can connect to. "all" allows connections to any block, "only_fences" restricts connections to fence-type blocks, and "none" prevents any connections. Defaults to "all".
             enabled_directions (List[BlockFaces], optional): Specifies the directions in which the block can connect to adjacent blocks. By default, connections are enabled in all four cardinal directions (North, South, East, West).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_connection_rule
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_connection_rule)
         """
         super().__init__("connection_rule")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.0")
@@ -1214,8 +1215,7 @@ class BlockRedstoneConsumer(Component):
             min_power (int, optional): Minimum signal strength required to activate the block (0-15). Defaults to 0.
             propagate_power (bool, optional): If true, the block will propagate the redstone signal to adjacent blocks. Defaults to True.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_redstone_consumer
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_redstone_consumer)
         """
         super().__init__("redstone_consumer")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
@@ -1235,8 +1235,7 @@ class BlockSupport(Component):
         Parameters:
             shape (Literal["fence", "stair"]): The shape of the block's support. "fence" gives the block the same support shape as a Vanilla fence, and "stair" gives the block the same support shape as a Vanilla stair.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_support
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_support)
         """
         super().__init__("support")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.0")
@@ -1249,8 +1248,7 @@ class BlockLeashable(Component):
     def __init__(self) -> None:
         """Indicates that this block can be leashed by a lead.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_leashable
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_leashable)
         """
         super().__init__("leashable")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.0")
@@ -1262,8 +1260,7 @@ class BlockTagComponent(Component):
     def __init__(self, tags: list[MinecraftBlockTags | str]) -> None:
         """Indicates that this block can be leashed by a lead.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_tag
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_tag)
         """
         super().__init__("tags")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.20")
@@ -1302,8 +1299,7 @@ class BlockChestObstruction(Component):
                 - "never": Will never obstruct a chest from opening when directly above it.
                 - "shape": Will use the block's AABB shape to determine if the chest is obstructed..
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_chest_obstruction
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_chest_obstruction)
         """
         super().__init__("chest_obstruction")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.20")
@@ -1314,3 +1310,37 @@ class BlockChestObstruction(Component):
             )
         if obstruction_rule != "shape":
             self._add_field("obstruction_rule", obstruction_rule)
+
+
+class BlockInstrumentSound(Component):
+    _identifier = "minecraft:instrument_sound"
+
+    def __init__(
+        self,
+        up: Optional[InstrumentSound | str] = None,
+        down: Optional[InstrumentSound | str] = None,
+    ) -> None:
+        """Defines what sound will play based on above or below relative position to a note block.
+
+        An instrument can be assigned to the "up" and "down" block faces.
+        If either face is undefined, or the component is omitted, it will use its default value ("up" = "note.harp" and "down" = "note.none").
+        At least one face needs to be defined for the component to be valid. "note.none" can be used to specify no sound for a face.
+
+        Parameters:
+            up (InstrumentSound | str, optional): The instrument sound that plays when the note block is below this block (the block's up face is exposed to the note block).
+            down (InstrumentSound | str, optional): The instrument sound that plays when the note block is above this block (the block's down face is exposed to the note block).
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_instrument_sound)
+        """
+        super().__init__("instrument_sound")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.60")
+
+        if up is None and down is None:
+            raise ValueError(
+                "At least one of 'up' or 'down' must be defined for BlockInstrumentSound."
+            )
+
+        if up is not None:
+            self._add_field("up", str(up))
+        if down is not None:
+            self._add_field("down", str(down))

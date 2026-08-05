@@ -1663,6 +1663,43 @@ def BlackWool() -> MinecraftBlockDescriptor:
     return MinecraftBlockDescriptor("minecraft:black_wool", True)
 
 
+def BlackWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BlackWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:black_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def BlackWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BlackWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:black_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def BlackWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BlackWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:black_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
 def Blackstone() -> MinecraftBlockDescriptor:
     """Factory for Blackstone"""
     return MinecraftBlockDescriptor("minecraft:blackstone", True)
@@ -1814,6 +1851,43 @@ def BlueTerracotta() -> MinecraftBlockDescriptor:
 def BlueWool() -> MinecraftBlockDescriptor:
     """Factory for BlueWool"""
     return MinecraftBlockDescriptor("minecraft:blue_wool", True)
+
+
+def BlueWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BlueWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:blue_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def BlueWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BlueWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:blue_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def BlueWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BlueWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:blue_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def BoneBlock(
@@ -2051,6 +2125,43 @@ def BrownTerracotta() -> MinecraftBlockDescriptor:
 def BrownWool() -> MinecraftBlockDescriptor:
     """Factory for BrownWool"""
     return MinecraftBlockDescriptor("minecraft:brown_wool", True)
+
+
+def BrownWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BrownWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:brown_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def BrownWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BrownWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:brown_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def BrownWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for BrownWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:brown_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def BubbleColumn(drag_down: Optional[DragDown] = None) -> MinecraftBlockDescriptor:
@@ -3496,6 +3607,43 @@ def CyanTerracotta() -> MinecraftBlockDescriptor:
 def CyanWool() -> MinecraftBlockDescriptor:
     """Factory for CyanWool"""
     return MinecraftBlockDescriptor("minecraft:cyan_wool", True)
+
+
+def CyanWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CyanWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cyan_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def CyanWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CyanWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cyan_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def CyanWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for CyanWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:cyan_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def DamagedAnvil(
@@ -5581,6 +5729,43 @@ def GrayWool() -> MinecraftBlockDescriptor:
     return MinecraftBlockDescriptor("minecraft:gray_wool", True)
 
 
+def GrayWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for GrayWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:gray_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def GrayWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for GrayWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:gray_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def GrayWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for GrayWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:gray_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
 def GreenCandle(
     candles: Optional[Candles] = None, lit: Optional[Lit] = None
 ) -> MinecraftBlockDescriptor:
@@ -5648,6 +5833,43 @@ def GreenTerracotta() -> MinecraftBlockDescriptor:
 def GreenWool() -> MinecraftBlockDescriptor:
     """Factory for GreenWool"""
     return MinecraftBlockDescriptor("minecraft:green_wool", True)
+
+
+def GreenWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for GreenWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:green_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def GreenWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for GreenWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:green_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def GreenWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for GreenWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:green_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def Grindstone(
@@ -6543,6 +6765,43 @@ def LightBlueWool() -> MinecraftBlockDescriptor:
     return MinecraftBlockDescriptor("minecraft:light_blue_wool", True)
 
 
+def LightBlueWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LightBlueWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:light_blue_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def LightBlueWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LightBlueWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:light_blue_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def LightBlueWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LightBlueWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:light_blue_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
 def LightGrayCandle(
     candles: Optional[Candles] = None, lit: Optional[Lit] = None
 ) -> MinecraftBlockDescriptor:
@@ -6599,6 +6858,43 @@ def LightGrayTerracotta() -> MinecraftBlockDescriptor:
 def LightGrayWool() -> MinecraftBlockDescriptor:
     """Factory for LightGrayWool"""
     return MinecraftBlockDescriptor("minecraft:light_gray_wool", True)
+
+
+def LightGrayWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LightGrayWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:light_gray_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def LightGrayWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LightGrayWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:light_gray_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def LightGrayWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LightGrayWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:light_gray_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def LightWeightedPressurePlate(
@@ -6702,6 +6998,43 @@ def LimeTerracotta() -> MinecraftBlockDescriptor:
 def LimeWool() -> MinecraftBlockDescriptor:
     """Factory for LimeWool"""
     return MinecraftBlockDescriptor("minecraft:lime_wool", True)
+
+
+def LimeWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LimeWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:lime_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def LimeWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LimeWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:lime_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def LimeWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for LimeWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:lime_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def LitBlastFurnace(
@@ -6842,6 +7175,43 @@ def MagentaTerracotta() -> MinecraftBlockDescriptor:
 def MagentaWool() -> MinecraftBlockDescriptor:
     """Factory for MagentaWool"""
     return MinecraftBlockDescriptor("minecraft:magenta_wool", True)
+
+
+def MagentaWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for MagentaWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:magenta_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def MagentaWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for MagentaWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:magenta_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def MagentaWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for MagentaWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:magenta_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def Magma() -> MinecraftBlockDescriptor:
@@ -7682,6 +8052,21 @@ def OrangeConcretePowder() -> MinecraftBlockDescriptor:
     return MinecraftBlockDescriptor("minecraft:orange_concrete_powder", True)
 
 
+def OrangePoplarLeaves(
+    persistent_bit: Optional[PersistentBit] = None,
+    update_bit: Optional[UpdateBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for OrangePoplarLeaves"""
+    return MinecraftBlockDescriptor(
+        "minecraft:orange_poplar_leaves",
+        True,
+        {
+            BlockStateKeys.PersistentBit: persistent_bit,
+            BlockStateKeys.UpdateBit: update_bit,
+        },
+    )
+
+
 def OrangeGlazedTerracotta(
     facing_direction: Optional[FacingDirection] = None,
 ) -> MinecraftBlockDescriptor:
@@ -7721,6 +8106,43 @@ def OrangeTulip() -> MinecraftBlockDescriptor:
 def OrangeWool() -> MinecraftBlockDescriptor:
     """Factory for OrangeWool"""
     return MinecraftBlockDescriptor("minecraft:orange_wool", True)
+
+
+def OrangeWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for OrangeWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:orange_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def OrangeWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for OrangeWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:orange_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def OrangeWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for OrangeWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:orange_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def OxeyeDaisy() -> MinecraftBlockDescriptor:
@@ -8297,6 +8719,43 @@ def PinkTulip() -> MinecraftBlockDescriptor:
 def PinkWool() -> MinecraftBlockDescriptor:
     """Factory for PinkWool"""
     return MinecraftBlockDescriptor("minecraft:pink_wool", True)
+
+
+def PinkWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PinkWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:pink_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def PinkWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PinkWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:pink_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def PinkWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PinkWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:pink_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def Piston(
@@ -8894,6 +9353,211 @@ def PolishedTuffWall(
     )
 
 
+def PoplarButton(
+    button_pressed_bit: Optional[ButtonPressedBit] = None,
+    facing_direction: Optional[FacingDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarButton"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_button",
+        True,
+        {
+            BlockStateKeys.ButtonPressedBit: button_pressed_bit,
+            BlockStateKeys.FacingDirection: facing_direction,
+        },
+    )
+
+
+def PoplarDoor(
+    door_hinge_bit: Optional[DoorHingeBit] = None,
+    minecraft_cardinal_direction: Optional[CardinalDirection] = None,
+    open_bit: Optional[OpenBit] = None,
+    upper_block_bit: Optional[UpperBlockBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarDoor"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_door",
+        True,
+        {
+            BlockStateKeys.DoorHingeBit: door_hinge_bit,
+            BlockStateKeys.MinecraftCardinalDirection: minecraft_cardinal_direction,
+            BlockStateKeys.OpenBit: open_bit,
+            BlockStateKeys.UpperBlockBit: upper_block_bit,
+        },
+    )
+
+
+def PoplarDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def PoplarFence() -> MinecraftBlockDescriptor:
+    """Factory for PoplarFence"""
+    return MinecraftBlockDescriptor("minecraft:poplar_fence", True)
+
+
+def PoplarFenceGate(
+    in_wall_bit: Optional[InWallBit] = None,
+    minecraft_cardinal_direction: Optional[CardinalDirection] = None,
+    open_bit: Optional[OpenBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarFenceGate"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_fence_gate",
+        True,
+        {
+            BlockStateKeys.InWallBit: in_wall_bit,
+            BlockStateKeys.MinecraftCardinalDirection: minecraft_cardinal_direction,
+            BlockStateKeys.OpenBit: open_bit,
+        },
+    )
+
+
+def PoplarHangingSign(
+    attached_bit: Optional[AttachedBit] = None,
+    facing_direction: Optional[FacingDirection] = None,
+    ground_sign_direction: Optional[GroundSignDirection] = None,
+    hanging: Optional[Hanging] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarHangingSign"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_hanging_sign",
+        True,
+        {
+            BlockStateKeys.AttachedBit: attached_bit,
+            BlockStateKeys.FacingDirection: facing_direction,
+            BlockStateKeys.GroundSignDirection: ground_sign_direction,
+            BlockStateKeys.Hanging: hanging,
+        },
+    )
+
+
+def PoplarLog(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
+    """Factory for PoplarLog"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_log", True, {BlockStateKeys.PillarAxis: pillar_axis}
+    )
+
+
+def PoplarPlanks() -> MinecraftBlockDescriptor:
+    """Factory for PoplarPlanks"""
+    return MinecraftBlockDescriptor("minecraft:poplar_planks", True)
+
+
+def PoplarPressurePlate(
+    redstone_signal: Optional[RedstoneSignal] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarPressurePlate"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_pressure_plate",
+        True,
+        {BlockStateKeys.RedstoneSignal: redstone_signal},
+    )
+
+
+def PoplarSapling(age_bit: Optional[AgeBit] = None) -> MinecraftBlockDescriptor:
+    """Factory for PoplarSapling"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_sapling", True, {BlockStateKeys.AgeBit: age_bit}
+    )
+
+
+def PoplarShelf(
+    cardinal_direction: Optional[CardinalDirection] = None,
+    powered_bit: Optional[PoweredBit] = None,
+    powered_shelf_type: Optional[int] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarShelf"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_shelf",
+        True,
+        {
+            BlockStateKeys.MinecraftCardinalDirection: cardinal_direction,
+            BlockStateKeys.PoweredBit: powered_bit,
+            BlockStateKeys.PoweredShelfType: powered_shelf_type,
+        },
+    )
+
+
+def PoplarSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def PoplarStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
+def PoplarStandingSign(
+    ground_sign_direction: Optional[GroundSignDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarStandingSign"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_standing_sign",
+        True,
+        {BlockStateKeys.GroundSignDirection: ground_sign_direction},
+    )
+
+
+def PoplarTrapdoor(
+    direction: Optional[Direction] = None,
+    open_bit: Optional[OpenBit] = None,
+    upside_down_bit: Optional[UpsideDownBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarTrapdoor"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_trapdoor",
+        True,
+        {
+            BlockStateKeys.Direction: direction,
+            BlockStateKeys.OpenBit: open_bit,
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+        },
+    )
+
+
+def PoplarWallSign(
+    facing_direction: Optional[FacingDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PoplarWallSign"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_wall_sign",
+        True,
+        {BlockStateKeys.FacingDirection: facing_direction},
+    )
+
+
+def PoplarWood(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
+    """Factory for PoplarWood"""
+    return MinecraftBlockDescriptor(
+        "minecraft:poplar_wood", True, {BlockStateKeys.PillarAxis: pillar_axis}
+    )
+
+
 def Poppy() -> MinecraftBlockDescriptor:
     """Factory for Poppy"""
     return MinecraftBlockDescriptor("minecraft:poppy", True)
@@ -9147,6 +9811,43 @@ def PurpleTerracotta() -> MinecraftBlockDescriptor:
 def PurpleWool() -> MinecraftBlockDescriptor:
     """Factory for PurpleWool"""
     return MinecraftBlockDescriptor("minecraft:purple_wool", True)
+
+
+def PurpleWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PurpleWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:purple_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def PurpleWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PurpleWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:purple_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def PurpleWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for PurpleWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:purple_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def PurpurBlock(pillar_axis: Optional[PillarAxis] = None) -> MinecraftBlockDescriptor:
@@ -9406,6 +10107,21 @@ def RedNetherBrickWall(
     )
 
 
+def RedPoplarLeaves(
+    persistent_bit: Optional[PersistentBit] = None,
+    update_bit: Optional[UpdateBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for RedPoplarLeaves"""
+    return MinecraftBlockDescriptor(
+        "minecraft:red_poplar_leaves",
+        True,
+        {
+            BlockStateKeys.PersistentBit: persistent_bit,
+            BlockStateKeys.UpdateBit: update_bit,
+        },
+    )
+
+
 def RedSand() -> MinecraftBlockDescriptor:
     """Factory for RedSand"""
     return MinecraftBlockDescriptor("minecraft:red_sand", True)
@@ -9499,9 +10215,51 @@ def RedTulip() -> MinecraftBlockDescriptor:
     return MinecraftBlockDescriptor("minecraft:red_tulip", True)
 
 
+def RedShrub() -> MinecraftBlockDescriptor:
+    """Factory for RedShrub"""
+    return MinecraftBlockDescriptor("minecraft:red_shrub", True)
+
+
 def RedWool() -> MinecraftBlockDescriptor:
     """Factory for RedWool"""
     return MinecraftBlockDescriptor("minecraft:red_wool", True)
+
+
+def RedWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for RedWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:red_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def RedWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for RedWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:red_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def RedWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for RedWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:red_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def RedstoneBlock() -> MinecraftBlockDescriptor:
@@ -9818,6 +10576,21 @@ def Seagrass(sea_grass_type: Optional[SeaGrassType] = None) -> MinecraftBlockDes
     """Factory for Seagrass"""
     return MinecraftBlockDescriptor(
         "minecraft:seagrass", True, {BlockStateKeys.SeaGrassType: sea_grass_type}
+    )
+
+
+def ShelfMushroom(
+    growth: Optional[Growth] = None,
+    minecraft_cardinal_direction: Optional[CardinalDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for ShelfMushroom"""
+    return MinecraftBlockDescriptor(
+        "minecraft:shelf_mushroom",
+        True,
+        {
+            BlockStateKeys.Growth: growth,
+            BlockStateKeys.MinecraftCardinalDirection: minecraft_cardinal_direction,
+        },
     )
 
 
@@ -10534,6 +11307,23 @@ def StonecutterBlock(
     )
 
 
+def StrawBed(
+    head_piece_bit: Optional[HeadPieceBit] = None,
+    minecraft_cardinal_direction: Optional[CardinalDirection] = None,
+    occupied_bit: Optional[OccupiedBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for StrawBed"""
+    return MinecraftBlockDescriptor(
+        "minecraft:straw_bed",
+        True,
+        {
+            BlockStateKeys.HeadPieceBit: head_piece_bit,
+            BlockStateKeys.MinecraftCardinalDirection: minecraft_cardinal_direction,
+            BlockStateKeys.OccupiedBit: occupied_bit,
+        },
+    )
+
+
 def StrippedAcaciaLog(
     pillar_axis: Optional[PillarAxis] = None,
 ) -> MinecraftBlockDescriptor:
@@ -10738,6 +11528,28 @@ def StrippedPaleOakWood(
     """Factory for StrippedPaleOakWood"""
     return MinecraftBlockDescriptor(
         "minecraft:stripped_pale_oak_wood",
+        True,
+        {BlockStateKeys.PillarAxis: pillar_axis},
+    )
+
+
+def StrippedPoplarLog(
+    pillar_axis: Optional[PillarAxis] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for StrippedPoplarLog"""
+    return MinecraftBlockDescriptor(
+        "minecraft:stripped_poplar_log",
+        True,
+        {BlockStateKeys.PillarAxis: pillar_axis},
+    )
+
+
+def StrippedPoplarWood(
+    pillar_axis: Optional[PillarAxis] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for StrippedPoplarWood"""
+    return MinecraftBlockDescriptor(
+        "minecraft:stripped_poplar_wood",
         True,
         {BlockStateKeys.PillarAxis: pillar_axis},
     )
@@ -12539,6 +13351,43 @@ def WhiteWool() -> MinecraftBlockDescriptor:
     return MinecraftBlockDescriptor("minecraft:white_wool", True)
 
 
+def WhiteWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for WhiteWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:white_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def WhiteWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for WhiteWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:white_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def WhiteWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for WhiteWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:white_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
+
+
 def Wildflowers(
     growth: Optional[Growth] = None,
     minecraft_cardinal_direction: Optional[CardinalDirection] = None,
@@ -12648,6 +13497,21 @@ def YellowConcretePowder() -> MinecraftBlockDescriptor:
     return MinecraftBlockDescriptor("minecraft:yellow_concrete_powder", True)
 
 
+def YellowPoplarLeaves(
+    persistent_bit: Optional[PersistentBit] = None,
+    update_bit: Optional[UpdateBit] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for YellowPoplarLeaves"""
+    return MinecraftBlockDescriptor(
+        "minecraft:yellow_poplar_leaves",
+        True,
+        {
+            BlockStateKeys.PersistentBit: persistent_bit,
+            BlockStateKeys.UpdateBit: update_bit,
+        },
+    )
+
+
 def YellowGlazedTerracotta(
     facing_direction: Optional[FacingDirection] = None,
 ) -> MinecraftBlockDescriptor:
@@ -12682,6 +13546,43 @@ def YellowTerracotta() -> MinecraftBlockDescriptor:
 def YellowWool() -> MinecraftBlockDescriptor:
     """Factory for YellowWool"""
     return MinecraftBlockDescriptor("minecraft:yellow_wool", True)
+
+
+def YellowWoolDoubleSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for YellowWoolDoubleSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:yellow_wool_double_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def YellowWoolSlab(
+    minecraft_vertical_half: Optional[VerticalHalf] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for YellowWoolSlab"""
+    return MinecraftBlockDescriptor(
+        "minecraft:yellow_wool_slab",
+        True,
+        {BlockStateKeys.MinecraftVerticalHalf: minecraft_vertical_half},
+    )
+
+
+def YellowWoolStairs(
+    upside_down_bit: Optional[UpsideDownBit] = None,
+    weirdo_direction: Optional[WeirdoDirection] = None,
+) -> MinecraftBlockDescriptor:
+    """Factory for YellowWoolStairs"""
+    return MinecraftBlockDescriptor(
+        "minecraft:yellow_wool_stairs",
+        True,
+        {
+            BlockStateKeys.UpsideDownBit: upside_down_bit,
+            BlockStateKeys.WeirdoDirection: weirdo_direction,
+        },
+    )
 
 
 def ZombieHead(

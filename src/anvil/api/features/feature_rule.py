@@ -16,8 +16,7 @@ class FeatureRule(AddonObject, DistributionMixin):
     biomes via minecraft:biome_filter, while placement_pass controls when the
     rule runs relative to other feature rules.
 
-    ## Documentation reference:
-        https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/featuresintroduction?view=minecraft-bedrock-stable#feature-rules
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/featuresintroduction?view=minecraft-bedrock-stable#feature-rules)
     """
 
     _object_type = "Feature Rule"
@@ -47,8 +46,7 @@ class FeatureRule(AddonObject, DistributionMixin):
                 occur before later passes, but order is not guaranteed within
                 each pass.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/featuresintroduction?view=minecraft-bedrock-stable#feature-rules
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/featuresintroduction?view=minecraft-bedrock-stable#feature-rules)
         """
         super().__init__(name, False)
         self.content(JsonSchemes.worldgen_feature_rule(self.identifier, str(feature)))

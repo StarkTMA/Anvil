@@ -26,7 +26,7 @@ from anvil.api.core.enums import DamageSensor
 from anvil.api.core.sounds import EntitySoundEvent, SoundCategory
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import Vector2D
-from anvil.api.logic.molang import Molang, Variable, molang_conditions
+from anvil.api.logic.molang import Molang, Variable
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.vanilla.entities import vanilla_entity_ids
 from anvil.lib.blockbench import BlockBenchSource, _Blockbench

@@ -793,6 +793,20 @@ class JsonSchemes:
             },
         )
 
+    @staticmethod
+    def voxel_shape(
+        model_name: str,
+    ):
+        return load_file(
+            "voxel_shape.jsont",
+            {
+                "format_version": GEOMETRY_VERSION,
+                "namespace": CONFIG.NAMESPACE,
+                "model_name": model_name,
+            },
+            is_json=True,
+        )
+
 
 class AddonDescriptor:
     """An object representing an addon descriptor with validation for names and namespaces."""

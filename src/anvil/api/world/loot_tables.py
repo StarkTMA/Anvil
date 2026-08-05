@@ -52,8 +52,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_book_for_trading-trade-table-only
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_book_for_trading-trade-table-only)
         """
         self._function.append(
             {
@@ -79,8 +78,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_random_gear
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_random_gear)
         """
         self._function.append(
             {
@@ -100,8 +98,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_randomly
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_randomly)
         """
         self._function.append({"function": "enchant_randomly", "treasure": treasure})
         return self
@@ -116,8 +113,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_with_levels
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#enchant_with_levels)
         """
         self._function.append(
             {
@@ -137,8 +133,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#set_potion
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#set_potion)
         """
         self._function.append({"function": "set_potion", "id": id})
         return self
@@ -170,8 +165,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants)
         """
         ...
 
@@ -187,8 +181,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/enchantingtables?view=minecraft-bedrock-stable#specific_enchants)
         """
         if enchants and isinstance(enchants[0], str):
             # Simple enchantment names only
@@ -222,8 +215,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#looting_enchant-loot-table-only
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#looting_enchant-loot-table-only)
         """
         self._function.append(
             {
@@ -242,8 +234,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_aux_value
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_aux_value)
         """
         self._function.append(
             {
@@ -262,8 +253,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_block_state
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_block_state)
         """
         self._function.append(
             {
@@ -279,8 +269,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_dye
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#random_dye)
         """
         self._function.append(
             {
@@ -303,8 +292,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_actor_id
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_actor_id)
         """
         self._function.append(
             {
@@ -323,8 +311,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_banner_details
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_banner_details)
         """
         self._function.append(
             {
@@ -348,8 +335,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_book_contents
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_book_contents)
         """
         self._function.append(
             {
@@ -394,8 +380,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_count
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_count)
         """
         if isinstance(count, int):
             self._function.append(
@@ -447,8 +432,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_damage
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_damage)
         """
         if isinstance(damage, (int, float)):
             self._function.append(
@@ -478,8 +462,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data)
         """
         self._function.append(
             {
@@ -498,8 +481,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data_from_color_index
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_data_from_color_index)
         """
         self._function.append(
             {
@@ -519,8 +501,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_lore
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_lore)
         """
         self._function.append(
             {
@@ -541,8 +522,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_name
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/itemmodtables?view=minecraft-bedrock-stable#set_name)
         """
         self._function.append(
             {
@@ -566,8 +546,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#exploration_map
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#exploration_map)
         """
         self._function.append(
             {
@@ -590,8 +569,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#fill_container
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#fill_container)
         """
         self._function.append(
             {
@@ -610,8 +588,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#furnace_smelt-loot-table-only
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#furnace_smelt-loot-table-only)
         """
         self._function.append(
             {
@@ -633,8 +610,7 @@ class _LootPoolEntryFunctions:
         Returns:
             _LootPoolEntryFunctions: Self for method chaining.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#trader_material_type
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitions/miscellaneoustables?view=minecraft-bedrock-stable#trader_material_type)
         """
         self._function.append(
             {
@@ -828,8 +804,7 @@ class LootTable(AddonObject):
     Each loot table contains one or more pools, and each pool contains weighted entries
     that can have functions applied to modify the resulting items.
 
-    ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitionlist?view=minecraft-bedrock-stable
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/loottablereference/examples/loottabledefinitionlist?view=minecraft-bedrock-stable)
     """
 
     _extension = ".loot_table.json"

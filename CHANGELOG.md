@@ -2,6 +2,7 @@
 
 ## 0.9.x
 
+- [**0.9.9**](#099)
 - [**0.9.8.71**](#09871)
 - [0.9.8.6](#0986)
 - [0.9.8.5](#0985)
@@ -100,6 +101,40 @@
 ---
 
 # 0.9.x
+
+## 0.9.9
+
+### Blockbench
+
+- Added Voxel Shape support for Blockbench models. Now you can generate bounding boxes for your blocks in Blockbench and queue them to export using BlockGeometry.block_culling with full support for collections.
+
+### Blocks
+
+- Added `BlockInstrumentSound` block component for mapping note block sounds to `up` and `down` block faces.
+- Enhanced `multi_block` trait in `_BlockTraits`:
+    - Added support for horizontal directions (`"north"`, `"south"`, `"east"`, `"west"`) under experimental flag.
+    - Added strict trait conflict validation: `multi_block` cannot be combined with `placement_position` or `connection` traits.
+    - Restricted `multi_block` + `placement_direction` usage to `PlacementDirectionTrait.CardinalDirection`.
+
+### Features
+
+- Added `MultiBlockFeature` for placing multi-blocks in worldgen.
+
+### Actors & Entities
+
+- Added `EntityNotPickableFromInside` component to prevent cursor targeting when the player's camera lies inside the entity's collision box.
+- Updated `EntityApplyKnockbackRules`, `EntityProjectile` and `EntityAIUseKineticWeapon` with the new schema.
+- Updated `EntityMovementMeters` calculation precision to 4 decimal places.
+
+### Vanilla
+
+- Added `"minecraft:cushion"` to vanilla entity IDs list.
+- Added ~80 new block factories:
+    - Colored wool slabs, double slabs, and stairs for all 16 wool colors (`{Color}WoolDoubleSlab`, `{Color}WoolSlab`, `{Color}WoolStairs`).
+    - Full Poplar wood block set (`PoplarButton`, `PoplarDoor`, `PoplarDoubleSlab`, `PoplarFence`, `PoplarFenceGate`, `PoplarHangingSign`, `PoplarLog`, `PoplarPlanks`, `PoplarPressurePlate`, `PoplarSapling`, `PoplarShelf`, `PoplarSlab`, `PoplarStairs`, `PoplarStandingSign`, `PoplarTrapdoor`, `PoplarWallSign`, `PoplarWood`).
+    - `StrippedPoplarLog` and `StrippedPoplarWood`.
+    - Poplar leaf variants (`OrangePoplarLeaves`, `RedPoplarLeaves`, `YellowPoplarLeaves`).
+    - New blocks: `RedShrub`, `ShelfMushroom`, and `StrawBed`.
 
 ## 0.9.8.71
 

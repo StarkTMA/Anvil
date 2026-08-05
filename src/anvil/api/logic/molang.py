@@ -51,7 +51,7 @@ class Molang(str):
     )
 
     @staticmethod
-    def molang_arrow(left: "Molang", right: "Molang") -> "Molang":
+    def arrow(left: "Molang", right: "Molang") -> "Molang":
         """Returns a Molang object representing the arrow operator for Molang."""
         return Molang(f"({left}) -> ({right})")
 
@@ -3385,7 +3385,7 @@ class Context(Query):
     @classmethod
     def OwningEntity(self, molang: Optional[Molang]):
         if molang:
-            return arrow_operator(
+            return Molang.arrow(
                 self.__query__(self, self.handle, "owning_entity"), molang
             )
         return Molang.__query__(self, self.handle, "owning_entity")
@@ -3393,7 +3393,7 @@ class Context(Query):
     @classmethod
     def Other(self, molang: Optional[Molang]):
         if molang:
-            return arrow_operator(self.__query__(self, self.handle, "other"), molang)
+            return Molang.arrow(self.__query__(self, self.handle, "other"), molang)
         return Molang.__query__(self, self.handle, "other")
 
     @classmethod
@@ -3691,7 +3691,7 @@ class Math(Molang):
 
 
 @deprecated(
-    "arrow_operator is deprecated and will be removed in a future version. Use `Molang.molang_arrow()` instead for better readability and maintainability."
+    "arrow_operator is deprecated and will be removed in a future version. Use `Molang.arrow()` instead for better readability and maintainability."
 )
 def arrow_operator(left: Molang, right: Molang) -> Molang:
     """Returns a Molang object representing the arrow operator for Molang."""
@@ -3699,7 +3699,7 @@ def arrow_operator(left: Molang, right: Molang) -> Molang:
 
 
 @deprecated(
-    "molang_conditions is deprecated and will be removed in a future version. Use `Molang.molang_arrow()` instead for better readability and maintainability."
+    "molang_conditions is deprecated and will be removed in a future version. Use `Molang.arrow()` instead for better readability and maintainability."
 )
 def molang_conditions(
     condition: Molang, expression: Molang, expression2: Optional[Molang] = None

@@ -51,9 +51,15 @@ class _BlockTraits:
             blocks_to_corner_with (list[MinecraftBlockDescriptor], optional): A list of blocks that when placed next to this block, will cause the block to rotate to face the corner between them. Defaults to None.
             traits (list[PlacementDirectionTrait], optional): The traits for the block. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_direction-example
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_direction-example)
         """
+
+        if self._traits.get("minecraft:multi_block") and traits != [
+            PlacementDirectionTrait.CardinalDirection
+        ]:
+            raise ValueError(
+                "placement_direction can only be used with multi_block with the trait [PlacementDirectionTrait.CardinalDirection]."
+            )
 
         if (
             blocks_to_corner_with
@@ -86,9 +92,10 @@ class _BlockTraits:
         Parameters:
             traits (list[PlacementPositionTrait]): The traits for the block.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_position-example
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_position-example)
         """
+        if self._traits.get("minecraft:multi_block"):
+            raise ValueError("connection trait cannot be used with placement_position.")
         self._traits["minecraft:placement_position"] = {"enabled_states": traits}
 
     def connection(self, traits: list[ConnectionTrait]):
@@ -97,12 +104,18 @@ class _BlockTraits:
         Parameters:
             traits (list[ConnectionTrait]): The traits for the block.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#connection_trait_example
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#connection_trait_example)
         """
+        if self._traits.get("minecraft:multi_block"):
+            raise ValueError("connection trait cannot be used with multi_block.")
+
         self._traits["minecraft:connection"] = {"enabled_states": traits}
 
-    def multi_block(self, direction: Literal["up", "down"], part_count: int = 2):
+    def multi_block(
+        self,
+        direction: Literal["up", "down", "north", "south", "east", "west"],
+        part_count: int = 2,
+    ):
         """Defines a block composed of multiple block parts.
 
         Multi blocks treat all parts as a single block, similar to doors. When the
@@ -110,14 +123,36 @@ class _BlockTraits:
         expands the selection outline by combining the AABBs of each part.
 
         Parameters:
-            direction (Literal["up", "down"]): Direction the parts are placed from.
+            direction (Literal["up", "down", "north", "south", "east", "west"]): Direction the parts are placed from.
             part_count (int, optional): Number of parts in the multi block. Valid range is [2, 4]. Defaults to 2.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits)
         """
-        if direction not in ("up", "down"):
-            raise ValueError("multi_block direction must be either 'up' or 'down'.")
+        if {
+            "minecraft:placement_position",
+            "minecraft:connection",
+        } & self._traits.keys():
+            raise ValueError(
+                "multi_block cannot be used with placement_position, or connection traits."
+            )
+
+        if self._traits.get("minecraft:placement_direction"):
+            if self._traits["minecraft:placement_direction"]["enabled_states"] != [
+                PlacementDirectionTrait.CardinalDirection
+            ]:
+                raise ValueError(
+                    "multi_block can only be used with placement_direction with the trait [PlacementDirectionTrait.CardinalDirection]."
+                )
+
+        if direction not in ("up", "down", "north", "south", "east", "west"):
+            raise ValueError(
+                "multi_block direction must be one of 'up', 'down', 'north', 'south', 'east', or 'west'."
+            )
+        if direction in ("north", "south", "east", "west") and not CONFIG._EXPERIMENTAL:
+            raise ValueError(
+                "Horizontal multi_block directions (north, south, east, west) require the experimental flag to be enabled in the config."
+            )
+
         if not 2 <= part_count <= 4:
             raise ValueError("multi_block part_count must be between 2 and 4.")
 
@@ -178,8 +213,7 @@ class _BlockServerDescription(MinecraftDescription):
             group (ItemGroups | None, optional): The group of the Block. Defaults to None.
             is_hidden_in_commands (bool, optional): Whether the Block is hidden in commands. Defaults to False.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters)
 
         """
         self._description["description"]["menu_category"]["category"] = str(category)
@@ -195,8 +229,7 @@ class _BlockServerDescription(MinecraftDescription):
     def traits(self):
         """Sets the traits for the block.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits
+        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits)
         """
         return self._traits
 

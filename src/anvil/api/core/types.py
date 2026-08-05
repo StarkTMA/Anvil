@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, TypeAlias
 
 # Vectors
 type Vector2D = tuple[float, float]
@@ -40,3 +40,33 @@ type StructureProcessors = Literal[
 
 # Command selectors
 type Target = Literal["@p", "@r", "@a", "@e", "@s", "@c", "@v", "@initiator"]
+
+InstrumentSound: TypeAlias = Literal[
+    "note.harp",
+    "note.bd",
+    "note.snare",
+    "note.hat",
+    "note.bassattack",
+    "note.flute",
+    "note.bell",
+    "note.guitar",
+    "note.chime",
+    "note.xylophone",
+    "note.iron_xylophone",
+    "note.cow_bell",
+    "note.didgeridoo",
+    "note.bit",
+    "note.banjo",
+    "note.pling",
+    "note.trumpet",
+    "note.trumpet_exposed",
+    "note.trumpet_weathered",
+    "note.trumpet_oxidized",
+    "note.zombie",
+    "note.skeleton",
+    "note.creeper",
+    "note.enderdragon",
+    "note.witherskeleton",
+    "note.piglin",
+    "note.none",
+]

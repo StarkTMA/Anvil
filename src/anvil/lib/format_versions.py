@@ -3,8 +3,22 @@
 # ---------------------------------------------------------------------------
 
 MANIFEST_VERSION: int = 3
-MANIFEST_BUILD: str = "1.26.34"
-MANIFEST_BUILD_PREVIEW: str = "1.26.40.26"
+MANIFEST_BUILD: str = "1.26.40"
+MANIFEST_BUILD_PREVIEW: str = "1.26.50"
+
+# ---------------------------------------------------------------------------
+# Script API module versions
+# ---------------------------------------------------------------------------
+
+MODULE_MINECRAFT_SERVER: str = "2.9.0"
+MODULE_MINECRAFT_SERVER_PREVIEW: str = "2.10.0-beta"
+
+MODULE_MINECRAFT_SERVER_UI: str = "2.1.0"
+MODULE_MINECRAFT_SERVER_UI_PREVIEW: str = "2.2.0-beta"
+
+MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"
+MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"
+MODULE_MINECRAFT_SERVER_GRAPHICS: str = "1.0.0-beta"
 
 # ---------------------------------------------------------------------------
 # Content-type format versions (all currently track MANIFEST_BUILD)
@@ -15,12 +29,12 @@ ENTITY_SERVER_VERSION: str = MANIFEST_BUILD
 ENTITY_CLIENT_VERSION: str = MANIFEST_BUILD
 ITEM_SERVER_VERSION: str = MANIFEST_BUILD
 RECIPE_JSON_FORMAT_VERSION: str = MANIFEST_BUILD
-SPAWN_RULES_VERSION: str = "1.8.0"
 SOUND_DEFINITIONS_VERSION: str = MANIFEST_BUILD
-FOG_VERSION: str = "1.21.0"
 JIGSAW_VERSION: str = MANIFEST_BUILD
 BIOME_SERVER_VERSION: str = MANIFEST_BUILD
 BIOME_CLIENT_VERSION: str = MANIFEST_BUILD
+FOG_VERSION: str = "1.21.0"
+SPAWN_RULES_VERSION: str = "1.8.0"
 PBR_SETTINGS_VERSION: str = "1.21.80"
 LIGHTING_SETTINGS_VERSION: str = "1.21.80"
 SHADOW_SETTINGS_VERSION: str = "1.21.80"
@@ -52,16 +66,3 @@ BLOCK_JSON_FORMAT_VERSION: str = "1.21.40"
 CRAFTING_ITEMS_CATALOG: str = "1.21.60"
 DIALOGUE_VERSION: str = "1.18.0"
 
-# ---------------------------------------------------------------------------
-# Script API module versions
-# ---------------------------------------------------------------------------
-
-MODULE_MINECRAFT_SERVER: str = "2.8.0"
-MODULE_MINECRAFT_SERVER_PREVIEW: str = "2.9.0-beta"
-
-MODULE_MINECRAFT_SERVER_UI: str = "2.1.0"
-MODULE_MINECRAFT_SERVER_UI_PREVIEW: str = "2.2.0-beta"
-
-MODULE_MINECRAFT_SERVER_EDITOR: str = "0.1.0"
-MODULE_MINECRAFT_SERVER_GAMETEST: str = "1.0.0"
-MODULE_MINECRAFT_SERVER_GRAPHICS: str = "1.0.0-beta"

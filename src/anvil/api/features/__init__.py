@@ -6,6 +6,7 @@ from .features import (
     FossilFeature,
     GeodeFeature,
     GrowingPlantFeature,
+    MultiBlockFeature,
     MultifaceFeature,
     NetherCaveCarverFeature,
     OreFeature,
@@ -32,6 +33,7 @@ __all__ = [
     "FossilFeature",
     "GeodeFeature",
     "GrowingPlantFeature",
+    "MultiBlockFeature",
     "MultifaceFeature",
     "NetherCaveCarverFeature",
     "OreFeature",
@@ -49,3 +51,4 @@ __all__ = [
     "VegetationPatchFeature",
     "WeightedRandomFeature",
 ]
+

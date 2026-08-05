@@ -1,0 +1,8 @@
+{
+    "format_version": "{{ format_version }}",
+    "minecraft:multi_block_feature": {
+        "description": {
+            "identifier": "{{ identifier }}"
+        }
+    }
+}

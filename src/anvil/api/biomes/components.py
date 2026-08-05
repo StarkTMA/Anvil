@@ -326,8 +326,7 @@ class BiomeClimate(Component):
             downfall (float, optional): Amount that precipitation affects colors and block changes. Setting to 0 will stop rain from falling in the biome. Defaults to None.
             snow_accumulation (list[float], optional): Minimum and maximum snow level, each multiple of 0.125 is another snow layer Value must have at least 2 items. Value must have at most 2 items. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_climate
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_climate)
         """
         super().__init__("climate")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -362,8 +361,7 @@ class BiomeCreatureSpawnProbability(Component):
         Parameters:
             probability (float, optional): Probability between 0.0 and 0.75 of creatures spawning within the biome on chunk generation. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_creature_spawn_probability
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_creature_spawn_probability)
         """
         super().__init__("creature_spawn_probability")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -383,8 +381,7 @@ class BiomeHumidity(Component):
         Parameters:
             is_humid (bool, optional): Whether the biome is humid or not. Affects fire spread mechanics. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_humidity
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_humidity)
         """
         super().__init__("humidity")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -405,8 +402,7 @@ class BiomeMapTints(Component):
             foliage (Color, optional): Sets the color foliage will be tinted by in this biome on the map. Can be a string or array of numbers. Defaults to None.
             grass (dict, optional): Controls whether the grass will use a custom tint color or a noise based tint color. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_map_tints
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_map_tints)
         """
         super().__init__("map_tints")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -428,8 +424,7 @@ class BiomeMountainParameters(Component):
     ) -> None:
         """Noise parameters used to drive mountain terrain generation in Overworld.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_mountain_parameters
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_mountain_parameters)
         """
         super().__init__("mountain_parameters")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -504,8 +499,7 @@ class BiomeMultiNoiseGenerationRules(Component):
             target_weirdness (float, optional): Weirdness with which this biome should be generated, relative to other biomes. Defaults to None.
             weight (float, optional): Weight with which this biome should be generated, relative to other biomes. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_multinoise_generation_rules
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_multinoise_generation_rules)
         """
         super().__init__("multinoise_generation_rules")
 
@@ -517,8 +511,7 @@ class BiomeOverworldGenerationRules(Component):
     def __init__(self) -> None:
         """Controls how this biome is instantiated (and then potentially modified) during world generation of the overworld.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_generation_rules
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_generation_rules)
         """
         super().__init__("overworld_generation_rules")
 
@@ -539,8 +532,7 @@ class BiomeOverworldHeight(Component):
         Parameters:
             noise_params (tuple[float, float]): First value is depth - more negative means deeper underwater, while more positive means higher. Second value is scale, which affects how much noise changes as it moves from the surface. Value must have at least 2 items. Value must have at most 2 items.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height)
         """
         ...
 
@@ -551,8 +543,7 @@ class BiomeOverworldHeight(Component):
         Parameters:
             noise_type (BiomeNoiseType): Specifies a preset based on a built-in setting rather than manually using noise_params.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height)
         """
         ...
 
@@ -583,8 +574,7 @@ class BiomeReplaceBiomes(Component):
     def __init__(self) -> None:
         """Replaces a specified portion of one or more Minecraft biomes.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_replace_biomes
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_replace_biomes)
         """
         super().__init__("replace_biomes")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -655,8 +645,7 @@ class BiomeSurfaceMaterialAdjustments(Component):
     def __init__(self):
         """Specify fine-detail changes to blocks used in terrain generation (based on a noise function).
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_material_adjustments
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_material_adjustments)
         """
         super().__init__("minecraft:surface_material_adjustments")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -744,8 +733,7 @@ class BiomeSurfaceBuilder(_BaseBiomeSurfaceBuilder):
     def __init__(self):
         """Controls the materials used for terrain generation.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_builder
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_builder)
         """
         super().__init__("surface_builder")
         self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
@@ -757,8 +745,7 @@ class BiomeSubSurfaceBuilder(_BaseBiomeSurfaceBuilder):
     def __init__(self):
         """Allow specifying a minecraft:surface_builder to be applied to biomes located underneath regular terrain surface.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_subsurface_builder
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_subsurface_builder)
         """
         super().__init__("subsurface_builder")
         self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
@@ -771,8 +758,7 @@ class BiomeNoiseGradient(Component):
         """Places continuous bands of blocks according to a noise distribution.
         This surface builder's processing has been implemented with sub-terrain height ranges in mind.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_noise_gradient
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_noise_gradient)
         """
         super().__init__("noise_gradient")
         self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
@@ -909,8 +895,7 @@ class BiomeTags(Component):
         Parameters:
             tags (list[str | MinecraftBiomeTags], optional): Array of string tags used by other systems such as entity spawning. Common tags include: birch, cold, deep, desert, extreme_hills, flower_forest, forest, forest_generation, frozen, ice, ice_plains, jungle, hills, meadow, mesa, mountain, mutated, no_legacy_worldgen, ocean, pale_garden, plains, rare, swamp, taiga. Defaults to None.
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_tags
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_tags)
         """
         super().__init__("tags")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
@@ -939,8 +924,7 @@ class BiomeVillageType(Component):
         Parameters:
             village_type (Literal["default", "desert", "ice", "savanna", "taiga"]): The village type for this biome. Must be one of: "default", "desert", "ice", "savanna", "taiga".
 
-        ## Documentation reference:
-            https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_village_type
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_village_type)
         """
         super().__init__("village_type")
         self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
