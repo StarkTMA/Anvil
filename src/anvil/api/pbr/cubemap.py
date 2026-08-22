@@ -51,7 +51,7 @@ class CubeMapSettings(AddonObject):
         directional_light_contribution: float = 1.0,
         affected_by_atmospheric_scattering: bool = False,
         affected_by_volumetric_scattering: bool = False,
-    ):
+    ) -> "CubeMapSettings":
         """Set lighting parameters for the cubemap.
 
         Parameters:
@@ -73,3 +73,4 @@ class CubeMapSettings(AddonObject):
             "affected_by_atmospheric_scattering": affected_by_atmospheric_scattering,
             "affected_by_volumetric_scattering": affected_by_volumetric_scattering,
         }
+        return self

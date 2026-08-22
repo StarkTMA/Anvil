@@ -124,4 +124,7 @@ def generate_dungeon():
 3.  **Run**: Anvil will export the structure set, which the game uses to generate your dungeon.
 
 !!! tip "Linking Pools"
-In your Jigsaw Block inside Minecraft: - **Target Pool**: `my_namespace:dungeon_rooms` (matches `JigsawStructureTemplatePool("dungeon_rooms")` + implicit namespace) - **Name**: `connector_a` (matches the name you connect to) - **Target Name**: `connector_a` (connection point on the other piece)
+    In your Jigsaw Block inside Minecraft:
+    - **Target Pool**: `my_namespace:dungeon_rooms` (matches `JigsawStructureTemplatePool("dungeon_rooms")` + implicit namespace)
+    - **Name**: `connector_a` (matches the name you connect to)
+    - **Target Name**: `connector_a` (connection point on the other piece)

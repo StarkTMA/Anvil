@@ -32,7 +32,7 @@ class FeatureRule(AddonObject, DistributionMixin):
         name: str,
         feature: Identifier | Feature,
         placement_pass: FeatureRulePlacementPass,
-    ):
+    ) -> None:
         """Creates a feature rule that controls where and when one feature is placed.
 
         Parameters:
@@ -71,6 +71,6 @@ class FeatureRule(AddonObject, DistributionMixin):
     def _distribution_target(self) -> dict[str, Any]:
         return self._content["minecraft:feature_rules"]
 
-    def queue(self):
+    def queue(self) -> "FeatureRule":
         """Queues the feature rule definition for export."""
         return super().queue()

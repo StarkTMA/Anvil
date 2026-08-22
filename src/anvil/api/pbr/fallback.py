@@ -74,5 +74,5 @@ class PBRFallback(AddonObject):
             )
         }
 
-    def queue(self):
+    def queue(self) -> "PBRFallback":
         return super().queue()

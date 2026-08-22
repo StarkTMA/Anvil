@@ -28,7 +28,7 @@ class _SpawnRuleDescription(MinecraftDescription):
         self._spawn_rule_obj: "SpawnRule" = spawn_rule_obj
         self._description["description"]["population_control"] = Population.Ambient
 
-    def population_control(self, population: Population):
+    def population_control(self, population: Population) -> "SpawnRule":
         """Assign the entity to a population pool for spawn limit management.
 
         Each population pool has its own spawn limits. Entities assigned to a pool
@@ -646,7 +646,7 @@ class SpawnRule(AddonObject):
         self._conditions: list[_SpawnRuleCondition] = []
 
     @property
-    def description(self):
+    def description(self) -> "_SpawnRuleDescription":
         """Access the spawn rule description for setting basic properties.
 
         Returns:
@@ -655,7 +655,7 @@ class SpawnRule(AddonObject):
         return self._description
 
     @property
-    def add_condition(self):
+    def add_condition(self) -> "_SpawnRuleCondition":
         """Create and add a new spawn condition to this spawn rule.
 
         Each condition represents a different spawning scenario. Multiple conditions
@@ -668,7 +668,7 @@ class SpawnRule(AddonObject):
         self._conditions.append(self._condition)
         return self._condition
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = None) -> "SpawnRule":
         """Queue this spawn rule for generation in the behavior pack.
 
         Exports the description and all conditions to JSON format and adds the
@@ -683,7 +683,7 @@ class SpawnRule(AddonObject):
         if len(self._conditions) > 0:
             return super().queue(directory=directory)
 
-    def __export__(self):
+    def __export__(self) -> None:
         self._spawn_rule["minecraft:spawn_rules"].update(self._description.__export__())
         self._spawn_rule["minecraft:spawn_rules"]["conditions"] = [
             condition.__export__() for condition in self._conditions

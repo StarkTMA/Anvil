@@ -4,94 +4,31 @@ Anvil’s API is grouped by domain. Start with the relevant guide page for examp
 
 ## Content APIs
 
-### Actors
-
-::: anvil.api.actors
-
-### Blocks
-
-::: anvil.api.blocks
-
-### Items
-
-::: anvil.api.items
+- **[Actors](actors/index.md)**: Custom entity definitions, entity components, spawn rules, and materials.
+- **[Blocks](blocks/index.md)**: Block definitions, block components, and custom behaviors.
+- **[Items](items/index.md)**: Item definitions, item components, and crafting / brewing recipes.
 
 ## Runtime APIs
 
-### Logic
-
-::: anvil.api.logic
-
-### World
-
-::: anvil.api.world
-
-### Biomes
-
-::: anvil.api.biomes
-
-### UI
-
-::: anvil.api.ui
-
-### PBR
-
-::: anvil.api.pbr
-
-### Vanilla
-
-::: anvil.api.vanilla
+- **[Logic](logic/index.md)**: Molang query and expression wrappers.
+- **[World](world/index.md)**: Cameras, fog, loot tables, particles, features, and jigsaw structures.
+- **[Biomes](biomes/index.md)**: Biome definitions and components.
+- **[UI](ui/index.md)**: UI and HUD manipulation.
+- **[PBR](pbr/index.md)**: Physical-based rendering, texture sets, and material properties.
+- **[Vanilla](vanilla/index.md)**: Reference identifiers for vanilla Minecraft entities, items, and blocks.
 
 ## Core Library
 
-### Configuration
-
-::: anvil.lib.config
-
-### Schemas
-
-::: anvil.lib.schemas
-
-### Types
-
-::: anvil.api.core.types
-
-### Enums
-
-::: anvil.api.core.enums
-
-### Filters
-
-::: anvil.api.core.filters
-
-### Library Functions
-
-::: anvil.lib.lib
-
-### Reports
-
-::: anvil.lib.reports
-
-### Sounds
-
-::: anvil.api.core.sounds
-
-### Textures
-
-::: anvil.api.core.textures
-
-### Templater
-
-::: anvil.lib.templater
-
-### Translator
-
-::: anvil.lib.translator
-
-### Blockbench
-
-::: anvil.lib.blockbench
-
-### Format Versions
-
-::: anvil.lib.format_versions
+- **[Config](core/config.md)**: Anvil project configuration and settings.
+- **[Schemas](core/schemas.md)**: Low-level JSON schemas and base addon objects.
+- **[Types](core/types.md)**: Type definitions, vectors, and identifiers.
+- **[Enums](core/enums.md)**: Enums for components, slots, operations, and states.
+- **[Filters](core/filters.md)**: Minecraft test filters builder.
+- **[Lib](core/lib.md)**: Core utility functions and I/O helpers.
+- **[Reports](core/reports.md)**: Build reporting and analytics.
+- **[Sounds](core/sounds.md)**: Sound events, music definitions, and sound categories.
+- **[Textures](core/textures.md)**: Texture registration and atlas generators.
+- **[Templater](core/templater.md)**: Template generators for Bedrock files.
+- **[Translator](core/translator.md)**: Language localization helpers.
+- **[Blockbench](core/blockbench.md)**: Blockbench geometry and animation importers.
+- **[Format Versions](core/format_versions.md)**: Minecraft Bedrock format version helpers.

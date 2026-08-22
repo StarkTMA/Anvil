@@ -64,7 +64,7 @@ class BiomeServer(AddonObject):
         """The biome components."""
         return self._components
 
-    def queue(self):
+    def queue(self) -> "BiomeServer":
         """Queues the biome to be exported."""
         self._content["minecraft:biome"].update(self.description.__export__())
         self._content["minecraft:biome"].update(self._components.__export__())
@@ -351,7 +351,7 @@ class BiomeClient(AddonObject):
             "minecraft:cubemap_identifier"
         ] = {"cubemap_identifier": str(cubemap_identifier)}
 
-    def queue(self):
+    def queue(self) -> "BiomeClient":
         self._content["minecraft:client_biome"].update(self._description.__export__())
         return super().queue()
 

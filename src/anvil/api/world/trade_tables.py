@@ -177,12 +177,12 @@ class TradeTable(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "trading", CONFIG.NAMESPACE)
     _object_type = "Trade Table"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
         self.tiers_list: List[_TradeTier] = []
         self._content = {"tiers": []}
 
-    def tier(self, total_exp_required: int):
+    def tier(self, total_exp_required: int) -> "_TradeTier":
         """Adds a new level/tier of trades.
 
         Args:
@@ -196,7 +196,7 @@ class TradeTable(AddonObject):
         return t
 
     @property
-    def table_path(self):
+    def table_path(self) -> str:
         """Get the relative path of this loot table for referencing.
 
         Returns:
@@ -208,7 +208,7 @@ class TradeTable(AddonObject):
             self._name + self._extension,
         )
 
-    def queue(self):
+    def queue(self) -> "TradeTable":
         """Queue this trade table for generation.
 
         Constructs the final JSON structure and registers it for export.

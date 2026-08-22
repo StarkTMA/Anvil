@@ -469,7 +469,7 @@ class BPAnimationControllers(AddonObject):
         self._controllers_list.append(ctrl)
         return ctrl
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = None) -> "BPAnimationControllers":
         if len(self._controllers_list) > 0:
             for controller in self._controllers_list:
                 self._animation_controllers["animation_controllers"].update(
@@ -518,7 +518,7 @@ class RPAnimationControllers(AddonObject):
             [len(t._controller_states) > 0 for t in [c for c in self._controllers_list]]
         )
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = None) -> "RPAnimationControllers":
         if self._is_populated():
             for controller in self._controllers_list:
                 self._animation_controllers["animation_controllers"].update(

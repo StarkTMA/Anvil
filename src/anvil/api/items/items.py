@@ -29,7 +29,7 @@ class _ItemServerDescription(MinecraftDescription):
         category: ItemCategory,
         group: ItemGroups | None = None,
         is_hidden_in_commands: bool = False,
-    ):
+    ) -> "_ItemServerDescription":
         """Sets the menu category for the item.
 
         Parameters:
@@ -47,7 +47,7 @@ class _ItemServerDescription(MinecraftDescription):
         )
         return self
 
-    def __export__(self):
+    def __export__(self) -> dict:
         return super().__export__()
 
 
@@ -63,14 +63,14 @@ class _ItemServer(AddonObject):
         self._components = RootComponent()
 
     @property
-    def description(self):
+    def description(self) -> "_ItemServerDescription":
         return self._description
 
     @property
-    def components(self):
+    def components(self) -> "_ItemComponents":
         return self._components
 
-    def __export__(self):
+    def __export__(self) -> None:
         if len(self._components._components) == 0:
             raise ValueError(
                 f"Item '{self.name}' must have at least one component defined."
@@ -106,21 +106,22 @@ class Item(MinecraftItemDescriptor):
         self._attachable = None
 
     @property
-    def attachable(self):
+    def attachable(self) -> "Attachable":
         if not self._attachable:
             self._attachable = Attachable(self.name)
 
         return self._attachable
 
-    def queue(self):
+    def queue(self) -> "Item":
         self.server.queue()
 
         if self._attachable:
             self._attachable.queue()
 
         ANVIL.__queue__(self)
+        return self
 
-    def __export__(self):
+    def __export__(self) -> None:
         item_name_comp = self.server._server_item["minecraft:item"]["components"][
             ItemDisplayName._identifier
         ]["value"]

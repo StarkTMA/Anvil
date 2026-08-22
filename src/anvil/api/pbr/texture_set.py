@@ -261,7 +261,7 @@ class TextureSet(AddonObject):
     def set_particle_textures(
         self,
         components: TextureComponents,
-    ):
+    ) -> "TextureSet":
         """Sets the texture components specifically for a particle texture set.
 
         Args:
@@ -271,23 +271,25 @@ class TextureSet(AddonObject):
             "particles",
             components,
         )
+        return self
 
     def set_item_textures(
         self,
         components: TextureComponents,
-    ):
+    ) -> "TextureSet":
         """Sets the texture components specifically for an item texture set.
 
         Args:
             components (TextureComponents): The PBR texture components for the item.
         """
         self.__set_individual_textures("textures/items", components)
+        return self
 
     def set_blockbench_textures(
         self,
         blockbench_name: str,
         components: TextureComponents,
-    ):
+    ) -> "TextureSet":
         """Sets texture components using standard Blockbench exporter conventions.
 
         Args:
@@ -314,13 +316,14 @@ class TextureSet(AddonObject):
 
         self._path = os.path.join(self._path, self._target, blockbench_name)
         self._content["minecraft:texture_set"].update(color_map)
+        return self
 
     def set_vanilla_texture(
         self,
         blockbench_name: str,
         components: TextureComponents,
         subfolder: str = "",
-    ):
+    ) -> "TextureSet":
         """Sets texture components for overriding a vanilla texture.
 
         Args:
@@ -358,8 +361,9 @@ class TextureSet(AddonObject):
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
 
         self._content["minecraft:texture_set"].update(color_map)
+        return self
 
-    def __export__(self):
+    def __export__(self) -> None:
         """Copies queued texture image assets to the destination resource pack and compiles the texture set definition JSON."""
         if hasattr(self, "_queued_textures"):
             for source, textures in self._queued_textures.items():

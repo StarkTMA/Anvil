@@ -58,14 +58,14 @@ class Filter:
 
     # Filter Groups
     @staticmethod
-    def all_of(filters: List["Filter"]):
+    def all_of(filters: List["Filter"]) -> "Filter":
         """Returns true when all of the filters evaluate to true.
 
-        Parameters:
-            *filters: Variable number of filter conditions
+        Args:
+            filters (List[Filter]): List of filter conditions.
 
         Returns:
-            dict: Filter group requiring all conditions to be true
+            Filter: Filter group requiring all conditions to be true.
 
         Example:
             Filter.all_of(
@@ -79,14 +79,14 @@ class Filter:
         return Filter(is_all_of=filters)
 
     @staticmethod
-    def any_of(filters: List["Filter"]):
+    def any_of(filters: List["Filter"]) -> "Filter":
         """Returns true when any of the filters evaluate to true.
 
-        Parameters:
-            *filters: Variable number of filter conditions
+        Args:
+            filters (List[Filter]): List of filter conditions.
 
         Returns:
-            dict: Filter group requiring at least one condition to be true
+            Filter: Filter group requiring at least one condition to be true.
 
         Example:
             Filter.any_of(
@@ -100,14 +100,14 @@ class Filter:
         return Filter(is_any_of=filters)
 
     @staticmethod
-    def none_of(filters: List["Filter"]):
+    def none_of(filters: List["Filter"]) -> "Filter":
         """Returns true when none of the filters evaluate to true.
 
-        Parameters:
-            *filters: Variable number of filter conditions
+        Args:
+            filters (List[Filter]): List of filter conditions.
 
         Returns:
-            dict: Filter group requiring no conditions to be true
+            Filter: Filter group requiring no conditions to be true.
 
         Example:
             Filter.none_of(
@@ -127,7 +127,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter(
             test="actor_health",
             subject=subject,
@@ -143,10 +143,10 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the designated equipment location for the subject entity is completely empty.
 
-        Parameters:
+        Args:
             value (FilterEquipmentDomain, optional): The equipment location to test. Defaults to FilterEquipmentDomain.Any.
             subject (FilterSubject, optional): Subject to test the value against. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use in testing. Defaults to FilterOperation.Equals.
@@ -160,10 +160,10 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the designated equipment location for the subject entity has any empty slot.
 
-        Parameters:
+        Args:
             value (FilterEquipmentDomain, optional): The equipment location to test. Defaults to FilterEquipmentDomain.Any.
             subject (FilterSubject, optional): Subject to test the value against. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use in testing. Defaults to FilterOperation.Equals.
@@ -178,7 +178,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter(
             "bool_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value
         )
@@ -190,18 +190,18 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Compares the current time with a float value in the range (0.0, 1.0).
 
         Time values: 0.0=Noon, 0.25=Sunset, 0.5=Midnight, 0.75=Sunrise
 
-        Parameters:
+        Args:
             value (float): Time value between 0.0 and 1.0
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing game time
+            Filter: Filter testing game time
 
         Example:
             Filter.clock_time(0.0)   # Test for noon
@@ -222,16 +222,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Compares the distance to the nearest Player with a float value.
 
-        Parameters:
+        Args:
             value (float): The distance value to compare against (minimum 0.0)
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing distance to nearest player
+            Filter: Filter testing distance to nearest player
 
         Example:
             # Test if entity is within 10 blocks of nearest player
@@ -252,7 +252,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter(
             "enum_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value
         )
@@ -265,7 +265,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter(
             "float_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value
         )
@@ -277,10 +277,10 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity has the named ability.
 
-        Parameters:
+        Args:
             value (str): The ability type to test. Valid values:
                 - "flySpeed", "flying", "instabuild", "invulnerable",
                 - "lightning", "mayfly", "mute", "noclip",
@@ -289,7 +289,7 @@ class Filter:
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing player ability
+            Filter: Filter testing player ability
 
         Example:
             Filter.has_ability("instabuild")  # Test if player has creative mode
@@ -307,7 +307,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Checks if the entity is in a biome with the specified tag."""
         return Filter("has_biome_tag", subject, operator, None, value)
 
@@ -318,16 +318,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity contains the named component.
 
-        Parameters:
+        Args:
             value (str): The component identifier to test for (e.g., "minecraft:health")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing for component presence
+            Filter: Filter testing for component presence
 
         Example:
             # Test if entity has health component
@@ -362,16 +362,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject Player entity has opened a container.
 
-        Parameters:
+        Args:
             value (bool): Whether container is open
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing if player has container open
+            Filter: Filter testing if player has container open
 
         Example:
             Filter.has_container_open(True)  # Test if player has container open
@@ -389,7 +389,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("has_damaged_equipment", subject, operator, domain, value)
 
     @classmethod
@@ -399,7 +399,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("has_damage", subject, operator, None, value)
 
     @classmethod
@@ -410,7 +410,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("has_equipment", subject, operator, domain, value)
 
     @classmethod
@@ -421,7 +421,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("has_equipment", subject, operator, domain, value)
 
     @classmethod
@@ -431,16 +431,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests whether the Subject has the specified mob effect.
 
-        Parameters:
+        Args:
             value (str): The mob effect identifier (e.g., "poison", "regeneration")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing mob effect presence
+            Filter: Filter testing mob effect presence
 
         Example:
             Filter.has_mob_effect("poison")       # Test if entity is poisoned
@@ -458,16 +458,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject has been given a custom name.
 
-        Parameters:
+        Args:
             value (bool): Whether entity has a nametag
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing nametag presence
+            Filter: Filter testing nametag presence
 
         Example:
             Filter.has_nametag(True)  # Test if entity has been named
@@ -484,7 +484,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter(
             "has_property", subject, operator, None, f"{CONFIG.NAMESPACE}:{value}"
         )
@@ -496,16 +496,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is holding a ranged weapon like a bow or crossbow.
 
-        Parameters:
+        Args:
             value (bool): Whether entity has ranged weapon
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing ranged weapon possession
+            Filter: Filter testing ranged weapon possession
 
         Example:
             Filter.has_ranged_weapon(True)  # Test if entity has bow/crossbow
@@ -522,16 +522,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject is holding an item with silk touch enchantment.
 
-        Parameters:
+        Args:
             value (bool): Whether item has silk touch
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing silk touch presence
+            Filter: Filter testing silk touch presence
 
         Example:
             Filter.has_silk_touch(True)  # Test if held item has silk touch
@@ -548,7 +548,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("has_tag", subject, operator, None, value)
 
     @classmethod
@@ -558,7 +558,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("has_target", subject, operator, None, value)
 
     @classmethod
@@ -568,16 +568,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests whether the target has any trade supply left.
 
-        Parameters:
+        Args:
             value (bool): Whether entity has trade supply
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing trade supply availability
+            Filter: Filter testing trade supply availability
 
         Example:
             Filter.has_trade_supply(True)  # Test if villager has trades available
@@ -594,7 +594,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("home_distance", subject, operator, None, value)
 
     @classmethod
@@ -604,18 +604,18 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Compares the current 24 hour time with an int value in the range [0, 24000].
 
         This is an updated version of clock_time that uses integers based on in-game time.
 
-        Parameters:
+        Args:
             value (int): Time value between 0 and 24000 (0=dawn, 6000=noon, 12000=sunset, 18000=midnight)
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing game time in ticks
+            Filter: Filter testing game time in ticks
 
         Example:
             Filter.hourly_clock_time(6000)   # Test for noon
@@ -635,16 +635,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the specified duration in seconds of inactivity for despawning has been reached.
 
-        Parameters:
+        Args:
             value (int): Inactivity duration in seconds
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing inactivity timer
+            Filter: Filter testing inactivity timer
 
         Example:
             Filter.inactivity_timer(300, operator=FilterOperation.GreaterEqual)  # 5+ minutes inactive
@@ -661,16 +661,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is inside a specified Block type.
 
-        Parameters:
+        Args:
             value (str): Block identifier (e.g., "minecraft:water", "minecraft:lava")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing if entity is inside block
+            Filter: Filter testing if entity is inside block
 
         Example:
             Filter.in_block("minecraft:water")  # Test if entity is in water block
@@ -688,16 +688,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is in a caravan.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is in caravan
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing caravan membership
+            Filter: Filter testing caravan membership
 
         Example:
             Filter.in_caravan(True)  # Test if llama is in caravan
@@ -714,16 +714,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is in the clouds.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is in clouds
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing cloud height
+            Filter: Filter testing cloud height
 
         Example:
             Filter.in_clouds(True)  # Test if entity is at cloud level
@@ -740,16 +740,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity in contact with any water: water, rain, splash water bottle.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is in contact with water
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing water contact
+            Filter: Filter testing water contact
 
         Example:
             Filter.in_contact_with_water(True)  # Test if entity touches any water source
@@ -766,16 +766,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is in lava.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is in lava
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing lava immersion
+            Filter: Filter testing lava immersion
 
         Example:
             Filter.in_lava(True)  # Test if entity is in lava
@@ -792,16 +792,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is in Nether dimension.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is in Nether
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing Nether dimension
+            Filter: Filter testing Nether dimension
 
         Example:
             Filter.in_nether(True)  # Test if entity is in Nether
@@ -818,16 +818,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is in Overworld dimension.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is in Overworld
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing Overworld dimension
+            Filter: Filter testing Overworld dimension
 
         Example:
             Filter.in_overworld(True)  # Test if entity is in Overworld
@@ -845,7 +845,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter(
             "int_property", subject, operator, f"{CONFIG.NAMESPACE}:{domain}", value
         )
@@ -857,7 +857,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("in_water", subject, operator, None, value)
 
     @classmethod
@@ -867,16 +867,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is in water or rain.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is in water or rain
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing water or rain exposure
+            Filter: Filter testing water or rain exposure
 
         Example:
             Filter.in_water_or_rain(True)  # Test if entity is wet
@@ -893,16 +893,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests the current altitude against a provided value.
 
-        Parameters:
+        Args:
             value (int): Y-coordinate altitude to test
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing altitude/Y position
+            Filter: Filter testing altitude/Y position
 
         Example:
             Filter.is_altitude(64, operator=FilterOperation.Greater)  # Above sea level
@@ -919,16 +919,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is fleeing from other mobs.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is avoiding mobs
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing avoidance behavior
+            Filter: Filter testing avoidance behavior
 
         Example:
             Filter.is_avoiding_mobs(True)  # Test if entity is fleeing
@@ -945,16 +945,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is a baby.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is baby
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing baby state
+            Filter: Filter testing baby state
 
         Example:
             Filter.is_baby(True)  # Test if entity is baby/child
@@ -971,7 +971,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_biome", subject, operator, None, str(value))
 
     @classmethod
@@ -981,16 +981,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the block has the given name.
 
-        Parameters:
+        Args:
             value (MinecraftBlockDescriptor | Identifier): Block descriptor or identifier to test
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing block type
+            Filter: Filter testing block type
 
         Example:
             Filter.is_block("minecraft:stone")  # Test if block is stone
@@ -1013,7 +1013,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_bound_to_creaking_heart", subject, operator, None, value)
 
     @classmethod
@@ -1023,16 +1023,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests the current brightness against a provided value in the range (0.0f, 1.0f).
 
-        Parameters:
+        Args:
             value (float): Brightness value between 0.0 (darkest) and 1.0 (brightest)
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing brightness level
+            Filter: Filter testing brightness level
 
         Example:
             Filter.is_brightness(0.5, operator=FilterOperation.Less)  # Test if dim
@@ -1051,16 +1051,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is climbing.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is climbing
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing climbing state
+            Filter: Filter testing climbing state
 
         Example:
             Filter.is_climbing(True)  # Test if entity is on ladder/vines
@@ -1077,16 +1077,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is the named color.
 
-        Parameters:
+        Args:
             value (str): Color name (e.g., "red", "blue", "white", etc.)
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing entity color
+            Filter: Filter testing entity color
 
         Example:
             Filter.is_color("red")   # Test if sheep is red
@@ -1104,7 +1104,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_daytime", subject, operator, None, value)
 
     @classmethod
@@ -1114,7 +1114,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_difficulty", subject, operator, None, str(value))
 
     @classmethod
@@ -1124,16 +1124,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is a member of the named family.
 
-        Parameters:
+        Args:
             value (str): The family name to test for (e.g., "monster", "player", "mob")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing family membership
+            Filter: Filter testing family membership
 
         Example:
             # Test if entity is a monster
@@ -1154,16 +1154,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests whether a named game rule is active.
 
-        Parameters:
+        Args:
             value (str): Game rule name (e.g., "doMobSpawning", "keepInventory")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing game rule state
+            Filter: Filter testing game rule state
 
         Example:
             Filter.is_game_rule("doMobSpawning")  # Test if mob spawning enabled
@@ -1180,16 +1180,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests whether the Subject is in an area with humidity.
 
-        Parameters:
+        Args:
             value (bool): Whether area is humid
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing humidity level
+            Filter: Filter testing humidity level
 
         Example:
             Filter.is_humid(True)  # Test if in humid biome (jungle, swamp)
@@ -1206,16 +1206,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is immobile.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is immobile
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing immobility state
+            Filter: Filter testing immobility state
 
         Example:
             Filter.is_immobile(True)  # Test if entity cannot move
@@ -1232,16 +1232,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests whether the Subject is inside the bounds of a village.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is in village
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing village bounds
+            Filter: Filter testing village bounds
 
         Example:
             Filter.is_in_village(True)  # Test if entity is within village
@@ -1258,16 +1258,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is leashed.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is leashed
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing leash state
+            Filter: Filter testing leash state
 
         Example:
             Filter.is_leashed(True)  # Test if mob is on leash
@@ -1284,16 +1284,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity leashed to the calling entity.
 
-        Parameters:
+        Args:
             value (bool): Whether subject is leashed to caller
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing leash connection
+            Filter: Filter testing leash connection
 
         Example:
             Filter.is_leashed_to(True, subject=FilterSubject.Target)  # Test if target is leashed to cls
@@ -1310,7 +1310,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_mark_variant", subject, operator, None, value)
 
     @classmethod
@@ -1320,16 +1320,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject is not at full health.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is missing health
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing damaged state
+            Filter: Filter testing damaged state
 
         Example:
             Filter.is_missing_health(True)  # Test if entity is damaged
@@ -1346,16 +1346,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is moving.
 
-        Parameters:
+        Args:
             value (bool): The movement state to test for
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing movement state
+            Filter: Filter testing movement state
 
         Example:
             Filter.is_moving(True)  # Test if entity is moving
@@ -1372,16 +1372,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject is currently pathfinding.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is pathfinding
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing navigation state
+            Filter: Filter testing navigation state
 
         Example:
             Filter.is_navigating(True)  # Test if mob is pathfinding to destination
@@ -1398,7 +1398,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_owner", subject, operator, None, value)
 
     @classmethod
@@ -1408,7 +1408,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_panicking", subject, operator, None, value)
 
     @classmethod
@@ -1418,16 +1418,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject's persistence matches the bool value passed in.
 
-        Parameters:
+        Args:
             value (bool): Persistence state to test
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing persistence
+            Filter: Filter testing persistence
 
         Example:
             Filter.is_persistent(True)  # Test if entity won't despawn
@@ -1444,7 +1444,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_raider", subject, operator, None, value)
 
     @classmethod
@@ -1454,7 +1454,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_riding", subject, operator, None, value)
 
     @classmethod
@@ -1464,16 +1464,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is riding the calling entity.
 
-        Parameters:
+        Args:
             value (bool): Whether subject is riding caller
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing rider relationship
+            Filter: Filter testing rider relationship
 
         Example:
             Filter.is_riding_self(True, subject=FilterSubject.Target)  # Test if target is riding cls
@@ -1490,7 +1490,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_sitting", subject, operator, None, value)
 
     @classmethod
@@ -1500,7 +1500,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_skin_id", subject, operator, None, value)
 
     @classmethod
@@ -1510,16 +1510,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests whether the Subject is sleeping.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is sleeping
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing sleep state
+            Filter: Filter testing sleep state
 
         Example:
             Filter.is_sleeping(True)  # Test if villager is sleeping in bed
@@ -1536,16 +1536,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity has the sneak input held.
 
-        Parameters:
+        Args:
             value (bool): Whether sneak input is held
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing sneak input
+            Filter: Filter testing sneak input
 
         Example:
             Filter.is_sneak_held(True)  # Test if player is holding sneak button
@@ -1562,16 +1562,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity is sneaking.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is sneaking
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing sneak state
+            Filter: Filter testing sneak state
 
         Example:
             Filter.is_sneaking(True)  # Test if player is sneaking
@@ -1588,16 +1588,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests whether the Subject is in an area with snow cover.
 
-        Parameters:
+        Args:
             value (bool): Whether area has snow cover
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing snow coverage
+            Filter: Filter testing snow coverage
 
         Example:
             Filter.is_snow_covered(True)  # Test if in snowy biome
@@ -1614,7 +1614,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_sprinting", subject, operator, None, value)
 
     @classmethod
@@ -1624,7 +1624,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_target", subject, operator, None, value)
 
     @classmethod
@@ -1634,16 +1634,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests whether the current temperature is a given type.
 
-        Parameters:
+        Args:
             value (str): Temperature type ("cold", "mild", "ocean", "warm")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing temperature category
+            Filter: Filter testing temperature category
 
         Example:
             Filter.is_temperature_type("cold")  # Test if in cold biome
@@ -1660,18 +1660,18 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests the current temperature against a provided value in the range (0.0, 1.0).
 
         Where 0.0 is the coldest temp and 1.0 is the hottest.
 
-        Parameters:
+        Args:
             value (float): Temperature value between 0.0 (coldest) and 1.0 (hottest)
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing temperature value
+            Filter: Filter testing temperature value
 
         Example:
             Filter.is_temperature_value(0.8, operator=FilterOperation.Greater)  # Test if very hot
@@ -1690,16 +1690,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is underground.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is underground
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing underground state
+            Filter: Filter testing underground state
 
         Example:
             Filter.is_underground(True)  # Test if entity is below surface
@@ -1716,7 +1716,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_underwater", subject, operator, None, value)
 
     @classmethod
@@ -1726,7 +1726,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_variant", subject, operator, None, value)
 
     @classmethod
@@ -1736,16 +1736,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity's vehicle is a member of the named family.
 
-        Parameters:
+        Args:
             value (str): Vehicle family name to test
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing vehicle family
+            Filter: Filter testing vehicle family
 
         Example:
             Filter.is_vehicle_family("boat")  # Test if riding boat
@@ -1762,7 +1762,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("is_visible", subject, operator, None, value)
 
     @classmethod
@@ -1772,16 +1772,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject block is submerged in water.
 
-        Parameters:
+        Args:
             value (bool): Whether block is waterlogged
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing waterlogged state
+            Filter: Filter testing waterlogged state
 
         Example:
             Filter.is_waterlogged(True, subject=FilterSubject.Block)  # Test if block is waterlogged
@@ -1798,16 +1798,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the mob is outside of the specified light level range (0, 16).
 
-        Parameters:
+        Args:
             value (int): Light level value between 0 and 16
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing light level
+            Filter: Filter testing light level
 
         Example:
             Filter.light_level(7, operator=FilterOperation.Less)  # Test if dark enough for mob spawning
@@ -1824,16 +1824,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Compares the current moon intensity with a float value in the range (0.0, 1.0).
 
-        Parameters:
+        Args:
             value (float): Moon intensity between 0.0 and 1.0
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing moon brightness
+            Filter: Filter testing moon brightness
 
         Example:
             Filter.moon_intensity(1.0)  # Test for full moon
@@ -1852,16 +1852,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Compares the current moon phase with an integer value in the range (0, 7).
 
-        Parameters:
+        Args:
             value (int): Moon phase between 0 and 7 (0=full moon, 4=new moon)
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing moon phase
+            Filter: Filter testing moon phase
 
         Example:
             Filter.moon_phase(0)  # Test for full moon
@@ -1879,16 +1879,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject is on fire.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is on fire
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing fire state
+            Filter: Filter testing fire state
 
         Example:
             Filter.on_fire(True)  # Test if entity is burning
@@ -1905,7 +1905,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("on_ground", subject, operator, None, value)
 
     @classmethod
@@ -1915,16 +1915,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject is on a hot block (like magma).
 
-        Parameters:
+        Args:
             value (bool): Whether entity is on hot block
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing hot block contact
+            Filter: Filter testing hot block contact
 
         Example:
             Filter.on_hot_block(True)  # Test if standing on magma block
@@ -1941,16 +1941,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity is on a ladder.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is on ladder
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing ladder state
+            Filter: Filter testing ladder state
 
         Example:
             Filter.on_ladder(True)  # Test if entity is climbing ladder
@@ -1967,7 +1967,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("owner_distance", subject, operator, None, value)
 
     @classmethod
@@ -1977,7 +1977,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("random_chance", subject, operator, None, value)
 
     @classmethod
@@ -1987,7 +1987,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("rider_count", subject, operator, None, value)
 
     @classmethod
@@ -1997,16 +1997,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject is a surface mob.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is surface mob
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing surface mob classification
+            Filter: Filter testing surface mob classification
 
         Example:
             Filter.surface_mob(True)  # Test if mob spawns on surface
@@ -2023,16 +2023,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject is taking fire damage.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is taking fire damage
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing fire damage
+            Filter: Filter testing fire damage
 
         Example:
             Filter.taking_fire_damage(True)  # Test if entity is burning and taking damage
@@ -2049,7 +2049,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("target_distance", subject, operator, None, value)
 
     @classmethod
@@ -2059,16 +2059,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject is trusted by entity.
 
-        Parameters:
+        Args:
             value (bool): Whether entity trusts subject
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing trust relationship
+            Filter: Filter testing trust relationship
 
         Example:
             Filter.trusts(True, subject=FilterSubject.Player)  # Test if entity trusts player
@@ -2085,7 +2085,7 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         return Filter("was_last_hurt_by", subject, operator, None, value)
 
     @classmethod
@@ -2095,16 +2095,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests the current weather in the dimension against a provided weather value.
 
-        Parameters:
+        Args:
             value (str): Weather type ("clear", "rain", "thunder")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing weather conditions
+            Filter: Filter testing weather conditions
 
         Example:
             Filter.weather("rain")     # Test if raining
@@ -2122,16 +2122,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests the current weather, at the actor's position, against a provided weather value.
 
-        Parameters:
+        Args:
             value (str): Weather type ("clear", "rain", "thunder")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing local weather conditions
+            Filter: Filter testing local weather conditions
 
         Example:
             Filter.weather_at_position("rain")  # Test if raining at exact position
@@ -2148,16 +2148,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns the Y rotation of this entity.
 
-        Parameters:
+        Args:
             value (float): Y rotation value in degrees
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing Y rotation
+            Filter: Filter testing Y rotation
 
         Example:
             Filter.y_rotation(0.0, operator=FilterOperation.Less)  # Test if facing north-ish
@@ -2174,16 +2174,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true when the subject entity's controlling passenger is a member of the named family.
 
-        Parameters:
+        Args:
             value (str): The family name to test for (e.g., "monster", "player", "mob")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing family membership
+            Filter: Filter testing family membership
 
         Example:
             # Test if entity is a monster
@@ -2203,16 +2203,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity has an item with the specified component.
 
-        Parameters:
+        Args:
             component (str): The component name to check for on the item
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing for item component
+            Filter: Filter testing for item component
 
         Example:
             Filter.has_item_with_component("minecraft:enchantments")  # Test if entity has an enchanted item
@@ -2229,16 +2229,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests if the subject is tamed.
 
-        Parameters:
+        Args:
             value (bool): Whether entity is tamed
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing if entity is tamed
+            Filter: Filter testing if entity is tamed
 
         Example:
             Filter.is_tamed(True)  # Test if entity is tamed
@@ -2255,16 +2255,16 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Returns true if the subject entity has the same equipment in the specified slot as the caller.
 
-        Parameters:
+        Args:
             slot (Slots): The equipment slot to compare (e.g., Slots.Head, Slots.Chest, Slots.Legs, Slots.Feet, Slots.Mainhand, Slots.Offhand)
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
         Returns:
-            dict: Filter testing for matching equipment
+            Filter: Filter testing for matching equipment
 
         """
         if slot not in [
@@ -2286,10 +2286,10 @@ class Filter:
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
-    ):
+    ) -> "Filter":
         """Tests the redstone signal strength at the subject entity's position.
 
-        Parameters:
+        Args:
             value (int): Redstone strength to test (0 to 15).
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.

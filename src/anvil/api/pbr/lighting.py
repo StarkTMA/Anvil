@@ -178,7 +178,7 @@ class LightingSettings(AddonObject):
             )
         }
 
-    def queue(self):
+    def queue(self) -> "LightingSettings":
         return super().queue()
 
 

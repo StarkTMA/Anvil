@@ -46,7 +46,7 @@ class AtmosphericSettings(AddonObject):
         start: float | list[KeyFrame],
         mie_start: float | list[KeyFrame],
         max: float | list[KeyFrame],
-    ):
+    ) -> "AtmosphericSettings":
         """How the atmosphere is divided up.
 
         Parameters:
@@ -73,8 +73,9 @@ class AtmosphericSettings(AddonObject):
                 max if isinstance(max, (int, float)) else KeyFrame.keyframe_dict(max)
             ),
         }
+        return self
 
-    def rayleigh_strength(self, value: float | list[KeyFrame]):
+    def rayleigh_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
         """How strong the atmosphere's rayleigh scattering term is.
 
         Parameters:
@@ -83,8 +84,9 @@ class AtmosphericSettings(AddonObject):
         self._content["minecraft:atmosphere_settings"]["rayleigh_strength"] = (
             value if isinstance(value, (int, float)) else KeyFrame.keyframe_dict(value)
         )
+        return self
 
-    def sun_mie_strength(self, value: float | list[KeyFrame]):
+    def sun_mie_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
         """How strong the sun's mie scattering term is.
 
         Parameters:
@@ -93,8 +95,9 @@ class AtmosphericSettings(AddonObject):
         self._content["minecraft:atmosphere_settings"]["sun_mie_strength"] = (
             value if isinstance(value, (int, float)) else KeyFrame.keyframe_dict(value)
         )
+        return self
 
-    def moon_mie_strength(self, value: float | list[KeyFrame]):
+    def moon_mie_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
         """How strong the moon's mie scattering term is.
 
         Parameters:
@@ -103,8 +106,9 @@ class AtmosphericSettings(AddonObject):
         self._content["minecraft:atmosphere_settings"]["moon_mie_strength"] = (
             value if isinstance(value, (int, float)) else KeyFrame.keyframe_dict(value)
         )
+        return self
 
-    def sun_glare_shape(self, value: float | list[KeyFrame]):
+    def sun_glare_shape(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
         """How the lobe of the mie scattering is shaped.
 
         Parameters:
@@ -113,8 +117,9 @@ class AtmosphericSettings(AddonObject):
         self._content["minecraft:atmosphere_settings"]["sun_glare_shape"] = (
             value if isinstance(value, (int, float)) else KeyFrame.keyframe_dict(value)
         )
+        return self
 
-    def sky_zenith_color(self, color: Color | list[KeyFrame]):
+    def sky_zenith_color(self, color: Color | list[KeyFrame]) -> "AtmosphericSettings":
         """The RGB color of the zenith region of the atmosphere. Supports RGB array or HEX string.
 
         Parameters:
@@ -130,8 +135,9 @@ class AtmosphericSettings(AddonObject):
             if is_kf
             else AnvilFormatter.convert_color(color)
         )
+        return self
 
-    def sky_horizon_color(self, color: Color | list[KeyFrame]):
+    def sky_horizon_color(self, color: Color | list[KeyFrame]) -> "AtmosphericSettings":
         """The RGB color of the horizon region of the atmosphere. Supports RGB array or HEX string.
 
         Parameters:
@@ -147,3 +153,4 @@ class AtmosphericSettings(AddonObject):
             if is_kf
             else AnvilFormatter.convert_color(color)
         )
+        return self

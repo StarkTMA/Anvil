@@ -25,7 +25,7 @@ class AimAssistPreset(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "cameras", "presets")
     _object_type = "Aim Assist Preset"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """Initializes the Aim Assist Preset.
 
         Parameters:
@@ -34,7 +34,7 @@ class AimAssistPreset(AddonObject):
         super().__init__(name)
         self.content(JsonSchemes.aim_assist_preset(self.identifier))
 
-    def item_settings(self, settings: dict):
+    def item_settings(self, settings: dict) -> "AimAssistPreset":
         """Specifies which category of aim assist rules to use when specific items are held.
 
         Parameters:
@@ -43,7 +43,7 @@ class AimAssistPreset(AddonObject):
         self._content["minecraft:aim_assist_preset"]["item_settings"] = settings
         return self
 
-    def default_item_settings(self, setting: str):
+    def default_item_settings(self, setting: str) -> "AimAssistPreset":
         """Sets the default aim assist category for items not listed in item_settings.
 
         Parameters:
@@ -52,7 +52,7 @@ class AimAssistPreset(AddonObject):
         self._content["minecraft:aim_assist_preset"]["default_item_settings"] = setting
         return self
 
-    def hand_settings(self, setting: str):
+    def hand_settings(self, setting: str) -> "AimAssistPreset":
         """Sets the aim assist behavior applied when the player is not holding any items.
 
         Parameters:
@@ -61,7 +61,7 @@ class AimAssistPreset(AddonObject):
         self._content["minecraft:aim_assist_preset"]["hand_settings"] = setting
         return self
 
-    def exclusion_list(self, exclusions: dict):
+    def exclusion_list(self, exclusions: dict) -> "AimAssistPreset":
         """Specifies entities or blocks that the aim assist will ignore.
 
         Parameters:
@@ -70,7 +70,7 @@ class AimAssistPreset(AddonObject):
         self._content["minecraft:aim_assist_preset"]["exclusion_list"] = exclusions
         return self
 
-    def liquid_targeting_list(self, targets: dict):
+    def liquid_targeting_list(self, targets: dict) -> "AimAssistPreset":
         """Lists the items that are allowed to target liquids.
 
         Parameters:
@@ -79,10 +79,10 @@ class AimAssistPreset(AddonObject):
         self._content["minecraft:aim_assist_preset"]["liquid_targeting_list"] = targets
         return self
 
-    def __export__(self):
+    def __export__(self) -> None:
         return self._content
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = None) -> "AimAssistPreset":
         self.content(self._content)
         return super().queue(directory)
 
@@ -169,7 +169,7 @@ class AimAssistCategories(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "cameras", "presets")
     _object_type = "Aim Assist Categories"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes the Aim Assist Categories container."""
         super().__init__("categories")
         self.content(JsonSchemes.aim_assist_categories())
@@ -185,7 +185,7 @@ class AimAssistCategories(AddonObject):
         self._categories.append(category)
         return category
 
-    def __export__(self):
+    def __export__(self) -> None:
         self._content["minecraft:aim_assist_categories"]["categories"] = []
         for category in self._categories:
             self._content["minecraft:aim_assist_categories"]["categories"].append(
@@ -193,7 +193,7 @@ class AimAssistCategories(AddonObject):
             )
         return self._content
 
-    def queue(self):
+    def queue(self) -> "AimAssistCategories":
         return super().queue()
 
 
@@ -233,7 +233,7 @@ class CameraPreset(AddonObject):
         self._camera_preset = JsonSchemes.camera_preset(self.identifier, self._inherit)
         self._replace_reticle = False
 
-    def position(self, x: float = None, y: float = None, z: float = None):
+    def position(self, x: float = None, y: float = None, z: float = None) -> "CameraPreset":
         """Sets the constant coordinate overrides for the camera.
 
         Parameters:
@@ -249,7 +249,7 @@ class CameraPreset(AddonObject):
             self._camera_preset["minecraft:camera_preset"]["pos_z"] = z
         return self
 
-    def rotation(self, x: float = None, y: float = None):
+    def rotation(self, x: float = None, y: float = None) -> "CameraPreset":
         """Sets the default rotation pitch and yaw overrides for the camera.
 
         Parameters:
@@ -262,7 +262,7 @@ class CameraPreset(AddonObject):
             self._camera_preset["minecraft:camera_preset"]["rot_y"] = y
         return self
 
-    def starting_rotation(self, x: float = None, y: float = None):
+    def starting_rotation(self, x: float = None, y: float = None) -> "CameraPreset":
         """Sets the initial starting rotation pitch and yaw of the camera.
 
         Parameters:
@@ -275,7 +275,7 @@ class CameraPreset(AddonObject):
             self._camera_preset["minecraft:camera_preset"]["starting_rot_y"] = y
         return self
 
-    def player_effects(self, value: bool):
+    def player_effects(self, value: bool) -> "CameraPreset":
         """Enables or disables screen effects (like fire, night vision, blindness) for this camera preset.
 
         Parameters:
@@ -284,7 +284,7 @@ class CameraPreset(AddonObject):
         self._camera_preset["minecraft:camera_preset"]["player_effects"] = value
         return self
 
-    def listener(self, value: bool | str):
+    def listener(self, value: bool | str) -> "CameraPreset":
         """Specifies where the sound listener "ears" are positioned while using the camera.
 
         Parameters:
@@ -300,7 +300,7 @@ class CameraPreset(AddonObject):
             self._camera_preset["minecraft:camera_preset"]["listener"] = value
         return self
 
-    def control_scheme(self, value: ControlSchemes | str):
+    def control_scheme(self, value: ControlSchemes | str) -> "CameraPreset":
         """Overrides the default input response scheme for this camera.
 
         Parameters:
@@ -312,7 +312,7 @@ class CameraPreset(AddonObject):
             self._camera_preset["minecraft:camera_preset"]["control_scheme"] = value
         return self
 
-    def extend_player_rendering(self, value: bool = True):
+    def extend_player_rendering(self, value: bool = True) -> "CameraPreset":
         """Extends entity rendering distance so chunks and entities render at further distances.
 
         Optimized to render the player and leashed entities.
@@ -325,7 +325,7 @@ class CameraPreset(AddonObject):
         ] = value
         return self
 
-    def view_offset(self, x_offset: float, y_offset: float):
+    def view_offset(self, x_offset: float, y_offset: float) -> "CameraPreset":
         """Sets the view offset relative to the camera position.
 
         Parameters:
@@ -338,7 +338,7 @@ class CameraPreset(AddonObject):
         ]
         return self
 
-    def entity_offset(self, x_offset: float, y_offset: float, z_offset: float):
+    def entity_offset(self, x_offset: float, y_offset: float, z_offset: float) -> "CameraPreset":
         """Sets the target entity tracking offset.
 
         Parameters:
@@ -353,7 +353,7 @@ class CameraPreset(AddonObject):
         ]
         return self
 
-    def radius(self, radius: float):
+    def radius(self, radius: float) -> "CameraPreset":
         """Sets the orbital radius (distance from target) for boom/follow/orbit cameras.
 
         Parameters:
@@ -371,7 +371,7 @@ class CameraPreset(AddonObject):
         angle: list[float] = [30.0, 30.0],
         distance: float = 8.0,
         replace_reticle: bool = False,
-    ):
+    ) -> "CameraPreset":
         """Configures targeting aid/assist options for the camera.
 
         Parameters:
@@ -400,7 +400,7 @@ class CameraPreset(AddonObject):
         vertical_rotation_limit: list[float] = [0.0, 180.0],
         continue_targeting: bool = False,
         tracking_radius: float = 50.0,
-    ):
+    ) -> "CameraPreset":
         """Enables target tracking of a specific entity with custom boundaries.
 
         Parameters:
@@ -442,12 +442,12 @@ class CameraPreset(AddonObject):
         ] = tracking_radius
         return self
 
-    def queue(self):
+    def queue(self) -> "CameraPreset":
         """Queues the camera preset to be exported."""
         self.content(self._camera_preset)
         return super().queue()
 
-    def __export__(self):
+    def __export__(self) -> None:
         if self._replace_reticle:
             if os.path.exists(
                 os.path.join(

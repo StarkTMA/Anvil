@@ -152,7 +152,7 @@ class Config:
         """
         return option in self._config[section]
 
-    def get_option(self, section: ConfigSection, option: ConfigOption):
+    def get_option(self, section: ConfigSection, option: ConfigOption) -> Any:
         """Gets a value from the anvilconfig.json file.
 
         Parameters:
@@ -160,7 +160,7 @@ class Config:
             option (ConfigOption): The option to get the value from.
 
         Returns:
-            str: The value of the option.
+            Any: The value of the option.
         """
         return self._config[section][option]
 

@@ -14,7 +14,7 @@ class DimensionConfiguration(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "dimensions")
     _object_type = "Dimension Height"
 
-    def __init__(self, dimension: Dimension):
+    def __init__(self, dimension: Dimension) -> None:
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
             raise RuntimeError("DimensionHeight cannot be used in an addon package.")
         if dimension not in (Dimension.Overworld, Dimension.Nether, Dimension.TheEnd):
@@ -25,7 +25,7 @@ class DimensionConfiguration(AddonObject):
 
         super().__init__(str(dimension.removeprefix("minecraft:")))
 
-    def heigh_bounds(self, range: tuple[int, int]):
+    def heigh_bounds(self, range: tuple[int, int]) -> "DimensionConfiguration":
         """Set the height bounds for the dimension.
 
         Args:

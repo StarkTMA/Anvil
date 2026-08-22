@@ -744,7 +744,7 @@ class ManifestRP(AddonObject):
             cls._instance = super(ManifestRP, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes a ManifestRP instance."""
         if not hasattr(self, "_initialized"):
             super().__init__("manifest")
@@ -756,7 +756,7 @@ class ManifestRP(AddonObject):
         """Returns a Manifest Settings object to add settings to the manifest."""
         return _ManifestSettings(self)
 
-    def queue(self):
+    def queue(self) -> "ManifestRP":
         if CONFIG.PBR:
             self._content.update({"capabilities": ["pbr"]})
 
@@ -778,7 +778,7 @@ class ManifestBP(AddonObject):
             cls._instance = super(ManifestBP, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initializes a ManifestBP instance."""
         if not hasattr(self, "_initialized"):
             super().__init__("manifest")
@@ -794,7 +794,7 @@ class ManifestBP(AddonObject):
             )
         return _ManifestSettings(self)
 
-    def queue(self):
+    def queue(self) -> "ManifestBP":
         if CONFIG._SCRIPT_API:
             self._content["modules"].append(
                 {

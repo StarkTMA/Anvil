@@ -285,10 +285,10 @@ class NinesliceJson(AddonObject):
     _path = os.path.join(CONFIG.RP_PATH, "textures", "ui")
     _object_type = "Nineslice Json"
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         super().__init__(name)
 
-    def queue(self):
+    def queue(self) -> "NinesliceJson":
         return super().queue()
 
 
@@ -2057,7 +2057,7 @@ class _UIVariables(AddonObject):
         """Initialize the global variables container."""
         super().__init__("_global_variables")
 
-    def add_variable(self, variable, value):
+    def add_variable(self, variable, value) -> "_UIVariables":
         """Add a global variable.
 
         Args:
@@ -2065,6 +2065,7 @@ class _UIVariables(AddonObject):
             value: Variable value (string, number, boolean, or expression)
         """
         self._content.update({variable: value})
+        return self
 
 
 class _UIDefs(AddonObject):
@@ -2085,15 +2086,16 @@ class _UIDefs(AddonObject):
         super().__init__("_ui_defs")
         self._files = []
 
-    def add_file(self, path: str):
+    def add_file(self, path: str) -> "_UIDefs":
         """Add a UI file to the definitions list.
 
         Args:
             path (str): Relative path to the UI file
         """
         self._files.append(path)
+        return self
 
-    def queue(self):
+    def queue(self) -> "_UIDefs":
         """Process and generate the UI definitions file.
 
         Returns:
@@ -2136,7 +2138,7 @@ class _UIAnimation(AddonObject):
             "namespace": namespace,
         }
 
-    def add_animation(self, animation_name: str):
+    def add_animation(self, animation_name: str) -> "_UIAnimationElement":
         """Add a new animation to the collection.
 
         Args:
@@ -2148,7 +2150,7 @@ class _UIAnimation(AddonObject):
         self._animations.append(_UIAnimationElement(animation_name))
         return self._animations[-1]
 
-    def queue(self, directory: str = ""):
+    def queue(self, directory: str = "") -> "_UIAnimation":
         """Process and generate the animation file.
 
         Args:
@@ -2226,7 +2228,7 @@ class _UIScreen(AddonObject):
         trigger: UIElementTrigger = UIElementTrigger.NONE,
         keyword: str = None,
         hides_hud: bool = False,
-    ):
+    ) -> "_UIElement":
         """Add a new UI element to the screen.
 
         This method creates a new UI element and configures it based on the
@@ -2304,7 +2306,7 @@ class _UIScreen(AddonObject):
         self._elements.append(new_element)
         return new_element
 
-    def queue(self, directory: str = ""):
+    def queue(self, directory: str = "") -> "_UIScreen":
         """Process and generate the screen file.
 
         Args:
@@ -2360,17 +2362,17 @@ class _HUDScreen(_UIScreen):
     #    self.root_panel.modification.remove("curor_rend")
     #    return self
 
-    def disable_mob_effect(self):
+    def disable_mob_effect(self) -> "_HUDScreen":
         self.root_panel.modification.remove("mob_effects_renderer")
         return self
 
-    def disable_helpers(self):
+    def disable_helpers(self) -> "_HUDScreen":
         self.root_panel.modification.remove("left_helpers")
         self.root_panel.modification.remove("right_helpers")
         self.root_panel.modification.remove("emote_expediate_helpers")
         return self
 
-    def disable_hotbar(self):
+    def disable_hotbar(self) -> "_HUDScreen":
         self.root_panel.modification.remove("centered_gui_elements")
         self.root_panel.modification.remove("centered_gui_elements_at_bottom_middle")
         self.root_panel.modification.remove(
@@ -2381,11 +2383,11 @@ class _HUDScreen(_UIScreen):
         self.root_panel.modification.remove("exp_rend_resizable")
         return self
 
-    def disable_sidebar(self):
+    def disable_sidebar(self) -> "_HUDScreen":
         self.root_panel.modification.remove("sidebar")
         return self
 
-    def queue(self, directory: str = ""):
+    def queue(self, directory: str = "") -> "_HUDScreen":
         return super().queue()
 
 
@@ -2405,10 +2407,10 @@ class _NPCScreen(_UIScreen):
         element_name: str,
         trigger: UIElementTrigger = UIElementTrigger.NONE,
         keyword: str = None,
-    ):
+    ) -> "_UIElement":
         return super().add_element(element_name, trigger, keyword, False)
 
-    def queue(self, directory: str = ""):
+    def queue(self, directory: str = "") -> "_NPCScreen":
         return super().queue()
 
 
@@ -2427,7 +2429,7 @@ class _AnvilHUDScreen(_UIScreen):
         trigger: UIElementTrigger = UIElementTrigger.NONE,
         keyword: str = None,
         hides_hud: bool = False,
-    ):
+    ) -> "_UIElement":
         if not trigger is UIElementTrigger.NONE:
             self.anvil_hud.controls(
                 f"{element_name}_instance@anvil_hud.{element_name}_factory"
@@ -2443,7 +2445,7 @@ class _AnvilHUDScreen(_UIScreen):
         zoom_in: float = 1,
         zoom_wait: float = 6,
         zoom_out: float = 1,
-    ):
+    ) -> "_UIElement":
         # element
         image_element = self.add_element(name, UIElementTrigger.Title, name)
         image_element.type(UIElementType.Panel)
@@ -2534,11 +2536,12 @@ class _AnvilHUDScreen(_UIScreen):
         return image_element
 
     # Layer 100
-    def add_logo(self):
+    def add_logo(self) -> "_AnvilHUDScreen":
         self.add_image_panel("logo")
+        return self
 
     # Layer 101
-    def add_blinking_screen(self):
+    def add_blinking_screen(self) -> "_AnvilHUDScreen":
         # animation
         blink_fade_in = self._anvil_animation.add_animation("blink_fade_in")
         blink_fade_in.anim_type(UIAnimType.Alpha)
@@ -2571,9 +2574,10 @@ class _AnvilHUDScreen(_UIScreen):
         blink_element.anchor(UIAnchor.Center, UIAnchor.Center)
         blink_element.size(("300%", "300%"))
         blink_element.alpha("@anvil_animations.blink_fade_in")
+        return self
 
     # Layer 101
-    def add_black_bars(self):
+    def add_black_bars(self) -> "_AnvilHUDScreen":
         black_bars_in = self._anvil_animation.add_animation("black_bars_in")
         black_bars_in.anim_type(UIAnimType.Size)
         black_bars_in.easing(UIEasing.InOutSine)
@@ -2633,8 +2637,9 @@ class _AnvilHUDScreen(_UIScreen):
                 "($text = $anvil.black_bars_out.text)",
             ]
         )
+        return self
 
-    def credits_screen_constructor(self, credits_duration: int = 30):
+    def credits_screen_constructor(self, credits_duration: int = 30) -> "_UICreditsConstructor":
         credits = self.add_element("credits", UIElementTrigger.Title, "credits")
         credits.type(UIElementType.Panel)
         credits.layer(100)
@@ -2647,7 +2652,7 @@ class _AnvilHUDScreen(_UIScreen):
 
         return _UICreditsConstructor(self, credits, credits_duration)
 
-    def queue(self, directory: str = ""):
+    def queue(self, directory: str = "") -> "_AnvilHUDScreen":
         return super().queue(directory)
 
 
@@ -2678,7 +2683,7 @@ class _AnvilNPCScreen(_UIScreen):
         self,
         element_name: str,
         keyword: str = None,
-    ):
+    ) -> "_UIElement":
         if keyword:
             self._ignored_panel_texts.append(f"$anvil.npc_screen.{element_name}.text")
             self._variables.add_variable(
@@ -2701,7 +2706,7 @@ class _AnvilNPCScreen(_UIScreen):
 
         return super().add_element(element_name, UIElementTrigger.NONE, keyword, False)
 
-    def queue(self, directory: str = ""):
+    def queue(self, directory: str = "") -> "_AnvilNPCScreen":
         self._variables.add_variable(
             "$anvil.npc_screen.vanilla",
             f"({'(' * len(self._ignored_panel_texts)}#dialogtext - "
@@ -2727,10 +2732,10 @@ class _AnvilCommon(_UIScreen):
         element_name: str,
         trigger: UIElementTrigger = UIElementTrigger.NONE,
         keyword: str = None,
-    ):
+    ) -> "_UIElement":
         return super().add_element(element_name, trigger, keyword, False)
 
-    def basic_components(self):
+    def basic_components(self) -> "_AnvilCommon":
         # ---------------------------
         # Label
         # Must supply your own text
@@ -2757,8 +2762,9 @@ class _AnvilCommon(_UIScreen):
         # ---------------------------
         panel = self.add_element("panel")
         panel.type(UIElementType.Panel)
+        return self
 
-    def complex_components(self):
+    def complex_components(self) -> "_AnvilCommon":
         # npc model renderer (for npc screen)
         npc_renderer = self.add_element("npc_renderer")
         npc_renderer.type(UIElementType.Panel)
@@ -2785,8 +2791,9 @@ class _AnvilCommon(_UIScreen):
         player_model.size(("80%", "80%"))
         player_model.enable_scissor_test
         player_model.offset((0, "50%y"))
+        return self
 
-    def image_label(self):
+    def image_label(self) -> "_AnvilCommon":
         # ---------------------------
         # Image Label
         # Must supply your own text key
@@ -2819,8 +2826,9 @@ class _AnvilCommon(_UIScreen):
         label_binding.binding.binding_type(UIBindingType.View).source_control_name(
             "$control_name"
         ).source_property_name("#text").target_property_name("#text")
+        return self
 
-    def title_actionbar(self):
+    def title_actionbar(self) -> "_AnvilCommon":
         title_binding = self.add_element("title_binding")
         title_binding.property_bag(title_text="", subtitle_text="")
         title_binding.binding.binding_name(
@@ -2836,8 +2844,9 @@ class _AnvilCommon(_UIScreen):
         actionbar_binding = self.add_element("actionbar_binding")
         actionbar_binding.keys("text", "$actionbar_text")
         actionbar_binding.visible("$binding_text")
+        return self
 
-    def scoreboard_retrieve(self):
+    def scoreboard_retrieve(self) -> "_AnvilCommon":
         """Use ``retrieve_score`` as the element. A few variables must be passed.
         To retrieve the score value, you must call the source_control_name using the element based on ``retrieve_score``,
         then call the property ``score`` for the int value, or ``text`` for the string value.
@@ -2884,8 +2893,9 @@ class _AnvilCommon(_UIScreen):
         retrieve_score.binding.binding_type(UIBindingType.View).source_control_name(
             "$name"
         ).source_property_name("#score_integer").target_property_name("#score_integer")
+        return self
 
-    def queue(self, directory: str = ""):
+    def queue(self, directory: str = "") -> "_AnvilCommon":
         return super().queue("anvil")
 
 
@@ -2893,7 +2903,7 @@ class _AnvilAnimations(_UIAnimation):
     def __init__(self, defs: _UIDefs) -> None:
         super().__init__("animations", "anvil_animations", defs)
 
-    def queue(self):
+    def queue(self) -> "_AnvilAnimations":
         return super().queue("anvil")
 
 

@@ -100,7 +100,9 @@ class BPAnimations(AddonObject):
         self._animations = JsonSchemes.animations_bp()
         self._animations_list: list[_BPAnimation] = []
 
-    def add_animation(self, animation_short_name: str, loop: bool = False):
+    def add_animation(
+        self, animation_short_name: str, loop: bool = False
+    ) -> "_BPAnimation":
         """Adds a new animation to the current actor.
 
         Args:
@@ -108,13 +110,13 @@ class BPAnimations(AddonObject):
             loop (bool, optional): If the animation should loop or not. Defaults to False.
 
         Returns:
-            Animation.
+            _BPAnimation: The created animation.
         """
         self._animation = _BPAnimation(self.identifier, animation_short_name, loop)
         self._animations_list.append(self._animation)
         return self._animation
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = None) -> "BPAnimations":
         """Queues the animations for export.
 
         Args:

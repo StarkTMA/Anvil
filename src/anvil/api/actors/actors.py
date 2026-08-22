@@ -155,10 +155,11 @@ class _ActorReuseAssets:
             {shortname: texture_name}
         )
 
-    def geometry(self, shortname: str, geometry_name: str):
+    def geometry(self, shortname: str, geometry_name: str) -> "_ActorReuseAssets":
         self.client._description["description"]["geometry"].update(
             {shortname: geometry_name}
         )
+        return self
 
     def particle_effect(self, shortname: str, particle_name: str):
         self.client["description"]["particle_effects"].update(
@@ -727,24 +728,24 @@ class _EntityClientDescription(_ActorClientDescription):
         self._spawn_egg_texture = None
         super().__init__(name, is_vanilla)
 
-    def enable_attachables(self, value: bool = False):
+    def enable_attachables(self, value: bool = False) -> "_EntityClientDescription":
         """This determines if the entity should render attachables such as armor."""
         self._description["description"]["enable_attachables"] = value
         return self
 
     @property
-    def HeldItemIgnoresLighting(self):
+    def HeldItemIgnoresLighting(self) -> "_EntityClientDescription":
         """This determines if the held item should ignore lighting."""
         self._description["description"]["held_item_ignores_lighting"] = True
         return self
 
     @property
-    def HideArmor(self):
+    def HideArmor(self) -> "_EntityClientDescription":
         """This determines if the armor should be hidden."""
         self._description["description"]["hide_armor"] = True
         return self
 
-    def spawn_egg(self, texture: TextureComponents, texture_index: int = 0):
+    def spawn_egg(self, texture: TextureComponents, texture_index: int = 0) -> "_EntityClientDescription":
         """This method adds a spawn egg texture to the entity.
 
         Parameters:
@@ -762,8 +763,9 @@ class _EntityClientDescription(_ActorClientDescription):
             "texture": f"{CONFIG.NAMESPACE}:{texture.color}",
             "texture_index": texture_index if texture_index == 0 else {},
         }
+        return self
 
-    def spawn_egg_color(self, base_color: str, overlay_color: str):
+    def spawn_egg_color(self, base_color: str, overlay_color: str) -> "_EntityClientDescription":
         """This method adds a spawn egg color to the entity.
 
         Parameters:
@@ -774,8 +776,9 @@ class _EntityClientDescription(_ActorClientDescription):
             "base_color": base_color,
             "overlay_color": overlay_color,
         }
+        return self
 
-    def held_item_scale(self, scale: Molang | str = 1):
+    def held_item_scale(self, scale: Molang | str = 1) -> "_EntityClientDescription":
         """Sets the scale of the held item.
 
         Parameters:
@@ -783,8 +786,9 @@ class _EntityClientDescription(_ActorClientDescription):
         """
         if scale != 1:
             self._description["description"]["held_item_scale"] = scale
+        return self
 
-    def __export__(self, directory: str):
+    def __export__(self, directory: str) -> dict:
         """Queues the entity for export.
 
         Parameters:
@@ -816,7 +820,7 @@ class _AttachableClientDescription(_ActorClientDescription):
         super().__init__(name, is_vanilla)
 
     @property
-    def reuse_assets(self):
+    def reuse_assets(self) -> "_ActorReuseAssets":
         """Whether or not the actor should reuse assets from another actor."""
         return _ActorReuseAssets(self._description)
 
@@ -843,7 +847,7 @@ class _EntityServerDescription(_ActorDescription):
     @deprecated(
         "The Summonable property is deprecated and will be removed in a future version. Please use the config method instead.",
     )
-    def Summonable(self):
+    def Summonable(self) -> "_EntityServerDescription":
         """Sets whether or not we can summon this entity using commands such as /summon.
 
         Returns
@@ -858,7 +862,7 @@ class _EntityServerDescription(_ActorDescription):
     @deprecated(
         "The Spawnable property is deprecated and will be removed in a future version. Please use the config method instead.",
     )
-    def Spawnable(self):
+    def Spawnable(self) -> "_EntityServerDescription":
         """Sets whether or not this entity has a spawn egg in the creative ui.
 
         Returns
@@ -873,7 +877,7 @@ class _EntityServerDescription(_ActorDescription):
     @deprecated(
         "The Experimental property is deprecated and will be removed in a future version. Please use the config method instead.",
     )
-    def Experimental(self):
+    def Experimental(self) -> "_EntityServerDescription":
         """Sets whether or not this entity is experimental. Experimental entities are only enabled when the experimental toggle is enabled.
 
         Returns
@@ -893,7 +897,7 @@ class _EntityServerDescription(_ActorDescription):
     @deprecated(
         "The RuntimeIdentifier property is deprecated and will be removed in a future version. Please use the config method instead.",
     )
-    def RuntimeIdentifier(self, entity: "MinecraftEntityDescriptor"):
+    def RuntimeIdentifier(self, entity: "MinecraftEntityDescriptor") -> "_EntityServerDescription":
         """Sets the runtime identifier of the entity.
 
         Parameters:
@@ -917,6 +921,7 @@ class _EntityServerDescription(_ActorDescription):
             raise RuntimeError(
                 f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]"
             )
+        return self
 
     def config(
         self,
@@ -925,7 +930,7 @@ class _EntityServerDescription(_ActorDescription):
         experimental: bool = False,
         runtime_identifier: "MinecraftEntityDescriptor" = None,
         spawn_category: str = "misc",
-    ):
+    ) -> "_EntityServerDescription":
         """Sets the config of the entity.
 
         Parameters:
@@ -961,15 +966,16 @@ class _EntityServerDescription(_ActorDescription):
         return self
 
     @property
-    def add_property(self):
+    def add_property(self) -> "_Properties":
         """Adds a property to the entity."""
         return self._properties
 
-    def spawn_category(self):
+    def spawn_category(self) -> "_EntityServerDescription":
         """Sets the spawn category of the entity."""
         self._description["description"]["spawn_category"] = "none"
+        return self
 
-    def __export__(self):
+    def __export__(self) -> dict:
         """Exports the entity description."""
         self._description["description"]["properties"] = self._properties.__export__()
         return super().__export__()
@@ -1007,12 +1013,12 @@ class _EntityServer(AddonObject):
         self._add_despawn_function()
 
     @property
-    def description(self):
+    def description(self) -> "_EntityServerDescription":
         """Returns the entity description."""
         return self._description
 
     @property
-    def spawn_rule(self):
+    def spawn_rule(self) -> "SpawnRule":
         """Returns the spawn rule of the entity."""
         return self._spawn_rule
 
@@ -1022,7 +1028,7 @@ class _EntityServer(AddonObject):
         animate: bool = False,
         condition: str | Molang = None,
         initial_state: str = "default",
-    ):
+    ) -> "_AnimationController":
         """Sets the mapping of internal animation controller references to actual animations.
 
         Parameters:
@@ -1044,7 +1050,7 @@ class _EntityServer(AddonObject):
         loop: bool = False,
         animate: bool = False,
         condition: str | Molang = None,
-    ):
+    ) -> "_Animation":
         """Sets the mapping of internal animation references to actual animations.
 
         Parameters:
@@ -1057,7 +1063,7 @@ class _EntityServer(AddonObject):
         self._description._animations(self._name, animation_name, animate, condition)
         return self._animations.add_animation(animation_name, loop)
 
-    def init_vars(self, **vars):
+    def init_vars(self, **vars) -> "_EntityServer":
         """Initializes variables for an entity."""
         for k, v in vars.items():
             Variable._set_var(k)
@@ -1076,7 +1082,7 @@ class _EntityServer(AddonObject):
             ]
             | str
         ),
-    ):
+    ) -> "_EntityEvent":
         """Adds an event to the entity.
             - `minecraft:entity_born` triggers an event call on an entity when the entity is born via breeding.
             - `minecraft:entity_spawned` triggers an event call on an entity when the entity is spawned in the world.
@@ -1093,11 +1099,11 @@ class _EntityServer(AddonObject):
         return self._events[event_name]
 
     @property
-    def components(self):
+    def components(self) -> "_Components":
         """Returns the components of the entity."""
         return self._components
 
-    def component_group(self, component_group_name: str):
+    def component_group(self, component_group_name: str) -> "_ComponentGroup":
         """Adds a component group to the entity.
 
         Parameters:
@@ -1107,7 +1113,7 @@ class _EntityServer(AddonObject):
         self._component_groups.append(RootComponent(group_name=component_group_name))
         return self._component_groups[-1]
 
-    def add_basic_components(self):
+    def add_basic_components(self) -> "_EntityServer":
         """Adds basic server components to the entity.
 
         This includes:
@@ -1155,8 +1161,9 @@ class _EntityServer(AddonObject):
             EntityPushableByEntity(),
             EntityPushThrough(1),
         )
+        return self
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = None) -> "_EntityServer":
         """Queues the entity for export.
 
         Parameters:
@@ -1164,7 +1171,7 @@ class _EntityServer(AddonObject):
         """
         super().queue(directory=directory)
 
-    def __export__(self):
+    def __export__(self) -> None:
         if len(self._vars) > 0:
             self.animation_controller("variables", True).add_state("default").on_entry(
                 *self._vars
@@ -1233,16 +1240,16 @@ class _EntityClient(AddonObject):
         self._description = _EntityClientDescription(self.identifier, self._is_vanilla)
 
     @property
-    def reuse_assets(self):
+    def reuse_assets(self) -> "_ActorReuseAssets":
         """Whether or not the actor should reuse assets from another actor."""
         return _ActorReuseAssets(self._description)
 
     @property
-    def description(self):
+    def description(self) -> "_EntityClientDescription":
         """Returns the entity description."""
         return self._description
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = None) -> "_EntityClient":
         """Queues the entity for export.
 
         Parameters:
@@ -1250,7 +1257,7 @@ class _EntityClient(AddonObject):
         """
         super().queue(directory=directory)
 
-    def __export__(self):
+    def __export__(self) -> None:
         self._client_entity["minecraft:client_entity"].update(
             self._description.__export__(self._directory)
         )
@@ -1260,7 +1267,7 @@ class _EntityClient(AddonObject):
 
 
 class Entity(MinecraftEntityDescriptor):
-    def __init__(self, name, is_vanilla=False, allow_runtime=True):
+    def __init__(self, name, is_vanilla=False, allow_runtime=True) -> None:
         super().__init__(name, is_vanilla, allow_runtime)
 
         self.server = _EntityServer(name, is_vanilla)
@@ -1271,7 +1278,7 @@ class Entity(MinecraftEntityDescriptor):
         directory: str = None,
         display_name: str = None,
         spawn_egg_name: str = None,
-    ):
+    ) -> "Entity":
         self._display_name = (
             self._display_name if display_name is None else display_name
         )
@@ -1294,8 +1301,9 @@ class Entity(MinecraftEntityDescriptor):
         self.client.queue(directory)
         self.server.queue(directory)
         ANVIL.__queue__(self)
+        return self
 
-    def __export__(self):
+    def __export__(self) -> None:
         CONFIG.Report.add_report(
             ReportType.ENTITY,
             vanilla=self._is_vanilla,
@@ -1322,11 +1330,11 @@ class Attachable(AddonObject):
         self._description = _AttachableClientDescription(self.identifier, False)
 
     @property
-    def description(self):
+    def description(self) -> "_AttachableClientDescription":
         """Returns the description of the attachable."""
         return self._description
 
-    def queue(self):
+    def queue(self) -> "Attachable":
         """Queues the attachable."""
 
         self._attachable["minecraft:attachable"].update(self._description.__export__())

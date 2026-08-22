@@ -159,12 +159,12 @@ class Dialogue(AddonObject):
         self._dialogues = JsonSchemes.dialogues()
         self._scenes: list[_DialogueScene] = []
 
-    def add_scene(self, scene_tag: str):
+    def add_scene(self, scene_tag: str) -> "_DialogueScene":
         scene = _DialogueScene(scene_tag)
         self._scenes.append(scene)
         return scene
 
-    def queue(self, directory: str = None):
+    def queue(self, directory: str = None) -> "Dialogue":
         for scene in self._scenes:
             self._dialogues["minecraft:npc_dialogue"]["scenes"].append(
                 scene.__export__()

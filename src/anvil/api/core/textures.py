@@ -1,5 +1,5 @@
 import os
-from typing import overload
+from typing import Any, overload
 
 from anvil.lib.blockbench import BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG
@@ -29,7 +29,7 @@ class ItemTexturesObject(AddonObject):
             self._initialized = True
 
     @overload
-    def add_item(self, item_name: str, item_sprites: list[str]):
+    def add_item(self, item_name: str, item_sprites: list[str]) -> "ItemTexturesObject":
         """Adds item textures to the content.
 
         Parameters:
@@ -37,6 +37,7 @@ class ItemTexturesObject(AddonObject):
             item_sprites (list[str]): The names of the item sprites.
         """
         ...
+        return self
 
     @overload
     def add_item(self, item_name: str, blockbench: str, item_sprites: list[str]):
@@ -125,19 +126,19 @@ class ItemTexturesObject(AddonObject):
                 ]
             }
 
-    def queue(self):
+    def queue(self) -> "ItemTexturesObject":
         """Queues the item textures.
 
         Returns:
-            object: The parent's queue method result.
+            Any: The parent's queue method result.
         """
         return super().queue("")
 
-    def __export__(self):
+    def __export__(self) -> None:
         """Exports the item textures if at least one item was added.
 
         Returns:
-            object: The parent's export method result.
+            Any: The parent's export method result.
         """
         if len(self._content["texture_data"]) > 0:
             for items in self._items.values():
@@ -179,7 +180,7 @@ class TerrainTexturesObject(AddonObject):
         directory: str,
         block_textures: list[str],
         force_vanilla: bool = False,
-    ):
+    ) -> "TerrainTexturesObject":
         """Adds block textures to the content.
 
         Parameters:
@@ -204,6 +205,7 @@ class TerrainTexturesObject(AddonObject):
                 ]
             ]
         }
+        return self
 
     def add_block_variations(
         self,
@@ -211,13 +213,14 @@ class TerrainTexturesObject(AddonObject):
         directory: str,
         block_variant: list[dict[str, str]],
         force_vanilla: bool = False,
-    ):
+    ) -> None:
         """Adds block textures with variations to the content.
 
         Parameters:
-            shortname (str): The shortname defined in terrain_texture.json for this block.
-            blockbench_name (str): The name of the blockbench model.
-            variations (list[dict]): List of variations for the block textures.
+            block_name (str): The name of the block.
+            directory (str): The directory containing the texture files.
+            block_variant (list[dict[str, str]]): List of variations for the block textures.
+            force_vanilla (bool, optional): Whether to force minecraft namespace. Defaults to False.
         """
 
         id = (
@@ -247,19 +250,19 @@ class TerrainTexturesObject(AddonObject):
             }
         }
 
-    def queue(self):
+    def queue(self) -> "TerrainTexturesObject":
         """Queues the block textures.
 
         Returns:
-            object: The parent's queue method result.
+            Any: The parent's queue method result.
         """
         return super().queue()
 
-    def __export__(self):
+    def __export__(self) -> None:
         """Exports the block textures if at least one block texture was added.
 
         Returns:
-            object: The parent's export method result, or None if no textures to export.
+            Any: The parent's export method result, or None if no textures to export.
         """
         if len(self._content.get("texture_data", {})) > 0:
             return super().__export__()
@@ -297,7 +300,7 @@ class FlipBookTexturesObject(AddonObject):
         atlas_tile_variant: int = None,
         replicate: int = 1,
         blend_frames: bool = True,
-    ):
+    ) -> "FlipBookTexturesObject":
         """Adds an animated flipbook texture for a block.
 
         Flipbook textures are animated textures used by blocks like fire, water, lava and magma.
@@ -353,20 +356,21 @@ class FlipBookTexturesObject(AddonObject):
             flipbook_entry["blend_frames"] = blend_frames
 
         self._content.append(flipbook_entry)
+        return self
 
-    def queue(self):
+    def queue(self) -> "FlipBookTexturesObject":
         """Queues the block textures.
 
         Returns:
-            object: The parent's queue method result.
+            Any: The parent's queue method result.
         """
         return super().queue()
 
-    def __export__(self):
+    def __export__(self) -> None:
         """Exports the block textures if at least one block texture was added.
 
         Returns:
-            object: The parent's export method result, or None if no textures to export.
+            Any: The parent's export method result, or None if no textures to export.
         """
         if len(self._content) > 0 and isinstance(self._content, list):
             # for items in self._content["texture_data"].values():

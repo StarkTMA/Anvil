@@ -137,7 +137,7 @@ class FogSettings(AddonObject):
         fog_end: int,
         render_distance_type: RenderDistanceType = RenderDistanceType.Render,
         camera_location: FogCameraLocation = FogCameraLocation.Air,
-    ):
+    ) -> "_FogDistance":
         """Adds and configures distance-based fog settings for a specific camera location environment.
 
         Args:
@@ -170,7 +170,7 @@ class FogSettings(AddonObject):
         uniform: bool = True,
         zero_density_height: float = 0.0,
         max_density_height: float = 0.0,
-    ):
+    ) -> "FogSettings":
         """Sets the volumetric density parameters for water. Used for Ray Tracing / PBR rendering.
 
         Args:
@@ -216,7 +216,7 @@ class FogSettings(AddonObject):
         uniform: bool = False,
         zero_density_height: float = 0.0,
         max_density_height: float = 0.0,
-    ):
+    ) -> "FogSettings":
         """Sets the volumetric density parameters for air. Used for Ray Tracing / PBR rendering.
 
         Args:
@@ -262,7 +262,7 @@ class FogSettings(AddonObject):
         water_absorption: Color | None = None,
         air_scattering: Color | None = None,
         air_absorption: Color | None = None,
-    ):
+    ) -> "FogSettings":
         """Sets media scattering and absorption RGB coefficients for water and air volumetric mediums.
 
         Args:
@@ -311,7 +311,7 @@ class FogSettings(AddonObject):
             }
         return self
 
-    def henyey_greenstein_g(self, air_g: float = 0.0, water_g: float = 0.0):
+    def henyey_greenstein_g(self, air_g: float = 0.0, water_g: float = 0.0) -> "FogSettings":
         """Sets Henyey-Greenstein phase function asymmetry parameters for air and water.
         Supported in format_version 1.21.90+ and only applicable in Vibrant Visuals (PBR) packs.
 
@@ -336,7 +336,7 @@ class FogSettings(AddonObject):
         hg["water"] = {"henyey_greenstein_g": clamp(water_g, -1.0, 1.0)}
         return self
 
-    def queue(self):
+    def queue(self) -> "FogSettings":
         """
         Validates, orders the JSON structure canonically, and queues the fog file for export.
 

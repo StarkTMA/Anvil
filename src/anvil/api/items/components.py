@@ -64,7 +64,12 @@ class ItemKineticWeapon(Component):
         """Specifies that the item is a kinetic weapon that uses kinetic energy when used.
 
         Parameters:
-            energy_per_use (int): The amount of kinetic energy consumed per use of the weapon. Default is 100.
+            reach (Tuple[float, float], optional): The reach range. Defaults to None.
+            creative_reach (Tuple[float, float], optional): The creative reach range. Defaults to None.
+            damage_modifier (float, optional): The damage modifier. Defaults to 0.
+            damage_multiplier (float, optional): The damage multiplier. Defaults to 1.
+            delay (Tick, optional): Delay in ticks. Defaults to 0.
+            hitbox_margin (float, optional): Hitbox margin. Defaults to 0.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_kinetic_weapon)
         """
@@ -381,7 +386,6 @@ class ItemStorageItem(Component):
         Parameters:
             allow_nested_storage_items (bool): Determines whether another Storage Item is allowed inside of this item. Default is True.
             max_slots (int): The maximum allowed weight of the sum of all contained items. Maximum is 64. Default is 64.
-            max_weight_limit (float): The maximum weight limit of the items in the storage item. Default is 64.0.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_item)
         """
@@ -496,7 +500,7 @@ class ItemCustomComponents(Component):
         """Allows you to add custom components to an item.
 
         Parameters:
-            components (str): The components to register, if the namespace is not provided, the project namespace will be used.
+            component_name (str): The components to register, if the namespace is not provided, the project namespace will be used.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/scripting/custom-components)
         """
@@ -522,7 +526,7 @@ class ItemEnchantable(Component):
         """Determines what enchantments can be applied to the item. Not all enchantments will have an effect on all item components.
 
         Parameters:
-            type (str): What enchantments can be applied (ex. Using bow would allow this item to be enchanted as if it were a bow).
+            slot (EnchantsSlots): What enchantments can be applied (ex. Using bow would allow this item to be enchanted as if it were a bow).
             value (int): The value of the enchantment (minimum of 0).
 
         ### [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_enchantable)
@@ -642,7 +646,7 @@ class ItemHoverTextColor(Component):
         """Determines the color of the item name when hovering over it.
 
         Parameters:
-            value (bool): The color of the item name when hovering over it.
+            color (str): The color of the item name when hovering over it.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hover_text_color)
         """
@@ -662,7 +666,6 @@ class ItemWearable(Component):
         Parameters:
             slot (Slots): Determines where the item can be worn. If any non-hand slot is chosen, the max stack size is set to 1.
             protection (int, optional): How much protection the wearable has. Defaults to 0.
-            dispensable (bool, optional): Whether or not the item can be dispensed from a dispenser. Defaults to True.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_wearable)
         """
@@ -866,7 +869,7 @@ class ItemRepairable(Component):
         """Defines the items that can be used to repair a defined item, and the amount of durability each item restores upon repair. Each entry needs to define a list of strings for 'items' that can be used for the repair and an optional 'repair_amount' for how much durability is repaired.
 
         Parameters:
-            on_repaired (Literal["minecraft:celebrate", None]): Event that is called when this item has been repaired.
+            on_repaired (str, optional): Event that is called when this item has been repaired. Defaults to None.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_repairable)
         """
@@ -1165,7 +1168,7 @@ class ItemDisplayName(Component):
 
         Parameters:
             display_name (str): Set the display name for an item.
-            key (str): The localization key for the display name.
+            localized_key (str, optional): The localization key for the display name. Defaults to None.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_display_name)
         """

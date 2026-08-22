@@ -131,7 +131,7 @@ class EntityTypeFamily(Component):
         """Defines the family categories this entity belongs to. Type families are used by filters and other game systems to group entities (e.g., 'mob', 'monster', 'undead', 'zombie').
 
         Parameters:
-            family (list[str]): A set of tags that describe the categories of this entity.
+            families (list[str]): A set of tags that describe the categories of this entity.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_type_family)
         """
@@ -228,9 +228,6 @@ class EntityPushableByBlock(Component):
 
     def __init__(self) -> None:
         """Allows the entity to be pushed by certain blocks, like Shulker Boxes and Pistons.
-
-        Parameters:
-            value (bool): Description.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_pushable_by_block)
         """
@@ -1847,14 +1844,14 @@ class EntityProjectile(Component):
         # Initialize on_hit dictionary to avoid checks in methods
         self._add_field("on_hit", {})
 
-    def arrow_effect(self):
+    def arrow_effect(self) -> "EntityProjectile":
         """Enable arrow effect on hit.
 
         Note:
             Exact behavior unknown according to Bedrock Wiki.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["arrow_effect"] = {}
         return self
@@ -1868,7 +1865,7 @@ class EntityProjectile(Component):
         affect_splash_area: bool = False,
         splash_area: float = 0,
         affect_target: bool = False,
-    ):
+    ) -> "EntityProjectile":
         """Call an event on hit.
 
         Args:
@@ -1881,7 +1878,7 @@ class EntityProjectile(Component):
             affect_target: Event will be triggered for hit entity. Default is False.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["definition_event"] = {
             "event_trigger": {"event": event, "target": target.value}
@@ -1908,14 +1905,14 @@ class EntityProjectile(Component):
 
         return self
 
-    def filter(self, filter: Filter):
+    def filter(self, filter: Filter) -> "EntityProjectile":
         """Set entity filter for the projectile.
 
         Args:
             filter: The filter to apply.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._add_field("filter", filter)
         return self
@@ -1925,7 +1922,7 @@ class EntityProjectile(Component):
         size: int,
         snap_to_block: bool,
         shape: str = "sphere",
-    ):
+    ) -> "EntityProjectile":
         """Freeze water on hit.
 
         Args:
@@ -1934,7 +1931,7 @@ class EntityProjectile(Component):
             shape: Shape of the freeze effect. Must be "sphere" or "cube". Default is "sphere".
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
 
         Note:
             Requires Education Edition toggle to be enabled.
@@ -1953,14 +1950,16 @@ class EntityProjectile(Component):
 
         return self
 
-    def grant_xp(self, xp: int | tuple[int, int]):
+    def grant_xp(
+        self, xp: int | tuple[int, int]
+    ) -> "EntityProjectile":
         """Grant experience points on hit.
 
         Args:
             xp: Experience to grant. If int, grants constant amount. If tuple, grants random amount between min and max.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
 
         Note:
             Despite the name, this actually spawns a number of experience orbs, being worth the amount stated.
@@ -1988,7 +1987,7 @@ class EntityProjectile(Component):
         owner_damage: int = 0,
         knockback: bool = False,
         ignite: bool = False,
-    ):
+    ) -> "EntityProjectile":
         """Configure projectile to potentially hurt its owner on hit.
 
         Args:
@@ -1997,7 +1996,7 @@ class EntityProjectile(Component):
             ignite: Whether to ignite the owner. Default is False.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
 
         Note:
             According to Bedrock Wiki, exact behavior is unknown and this may crash Minecraft with wrong parameters.
@@ -2031,7 +2030,7 @@ class EntityProjectile(Component):
         set_last_hurt_requires_damage: bool = False,
         apply_knockback_to_blocking_targets: bool = False,
         ceil_pre_critical_damage: bool = False,
-    ):
+    ) -> "EntityProjectile":
         """Deal damage on impact.
 
         Args:
@@ -2050,7 +2049,7 @@ class EntityProjectile(Component):
             apply_knockback_to_blocking_targets: If true, knockback will be applied to any blocking targets. Default is False.
             ceil_pre_critical_damage: Rounds the projectile's damage up to the next integer before the critical hit multiplier is applied. Default is False.
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         impact = {}
         if not filter is None:
@@ -2097,7 +2096,7 @@ class EntityProjectile(Component):
         durationeasy: int = 0,
         durationhard: int = 800,
         durationnormal: int = 200,
-    ):
+    ) -> "EntityProjectile":
         """Apply a mob effect to the target on hit.
 
         Args:
@@ -2111,7 +2110,7 @@ class EntityProjectile(Component):
             durationnormal: Duration of the effect on normal difficulty. Default is 200.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["mob_effect"] = {"effect": effect.value}
 
@@ -2138,7 +2137,7 @@ class EntityProjectile(Component):
         douse_fire: bool = False,
         ignite: bool = False,
         teleport_owner: bool = False,
-    ):
+    ) -> "EntityProjectile":
         """Configure basic on_hit behaviors for the projectile.
 
         Args:
@@ -2148,7 +2147,7 @@ class EntityProjectile(Component):
             teleport_owner: Determines if the owner is transported on hit. Default is False.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         if catch_fire:
             self._component["on_hit"]["catch_fire"] = catch_fire
@@ -2166,7 +2165,7 @@ class EntityProjectile(Component):
         on_other_hit: bool = False,
         on_entity_hit: bool = False,
         num_particles: int = 0,
-    ):
+    ) -> "EntityProjectile":
         """Spawn particles on hit.
 
         Args:
@@ -2176,7 +2175,7 @@ class EntityProjectile(Component):
             num_particles: Number of particles to spawn. Default is 0.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["particle_on_hit"] = {"particle_type": particle_type}
 
@@ -2193,11 +2192,11 @@ class EntityProjectile(Component):
         return self
 
     @property
-    def remove_on_hit(self):
+    def remove_on_hit(self) -> "EntityProjectile":
         """Remove the projectile when it hits something.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["remove_on_hit"] = {"remove": True}
         return self
@@ -2212,7 +2211,7 @@ class EntityProjectile(Component):
         radius: float = 0.0,
         radius_on_use: float = -1.0,
         reapplication_delay: int = 0,
-    ):
+    ) -> "EntityProjectile":
         """Spawn an area of effect cloud of potion effect on hit.
 
         Args:
@@ -2226,7 +2225,7 @@ class EntityProjectile(Component):
             reapplication_delay: Delay in ticks between application of the potion effect. Default is 0.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["spawn_aoe_cloud"] = {}
 
@@ -2261,7 +2260,7 @@ class EntityProjectile(Component):
         first_spawn_percent_chance: int = 0,
         second_spawn_percent_chance: int = 32,
         second_spawn_count: int = 0,
-    ):
+    ) -> "EntityProjectile":
         """Spawn an entity on hit with specified chances.
 
         Args:
@@ -2273,7 +2272,7 @@ class EntityProjectile(Component):
             second_spawn_count: Number of entities to spawn in second spawn. Default is 0.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["spawn_chance"] = {
             "spawn_definition": spawn_definition
@@ -2300,24 +2299,24 @@ class EntityProjectile(Component):
 
         return self
 
-    def stick_in_ground(self, shake_time: float):
+    def stick_in_ground(self, shake_time: float) -> "EntityProjectile":
         """Configure projectile to stick into the ground on hit.
 
         Args:
             shake_time: Time in seconds the projectile shakes when stuck in ground.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["stick_in_ground"] = {"shake_time": shake_time}
         return self
 
     @property
-    def thrown_potion_effect(self):
+    def thrown_potion_effect(self) -> "EntityProjectile":
         """Enable thrown potion effect.
 
         Returns:
-            Self for method chaining.
+            EntityProjectile: Self for method chaining.
 
         Note:
             According to Bedrock Wiki, exact behavior is unknown and this may crash Minecraft as it's probably only valid for thrown potions.
@@ -2782,7 +2781,9 @@ class EntityEquipment(Component):
                 table.table_path if isinstance(table, LootTable) else table,
             )
 
-    def slot_drop_chance(self, slot: str, drop_chance: float = None):
+    def slot_drop_chance(
+        self, slot: str, drop_chance: float = None
+    ) -> "EntityEquipment":
         """Adds a chance to drop an equipped item from a specific slot.
 
         Parameters:
@@ -2836,8 +2837,6 @@ class EntityFireImmune(Component):
     def __init__(self) -> None:
         """Sets that this entity doesn't take damage from fire.
 
-        Parameters:
-
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_fire_immune)
         """
         super().__init__("fire_immune")
@@ -2866,19 +2865,21 @@ class EntitySensor(Component):
         range: range = [10, 10],
         cooldown: int = -1,
         y_offset: float = 0.0,
-    ):
+    ) -> "EntitySensor":
         """A component that initiates an event when a set of conditions are met by other entities within the defined range.
 
         Parameters:
             event (str): Event to initiate when the conditions are met.
-            event_filter (Filter): The set of conditions that must be satisfied to initiate the event.
+            event_filters (Filter): The set of conditions that must be satisfied to initiate the event.
             maximum_count (int, optional): The maximum number of entities that must pass the filter conditions for the event to send. Defaults to -1.
             minimum_count (int, optional): The minimum number of entities that must pass the filter conditions for the event to send. Defaults to -1.
-            relative_range (bool, optional): If true, the sensor range is additive on top of the entity's size. Defaults to True.
             require_all (bool, optional): If true, requires all nearby entities to pass the filter conditions for the event to send. Defaults to False.
             range (range, optional): The maximum horizontal and vertical distance another entity can be from this and have the filters checked against it. Defaults to (10, 10).
             cooldown (int, optional): How many seconds should elapse before the subsensor can once again sense for entities. The cooldown is applied on top of the base 1 tick (0.05 seconds) delay. Negative values will result in no cooldown being used. Defaults to -1.
             y_offset (float, optional): Vertical offset applied to the entity's position when computing the distance from other entities.
+
+        Returns:
+            EntitySensor: Returns the EntitySensor component to allow for method chaining.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_entity_sensor)
         """
@@ -3329,15 +3330,15 @@ class EntityTameable(Component):
         self,
         item: MinecraftItemDescriptor | Identifier,
         result_item: MinecraftItemDescriptor | Identifier = None,
-    ):
+    ) -> "EntityTameable":
         """Adds an item to the list of items that can be used to tame the entity.
 
         Parameters:
             item (str): The item to add to the list of items that can be used to tame the entity.
             result_item (str, optional): The item that the tame item will transform into upon successful taming. Defaults to None.
 
-            Returns:
-                Tameable: Returns the Tameable component to allow for method chaining.
+        Returns:
+            EntityTameable: Returns the EntityTameable component to allow for method chaining.
         """
         if result_item is None:
             self._component["tame_items"].append(item)
@@ -3350,15 +3351,17 @@ class EntityTameable(Component):
             )
         return self
 
-    def tame_event(self, event: str, target: FilterSubject = FilterSubject.Self):
+    def tame_event(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ) -> "EntityTameable":
         """Sets the event to initiate when the entity becomes tamed.
 
         Parameters:
             event (str): Event to initiate when the entity becomes tamed.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-            Returns:
-                Tameable: Returns the Tameable component to allow for method chaining.
+        Returns:
+            EntityTameable: Returns the EntityTameable component to allow for method chaining.
         """
         self._add_field("tame_event", {"event": event, "target": target})
         return self
@@ -3392,78 +3395,84 @@ class EntityAgeable(Component):
         if not result_item is None:
             self._add_field("result_item", result_item)
 
-    def drop_item(self, *items: str):
+    def drop_item(self, *items: str) -> "EntityAgeable":
         """Adds an item to the list of items the entity drops when it grows up.
 
         Parameters:
-            item (str): The item to add to the list of items the entity drops when it grows up.
+            *items (str): The items to add to the list of items the entity drops when it grows up.
 
-            Returns:
-                Ageable: Returns the Ageable component to allow for method chaining.
+        Returns:
+            EntityAgeable: Returns the EntityAgeable component to allow for method chaining.
         """
         self._add_field("drop_items", items)
         return self
 
-    def feed_items(self, items: list[str]):
+    def feed_items(self, items: list[str]) -> "EntityAgeable":
         """Adds an item to the list of items the entity can be fed.
 
         Parameters:
-            item (str): The item to add to the list of items the entity can be fed.
+            items (list[str]): The list of items the entity can be fed.
 
-            Returns:
-                Ageable: Returns the Ageable component to allow for method chaining.
+        Returns:
+            EntityAgeable: Returns the EntityAgeable component to allow for method chaining.
         """
         self._component["feed_items"].extend([str(i) for i in items])
         return self
 
-    def feed_item_growth(self, item: str, growth: float):
+    def feed_item_growth(self, item: str, growth: float) -> "EntityAgeable":
         """Adds an item to the list of items the entity can be fed.
 
         Parameters:
             item (str): The item to add to the list of items the entity can be fed.
             growth (float): The amount of growth to add to the entity when fed this item.
 
-            Returns:
-                Ageable: Returns the Ageable component to allow for method chaining.
+        Returns:
+            EntityAgeable: Returns the EntityAgeable component to allow for method chaining.
         """
         self._component["feed_items"].append(
             {"item": str(item), "growth": clamp(growth, 0, 1)}
         )
         return self
 
-    def grow_up(self, event: str, target: FilterSubject = FilterSubject.Self):
+    def grow_up(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ) -> "EntityAgeable":
         """Sets the event to initiate when the entity grows up.
 
         Parameters:
             event (str): Event to initiate when the entity grows up.
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
-            Returns:
-                Ageable: Returns the Ageable component to allow for method chaining.
+        Returns:
+            EntityAgeable: Returns the EntityAgeable component to allow for method chaining.
         """
         self._add_field("grow_up", {"event": event, "target": target})
         return self
 
-    def pause_growth_items(self, items: list[MinecraftItemDescriptor | Identifier]):
+    def pause_growth_items(
+        self, items: list[MinecraftItemDescriptor | Identifier]
+    ) -> "EntityAgeable":
         """Pauses the growth of the entity when given specific items.
 
         Parameters:
             items (list[MinecraftItemDescriptor | Identifier]): The items that will pause the entity's growth.
 
-            Returns:
-                Ageable: Returns the Ageable component to allow for method chaining.
+        Returns:
+            EntityAgeable: Returns the EntityAgeable component to allow for method chaining.
         """
         self._add_field("pause_growth_items", [str(i) for i in items])
         return self
 
-    def reset_growth_items(self, items: list[MinecraftItemDescriptor | Identifier]):
+    def reset_growth_items(
+        self, items: list[MinecraftItemDescriptor | Identifier]
+    ) -> "EntityAgeable":
         """Resets the growth of the entity when given specific items.
 
         Parameters:
             items (list[MinecraftItemDescriptor | Identifier]): The items that will reset the entity's growth.
 
         Returns:
-            Ageable: Returns the Ageable component to allow for method chaining.
+            EntityAgeable: Returns the EntityAgeable component to allow for method chaining.
         """
         self._add_field("reset_growth_items", [str(i) for i in items])
         return self
@@ -3742,7 +3751,7 @@ class EntityEquippable(Component):
         interact_text: str = None,
         on_equip: str = None,
         on_unequip: str = None,
-    ):
+    ) -> "EntityEquippable":
         """Adds a slot to the entity's equippable slots.
 
         Parameters:
@@ -3754,7 +3763,7 @@ class EntityEquippable(Component):
             on_unequip (str, optional): Event to trigger when the item is removed from the entity. Defaults to None.
 
         Returns:
-            Equippable: Returns the Equippable component to allow for method chaining.
+            EntityEquippable: Returns the EntityEquippable component to allow for method chaining.
         """
         slot_data = {
             "slot": slot,
@@ -4258,16 +4267,14 @@ class EntityBreedable(Component):
         )
         return self
 
-    def breeds_with(self, mate_type: str) -> dict:
+    def breeds_with(self, mate_type: str) -> "EntityBreedable":
         """Defines the breeding partner for the entity.
 
         Parameters:
             mate_type (str): The entity type of the breeding partner.
-            baby_type (str): The entity type of the offspring.
-            breed_event (str): The event to trigger when breeding occurs.
 
         Returns:
-            dict: A dictionary containing the breeding information.
+            EntityBreedable: Returns the EntityBreedable component to allow for method chaining.
         """
 
         self._add_field(
@@ -5248,7 +5255,9 @@ class EntityScheduler(Component):
             self._add_field("min_delay_secs", min_delay_secs)
         self._add_field("scheduled_events", [])
 
-    def add_scheduled_event(self, event: str, filters: Filter = None):
+    def add_scheduled_event(
+        self, event: str, filters: Filter = None
+    ) -> "EntityScheduler":
         """Adds a scheduled event to the scheduler.
 
         Parameters:
@@ -7779,9 +7788,7 @@ class EntityAIRangedAttack(AIGoal):
 
     def __init__(
         self,
-        attack_interval: int = 0,
-        attack_interval_max: int = 0,
-        attack_interval_min: int = 0,
+        attack_interval: tuple[int, int] = (-1, -1),
         attack_radius: int = 0,
         attack_radius_min: int = 0,
         burst_interval: int = 0,
@@ -7799,9 +7806,7 @@ class EntityAIRangedAttack(AIGoal):
         """Allows an entity to attack by using ranged shots. "charge_shoot_trigger" must be greater than 0 to enable charged up burst-shot attacks. Requires minecraft:shooter to define projectile behaviour.
 
         Parameters:
-            attack_interval (int, optional): Alternative to "attack_interval_min" & "attack_interval_max". Consistent reload-time (in seconds), when not using a charged shot. Does not scale with target-distance. Defaults to 0.
-            attack_interval_max (int, optional): Maximum bound for reload-time range (in seconds), when not using a charged shot. Reload-time range scales with target-distance. Defaults to 0.
-            attack_interval_min (int, optional): Minimum bound for reload-time range (in seconds), when not using a charged shot. Reload-time range scales with target-distance. Defaults to 0.
+            attack_interval (tuple[int, int], optional): Reload-time range (in seconds), when not using a charged shot. Defaults to  (-1, -1).
             attack_radius (int, optional): Minimum distance to target before this entity will attempt to shoot. Defaults to 0.
             attack_radius_min (int, optional): Minimum distance the target can be for this mob to fire. If the target is closer, this mob will move first before firing. Defaults to 0.
             burst_interval (int, optional): Time (in seconds) between each individual shot when firing a burst of shots from a charged up attack. Defaults to 0.
@@ -7821,11 +7826,7 @@ class EntityAIRangedAttack(AIGoal):
         super().__init__("behavior.ranged_attack")
 
         if attack_interval != 0:
-            self._add_field("attack_interval", attack_interval)
-        if attack_interval_max != 0:
-            self._add_field("attack_interval_max", attack_interval_max)
-        if attack_interval_min != 0:
-            self._add_field("attack_interval_min", attack_interval_min)
+            self._add_field("attack_interval", AnvilFormatter.min_max_dict(attack_interval, "attack_interval"))
         if attack_radius != 0:
             self._add_field("attack_radius", attack_radius)
         if attack_radius_min != 0:
@@ -9834,7 +9835,9 @@ class EntityAITakeBlock(AIGoal):
         if y_range != (0, 0):
             self._add_field("y_range", y_range)
 
-    def on_take(self, event: str, target: FilterSubject = FilterSubject.Self):
+    def on_take(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ) -> "EntityAITakeBlock":
         """Sets the event to be triggered when the entity successfully takes a block.
 
         Parameters:
@@ -9842,7 +9845,7 @@ class EntityAITakeBlock(AIGoal):
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAITakeBlock: Returns the current instance for method chaining.
         """
         self._add_field("on_take", {"event": event, "target": target.value})
         return self
@@ -9889,7 +9892,9 @@ class EntityAIPlaceBlock(AIGoal):
             self._add_field("y_range", y_range)
         self._add_field("randomly_placeable_blocks", [])
 
-    def on_place(self, event: str, target: FilterSubject = FilterSubject.Self):
+    def on_place(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ) -> "EntityAIPlaceBlock":
         """Sets the event to be triggered when the entity successfully places a block.
 
         Parameters:
@@ -9897,7 +9902,7 @@ class EntityAIPlaceBlock(AIGoal):
             target (FilterSubject, optional): The target of the event. Defaults to FilterSubject.Self.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAIPlaceBlock: Returns the current instance for method chaining.
         """
         self._add_field("on_place", {"event": event, "target": target.value})
         return self
@@ -9907,7 +9912,7 @@ class EntityAIPlaceBlock(AIGoal):
         block: MinecraftBlockDescriptor,
         filter: Filter,
         states: dict[str, Any] = None,
-    ):
+    ) -> "EntityAIPlaceBlock":
         """Sets the block that the entity can randomly place.
 
         Parameters:
@@ -9916,7 +9921,7 @@ class EntityAIPlaceBlock(AIGoal):
             states (dict[str, Any], optional): The states of the block to be placed.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAIPlaceBlock: Returns the current instance for method chaining.
         """
         self._get_field("randomly_placeable_blocks").append(
             {
@@ -9994,7 +9999,9 @@ class EntityAIDig(AIGoal):
         if vibration_is_disturbance:
             self._add_field("vibration_is_disturbance", vibration_is_disturbance)
 
-    def on_start(self, event: str, target: FilterSubject = FilterSubject.Self):
+    def on_start(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ) -> "EntityAIDig":
         """Sets an event to run when the dig goal starts.
 
         Parameters:
@@ -10002,7 +10009,7 @@ class EntityAIDig(AIGoal):
             target (FilterSubject, optional): The event target. Defaults to FilterSubject.Self.
 
         Returns:
-            self: for chaining.
+            EntityAIDig: For chaining.
         """
         self._add_field("on_start", {"event": event, "target": target.value})
         return self
@@ -10092,7 +10099,9 @@ class EntityAIAvoidBlock(AIGoal):
 
         self._add_field("on_escape", [])
 
-    def on_escape(self, event: str, target: FilterSubject = FilterSubject.Self):
+    def on_escape(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ) -> "EntityAIAvoidBlock":
         """Add an escape event to be triggered when the mob escapes the avoided block.
 
         Parameters:
@@ -10100,7 +10109,7 @@ class EntityAIAvoidBlock(AIGoal):
             target (FilterSubject, optional): The event target. Defaults to FilterSubject.Self.
 
         Returns:
-            self: for chaining.
+            EntityAIAvoidBlock: For chaining.
         """
         self._get_field("on_escape").append({"event": event, "target": target.value})
         return self
@@ -10861,7 +10870,6 @@ class EntityAISleep(AIGoal):
         Parameters:
             can_sleep_while_riding (bool, optional): If true, the mob will be able to use the sleep goal if riding something. Defaults to False.
             cooldown_time (float, optional): Time in seconds the mob has to wait before using the goal again. Defaults to 0.0.
-            goal_radius (float, optional): Description. Defaults to None.
             sleep_collider_height (float, optional): The height of the mob's collider while sleeping. Defaults to 1.0.
             sleep_collider_width (float, optional): The width of the mob's collider while sleeping. Defaults to 1.0.
             sleep_y_offset (float, optional): The y offset of the mob's collider while sleeping. Defaults to 1.0.
@@ -14336,7 +14344,7 @@ class EntityAIGoAndGiveItemsToNoteblock(AIGoal):
         self,
         event: str,
         target: FilterSubject = FilterSubject.Self,
-    ):
+    ) -> "EntityAIDropItemFor":
         """Adds an event to run when the entity throws items toward the noteblock.
 
         Parameters:
@@ -14344,7 +14352,7 @@ class EntityAIGoAndGiveItemsToNoteblock(AIGoal):
             target (FilterSubject, optional): Event target. Defaults to FilterSubject.Self.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAIDropItemFor: Returns the current instance for method chaining.
         """
         if "on_item_throw" not in self._component:
             self._add_field("on_item_throw", [])
@@ -14394,7 +14402,7 @@ class EntityAIGoAndGiveItemsToOwner(AIGoal):
         self,
         event: str,
         target: FilterSubject = FilterSubject.Self,
-    ):
+    ) -> "EntityAIGoAndGiveItemsToOwner":
         """Adds an event to run when the entity throws items to its owner.
 
         Parameters:
@@ -14402,7 +14410,7 @@ class EntityAIGoAndGiveItemsToOwner(AIGoal):
             target (FilterSubject, optional): Event target. Defaults to FilterSubject.Self.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAIGoAndGiveItemsToOwner: Returns the current instance for method chaining.
         """
         if "on_item_throw" not in self._component:
             self._add_field("on_item_throw", [])
@@ -14559,7 +14567,7 @@ class EntityAIEatBlock(AIGoal):
         self,
         eat_block: MinecraftBlockDescriptor | Identifier,
         replace_block: MinecraftBlockDescriptor | Identifier,
-    ):
+    ) -> "EntityAIEatBlock":
         """Adds an eat-and-replace block pair for the behavior.
 
         Parameters:
@@ -14567,7 +14575,7 @@ class EntityAIEatBlock(AIGoal):
             replace_block (MinecraftBlockDescriptor | Identifier): Block identifier that should replace the eaten block.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAIEatBlock: Returns the current instance for method chaining.
         """
         if "eat_and_replace_block_pairs" not in self._component:
             self._add_field("eat_and_replace_block_pairs", [])
@@ -14577,7 +14585,9 @@ class EntityAIEatBlock(AIGoal):
         )
         return self
 
-    def on_eat(self, event: str, target: FilterSubject = FilterSubject.Self):
+    def on_eat(
+        self, event: str, target: FilterSubject = FilterSubject.Self
+    ) -> "EntityAIEatBlock":
         """Sets the event triggered when the eating animation completes.
 
         Parameters:
@@ -14585,7 +14595,7 @@ class EntityAIEatBlock(AIGoal):
             target (FilterSubject, optional): Event target. Defaults to FilterSubject.Self.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAIEatBlock: Returns the current instance for method chaining.
         """
         self._add_field("on_eat", {"event": event, "target": target.value})
         return self
@@ -14722,14 +14732,16 @@ class EntityAITransportItems(AIGoal):
         if control_flags != ():
             self._add_field("control_flags", control_flags)
 
-    def allow_item(self, item: MinecraftItemDescriptor | Identifier):
+    def allow_item(
+        self, item: MinecraftItemDescriptor | Identifier
+    ) -> "EntityAITransportItems":
         """Adds an item descriptor the mob is allowed to transport.
 
         Parameters:
             item (MinecraftItemDescriptor | Identifier): Item descriptor to allow.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAITransportItems: Returns the current instance for method chaining.
         """
         if "disallowed_items" in self._component:
             raise ValueError(
@@ -14741,14 +14753,16 @@ class EntityAITransportItems(AIGoal):
         self._component["allowed_items"].append(item)
         return self
 
-    def disallow_item(self, item: MinecraftItemDescriptor | Identifier):
+    def disallow_item(
+        self, item: MinecraftItemDescriptor | Identifier
+    ) -> "EntityAITransportItems":
         """Adds an item descriptor the mob is not allowed to transport.
 
         Parameters:
             item (MinecraftItemDescriptor | Identifier): Item descriptor to disallow.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAITransportItems: Returns the current instance for method chaining.
         """
         if "allowed_items" in self._component:
             raise ValueError(
@@ -14765,7 +14779,7 @@ class EntityAITransportItems(AIGoal):
         container_type: MinecraftBlockDescriptor | Identifier | dict[str, Any],
         states: dict[str, Any] = None,
         tags: str = None,
-    ):
+    ) -> "EntityAITransportItems":
         """Adds a destination container type descriptor.
 
         Parameters:
@@ -14774,7 +14788,7 @@ class EntityAITransportItems(AIGoal):
             tags (str, optional): Block tags to match when using a simple identifier. Defaults to None.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAITransportItems: Returns the current instance for method chaining.
         """
         if "destination_container_types" not in self._component:
             self._add_field("destination_container_types", [])
@@ -14797,7 +14811,7 @@ class EntityAITransportItems(AIGoal):
         container_type: MinecraftBlockDescriptor | Identifier | dict[str, Any],
         states: dict[str, Any] = None,
         tags: str = None,
-    ):
+    ) -> "EntityAITransportItems":
         """Adds a source container type descriptor.
 
         Parameters:
@@ -14806,7 +14820,7 @@ class EntityAITransportItems(AIGoal):
             tags (str, optional): Block tags to match when using a simple identifier. Defaults to None.
 
         Returns:
-            self: Returns the current instance for method chaining.
+            EntityAITransportItems: Returns the current instance for method chaining.
         """
         if "source_container_types" not in self._component:
             self._add_field("source_container_types", [])

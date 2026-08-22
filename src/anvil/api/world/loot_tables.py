@@ -811,7 +811,7 @@ class LootTable(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "loot_tables", CONFIG.NAMESPACE)
     _object_type = "Loot Table"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         """Initialize a LootTable instance.
 
         Parameters:
@@ -824,7 +824,7 @@ class LootTable(AddonObject):
     def pool(
         self,
         rolls: int | tuple[int, int] = 1,
-    ):
+    ) -> "_LootPool":
         """Create a new loot pool in this loot table.
 
         Pools are rolled independently, so multiple pools allow for multiple
@@ -842,7 +842,7 @@ class LootTable(AddonObject):
         return pool
 
     @property
-    def table_path(self):
+    def table_path(self) -> str:
         """Get the relative path of this loot table for referencing.
 
         Returns:
@@ -854,7 +854,7 @@ class LootTable(AddonObject):
             self._name + self._extension,
         )
 
-    def queue(self):
+    def queue(self) -> "LootTable":
         """Queue this loot table for generation in the behavior pack.
 
         Exports all pools and their entries to JSON format and adds the

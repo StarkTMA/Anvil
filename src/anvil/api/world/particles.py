@@ -16,16 +16,12 @@ class Particle(AddonObject):
         self,
         particle: str,
         component: TextureComponents,
-    ):
+    ) -> None:
         """Create a particle with optional PBR texture set support.
 
         Args:
-            particle: Name of the particle
-            color_texture: color texture name
-            normal_texture: normal texture name (optional)
-            height_texture: height texture name (optional, mutually exclusive with normal)
-            mer_texture: MER texture name (optional)
-            mers_texture: MER+subsurface texture name (optional)
+            particle (str): Name of the particle.
+            component (TextureComponents): Texture components configuration for PBR.
         """
         super().__init__(particle)
         self._texture_set: TextureSet | None = None
@@ -56,7 +52,7 @@ class Particle(AddonObject):
 
         self._content["particle_effect"]["description"]["identifier"] = f"{CONFIG.NAMESPACE}:{self._name}"
 
-    def queue(self):
+    def queue(self) -> "Particle":
         CONFIG.Report.add_report(
             ReportType.PARTICLE,
             vanilla=False,
@@ -66,7 +62,7 @@ class Particle(AddonObject):
 
         return super().queue()
 
-    def __export__(self):
+    def __export__(self) -> None:
         # Export texture set if configured
         if self._texture_set is not None:
             self._texture_set.queue()

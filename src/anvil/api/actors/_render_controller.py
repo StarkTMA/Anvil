@@ -223,7 +223,7 @@ class RenderControllers(AddonObject):
 
         return self._controllers[controller_name]
 
-    def queue(self, directory: str = ""):
+    def queue(self, directory: str = "") -> "RenderControllers":
         if len(self._controllers) > 0:
             for controller in self._controllers.values():
                 self.render_controller["render_controllers"].update(

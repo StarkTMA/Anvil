@@ -901,10 +901,10 @@ class AddonDescriptor:
         """
         return self._name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.identifier
 
-    def set_identifier_data(self, data: str):
+    def set_identifier_data(self, data: str) -> "AddonDescriptor":
         """
         Sets the data of the addon object.
 
@@ -914,9 +914,8 @@ class AddonDescriptor:
         self._data = data
         return self
 
-    def __export__(self):
-        """
-        Exports the addon object. This method should be overridden by subclasses to provide specific export functionality.
+    def __export__(self) -> dict:
+        """Exports the addon object. This method should be overridden by subclasses to provide specific export functionality.
 
         Returns:
             dict: The exported data of the addon object.
@@ -933,7 +932,7 @@ class MinecraftDescription(AddonDescriptor):
         is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
     """
 
-    def __init__(self, name, is_vanilla=False):
+    def __init__(self, name, is_vanilla=False) -> None:
         super().__init__(name, is_vanilla)
         self._description: dict = JsonSchemes.description(self._namespace, self._name)
 
@@ -972,7 +971,7 @@ class AddonObject(AddonDescriptor):
         self._directory = ""
         self._content = {}
 
-    def content(self, content) -> AddonObject:
+    def content(self, content) -> "AddonObject":
         """
         Sets the content of the addon object and returns the object.
 
@@ -985,7 +984,7 @@ class AddonObject(AddonDescriptor):
         self._content = content
         return self
 
-    def queue(self, directory: str | None = None) -> AddonObject:
+    def queue(self, directory: str | None = None) -> "AddonObject":
         """
         Queues the addon object for processing and logs the event.
 
@@ -1002,7 +1001,7 @@ class AddonObject(AddonDescriptor):
         ANVIL.__queue__(self)
         return self
 
-    def __export__(self):
+    def __export__(self) -> None:
         """
         Exports the addon object after potentially shortening its content and replacing backslashes.
         Logs the event and writes the object to a file.
@@ -1018,7 +1017,7 @@ class AddonObject(AddonDescriptor):
 
 
 class MinecraftAddonObject(AddonDescriptor):
-    def __init__(self, name, is_vanilla=False, is_vanilla_allowed=False):
+    def __init__(self, name, is_vanilla=False, is_vanilla_allowed=False) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
 
 
@@ -1180,6 +1179,6 @@ class MinecraftEntityDescriptor(MinecraftAddonObject):
         is_vanilla=False,
         allow_runtime: bool = True,
         is_vanilla_allowed=True,
-    ):
+    ) -> None:
         super().__init__(name, is_vanilla, is_vanilla_allowed)
         self._allow_runtime = allow_runtime

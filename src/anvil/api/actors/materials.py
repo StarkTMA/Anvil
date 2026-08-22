@@ -41,16 +41,13 @@ class MaterialsObject(AddonObject):
         self._materials.append(material)
         return material
 
-    def queue(self):
-        """Returns the queue for the materials.
-
-        Returns:
-            queue: The queue for the materials.
-        """
+    def queue(self) -> "MaterialsObject":
+        """Queues the materials for export."""
         if (len(self._materials)) > 0:
             for m in self._materials:
                 self._content["materials"].update(m.__export__())
             super().queue()
+        return self
 
 
 class Material:
@@ -81,7 +78,7 @@ class Material:
     def identifier(self):
         return self._identifier
 
-    def states(self, *states: MaterialStates):
+    def states(self, *states: MaterialStates) -> "Material":
         """
         Sets the rendering states for the material.
 
@@ -97,7 +94,7 @@ class Material:
         self._material[self._material_name]["states"] = states
         return self
 
-    def remove_states(self, *states: MaterialStates):
+    def remove_states(self, *states: MaterialStates) -> "Material":
         """
         Removes specific rendering states from the material configuration.
 
@@ -113,7 +110,7 @@ class Material:
         self._material[self._material_name]["-states"] = states
         return self
 
-    def add_states(self, *states: MaterialStates):
+    def add_states(self, *states: MaterialStates) -> "Material":
         """
         Adds rendering states to the existing material configuration.
 
@@ -135,7 +132,7 @@ class Material:
         stencilDepthFailOp: MaterialOperation = None,
         stencilPassOp: MaterialOperation = None,
         stencilPass: MaterialOperation = None,
-    ):
+    ) -> "Material":
         """
         Configures stencil testing for front-facing polygons.
 
@@ -171,7 +168,7 @@ class Material:
         stencilDepthFailOp: MaterialOperation = None,
         stencilPassOp: MaterialOperation = None,
         stencilPass: MaterialOperation = None,
-    ):
+    ) -> "Material":
         """
         Configures stencil testing for back-facing polygons.
 
@@ -200,7 +197,7 @@ class Material:
         }
         return self
 
-    def stencilRef(self, stencilRef: int):
+    def stencilRef(self, stencilRef: int) -> "Material":
         """
         Sets the reference value for the stencil test.
 
@@ -217,7 +214,7 @@ class Material:
         self._material[self._material_name]["stencilRef"] = stencilRef
         return self
 
-    def depthFunc(self, depthFunc: MaterialFunc):
+    def depthFunc(self, depthFunc: MaterialFunc) -> "Material":
         """
         Sets the function used for the depth test.
 
@@ -234,7 +231,7 @@ class Material:
         self._material[self._material_name]["depthFunc"] = depthFunc
         return self
 
-    def blendSrc(self, blendSrc: str):
+    def blendSrc(self, blendSrc: str) -> "Material":
         """
         Sets the blending factor for the source color (the pixel being drawn).
 
@@ -250,7 +247,7 @@ class Material:
         self._material[self._material_name]["blendSrc"] = blendSrc
         return self
 
-    def blendDst(self, blendDst: str):
+    def blendDst(self, blendDst: str) -> "Material":
         """
         Sets the blending factor for the destination color (the background).
 
@@ -266,7 +263,7 @@ class Material:
         self._material[self._material_name]["blendDst"] = blendDst
         return self
 
-    def vertexShader(self, shader: str):
+    def vertexShader(self, shader: str) -> "Material":
         """
         Sets the path to the vertex shader file.
 
@@ -282,7 +279,7 @@ class Material:
         self._material[self._material_name]["vertexShader"] = shader
         return self
 
-    def fragmentShader(self, shader: str):
+    def fragmentShader(self, shader: str) -> "Material":
         """
         Sets the path to the fragment (pixel) shader file.
 
@@ -297,7 +294,7 @@ class Material:
         self._material[self._material_name]["fragmentShader"] = shader
         return self
 
-    def geometryShader(self, shader: str):
+    def geometryShader(self, shader: str) -> "Material":
         """
         Sets the path to the geometry shader file.
 
@@ -313,7 +310,7 @@ class Material:
         self._material[self._material_name]["geometryShader"] = shader
         return self
 
-    def vrGeometryShader(self, shader: str):
+    def vrGeometryShader(self, shader: str) -> "Material":
         """
         Sets the path to the VR-specific geometry shader.
 
@@ -328,7 +325,7 @@ class Material:
         self._material[self._material_name]["vrGeometryShader"] = shader
         return self
 
-    def vertexFields(self, fields: list[dict]):
+    def vertexFields(self, fields: list[dict]) -> "Material":
         """
         Defines the data layout for vertices passed to the shader.
 
@@ -344,7 +341,7 @@ class Material:
         self._material[self._material_name]["vertexFields"] = fields
         return self
 
-    def variants(self, variants: list[dict]):
+    def variants(self, variants: list[dict]) -> "Material":
         """
         Defines shader variants.
 
@@ -360,7 +357,7 @@ class Material:
         self._material[self._material_name]["variants"] = variants
         return self
 
-    def msaaSupport(self, support: str):
+    def msaaSupport(self, support: str) -> "Material":
         """
         Configures Multisample Anti-Aliasing (MSAA) support.
 
@@ -375,7 +372,7 @@ class Material:
         self._material[self._material_name]["msaaSupport"] = support
         return self
 
-    def primitiveMode(self, mode: str):
+    def primitiveMode(self, mode: str) -> "Material":
         """
         Sets the geometric primitive drawing mode.
 
@@ -393,7 +390,7 @@ class Material:
         self._material[self._material_name]["primitiveMode"] = mode
         return self
 
-    def depthBias(self, bias: float):
+    def depthBias(self, bias: float) -> "Material":
         """
         Sets the depth bias.
 
@@ -409,7 +406,7 @@ class Material:
         self._material[self._material_name]["depthBias"] = bias
         return self
 
-    def slopeScaledDepthBias(self, bias: float):
+    def slopeScaledDepthBias(self, bias: float) -> "Material":
         """
         Sets the slope-scaled depth bias.
 
@@ -425,7 +422,7 @@ class Material:
         self._material[self._material_name]["slopeScaledDepthBias"] = bias
         return self
 
-    def depthBiasOGL(self, bias: float):
+    def depthBiasOGL(self, bias: float) -> "Material":
         """
         Sets the OpenGL-specific depth bias.
 
@@ -441,7 +438,7 @@ class Material:
         self._material[self._material_name]["depthBiasOGL"] = bias
         return self
 
-    def slopeScaledDepthBiasOGL(self, bias: float):
+    def slopeScaledDepthBiasOGL(self, bias: float) -> "Material":
         """
         Sets the OpenGL-specific slope-scaled depth bias.
 
@@ -456,7 +453,7 @@ class Material:
         self._material[self._material_name]["slopeScaledDepthBiasOGL"] = bias
         return self
 
-    def samplerStates(self, states: list[dict]):
+    def samplerStates(self, states: list[dict]) -> "Material":
         """
         Configures texture sampling.
 
@@ -472,7 +469,7 @@ class Material:
         self._material[self._material_name]["samplerStates"] = states
         return self
 
-    def add_samplerStates(self, states: list[dict]):
+    def add_samplerStates(self, states: list[dict]) -> "Material":
         """
         Adds additional sampler states.
 
@@ -487,7 +484,7 @@ class Material:
         self._material[self._material_name]["+samplerStates"] = states
         return self
 
-    def defines(self, *defines: MaterialDefinitions):
+    def defines(self, *defines: MaterialDefinitions) -> "Material":
         """
         Sets the shader preprocessor defines.
 
@@ -504,7 +501,7 @@ class Material:
         self._material[self._material_name]["defines"] = defines
         return self
 
-    def remove_defines(self, *defines: MaterialDefinitions):
+    def remove_defines(self, *defines: MaterialDefinitions) -> "Material":
         """
         Removes specific defines from the material.
 
@@ -520,7 +517,7 @@ class Material:
         self._material[self._material_name]["-defines"] = defines
         return self
 
-    def add_defines(self, *defines: MaterialDefinitions):
+    def add_defines(self, *defines: MaterialDefinitions) -> "Material":
         """
         Adds defines to the material.
 
@@ -535,7 +532,7 @@ class Material:
         self._material[self._material_name]["+defines"] = defines
         return self
 
-    def queue(self):
+    def queue(self) -> "Material":
         MaterialsObject().add_material(self)
 
     def __export__(self) -> dict:

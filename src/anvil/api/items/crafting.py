@@ -118,7 +118,7 @@ class CraftingItemCatalog(AddonObject):
             )
         return self
 
-    def queue(self):
+    def queue(self) -> "CraftingItemCatalog":
         return super().queue()
 
 
@@ -128,24 +128,24 @@ class _BaseRecipe(AddonObject):
     _object_type = "Base Recipe"
     _type = "minecraft:recipe_furnace"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
 
-    def priority(self, priority: int):
+    def priority(self, priority: int) -> "_BaseRecipe":
         self._content[self._type]["priority"] = priority
         return self
 
-    def unlock_context(self, unlock_context: RecipeUnlockContext):
+    def unlock_context(self, unlock_context: RecipeUnlockContext) -> "_BaseRecipe":
         self._content[self._type]["unlock"] = {"context": unlock_context.value}
         return self
 
-    def unlock_items(self, unlock_items: list[Identifier]):
+    def unlock_items(self, unlock_items: list[Identifier]) -> "_BaseRecipe":
         self._content[self._type]["unlock"] = [
             {"item": str(item)} for item in unlock_items
         ]
         return self
 
-    def queue(self):
+    def queue(self) -> "_BaseRecipe":
         return super().queue()
 
 
@@ -153,7 +153,7 @@ class SmeltingRecipe(_BaseRecipe):
     _object_type = "Smelting Recipe"
     _type = "minecraft:recipe_furnace"
 
-    def __init__(self, name: str, tags: list[SmeltingTags]):
+    def __init__(self, name: str, tags: list[SmeltingTags]) -> None:
         super().__init__(name)
         self._tags = tags
         self.content(JsonSchemes.recipe_smelting(self.identifier, tags))
@@ -166,7 +166,7 @@ class SmeltingRecipe(_BaseRecipe):
         self._content["minecraft:recipe_furnace"]["output"] = identifier
         return self
 
-    def queue(self):
+    def queue(self) -> "SmeltingRecipe":
         return super().queue()
 
 
@@ -174,24 +174,24 @@ class SmithingRecipe(_BaseRecipe):
     _object_type = "Smithing Recipe"
     _extension = ".recipe.json"
 
-    def __init__(self, name: str, tags: list[str] = ["smithing_table"]):
+    def __init__(self, name: str, tags: list[str] = ["smithing_table"]) -> None:
         self._name = name
         self.content(JsonSchemes.recipe_smithing_table(self.identifier, tags))
         super().__init__(name)
 
-    def base(self, identifier: Identifier):
+    def base(self, identifier: Identifier) -> "SmithingRecipe":
         self._content["minecraft:recipe_smithing_transform"]["base"] = identifier
         return self
 
-    def addition(self, identifier: Identifier):
+    def addition(self, identifier: Identifier) -> "SmithingRecipe":
         self._content["minecraft:recipe_smithing_transform"]["addition"] = identifier
         return self
 
-    def result(self, identifier: Identifier):
+    def result(self, identifier: Identifier) -> "SmithingRecipe":
         self._content["minecraft:recipe_smithing_transform"]["result"] = identifier
         return self
 
-    def queue(self):
+    def queue(self) -> "SmithingRecipe":
         return super().queue()
 
 
@@ -199,11 +199,11 @@ class ShapelessRecipe(_BaseRecipe):
     _object_type = "Shapeless Recipe"
     _type = "minecraft:recipe_shapeless"
 
-    def __init__(self, name: str, tags: list[str] = ["crafting_table"]):
+    def __init__(self, name: str, tags: list[str] = ["crafting_table"]) -> None:
         super().__init__(name)
         self.content(JsonSchemes.recipe_shapeless_crafting(self.identifier, tags))
 
-    def ingredients(self, items: list[tuple[Identifier, int]]):
+    def ingredients(self, items: list[tuple[Identifier, int]]) -> "ShapelessRecipe":
         if len(items) > 9:
             raise ValueError(
                 f"Too many items in shapeless recipe, maximum is 9. {self._object_type}[{self._name}]"
@@ -223,7 +223,7 @@ class ShapelessRecipe(_BaseRecipe):
         item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         count: int = 1,
         data: int = 0,
-    ):
+    ) -> "ShapelessRecipe":
         self._content["minecraft:recipe_shapeless"]["result"] = {
             "item": str(item),
             "count": count,
@@ -231,14 +231,14 @@ class ShapelessRecipe(_BaseRecipe):
         }
         return self
 
-    def queue(self):
+    def queue(self) -> "ShapelessRecipe":
         return super().queue()
 
 
 class StoneCutterRecipe(ShapelessRecipe):
     _object_type = "Stone Cutter Recipe"
 
-    def __init__(self, name: str, tags: list[str] = ["stonecutter"]):
+    def __init__(self, name: str, tags: list[str] = ["stonecutter"]) -> None:
         super().__init__(name)
         self.content(JsonSchemes.recipe_shapeless_crafting(self.identifier, tags))
 
@@ -246,10 +246,11 @@ class StoneCutterRecipe(ShapelessRecipe):
         self,
         item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         data: int = 0,
-    ):
-        return super().ingredient([(item, data)])
+    ) -> "StoneCutterRecipe":
+        super().ingredient([(item, data)])
+        return self
 
-    def queue(self):
+    def queue(self) -> "StoneCutterRecipe":
         return super().queue()
 
 
@@ -262,7 +263,7 @@ class ShapedCraftingRecipe(_BaseRecipe):
         name: str,
         assume_symmetry: bool = True,
         tags: list[str] = ["crafting_table"],
-    ):
+    ) -> None:
         self._recipe_exactly = False
         super().__init__(name)
         self.content(
@@ -326,7 +327,7 @@ class ShapedCraftingRecipe(_BaseRecipe):
         item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         count: int = 1,
         data: int = 0,
-    ):
+    ) -> "ShapedCraftingRecipe":
         self._content["minecraft:recipe_shaped"]["result"] = {
             "item": str(item),
             "count": count,
@@ -334,7 +335,7 @@ class ShapedCraftingRecipe(_BaseRecipe):
         }
         return self
 
-    def queue(self):
+    def queue(self) -> "ShapedCraftingRecipe":
         return super().queue()
 
 
@@ -342,24 +343,24 @@ class SmithingTrimRecipe(_BaseRecipe):
     _object_type = "Smithing Trim Recipe"
     _extension = ".recipe.json"
 
-    def __init__(self, name: str, tags: list[str] = ["smithing_table"]):
+    def __init__(self, name: str, tags: list[str] = ["smithing_table"]) -> None:
         self._name = name
         self.content(JsonSchemes.recipe_smithing_table_trim(self.identifier, tags))
         super().__init__(name)
 
     def base(
         self, item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier
-    ):
+    ) -> "SmithingTrimRecipe":
         self._content["minecraft:recipe_smithing_transform"]["base"] = item
         return self
 
     def addition(
         self, item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier
-    ):
+    ) -> "SmithingTrimRecipe":
         self._content["minecraft:recipe_smithing_transform"]["addition"] = item
         return self
 
-    def queue(self):
+    def queue(self) -> "SmithingTrimRecipe":
         return super().queue()
 
 
@@ -368,7 +369,7 @@ class PotionBrewingRecipe(_BaseRecipe):
     _extension = ".recipe.json"
     _type = "minecraft:recipe_brewing_container"
 
-    def __init__(self, name: str, tags: list[str] = ["brewing_stand"]):
+    def __init__(self, name: str, tags: list[str] = ["brewing_stand"]) -> None:
         """Represents a Potion Brewing Container Recipe.
 
         Args:
@@ -385,7 +386,7 @@ class PotionBrewingRecipe(_BaseRecipe):
         item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         reagent: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         output: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
-    ):
+    ) -> "PotionBrewingRecipe":
         """Sets the recipe for the potion brewing container.
 
         Args:
@@ -401,7 +402,7 @@ class PotionBrewingRecipe(_BaseRecipe):
         self._content[self._type]["output"] = str(output)
         return self
 
-    def queue(self):
+    def queue(self) -> "PotionBrewingRecipe":
         return super().queue()
 
 
@@ -410,7 +411,7 @@ class PotionMixingRecipe(_BaseRecipe):
     _extension = ".recipe.json"
     _type = "minecraft:recipe_brewing_mix"
 
-    def __init__(self, name: str, tags: list[str] = ["brewing_stand"]):
+    def __init__(self, name: str, tags: list[str] = ["brewing_stand"]) -> None:
         """Represents a Potion Mixing Recipe.
 
         Args:
@@ -427,7 +428,7 @@ class PotionMixingRecipe(_BaseRecipe):
         item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         reagent: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
         output: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier,
-    ):
+    ) -> "PotionMixingRecipe":
         """Sets the recipe for the potion mixing.
 
         Args:
@@ -443,5 +444,5 @@ class PotionMixingRecipe(_BaseRecipe):
         self._content[self._type]["output"] = str(output)
         return self
 
-    def queue(self):
+    def queue(self) -> "PotionMixingRecipe":
         return super().queue()

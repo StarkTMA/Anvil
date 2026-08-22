@@ -44,7 +44,7 @@ class ColorGradingSettings(AddonObject):
         gamma: Vector3D | None = None,
         offset: Vector3D | None = None,
         saturation: Vector3D | None = None,
-    ):
+    ) -> "ColorGradingSettings":
         """Sets color grading parameters for midtones (or globally if highlights/shadows are disabled).
 
         Parameters:
@@ -70,6 +70,7 @@ class ColorGradingSettings(AddonObject):
             mid["offset"] = [clamp(c, -1.0, 1.0) for c in offset]
         if saturation is not None:
             mid["saturation"] = [clamp(c, 0.0, 10.0) for c in saturation]
+        return self
 
     def highlights(
         self,
@@ -79,7 +80,7 @@ class ColorGradingSettings(AddonObject):
         gamma: list[float] | None = None,
         offset: list[float] | None = None,
         saturation: list[float] | None = None,
-    ):
+    ) -> "ColorGradingSettings":
         """Sets color grading parameters for highlights.
 
         Parameters:
@@ -111,6 +112,7 @@ class ColorGradingSettings(AddonObject):
             high["offset"] = [clamp(c, -1.0, 1.0) for c in offset]
         if saturation is not None:
             high["saturation"] = [clamp(c, 0.0, 10.0) for c in saturation]
+        return self
 
     def shadows(
         self,
@@ -120,7 +122,7 @@ class ColorGradingSettings(AddonObject):
         gamma: list[float] | None = None,
         offset: list[float] | None = None,
         saturation: list[float] | None = None,
-    ):
+    ) -> "ColorGradingSettings":
         """Sets color grading parameters for shadows.
 
         Parameters:
@@ -151,12 +153,13 @@ class ColorGradingSettings(AddonObject):
             shad["offset"] = [clamp(c, -1.0, 1.0) for c in offset]
         if saturation is not None:
             shad["saturation"] = [clamp(c, 0.0, 10.0) for c in saturation]
+        return self
 
     def temperature_grade(
         self,
         temp_value: float | None = None,
         type: Literal["white_balance", "color_temperature"] | None = None,
-    ):
+    ) -> "ColorGradingSettings":
         """Globally adjusts how warm or cool the scene is.
 
         Parameters:
@@ -174,6 +177,7 @@ class ColorGradingSettings(AddonObject):
             temp["temperature"] = clamp(temp_value, 1000.0, 15000.0)
         if type is not None:
             temp["type"] = type
+        return self
 
     def tone_mapping(
         self,
@@ -185,7 +189,7 @@ class ColorGradingSettings(AddonObject):
             "aces",
             "generic",
         ],
-    ):
+    ) -> "ColorGradingSettings":
         """Remaps HDR colors to SDR-space for display.
 
         Parameters:
@@ -195,3 +199,4 @@ class ColorGradingSettings(AddonObject):
         self._content["minecraft:color_grading_settings"]["tone_mapping"][
             "operator"
         ] = operator
+        return self

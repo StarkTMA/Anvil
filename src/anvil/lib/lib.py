@@ -239,11 +239,11 @@ class AnvilIO:
 
         Parameters:
             name (str): The name of the file.
-            content: The content of the file.
+            content (Any): The content of the file.
             directory (str): The directory path where the file should be created or modified.
             mode (str): The file mode, either "w" (write) or "a" (append).
             skip_tag (bool, optional): Whether to skip adding the file metadata tag. Defaults to False.
-            *Parameters: Additional StrEnum.
+            **parameters (Any): Additional keyword arguments.
 
         Note:
             The file content is converted to the appropriate format based on the file extension.
@@ -303,12 +303,12 @@ class AnvilArchive:
         )
 
     @classmethod
-    def from_mapping(cls, zip_name, dir_list: dict) -> None:
+    def from_mapping(cls, zip_name: str, dir_list: dict) -> None:
         """
         Create a ZIP archive containing multiple directories and files.
 
         Parameters:
-            zip_name: The name of the ZIP archive.
+            zip_name (str): The name of the ZIP archive.
             dir_list (dict): A dictionary where the keys are source directories and the values are target directories.
 
         Note:
@@ -936,7 +936,7 @@ def clamp(value: float | int, _min: float | int, _max: float | int) -> float | i
     return max(min(_max, value), _min)
 
 
-def frange(start: int, stop: int, num: float = 1):
+def frange(start: int, stop: int, num: float = 1) -> list[float]:
     """
     Generate a list of interpolated float values between start and stop.
 
@@ -946,7 +946,7 @@ def frange(start: int, stop: int, num: float = 1):
         num (float, optional): The number of values to generate. Defaults to 1.
 
     Returns:
-        list: A list of interpolated values between start and stop.
+        list[float]: A list of interpolated values between start and stop.
     """
     step = (stop - start) / (num - 1)
     values = [round(start + i * step, 2) for i in range(int(num))]

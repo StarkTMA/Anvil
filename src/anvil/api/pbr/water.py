@@ -35,7 +35,7 @@ class WaterSettings(AddonObject):
         cdom: float | None = None,
         chlorophyll: float | None = None,
         suspended_sediment: float | None = None,
-    ):
+    ) -> "WaterSettings":
         """
         The composition of particles in a body of water determines its color and how light behaves as it
         travels through the water. We've boiled them down to three concentrations in mg/L. Use these values
@@ -54,6 +54,7 @@ class WaterSettings(AddonObject):
             pc["chlorophyll"] = clamp(chlorophyll, 0.0, 10.0)
         if suspended_sediment is not None:
             pc["suspended_sediment"] = clamp(suspended_sediment, 0.0, 300.0)
+        return self
 
     def waves(
         self,
@@ -69,7 +70,7 @@ class WaterSettings(AddonObject):
         shape: float | None = None,
         speed: float | None = None,
         speed_scaling: float | None = None,
-    ):
+    ) -> "WaterSettings":
         """
         Waves are an optional effect that can be used to complement water surface animations to make your water appear more
         realistic. You can blend them with existing water texture animations, or replace them entirely.
@@ -115,6 +116,7 @@ class WaterSettings(AddonObject):
             waves["speed"] = clamp(speed, 0.01, 10.0)
         if speed_scaling is not None:
             waves["speed_scaling"] = clamp(speed_scaling, 0.0, 2.0)
+        return self
 
     def caustics(
         self,
@@ -123,7 +125,7 @@ class WaterSettings(AddonObject):
         power: int | None = None,
         scale: float | None = None,
         texture: str | None = None,
-    ):
+    ) -> "WaterSettings":
         """
         Caustics make bodies of water more realistic by projecting light rays on underwater surfaces.
         These rays then scatter and dance as the surface of the water moves. This effect is enabled by default,
@@ -147,3 +149,4 @@ class WaterSettings(AddonObject):
             caustics["scale"] = clamp(scale, 0.1, 5.0)
         if texture is not None:
             caustics["texture"] = texture
+        return self

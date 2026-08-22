@@ -139,7 +139,7 @@ class Feature(AddonObject):
         "features",
     )
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         """Initializes the base feature definition content.
 
         Parameters:
@@ -150,7 +150,7 @@ class Feature(AddonObject):
         super().__init__(name, False)
         self.content(JsonSchemes.worldgen_feature(self._template_name, self.identifier))
 
-    def queue(self):
+    def queue(self) -> "Feature":
         """Queues the feature definition for export."""
         return super().queue()
 
@@ -166,7 +166,7 @@ class AggregateFeature(Feature):
     _template_name = "feature_aggregate"
     _feature_name = "minecraft:aggregate_feature"
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         """Places a collection of features in an arbitrary order.
 
         Parameters:
@@ -178,7 +178,7 @@ class AggregateFeature(Feature):
         """
         super().__init__(name)
 
-    def features(self, feature_list: list[Feature | Identifier]):
+    def features(self, feature_list: list[Feature | Identifier]) -> "AggregateFeature":
         """Sets the collection of features to be placed one by one.
 
         No guarantee of order. All features use the same input position.
@@ -186,10 +186,12 @@ class AggregateFeature(Feature):
         self._content[self._feature_name].setdefault("features", []).extend(
             [str(feature) for feature in feature_list]
         )
+        return self
 
-    def early_out(self, early_out: Literal["none", "first_failure", "first_success"]):
+    def early_out(self, early_out: Literal["none", "first_failure", "first_success"]) -> "AggregateFeature":
         """Do not continue placing features once either the first success or first failure has occurred."""
         self._content[self._feature_name]["early_out"] = early_out
+        return self
 
 
 class CaveCarverFeature(Feature):
@@ -212,7 +214,7 @@ class CaveCarverFeature(Feature):
         horizontal_radius_multiplier: float | tuple[float, float] | None = None,
         vertical_radius_multiplier: float | tuple[float, float] | None = None,
         floor_level: float | tuple[float, float] | None = None,
-    ):
+    ) -> None:
         """Carves caves through the world during pregeneration.
 
         Parameters:
@@ -286,7 +288,7 @@ class FossilFeature(Feature):
         name,
         ore_block: MinecraftBlockDescriptor | Identifier,
         max_empty_corners: int,
-    ):
+    ) -> None:
         """Generates a fossil structure with a configurable ore block.
 
         Parameters:
@@ -339,7 +341,7 @@ class GeodeFeature(Feature):
         placements_require_layer0_alternate: bool,
         invalid_blocks_threshold: int,
         inner_placements: list[MinecraftBlockDescriptor | Identifier] | None = None,
-    ):
+    ) -> None:
         """Generates a geode with configurable shell layers, point distribution, and crack behavior.
 
         Parameters:
@@ -463,7 +465,7 @@ class GrowingPlantFeature(Feature):
         growth_direction: Literal["UP", "DOWN"],
         age: float | tuple[float, float] | None = None,
         allow_water: bool = False,
-    ):
+    ) -> None:
         """Places a growing plant in the world.
 
         Parameters:
@@ -563,7 +565,7 @@ class MultifaceFeature(Feature):
         can_place_on_wall: bool,
         chance_of_spreading: float,
         can_place_on: list[MinecraftBlockDescriptor | Identifier] | None = None,
-    ):
+    ) -> None:
         """Places one or a few multiface blocks on floors, walls, and ceilings.
 
         Parameters:
@@ -634,7 +636,7 @@ class MultiBlockFeature(Feature):
         places_block: MinecraftBlockDescriptor | Identifier,
         randomize_rotation: bool = False,
         enforce_placement_rules: bool = False,
-    ):
+    ) -> None:
         """Places a multi-block in the world as a biome decoration feature.
 
         Parameters:
@@ -696,7 +698,7 @@ class NetherCaveCarverFeature(Feature):
         horizontal_radius_multiplier: float | tuple[float, float] | None = None,
         vertical_radius_multiplier: float | tuple[float, float] | None = None,
         floor_level: float | tuple[float, float] | None = None,
-    ):
+    ) -> None:
         """Carves cave systems through the Nether.
 
         Parameters:
@@ -770,7 +772,7 @@ class OreFeature(Feature):
         name,
         count: int,
         discard_chance_on_air_exposure: float | None = None,
-    ):
+    ) -> None:
         """Places a vein of blocks to simulate ore deposits.
 
         Parameters:
@@ -821,7 +823,7 @@ class PartiallyExposedBlobFeature(Feature):
         placement_radius_around_floor: int,
         placement_probability_per_valid_position: float,
         exposed_face: BlockFaces | None = BlockFaces.Up,
-    ):
+    ) -> None:
         """Generates a blob where one face may remain exposed.
 
         Parameters:
@@ -867,7 +869,7 @@ class ScatterFeature(Feature, DistributionMixin):
         name,
         places_feature: Feature | Identifier,
         project_input_to_floor: bool = False,
-    ):
+    ) -> None:
         """Scatters a feature throughout a chunk.
 
         Parameters:
@@ -907,7 +909,7 @@ class SearchFeature(Feature):
         min_position: Sequence[int],
         max_position: Sequence[int],
         required_successes: int = None,
-    ):
+    ) -> None:
         """Sweeps a volume searching for a valid placement location for its referenced feature.
 
         Parameters:
@@ -971,7 +973,7 @@ class SculkPatchFeature(Feature):
         central_block: MinecraftBlockDescriptor | Identifier | None = None,
         central_block_placement_chance: float | None = None,
         extra_growth_chance: float | tuple[float, float] | None = None,
-    ):
+    ) -> None:
         """Places a sculk patch with cursor spread settings and an optional central block.
 
         Parameters:
@@ -1045,11 +1047,12 @@ class SequenceFeature(Feature):
     _template_name = "feature_sequence"
     _feature_name = "minecraft:sequence_feature"
 
-    def features(self, feature_list: list[Feature | Identifier]):
+    def features(self, feature_list: list[Feature | Identifier]) -> "SequenceFeature":
         """Sets the ordered feature_reference array for the sequence."""
         self._content[self._feature_name].setdefault("features", []).extend(
             [str(feature) for feature in feature_list]
         )
+        return self
 
 
 class SingleBlockFeature(Feature):
@@ -1081,7 +1084,7 @@ class SingleBlockFeature(Feature):
         enforce_placement_rules: bool = False,
         enforce_survivability_rules: bool = False,
         randomize_rotation: bool = False,
-    ):
+    ) -> None:
         """Places a single block in the world.
 
         Parameters:
@@ -1200,7 +1203,7 @@ class SnapToSurfaceFeature(Feature):
             list[MinecraftBlockDescriptor | Identifier] | None
         ) = None,
         embed_in_surface: bool = False,
-    ):
+    ) -> None:
         """Snaps the y-value of a feature placement position to the floor or ceiling within the provided vertical search range.
 
         Parameters:
@@ -1260,7 +1263,7 @@ class StructureTemplateFeature(Feature):
             Literal["north", "south", "east", "west", "random"] | None
         ) = None,
         rotate_around_center: bool = False,
-    ):
+    ) -> None:
         """Places a structure in the world.
 
         Parameters:
@@ -1318,7 +1321,7 @@ class SurfaceRelativeThresholdFeature(Feature):
         name,
         feature_to_place: Feature | Identifier,
         minimum_distance_below_surface: int = 0,
-    ):
+    ) -> None:
         """Determines whether the provided position is below the estimated surface level of the world and places a feature if so.
 
         Parameters:
@@ -1479,7 +1482,7 @@ class UnderwaterCaveCarverFeature(Feature):
         vertical_radius_multiplier: float | tuple[float, float] | None = None,
         floor_level: float | tuple[float, float] | None = None,
         replace_air_with: MinecraftBlockDescriptor | Identifier | None = None,
-    ):
+    ) -> None:
         """Carves underwater caves below sea level during pregeneration.
 
         Parameters:
@@ -1566,7 +1569,7 @@ class VegetationPatchFeature(Feature):
         vegetation_chance: float | None = None,
         extra_edge_column_chance: float | None = None,
         waterlogged: bool = False,
-    ):
+    ) -> None:
         """Creates a patch of ground blocks and scatters a vegetation feature over it.
 
         Parameters:
@@ -1638,7 +1641,8 @@ class WeightedRandomFeature(Feature):
             [str(feature), clamp(weight, 0, inf)]
         )
 
-    def features(self, feature_list: list[tuple[Feature | Identifier, float]]):
+    def features(self, feature_list: list[tuple[Feature | Identifier, float]]) -> "WeightedRandomFeature":
         """Adds multiple weighted feature entries with feature references and weights."""
         for feature, weight in feature_list:
             self.add_feature(feature, weight)
+        return self

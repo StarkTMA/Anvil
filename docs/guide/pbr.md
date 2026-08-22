@@ -63,7 +63,7 @@ block.server.components.add(
 ```
 
 !!! warning "Do not use loose PNGs"
-Do not place block or entity textures in `assets/textures/`. They will be ignored. usage of the Blockbench file is mandatory for these assets.
+    Do not place block or entity textures in `assets/textures/`. They will be ignored. Usage of the Blockbench file is mandatory for these assets.
 
 ### PBR Entities Example
 

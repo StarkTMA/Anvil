@@ -27,7 +27,7 @@ class ShadowSettings(AddonObject):
 
     def shadow_style(
         self, style: Literal["blocky_shadows", "soft_shadows"], texel_size: float = 16
-    ):
+    ) -> "ShadowSettings":
         """Sets the shadow style and resolution.
 
         Parameters:
@@ -36,3 +36,4 @@ class ShadowSettings(AddonObject):
         """
         self._content["minecraft:shadow_settings"]["shadow_style"] = style
         self._content["minecraft:shadow_settings"]["texel_size"] = texel_size
+        return self

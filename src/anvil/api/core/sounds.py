@@ -184,7 +184,7 @@ class SoundDefinition(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
-    ):
+    ) -> "_SoundDescription":
         """Defines a sound for the SoundDefinition instance.
 
         Parameters:
@@ -214,19 +214,15 @@ class SoundDefinition(AddonObject):
         self._sounds.append(sound)
         return sound
 
-    def queue(self):
-        """Returns the queue for the sound definition.
-
-        Returns:
-            queue: The queue for the sound definition.
-        """
+    def queue(self) -> "SoundDefinition":
+        """Queues the sound definition for export."""
         return super().queue("")
 
-    def __export__(self):
+    def __export__(self) -> None:
         """Returns the sound definition.
 
         Returns:
-            dict: The sound definition.
+            None
         """
         if len(self._sounds) == 0:
             return
@@ -265,11 +261,11 @@ class MusicDefinition(AddonObject):
         music_reference: MusicCategory | str,
         min_delay: int = 60,
         max_delay: int = 180,
-    ):
+    ) -> _SoundDescription:
         """Defines a music for the MusicDefinition instance.
 
         Parameters:
-            music_category (MusicCategory): The category of the music.
+            music_reference (MusicCategory | str): The reference/category of the music.
             min_delay (int, optional): The minimum delay for the music. Defaults to 60.
             max_delay (int, optional): The maximum delay for the music. Defaults to 180.
 
@@ -290,19 +286,15 @@ class MusicDefinition(AddonObject):
             f"music.{music_reference}", SoundCategory.Music
         )
 
-    def queue(self):
-        """Returns the queue for the music definition.
-
-        Returns:
-            queue: The queue for the music definition.
-        """
+    def queue(self) -> "MusicDefinition":
+        """Queues the music definition for export."""
         return super().queue("")
 
-    def __export__(self):
+    def __export__(self) -> None:
         """Returns the music definition.
 
         Returns:
-            dict: The music definition.
+            None
         """
         if len(self._music) == 0:
             return
@@ -349,7 +341,7 @@ class SoundEvent(AddonObject):
         variant_query: Molang = None,
         variant_map: str = None,
         subtitle: str = None,
-    ):
+    ) -> "SoundEvent":
         self._changed = True
         self._content["entity_sounds"]["entities"].setdefault(
             entity_identifier,
@@ -398,7 +390,7 @@ class SoundEvent(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
-    ):
+    ) -> "_SoundDescription":
         self._changed = True
         self._content["block_sounds"].setdefault(
             block_identifier,
@@ -435,7 +427,7 @@ class SoundEvent(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
-    ):
+    ) -> "_SoundDescription":
         self._changed = True
         self._content["interactive_sounds"]["block_sounds"].setdefault(
             block_identifier,
@@ -473,7 +465,7 @@ class SoundEvent(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
-    ):
+    ) -> "_SoundDescription":
         self._changed = True
         self._content["individual_event_sounds"]["events"][sound_identifier] = {
             "sound": sound_identifier,
@@ -494,9 +486,9 @@ class SoundEvent(AddonObject):
             subtitle=key if subtitle is not None else None,
         )
 
-    def queue(self):
+    def queue(self) -> "SoundEvent":
         if not self._changed:
-            return
+            return self
         return super().queue()
 
 
@@ -519,10 +511,11 @@ class BlocksJSONObject(AddonObject):
         self._initialized = True
         self._blocks = []
 
-    def add_block(self, block: Identifier):
+    def add_block(self, block: Identifier) -> "BlocksJSONObject":
         self._blocks.append({str(block): {"sound": str(block)}})
+        return self
 
-    def queue(self):
+    def queue(self) -> "BlocksJSONObject":
         if len(self._blocks) == 0:
             return
         self._content["blocks"].update(

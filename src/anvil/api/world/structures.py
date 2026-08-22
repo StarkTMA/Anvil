@@ -321,12 +321,12 @@ class _JigsawStructureProcess(AddonObject, _processor_builder):
     _path = os.path.join(CONFIG.BP_PATH, "worldgen", "processors")
     _object_type = "Jigsaw Structure Process"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
         _processor_builder.__init__(self)
         self.content(JsonSchemes.jigsaw_structure_process(self.identifier))
 
-    def __export__(self):
+    def __export__(self) -> None:
         self._content["minecraft:processor_list"]["processors"] = self.build()
         super().__export__()
 
@@ -466,7 +466,7 @@ class _JigsawStructure(AddonObject):
             "apply_waterlogging", "ignore_waterlogging"
         ] = "apply_waterlogging",
         start_height_from_sea: bool = False,
-    ):
+    ) -> None:
         """Initializes a Jigsaw instance.
 
         Parameters:
@@ -514,20 +514,21 @@ class _JigsawStructure(AddonObject):
         self._pool_aliases: _JigsawStructure._pool | None = None
         self._start_pool = start_pool
 
-    def add_biome_filters(self, filter: Filter):
+    def add_biome_filters(self, filter: Filter) -> "_JigsawStructure":
         """Adds biome filters to the jigsaw structure.
 
         Parameters:
             *filters (Filter): The biome filters to add.
         """
         self._content["minecraft:jigsaw"]["biome_filters"].append(filter)
+        return self
 
     def terrain_adaptation(
         self,
         terrain_adaptation: Literal[
             "none", "bury", "beard_thin", "beard_box", "encapsulate"
         ],
-    ):
+    ) -> "_JigsawStructure":
         """Sets the terrain adaptation for the jigsaw structure.
 
         Parameters:
@@ -547,10 +548,11 @@ class _JigsawStructure(AddonObject):
         ]:
             raise ValueError("Invalid terrain adaptation value")
         self._content["minecraft:jigsaw"]["terrain_adaptation"] = terrain_adaptation
+        return self
 
     def heightmap_projection(
         self, heightmap_projection: Literal["none", "world_surface", "ocean_floor"]
-    ):
+    ) -> "_JigsawStructure":
         """Sets the heightmap projection for the jigsaw structure.
 
         Parameters:
@@ -559,8 +561,9 @@ class _JigsawStructure(AddonObject):
         if heightmap_projection not in ["none", "world_surface", "ocean_floor"]:
             raise ValueError("Invalid heightmap projection value")
         self._content["minecraft:jigsaw"]["heightmap_projection"] = heightmap_projection
+        return self
 
-    def dimension_padding(self, dimension_padding: tuple[int, int]):
+    def dimension_padding(self, dimension_padding: tuple[int, int]) -> "_JigsawStructure":
         """Sets the dimension padding for the jigsaw structure.
 
         Parameters:
@@ -569,8 +572,9 @@ class _JigsawStructure(AddonObject):
         if not isinstance(dimension_padding, tuple) or len(dimension_padding) != 2:
             raise TypeError("dimension_padding must be a tuple of two integers")
         self._content["minecraft:jigsaw"]["dimension_padding"] = dimension_padding
+        return self
 
-    def max_distance_from_center(self, horizontal: int, vertical: int):
+    def max_distance_from_center(self, horizontal: int, vertical: int) -> "_JigsawStructure":
         """Sets the maximum distance from center for the jigsaw structure.
 
         Parameters:
@@ -585,6 +589,7 @@ class _JigsawStructure(AddonObject):
             "horizontal": horizontal,
             "vertical": vertical,
         }
+        return self
 
     @property
     def pool_aliases(self) -> "_JigsawStructure._pool":
@@ -592,10 +597,10 @@ class _JigsawStructure(AddonObject):
         self._pool_aliases = self._pool()
         return self._pool_aliases
 
-    def queue(self):
+    def queue(self) -> "_JigsawStructure":
         return super().queue()
 
-    def __export__(self):
+    def __export__(self) -> None:
         self._content["minecraft:jigsaw"][
             "pool_aliases"
         ] = self.pool_aliases.__export__()
@@ -609,7 +614,7 @@ class JigsawStructureTemplatePool(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "worldgen", "template_pools")
     _object_type = "Jigsaw Structure Template Pool"
 
-    def __init__(self, name: str, fallback: str | None = None):
+    def __init__(self, name: str, fallback: str | None = None) -> None:
         """Initializes a JigsawStructureTemplatePool instance.
 
         Parameters:
@@ -635,7 +640,7 @@ class JigsawStructureTemplatePool(AddonObject):
             structure (str | Structure | Feature | None): The structure to add to the pool.
             weight (int, optional): The weight of the structure. Defaults to 1.
             processors (str | _JigsawStructureProcess | None, optional): The processors for the structure. Defaults to None.
-            projection (Literal["minecraft:rigid", "minecraft:terrain_matching"], optional): The projection type. Defaults to "minecraft:rigid".
+            projection (str, optional): The projection type ("rigid" or "terrain_matching"). Defaults to "rigid".
         """
         if not isinstance(structure, (Structure, Feature, str, type(None))):
             raise TypeError(
@@ -689,7 +694,7 @@ class JigsawStructureTemplatePool(AddonObject):
 
         return processors_obj
 
-    def queue(self):
+    def queue(self) -> "JigsawStructureTemplatePool":
         for processor in self._processors:
             processor.queue()
         for structure in self._structures:
@@ -715,19 +720,19 @@ class JigsawStructureSet(AddonObject):
     def __init__(
         self,
         name: str,
-        separation: int = 4,
-        spacing: int = 10,
+        separation: int,
+        spacing: int,
         spread_type: Literal["linear", "triangle"] = "linear",
         placement_type: Literal["minecraft:random_spread"] = "minecraft:random_spread",
-    ):
+    ) -> None:
         """Initializes a JigsawStructureSet instance.
 
         Parameters:
             name (str): The name of the structure set.
             separation (int): Padding (in chunks) within each grid cell. Structures will not generate within the padded area.
             spacing (int): Grid cell size (in chunks) to use when generating the structure. Structures will attempt to generate at a random position within each cell.
-            spread_type (Literal["linear", "triangle"]): Randomness algorithm used when placing structures.
-            placement_type (Literal["minecraft:random_spread"]): Describes where structures in the set spawn relative to one another. Currently, the only placement type supported is random_spread, which scatters structures randomly with a given separation and spacing.
+            spread_type (str, optional): Randomness algorithm used when placing structures ("linear" or "triangle"). Defaults to "linear".
+            placement_type (str, optional): Describes where structures in the set spawn relative to one another. Defaults to "minecraft:random_spread".
         """
         super().__init__(name)  # "structure_set"
         if separation >= spacing / 2:
@@ -765,7 +770,7 @@ class JigsawStructureSet(AddonObject):
             "apply_waterlogging", "ignore_waterlogging"
         ] = "apply_waterlogging",
         start_height_from_sea: bool = False,
-    ):
+    ) -> "_JigsawStructure":
         """Adds a jigsaw structure to the structure set.
 
         Parameters:
@@ -789,7 +794,7 @@ class JigsawStructureSet(AddonObject):
         )
         return structure
 
-    def queue(self):
+    def queue(self) -> "JigsawStructureSet":
         for structure in self._structures:
             structure.queue()
 

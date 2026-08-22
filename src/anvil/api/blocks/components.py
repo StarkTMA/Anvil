@@ -736,11 +736,16 @@ class BlockGeometry(Component):
 
         return self._bb.model.block_culling()
 
-    def n_way_visual_rotation(self, axis: Dict[str, Molang]):
+    def n_way_visual_rotation(
+        self, axis: Dict[str, Molang | str]
+    ) -> "BlockGeometry":
         """Specifies the visual rotation mapping for the geometry.
 
         Parameters:
-            **axes: Axes to state mappings (e.g. y="minecraft:cardinal_direction").
+            axis (Dict[str, Molang | str]): Axes to state mappings (e.g. y="minecraft:cardinal_direction").
+
+        Returns:
+            BlockGeometry: Self for method chaining.
         """
         valid_axes = ["x", "y", "z"]
         for axis, state in axis.items():

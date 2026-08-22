@@ -592,21 +592,21 @@ class Query(Molang):
 
     # More info needed
     @classmethod
-    def BoneAabb(self):
+    def BoneAabb(self) -> "_AabbStruct":
         """Returns the axis aligned bounding box of a bone as a struct with members '.min', '.max', along with '.x', '.y', and '.z' values for each.
 
         Returns:
-            AabbStruct: A struct with .min and .max, each a Vec3Struct
+            _AabbStruct: A struct with .min and .max, each a _Vec3Struct
         """
         return _AabbStruct(self.__query__(self, self.handle, "bone_aabb"))
 
     # More info needed
     @classmethod
-    def BoneOrigin(self):
+    def BoneOrigin(self) -> "_Vec3Struct":
         """Returns the initial (from the .geo) pivot of a bone as a struct with members '.x', '.y', and '.z'.
 
         Returns:
-            Vec3Struct: A struct with .x, .y, .z components
+            _Vec3Struct: A struct with .x, .y, .z components
         """
         return _Vec3Struct(self.__query__(self, self.handle, "bone_origin"))
 

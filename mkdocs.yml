@@ -99,11 +99,11 @@ nav:
                 - Overview: api/world/index.md
                 - Using Jigsaw Structures: guide/using_jigsaw.md
                 - Adding a Custom Camera: guide/adding_camera.md
-                - Camera: api/world/camera.md
                 - Fog: api/world/fog.md
                 - Loot Tables: api/world/loot_tables.md
                 - Structures: api/world/structures.md
                 - Particles: api/world/particles.md
+                - Features: api/world/features.md
           - Biomes:
                 - Overview: api/biomes/index.md
           - UI:

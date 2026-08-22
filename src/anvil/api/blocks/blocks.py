@@ -183,7 +183,7 @@ class _BlockServerDescription(MinecraftDescription):
             {"states": {}, "traits": {}, "menu_category": {}}
         )
 
-    def add_state(self, name: str, range: set[float | str | bool]):
+    def add_state(self, name: str, range: set[float | str | bool]) -> "_BlockServerDescription":
         """Adds a state to the block.
 
         Parameters:
@@ -205,7 +205,7 @@ class _BlockServerDescription(MinecraftDescription):
         category: ItemCategory,
         group: ItemGroups | None = None,
         is_hidden_in_commands: bool = False,
-    ):
+    ) -> "_BlockServerDescription":
         """Sets the menu category for the Block.
 
         Parameters:
@@ -226,14 +226,14 @@ class _BlockServerDescription(MinecraftDescription):
         return self
 
     @property
-    def traits(self):
+    def traits(self) -> "_BlockTraits":
         """Sets the traits for the block.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits)
         """
         return self._traits
 
-    def __export__(self):
+    def __export__(self) -> dict:
         self._description["description"]["traits"] = self._traits.export
         return super().__export__()
 
@@ -259,12 +259,12 @@ class BlockServer(AddonObject):
         self._permutations: list[PermutationGroup] = []
 
     @property
-    def description(self):
+    def description(self) -> "_BlockServerDescription":
         """The block description."""
         return self._description
 
     @property
-    def components(self):
+    def components(self) -> "_BlockComponents":
         """The block components."""
         return self._components
 
@@ -278,7 +278,7 @@ class BlockServer(AddonObject):
         self._permutations.append(self._permutation)
         return self._permutation
 
-    def __export__(self):
+    def __export__(self) -> None:
         """Queues the block to be exported."""
         components_validations(
             self, self._components, self._permutations, is_block=True
@@ -305,7 +305,7 @@ class BlockServer(AddonObject):
 
 
 class BlockClient(AddonObject):
-    def __init__(self, name: str, is_vanilla: bool = False):
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
         super().__init__(name, is_vanilla)
 
     def block_sound(
@@ -346,8 +346,8 @@ class BlockClient(AddonObject):
         else:
             raise TypeError("Invalid sound event type.")
 
-    def queue(self):
-        return
+    def queue(self) -> "BlockClient":
+        return self
 
 
 # ===========================================
@@ -356,7 +356,7 @@ class BlockClient(AddonObject):
 class Block(MinecraftBlockDescriptor):
     _object_type = "Block"
 
-    def __init__(self, name, is_vanilla=False):
+    def __init__(self, name, is_vanilla=False) -> None:
         super().__init__(name, is_vanilla)
 
         self.server = BlockServer(name, is_vanilla)
@@ -369,7 +369,7 @@ class Block(MinecraftBlockDescriptor):
         self,
         states: Mapping[str, str | int | float | bool] = None,
         tags: list[str] = None,
-    ):
+    ) -> dict | str:
         if any([states, tags]):
             return {
                 "name": self.identifier,
@@ -379,7 +379,7 @@ class Block(MinecraftBlockDescriptor):
         return self.identifier
 
     @property
-    def item(self):
+    def item(self) -> "Item":
         if not self._item:
             from anvil.api.items.items import Item
 
@@ -405,10 +405,10 @@ class Block(MinecraftBlockDescriptor):
         texture_set.set_vanilla_texture(blockbench_name, component, subfolder)
         texture_set.queue(subfolder)
 
-    def queue(self):
+    def queue(self) -> "Block":
         """Queues the block to be exported."""
         if self._texture_only:
-            return
+            return self
 
         self.server.queue()
         self.client.queue()
@@ -417,8 +417,9 @@ class Block(MinecraftBlockDescriptor):
             self._item.queue()
 
         ANVIL.__queue__(self)
+        return self
 
-    def __export__(self):
+    def __export__(self) -> None:
 
         from anvil.api.blocks.components import BlockDisplayName
 
