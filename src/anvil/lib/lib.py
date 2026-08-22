@@ -1,6 +1,7 @@
 """A collection of useful functions and classes used throughout the program."""
 
 import inspect
+import json
 import os
 import re
 import shutil
@@ -730,6 +731,110 @@ class AnvilValidator:
     @classmethod
     def check_new_versions(cls):
         click.echo(click.style("Checking for package updates...", fg="cyan"))
+        outdated_packages: List[Dict[str, str]] = []
+
+        # Check npm updates
+        try:
+            res = subprocess.run(
+                "npm outdated --json",
+                shell=True,
+                capture_output=True,
+                text=True,
+            )
+            if res.stdout and res.stdout.strip():
+                try:
+                    npm_data = json.loads(res.stdout)
+                    for pkg_name, pkg_info in npm_data.items():
+                        if isinstance(pkg_info, dict):
+                            outdated_packages.append(
+                                {
+                                    "name": pkg_name,
+                                    "type": "npm",
+                                    "current": str(pkg_info.get("current", "N/A")),
+                                    "latest": str(
+                                        pkg_info.get(
+                                            "latest", pkg_info.get("wanted", "N/A")
+                                        )
+                                    ),
+                                }
+                            )
+                except json.JSONDecodeError:
+                    for line in res.stdout.splitlines():
+                        parts = line.split()
+                        if len(parts) >= 4 and not line.startswith("Package"):
+                            outdated_packages.append(
+                                {
+                                    "name": parts[0],
+                                    "type": "npm",
+                                    "current": parts[1],
+                                    "latest": parts[3],
+                                }
+                            )
+        except Exception:
+            pass
+
+        # Check pip updates for mcanvil
+        try:
+            res = subprocess.run(
+                [sys.executable, "-m", "pip", "list", "--outdated", "--format=json"],
+                capture_output=True,
+                text=True,
+            )
+            if res.stdout and res.stdout.strip():
+                try:
+                    pip_data = json.loads(res.stdout)
+                    for pkg in pip_data:
+                        if (
+                            isinstance(pkg, dict)
+                            and "mcanvil" in pkg.get("name", "").lower()
+                        ):
+                            outdated_packages.append(
+                                {
+                                    "name": pkg.get("name", "mcanvil"),
+                                    "type": "pip",
+                                    "current": str(pkg.get("version", "N/A")),
+                                    "latest": str(pkg.get("latest_version", "N/A")),
+                                }
+                            )
+                except json.JSONDecodeError:
+                    for line in res.stdout.splitlines():
+                        if "mcanvil" in line.lower():
+                            parts = line.split()
+                            if len(parts) >= 3:
+                                outdated_packages.append(
+                                    {
+                                        "name": parts[0],
+                                        "type": "pip",
+                                        "current": parts[1],
+                                        "latest": parts[2],
+                                    }
+                                )
+        except Exception:
+            pass
+
+        if outdated_packages:
+            pkg_w = max(len("Package"), max(len(p["name"]) for p in outdated_packages))
+            type_w = max(len("Type"), max(len(p["type"]) for p in outdated_packages))
+            curr_w = max(
+                len("Current"), max(len(p["current"]) for p in outdated_packages)
+            )
+            late_w = max(
+                len("Latest"), max(len(p["latest"]) for p in outdated_packages)
+            )
+
+            header = f"{'Package':<{pkg_w}}  {'Type':<{type_w}}  {'Current':<{curr_w}}  {'Latest':<{late_w}}"
+            separator = f"{'-' * pkg_w}  {'-' * type_w}  {'-' * curr_w}  {'-' * late_w}"
+            click.echo(click.style(header, fg="yellow", bold=True))
+            click.echo(click.style(separator, fg="bright_black"))
+
+            for p in outdated_packages:
+                name_str = click.style(f"{p['name']:<{pkg_w}}", fg="cyan")
+                type_str = click.style(f"{p['type']:<{type_w}}", fg="magenta")
+                curr_str = click.style(f"{p['current']:<{curr_w}}", fg="red")
+                late_str = click.style(f"{p['latest']:<{late_w}}", fg="green")
+                click.echo(f"{name_str}  {type_str}  {curr_str}  {late_str}")
+        else:
+            click.echo(click.style("[INFO]: All packages are up to date.", fg="green"))
 
         try:
             request = requests.get(
@@ -746,33 +851,7 @@ class AnvilValidator:
             )
             vanilla_latest_build = MANIFEST_BUILD
 
-        try:
-            request = requests.get(
-                "https://raw.githubusercontent.com/StarkTMA/Anvil/main/src/anvil/__version__.py"
-            )
-            latest_build: str = (
-                request.text.split("=")[-1].strip().strip('"').strip("'")
-            )
-
-            if Version(__version__) < Version(latest_build):
-                click.echo(
-                    click.style(
-                        f"\r[INFO]: A newer anvil build were found: [{latest_build}].",
-                        fg="green",
-                    )
-                )
-            else:
-                click.echo(click.style("\r[INFO]: Anvil is up to date.", fg="green"))
-
-        except Exception:
-            click.echo(
-                click.style(
-                    "[WARN]: Could not fetch latest Anvil version.", fg="yellow"
-                )
-            )
-            latest_build = __version__
-
-        return vanilla_latest_build, latest_build
+        return vanilla_latest_build, __version__
 
     @classmethod
     def is_color_value(cls, value) -> bool:

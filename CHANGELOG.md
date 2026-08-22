@@ -2,8 +2,9 @@
 
 ## 0.9.x
 
-- [**0.9.9**](#099)
-- [**0.9.8.71**](#09871)
+- [**0.9.91**](#0991)
+- [0.9.9](#099)
+- [0.9.8.71](#09871)
 - [0.9.8.6](#0986)
 - [0.9.8.5](#0985)
 - [0.9.8.4](#0984)
@@ -101,6 +102,20 @@
 ---
 
 # 0.9.x
+
+## 0.9.91
+
+### CLI & Scaffolding
+
+- Enhanced `AnvilValidator.check_new_versions()` to detect outdated packages across both npm dependencies and pip (`mcanvil`), outputting a clear, color-coded terminal table.
+- Updated project scaffolding template `package.json` to include default `"build"` (`node esbuild.js`) and `"test"` (`npx tsc --noemit`) npm scripts.
+- Updated `esbuild.js` scaffolding template to target `BP_${projectName}` behavior pack output directory and dynamically exclude `@minecraft/server-ui` based on the `scriptui` config flag.
+- Updated GitHub Actions release workflow template to use Node.js version 24.
+- Comprehensive documentation updates for the `anvil init` command (alias `anvil create`), clarifying valid flags and providing guidance on removed CLI options (`--pbr`, `--random_seed`/`--seed`, and `--fullns`).
+
+### Core
+
+- Updated behavior pack module dependencies (`ManifestBP`) so that `@minecraft/server` and `@minecraft/server-ui` preview module versions are only used when both `preview` and `experimental` flags are enabled.
 
 ## 0.9.9
 

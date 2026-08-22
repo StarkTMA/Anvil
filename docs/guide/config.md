@@ -105,6 +105,7 @@ This section contains settings related to the Anvil tool.
 
 ## Notes
 
-- The `anvilconfig.json` file is automatically generated when you run the `anvil create` command. You can modify the file at any time, but be cautious—some changes might have unexpected results.
+- The `anvilconfig.json` file is automatically generated when you run the `anvil init` (or `anvil create`) command. You can modify the file at any time, but be cautious—some changes might have unexpected results.
+- Project options that are not exposed as CLI flags during initialization (such as `pbr` and `random_seed`) are configured directly in this file under the `anvil` section.
 - Missing keys in the `anvilconfig.json` file will be automatically handled by Anvil during runtime.
 - You can add additional information to the `anvilconfig.json` file through the Anvil API. This is particularly useful for storing metadata not required during the project generation.

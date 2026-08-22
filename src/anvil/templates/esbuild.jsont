@@ -7,8 +7,10 @@ import { mkdirSync, writeFileSync, readFileSync } from "fs";
 // Read anvilconfig.json next to this file
 const configPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "anvilconfig.json");
 const anvilConfig = JSON.parse(readFileSync(configPath, "utf8"));
-const projectPascalName = anvilConfig.package.project_name;
+const projectName = anvilConfig.package.project_name;
 const preview = anvilConfig.anvil.preview;
+const minify = anvilConfig.anvil.minify;
+const scriptui = anvilConfig.anvil.scriptui;
 
 const target = preview ? "Minecraft Bedrock Preview" : "Minecraft Bedrock";
 const appData = process.env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming");
@@ -22,9 +24,11 @@ const outDir = path.join(
 	"games",
 	"com.mojang",
 	"development_behavior_packs",
-	`BP_${projectPascalName}`,
+	`BP_${projectName}`,
 	"scripts",
 );
+
+const tsconfigPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "tsconfig.json");
 
 const removeFileSchemePlugin = {
 	name: "remove-file-scheme",
@@ -45,7 +49,7 @@ const removeFileSchemePlugin = {
 							src = src.replace("file://", "");
 						}
 					}
-					return src
+					return src;
 				});
 
 				file.contents = Buffer.from(JSON.stringify(map));
@@ -54,16 +58,22 @@ const removeFileSchemePlugin = {
 	},
 };
 
-const minifyArg = process.argv.includes("--minify")
+const minifyArg = process.argv.includes("--minify");
+
+const external = ["@minecraft/server"];
+if (scriptui) {
+	external.push("@minecraft/server-ui");
+}
 
 const result = await esbuild.build({
 	entryPoints: ["scripts/javascript/main.ts"],
 	bundle: true,
 	format: "esm",
 	sourcemap: true,
-	minify: {{ minify|lower }} || minifyArg,
+	minify: minify || minifyArg,
 	outdir: outDir,
-	external: ["@minecraft/server", "@minecraft/server-ui"],
+	external: external,
+	tsconfig: tsconfigPath,
 	write: false,
 	plugins: [removeFileSchemePlugin],
 });

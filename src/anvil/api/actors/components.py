@@ -7843,6 +7843,8 @@ class EntityAIRangedAttack(AIGoal):
         if set_persistent:
             self._add_field("set_persistent", set_persistent)
         if speed_multiplier != 1:
+            if speed_multiplier <= 0:
+                raise ValueError("speed_multiplier must be greater than 0")
             self._add_field("speed_multiplier", speed_multiplier)
         if swing:
             self._add_field("swing", swing)

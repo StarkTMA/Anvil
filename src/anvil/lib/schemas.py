@@ -46,7 +46,7 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def manifest_bp(version):
+    def manifest_bp(version: str):
         content = load_file(
             "manifest_bp.jsont",
             {
@@ -65,7 +65,7 @@ class JsonSchemes:
         return content
 
     @staticmethod
-    def manifest_rp(version):
+    def manifest_rp(version: str):
         content = load_file(
             "manifest_rp.jsont",
             {

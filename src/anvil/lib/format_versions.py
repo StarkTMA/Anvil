@@ -11,7 +11,7 @@ MANIFEST_BUILD_PREVIEW: str = "1.26.50"
 # ---------------------------------------------------------------------------
 
 MODULE_MINECRAFT_SERVER: str = "2.9.0"
-MODULE_MINECRAFT_SERVER_PREVIEW: str = "2.10.0-beta"
+MODULE_MINECRAFT_SERVER_PREVIEW: str = "2.11.0-beta"
 
 MODULE_MINECRAFT_SERVER_UI: str = "2.1.0"
 MODULE_MINECRAFT_SERVER_UI_PREVIEW: str = "2.2.0-beta"
@@ -65,4 +65,3 @@ TEXTURE_SET_VERSION: str = "1.21.30"
 BLOCK_JSON_FORMAT_VERSION: str = "1.21.40"
 CRAFTING_ITEMS_CATALOG: str = "1.21.60"
 DIALOGUE_VERSION: str = "1.18.0"
-

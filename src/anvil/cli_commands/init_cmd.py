@@ -3,8 +3,6 @@ import uuid
 from datetime import datetime
 
 import click
-from click_aliases import ClickAliasedGroup
-
 from anvil.lib.config import Config, ConfigOption, ConfigSection
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (

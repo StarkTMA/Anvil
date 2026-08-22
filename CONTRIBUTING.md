@@ -53,7 +53,7 @@ From the repository root:
 anvil --help
 ```
 
-For project-specific tests, use the `scripts/python/main.py` example flow or any sample project created with `anvil create`.
+For project-specific tests, use the `scripts/python/main.py` example flow or any sample project created with `anvil init` (or `anvil create`).
 
 ## Submitting Pull Requests
 
@@ -71,6 +71,30 @@ For project-specific tests, use the `scripts/python/main.py` example flow or any
 - [ ] I have used strong type hints for all public and internal APIs.
 - [ ] I have added argument validation where appropriate.
 - [ ] I have included links to any relevant Bedrock documentation if the change involves engine-specific behavior.
+- [ ] I have included a minimal sample Anvil project (see "Sample Project" section below).
+
+## Sample Project
+
+Every pull request must include a minimal Anvil project that directly exercises the changed API surface. This lets maintainers verify your PR immediately — **no manual project setup required**.
+
+### What to include
+
+Place your sample project inside a `sample/` directory at the root of your PR branch. It needs only the bare minimum for a successful compilation and error-free test run:
+
+```
+sample/
+├── anvilconfig.json          # Minimal project config
+└── scripts/
+    └── python/
+        └── main.py           # Entry point that exercises your change
+```
+
+### Guidelines
+
+- The sample does **not** need to be a fully fledged project — just enough to compile cleanly and demonstrate the feature.
+- If your change involves a new component, entity type, block, or item, add at least one instance of it to the sample.
+- If your change involves a bug fix, include the code pattern that previously caused the bug.
+- The sample should compile without errors when run from the `sample/` directory with `anvil build`.
 
 ## Documentation and Style
 

@@ -10,8 +10,6 @@ from os import path
 from typing import Optional
 
 import click
-from PIL import Image
-
 from anvil.api.actors.materials import MaterialsObject
 from anvil.api.core.sounds import (
     BlocksJSONObject,
@@ -51,6 +49,7 @@ from anvil.lib.lib import (
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
+from PIL import Image
 
 from ...__version__ import __version__
 
@@ -811,7 +810,7 @@ class ManifestBP(AddonObject):
                     "module_name": "@minecraft/server",
                     "version": (
                         MODULE_MINECRAFT_SERVER
-                        if not CONFIG._PREVIEW
+                        if not (CONFIG._PREVIEW and CONFIG._EXPERIMENTAL)
                         else MODULE_MINECRAFT_SERVER_PREVIEW
                     ),
                 }
@@ -822,7 +821,7 @@ class ManifestBP(AddonObject):
                         "module_name": "@minecraft/server-ui",
                         "version": (
                             MODULE_MINECRAFT_SERVER_UI
-                            if not CONFIG._PREVIEW
+                            if not (CONFIG._PREVIEW and CONFIG._EXPERIMENTAL)
                             else MODULE_MINECRAFT_SERVER_UI_PREVIEW
                         ),
                     }

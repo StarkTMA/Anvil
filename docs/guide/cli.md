@@ -8,18 +8,20 @@ This page documents the commands registered in `src/anvil/cli.py` and the behavi
 
 | Command          | Alias / implementation | Project required                     | Purpose                                                            |
 | ---------------- | ---------------------- | ------------------------------------ | ------------------------------------------------------------------ |
-| `create`         | `init`                 | No                                   | Scaffold a new Anvil project.                                      |
+| `init`           | `create`               | No                                   | Scaffold a new Anvil project.                                      |
 | `build`          | `run`                  | Yes                                  | Build or export the configured project entry point.                |
 | `clean`          | `clear`                | Yes                                  | Remove the current project's development packs.                    |
 | `prof`           | `profile`              | Yes                                  | Record a performance trace for the current project.                |
 | `process-sounds` | `sounds`               | No, but `assets/sounds` should exist | Normalize and re-encode audio files in place.                      |
 | `loopback`       | `lb`                   | No                                   | Enable Minecraft UWP loopback access and open the local test page. |
 
-## `create` / `init`
+## `init` / `create`
 
-Scaffolds a new project and writes the base configuration, pack folders, and starter files.
+Scaffolds a new project and writes the base configuration, pack folders, and starter files. `init` is the primary command name; `create` is available as a direct alias.
 
 ```bash
+anvil init <namespace> <project_name> [--preview] [--scriptapi] [--addon] [--vscode]
+# or
 anvil create <namespace> <project_name> [--preview] [--scriptapi] [--addon] [--vscode]
 ```
 
@@ -38,6 +40,16 @@ anvil create <namespace> <project_name> [--preview] [--scriptapi] [--addon] [--v
 | `--scriptapi` | Add Script API support, generate JavaScript scaffolding, and install the Script API npm dependencies. |
 | `--addon`     | Mark the project as an addon and apply addon-specific restrictions.                                   |
 | `--vscode`    | Generate a VS Code workspace and launch it after scaffolding.                                         |
+
+### Removed / Deprecated Options
+
+The following flags were previously available on the initialization CLI command and have since been removed from the command-line interface:
+
+| Removed Option | Status / Migration | Details |
+| -------------- | ------------------ | ------- |
+| `--pbr` | Configured in `anvilconfig.json` | PBR functionality is configured in `anvilconfig.json` under `[ANVIL]` (`"pbr": true / false`) or used directly via the modular `anvil.api.pbr` submodules. |
+| `--random_seed` (formerly `--seed`) | Configured in `anvilconfig.json` | Random seed world generation is configured in `anvilconfig.json` under `[ANVIL]` (`"random_seed": true / false`). |
+| `--fullns` | Removed | Universal namespace formatting and validation are enforced automatically. |
 
 ### What it creates
 
@@ -174,7 +186,7 @@ anvil lb
 ## Common Usage Patterns
 
 ```bash
-anvil create my_ns awesome_project --scriptapi --vscode
+anvil init my_ns awesome_project --scriptapi --vscode
 anvil build --mcaddon
 anvil clean
 anvil sounds --target-lufs -16 --quality 2
@@ -183,7 +195,7 @@ anvil lb
 
 ## Practical Notes
 
-- `create` can be run in an empty folder.
+- `init` (or `create`) can be run in an empty folder.
 - `run`, `clean`, and `prof` expect a valid Anvil project in the current directory.
 - `process-sounds` and `clean` can modify or delete files, so they prompt before doing work.
 - `profile` and `process-sounds` depend on external tools, not just Python packages.

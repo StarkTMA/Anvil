@@ -48,8 +48,10 @@ This will install the latest version of Anvil along with its dependencies.
 To create a new Minecraft development project with Anvil, open your terminal and run the following command:
 
 ```bash
-anvil create <namespace> <project_name> [options]
+anvil init <namespace> <project_name> [options]
 ```
+
+_(You can also use the alias `anvil create <namespace> <project_name> [options]`)_
 
 - **namespace**: A unique identifier for your project. The namespace `minecraft` is reserved and cannot be used.
 - **project_name**: The name of your project.
@@ -58,14 +60,13 @@ Optional flags include:
 
 - `--preview`: Set up the project for Minecraft Preview.
 - `--scriptapi`: Adds support for Script API dependencies.
-- `--pbr`: Adds Physically Based Rendering (PBR) dependencies for enhanced graphics.
-- `--random_seed` : Adds support for Random Seed Worlds, allowing for randomized world generation.
 - `--addon`: Marks the package as an addon, enforcing relevant constraints.
+- `--vscode`: Adds support for Visual Studio Code (generates workspace and launch configuration).
 
 ### Example
 
 ```bash
-anvil create my_ns awesome_project --scriptapi --pbr
+anvil init my_ns awesome_project --scriptapi --vscode
 ```
 
 This command will:

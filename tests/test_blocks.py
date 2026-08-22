@@ -54,36 +54,68 @@ def test_new_blocks():
 
 
 def test_new_block_components():
+    import pytest
     # 1. Test BlockPrecipitationInteractions
     precip = BlockPrecipitationInteractions("snowlogging")
     assert precip.identifier == "minecraft:precipitation_interactions"
     assert precip._component["precipitation_behavior"] == "snowlogging"
 
-    # 2. Test n_way_visual_rotation on BlockGeometry
-    # geom = BlockGeometry()
-    # geom.n_way_visual_rotation(y="minecraft:sixteen_way_rotation")
-    # assert geom._component["n_way_visual_rotation"] == {"y": "minecraft:sixteen_way_rotation"}
-    #
-    ## 3. Test PlacementDirectionTrait.SixteenWayRotation enum value
-    # assert PlacementDirectionTrait.SixteenWayRotation == "minecraft:sixteen_way_rotation"
-    #
-    ## 4. Test lava_flammable parameter on BlockFlammable
-    # flam = BlockFlammable(catch_chance_modifier=5, destroy_chance_modifier=20, lava_flammable="always")
-    # assert flam._component["lava_flammable"] == "always"
-    #
-    ## 5. Test BlockItemVisual.n_way_visual_rotation
-    # iv = BlockItemVisual()
-    # assert iv.identifier == "minecraft:item_visual"
-    # iv.n_way_visual_rotation(y="minecraft:sixteen_way_rotation")
-    # assert iv._component["geometry"]["n_way_visual_rotation"] == {"y": "minecraft:sixteen_way_rotation"}
+    # 2. Test invalid precipitation_behavior raises ValueError
+    with pytest.raises(ValueError):
+        BlockPrecipitationInteractions("invalid_behavior")
 
-    # 6. Test BlockEmbeddedVisual.n_way_visual_rotation and identifier
+    # 3. Test BlockEmbeddedVisual.n_way_visual_rotation
     ev = BlockEmbeddedVisual()
     assert ev.identifier == "minecraft:embedded_visual"
     ev.n_way_visual_rotation(y="minecraft:sixteen_way_rotation")
     assert ev._component["geometry"]["n_way_visual_rotation"] == {
         "y": "minecraft:sixteen_way_rotation"
     }
+
+    # 4. Test n_way_visual_rotation rejects invalid axis
+    with pytest.raises(ValueError, match="Invalid axis"):
+        ev.n_way_visual_rotation(w="minecraft:cardinal_direction")
+
+
+def test_block_flammable():
+    import pytest
+    # Basic catch/destroy chance
+    flam = BlockFlammable(catch_chance_modifier=5, destroy_chance_modifier=20)
+    assert flam.identifier == "minecraft:flammable"
+    assert flam._component["catch_chance_modifier"] == 5
+    assert flam._component["destroy_chance_modifier"] == 20
+    assert "lava_flammable" not in flam._component
+
+    # lava_flammable = "always"
+    flam_lava = BlockFlammable(
+        catch_chance_modifier=5, destroy_chance_modifier=20, lava_flammable="always"
+    )
+    assert flam_lava._component["lava_flammable"] == "always"
+
+    # lava_flammable = "never"
+    flam_never = BlockFlammable(
+        catch_chance_modifier=5, destroy_chance_modifier=20, lava_flammable="never"
+    )
+    assert flam_never._component["lava_flammable"] == "never"
+
+    # Invalid lava_flammable value
+    with pytest.raises(ValueError, match="lava_flammable"):
+        BlockFlammable(catch_chance_modifier=5, destroy_chance_modifier=20, lava_flammable="sometimes")
+
+
+def test_block_geometry_default():
+    # BlockGeometry with no args → full_block identifier, no Blockbench needed
+    geom = BlockGeometry()
+    assert geom.identifier == "minecraft:geometry"
+    assert geom._component["identifier"] == "minecraft:geometry.full_block"
+    assert geom._is_default is True
+
+
+def test_placement_direction_trait_values():
+    assert PlacementDirectionTrait.CardinalDirection == "minecraft:cardinal_direction"
+    assert PlacementDirectionTrait.FacingDirection == "minecraft:facing_direction"
+    assert PlacementDirectionTrait.CornerAndCardinalDirection == "minecraft:corner_and_cardinal_direction"
+
 
 
 def test_block_instrument_sound():

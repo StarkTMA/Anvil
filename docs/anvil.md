@@ -10,10 +10,10 @@ A typical Bedrock project involves hundreds of JSON fragments that must all line
 
 ---
 
-## Zero‑to‑Pack Workflow
+## Zero‑to‑Pack Workflow
 
-1. **`anvil create <namespace> <project_name>`** scaffolds a project folder, generates all required UUIDs, and writes `anvilconfig.json`.
-2. Drop assets, Blockbench models, textures, mcstructure files, sounds into the `assets` tree. Put gameplay Python and Typescript in `assets/`.
+1. **`anvil init <namespace> <project_name>`** (or `anvil create`) scaffolds a project folder, generates all required UUIDs, and writes `anvilconfig.json`.
+2. Drop assets, Blockbench models, textures, mcstructure files, sounds into the `assets` tree. Put gameplay Python and Typescript in `assets/`.
 3. **`anvil build`** compiles Python ➞ JSON, optionally compiles TypeScript ➞ JavaScript, validates everything, and exports your chosen package format.
 
 ---
@@ -52,7 +52,7 @@ Source stays put; `anvil build` copies only what Bedrock needs into dev Behaviou
 
 ## CLI Flags
 
-The command options used by `anvil create`, `anvil build`, and the other CLI commands are documented in the [CLI reference](guide/cli.md).
+The command options used by `anvil init` / `anvil create`, `anvil build`, and the other CLI commands are documented in the [CLI reference](guide/cli.md).
 
 ---
 

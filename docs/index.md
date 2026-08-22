@@ -5,7 +5,7 @@ Anvil is a Python-first toolkit for creating Minecraft Bedrock content. This sit
 ## Start Here
 
 - [Anvil Overview](anvil.md) for the workflow and project layout.
-- [CLI Reference](guide/cli.md) for `anvil create`, `anvil build`, and the rest of the command set.
+- [CLI Reference](guide/cli.md) for `anvil init` / `anvil create`, `anvil build`, and the rest of the command set.
 - [Project Configuration](guide/config.md) for `anvilconfig.json`.
 - [API Reference](api/index.md) for classes, functions, and modules.
 
@@ -22,6 +22,6 @@ Anvil is a Python-first toolkit for creating Minecraft Bedrock content. This sit
 
 ## Quick Workflow
 
-1. Run `anvil create <namespace> <project_name>` to scaffold a project.
+1. Run `anvil init <namespace> <project_name>` (or `anvil create`) to scaffold a project.
 2. Put gameplay code in `scripts/python/` and assets under `assets/`.
 3. Run `anvil build` to build and export your packs.

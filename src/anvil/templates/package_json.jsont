@@ -3,6 +3,10 @@
     "version": "{{ version }}",
     "description": "{{ description }}",
     "type": "module",
+    "scripts": {
+        "build": "node esbuild.js",
+        "test": "npx tsc --noemit"
+    },
     "keywords": [],
     "author": "{{ author }}",
     "license": "ISC"
