@@ -800,7 +800,7 @@ class JsonSchemes:
         return load_file(
             "voxel_shape.jsont",
             {
-                "format_version": GEOMETRY_VERSION,
+                "format_version": VOXEL_SHAPE_VERSION,
                 "namespace": CONFIG.NAMESPACE,
                 "model_name": model_name,
             },

@@ -1,5 +1,5 @@
 import os
-from typing import Literal, Mapping
+from typing import TYPE_CHECKING, Literal, Mapping
 
 from anvil.api.blocks.components import BlockDisplayName
 from anvil.api.core.components import (
@@ -29,6 +29,9 @@ from anvil.lib.schemas import (
     MinecraftDescription,
 )
 from anvil.lib.translator import AnvilTranslator
+
+if TYPE_CHECKING:
+    from anvil.api.items.items import Item
 
 __all__ = ["Block"]
 
@@ -183,7 +186,9 @@ class _BlockServerDescription(MinecraftDescription):
             {"states": {}, "traits": {}, "menu_category": {}}
         )
 
-    def add_state(self, name: str, range: set[float | str | bool]) -> "_BlockServerDescription":
+    def add_state(
+        self, name: str, range: set[float | str | bool]
+    ) -> "_BlockServerDescription":
         """Adds a state to the block.
 
         Parameters:
@@ -264,7 +269,7 @@ class BlockServer(AddonObject):
         return self._description
 
     @property
-    def components(self) -> "_BlockComponents":
+    def components(self) -> "PermutationGroup":
         """The block components."""
         return self._components
 

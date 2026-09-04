@@ -326,11 +326,11 @@ class Animation:
             data = kf.get("data_points")
             target_dict[time] = []
             for particle in data:
-                effect = particle.get("effect", "")
-                locator = particle.get("locator", "")
-                script = particle.get("script", "")
+                effect = particle.get("effect", "").replace("\n", "")
+                locator = particle.get("locator", "").replace("\n", "")
+                script = particle.get("script", "").replace("\n", "")
 
-                if "\n" in effect or "\n" in locator or "\n" in script:
+                if any("\n" in str(value) for value in [effect, locator, script]):
                     raise ValueError(f"Newline in particle keyframe at {time}")
 
                 val = {"effect": effect, "locator": locator}
@@ -795,18 +795,39 @@ class Cube:
 class Locator:
     name: str
     position: List[float]
+    ignore_inherited_scale: bool
     rotation: List[float] = field(default_factory=lambda: [0, 0, 0])
 
     @classmethod
     def from_dict(cls, data: dict) -> "Locator":
         name = data["name"]
         rot = [-x for x in data.get("rotation", [0, 0, 0])]
+        ignore_inherited_scale = data.get("ignore_inherited_scale", False)
         pos = list(data["position"])
         pos[0] *= -1
-        return cls(name=name, position=pos, rotation=rot)
+        return cls(
+            name=name,
+            position=pos,
+            rotation=rot,
+            ignore_inherited_scale=ignore_inherited_scale,
+        )
 
     def compile(self) -> dict:
-        return {self.name: self.position}
+        data = {
+            "offset": self.position,
+            "rotation": self.rotation,
+            "ignore_inherited_scale": self.ignore_inherited_scale,
+        }
+
+        if self.rotation == [0, 0, 0] and not self.ignore_inherited_scale:
+            del data["rotation"]
+        if not self.ignore_inherited_scale:
+            del data["ignore_inherited_scale"]
+
+        if list(data.keys()) == ["offset"]:
+            data = self.position
+
+        return {self.name: data}
 
 
 @dataclass

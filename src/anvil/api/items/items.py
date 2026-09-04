@@ -67,7 +67,7 @@ class _ItemServer(AddonObject):
         return self._description
 
     @property
-    def components(self) -> "_ItemComponents":
+    def components(self) -> "RootComponent":
         return self._components
 
     def __export__(self) -> None:
@@ -75,7 +75,7 @@ class _ItemServer(AddonObject):
             raise ValueError(
                 f"Item '{self.name}' must have at least one component defined."
             )
-        
+
         components_validations(self, self._components, [])
 
         from anvil.api.items.components import ItemDisplayName

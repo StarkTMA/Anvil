@@ -60,6 +60,7 @@ This section contains settings related to the Anvil tool.
 | `entry_point`         | `str`  | The main entry point script for the project.                               | `main.py`         | None        | Yes            |
 | `js_bundle_script`    | `str`  | The JavaScript bundle script for the project.                              | `node esbuild.js` | None        | Yes            |
 | `minify`              | `bool` | Whether to minify the JavaScript code and JSONs during the build process.  | `false`           | None        | Yes            |
+| `local_export`        | `bool` | Whether to export compiled behavior and resource packs to the local `output/com.mojang` folder. Defaults to `false` on Windows and `true` on non-Windows. | `false` (Windows) / `true` (non-Windows) | None | Yes |
 
 ## Example
 

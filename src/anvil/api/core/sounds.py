@@ -341,7 +341,7 @@ class SoundEvent(AddonObject):
         variant_query: Molang = None,
         variant_map: str = None,
         subtitle: str = None,
-    ) -> "SoundEvent":
+    ) -> "_SoundDescription":
         self._changed = True
         self._content["entity_sounds"]["entities"].setdefault(
             entity_identifier,

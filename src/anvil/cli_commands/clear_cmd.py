@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 import click
 from anvil.lib.config import Config, ConfigOption, ConfigSection
@@ -10,7 +11,17 @@ def get_project_dev_pack_paths(config: Config) -> list[str]:
     """Returns the current project's development pack directories."""
     preview = config.get_option(ConfigSection.ANVIL, ConfigOption.PREVIEW)
     project_name = config.get_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME)
-    com_mojang = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
+
+    local_export = (
+        bool(config.get_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT))
+        if config.has_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT)
+        else (sys.platform != "win32")
+    )
+
+    if local_export or sys.platform != "win32":
+        com_mojang = os.path.join(os.path.abspath("output"), "com.mojang")
+    else:
+        com_mojang = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
 
     return [
         os.path.join(com_mojang, "development_resource_packs", f"RP_{project_name}"),

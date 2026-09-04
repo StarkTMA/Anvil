@@ -19,14 +19,23 @@ import orjson
 import requests
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 from anvil.lib.format_versions import MANIFEST_BUILD
-from packaging.version import Version
 
 from ..__version__ import __version__
 
-if os.name != "nt":
-    raise OSError(
-        "Anvil is only supported on Windows due to its reliance on Minecraft Bedrock's file structure and APIs."
-    )
+
+def validate_platform() -> None:
+    """Validates that Anvil is running on a supported platform.
+
+    Only Linux, macOS, and Windows are supported.
+    """
+    if sys.platform not in ("win32", "darwin") and not sys.platform.startswith("linux"):
+        raise OSError(
+            f"Anvil only supports Windows, macOS, and Linux (current platform: '{sys.platform}')."
+        )
+
+
+validate_platform()
+
 
 USERPROFILE: str = os.getenv("USERPROFILE", os.path.expanduser("~"))
 APPDATA: str = os.getenv("APPDATA", os.path.join(USERPROFILE, "AppData", "Roaming"))
@@ -51,8 +60,13 @@ class Directory:
         Parameters:
             path (str): The path to the new directory.
         """
-        this_path = os.path.join("./", path.lstrip("/"))
-        os.makedirs(this_path, exist_ok=True)
+        if not path:
+            return
+        if os.path.isabs(path):
+            os.makedirs(path, exist_ok=True)
+        else:
+            this_path = os.path.join("./", path.lstrip("/"))
+            os.makedirs(this_path, exist_ok=True)
 
     @classmethod
     def copy_files(
@@ -203,7 +217,7 @@ class AnvilIO:
         return orjson.dumps(normalized, option=option)
 
     @classmethod
-    def _get_file_stamp(cls, name: str, type: str, company: str) -> str:
+    def _get_file_stamp(cls, name: str, type: str, company: str, minify: bool) -> str:
         prefix = cls._FILE_TYPE_COMMENT.get(type, "//")
         time = datetime.now(datetime.now().astimezone().tzinfo).strftime(
             "%d-%m-%Y %H:%M:%S %z"
@@ -216,7 +230,10 @@ class AnvilIO:
             f"Property of {company}",
         ]
 
-        return "\n".join(prefix + line for line in stamp) + "\n\n"
+        if minify:
+            return "".join(prefix + line for line in stamp) + "\n"
+        else:
+            return "\n".join(prefix + line for line in stamp) + "\n\n"
 
     @classmethod
     def _parse_json_like(
@@ -231,7 +248,6 @@ class AnvilIO:
         content: str | bytes | Dict | List,
         directory: str,
         mode: str,
-        skip_tag: bool = False,
         **parameters,
     ):
         """
@@ -242,7 +258,6 @@ class AnvilIO:
             content (Any): The content of the file.
             directory (str): The directory path where the file should be created or modified.
             mode (str): The file mode, either "w" (write) or "a" (append).
-            skip_tag (bool, optional): Whether to skip adding the file metadata tag. Defaults to False.
             **parameters (Any): Additional keyword arguments.
 
         Note:
@@ -260,8 +275,14 @@ class AnvilIO:
                 content, minify=CONFIG._MINIFY or "--minify" in sys.argv
             )
 
-        if not skip_tag:
-            file_stamp = cls._get_file_stamp(name, type, CONFIG.COMPANY)
+        if CONFIG._ADD_STAMP:
+            file_stamp = cls._get_file_stamp(
+                name,
+                type,
+                CONFIG.COMPANY,
+                minify=CONFIG._MINIFY or "--minify" in sys.argv,
+            )
+
             if isinstance(content, bytes):
                 content = file_stamp.encode("utf-8") + content
             else:

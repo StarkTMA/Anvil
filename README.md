@@ -1,10 +1,14 @@
 # Anvil Documentation
 
-![Python 3.13](https://img.shields.io/badge/python-+3.13%20%20-g.svg)
-![Anvil Version](https://img.shields.io/github/v/release/StarkTMA/Anvil?label=version)
-![OS](https://img.shields.io/badge/OS-Windows-blue.svg)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![](https://img.shields.io/github/v/release/starktma/anvil)
+![](https://img.shields.io/github/license/starktma/anvil)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/StarkTMA/Anvil)
+
+![Python](https://img.shields.io/badge/Python_3.13-3776AB?style=flat&logo=python&logoColor=white)
+
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat&logo=windows&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat&logo=linux&logoColor=black)
+![macOS](https://img.shields.io/badge/macOS-000000?style=flat&logo=apple&logoColor=white)
 
 ## Introduction to Anvil
 
@@ -31,7 +35,7 @@ Anvil is intended to grow as a community-driven project. Contributions are very 
 To use Anvil, ensure you have the following installed:
 
 - [**Python 3.13**](https://www.python.org/downloads/) or higher.
-- **Windows OS**: Anvil is designed specifically for Windows, as Minecraft Bedrock development is primarily done on this platform.
+- **Operating System**: Windows, Linux, or macOS.
 
 ### Installation
 

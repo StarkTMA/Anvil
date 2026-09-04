@@ -1,4 +1,4 @@
-﻿"""Tests for anvil/lib/config.py — Config CRUD operations."""
+"""Tests for anvil/lib/config.py — Config CRUD operations."""
 import json
 import pytest
 from anvil.lib.config import Config, ConfigSection, ConfigOption, ConfigPackageTarget
@@ -99,3 +99,12 @@ def test_config_package_target_enum():
     assert ConfigPackageTarget.ADDON == "addon"
     assert "world" in list(ConfigPackageTarget)
     assert "addon" in list(ConfigPackageTarget)
+
+
+def test_config_local_export_option(config_file, monkeypatch):
+    monkeypatch.chdir(config_file)
+    cfg = Config()
+    cfg.add_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT, True)
+    assert cfg.has_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT)
+    assert cfg.get_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT) is True
+

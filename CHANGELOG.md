@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.91**](#0991)
+- [**0.9.92**](#0992)
+- [0.9.91](#0991)
 - [0.9.9](#099)
 - [0.9.8.71](#09871)
 - [0.9.8.6](#0986)
@@ -102,6 +103,32 @@
 ---
 
 # 0.9.x
+
+## 0.9.92
+
+### Anvil
+
+- Added cross-platform support for **Linux** and **macOS** alongside **Windows**. Operating systems outside of Windows, Linux, and macOS are explicitly disallowed and raise an `OSError`.
+- Added `local_export` (`bool`) configuration option under `[ANVIL]` in `anvilconfig.json`.
+    - When enabled (or running on non-Windows), exports development resource packs, behavior packs, and worlds into an isolated `./output/com.mojang/` directory structure (`output/com.mojang/development_resource_packs/RP_<name>`, `output/com.mojang/development_behavior_packs/BP_<name>`, `output/com.mojang/minecraftWorlds/<name>`), preventing namespace collisions with packaged distribution archives (`.mcaddon`, `.mcworld`, `.zip`, `.pdf`) in `./output/`.
+    - On Windows with `local_export: false`, continues exporting to Minecraft Bedrock AppData folders (`RELEASE_COM_MOJANG` or `PREVIEW_COM_MOJANG`).
+    - On non-Windows platforms, `local_export` is enforced as `True` at runtime.
+- Updated `Directory.create()` to safely support absolute paths cross-platform without prepending `./`.
+- Updated `anvil init --vscode` workspace launcher to support cross-platform commands (`start` on Windows, `open` on macOS, and `xdg-open` on Linux).
+- Updated `anvil clean` / `anvil clear` and build-time pack cleanup (`clean_old_dev`) to dynamically locate and clear development packs from `output/com.mojang` when local export is active.
+- Simplified `esbuild.js` scaffolding template to drop local path guessing and rely exclusively on the `--outdir` argument supplied during `anvil build`.
+- Updated documentation and README with badges and setup instructions for Windows, Linux, and macOS.
+
+### Blockbench
+
+- Added support for locator `rotation` and `ignore_inherited_scale` properties in Blockbench models.
+- Fixed newline handling in animation particle keyframes, allowing particle scripts, effects, and locators to be parsed cleanly without formatting issues.
+- Added `VOXEL_SHAPE_VERSION` (`1.21.110`) format version constant.
+
+### Components
+
+- Added `add_stamp` (`bool`) option under `[ANVIL]` in `anvilconfig.json` to configure whether metadata stamps are prepended to generated files.
+- Restricted `EntityAIHide.poi_type` with strict `Literal["bed", "jobsite", "meeting_area"]` typing.
 
 ## 0.9.91
 

@@ -1,4 +1,5 @@
 import os
+import sys
 import uuid
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -6,7 +7,6 @@ from typing import Any, List
 
 import click
 import commentjson as json
-
 from anvil.__version__ import __version__
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
@@ -67,6 +67,8 @@ class ConfigOption(StrEnum):
     ENTRY_POINT = "entry_point"
     JS_BUNDLE_SCRIPT = "js_bundle_script"
     MINIFY = "minify"
+    ADD_STAMP = "add_stamp"
+    LOCAL_EXPORT = "local_export"
 
 
 class ConfigPackageTarget(StrEnum):
@@ -202,6 +204,8 @@ class _AnvilConfig:
     _DATA_MODULE_UUID: str
     _SCRIPT_MODULE_UUID: str
     _MINIFY: bool
+    _ADD_STAMP: bool
+    _LOCAL_EXPORT: bool = False
 
     def __new__(cls):
         if cls._instance is None:
@@ -223,17 +227,26 @@ class _AnvilConfig:
         AnvilDisplay.copyright()
         AnvilDisplay.project_display(self.DISPLAY_NAME, self._TARGET, self._PREVIEW)
 
-        # GDK Setup preparation
-        self._COM_MOJANG = PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
+        # GDK Setup preparation / Local export
+        if self._LOCAL_EXPORT:
+            self._COM_MOJANG = os.path.join(os.path.abspath("output"), "com.mojang")
+        else:
+            self._COM_MOJANG = (
+                PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
+            )
+
         self._WORLD_PATH = os.path.join(
             self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME
         )
-
         self.RP_PATH = os.path.join(
-            self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}"
+            self._COM_MOJANG,
+            "development_resource_packs",
+            f"RP_{self.PROJECT_NAME}",
         )
         self.BP_PATH = os.path.join(
-            self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}"
+            self._COM_MOJANG,
+            "development_behavior_packs",
+            f"BP_{self.PROJECT_NAME}",
         )
 
         if datetime.now() - datetime.strptime(
@@ -361,6 +374,20 @@ class _AnvilConfig:
         self._MINIFY = self._handle_config(
             ConfigSection.ANVIL, ConfigOption.MINIFY, False
         )
+
+        self._ADD_STAMP = self._handle_config(
+            ConfigSection.ANVIL, ConfigOption.ADD_STAMP, True
+        )
+
+        self._LOCAL_EXPORT = bool(
+            self._handle_config(
+                ConfigSection.ANVIL,
+                ConfigOption.LOCAL_EXPORT,
+                sys.platform != "win32",
+            )
+        )
+        if sys.platform != "win32":
+            self._LOCAL_EXPORT = True
 
         AnvilValidator.validate_namespace_project_name(
             self.NAMESPACE, self.PROJECT_NAME, self._TARGET == "addon"

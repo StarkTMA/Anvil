@@ -1,4 +1,5 @@
 import os
+import sys
 import uuid
 from datetime import datetime
 
@@ -90,20 +91,33 @@ class JsonSchemes:
         return load_file("gitignore.jsont")
 
     @staticmethod
-    def code_workspace(name, path, preview=False):
+    def code_workspace(
+        name,
+        path,
+        preview=False,
+        dev_res_path=None,
+        dev_beh_path=None,
+    ):
         """Generates a VS Code workspace configuration.
 
         Args:
             name (str): The workspace name.
-            path1 (str): The first path component.
-            path2 (str): The second path component.
+            path (str): The workspace path.
             preview (bool, optional): Whether this is for preview mode. Defaults to False.
+            dev_res_path (str, optional): Custom development resource packs path.
+            dev_beh_path (str, optional): Custom development behavior packs path.
 
         Returns:
             dict: The workspace configuration data.
         """
-        DEV_RES_DIR = os.path.join(RELEASE_COM_MOJANG, "development_resource_packs")
-        DEV_BEH_DIR = os.path.join(RELEASE_COM_MOJANG, "development_behavior_packs")
+        DEV_RES_DIR = dev_res_path or os.path.join(
+            PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG,
+            "development_resource_packs",
+        )
+        DEV_BEH_DIR = dev_beh_path or os.path.join(
+            PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG,
+            "development_behavior_packs",
+        )
 
         DEV_PREV_RES_DIR = os.path.join(
             PREVIEW_COM_MOJANG, "development_resource_packs"
@@ -218,6 +232,12 @@ def handle_configuration(
         ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
     )
     config.add_option(ConfigSection.ANVIL, ConfigOption.MINIFY, False)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.ADD_STAMP, True)
+    config.add_option(
+        ConfigSection.ANVIL,
+        ConfigOption.LOCAL_EXPORT,
+        sys.platform != "win32",
+    )
 
     config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
     config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
@@ -424,9 +444,19 @@ def init(
     os.chdir(project_name)
     config.save()
     WORKING_DIR = os.getcwd()
-    COM_MOJANG = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
+    local_export = (
+        bool(config.get_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT))
+        if config.has_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT)
+        else (sys.platform != "win32")
+    )
+    if local_export or sys.platform != "win32":
+        COM_MOJANG = os.path.join(os.path.abspath("output"), "com.mojang")
+    else:
+        COM_MOJANG = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
+
     DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
     DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
+
     AnvilIO.file("main.py", JsonSchemes.python(), "scripts/python/", "w")
     AnvilIO.file(".gitignore", JsonSchemes.gitignore(), "", "w")
     AnvilIO.file(
@@ -440,18 +470,34 @@ def init(
     if scriptapi:
         handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR, vscode)
     if vscode:
+        workspace_file = f"{project_name}.code-workspace"
+        workspace_dir = DESKTOP if os.path.isdir(DESKTOP) else WORKING_DIR
         AnvilIO.file(
-            f"{project_name}.code-workspace",
+            workspace_file,
             JsonSchemes.code_workspace(
                 config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
                 WORKING_DIR,
                 preview,
+                dev_res_path=DEV_RES_DIR,
+                dev_beh_path=DEV_BEH_DIR,
             ),
-            DESKTOP,
+            workspace_dir,
             "w",
         )
-        process_subcommand(
-            f"start {os.path.join(DESKTOP, f'{project_name}.code-workspace')}",
-            "Unable to start the project vscode workspace",
-        )
+        workspace_full_path = os.path.join(workspace_dir, workspace_file)
+        if sys.platform == "win32":
+            process_subcommand(
+                f'start "" "{workspace_full_path}"',
+                "Unable to start the project vscode workspace",
+            )
+        elif sys.platform == "darwin":
+            process_subcommand(
+                f'open "{workspace_full_path}"',
+                "Unable to start the project vscode workspace",
+            )
+        else:
+            process_subcommand(
+                f'xdg-open "{workspace_full_path}"',
+                "Unable to start the project vscode workspace",
+            )
     AnvilValidator.check_new_versions()

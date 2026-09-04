@@ -711,15 +711,9 @@ def translate(languages: Optional[list[str]] = None) -> None:
 
 
 def clean_old_dev(config: _AnvilConfig):
-    com_mojang = PREVIEW_COM_MOJANG if config._PREVIEW else RELEASE_COM_MOJANG
-
     pack_paths = [
-        os.path.join(
-            com_mojang, "development_resource_packs", f"RP_{config.PROJECT_NAME}"
-        ),
-        os.path.join(
-            com_mojang, "development_behavior_packs", f"BP_{config.PROJECT_NAME}"
-        ),
+        config.RP_PATH,
+        config.BP_PATH,
     ]
 
     for pack_path in pack_paths:

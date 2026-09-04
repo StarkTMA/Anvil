@@ -5,8 +5,9 @@ from warnings import deprecated
 from anvil.api.actors._animation_controllers import (
     BPAnimationControllers,
     RPAnimationControllers,
+    _BP_Controller,
 )
-from anvil.api.actors._animations import BPAnimations
+from anvil.api.actors._animations import BPAnimations, _BPAnimation
 from anvil.api.actors._events import _Event
 from anvil.api.actors._render_controller import RenderControllers
 from anvil.api.actors._spawn_rules import SpawnRule
@@ -1028,7 +1029,7 @@ class _EntityServer(AddonObject):
         animate: bool = False,
         condition: str | Molang = None,
         initial_state: str = "default",
-    ) -> "_AnimationController":
+    ) -> "_BP_Controller":
         """Sets the mapping of internal animation controller references to actual animations.
 
         Parameters:
@@ -1050,7 +1051,7 @@ class _EntityServer(AddonObject):
         loop: bool = False,
         animate: bool = False,
         condition: str | Molang = None,
-    ) -> "_Animation":
+    ) -> "_BPAnimation":
         """Sets the mapping of internal animation references to actual animations.
 
         Parameters:
@@ -1082,7 +1083,7 @@ class _EntityServer(AddonObject):
             ]
             | str
         ),
-    ) -> "_EntityEvent":
+    ) -> "_Event":
         """Adds an event to the entity.
             - `minecraft:entity_born` triggers an event call on an entity when the entity is born via breeding.
             - `minecraft:entity_spawned` triggers an event call on an entity when the entity is spawned in the world.
@@ -1099,11 +1100,11 @@ class _EntityServer(AddonObject):
         return self._events[event_name]
 
     @property
-    def components(self) -> "_Components":
+    def components(self) -> "RootComponent":
         """Returns the components of the entity."""
         return self._components
 
-    def component_group(self, component_group_name: str) -> "_ComponentGroup":
+    def component_group(self, component_group_name: str) -> "RootComponent":
         """Adds a component group to the entity.
 
         Parameters:

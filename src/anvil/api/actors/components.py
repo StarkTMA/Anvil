@@ -10238,7 +10238,7 @@ class EntityAIHide(AIGoal):
     def __init__(
         self,
         duration: Seconds = 1.0,
-        poi_type: str = None,
+        poi_type: Literal["bed", "jobsite", "meeting_area"] | None = None,
         speed_multiplier: float = 1.0,
         timeout_cooldown: float = 8.0,
     ) -> None:

@@ -36,7 +36,7 @@ anvil create <namespace> <project_name> [--preview] [--scriptapi] [--addon] [--v
 
 | Option        | Effect                                                                                                |
 | ------------- | ----------------------------------------------------------------------------------------------------- |
-| `--preview`   | Generate the project for the Minecraft Preview `com.mojang` paths.                                    |
+| `--preview`   | Generate the project for Minecraft Preview `com.mojang` paths (Windows default export). |
 | `--scriptapi` | Add Script API support, generate JavaScript scaffolding, and install the Script API npm dependencies. |
 | `--addon`     | Mark the project as an addon and apply addon-specific restrictions.                                   |
 | `--vscode`    | Generate a VS Code workspace and launch it after scaffolding.                                         |
@@ -101,7 +101,7 @@ anvil build [--js-only] [--noarch] [--nocompile] [--mcaddon] [--mcworld] [--zip]
 
 ## `clean` / `clear`
 
-Deletes the current project's development packs from the matching Minecraft `com.mojang` folders.
+Deletes the current project's development packs from the matching `com.mojang` folders (Minecraft AppData on Windows, or `output/com.mojang` when using local export).
 
 ```bash
 anvil clean
