@@ -7,6 +7,7 @@ from .cli_commands.loopback_cmd import loopback
 from .cli_commands.process_sounds import process_sounds
 from .cli_commands.profile_cmd import profile
 from .cli_commands.build_cmd import build
+from .cli_commands.brarchive_cmd import brarchive_cmd
 
 
 @click.group(cls=ClickAliasedGroup)
@@ -25,3 +26,4 @@ cli.add_command(clear, aliases=["clean"])
 cli.add_command(profile, aliases=["prof"])
 cli.add_command(process_sounds, aliases=["sounds"])
 cli.add_command(loopback, aliases=["lb"])
+cli.add_command(brarchive_cmd, name="brarchive", aliases=["archive", "bra", "brarch"])
