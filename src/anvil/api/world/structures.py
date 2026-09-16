@@ -563,7 +563,9 @@ class _JigsawStructure(AddonObject):
         self._content["minecraft:jigsaw"]["heightmap_projection"] = heightmap_projection
         return self
 
-    def dimension_padding(self, dimension_padding: tuple[int, int]) -> "_JigsawStructure":
+    def dimension_padding(
+        self, dimension_padding: tuple[int, int]
+    ) -> "_JigsawStructure":
         """Sets the dimension padding for the jigsaw structure.
 
         Parameters:
@@ -574,7 +576,9 @@ class _JigsawStructure(AddonObject):
         self._content["minecraft:jigsaw"]["dimension_padding"] = dimension_padding
         return self
 
-    def max_distance_from_center(self, horizontal: int, vertical: int) -> "_JigsawStructure":
+    def max_distance_from_center(
+        self, horizontal: int, vertical: int
+    ) -> "_JigsawStructure":
         """Sets the maximum distance from center for the jigsaw structure.
 
         Parameters:

@@ -311,7 +311,9 @@ class FogSettings(AddonObject):
             }
         return self
 
-    def henyey_greenstein_g(self, air_g: float = 0.0, water_g: float = 0.0) -> "FogSettings":
+    def henyey_greenstein_g(
+        self, air_g: float = 0.0, water_g: float = 0.0
+    ) -> "FogSettings":
         """Sets Henyey-Greenstein phase function asymmetry parameters for air and water.
         Supported in format_version 1.21.90+ and only applicable in Vibrant Visuals (PBR) packs.
 

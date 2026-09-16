@@ -7,7 +7,11 @@ from anvil.api.core.types import Color, HexRGB
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.format_versions import BIOME_SERVER_VERSION
 from anvil.lib.lib import AnvilFormatter
-from anvil.lib.schemas import MinecraftBlockDescriptor, NoiseDescriptor, NoiseBlockSpecifier
+from anvil.lib.schemas import (
+    MinecraftBlockDescriptor,
+    NoiseDescriptor,
+    NoiseBlockSpecifier,
+)
 
 BiomeNoiseType = Literal[
     "beach",
@@ -802,7 +806,9 @@ class BiomeNoiseGradient(Component):
             specifiers (list[NoiseBlockSpecifier]): The noise block specifiers.
         """
         if not isinstance(specifiers, list) or len(specifiers) < 1:
-            raise ValueError("specifiers must be a non-empty list of NoiseBlockSpecifier instances")
+            raise ValueError(
+                "specifiers must be a non-empty list of NoiseBlockSpecifier instances"
+            )
         for specifier in specifiers:
             if not isinstance(specifier, NoiseBlockSpecifier):
                 raise ValueError("All specifiers must be NoiseBlockSpecifier instances")
@@ -883,7 +889,6 @@ class BiomeNoiseGradient(Component):
             blocks (list[MinecraftBlockDescriptor]): The blocks to prevent replacement of.
         """
         return self.non_replaceable_blocks(blocks)
-
 
 
 class BiomeTags(Component):

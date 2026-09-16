@@ -5,7 +5,11 @@ from anvil.api.biomes.components import (
     BiomeSubSurfaceBuilder,
     BiomeNoiseGradient,
 )
-from anvil.lib.schemas import MinecraftBlockDescriptor, NoiseDescriptor, NoiseBlockSpecifier
+from anvil.lib.schemas import (
+    MinecraftBlockDescriptor,
+    NoiseDescriptor,
+    NoiseBlockSpecifier,
+)
 from anvil.lib.lib import AnvilIO
 
 
@@ -25,7 +29,7 @@ def test_biome_components():
     # Verify BiomeNoiseGradient supports negative ranges in [-1.0, 1.0]
     ng = BiomeNoiseGradient()
     ng.noise_type("minecraft:noise_gradient")
-    
+
     # Try adding a valid range with negative values (e.g. [-0.5, 0.5])
     stone = MinecraftBlockDescriptor("minecraft:stone")
     ng.noise_block_specifier((-0.5, 0.5), stone)
@@ -65,7 +69,7 @@ def test_noise_descriptor():
 def test_noise_block_specifier():
     stone = MinecraftBlockDescriptor("minecraft:stone")
     dirt = MinecraftBlockDescriptor("minecraft:dirt")
-    
+
     # Valid specifiers
     nbs1 = NoiseBlockSpecifier(stone, threshold=0.5)
     assert nbs1.block == stone

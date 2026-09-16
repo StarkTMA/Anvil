@@ -13,9 +13,11 @@ mock_config.RP_PATH = "dummy_rp_path"
 
 # We must mock config & schemas before importing ldtk
 import anvil.lib.config
+
 anvil.lib.config.CONFIG = mock_config
 
 import anvil.lib.schemas
+
 anvil.lib.schemas.CONFIG = mock_config
 is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
 
@@ -23,12 +25,15 @@ try:
     import amulet
     import anvil.kit.world.ldtk as ldtk
     from anvil.kit.world.ldtk import LDtk
+
     has_amulet = True
 except ImportError:
     has_amulet = False
 
 if is_github_actions:
-    pytestmark = pytest.mark.skip(reason="ldtk test is disabled on GitHub Actions (local only)")
+    pytestmark = pytest.mark.skip(
+        reason="ldtk test is disabled on GitHub Actions (local only)"
+    )
 elif not has_amulet:
     pytestmark = pytest.mark.skip(reason="amulet is not installed")
 
@@ -47,9 +52,7 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
     # Define minimal valid LDtk structure
     ldtk_data = {
         "defaultGridSize": 16,
-        "defs": {
-            "tilesets": []
-        },
+        "defs": {"tilesets": []},
         "levels": [
             {
                 "identifier": "Level_Empty",
@@ -59,14 +62,14 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
                 "pxHei": 160,
                 "worldDepth": 0,
                 "layerInstances": [],
-                "externalRelPath": None
+                "externalRelPath": None,
             },
             {
                 "identifier": "Level_With_Entities",
                 "worldX": 160,  # origin x: 10
                 "worldY": -320,  # origin y: -20
-                "pxWid": 320,   # size x: 20
-                "pxHei": 480,   # size y: 30
+                "pxWid": 320,  # size x: 20
+                "pxHei": 480,  # size y: 30
                 "worldDepth": 5,
                 "externalRelPath": None,
                 "layerInstances": [
@@ -80,42 +83,33 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
                                 "px": [32, 64],  # local x: 2, y: 4
                                 "__tile": {"tilesetUid": 1},
                                 "fieldInstances": [
-                                    {
-                                        "__identifier": "vanilla",
-                                        "__value": True
-                                    },
-                                    {
-                                        "__identifier": "do_not_spawn",
-                                        "__value": True
-                                    }
-                                ]
+                                    {"__identifier": "vanilla", "__value": True},
+                                    {"__identifier": "do_not_spawn", "__value": True},
+                                ],
                             },
                             {
                                 "__identifier": "Zombie",
                                 "px": [80, 160],  # local x: 5, y: 10
                                 "__tile": {"tilesetUid": 1},
                                 "fieldInstances": [
-                                    {
-                                        "__identifier": "vanilla",
-                                        "__value": False
-                                    },
+                                    {"__identifier": "vanilla", "__value": False},
                                     {
                                         "__identifier": "point",
-                                        "__value": {"cx": 5, "cy": 10}
-                                    }
-                                ]
+                                        "__value": {"cx": 5, "cy": 10},
+                                    },
+                                ],
                             },
                             {
                                 "__identifier": "Skeleton",
                                 "px": [160, 320],  # local x: 10, y: 20
                                 "__tile": None,
-                                "fieldInstances": []
-                            }
-                        ]
+                                "fieldInstances": [],
+                            },
+                        ],
                     }
-                ]
-            }
-        ]
+                ],
+            },
+        ],
     }
 
     with open(ldtk_file_path, "w") as f:
@@ -126,10 +120,7 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
 
     # Run convert in YX plane with offset
     ldtk_instance.convert(
-        plane="yx",
-        offset=(100, 200, 300),
-        export_entities=True,
-        export_world=False
+        plane="yx", offset=(100, 200, 300), export_entities=True, export_world=False
     )
 
     # Output path for entity JSON
@@ -213,16 +204,14 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
     # Define minimal valid LDtk structure
     ldtk_data = {
         "defaultGridSize": 16,
-        "defs": {
-            "tilesets": []
-        },
+        "defs": {"tilesets": []},
         "levels": [
             {
                 "identifier": "Level_With_Entities",
                 "worldX": 160,  # origin x: 10
                 "worldY": -320,  # origin y: -20
-                "pxWid": 320,   # size x: 20
-                "pxHei": 480,   # size y: 30
+                "pxWid": 320,  # size x: 20
+                "pxHei": 480,  # size y: 30
                 "worldDepth": 5,
                 "externalRelPath": None,
                 "layerInstances": [
@@ -236,17 +225,14 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
                                 "px": [32, 64],  # local x: 2, y: 4
                                 "__tile": {"tilesetUid": 1},
                                 "fieldInstances": [
-                                    {
-                                        "__identifier": "vanilla",
-                                        "__value": True
-                                    }
-                                ]
+                                    {"__identifier": "vanilla", "__value": True}
+                                ],
                             }
-                        ]
+                        ],
                     }
-                ]
+                ],
             }
-        ]
+        ],
     }
 
     with open(ldtk_file_path, "w") as f:
@@ -257,10 +243,7 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
 
     # Run convert in XZ plane with offset
     ldtk_instance.convert(
-        plane="xz",
-        offset=(100, 200, 300),
-        export_entities=True,
-        export_world=False
+        plane="xz", offset=(100, 200, 300), export_entities=True, export_world=False
     )
 
     # Output path for entity JSON
@@ -309,16 +292,14 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
     # Define minimal valid LDtk structure
     ldtk_data = {
         "defaultGridSize": 16,
-        "defs": {
-            "tilesets": []
-        },
+        "defs": {"tilesets": []},
         "levels": [
             {
                 "identifier": "Level_With_Entities",
                 "worldX": 160,  # origin x: 10
                 "worldY": -320,  # origin y: -20
-                "pxWid": 320,   # size x: 20
-                "pxHei": 480,   # size y: 30
+                "pxWid": 320,  # size x: 20
+                "pxHei": 480,  # size y: 30
                 "worldDepth": 5,
                 "externalRelPath": None,
                 "layerInstances": [
@@ -332,17 +313,14 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
                                 "px": [32, 64],  # local x: 2, y: 4
                                 "__tile": {"tilesetUid": 1},
                                 "fieldInstances": [
-                                    {
-                                        "__identifier": "vanilla",
-                                        "__value": True
-                                    }
-                                ]
+                                    {"__identifier": "vanilla", "__value": True}
+                                ],
                             }
-                        ]
+                        ],
                     }
-                ]
+                ],
             }
-        ]
+        ],
     }
 
     with open(ldtk_file_path, "w") as f:
@@ -353,10 +331,7 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
 
     # Run convert in YZ plane with offset
     ldtk_instance.convert(
-        plane="yz",
-        offset=(100, 200, 300),
-        export_entities=True,
-        export_world=False
+        plane="yz", offset=(100, 200, 300), export_entities=True, export_world=False
     )
 
     # Output path for entity JSON

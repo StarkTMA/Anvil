@@ -1,4 +1,3 @@
-
 from anvil.api.core.components import (
     Component,
 )

@@ -9,11 +9,4 @@ This document outlines the planned features and improvements for the Anvil proje
 ### Features
 
 - [ ] Complete the full unit testing suite.
-
-## Upcoming Releases
-
-### v1.0
-
-- [ ] Remove the `tag` method from `PermutationGroup`.
-- [ ] Remove the `effects` method from `effects`.
-- [ ] Remove `arrow_operator` and `molang_conditions` functions from `molang.py`.
+- [ ] Investigate https://feedback.minecraft.net/hc/en-us/articles/48826825649933-Minecraft-Bedrock-Edition-26-50-Changelog-Wilderness-Bound#:~:text=Dimension%20method%20cloneBlocks-,Loot%20Tables,-Added%20the%20optional

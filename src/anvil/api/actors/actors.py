@@ -559,11 +559,10 @@ class _ActorClientDescription(_ActorDescription):
         """
         from anvil.api.world.particles import Particle
 
-        self._particle_name = particle
         self._description["description"]["particle_effects"].update(
-            {self._particle_name: f"{CONFIG.NAMESPACE}:{self._particle_name}"}
+            {particle: f"{CONFIG.NAMESPACE}:{particle}"}
         )
-        Particle(self._particle_name, component).queue()
+        Particle(particle, component).queue()
         return self
 
     def sound_effect(
@@ -746,7 +745,9 @@ class _EntityClientDescription(_ActorClientDescription):
         self._description["description"]["hide_armor"] = True
         return self
 
-    def spawn_egg(self, texture: TextureComponents, texture_index: int = 0) -> "_EntityClientDescription":
+    def spawn_egg(
+        self, texture: TextureComponents, texture_index: int = 0
+    ) -> "_EntityClientDescription":
         """This method adds a spawn egg texture to the entity.
 
         Parameters:
@@ -766,7 +767,9 @@ class _EntityClientDescription(_ActorClientDescription):
         }
         return self
 
-    def spawn_egg_color(self, base_color: str, overlay_color: str) -> "_EntityClientDescription":
+    def spawn_egg_color(
+        self, base_color: str, overlay_color: str
+    ) -> "_EntityClientDescription":
         """This method adds a spawn egg color to the entity.
 
         Parameters:
@@ -898,7 +901,9 @@ class _EntityServerDescription(_ActorDescription):
     @deprecated(
         "The RuntimeIdentifier property is deprecated and will be removed in a future version. Please use the config method instead.",
     )
-    def RuntimeIdentifier(self, entity: "MinecraftEntityDescriptor") -> "_EntityServerDescription":
+    def RuntimeIdentifier(
+        self, entity: "MinecraftEntityDescriptor"
+    ) -> "_EntityServerDescription":
         """Sets the runtime identifier of the entity.
 
         Parameters:

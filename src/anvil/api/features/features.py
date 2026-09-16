@@ -188,7 +188,9 @@ class AggregateFeature(Feature):
         )
         return self
 
-    def early_out(self, early_out: Literal["none", "first_failure", "first_success"]) -> "AggregateFeature":
+    def early_out(
+        self, early_out: Literal["none", "first_failure", "first_success"]
+    ) -> "AggregateFeature":
         """Do not continue placing features once either the first success or first failure has occurred."""
         self._content[self._feature_name]["early_out"] = early_out
         return self
@@ -1641,7 +1643,9 @@ class WeightedRandomFeature(Feature):
             [str(feature), clamp(weight, 0, inf)]
         )
 
-    def features(self, feature_list: list[tuple[Feature | Identifier, float]]) -> "WeightedRandomFeature":
+    def features(
+        self, feature_list: list[tuple[Feature | Identifier, float]]
+    ) -> "WeightedRandomFeature":
         """Adds multiple weighted feature entries with feature references and weights."""
         for feature, weight in feature_list:
             self.add_feature(feature, weight)

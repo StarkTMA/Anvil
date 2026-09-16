@@ -55,6 +55,7 @@ def test_new_blocks():
 
 def test_new_block_components():
     import pytest
+
     # 1. Test BlockPrecipitationInteractions
     precip = BlockPrecipitationInteractions("snowlogging")
     assert precip.identifier == "minecraft:precipitation_interactions"
@@ -79,6 +80,7 @@ def test_new_block_components():
 
 def test_block_flammable():
     import pytest
+
     # Basic catch/destroy chance
     flam = BlockFlammable(catch_chance_modifier=5, destroy_chance_modifier=20)
     assert flam.identifier == "minecraft:flammable"
@@ -100,7 +102,11 @@ def test_block_flammable():
 
     # Invalid lava_flammable value
     with pytest.raises(ValueError, match="lava_flammable"):
-        BlockFlammable(catch_chance_modifier=5, destroy_chance_modifier=20, lava_flammable="sometimes")
+        BlockFlammable(
+            catch_chance_modifier=5,
+            destroy_chance_modifier=20,
+            lava_flammable="sometimes",
+        )
 
 
 def test_block_geometry_default():
@@ -114,8 +120,10 @@ def test_block_geometry_default():
 def test_placement_direction_trait_values():
     assert PlacementDirectionTrait.CardinalDirection == "minecraft:cardinal_direction"
     assert PlacementDirectionTrait.FacingDirection == "minecraft:facing_direction"
-    assert PlacementDirectionTrait.CornerAndCardinalDirection == "minecraft:corner_and_cardinal_direction"
-
+    assert (
+        PlacementDirectionTrait.CornerAndCardinalDirection
+        == "minecraft:corner_and_cardinal_direction"
+    )
 
 
 def test_block_instrument_sound():

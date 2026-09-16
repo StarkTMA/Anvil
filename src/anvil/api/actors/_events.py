@@ -158,8 +158,6 @@ class _Randomize(_BaseEvent):
         self._event["unleash"] = payload
         return self
 
-
-
     @property
     def randomize(self):
         return self._parent_class.randomize
@@ -240,8 +238,6 @@ class _Sequence(_BaseEvent):
             payload["unleash_others"] = unleash_others
         self._event["unleash"] = payload
         return self
-
-
 
     @property
     def sequence(self):

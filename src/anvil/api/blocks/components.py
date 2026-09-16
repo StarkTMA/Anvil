@@ -736,9 +736,7 @@ class BlockGeometry(Component):
 
         return self._bb.model.block_culling()
 
-    def n_way_visual_rotation(
-        self, axis: Dict[str, Molang | str]
-    ) -> "BlockGeometry":
+    def n_way_visual_rotation(self, axis: Dict[str, Molang | str]) -> "BlockGeometry":
         """Specifies the visual rotation mapping for the geometry.
 
         Parameters:
@@ -1349,3 +1347,25 @@ class BlockInstrumentSound(Component):
             self._add_field("up", str(up))
         if down is not None:
             self._add_field("down", str(down))
+
+
+class BlockEntity(Component):
+    _identifier = "minecraft:block_entity"
+
+    def __init__(self, slot_count: int = None, dynamic_properties: bool = False):
+        """Indicates that this block has an associated entity. This component is required for blocks that have a custom block entity.
+
+          Parameters:
+            slot_count (int): The number of slots in the block's inventory.
+            dynamic_properties (bool): Whether the block's properties can be changed dynamically.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_block_entity)
+        """
+        super().__init__("block_entity")
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.20")
+
+        if slot_count is not None and (slot_count <= 0 or slot_count > 55):
+            raise ValueError("Slot count must be between 1 and 54.")
+
+        self._add_field("slot_count", slot_count)
+        self._add_field("dynamic_properties", dynamic_properties)

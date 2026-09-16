@@ -312,6 +312,28 @@ class Filter:
         return Filter("has_biome_tag", subject, operator, None, value)
 
     @classmethod
+    def has_all_biome_tags(
+        cls,
+        values: list[MinecraftBiomeTags],
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ) -> "Filter":
+        """Checks if the entity is in a biome with all of the specified tags."""
+        return Filter("has_all_biome_tag", subject, operator, None, values)
+
+    @classmethod
+    def has_any_biome_tags(
+        cls,
+        values: list[MinecraftBiomeTags],
+        *,
+        subject: FilterSubject = FilterSubject.Self,
+        operator: FilterOperation = FilterOperation.Equals,
+    ) -> "Filter":
+        """Checks if the entity is in a biome with any of the specified tags."""
+        return Filter("has_any_biome_tag", subject, operator, None, values)
+
+    @classmethod
     def has_component(
         cls,
         value: "Component | str",
@@ -2295,4 +2317,3 @@ class Filter:
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
         """
         return Filter("redstone_strength_at_position", subject, operator, None, value)
-

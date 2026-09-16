@@ -958,6 +958,7 @@ class AddonObject(AddonDescriptor):
     _extension = ".json"
     _path = ""
     _object_type = "addon_object"
+    _queued = False
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """
@@ -998,6 +999,7 @@ class AddonObject(AddonDescriptor):
 
         self._directory = directory if not directory is None else ""
         self._path = os.path.join(self._path, self._directory)
+        self._queued = True
         ANVIL.__queue__(self)
         return self
 

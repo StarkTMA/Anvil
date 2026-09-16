@@ -1,4 +1,5 @@
 """Tests for anvil/lib/lib.py utilities not yet covered by test_lib.py."""
+
 import os
 import zipfile
 
@@ -15,10 +16,10 @@ from anvil.lib.lib import (
 )
 from anvil.api.core.types import RGB, RGBA, RGB255, RGBA255, HexRGB, HexRGBA
 
-
 # ---------------------------------------------------------------------------
 # clamp
 # ---------------------------------------------------------------------------
+
 
 class TestClamp:
     def test_below_min(self):
@@ -44,6 +45,7 @@ class TestClamp:
 # frange
 # ---------------------------------------------------------------------------
 
+
 class TestFrange:
     def test_two_values(self):
         result = frange(0, 10, 2)
@@ -66,6 +68,7 @@ class TestFrange:
 # salt_from_str
 # ---------------------------------------------------------------------------
 
+
 class TestSaltFromStr:
     def test_deterministic(self):
         assert salt_from_str("hello") == salt_from_str("hello")
@@ -86,6 +89,7 @@ class TestSaltFromStr:
 # ---------------------------------------------------------------------------
 # AnvilFormatter.min_max_dict / min_max_list
 # ---------------------------------------------------------------------------
+
 
 class TestAnvilFormatterMinMax:
     def test_min_max_dict_normal(self):
@@ -132,6 +136,7 @@ class TestAnvilFormatterMinMax:
 # ---------------------------------------------------------------------------
 # AnvilFormatter.convert_color
 # ---------------------------------------------------------------------------
+
 
 class TestConvertColor:
     def test_hex_to_rgb(self):
@@ -199,6 +204,7 @@ class TestConvertColor:
 # AnvilValidator.is_color_value
 # ---------------------------------------------------------------------------
 
+
 class TestIsColorValue:
     def test_rgb_float(self):
         assert AnvilValidator.is_color_value((0.5, 0.5, 0.5)) is True
@@ -229,6 +235,7 @@ class TestIsColorValue:
 # AnvilValidator.validate_namespace_project_name
 # ---------------------------------------------------------------------------
 
+
 class TestValidateNamespace:
     def test_valid(self):
         AnvilValidator.validate_namespace_project_name("stark", "my_project")
@@ -243,20 +250,27 @@ class TestValidateNamespace:
 
     def test_project_name_too_long(self):
         with pytest.raises(ValueError, match="16 characters"):
-            AnvilValidator.validate_namespace_project_name("stark", "a_very_long_project_name_here")
+            AnvilValidator.validate_namespace_project_name(
+                "stark", "a_very_long_project_name_here"
+            )
 
     def test_addon_valid_suffix(self):
         # project_name="my_project" -> initials="MP" -> namespace must end with "_mp"
-        AnvilValidator.validate_namespace_project_name("stark_mp", "my_project", is_addon=True)
+        AnvilValidator.validate_namespace_project_name(
+            "stark_mp", "my_project", is_addon=True
+        )
 
     def test_addon_wrong_suffix(self):
         with pytest.raises(ValueError, match="unique"):
-            AnvilValidator.validate_namespace_project_name("stark", "my_project", is_addon=True)
+            AnvilValidator.validate_namespace_project_name(
+                "stark", "my_project", is_addon=True
+            )
 
 
 # ---------------------------------------------------------------------------
 # AnvilArchive.from_mapping
 # ---------------------------------------------------------------------------
+
 
 class TestAnvilArchive:
     def test_creates_zip(self, tmp_path):
@@ -314,6 +328,7 @@ class TestAnvilArchive:
 # ---------------------------------------------------------------------------
 # AnvilIO._normalize_json_like
 # ---------------------------------------------------------------------------
+
 
 class TestAnvilIONormalizeJsonLike:
     def test_prunes_empty_dict(self):

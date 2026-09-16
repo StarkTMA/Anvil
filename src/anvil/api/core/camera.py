@@ -210,7 +210,9 @@ class CameraPreset(AddonObject):
     _path = os.path.join(CONFIG.BP_PATH, "cameras", "presets")
     _object_type = "Camera Preset"
 
-    def __init__(self, name: str, inherit_from: CameraPresets | CameraPreset | str) -> None:
+    def __init__(
+        self, name: str, inherit_from: CameraPresets | CameraPreset | str
+    ) -> None:
         """Initializes the CameraPreset instance.
 
         Parameters:
@@ -233,7 +235,9 @@ class CameraPreset(AddonObject):
         self._camera_preset = JsonSchemes.camera_preset(self.identifier, self._inherit)
         self._replace_reticle = False
 
-    def position(self, x: float = None, y: float = None, z: float = None) -> "CameraPreset":
+    def position(
+        self, x: float = None, y: float = None, z: float = None
+    ) -> "CameraPreset":
         """Sets the constant coordinate overrides for the camera.
 
         Parameters:
@@ -257,7 +261,9 @@ class CameraPreset(AddonObject):
             y (float, optional): The yaw (horizontal rotation) of the camera in degrees.
         """
         if x is not None:
-            self._camera_preset["minecraft:camera_preset"]["rot_x"] = clamp(x, -90.0, 90.0)
+            self._camera_preset["minecraft:camera_preset"]["rot_x"] = clamp(
+                x, -90.0, 90.0
+            )
         if y is not None:
             self._camera_preset["minecraft:camera_preset"]["rot_y"] = y
         return self
@@ -270,7 +276,9 @@ class CameraPreset(AddonObject):
             y (float, optional): The initial yaw in degrees.
         """
         if x is not None:
-            self._camera_preset["minecraft:camera_preset"]["starting_rot_x"] = clamp(x, -90.0, 90.0)
+            self._camera_preset["minecraft:camera_preset"]["starting_rot_x"] = clamp(
+                x, -90.0, 90.0
+            )
         if y is not None:
             self._camera_preset["minecraft:camera_preset"]["starting_rot_y"] = y
         return self
@@ -307,7 +315,9 @@ class CameraPreset(AddonObject):
             value (ControlSchemes | str): The control scheme, such as 'camera_relative'.
         """
         if isinstance(value, ControlSchemes):
-            self._camera_preset["minecraft:camera_preset"]["control_scheme"] = value.value
+            self._camera_preset["minecraft:camera_preset"][
+                "control_scheme"
+            ] = value.value
         else:
             self._camera_preset["minecraft:camera_preset"]["control_scheme"] = value
         return self
@@ -338,7 +348,9 @@ class CameraPreset(AddonObject):
         ]
         return self
 
-    def entity_offset(self, x_offset: float, y_offset: float, z_offset: float) -> "CameraPreset":
+    def entity_offset(
+        self, x_offset: float, y_offset: float, z_offset: float
+    ) -> "CameraPreset":
         """Sets the target entity tracking offset.
 
         Parameters:
@@ -424,7 +436,10 @@ class CameraPreset(AddonObject):
             total = h_lim_0 + h_lim_1
             h_lim_0 = (h_lim_0 / total) * 360.0
             h_lim_1 = (h_lim_1 / total) * 360.0
-        self._camera_preset["minecraft:camera_preset"]["horizontal_rotation_limit"] = [h_lim_0, h_lim_1]
+        self._camera_preset["minecraft:camera_preset"]["horizontal_rotation_limit"] = [
+            h_lim_0,
+            h_lim_1,
+        ]
 
         v_lim_0 = max(0.0, vertical_rotation_limit[0])
         v_lim_1 = max(0.0, vertical_rotation_limit[1])
@@ -432,7 +447,10 @@ class CameraPreset(AddonObject):
             total = v_lim_0 + v_lim_1
             v_lim_0 = (v_lim_0 / total) * 180.0
             v_lim_1 = (v_lim_1 / total) * 180.0
-        self._camera_preset["minecraft:camera_preset"]["vertical_rotation_limit"] = [v_lim_0, v_lim_1]
+        self._camera_preset["minecraft:camera_preset"]["vertical_rotation_limit"] = [
+            v_lim_0,
+            v_lim_1,
+        ]
 
         self._camera_preset["minecraft:camera_preset"][
             "continue_targeting"

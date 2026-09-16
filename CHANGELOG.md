@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.92**](#0992)
+- [**0.9.93**](#0993)
+- [0.9.92](#0992)
 - [0.9.91](#0991)
 - [0.9.9](#099)
 - [0.9.8.71](#09871)
@@ -103,6 +104,33 @@
 ---
 
 # 0.9.x
+
+## 0.9.93
+
+### Anvil
+
+- Updated format version to `1.26.50`.
+- Updated `@minecraft/` npm package versions.
+- Particles now check for the existence of non vanilla particles referenced in the particle events.
+- Behaviour Pack settings can now be used without setting the `preview` flag to true.
+
+### Actor
+
+- Updated `EntityAngerLevel`, `EntityProjectile`, `EntityAIRangedAttack` components.
+- Updated `EntityProjectile` component and its `on_hit` subcomponents (`wind_burst_on_hit`, `catch_fire_on_hit`, `thrown_potion_effect`, `arrow_effect`, `impact_damage`, `spawn_chance`, `stick_in_ground`) according to the latest Bedrock documentation.
+- Added `EntityFreezingImmune`, `EntityFreezingVulnerable`, `EntityCanStandOnPowderSnow` components.
+
+### Blocks
+
+- Added the new `BlockEntity` component.
+
+### Vanilla
+
+- Added new Abandoned Camp Feature/Structure entries.
+- Added all new Wool Stairs and Wool Slabs 16 color block factories.
+- Added all new Cushion item factories.
+- Added the new Cushion entity factory.
+- Added a new `minecraft:leaves` block tag.
 
 ## 0.9.92
 

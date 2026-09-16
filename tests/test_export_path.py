@@ -1,4 +1,5 @@
 """Tests for cross-platform support and local_export flag."""
+
 import json
 import os
 import sys
@@ -23,6 +24,7 @@ def reset_anvil_config():
 @pytest.fixture
 def make_project(tmp_path, monkeypatch):
     """Factory fixture to create an anvilconfig.json in tmp_path."""
+
     def _create(local_export=None, preview=False):
         data = {
             "package": {
@@ -97,8 +99,12 @@ def test_windows_local_export_false_defaults_to_mojang(make_project, monkeypatch
 
     with patch("anvil.lib.lib.AnvilValidator.validate_namespace_project_name"):
         cfg = _AnvilConfig()
-        expected_rp = os.path.join(RELEASE_COM_MOJANG, "development_resource_packs", "RP_test_proj")
-        expected_bp = os.path.join(RELEASE_COM_MOJANG, "development_behavior_packs", "BP_test_proj")
+        expected_rp = os.path.join(
+            RELEASE_COM_MOJANG, "development_resource_packs", "RP_test_proj"
+        )
+        expected_bp = os.path.join(
+            RELEASE_COM_MOJANG, "development_behavior_packs", "BP_test_proj"
+        )
         assert cfg.RP_PATH == expected_rp
         assert cfg.BP_PATH == expected_bp
         assert cfg._LOCAL_EXPORT is False
@@ -111,8 +117,12 @@ def test_windows_preview_effective_only_with_default_paths(make_project, monkeyp
 
     with patch("anvil.lib.lib.AnvilValidator.validate_namespace_project_name"):
         cfg = _AnvilConfig()
-        expected_rp = os.path.join(PREVIEW_COM_MOJANG, "development_resource_packs", "RP_test_proj")
-        expected_bp = os.path.join(PREVIEW_COM_MOJANG, "development_behavior_packs", "BP_test_proj")
+        expected_rp = os.path.join(
+            PREVIEW_COM_MOJANG, "development_resource_packs", "RP_test_proj"
+        )
+        expected_bp = os.path.join(
+            PREVIEW_COM_MOJANG, "development_behavior_packs", "BP_test_proj"
+        )
         assert cfg.RP_PATH == expected_rp
         assert cfg.BP_PATH == expected_bp
 
@@ -231,8 +241,22 @@ def test_clean_old_dev_removes_configured_paths(make_project, tmp_path, monkeypa
         cfg = _AnvilConfig()
         os.makedirs(cfg.RP_PATH, exist_ok=True)
         os.makedirs(cfg.BP_PATH, exist_ok=True)
-        (tmp_path / "output" / "com.mojang" / "development_resource_packs" / "RP_test_proj" / "test.txt").write_text("rp content")
-        (tmp_path / "output" / "com.mojang" / "development_behavior_packs" / "BP_test_proj" / "test.txt").write_text("bp content")
+        (
+            tmp_path
+            / "output"
+            / "com.mojang"
+            / "development_resource_packs"
+            / "RP_test_proj"
+            / "test.txt"
+        ).write_text("rp content")
+        (
+            tmp_path
+            / "output"
+            / "com.mojang"
+            / "development_behavior_packs"
+            / "BP_test_proj"
+            / "test.txt"
+        ).write_text("bp content")
 
         assert os.path.isdir(cfg.RP_PATH)
         assert os.path.isdir(cfg.BP_PATH)

@@ -11,12 +11,23 @@ def test_sulfur_cube_entity():
 
 def test_entity_hide_held_items():
     from anvil.api.actors.actors import Entity
+
     entity = Entity("custom_entity")
     entity.client.description.hide_held_items(True)
-    assert entity.client.description._description["description"]["scripts"]["hide_held_items"] == "1"
+    assert (
+        entity.client.description._description["description"]["scripts"][
+            "hide_held_items"
+        ]
+        == "1"
+    )
 
     entity.client.description.hide_held_items("q.is_sheared")
-    assert entity.client.description._description["description"]["scripts"]["hide_held_items"] == "q.is_sheared"
+    assert (
+        entity.client.description._description["description"]["scripts"][
+            "hide_held_items"
+        ]
+        == "q.is_sheared"
+    )
 
 
 def test_entity_ai_pickup_items():
@@ -40,7 +51,9 @@ def test_execute_event_on_home_block():
     event.execute_event_on_home_block("my_block_event")
 
     exported = event.__export__()
-    assert exported["minecraft:entity_spawned"]["execute_event_on_home_block"] == {"event": "my_block_event"}
+    assert exported["minecraft:entity_spawned"]["execute_event_on_home_block"] == {
+        "event": "my_block_event"
+    }
 
     # 2. Test Sequence Event
     entity2 = Entity("custom_entity2")
@@ -53,9 +66,15 @@ def test_execute_event_on_home_block():
     seq.emit_particle("minecraft:basic_flame_particle")
 
     exported2 = event2.__export__()
-    assert exported2["minecraft:entity_born"]["sequence"][0]["execute_event_on_home_block"] == {"event": "my_born_seq_event"}
-    assert exported2["minecraft:entity_born"]["sequence"][0]["play_sound"] == {"sound": "ambient.weather.thunder"}
-    assert exported2["minecraft:entity_born"]["sequence"][0]["emit_particle"] == {"particle": "minecraft:basic_flame_particle"}
+    assert exported2["minecraft:entity_born"]["sequence"][0][
+        "execute_event_on_home_block"
+    ] == {"event": "my_born_seq_event"}
+    assert exported2["minecraft:entity_born"]["sequence"][0]["play_sound"] == {
+        "sound": "ambient.weather.thunder"
+    }
+    assert exported2["minecraft:entity_born"]["sequence"][0]["emit_particle"] == {
+        "particle": "minecraft:basic_flame_particle"
+    }
 
     # 4. Test Randomize Event
     entity3 = Entity("custom_entity3")
@@ -68,25 +87,34 @@ def test_execute_event_on_home_block():
     rand.emit_particle("minecraft:basic_flame_particle")
 
     exported3 = event3.__export__()
-    assert exported3["minecraft:on_prime"]["randomize"][0]["execute_event_on_home_block"] == {"event": "my_prime_rand_event"}
-    assert exported3["minecraft:on_prime"]["randomize"][0]["play_sound"] == {"sound": "ambient.weather.thunder"}
-    assert exported3["minecraft:on_prime"]["randomize"][0]["emit_particle"] == {"particle": "minecraft:basic_flame_particle"}
+    assert exported3["minecraft:on_prime"]["randomize"][0][
+        "execute_event_on_home_block"
+    ] == {"event": "my_prime_rand_event"}
+    assert exported3["minecraft:on_prime"]["randomize"][0]["play_sound"] == {
+        "sound": "ambient.weather.thunder"
+    }
+    assert exported3["minecraft:on_prime"]["randomize"][0]["emit_particle"] == {
+        "particle": "minecraft:basic_flame_particle"
+    }
 
 
 def test_entity_bounciness():
     from anvil.api.actors.components import EntityBounciness
+
     bounciness = EntityBounciness(0.5)
     assert bounciness._component["strength"] == 0.5
 
 
 def test_entity_air_drag_modifier():
     from anvil.api.actors.components import EntityAirDragModifier
+
     air_drag = EntityAirDragModifier(0.8)
     assert air_drag._component["strength"] == 0.8
 
 
 def test_entity_apply_knockback_rules():
     from anvil.api.actors.components import EntityApplyKnockbackRules
+
     rules = EntityApplyKnockbackRules()
     rules.add_preset(extra_knockback_approach="multiply")
     assert rules._component["presets"][0]["extra_knockback_approach"] == "multiply"
@@ -94,6 +122,7 @@ def test_entity_apply_knockback_rules():
 
 def test_entity_pushable_by_entity():
     from anvil.api.actors.components import EntityPushableByEntity
+
     push = EntityPushableByEntity()
     push.add_preset(
         push_mode="none",
@@ -120,12 +149,14 @@ def test_entity_pushable_by_entity():
 def test_entity_area_attack():
     from anvil.api.actors.components import EntityAreaAttack
     from anvil.api.core.enums import DamageCause
+
     aa = EntityAreaAttack(cause=DamageCause.Magic, use_self_as_damage_source=False)
     assert aa._component["use_self_as_damage_source"] is False
 
 
 def test_entity_leashable():
     from anvil.api.actors.components import EntityLeashable, EntityLeashableTo
+
     leash = EntityLeashable(unleash_on_removal=True)
     assert leash._component["unleash_on_removal"] is True
 
@@ -135,15 +166,20 @@ def test_entity_leashable():
 
 def test_entity_unleash_event_response():
     from anvil.api.actors.actors import Entity
+
     ent = Entity("test_unleash")
     evt = ent.server.event("minecraft:entity_spawned")
     evt.unleash(unleash_self=True, unleash_others=True)
     exported = evt.__export__()
-    assert exported["minecraft:entity_spawned"]["unleash"] == {"unleash_self": True, "unleash_others": True}
+    assert exported["minecraft:entity_spawned"]["unleash"] == {
+        "unleash_self": True,
+        "unleash_others": True,
+    }
 
 
 def test_entity_filter_redstone_strength():
     from anvil.api.core.filters import Filter
+
     filt = Filter.redstone_strength_at_position(15)
     assert filt.test == "redstone_strength_at_position"
     assert filt.value == 15

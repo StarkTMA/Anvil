@@ -10,6 +10,8 @@ from os import path
 from typing import Optional
 
 import click
+from PIL import Image
+
 from anvil.api.actors.materials import MaterialsObject
 from anvil.api.core.sounds import (
     BlocksJSONObject,
@@ -22,12 +24,11 @@ from anvil.api.core.textures import (
     ItemTexturesObject,
     TerrainTexturesObject,
 )
+from anvil.api.world.particles import Particle
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import (
     CONFIG,
-    ConfigOption,
     ConfigPackageTarget,
-    ConfigSection,
     _AnvilConfig,
 )
 from anvil.lib.format_versions import (
@@ -38,8 +39,6 @@ from anvil.lib.format_versions import (
     MODULE_MINECRAFT_SERVER_UI_PREVIEW,
 )
 from anvil.lib.lib import (
-    PREVIEW_COM_MOJANG,
-    RELEASE_COM_MOJANG,
     AnvilArchive,
     AnvilIO,
     AnvilValidator,
@@ -49,7 +48,6 @@ from anvil.lib.lib import (
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
-from PIL import Image
 
 from ...__version__ import __version__
 
@@ -690,6 +688,8 @@ def compile_objects(
                 )
             raise
 
+    Particle.__check_errors__()
+
     if CONFIG._TARGET == ConfigPackageTarget.ADDON:
         if len(CONFIG._RP_UUID) > 1:
             raise RuntimeError(
@@ -751,6 +751,8 @@ class ManifestRP(AddonObject):
         return _ManifestSettings(self)
 
     def queue(self) -> "ManifestRP":
+        if self._queued:
+            return
         if CONFIG.PBR:
             self._content.update({"capabilities": ["pbr"]})
 
@@ -782,13 +784,11 @@ class ManifestBP(AddonObject):
     @property
     def settings(self) -> "_ManifestSettings":
         """Returns a Manifest Settings object to add settings to the manifest."""
-        if not CONFIG._PREVIEW:
-            raise RuntimeError(
-                "Behaviour Pack Settings are currently only supported in current preview builds."
-            )
         return _ManifestSettings(self)
 
     def queue(self) -> "ManifestBP":
+        if self._queued:
+            return
         if CONFIG._SCRIPT_API:
             self._content["modules"].append(
                 {
@@ -913,6 +913,27 @@ class _ManifestSettings:
             }
         )
         return self
+
+    # def multiselect(self, id: str, text: str, options: list[str]):
+    #    if not isinstance(options, list) or len(options) == 0:
+    #        raise ValueError("Options must be a non-empty list.")
+    #
+    #    for option in options:
+    #        if not isinstance(option, str):
+    #            raise ValueError("Options must be a list of strings.")
+    #
+    #    if id in self.manifest._setting_ids:
+    #        raise ValueError(f"Setting ID '{id}' is already used.")
+    #
+    #    self.manifest._setting_ids.add(id)
+    #    self.manifest._content["settings"].append(
+    #        {
+    #            "type": "multiselect",
+    #            "name": f"{CONFIG.NAMESPACE}:{id}",
+    #            "text": text,
+    #            "options": options
+    #        }
+    #    )
 
 
 class _Anvil:

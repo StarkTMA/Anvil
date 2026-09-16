@@ -873,7 +873,7 @@ class _UIElement:
         scale_factor: int = 1,
         nineslice_size: int | tuple[int, int, int, int] | None = None,
         tiled: bool = False,
-        tiled_scale: float | tuple[float, float] = 1
+        tiled_scale: float | tuple[float, float] = 1,
     ):
         """Set the texture for image elements with optional scaling and nineslice.
 
@@ -2639,7 +2639,9 @@ class _AnvilHUDScreen(_UIScreen):
         )
         return self
 
-    def credits_screen_constructor(self, credits_duration: int = 30) -> "_UICreditsConstructor":
+    def credits_screen_constructor(
+        self, credits_duration: int = 30
+    ) -> "_UICreditsConstructor":
         credits = self.add_element("credits", UIElementTrigger.Title, "credits")
         credits.type(UIElementType.Panel)
         credits.layer(100)

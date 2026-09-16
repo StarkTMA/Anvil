@@ -10,9 +10,11 @@ mock_config.NAMESPACE = "testns"
 mock_config.PROJECT_NAME = "test_project"
 
 import anvil.lib.config
+
 anvil.lib.config.CONFIG = mock_config
 
 import anvil.lib.schemas
+
 anvil.lib.schemas.CONFIG = mock_config
 
 from anvil.api.core.enums import CameraPresets, AimAssistTargetMode, ControlSchemes
@@ -36,11 +38,20 @@ def test_aim_assist_preset():
     preset.liquid_targeting_list({"items": ["minecraft:bucket"]})
 
     content = preset.__export__()
-    assert content["minecraft:aim_assist_preset"]["item_settings"] == {"minecraft:stone_axe": "axe_category"}
-    assert content["minecraft:aim_assist_preset"]["default_item_settings"] == "default_category"
+    assert content["minecraft:aim_assist_preset"]["item_settings"] == {
+        "minecraft:stone_axe": "axe_category"
+    }
+    assert (
+        content["minecraft:aim_assist_preset"]["default_item_settings"]
+        == "default_category"
+    )
     assert content["minecraft:aim_assist_preset"]["hand_settings"] == "hand_category"
-    assert content["minecraft:aim_assist_preset"]["exclusion_list"] == {"blocks": ["minecraft:dirt"]}
-    assert content["minecraft:aim_assist_preset"]["liquid_targeting_list"] == {"items": ["minecraft:bucket"]}
+    assert content["minecraft:aim_assist_preset"]["exclusion_list"] == {
+        "blocks": ["minecraft:dirt"]
+    }
+    assert content["minecraft:aim_assist_preset"]["liquid_targeting_list"] == {
+        "items": ["minecraft:bucket"]
+    }
 
 
 def test_aim_assist_category_and_categories():
@@ -122,20 +133,33 @@ def test_camera_preset_settings():
 
     # Control scheme
     preset.control_scheme("camera_relative")
-    assert preset._camera_preset["minecraft:camera_preset"]["control_scheme"] == "camera_relative"
+    assert (
+        preset._camera_preset["minecraft:camera_preset"]["control_scheme"]
+        == "camera_relative"
+    )
     preset.control_scheme(ControlSchemes.PlayerRelativeStrafe)
-    assert preset._camera_preset["minecraft:camera_preset"]["control_scheme"] == "player_relative_strafe"
+    assert (
+        preset._camera_preset["minecraft:camera_preset"]["control_scheme"]
+        == "player_relative_strafe"
+    )
 
     # Extend player rendering
     preset.extend_player_rendering(True)
-    assert preset._camera_preset["minecraft:camera_preset"]["extend_player_rendering"] is True
+    assert (
+        preset._camera_preset["minecraft:camera_preset"]["extend_player_rendering"]
+        is True
+    )
 
     # View offset, entity offset, radius
     preset.view_offset(1.0, 2.0)
     assert preset._camera_preset["minecraft:camera_preset"]["view_offset"] == [1.0, 2.0]
 
     preset.entity_offset(0.0, 1.5, 0.0)
-    assert preset._camera_preset["minecraft:camera_preset"]["entity_offset"] == [0.0, 1.5, 0.0]
+    assert preset._camera_preset["minecraft:camera_preset"]["entity_offset"] == [
+        0.0,
+        1.5,
+        0.0,
+    ]
 
     preset.radius(15.0)
     assert preset._camera_preset["minecraft:camera_preset"]["radius"] == 15.0
@@ -144,7 +168,12 @@ def test_camera_preset_settings():
 def test_camera_preset_aim_assist():
     preset = CameraPreset("cam_aa", CameraPresets.Free)
     aa_preset = AimAssistPreset("aa_preset")
-    preset.aim_assist(aa_preset, target_mode=AimAssistTargetMode.Angle, angle=[25.0, 35.0], distance=12.0)
+    preset.aim_assist(
+        aa_preset,
+        target_mode=AimAssistTargetMode.Angle,
+        angle=[25.0, 35.0],
+        distance=12.0,
+    )
 
     aa_data = preset._camera_preset["minecraft:camera_preset"]["aim_assist"]
     assert aa_data["preset"] == "testns:aa_preset"
@@ -163,7 +192,7 @@ def test_camera_preset_focus_target():
         horizontal_rotation_limit=[45.0, 45.0],
         vertical_rotation_limit=[30.0, 60.0],
         continue_targeting=True,
-        tracking_radius=40.0
+        tracking_radius=40.0,
     )
     cam_data = preset._camera_preset["minecraft:camera_preset"]
     assert cam_data["rotation_speed"] == 15.0
@@ -175,8 +204,17 @@ def test_camera_preset_focus_target():
 
     # Limits exceeding maximum sums (horizontal sum > 360, vertical sum > 180)
     preset.focus_target(
-        horizontal_rotation_limit=[200.0, 200.0],
-        vertical_rotation_limit=[100.0, 100.0]
+        horizontal_rotation_limit=[200.0, 200.0], vertical_rotation_limit=[100.0, 100.0]
     )
-    assert sum(preset._camera_preset["minecraft:camera_preset"]["horizontal_rotation_limit"]) == 360.0
-    assert sum(preset._camera_preset["minecraft:camera_preset"]["vertical_rotation_limit"]) == 180.0
+    assert (
+        sum(
+            preset._camera_preset["minecraft:camera_preset"][
+                "horizontal_rotation_limit"
+            ]
+        )
+        == 360.0
+    )
+    assert (
+        sum(preset._camera_preset["minecraft:camera_preset"]["vertical_rotation_limit"])
+        == 180.0
+    )

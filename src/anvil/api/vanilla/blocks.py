@@ -28,6 +28,7 @@ class MinecraftBlockTags(StrEnum):
     TextSign = "text_sign"
     Crop = "minecraft:crop"
     FertilizeArea = "fertilize_area"
+    Leaves = "minecraft:leaves"
 
     DiamondTierDestructible = "minecraft:diamond_tier_destructible"
     IronTierDestructible = "minecraft:iron_tier_destructible"

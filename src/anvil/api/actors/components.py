@@ -1688,7 +1688,7 @@ class EntityProjectile(Component):
 
     def __init__(
         self,
-        anchor: int = 0,
+        anchor: int | Literal["origin", "eye_height", "middle"] = 0,
         angle_offset: float = 0,
         catch_fire: bool = False,
         crit_particle_on_hurt: bool = False,
@@ -1725,50 +1725,50 @@ class EntityProjectile(Component):
         uncertainty_base: float = 0.0,
         uncertainty_multiplier: float = 0.0,
     ) -> None:
-        """Allows the entity to be a thrown entity.
+        """Turns the entity into a projectile: a thrown or shot entity that flies along a ballistic arc and reacts when it impacts a block, a fluid, or another entity.
 
         Parameters:
-            anchor (int, optional): . Defaults to 0.
-            angle_offset (float, optional): Determines the angle at which the projectile is thrown. Defaults to 0.
+            anchor (int | Literal["origin", "eye_height", "middle"], optional): Reference point on the shooter used to position the projectile at spawn: 0 = origin (feet), 1 = eye height, 2 = middle of the bounding box. Defaults to 0.
+            angle_offset (float, optional): Additional upwards pitch (in degrees) applied to the shooter's aim direction at launch. Negative values aim downward. Defaults to 0.
             catch_fire (bool, optional): Determines whether the entity hit will be set on fire. Defaults to False.
-            crit_particle_on_hurt (bool, optional): If true, the projectile will produce additional particles when a critical hit happens. Defaults to False.
-            destroy_on_hurt (bool, optional): If true, this entity will be destroyed when hit. Defaults to False.
+            crit_particle_on_hurt (bool, optional): If true, critical-hit particles are spawned on the projectile when it is struck. Defaults to False.
+            destroy_on_hurt (bool, optional): If true, the projectile is removed from the world when struck. Defaults to False.
             fire_affected_by_griefing (bool, optional): If true, whether the projectile causes fire is affected by the mob griefing game rule. Defaults to False.
-            gravity (float, optional): The gravity applied to this entity when thrown. The higher the value, the faster the entity falls. Defaults to 0.05.
-            hit_nearest_passenger (bool, optional): If true, damage is dealt to closest passenger when hitting a vehicle. Defaults to False.
-            hit_sound (str, optional): The sound that plays when the projectile hits something. Defaults to ''.
-            hit_ground_sound (str, optional): . Defaults to ''.
-            hit_water (bool, optional): . Defaults to False.
-            homing (bool, optional): If true, the projectile homes in to the nearest entity. Defaults to False.
-            ignored_entities (list of str, optional): Entity types that this projectile does not collide with. Defaults to None.
-            inertia (float, optional): The fraction of the projectile's speed maintained every frame while traveling in air. Defaults to 0.99.
-            is_dangerous (bool, optional): If true, the projectile will be treated as dangerous to the players. Defaults to False.
-            isolated_physics (bool, optional): If true, projectile is not affected by outside forces. Defaults to True.
+            gravity (float, optional): Downward acceleration (blocks per tick squared) applied each tick while in flight. Higher values make the projectile fall faster. Defaults to 0.05.
+            hit_nearest_passenger (bool, optional): If true, when the projectile hits a vehicle with at least one passenger, the on-hit behavior is applied to the passenger closest to the impact point instead of the vehicle itself. Defaults to False.
+            hit_sound (str, optional): Identifier of the sound to play when the projectile hits an entity. Also used for block hits when hit_ground_sound is not specified. Defaults to ''.
+            hit_ground_sound (str, optional): Identifier of the sound to play when the projectile hits a block. Defaults to hit_sound when empty. Defaults to ''.
+            hit_water (bool, optional): If true, the projectile treats water as a hit surface and stops on contact. Defaults to False.
+            homing (bool, optional): If true, the projectile steers towards an active target while in flight. Defaults to False.
+            ignored_entities (list of str, optional): Array of entity identifiers that the projectile will pass through without registering a hit. Defaults to None.
+            inertia (float, optional): Fraction of the projectile's velocity preserved each tick while traveling through air. Values below 1.0 cause it to slow down over time. Defaults to 0.99.
+            is_dangerous (bool, optional): If true, the projectile is flagged as dangerous, affecting AI reactions and certain client-side behaviors. Defaults to False.
+            isolated_physics (bool, optional): If true, projectile is not affected by outside forces such as friction and drag. Defaults to True.
             knockback (bool, optional): If true, the projectile will knock back the entity it hits. Defaults to True.
-            lightning (bool, optional): If true, the entity hit will be struck by lightning. Defaults to False.
-            liquid_inertia (float, optional): The fraction of the projectile's speed maintained every frame while traveling in water. Defaults to 0.6.
-            multiple_targets (bool, optional): If true, the projectile can hit multiple entities per flight. Defaults to True.
-            offset (Coordinates, optional): The offset from the entity's anchor where the projectile will spawn. Defaults to (0, 0.5, 0).
-            on_fire_time (float, optional): Time in seconds that the entity hit will be on fire for. Defaults to 5.0.
-            owner_launch_immunity_ticks (int, optional): Number of ticks after launch projectile cannot hit its owner. Defaults to 5.
-            particle (str, optional): Particle to use upon collision. Defaults to 'iconcrack'.
-            potion_effect (int, optional): Defines the effect the arrow will apply to the entity it hits. Defaults to -1.
-            power (float, optional): Determines the velocity of the projectile. Defaults to 1.3.
-            reflect_immunity (float, optional): Time in seconds during which the projectile cannot be reflected. Defaults to 0.0.
-            reflect_on_hurt (bool, optional): If true, this entity will be reflected back when hit. Defaults to False.
-            shoot_sound (str, optional): The sound that plays when the projectile is shot. Defaults to ''.
-            shoot_target (bool, optional): If true, the projectile will be shot towards the target of the entity firing it. Defaults to True.
-            should_bounce (Literal["no", "if_invulnerable", "if_no_damage_dealt"], optional): Determines when the projectile will bounce upon hit. Defaults to "no".
+            lightning (bool, optional): If true, the projectile can channel a lightning bolt when it hits an entity during a thunderstorm. Defaults to False.
+            liquid_inertia (float, optional): Fraction of the projectile's velocity preserved each tick while traveling through a fluid. Defaults to 0.6.
+            multiple_targets (bool, optional): If true, the projectile can hit more than one entity over the course of its flight; if false, it stops at the first entity it hits. Defaults to True.
+            offset (Coordinates, optional): Offset, relative to the anchor, at which the projectile is spawned when fired by the shooter. Defaults to (0, 0.5, 0).
+            on_fire_time (float, optional): Duration in seconds for which an entity set on fire by this projectile remains burning. Defaults to 5.0.
+            owner_launch_immunity_ticks (int, optional): Number of ticks immediately after launch during which the projectile cannot hit its own shooter. Defaults to 5.
+            particle (str, optional): Particle effect emitted at the impact location when the projectile hits something. Defaults to 'iconcrack'.
+            potion_effect (int, optional): Default potion aux value associated with the projectile. Defaults to -1.
+            power (float, optional): Initial speed (in blocks per tick) at which the projectile is launched. Defaults to 1.3.
+            reflect_immunity (float, optional): Duration in seconds after launch during which the projectile cannot be reflected by being struck. Defaults to 0.0.
+            reflect_on_hurt (bool, optional): If true, this projectile will be reflected back when hit by another projectile or by taking damage. Defaults to False.
+            shoot_sound (str, optional): Identifier of the sound to play when the projectile is fired. Defaults to ''.
+            shoot_target (bool, optional): If true, the projectile is aimed at the shooter's current target (when one exists) rather than straight ahead. Defaults to True.
+            should_bounce (Literal["no", "if_invulnerable", "if_no_damage_dealt"], optional): Controls whether the projectile bounces off entities on impact. Defaults to "no".
             splash_potion (bool, optional): If true, the projectile will be treated like a splash potion. Defaults to False.
-            splash_range (float, optional): Radius in blocks of the 'splash' effect. Defaults to 4.0.
-            stop_on_hurt (bool, optional): . Defaults to False.
-            uncertainty_base (float, optional): The base accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier. Defaults to 0.0.
-            uncertainty_multiplier (float, optional): Determines how much difficulty affects accuracy. Accuracy is determined by the formula uncertaintyBase - difficultyLevel * uncertaintyMultiplier. Defaults to 0.0.
+            splash_range (float, optional): Splash radius (in blocks) used when applying potion effects via the splash/lingering potion code path. Defaults to 4.0.
+            stop_on_hurt (bool, optional): If true, the projectile has its velocity zeroed out when struck. Defaults to False.
+            uncertainty_base (float, optional): Base inaccuracy added to the launch direction. The total inaccuracy is uncertainty_base - difficultyLevel * uncertainty_multiplier. Defaults to 0.0.
+            uncertainty_multiplier (float, optional): Per-difficulty-level reduction in inaccuracy. Defaults to 0.0.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_projectile?view=minecraft-bedrock-stable)
         """
         super().__init__("projectile")
-        if anchor != 0:
+        if anchor != 0 and anchor != "origin":
             self._add_field("anchor", anchor)
         if angle_offset != 0:
             self._add_field("angle_offset", angle_offset)
@@ -1844,45 +1844,56 @@ class EntityProjectile(Component):
         # Initialize on_hit dictionary to avoid checks in methods
         self._add_field("on_hit", {})
 
-    def arrow_effect(self) -> "EntityProjectile":
-        """Enable arrow effect on hit.
+    def arrow_effect(
+        self, apply_effect_to_blocking_targets: bool = True
+    ) -> "EntityProjectile":
+        """Enable arrow effect on hit. Variant of mob_effect that derives effects from the arrow's tipped-potion data and splits durations across the standard eight-arrow stack.
 
-        Note:
-            Exact behavior unknown according to Bedrock Wiki.
+        Args:
+            apply_effect_to_blocking_targets: If true, effects are still applied to targets that blocked the projectile. Defaults to True.
 
         Returns:
             EntityProjectile: Self for method chaining.
         """
         self._component["on_hit"]["arrow_effect"] = {}
+        if not apply_effect_to_blocking_targets:
+            self._component["on_hit"]["arrow_effect"][
+                "apply_effect_to_blocking_targets"
+            ] = apply_effect_to_blocking_targets
         return self
 
     def definition_event(
         self,
         event: str,
-        target: FilterSubject,
+        target: FilterSubject | str = FilterSubject.Self,
         affect_projectile: bool = False,
         affect_shooter: bool = False,
         affect_splash_area: bool = False,
         splash_area: float = 0,
         affect_target: bool = False,
+        filters: Filter | None = None,
     ) -> "EntityProjectile":
-        """Call an event on hit.
+        """Call an entity event on hit. Fires an entity event on the shooter, the projectile, the entity hit, and/or all entities in a splash radius.
 
         Args:
-            event: Event to trigger.
-            target: Target of the event.
+            event: Event identifier to trigger.
+            target: Target of the event trigger ('self', 'target', 'damager', etc.). Default is FilterSubject.Self.
             affect_projectile: Event will be triggered for projectile entity. Default is False.
             affect_shooter: Event will be triggered for shooter entity. Default is False.
             affect_splash_area: Event will be triggered for all entities in an area. Default is False.
-            splash_area: Area of entities to affect. Default is 0.
+            splash_area: Radius (in blocks) of entities to affect when affect_splash_area is True. Default is 0.
             affect_target: Event will be triggered for hit entity. Default is False.
+            filters: Optional filters for the event trigger.
 
         Returns:
             EntityProjectile: Self for method chaining.
         """
-        self._component["on_hit"]["definition_event"] = {
-            "event_trigger": {"event": event, "target": target.value}
-        }
+        target_val = target.value if isinstance(target, FilterSubject) else target
+        event_trigger: dict[str, Any] = {"event": event, "target": target_val}
+        if filters is not None:
+            event_trigger["filters"] = filters
+
+        self._component["on_hit"]["definition_event"] = {"event_trigger": event_trigger}
 
         if affect_projectile:
             self._component["on_hit"]["definition_event"][
@@ -1919,41 +1930,35 @@ class EntityProjectile(Component):
 
     def freeze_on_hit(
         self,
-        size: int,
-        snap_to_block: bool,
-        shape: str = "sphere",
+        size: float | int,
+        snap_to_block: bool = False,
+        shape: Literal["sphere", "cube"] = "sphere",
     ) -> "EntityProjectile":
-        """Freeze water on hit.
+        """Freeze nearby water blocks to ice in a configurable volume around the impact (Education Edition chemistry feature).
 
         Args:
-            size: The size of the freeze effect.
-            snap_to_block: Whether to snap to block.
-            shape: Shape of the freeze effect. Must be "sphere" or "cube". Default is "sphere".
+            size: Half-extent of the freezing volume (in blocks).
+            snap_to_block: If true, the freezing volume is centered on the hit block's center instead of the precise impact point. Default is False.
+            shape: Shape of the freezing volume ("sphere" or "cube"). Default is "sphere".
 
         Returns:
             EntityProjectile: Self for method chaining.
 
-        Note:
-            Requires Education Edition toggle to be enabled.
-            According to Bedrock Wiki, exact behavior is unknown.
-
         Raises:
             RuntimeError: If shape is not "sphere" or "cube".
         """
+        if shape not in ["sphere", "cube"]:
+            raise RuntimeError("Unknown shape, must be sphere or cube")
+
         self._component["on_hit"]["freeze_on_hit"] = {
             "size": size,
             "snap_to_block": snap_to_block,
+            "shape": shape,
         }
-        if shape not in ["sphere", "cube"]:
-            raise RuntimeError("Unknown shape, must be sphere or cube")
-        self._component["on_hit"]["freeze_on_hit"]["shape"] = shape
-
         return self
 
-    def grant_xp(
-        self, xp: int | tuple[int, int]
-    ) -> "EntityProjectile":
-        """Grant experience points on hit.
+    def grant_xp(self, xp: int | tuple[int, int]) -> "EntityProjectile":
+        """Grant experience points on hit by dropping experience orbs at the impact location.
 
         Args:
             xp: Experience to grant. If int, grants constant amount. If tuple, grants random amount between min and max.
@@ -1961,22 +1966,16 @@ class EntityProjectile(Component):
         Returns:
             EntityProjectile: Self for method chaining.
 
-        Note:
-            Despite the name, this actually spawns a number of experience orbs, being worth the amount stated.
-
         Raises:
             ValueError: If xp is not an int or tuple of two ints.
         """
         if isinstance(xp, int):
-            self._component["on_hit"]["grant_xp"] = {"xp": xp}
+            self._component["on_hit"]["grant_xp"] = {"maxXP": xp, "minXP": xp}
         elif isinstance(xp, tuple) and len(xp) == 2:
-            if xp[0] == xp[1]:
-                self._component["on_hit"]["grant_xp"] = {"xp": xp[0]}
-            else:
-                self._component["on_hit"]["grant_xp"] = {
-                    "minXP": min(xp),
-                    "maxXP": max(xp),
-                }
+            self._component["on_hit"]["grant_xp"] = {
+                "minXP": min(xp),
+                "maxXP": max(xp),
+            }
         else:
             raise ValueError("xp must be an int or tuple of two ints")
 
@@ -1984,22 +1983,19 @@ class EntityProjectile(Component):
 
     def hurt_owner(
         self,
-        owner_damage: int = 0,
+        owner_damage: float = 0,
         knockback: bool = False,
         ignite: bool = False,
     ) -> "EntityProjectile":
-        """Configure projectile to potentially hurt its owner on hit.
+        """Damages the projectile's owner when the projectile lands.
 
         Args:
-            owner_damage: Damage dealt to the owner. Default is 0.
-            knockback: Whether to apply knockback to owner. Default is False.
-            ignite: Whether to ignite the owner. Default is False.
+            owner_damage: Amount of damage to deal to the owner. Default is 0.
+            knockback: If true, the damage applies knockback to the owner. Default is False.
+            ignite: If true, the damage sets the owner on fire. Default is False.
 
         Returns:
             EntityProjectile: Self for method chaining.
-
-        Note:
-            According to Bedrock Wiki, exact behavior is unknown and this may crash Minecraft with wrong parameters.
         """
         self._component["on_hit"]["hurt_owner"] = {}
 
@@ -2016,57 +2012,64 @@ class EntityProjectile(Component):
         self,
         filter: str = None,
         catch_fire: bool = False,
-        channeling: bool = True,
-        damage: int = 1,
+        channeling: bool = False,
+        damage: int | float | tuple[float, float] | dict[str, float] = 1,
         destroy_on_hit: bool = False,
         destroy_on_hit_requires_damage: bool = True,
-        knockback: bool = True,
-        max_critical_damage: int = 5,
+        knockback: bool = False,
+        max_critical_damage: int = 2147483647,
         min_critical_damage: int = 0,
         power_multiplier: float = 0,
         difficulty_randomization: Literal[
             "none", "additive", "multiplicative"
         ] = "none",
-        set_last_hurt_requires_damage: bool = False,
+        set_last_hurt_requires_damage: bool = True,
         apply_knockback_to_blocking_targets: bool = False,
         ceil_pre_critical_damage: bool = False,
     ) -> "EntityProjectile":
-        """Deal damage on impact.
+        """Deals damage to the entity that was hit and optionally applies knockback, fire, channeling, and critical-hit scaling.
 
         Args:
-            filter: Entity identifier to affect. Much more primitive than filters used elsewhere, as it cannot "test" for anything other than an identifier. Default is None.
-            catch_fire: Whether targets will be engulfed in flames. Default is False.
-            channeling: Whether lightning can be channeled through the weapon. Default is True.
-            damage: Damage dealt to entity on hit. Default is 1.
-            destroy_on_hit: Whether projectile is removed on hit. Default is False.
-            destroy_on_hit_requires_damage: If true, hit must cause damage to destroy the projectile. Default is True.
-            knockback: Whether the projectile will knock back the entity it hits. Default is True.
-            max_critical_damage: Maximum critical damage. Default is 5.
-            min_critical_damage: Minimum critical damage. Default is 0.
-            power_multiplier: How much the base damage is multiplied. Default is 0.
-            difficulty_randomization: How damage is randomized based on difficulty. Default is "none".
-            set_last_hurt_requires_damage: If true, hit must cause damage to update the last hurt property. Default is False.
-            apply_knockback_to_blocking_targets: If true, knockback will be applied to any blocking targets. Default is False.
-            ceil_pre_critical_damage: Rounds the projectile's damage up to the next integer before the critical hit multiplier is applied. Default is False.
+            filter: Entity family or type that the projectile is restricted to damaging. Default is None.
+            catch_fire: If true, the entity hit is set on fire (uses the projectile's on_fire_time). Default is False.
+            channeling: If true, the projectile can call down a lightning bolt on the entity hit during a thunderstorm. Default is False.
+            damage: Range or value of damage to apply on impact. Accepts a single number (set as both min/max or value) or a (min, max) tuple/dict. Default is 1.
+            destroy_on_hit: If true, the projectile is removed when it deals damage to an entity. Default is False.
+            destroy_on_hit_requires_damage: If true, destroy_on_hit only triggers when at least one point of damage is actually dealt. Default is True.
+            knockback: If true, the entity hit is knocked back away from the projectile. Default is False.
+            max_critical_damage: Sets the maximum damage after critical damage has been applied. Default is 2147483647.
+            min_critical_damage: Sets the minimum damage after critical damage has been applied. Default is 0.
+            power_multiplier: Multiplied by the projectile's velocity and added to the rolled damage. Default is 0.
+            difficulty_randomization: Controls how world difficulty contributes to rolled damage ('none', 'additive', 'multiplicative'). Default is "none".
+            set_last_hurt_requires_damage: If true, the projectile only registers as the last hurt-by source on the target when at least one point of damage is actually dealt. Default is True.
+            apply_knockback_to_blocking_targets: If true, knockback is still applied to targets that successfully blocked the hit. Default is False.
+            ceil_pre_critical_damage: If true, rounds the projectile's damage up to the next integer before the critical-hit multiplier is applied. Default is False.
+
         Returns:
             EntityProjectile: Self for method chaining.
         """
-        impact = {}
-        if not filter is None:
+        impact: dict[str, Any] = {}
+        if filter is not None:
             impact["filter"] = filter
         if catch_fire:
             impact["catch_fire"] = catch_fire
-        if not channeling:
+        if channeling:
             impact["channeling"] = channeling
-        if damage != 1:
+
+        if isinstance(damage, (tuple, list)):
+            impact["damage"] = AnvilFormatter.min_max_dict(damage, "damage")
+        elif isinstance(damage, dict):
             impact["damage"] = damage
+        elif damage != 1:
+            impact["damage"] = damage
+
         if destroy_on_hit:
             impact["destroy_on_hit"] = destroy_on_hit
         if not destroy_on_hit_requires_damage:
             impact["destroy_on_hit_requires_damage"] = destroy_on_hit_requires_damage
-        if not knockback:
+        if knockback:
             impact["knockback"] = knockback
-        if max_critical_damage != 5:
+        if max_critical_damage != 2147483647:
             impact["max_critical_damage"] = max_critical_damage
         if min_critical_damage != 0:
             impact["min_critical_damage"] = min_critical_damage
@@ -2074,7 +2077,7 @@ class EntityProjectile(Component):
             impact["power_multiplier"] = power_multiplier
         if difficulty_randomization != "none":
             impact["difficulty_randomization"] = difficulty_randomization
-        if set_last_hurt_requires_damage:
+        if not set_last_hurt_requires_damage:
             impact["set_last_hurt_requires_damage"] = set_last_hurt_requires_damage
         if apply_knockback_to_blocking_targets:
             impact["apply_knockback_to_blocking_targets"] = (
@@ -2088,7 +2091,7 @@ class EntityProjectile(Component):
 
     def mob_effect(
         self,
-        effect: MinecraftEffects,
+        effect: MinecraftEffects | str,
         amplifier: int = 1,
         ambient: bool = False,
         visible: bool = False,
@@ -2096,39 +2099,47 @@ class EntityProjectile(Component):
         durationeasy: int = 0,
         durationhard: int = 800,
         durationnormal: int = 200,
+        effects: list[dict[str, Any]] | None = None,
     ) -> "EntityProjectile":
-        """Apply a mob effect to the target on hit.
+        """Applies one or more mob effects to the entity hit.
 
         Args:
-            effect: The effect to apply.
+            effect: The effect to apply (name or MinecraftEffects enum).
             amplifier: Effect amplifier. Default is 1.
             ambient: Whether the effect is ambient. Default is False.
             visible: Whether the effect is visible. Default is False.
-            duration: Duration of the effect. Default is 1.
-            durationeasy: Duration of the effect on easy difficulty. Default is 0.
-            durationhard: Duration of the effect on hard difficulty. Default is 800.
-            durationnormal: Duration of the effect on normal difficulty. Default is 200.
+            duration: Duration of the effect in seconds. Default is 1.
+            durationeasy: Duration of the effect on easy difficulty in ticks. Default is 0.
+            durationhard: Duration of the effect on hard difficulty in ticks. Default is 800.
+            durationnormal: Duration of the effect on normal difficulty in ticks. Default is 200.
+            effects: Optional list of effect dictionaries conforming to the schema.
 
         Returns:
             EntityProjectile: Self for method chaining.
         """
-        self._component["on_hit"]["mob_effect"] = {"effect": effect.value}
+        if effects is not None:
+            self._component["on_hit"]["mob_effect"] = {"effects": effects}
+            return self
+
+        effect_val = effect.value if isinstance(effect, MinecraftEffects) else effect
+        effect_data: dict[str, Any] = {"effect": effect_val}
 
         if amplifier != 1:
-            self._component["on_hit"]["mob_effect"]["amplifier"] = amplifier
+            effect_data["amplifier"] = amplifier
         if ambient:
-            self._component["on_hit"]["mob_effect"]["ambient"] = ambient
+            effect_data["ambient"] = ambient
         if visible:
-            self._component["on_hit"]["mob_effect"]["visible"] = visible
+            effect_data["visible"] = visible
         if duration != 1:
-            self._component["on_hit"]["mob_effect"]["duration"] = duration
+            effect_data["duration"] = duration
         if durationeasy != 0:
-            self._component["on_hit"]["mob_effect"]["durationeasy"] = durationeasy
+            effect_data["durationeasy"] = durationeasy
         if durationhard != 800:
-            self._component["on_hit"]["mob_effect"]["durationhard"] = durationhard
+            effect_data["durationhard"] = durationhard
         if durationnormal != 200:
-            self._component["on_hit"]["mob_effect"]["durationnormal"] = durationnormal
+            effect_data["durationnormal"] = durationnormal
 
+        self._component["on_hit"]["mob_effect"] = effect_data
         return self
 
     def on_hit(
@@ -2141,22 +2152,22 @@ class EntityProjectile(Component):
         """Configure basic on_hit behaviors for the projectile.
 
         Args:
-            catch_fire: Determines if the struck object is set on fire. Default is False.
-            douse_fire: If the target is on fire, then douse the fire. Default is False.
-            ignite: Determines if a fire may be started on a flammable target. Default is False.
-            teleport_owner: Determines if the owner is transported on hit. Default is False.
+            catch_fire: Causes the projectile to embed itself and set fire on hit. Default is False.
+            douse_fire: When the projectile is a water-effect potion, extinguishes fires and campfires at and around the hit block. Default is False.
+            ignite: Triggers the entity's on_ignite definition when the projectile hits. Default is False.
+            teleport_owner: Teleports the projectile's owner to the impact location. Default is False.
 
         Returns:
             EntityProjectile: Self for method chaining.
         """
         if catch_fire:
-            self._component["on_hit"]["catch_fire"] = catch_fire
+            self._component["on_hit"]["catch_fire"] = {}
         if douse_fire:
-            self._component["on_hit"]["douse_fire"] = douse_fire
+            self._component["on_hit"]["douse_fire"] = {}
         if ignite:
-            self._component["on_hit"]["ignite"] = ignite
+            self._component["on_hit"]["ignite"] = {}
         if teleport_owner:
-            self._component["on_hit"]["teleport_owner"] = teleport_owner
+            self._component["on_hit"]["teleport_owner"] = {}
         return self
 
     def particle_on_hit(
@@ -2164,15 +2175,15 @@ class EntityProjectile(Component):
         particle_type: str,
         on_other_hit: bool = False,
         on_entity_hit: bool = False,
-        num_particles: int = 0,
+        num_particles: int = 1,
     ) -> "EntityProjectile":
-        """Spawn particles on hit.
+        """Emits a particle effect at the impact location, optionally only for entity hits or only for non-entity hits.
 
         Args:
-            particle_type: Vanilla particle type to use.
-            on_other_hit: Whether it should spawn particles on non-entity hit. Default is False.
-            on_entity_hit: Whether it should spawn particles on entity hit. Default is False.
-            num_particles: Number of particles to spawn. Default is 0.
+            particle_type: Particle type to spawn at the impact point.
+            on_other_hit: If true, particles are spawned when the projectile hits something that is not an entity. Default is False.
+            on_entity_hit: If true, particles are spawned when the projectile hits an entity. Default is False.
+            num_particles: Number of particles to spawn per hit. Default is 1.
 
         Returns:
             EntityProjectile: Self for method chaining.
@@ -2185,7 +2196,7 @@ class EntityProjectile(Component):
             self._component["on_hit"]["particle_on_hit"][
                 "on_entity_hit"
             ] = on_entity_hit
-        if num_particles != 0:
+        if num_particles != 1:
             self._component["on_hit"]["particle_on_hit"][
                 "num_particles"
             ] = num_particles
@@ -2193,12 +2204,22 @@ class EntityProjectile(Component):
 
     @property
     def remove_on_hit(self) -> "EntityProjectile":
-        """Remove the projectile when it hits something.
+        """Removes the projectile from the world when it hits a block, entity, or (if hit_water is set) water.
 
         Returns:
             EntityProjectile: Self for method chaining.
         """
-        self._component["on_hit"]["remove_on_hit"] = {"remove": True}
+        self._component["on_hit"]["remove_on_hit"] = {}
+        return self
+
+    @property
+    def wind_burst_on_hit(self) -> "EntityProjectile":
+        """Releases an outward wind burst at the impact point that pushes nearby entities away.
+
+        Returns:
+            EntityProjectile: Self for method chaining.
+        """
+        self._component["on_hit"]["wind_burst_on_hit"] = {}
         return self
 
     def spawn_aoe_cloud(
@@ -2206,23 +2227,23 @@ class EntityProjectile(Component):
         affect_owner: bool = True,
         color: tuple[int, int, int] = (1, 1, 1),
         duration: int = 0,
-        particle: str = "",
+        particle: str = "mobspellambient",
         potion: int = -1,
         radius: float = 0.0,
         radius_on_use: float = -1.0,
         reapplication_delay: int = 0,
     ) -> "EntityProjectile":
-        """Spawn an area of effect cloud of potion effect on hit.
+        """Spawns an area effect cloud at the impact point that applies potion effects to entities inside it over time.
 
         Args:
-            affect_owner: Whether potion effect affects the shooter. Does not appear to apply to the player. Default is True.
+            affect_owner: If true, the projectile's owner can be affected by the cloud. Default is True.
             color: RGB color of the particles. Default is (1, 1, 1).
-            duration: Duration of the cloud in seconds. Default is 0.
-            particle: Vanilla particle emitter of the cloud. Only accepts Vanilla Particles. 'dragonbreath' enables the usage of Bottles to obtain Dragon's Breath. Default is "".
-            potion: Lingering Potion ID. Default is -1.
-            radius: Radius of the cloud. Default is 0.0.
-            radius_on_use: Radius change on use. Default is -1.0.
-            reapplication_delay: Delay in ticks between application of the potion effect. Default is 0.
+            duration: How long, in seconds, the cloud persists before disappearing. Default is 0.
+            particle: Particle effect emitted by the cloud. Default is 'mobspellambient'.
+            potion: Aux value of the potion whose effects the cloud applies. When -1, the potion is taken from the projectile entity itself. Default is -1.
+            radius: Initial radius (in blocks) of the cloud. Default is 0.0.
+            radius_on_use: Amount the radius shrinks (or grows) each time the cloud applies its effects. -1 keeps the radius unchanged. Default is -1.0.
+            reapplication_delay: Number of ticks the cloud waits before re-applying its effects to the same entity. Default is 0.
 
         Returns:
             EntityProjectile: Self for method chaining.
@@ -2235,7 +2256,7 @@ class EntityProjectile(Component):
             self._component["on_hit"]["spawn_aoe_cloud"]["color"] = color
         if duration != 0:
             self._component["on_hit"]["spawn_aoe_cloud"]["duration"] = duration
-        if particle != "":
+        if particle != "mobspellambient":
             self._component["on_hit"]["spawn_aoe_cloud"]["particle"] = particle
         if potion != -1:
             self._component["on_hit"]["spawn_aoe_cloud"]["potion"] = potion
@@ -2257,19 +2278,21 @@ class EntityProjectile(Component):
         spawn_definition: str,
         spawn_baby: bool = False,
         first_spawn_count: int = 0,
-        first_spawn_percent_chance: int = 0,
-        second_spawn_percent_chance: int = 32,
+        first_spawn_chance: float = 0.0,
+        second_spawn_chance: float = 0.0,
         second_spawn_count: int = 0,
+        on_spawn: list[dict[str, Any]] | None = None,
     ) -> "EntityProjectile":
-        """Spawn an entity on hit with specified chances.
+        """Conditionally spawns one or two groups of entities at the impact location and optionally fires events on each spawned entity.
 
         Args:
-            spawn_definition: ID of the entity to spawn.
-            spawn_baby: Whether the spawned entity should be a baby. Default is False.
-            first_spawn_count: Number of entities to spawn in first spawn. Default is 0.
-            first_spawn_percent_chance: Percentage chance for first spawn. Default is 0.
-            second_spawn_percent_chance: Percentage chance for second spawn. Default is 32.
-            second_spawn_count: Number of entities to spawn in second spawn. Default is 0.
+            spawn_definition: Identifier of the entity definition to spawn.
+            spawn_baby: If true, spawned entities start as babies (where applicable). Default is False.
+            first_spawn_count: Number of entities spawned when the first roll succeeds. Default is 0.
+            first_spawn_chance: Percent chance (0-1.0) that the first group spawns. Default is 0.0.
+            second_spawn_chance: Percent chance (0-1.0) that the second group spawns (rolled independently of the first). Default is 0.0.
+            second_spawn_count: Number of entities spawned when the second roll succeeds. Default is 0.
+            on_spawn: Array of entity event triggers to fire on each spawned entity. Defaults to None.
 
         Returns:
             EntityProjectile: Self for method chaining.
@@ -2284,44 +2307,71 @@ class EntityProjectile(Component):
             self._component["on_hit"]["spawn_chance"][
                 "first_spawn_count"
             ] = first_spawn_count
-        if first_spawn_percent_chance:
+        if first_spawn_chance:
             self._component["on_hit"]["spawn_chance"][
-                "first_spawn_percent_chance"
-            ] = first_spawn_percent_chance
-        if second_spawn_percent_chance:
+                "first_spawn_chance"
+            ] = first_spawn_chance
+        if second_spawn_chance:
             self._component["on_hit"]["spawn_chance"][
-                "second_spawn_percent_chance"
-            ] = second_spawn_percent_chance
+                "second_spawn_chance"
+            ] = second_spawn_chance
         if second_spawn_count:
             self._component["on_hit"]["spawn_chance"][
                 "second_spawn_count"
             ] = second_spawn_count
+        if on_spawn:
+            self._component["on_hit"]["spawn_chance"]["on_spawn"] = on_spawn
 
         return self
 
-    def stick_in_ground(self, shake_time: float) -> "EntityProjectile":
-        """Configure projectile to stick into the ground on hit.
+    def stick_in_ground(self, shake_time: float = 0.0) -> "EntityProjectile":
+        """Causes the projectile to embed itself in the block it hits.
 
         Args:
-            shake_time: Time in seconds the projectile shakes when stuck in ground.
+            shake_time: Duration in seconds for which the projectile visually shakes after sticking. Default is 0.0.
 
         Returns:
             EntityProjectile: Self for method chaining.
         """
-        self._component["on_hit"]["stick_in_ground"] = {"shake_time": shake_time}
+        stick: dict[str, Any] = {}
+        if shake_time != 0.0:
+            stick["shake_time"] = shake_time
+        self._component["on_hit"]["stick_in_ground"] = stick
         return self
 
-    @property
-    def thrown_potion_effect(self) -> "EntityProjectile":
-        """Enable thrown potion effect.
+    def catch_fire_on_hit(
+        self, fire_affected_by_griefing: bool = False, on_fire_time: float = 0.0
+    ) -> "EntityProjectile":
+        """Causes the projectile to embed itself and set fire on hit.
+
+        Args:
+            fire_affected_by_griefing: If true, the block-ignition behavior is suppressed when shooter is a mob and mobGriefing is off. Default is False.
+            on_fire_time: Duration in seconds for which entity remains on fire. Default is 0.0.
 
         Returns:
             EntityProjectile: Self for method chaining.
-
-        Note:
-            According to Bedrock Wiki, exact behavior is unknown and this may crash Minecraft as it's probably only valid for thrown potions.
         """
-        self._component["on_hit"]["thrown_potion_effect"] = {}
+        catch_fire_data: dict[str, Any] = {}
+        if fire_affected_by_griefing:
+            catch_fire_data["fire_affected_by_griefing"] = fire_affected_by_griefing
+        if on_fire_time != 0.0:
+            catch_fire_data["on_fire_time"] = on_fire_time
+        self._component["on_hit"]["catch_fire"] = catch_fire_data
+        return self
+
+    def thrown_potion_effect(self, effect: int = -1) -> "EntityProjectile":
+        """Applies the splash-potion effects of a thrown potion to nearby entities at the impact point.
+
+        Args:
+            effect: Aux value of the potion to apply. Defaults to -1.
+
+        Returns:
+            EntityProjectile: Self for method chaining.
+        """
+        potion_data: dict[str, Any] = {}
+        if effect != -1:
+            potion_data["effect"] = effect
+        self._component["on_hit"]["thrown_potion_effect"] = potion_data
         return self
 
 
@@ -3243,12 +3293,22 @@ class EntityAngerLevel(Component):
         anger_decrement_interval: Seconds = 1.0,
         angry_boost: int = 20,
         angry_threshold: int = 80,
+        broadcast_anger: bool = False,
+        broadcast_anger_on_attack: bool = False,
+        broadcast_filters: Filter = None,
+        broadcast_range: int = 20,
+        broadcast_targets: list[str] = [],
+        calm_event: str = None,
         default_annoyingness: int = 0,
         default_projectile_annoyingness: int = 0,
+        duration: int = None,
+        duration_delta: int = None,
+        filters: Filter = None,
         max_anger: int = 100,
         nuisance_filter: Filter = None,
         on_increase_sounds: list[dict[str, str]] = [],
         remove_targets_below_angry_threshold: bool = True,
+        sound_interval: tuple[int, int] = None,
     ) -> None:
         """Compels the entity to track anger towards a set of nuisances.
 
@@ -3256,12 +3316,22 @@ class EntityAngerLevel(Component):
             anger_decrement_interval (Seconds, optional): Anger level will decay over time. Defines how often anger towards all nuisances will decrease by one. Defaults to 1.0.
             angry_boost (int, optional): Anger boost applied to angry threshold when mob gets angry Value must be >= 0. Defaults to 20.
             angry_threshold (int, optional): Threshold that define when the mob is considered angry at a nuisance Value must be >= 0. Defaults to 80.
+            broadcast_anger (bool, optional): If set, other entities of the same entity definition within the broadcastRange will also become angry. Defaults to False.
+            broadcast_anger_on_attack (bool, optional): If set, other entities of the same entity definition within the broadcastRange will also become angry whenever this mob attacks. Defaults to False.
+            broadcast_filters: (Filter, optional): Conditions that make this entry in the list valid. Defaults to None.
+            broadcast_range: (int, optional): Distance in blocks within which other entities of the same entity type will become angry. Defaults to 20.
+            broadcast_targets: (list[str], optional): A list of entity families to broadcast anger to. Defaults to [].
+            calm_event: (str, optional): Event to fire when this entity is calmed down. Defaults to [].
             default_annoyingness (int, optional): The default amount of annoyingness for any given nuisance. Specifies how much to raise anger level on each provocation. Defaults to 0.
             default_projectile_annoyingness (int, optional): The default amount of annoyingness for any given nuisance. Specifies how much to raise anger level on each provocation. Defaults to 0.
+            duration (int, optional): The amount of time in seconds that the entity will be angry. Defaults to None
+            duration_delta (int, optional): Variance in seconds added to the duration [-delta, delta]. Defaults to None.
+            filters (Filter, optional): Filter out mob types that it should not attack while angry (other Piglins). Defaults to None.
             max_anger (int, optional): The maximum anger level that can be reached. Applies to any nuisance Value must be >= 0. Defaults to 100.
             nuisance_filter (Filter, optional): Filter that is applied to determine if a mob can be a nuisance. Defaults to None.
             on_increase_sounds (list[dict[str, str]], optional): Sounds to play when the entity is getting provoked. Evaluated in order. First matching condition wins. Defaults to [].
             remove_targets_below_angry_threshold (bool, optional): Defines if the mob should remove target if it falls below 'angry' threshold. Defaults to True.
+            sound_interval (tuple[int, int], optional): Anger boost applied to angry threshold when the entity gets angry. Defaults to ()
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_anger_level)
         """
@@ -3273,12 +3343,30 @@ class EntityAngerLevel(Component):
             self._add_field("angry_boost", angry_boost)
         if angry_threshold != 80:
             self._add_field("angry_threshold", angry_threshold)
+        if broadcast_anger:
+            self._add_field("broadcast_anger", broadcast_anger)
+        if broadcast_anger_on_attack:
+            self._add_field("broadcast_anger_on_attack", broadcast_anger_on_attack)
+        if broadcast_filters:
+            self._add_field("broadcast_filters", broadcast_filters)
+        if broadcast_range != 20:
+            self._add_field("broadcast_range", broadcast_range)
+        if len(broadcast_targets) > 0:
+            self._add_field("broadcast_targets", broadcast_targets)
+        if calm_event:
+            self._add_field("calm_event", calm_event)
         if default_annoyingness != 0:
             self._add_field("default_annoyingness", default_annoyingness)
         if default_projectile_annoyingness != 0:
             self._add_field(
                 "default_projectile_annoyingness", default_projectile_annoyingness
             )
+        if duration:
+            self._add_field("duration", duration)
+        if duration_delta:
+            self._add_field("duration_delta", duration_delta)
+        if filters:
+            self._add_field("filters", filters)
         if max_anger != 100:
             self._add_field("max_anger", max_anger)
         if not nuisance_filter is None:
@@ -3289,6 +3377,11 @@ class EntityAngerLevel(Component):
             self._add_field(
                 "remove_targets_below_angry_threshold",
                 remove_targets_below_angry_threshold,
+            )
+        if sound_interval:
+            self._add_field(
+                "sound_interval",
+                AnvilFormatter.min_max_list(sound_interval, "sound_interval"),
             )
 
 
@@ -7181,6 +7274,40 @@ class EntityNotPickableFromInside(Component):
         super().__init__("not_pickable_from_inside")
 
 
+class EntityFreezingImmune(Component):
+    _identifier = "minecraft:freezing_immune"
+
+    def __init__(self) -> None:
+        """When set, the entity is immune to Powder Snow.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_freezing_immune)
+        """
+
+        super().__init__("freezing_immune")
+
+
+class EntityFreezingVulnerable(Component):
+    _identifier = "minecraft:freezing_vulnerable"
+
+    def __init__(self) -> None:
+        """When set, the entity is vulnerable to Powder Snow.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_freezing_vulnerable)
+        """
+        super().__init__("freezing_vulnerable")
+
+
+class EntityCanStandOnPowderSnow(Component):
+    _identifier = "minecraft:can_stand_on_powder_snow "
+
+    def __init__(self) -> None:
+        """When set, the entity can stand on Powder Snow.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_can_stand_on_powder_snow)
+        """
+        super().__init__("can_stand_on_powder_snow")
+
+
 # AI Goals ==========================================================================
 
 
@@ -7789,8 +7916,7 @@ class EntityAIRangedAttack(AIGoal):
     def __init__(
         self,
         attack_interval: tuple[int, int] = (-1, -1),
-        attack_radius: int = 0,
-        attack_radius_min: int = 0,
+        attack_radius: tuple[float, float] = (0, 0),
         burst_interval: int = 0,
         burst_shots: int = 1,
         charge_charged_trigger: int = 0,
@@ -7802,13 +7928,15 @@ class EntityAIRangedAttack(AIGoal):
         target_in_sight_time: int = 1,
         x_max_rotation: int = 30,
         y_max_head_rotation: int = 30,
+        in_range_movement_mode: Literal[
+            "follow_target", "hold_position"
+        ] = "hold_position",
     ) -> None:
         """Allows an entity to attack by using ranged shots. "charge_shoot_trigger" must be greater than 0 to enable charged up burst-shot attacks. Requires minecraft:shooter to define projectile behaviour.
 
         Parameters:
             attack_interval (tuple[int, int], optional): Reload-time range (in seconds), when not using a charged shot. Defaults to  (-1, -1).
-            attack_radius (int, optional): Minimum distance to target before this entity will attempt to shoot. Defaults to 0.
-            attack_radius_min (int, optional): Minimum distance the target can be for this mob to fire. If the target is closer, this mob will move first before firing. Defaults to 0.
+            attack_radius (tuple[float, float], optional): Range (in blocks) for which the attacking entity can detect a target for attack. Defaults to (0, 0).
             burst_interval (int, optional): Time (in seconds) between each individual shot when firing a burst of shots from a charged up attack. Defaults to 0.
             burst_shots (int, optional): Number of shots fired every time the attacking entity uses a charged up attack. Defaults to 1.
             charge_charged_trigger (int, optional): Time (in seconds, then add "charge_shoot_trigger"), before a charged up attack is done charging. Charge-time decays while target is not in sight. Defaults to 0.
@@ -7820,17 +7948,22 @@ class EntityAIRangedAttack(AIGoal):
             target_in_sight_time (int, optional): Minimum amount of time (in seconds) the attacking entity needs to see the target before moving toward it. Defaults to 1.
             x_max_rotation (int, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Defaults to 30.
             y_max_head_rotation (int, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Defaults to 30.
+            in_range_movement_mode (Literal["follow_target", "hold_position"], optional): Controls how the entity moves while its target is within the configured attack range. Defaults to "hold_position".
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_ranged_attack)
         """
         super().__init__("behavior.ranged_attack")
 
         if attack_interval != 0:
-            self._add_field("attack_interval", AnvilFormatter.min_max_dict(attack_interval, "attack_interval"))
-        if attack_radius != 0:
-            self._add_field("attack_radius", attack_radius)
-        if attack_radius_min != 0:
-            self._add_field("attack_radius_min", attack_radius_min)
+            self._add_field(
+                "attack_interval",
+                AnvilFormatter.min_max_dict(attack_interval, "attack_interval"),
+            )
+        if attack_radius != (0, 0):
+            self._add_field(
+                "attack_radius",
+                AnvilFormatter.min_max_dict(attack_radius, "attack_radius"),
+            )
         if burst_interval != 0:
             self._add_field("burst_interval", burst_interval)
         if burst_shots != 1:
@@ -7855,6 +7988,8 @@ class EntityAIRangedAttack(AIGoal):
             self._add_field("x_max_rotation", x_max_rotation)
         if y_max_head_rotation != 30:
             self._add_field("y_max_head_rotation", y_max_head_rotation)
+        if in_range_movement_mode != "hold_position":
+            self._add_field("in_range_movement_mode", in_range_movement_mode)
 
 
 class EntityAISummonEntity(AIGoal):

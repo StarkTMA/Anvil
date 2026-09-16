@@ -15,9 +15,18 @@ def test_new_items():
 
 def test_promoted_tags():
     # Verify SulfurCubeArchetype tags are promoted and accessible
-    assert MinecraftItemTags.SulfurCubeArchetypeBouncy == "minecraft:sulfur_cube_archetype_bouncy"
-    assert MinecraftItemTags.SulfurCubeArchetypeRegular == "minecraft:sulfur_cube_archetype_regular"
-    assert MinecraftItemTags.SulfurCubeArchetypeSticky == "minecraft:sulfur_cube_archetype_sticky"
+    assert (
+        MinecraftItemTags.SulfurCubeArchetypeBouncy
+        == "minecraft:sulfur_cube_archetype_bouncy"
+    )
+    assert (
+        MinecraftItemTags.SulfurCubeArchetypeRegular
+        == "minecraft:sulfur_cube_archetype_regular"
+    )
+    assert (
+        MinecraftItemTags.SulfurCubeArchetypeSticky
+        == "minecraft:sulfur_cube_archetype_sticky"
+    )
 
 
 def test_use_modifiers_start_using():
