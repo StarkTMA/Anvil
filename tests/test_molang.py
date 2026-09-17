@@ -2,6 +2,7 @@ from enum import StrEnum
 from unittest.mock import MagicMock
 
 import pytest
+
 from anvil.api.core.enums import InputModes, Slots
 from anvil.api.logic.molang import (
     Context,
@@ -93,40 +94,40 @@ class TestMolang:
     # --- comparison / logical operators ---
 
     def test_eq_string(self):
-        assert str(Molang("q.variant") == "red") == "q.variant == 'red'"
+        assert str(Molang("q.variant") == "red") == "(q.variant == 'red')"
 
     def test_eq_number(self):
-        assert str(Molang("q.health") == 20) == "q.health == 20"
+        assert str(Molang("q.health") == 20) == "(q.health == 20)"
 
     def test_eq_molang(self):
         assert (
             str(Molang("q.health") == Molang("q.max_health"))
-            == "q.health == q.max_health"
+            == "(q.health == q.max_health)"
         )
 
     def test_eq_bool_true(self):
-        assert str(Molang("q.is_alive") == True) == "q.is_alive == true"
+        assert str(Molang("q.is_alive") == True) == "(q.is_alive == true)"
 
     def test_eq_bool_false(self):
-        assert str(Molang("q.is_alive") == False) == "q.is_alive == false"
+        assert str(Molang("q.is_alive") == False) == "(q.is_alive == false)"
 
     def test_ne_string(self):
-        assert str(Molang("q.variant") != "blue") == "q.variant != 'blue'"
+        assert str(Molang("q.variant") != "blue") == "(q.variant != 'blue')"
 
     def test_ne_number(self):
-        assert str(Molang("q.health") != 0) == "q.health != 0"
+        assert str(Molang("q.health") != 0) == "(q.health != 0)"
 
     def test_lt(self):
-        assert str(Molang("q.health") < 10) == "q.health < 10"
+        assert str(Molang("q.health") < 10) == "(q.health < 10)"
 
     def test_gt(self):
-        assert str(Molang("q.health") > 10) == "q.health > 10"
+        assert str(Molang("q.health") > 10) == "(q.health > 10)"
 
     def test_le(self):
-        assert str(Molang("q.health") <= 10) == "q.health <= 10"
+        assert str(Molang("q.health") <= 10) == "(q.health <= 10)"
 
     def test_ge(self):
-        assert str(Molang("q.health") >= 10) == "q.health >= 10"
+        assert str(Molang("q.health") >= 10) == "(q.health >= 10)"
 
     def test_invert(self):
         assert str(~Molang("q.is_alive")) == "!(q.is_alive)"
