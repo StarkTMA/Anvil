@@ -1367,5 +1367,5 @@ class BlockEntity(Component):
         if slot_count is not None and (slot_count <= 0 or slot_count > 55):
             raise ValueError("Slot count must be between 1 and 54.")
 
-        self._add_field("slot_count", slot_count)
+        self._add_field("container", {"slot_count": slot_count})
         self._add_field("dynamic_properties", dynamic_properties)
