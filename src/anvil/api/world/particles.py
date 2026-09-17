@@ -48,7 +48,7 @@ class Particle(AddonObject):
             if not component:
                 continue
 
-            id: str = component.get("effects")
+            id: str = component.get("effect")
             if id.startswith("minecraft:"):
                 continue
 
@@ -58,6 +58,8 @@ class Particle(AddonObject):
 
             if not name in Particle._queued_particles:
                 Particle._non_queued_particles.add(name)
+
+            event["particle_effect"]["effect"] = f"{CONFIG.NAMESPACE}:{name}"
 
     def _check_file_exists(self, source_path, particle_name):
         if not os.path.exists(source_path):
@@ -139,5 +141,5 @@ class Particle(AddonObject):
             return
 
         raise ParticlesNotRegisteredError(
-            f"The following particles were referenced in event but were never queued. [{" ".join(Particle._non_queued_particles)}]"
+            f"The following particles were referenced in particle events but were never queued. [{" ".join(Particle._non_queued_particles)}]"
         )
