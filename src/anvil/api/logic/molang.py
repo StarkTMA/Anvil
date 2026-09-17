@@ -117,28 +117,28 @@ class Molang(str):
 
     def __eq__(self, other):
         o = self.__parse_other__(other)
-        return Molang(f"{self} == {o}")
+        return Molang(f"({self} == {o})")
 
     def __ne__(self, other):
         o = self.__parse_other__(other)
 
-        return Molang(f"{self} != {o}")
+        return Molang(f"({self} != {o})")
 
     def __lt__(self, other):
         o = self.__parse_other__(other)
-        return Molang(f"{self} < {o}")
+        return Molang(f"({self} < {o})")
 
     def __gt__(self, other):
         o = self.__parse_other__(other)
-        return Molang(f"{self} > {o}")
+        return Molang(f"({self} > {o})")
 
     def __le__(self, other):
         o = self.__parse_other__(other)
-        return Molang(f"{self} <= {o}")
+        return Molang(f"({self} <= {o})")
 
     def __ge__(self, other):
         o = self.__parse_other__(other)
-        return Molang(f"{self} >= {o}")
+        return Molang(f"({self} >= {o})")
 
     def __and__(self, other):
         return Molang(f"({self} && {other})")
