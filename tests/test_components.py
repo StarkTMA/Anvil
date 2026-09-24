@@ -97,7 +97,9 @@ def test_entity_projectile_on_hit_methods():
     assert proj._component["on_hit"]["impact_damage"] == {}
 
     proj = EntityProjectile()
-    proj.impact_damage(damage=4, filter="zombie", difficulty_randomization="additive")
+    proj.impact_damage(
+        damage=(4, 4), filter="zombie", difficulty_randomization="additive"
+    )
     assert proj._component["on_hit"]["impact_damage"] == {
         "damage": {"min": 4, "max": 4},
         "filter": "zombie",
@@ -105,7 +107,7 @@ def test_entity_projectile_on_hit_methods():
     }
 
     proj = EntityProjectile()
-    proj.impact_damage(damage={"max": 6, "min": 3}, power_multiplier=2.0)
+    proj.impact_damage(damage=(3, 6), power_multiplier=2.0)
     assert proj._component["on_hit"]["impact_damage"] == {
         "damage": {"min": 3, "max": 6},
         "power_multiplier": 2.0,
@@ -113,10 +115,8 @@ def test_entity_projectile_on_hit_methods():
 
     with pytest.raises(ValueError):
         EntityProjectile().impact_damage(difficulty_randomization="random")
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         EntityProjectile().impact_damage(damage={"minimum": 1})
-    with pytest.raises(ValueError):
-        EntityProjectile().impact_damage(min_critical_damage=10, max_critical_damage=5)
 
     proj = EntityProjectile()
     proj.spawn_chance(

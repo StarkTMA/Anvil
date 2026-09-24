@@ -2013,7 +2013,7 @@ class EntityProjectile(Component):
         filter: str = None,
         catch_fire: bool = False,
         channeling: bool = False,
-        damage: tuple[float, float] = (1, 1),
+        damage: tuple[float, float] = (0, 0),
         destroy_on_hit: bool = False,
         destroy_on_hit_requires_damage: bool = True,
         knockback: bool = False,
@@ -2056,11 +2056,14 @@ class EntityProjectile(Component):
         if channeling:
             impact["channeling"] = channeling
 
-        if isinstance(damage, (tuple, list)):
-            impact["damage"] = AnvilFormatter.min_max_dict(damage, "damage")
-        else:
+        if not isinstance(damage, (tuple, list)):
             raise TypeError("damage must be a list/tulip")
 
+        if difficulty_randomization not in ["none", "additive", "multiplicative"]:
+            raise ValueError(f"{difficulty_randomization} must be one of ['none', 'additive', 'multiplicative'].")
+
+        if damage != (0, 0):
+            impact["damage"] = AnvilFormatter.min_max_dict(damage, "damage")
         if destroy_on_hit:
             impact["destroy_on_hit"] = destroy_on_hit
         if not destroy_on_hit_requires_damage:
