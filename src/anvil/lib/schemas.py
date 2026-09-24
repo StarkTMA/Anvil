@@ -157,6 +157,14 @@ class JsonSchemes:
         )
 
     @staticmethod
+    def server_sound_definitions():
+        return load_file(
+            "server_sound_definitions.jsont",
+            {"format_version": SERVER_SOUND_DEFINITIONS_VERSION},
+            is_json=True,
+        )
+
+    @staticmethod
     def music_definitions():
         return load_file("music_definitions.jsont", is_json=True)
 

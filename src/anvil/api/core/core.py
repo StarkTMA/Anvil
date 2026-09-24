@@ -10,12 +10,11 @@ from os import path
 from typing import Optional
 
 import click
-from PIL import Image
-
 from anvil.api.actors.materials import MaterialsObject
 from anvil.api.core.sounds import (
     BlocksJSONObject,
     MusicDefinition,
+    ServerSoundDefinition,
     SoundDefinition,
     SoundEvent,
 )
@@ -48,6 +47,7 @@ from anvil.lib.lib import (
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
+from PIL import Image
 
 from ...__version__ import __version__
 
@@ -644,6 +644,9 @@ def compile_objects(
     _Blockbench.__export__()
     anvil.__queue__(AnvilTranslator())
 
+    if CONFIG._PREVIEW:
+        ServerSoundDefinition().queue()
+
     pack_art(apply_overlay=apply_overlay)
 
     if workflow:
@@ -654,7 +657,6 @@ def compile_objects(
             ),
             os.path.join(".github", "workflows"),
             "w",
-            True,
         )
 
     from anvil.api.blocks.blocks import PermutationGroup
@@ -840,23 +842,37 @@ class _ManifestSettings:
         if "settings" not in self.manifest._content:
             self.manifest._content["settings"] = []
 
+        self.labels = 0
+        self.toggles = 0
+        self.sliders = 0
+        self.dropdowns = 0
+
     def label(self, label: str):
-        self.manifest._content["settings"].append({"type": "label", "text": label})
+        key = f"pack.manifest.setting.label_{self.labels}"
+        AnvilTranslator().add_localization_entry(key, label)
+        self.manifest._content["settings"].append({"type": "label", "text": key})
+
+        self.labels += 1
         return self
 
     def toggle(self, id: str, text: str, default: bool = True):
         if id in self.manifest._setting_ids:
             raise ValueError(f"Setting ID '{id}' is already used.")
 
+        key = f"pack.manifest.setting.toggle_{self.toggles}"
+        AnvilTranslator().add_localization_entry(key, text)
+
         self.manifest._setting_ids.add(id)
         self.manifest._content["settings"].append(
             {
                 "type": "toggle",
                 "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": text,
+                "text": key,
                 "default": default,
             }
         )
+
+        self.toggles += 1
         return self
 
     def slider(self, id: str, text: str, min: int, max: int, step: int, default: int):
@@ -875,43 +891,62 @@ class _ManifestSettings:
             raise ValueError(f"Setting ID '{id}' is already used.")
 
         self.manifest._setting_ids.add(id)
+
+        key = f"pack.manifest.setting.slider_{self.sliders}"
+        AnvilTranslator().add_localization_entry(key, text)
+
         self.manifest._content["settings"].append(
             {
                 "type": "slider",
                 "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": text,
+                "text": key,
                 "min": min,
                 "max": max,
                 "step": step,
                 "default": default,
             }
         )
+        self.sliders += 1
         return self
 
-    def dropdown(self, id: str, text: str, options: list[dict[str, str]], default: str):
-        if not isinstance(options, list) or len(options) == 0:
+    def _dropdown_options(self, options: dict[str, str]) -> list[dict[str, str]]:
+        o = []
+
+        for i, (k, v) in enumerate(options.items()):
+
+            translation_key = (
+                f"pack.manifest.setting.dropdown_{self.dropdowns}.option_{i}"
+            )
+            AnvilTranslator().add_localization_entry(translation_key, v)
+
+            o.append({"name": k, "text": translation_key})
+
+        return o
+
+    def dropdown(self, id: str, text: str, options: dict[str, str], default: str):
+        if not isinstance(options, dict) or len(options.items()) == 0:
             raise ValueError("Options must be a non-empty list of dictionaries.")
 
-        if default not in [key for option in options for key in option.keys()]:
+        if default not in options.keys():
             raise ValueError(f"Default value '{default}' is not in the options list.")
 
         if id in self.manifest._setting_ids:
             raise ValueError(f"Setting ID '{id}' is already used.")
+
+        key = f"pack.manifest.setting.dropdown_{self.dropdowns}"
+        AnvilTranslator().add_localization_entry(key, text)
 
         self.manifest._setting_ids.add(id)
         self.manifest._content["settings"].append(
             {
                 "type": "dropdown",
                 "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": text,
-                "options": [
-                    {"name": k, "text": v}
-                    for option in options
-                    for k, v in option.items()
-                ],
+                "text": key,
+                "options": self._dropdown_options(options),
                 "default": default,
             }
         )
+        self.dropdowns += 1
         return self
 
     # def multiselect(self, id: str, text: str, options: list[str]):

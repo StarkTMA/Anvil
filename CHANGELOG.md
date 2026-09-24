@@ -2,7 +2,9 @@
 
 ## 0.9.x
 
-- [**0.9.93**](#0993)
+- [**0.9.95**](#0995)
+- [0.9.94](#0994)
+- [0.9.93](#0993)
 - [0.9.92](#0992)
 - [0.9.91](#0991)
 - [0.9.9](#099)
@@ -104,6 +106,20 @@
 ---
 
 # 0.9.x
+
+## 0.9.95
+
+### Anvil
+
+- Updated `EntityProjectile` and `EntityAIRangedAttack` scheme
+- Added `ServerSoundDefinition` support, requires the Preview flag.
+- Manifest setting text is now localized.
+
+## 0.9.94
+
+### Anvil
+
+- Fixed format versions
 
 ## 0.9.93
 

@@ -2013,7 +2013,7 @@ class EntityProjectile(Component):
         filter: str = None,
         catch_fire: bool = False,
         channeling: bool = False,
-        damage: int | float | tuple[float, float] | dict[str, float] = 1,
+        damage: tuple[float, float] = (1, 1),
         destroy_on_hit: bool = False,
         destroy_on_hit_requires_damage: bool = True,
         knockback: bool = False,
@@ -2033,7 +2033,7 @@ class EntityProjectile(Component):
             filter: Entity family or type that the projectile is restricted to damaging. Default is None.
             catch_fire: If true, the entity hit is set on fire (uses the projectile's on_fire_time). Default is False.
             channeling: If true, the projectile can call down a lightning bolt on the entity hit during a thunderstorm. Default is False.
-            damage: Range or value of damage to apply on impact. Accepts a single number (set as both min/max or value) or a (min, max) tuple/dict. Default is 1.
+            damage: Range or value of damage to apply on impact. Accepts a (min, max) tuple/list. Default is (1, 1).
             destroy_on_hit: If true, the projectile is removed when it deals damage to an entity. Default is False.
             destroy_on_hit_requires_damage: If true, destroy_on_hit only triggers when at least one point of damage is actually dealt. Default is True.
             knockback: If true, the entity hit is knocked back away from the projectile. Default is False.
@@ -2058,10 +2058,8 @@ class EntityProjectile(Component):
 
         if isinstance(damage, (tuple, list)):
             impact["damage"] = AnvilFormatter.min_max_dict(damage, "damage")
-        elif isinstance(damage, dict):
-            impact["damage"] = damage
-        elif damage != 1:
-            impact["damage"] = damage
+        else:
+            raise TypeError("damage must be a list/tulip")
 
         if destroy_on_hit:
             impact["destroy_on_hit"] = destroy_on_hit
@@ -7916,7 +7914,7 @@ class EntityAIRangedAttack(AIGoal):
     def __init__(
         self,
         attack_interval: tuple[int, int] = (-1, -1),
-        attack_radius: tuple[float, float] = (0, 0),
+        attack_range: tuple[float, float] = (0, 0),
         burst_interval: int = 0,
         burst_shots: int = 1,
         charge_charged_trigger: int = 0,
@@ -7936,7 +7934,7 @@ class EntityAIRangedAttack(AIGoal):
 
         Parameters:
             attack_interval (tuple[int, int], optional): Reload-time range (in seconds), when not using a charged shot. Defaults to  (-1, -1).
-            attack_radius (tuple[float, float], optional): Range (in blocks) for which the attacking entity can detect a target for attack. Defaults to (0, 0).
+            attack_range (tuple[float, float], optional): Range (in blocks) for which the attacking entity can detect a target for attack. Defaults to (0, 0).
             burst_interval (int, optional): Time (in seconds) between each individual shot when firing a burst of shots from a charged up attack. Defaults to 0.
             burst_shots (int, optional): Number of shots fired every time the attacking entity uses a charged up attack. Defaults to 1.
             charge_charged_trigger (int, optional): Time (in seconds, then add "charge_shoot_trigger"), before a charged up attack is done charging. Charge-time decays while target is not in sight. Defaults to 0.
@@ -7959,10 +7957,10 @@ class EntityAIRangedAttack(AIGoal):
                 "attack_interval",
                 AnvilFormatter.min_max_dict(attack_interval, "attack_interval"),
             )
-        if attack_radius != (0, 0):
+        if attack_range != (0, 0):
             self._add_field(
-                "attack_radius",
-                AnvilFormatter.min_max_dict(attack_radius, "attack_radius"),
+                "attack_range",
+                AnvilFormatter.min_max_dict(attack_range, "attack_range"),
             )
         if burst_interval != 0:
             self._add_field("burst_interval", burst_interval)

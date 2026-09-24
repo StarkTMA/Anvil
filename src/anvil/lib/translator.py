@@ -14,6 +14,14 @@ from anvil.lib.schemas import JsonSchemes
 class AnvilTranslator:
     _instance = None
 
+    PACK_PREFIX = "pack."
+    # Maps a pack target to the key whose value becomes that pack's `pack.description`.
+    PACK_DESCRIPTION_KEYS = {
+        "resource": "pack.resource_description",
+        "behaviour": "pack.behaviour_description",
+        "project": "pack.project_description",
+    }
+
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super(AnvilTranslator, cls).__new__(cls)
@@ -298,6 +306,43 @@ class AnvilTranslator:
             formatted = "_" + formatted
         return formatted
 
+    def _build_pack_lines(
+        self, entries: Dict[str, Optional[str]], target: str
+    ) -> List[str]:
+        """
+        Build the `pack.*` lines for a single pack target.
+
+        Every key starting with `pack.` is included, except the per-target
+        description keys: only the one matching `target` is kept, and it is
+        renamed to `pack.description`. `pack.name` and `pack.description`
+        come first, the remaining `pack.*` keys follow in sorted order.
+        """
+        description_keys = set(self.PACK_DESCRIPTION_KEYS.values())
+        target_description_key = self.PACK_DESCRIPTION_KEYS[target]
+
+        pack_entries: Dict[str, Optional[str]] = {}
+        for key, value in entries.items():
+            if not key.startswith(self.PACK_PREFIX):
+                continue
+
+            if key in description_keys:
+                if key == target_description_key:
+                    pack_entries["pack.description"] = value
+                continue
+
+            if key == "pack.description" and target_description_key in entries:
+                continue
+
+            pack_entries[key] = value
+
+        leading_keys = ["pack.name", "pack.description"]
+        ordered_keys = [key for key in leading_keys if key in pack_entries]
+        ordered_keys.extend(
+            sorted(key for key in pack_entries if key not in leading_keys)
+        )
+
+        return [f"{key}={pack_entries[key]}" for key in ordered_keys]
+
     def __export__(self) -> None:
         """
         Export translations to Anvil's .lang file format.
@@ -324,43 +369,16 @@ class AnvilTranslator:
 
             languages.append(lang_code)
 
-            lang_content = []
-            ordered_keys = [
-                "pack.name",
-                "pack.project_description",
-                "pack.resource_description",
-                "pack.behaviour_description",
-            ]
-
-            for key in ordered_keys:
-                if key in entries:
-                    lang_content.append(f"{key}={entries[key]}")
-
-            remaining_entries = []
-            for key, value in entries.items():
-                if key in ordered_keys:
-                    continue
-
-                remaining_entries.append((key, value))
-
-            for key, value in sorted(remaining_entries):
-                lang_content.append(f"{key}={value}")
-
-            bp_content = [
-                lang_content[0],
-                lang_content[3].replace("behaviour_description", "description"),
-            ]
-            world_content = [
-                lang_content[0],
-                lang_content[1].replace("project_description", "description"),
-            ]
-
-            rp_content = lang_content.copy()
-            rp_content[2] = lang_content[2].replace(
-                "resource_description", "description"
+            other_entries = sorted(
+                (key, value)
+                for key, value in entries.items()
+                if not key.startswith(self.PACK_PREFIX)
             )
-            del rp_content[1]
-            del rp_content[2]
+
+            rp_content = self._build_pack_lines(entries, "resource")
+            rp_content.extend(f"{key}={value}" for key, value in other_entries)
+            bp_content = self._build_pack_lines(entries, "behaviour")
+            world_content = self._build_pack_lines(entries, "project")
 
             AnvilIO.file(
                 f"{lang_code}.lang",

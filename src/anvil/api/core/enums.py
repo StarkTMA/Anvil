@@ -713,6 +713,15 @@ class SoundCategory(StrEnum):
     UI = "ui"
 
 
+class DurationInfoMode(StrEnum):
+    """
+    Enumeration for how a server-side sound definition's duration is tracked.
+    """
+
+    GameTime = "game_time"
+    RealTime = "real_time"
+
+
 class EntitySoundEvent(StrEnum):
     Ambient = "ambient"
     Hurt = "hurt"

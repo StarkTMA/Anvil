@@ -275,7 +275,7 @@ class AnvilIO:
                 content, minify=CONFIG._MINIFY or "--minify" in sys.argv
             )
 
-        if CONFIG._ADD_STAMP:
+        if CONFIG._ADD_STAMP and not type == "yml":
             file_stamp = cls._get_file_stamp(
                 name,
                 type,

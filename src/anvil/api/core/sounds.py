@@ -1,8 +1,10 @@
 import os
+from dataclasses import dataclass
 
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
+    DurationInfoMode,
     EntitySoundEvent,
     MusicCategory,
     SoundCategory,
@@ -14,6 +16,51 @@ from anvil.lib.lib import Directory
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
+
+
+@dataclass
+class MusicInfo:
+    """Represents the optional server-side metadata for a sound definition.
+
+    Mirrors the payload introduced with `minecraft:server_sound_definitions` in Minecraft
+    Bedrock 26.40: music metadata (genres, moods, artist, title), duration tracking mode,
+    and arbitrary tags, all bundled together since they're always registered as a unit
+    against a single server-side sound entry.
+    """
+
+    genres: list[str] | None = None
+    moods: list[str] | None = None
+    artist: str | None = None
+    title: str | None = None
+    duration: float | None = None
+    duration_tracking: "DurationInfoMode" = DurationInfoMode.GameTime
+    tags: list[str] | None = None
+
+    def __export__(self) -> dict:
+        entry = {}
+
+        music_data = {}
+        if self.genres:
+            music_data["genres"] = self.genres
+        if self.moods:
+            music_data["moods"] = self.moods
+        if self.artist is not None:
+            music_data["artist"] = self.artist
+        if self.title is not None:
+            music_data["title"] = self.title
+        if music_data:
+            entry["music_info"] = music_data
+
+        if self.duration is not None:
+            entry["duration_info"] = {
+                "tracking": self.duration_tracking.value,
+                "duration": self.duration,
+            }
+
+        if self.tags:
+            entry["tags"] = list(self.tags)
+
+        return entry
 
 
 class _SoundDescription:
@@ -184,6 +231,7 @@ class SoundDefinition(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
+        server_music_info: "MusicInfo" = None,
     ) -> "_SoundDescription":
         """Defines a sound for the SoundDefinition instance.
 
@@ -194,6 +242,9 @@ class SoundDefinition(AddonObject):
             max_distance (int, optional): The maximum distance for the sound. Defaults to 0.
             min_distance (int, optional): The minimum distance for the sound. Defaults to 9999.
             subtitle (str, optional): The subtitle for the sound. Defaults to None.
+            server_music_info (MusicInfo, optional): If set, also registers this sound in the
+                (experimental) behavior pack server-side sound definitions with this duration
+                tracking mode / music metadata / tags. Requires the experimental flag. Defaults to None.
         Returns:
             _SoundDescription: The created sound description instance.
         """
@@ -212,6 +263,12 @@ class SoundDefinition(AddonObject):
             subtitle=subtitle,
         )
         self._sounds.append(sound)
+
+        if server_music_info is not None:
+            ServerSoundDefinition().server_sound_reference(
+                sound.identifier, server_music_info
+            )
+
         return sound
 
     def queue(self) -> "SoundDefinition":
@@ -228,6 +285,73 @@ class SoundDefinition(AddonObject):
             return
         for sound in self._sounds:
             self._content["sound_definitions"].update(sound.__export__())
+        return super().__export__()
+
+
+class ServerSoundDefinition(AddonObject):
+    """Singleton for handling server-side (behavior pack) sound definitions.
+
+    Experimental system introduced in Minecraft Bedrock 26.40 (`minecraft:server_sound_definitions`)
+    that lets a behavior pack attach metadata (duration tracking, music info, tags) to sounds that
+    already exist as client-side (resource pack) sound definitions.
+
+    This class is not meant to be instantiated/used directly. Server-side metadata is registered
+    through the `server_music_info` parameter on `SoundDefinition.sound_reference` (and the
+    higher-level helpers that call it, such as `MusicDefinition.music_definition` and the
+    `SoundEvent.add_*_event` methods), which guarantees the referenced sound has already been
+    registered on the client side before any server-side entry can be created for it.
+    """
+
+    _instance = None
+    _path = os.path.join(CONFIG.BP_PATH, "sounds")
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self) -> None:
+        if getattr(self, "_initialized", False):
+            return
+        super().__init__("sound_definitions")
+        self.content(JsonSchemes.server_sound_definitions())
+        self._entries: list[dict] = []
+        self._initialized = True
+
+    def server_sound_reference(
+        self,
+        sound_identifier: str,
+        music_info: "MusicInfo",
+    ) -> "ServerSoundDefinition":
+        """Registers server-side metadata for a sound already registered on the client side.
+
+        Parameters:
+            sound_identifier (str): The fully-qualified sound identifier (e.g. "namespace:sound_ref")
+                as already registered in the client-side sound definitions.
+            music_info (MusicInfo): The duration tracking mode, music metadata, and/or tags to
+                register for this sound.
+        Returns:
+            ServerSoundDefinition: self, for chaining.
+        """
+        self._entries.append({sound_identifier: music_info.__export__()})
+        return self
+
+    def queue(self) -> "ServerSoundDefinition":
+        """Queues the server sound definition for export."""
+        if len(self._entries) == 0:
+            return self
+        return super().queue("")
+
+    def __export__(self) -> None:
+        """Returns the server sound definition.
+
+        Returns:
+            None
+        """
+        if len(self._entries) == 0:
+            return
+        self._content["minecraft:server_sound_definitions"] = self._entries
         return super().__export__()
 
 
@@ -261,6 +385,7 @@ class MusicDefinition(AddonObject):
         music_reference: MusicCategory | str,
         min_delay: int = 60,
         max_delay: int = 180,
+        server_music_info: "MusicInfo" = None,
     ) -> _SoundDescription:
         """Defines a music for the MusicDefinition instance.
 
@@ -268,6 +393,9 @@ class MusicDefinition(AddonObject):
             music_reference (MusicCategory | str): The reference/category of the music.
             min_delay (int, optional): The minimum delay for the music. Defaults to 60.
             max_delay (int, optional): The maximum delay for the music. Defaults to 180.
+            server_music_info (MusicInfo, optional): If set, also registers this music track in the
+                (experimental) behavior pack server-side sound definitions (duration tracking mode,
+                music metadata, tags). Requires the experimental flag. Defaults to None.
 
         Returns:
             _SoundDescription: The created sound description instance.
@@ -283,7 +411,9 @@ class MusicDefinition(AddonObject):
         )
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
-            f"music.{music_reference}", SoundCategory.Music
+            f"music.{music_reference}",
+            SoundCategory.Music,
+            server_music_info=server_music_info,
         )
 
     def queue(self) -> "MusicDefinition":
@@ -341,6 +471,7 @@ class SoundEvent(AddonObject):
         variant_query: Molang = None,
         variant_map: str = None,
         subtitle: str = None,
+        server_music_info: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
         self._content["entity_sounds"]["entities"].setdefault(
@@ -378,6 +509,7 @@ class SoundEvent(AddonObject):
             max_distance=max_distance,
             min_distance=min_distance,
             subtitle=key if subtitle is not None else None,
+            server_music_info=server_music_info,
         )
 
     def add_block_event(
@@ -390,6 +522,7 @@ class SoundEvent(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
+        server_music_info: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
         self._content["block_sounds"].setdefault(
@@ -415,6 +548,7 @@ class SoundEvent(AddonObject):
             max_distance=max_distance,
             min_distance=min_distance,
             subtitle=key if subtitle is not None else None,
+            server_music_info=server_music_info,
         )
 
     def add_block_interactive_event(
@@ -427,6 +561,7 @@ class SoundEvent(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
+        server_music_info: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
         self._content["interactive_sounds"]["block_sounds"].setdefault(
@@ -454,6 +589,7 @@ class SoundEvent(AddonObject):
             max_distance=max_distance,
             min_distance=min_distance,
             subtitle=key if subtitle is not None else None,
+            server_music_info=server_music_info,
         )
 
     def add_individual_event(
@@ -465,6 +601,7 @@ class SoundEvent(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
+        server_music_info: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
         self._content["individual_event_sounds"]["events"][sound_identifier] = {
@@ -484,6 +621,7 @@ class SoundEvent(AddonObject):
             max_distance,
             min_distance,
             subtitle=key if subtitle is not None else None,
+            server_music_info=server_music_info,
         )
 
     def queue(self) -> "SoundEvent":
