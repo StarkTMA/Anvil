@@ -31,5 +31,4 @@ class MinecraftStructureTypes(StrEnum):
     Village = "minecraft:village"
 
 
-class MinecraftFeatureTypes(MinecraftStructureTypes):
-    pass
+MinecraftFeatureTypes = MinecraftStructureTypes

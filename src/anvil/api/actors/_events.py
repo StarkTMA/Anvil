@@ -1,4 +1,3 @@
-import click
 from anvil.api.actors.components import Filter
 from anvil.api.core.enums import Vibrations
 from anvil.lib.config import CONFIG
@@ -7,128 +6,48 @@ from anvil.lib.config import CONFIG
 class _BaseEvent:
     def __init__(self, event_name: str):
         self._event_name = event_name
-        self._event = {
-            self._event_name: {
-                "add": {"component_groups": []},
-                "remove": {"component_groups": []},
-                "queue_command": {"command": []},
-                "set_property": {},
-                "emit_vibration": {},
-            }
-        }
+        self._event = {}
 
     def add(self, component_groups: list[str]):
         if not isinstance(component_groups, list):
             raise TypeError("Component groups must be provided as a list of strings.")
-
-        self._event[self._event_name]["add"]["component_groups"].extend(
-            component_groups
-        )
+        self._event.setdefault("add", {"component_groups": []})[
+            "component_groups"
+        ].extend(component_groups)
         return self
 
     def remove(self, component_groups: list[str]):
         if not isinstance(component_groups, list):
             raise TypeError("Component groups must be provided as a list of strings.")
-        self._event[self._event_name]["remove"]["component_groups"].extend(
-            component_groups
-        )
+        self._event.setdefault("remove", {"component_groups": []})[
+            "component_groups"
+        ].extend(component_groups)
         return self
 
     def trigger(self, event: str):
-        if "trigger" in self._event[self._event_name]:
-            click.echo(
-                click.style(
-                    "An event can only have one trigger. Use sequences instead.",
-                    fg="yellow",
-                )
+        if "trigger" in self._event:
+            raise SyntaxError(
+                "An event can only have one trigger. Use sequences instead."
             )
-
-        self._event[self._event_name]["trigger"] = event
+        self._event["trigger"] = event
         return self
 
     def set_property(self, property, value):
-        self._event[self._event_name]["set_property"].update(
-            {f"{CONFIG.NAMESPACE}:{property}": value}
-        )
+        self._event.setdefault("set_property", {})[
+            f"{CONFIG.NAMESPACE}:{property}"
+        ] = value
         return self
 
     def queue_command(self, commands: list[str]):
         if not isinstance(commands, list):
             raise TypeError("Commands must be provided as a list of strings.")
-        self._event[self._event_name]["queue_command"]["command"].extend(
-            [str(cmd) for cmd in commands]
+        self._event.setdefault("queue_command", {"command": []})["command"].extend(
+            str(cmd) for cmd in commands
         )
         return self
 
     def emit_vibration(self, vibration: Vibrations):
-        self._event[self._event_name]["vibration"] = vibration
-        return self
-
-    def play_sound(self, sound: str):
-        self._event[self._event_name]["play_sound"] = {"sound": sound}
-        return self
-
-    def emit_particle(self, particle: str):
-        self._event[self._event_name]["emit_particle"] = {"particle": particle}
-        return self
-
-    def execute_event_on_home_block(self, event: str):
-        self._event[self._event_name]["execute_event_on_home_block"] = {"event": event}
-        return self
-
-    def unleash(self, unleash_self: bool = False, unleash_others: bool = False):
-        """Unleashes the entity.
-
-        Parameters:
-            unleash_self (bool, optional): If true, unleashes the entity from the entity it is leashed to. Defaults to False.
-            unleash_others (bool, optional): If true, unleashes all entities that are leashed to the entity. Defaults to False.
-        """
-        payload = {}
-        if unleash_self:
-            payload["unleash_self"] = unleash_self
-        if unleash_others:
-            payload["unleash_others"] = unleash_others
-        self._event[self._event_name]["unleash"] = payload
-        return self
-
-    def __export__(self):
-        return self._event
-
-
-class _Randomize(_BaseEvent):
-    def __init__(self, parent):
-        self._event = {"weight": 1, "set_property": {}}
-        self._sequences: list[_Sequence] = []
-        self._parent_class: _Event = parent
-
-    def add(self, component_groups: list[str]):
-        self._event.update({"add": {"component_groups": component_groups}})
-        return self
-
-    def remove(self, component_groups: list[str]):
-        self._event.update({"remove": {"component_groups": component_groups}})
-        return self
-
-    def trigger(self, event: str):
-        self._event.update({"trigger": event})
-        return self
-
-    def weight(self, weight: int):
-        self._event.update({"weight": weight})
-        return self
-
-    def set_property(self, property, value):
-        self._event["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
-        return self
-
-    def queue_command(self, commands: list[str]):
-        self._event.update(
-            {"queue_command": {"command": [str(cmd) for cmd in commands]}}
-        )
-        return self
-
-    def emit_vibration(self, vibration: Vibrations):
-        self._event.update({"vibration": vibration})
+        self._event["vibration"] = vibration
         return self
 
     def play_sound(self, sound: str):
@@ -156,6 +75,20 @@ class _Randomize(_BaseEvent):
         if unleash_others:
             payload["unleash_others"] = unleash_others
         self._event["unleash"] = payload
+        return self
+
+    def __export__(self):
+        return {self._event_name: self._event}
+
+
+class _Randomize(_BaseEvent):
+    def __init__(self, parent):
+        self._event = {"weight": 1}
+        self._sequences: list["_Sequence"] = []
+        self._parent_class: "_Event" = parent
+
+    def weight(self, weight: int):
+        self._event["weight"] = weight
         return self
 
     @property
@@ -169,74 +102,19 @@ class _Randomize(_BaseEvent):
         return sequence
 
     def __export__(self):
-        if len(self._sequences) > 0:
-            self._event.update({"sequence": []})
-            for sequence in self._sequences:
-                self._event["sequence"].append(sequence.__export__())
+        if self._sequences:
+            self._event["sequence"] = [s.__export__() for s in self._sequences]
         return self._event
 
 
 class _Sequence(_BaseEvent):
     def __init__(self, parent_event) -> None:
+        self._event = {}
         self._randomizes: list[_Randomize] = []
-        self._parent_class: _Event = parent_event
-        self._event = {"set_property": {}}
-
-    def add(self, component_groups: list[str]):
-        self._event.update({"add": {"component_groups": component_groups}})
-        return self
-
-    def remove(self, component_groups: list[str]):
-        self._event.update({"remove": {"component_groups": component_groups}})
-        return self
-
-    def trigger(self, event: str):
-        self._event.update({"trigger": event})
-        return self
+        self._parent_class: "_Event" = parent_event
 
     def filters(self, filter: Filter):
-        self._event.update({"filters": filter})
-        return self
-
-    def set_property(self, property, value):
-        self._event["set_property"].update({f"{CONFIG.NAMESPACE}:{property}": value})
-        return self
-
-    def queue_command(self, commands: list[str]):
-        self._event.update(
-            {"queue_command": {"command": [str(cmd) for cmd in commands]}}
-        )
-        return self
-
-    def emit_vibration(self, vibration: Vibrations):
-        self._event.update({"vibration": vibration})
-        return self
-
-    def play_sound(self, sound: str):
-        self._event["play_sound"] = {"sound": sound}
-        return self
-
-    def emit_particle(self, particle: str):
-        self._event["emit_particle"] = {"particle": particle}
-        return self
-
-    def execute_event_on_home_block(self, event: str):
-        self._event["execute_event_on_home_block"] = {"event": event}
-        return self
-
-    def unleash(self, unleash_self: bool = False, unleash_others: bool = False):
-        """Unleashes the entity.
-
-        Parameters:
-            unleash_self (bool, optional): If true, unleashes the entity from the entity it is leashed to. Defaults to False.
-            unleash_others (bool, optional): If true, unleashes all entities that are leashed to the entity. Defaults to False.
-        """
-        payload = {}
-        if unleash_self:
-            payload["unleash_self"] = unleash_self
-        if unleash_others:
-            payload["unleash_others"] = unleash_others
-        self._event["unleash"] = payload
+        self._event["filters"] = filter
         return self
 
     @property
@@ -250,10 +128,8 @@ class _Sequence(_BaseEvent):
         return randomize
 
     def __export__(self):
-        if len(self._randomizes) > 0:
-            self._event.update({"randomize": []})
-            for randomize in self._randomizes:
-                self._event["randomize"].append(randomize.__export__())
+        if self._randomizes:
+            self._event["randomize"] = [r.__export__() for r in self._randomizes]
         return self._event
 
 
@@ -276,18 +152,12 @@ class _Event(_BaseEvent):
         return randomize
 
     def __export__(self):
-        if len(self._sequences) > 0 and len(self._randomizes) > 0:
+        if self._sequences and self._randomizes:
             raise SyntaxError(
                 "Sequences and Randomizes cannot coexist in the same event."
             )
-        if len(self._sequences) > 0:
-            self._event[self._event_name].update({"sequence": []})
-            for sequence in self._sequences:
-                self._event[self._event_name]["sequence"].append(sequence.__export__())
-        if len(self._randomizes) > 0:
-            self._event[self._event_name].update({"randomize": []})
-            for randomize in self._randomizes:
-                self._event[self._event_name]["randomize"].append(
-                    randomize.__export__()
-                )
+        if self._sequences:
+            self._event["sequence"] = [s.__export__() for s in self._sequences]
+        if self._randomizes:
+            self._event["randomize"] = [r.__export__() for r in self._randomizes]
         return super().__export__()

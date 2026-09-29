@@ -464,7 +464,6 @@ def init(
         JsonSchemes.github_release_workflow(project_name, display_name),
         os.path.join(".github", "workflows"),
         "w",
-        True,
     )
     AnvilIO.file("CHANGELOG.md", "", "", "w")
     if scriptapi:

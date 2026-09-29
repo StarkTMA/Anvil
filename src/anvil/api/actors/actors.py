@@ -46,7 +46,7 @@ __all__ = ["Entity", "Attachable"]
 
 class _Properties:
     def _enforce_count_limit(self):
-        if len(self._properties) >= 32:
+        if len(self._properties) > 32:
             raise ValueError(
                 "Cannot have more than 32 properties in a component group."
             )
@@ -109,6 +109,9 @@ class _Properties:
         }
         return self
 
+    def __iter__(self):
+        return iter(self._properties.keys())
+
     def __export__(self):
         return self._properties
 
@@ -163,7 +166,7 @@ class _ActorReuseAssets:
         return self
 
     def particle_effect(self, shortname: str, particle_name: str):
-        self.client["description"]["particle_effects"].update(
+        self.client._description["description"]["particle_effects"].update(
             {shortname: particle_name}
         )
 
@@ -1316,6 +1319,7 @@ class Entity(MinecraftEntityDescriptor):
             col0=self._display_name,
             col1=self.identifier,
             col2=[event._event_name for event in self.server._events.values()],
+            col3=[prop for prop in self.server.description._properties],
         )
 
 

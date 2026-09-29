@@ -183,7 +183,6 @@ def scriptapi():
                 JsonSchemes.tsconfig(CONFIG.BP_PATH),
                 "",
                 "w",
-                False,
             )
         if (
             not os.path.exists("esbuild.js")
@@ -194,7 +193,6 @@ def scriptapi():
                 JsonSchemes.esbuild_config_js(CONFIG.BP_PATH, CONFIG._MINIFY),
                 "",
                 "w",
-                False,
             )
         if not os.path.exists("package.json"):
             AnvilIO.file(
@@ -207,7 +205,6 @@ def scriptapi():
                 ),
                 "",
                 "w",
-                True,
             )
 
 
@@ -443,115 +440,6 @@ def process_art(
             raise FileNotFoundError(
                 "pack_icon.png not found in marketing directory. Please ensure the file exists."
             )
-
-
-def generate_technical_notes_pdf(config: _AnvilConfig):
-    """Generates a technical notes PDF that contains information about included entities, blocks, items, sounds and more."""
-    import click
-
-    click.echo(click.style(f"\r[INFO]: Generating technical notes...", fg="cyan"))
-
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.lib.units import cm
-    from reportlab.platypus import (
-        Paragraph,
-        SimpleDocTemplate,
-        Spacer,
-        Table,
-        TableStyle,
-    )
-
-    def add_table(section_name: str, data: dict[bool, set[str]]):
-        title_style.spaceBefore = 0
-        title_style.fontSize = 14
-        title_style.textColor = colors.royalblue
-        title = Paragraph(section_name, title_style)
-
-        converted_data = []
-        vanilla_true_rows = []
-
-        for idx, (row, columns) in enumerate(data.items()):
-            vals = []
-            for col_name, col_values in columns.items():
-                value_string = "<br/>".join(col_values)
-                if col_name != "vanilla":
-                    vals.append(Paragraph(value_string, styles["Normal"]))
-                elif value_string == "True":
-                    vanilla_true_rows.append(idx)
-            converted_data.append([Paragraph(row, styles["Normal"]), *vals])
-
-        table = Table(
-            converted_data,
-            hAlign="LEFT",
-            colWidths=doc.width / len(converted_data[0]),
-        )
-
-        style_commands = [
-            ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
-            ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("FONTSIZE", (0, 0), (-1, 0), 12),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica"),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
-            ("BACKGROUND", (0, 1), (-1, -1), colors.white),
-            ("GRID", (0, 0), (-1, -1), 1, colors.black),
-        ]
-        for row in vanilla_true_rows:
-            style_commands.append(
-                ("BACKGROUND", (0, row), (-1, row), colors.lightgreen)
-            )
-        table.setStyle(TableStyle(style_commands))
-
-        return title, Spacer(1, 0.3 * cm), table, Spacer(1, 1 * cm)
-
-    doc = SimpleDocTemplate(
-        os.path.join("output", "technical_notes.pdf"),
-        pagesize=A4,
-        leftMargin=1 * cm,
-        rightMargin=1 * cm,
-        topMargin=1 * cm,
-        bottomMargin=1 * cm,
-        title=f"{config.DISPLAY_NAME} Technical Notes",
-        author=config.COMPANY,
-        subject=f"{config.DISPLAY_NAME} Technical Notes",
-        creator=f"Anvil@stark_lg {__version__}",
-    )
-    styles = getSampleStyleSheet()
-    title_style = styles["Heading1"]
-    body_style = styles["BodyText"]
-    bullet_style = styles["Bullet"]
-
-    elements = [
-        Paragraph(f"{config.DISPLAY_NAME}:", title_style),
-        Paragraph(f"Developed by: {config.COMPANY}", body_style),
-        Paragraph(
-            f'Generated with <a href="https://github.com/StarkTMA/Anvil"><u><font color="blue">StarkTMA/Anvil {__version__}</font></u></a>',
-            body_style,
-        ),
-        Spacer(1, 1 * cm),
-        Paragraph("General information:", title_style),
-        Paragraph(
-            "The following technical notes have been entirely generated from source code using Anvil.",
-            body_style,
-        ),
-        Paragraph(
-            "Features overwriting vanilla defaults will be highlighted in green.",
-            bullet_style,
-            "*",
-        ),
-        Spacer(1, 1 * cm),
-        *add_table("Entities:", config.Report.dict[ReportType.ENTITY]),
-        *add_table("Attachables:", config.Report.dict[ReportType.ATTACHABLE]),
-        *add_table("Items:", config.Report.dict[ReportType.ITEM]),
-        *add_table("Blocks:", config.Report.dict[ReportType.BLOCK]),
-        *add_table("Particles:", config.Report.dict[ReportType.PARTICLE]),
-        *add_table("Sounds:", config.Report.dict[ReportType.SOUND]),
-    ]
-
-    doc.build(elements)
 
 
 def package_zip_core(
@@ -1037,6 +925,12 @@ class _Anvil:
             apply_overlay=apply_overlay,
         )
 
+        if generate_technical_notes:
+            click.echo(
+                click.style(f"\r[INFO]: Generating technical notes...", fg="cyan")
+            )
+            self.config.Report.generate_report()
+
         if no_arch:
             return
 
@@ -1048,9 +942,6 @@ class _Anvil:
 
         if zip:
             package_zip_core(self.config, apply_overlay)
-
-        if generate_technical_notes:
-            generate_technical_notes_pdf(self.config)
 
     def __queue__(self, object: object):
         """Queues an object to be compiled."""

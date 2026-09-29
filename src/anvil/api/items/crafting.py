@@ -19,11 +19,6 @@ class CraftingItemCatalog(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.BP_PATH, "item_catalog")
 
-    def __new__(cls, *Parameters, **kwParameters):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
     def __init__(self) -> None:
         if getattr(self, "_initialized", False):
             return

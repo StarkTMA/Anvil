@@ -604,7 +604,9 @@ class SoundEvent(AddonObject):
         server_music_info: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
-        self._content["individual_event_sounds"]["events"][sound_identifier] = {
+        self._content["individual_event_sounds"].setdefault("events", {})[
+            sound_identifier
+        ] = {
             "sound": sound_identifier,
             "pitch": pitch if pitch != (0.8, 1.2) else {},
             "volume": volume,
@@ -618,12 +620,42 @@ class SoundEvent(AddonObject):
         return sound_definition_object.sound_reference(
             sound_identifier,
             category,
-            max_distance,
-            min_distance,
+            max_distance=max_distance,
+            min_distance=min_distance,
             subtitle=key if subtitle is not None else None,
             server_music_info=server_music_info,
         )
 
+
+    def add_individual_named_sound(
+        self,
+        sound_identifier: str,
+        category: SoundCategory = SoundCategory.Ambient,
+        volume: float = 1.0,
+        pitch: tuple[float, float] = (0.8, 1.2),
+        max_distance: float = 0,
+        min_distance: float = 9999,
+    ) -> "_SoundDescription":
+        """Registers a sound in the ``individual_named_sounds`` section of sounds.json.
+
+        Client biome ambient sounds (``minecraft:ambient_sounds``) must be defined here.
+        """
+        self._changed = True
+        self._content["individual_named_sounds"].setdefault("sounds", {})[
+            sound_identifier
+        ] = {
+            "sound": sound_identifier,
+            "pitch": pitch if pitch != (0.8, 1.2) else {},
+            "volume": volume,
+        }
+
+        sound_definition_object = SoundDefinition()
+        return sound_definition_object.sound_reference(
+            sound_identifier,
+            category,
+            max_distance=max_distance,
+            min_distance=min_distance,
+        )
     def queue(self) -> "SoundEvent":
         if not self._changed:
             return self
