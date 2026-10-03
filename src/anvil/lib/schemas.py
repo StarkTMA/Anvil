@@ -1005,6 +1005,9 @@ class AddonObject(AddonDescriptor):
         """
         from anvil.api.core.core import ANVIL
 
+        if self._queued:
+            return self
+
         self._directory = directory if not directory is None else ""
         self._path = os.path.join(self._path, self._directory)
         self._queued = True
@@ -1036,24 +1039,66 @@ class MinecraftBlockDescriptor(AddonDescriptor):
 
     def __init__(
         self,
-        name,
+        name: str | None = None,
         is_vanilla=False,
         states: Mapping[str, str | int | float | bool | None] | None = None,
-        tags: set[str] | None = None,
+        tags: str | None = None,
         is_vanilla_allowed=True,
     ) -> None:
-        super().__init__(name, is_vanilla, is_vanilla_allowed)
+        """A block descriptor, matching a block by name, by tags, or both.
+
+        Parameters:
+            name (str | None, optional): The block identifier. May be omitted when matching by tags only. Defaults to None.
+            is_vanilla (bool, optional): If the block is from vanilla Minecraft. Defaults to False.
+            states (Mapping, optional): Block states to match. Requires a name. Defaults to None.
+            tags (Molang | str, optional): A Molang expression over block tags, e.g. `Query.AllTags(["stone"])`. Defaults to None.
+            is_vanilla_allowed (bool, optional): If overriding vanilla objects is allowed. Defaults to True.
+        """
+        if name is None:
+            if tags is None:
+                raise ValueError(
+                    f"A name or tags (Molang) must be provided. {self._object_type}"
+                )
+            if states:
+                raise ValueError(
+                    f"States require a block name. {self._object_type}[tags={tags}]"
+                )
+            self._is_vanilla = is_vanilla
+            self._name = None
+            self._namespace = None
+            self._data = None
+            self._display_name = ""
+        else:
+            super().__init__(name, is_vanilla, is_vanilla_allowed)
+
+        if tags is not None and not isinstance(tags, str):
+            raise TypeError(
+                f"tags must be a Molang expression (str). {self._object_type}[{name}]"
+            )
 
         self._states = {}
         if states:
             for k, v in states.items():
                 if v is not None:
                     self._states[str(k)] = str(v)
-        self._tags = tags if tags is not None else set()
+        self._tags = tags
 
     @property
-    def tags(self) -> set[str]:
-        """Returns the tags associated with the block."""
+    def identifier(self) -> Identifier:
+        if self._name is None:
+            raise ValueError(
+                f"This {self._object_type} was created from tags only and has no identifier. Tags: [{self._tags}]"
+            )
+        return super().identifier
+
+    def __str__(self) -> str:
+        if self._name is None:
+            return str(self._tags)
+        return self.identifier
+
+    @property
+    def tags(self) -> str | None:
+        """Returns the Molang tags expression associated with the block, if any."""
         return self._tags
 
     @property
@@ -1062,12 +1107,15 @@ class MinecraftBlockDescriptor(AddonDescriptor):
         return self._states
 
     def descriptor(self) -> Identifier | dict:
-        if len(self.states) > 0 or len(self._tags) > 0:
-            return {
-                "name": self.identifier,
-                "states": self.states,
-                "tags": list(self.tags),
-            }
+        if self._name is None:
+            return {"tags": str(self._tags)}
+        if len(self.states) > 0 or self._tags is not None:
+            result: dict = {"name": self.identifier}
+            if len(self.states) > 0:
+                result["states"] = self.states
+            if self._tags is not None:
+                result["tags"] = str(self._tags)
+            return result
         return self.identifier
 
 

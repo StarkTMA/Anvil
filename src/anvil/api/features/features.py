@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from math import inf
 from typing import Any, Literal, overload
 
-from anvil.api.core.enums import BlockFaces
+from anvil.api.core.enums import BlockFaceValues
 from anvil.api.core.types import Identifier, Vector3DInt
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
@@ -824,7 +824,7 @@ class PartiallyExposedBlobFeature(Feature):
         places_block: MinecraftBlockDescriptor | Identifier,
         placement_radius_around_floor: int,
         placement_probability_per_valid_position: float,
-        exposed_face: BlockFaces | None = BlockFaces.Up,
+        exposed_face: BlockFaceValues | None = BlockFaceValues.Up,
     ) -> None:
         """Generates a blob where one face may remain exposed.
 
@@ -838,7 +838,7 @@ class PartiallyExposedBlobFeature(Feature):
                 for placement.
             placement_probability_per_valid_position (float): Probability per
                 valid position.
-            exposed_face (BlockFaces | None): Defines a block face allowed to
+            exposed_face (BlockFaceValues | None): Defines a block face allowed to
                 be exposed.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftpartially_exposed_blob_feature)
@@ -1120,7 +1120,7 @@ class SingleBlockFeature(Feature):
 
     def may_attach_to(
         self,
-        face: BlockFaces | Literal["diagonal"],
+        face: BlockFaceValues | Literal["diagonal"],
         blocks: list[MinecraftBlockDescriptor | Identifier],
         min_sides_must_attach: int = 1,
         auto_rotate: bool = False,
@@ -1136,8 +1136,8 @@ class SingleBlockFeature(Feature):
 
         face = (
             "top"
-            if face == BlockFaces.Up
-            else "bottom" if face == BlockFaces.Down else face
+            if face == BlockFaceValues.Up
+            else "bottom" if face == BlockFaceValues.Down else face
         )
 
         attachment = {
@@ -1150,7 +1150,7 @@ class SingleBlockFeature(Feature):
 
     def may_not_attach_to(
         self,
-        face: BlockFaces | Literal["diagonal"],
+        face: BlockFaceValues | Literal["diagonal"],
         blocks: list[MinecraftBlockDescriptor | Identifier],
         min_sides_must_attach: int = 1,
         auto_rotate: bool = False,
@@ -1166,8 +1166,8 @@ class SingleBlockFeature(Feature):
 
         face = (
             "top"
-            if face == BlockFaces.Up
-            else "bottom" if face == BlockFaces.Down else face
+            if face == BlockFaceValues.Up
+            else "bottom" if face == BlockFaceValues.Down else face
         )
 
         attachment = {

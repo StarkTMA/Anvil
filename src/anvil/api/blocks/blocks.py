@@ -64,14 +64,6 @@ class _BlockTraits:
                 "placement_direction can only be used with multi_block with the trait [PlacementDirectionTrait.CardinalDirection]."
             )
 
-        if (
-            blocks_to_corner_with
-            and PlacementPositionTrait.CornerAndCardinal not in traits
-        ):
-            raise ValueError(
-                "blocks_to_corner_with can only be used if PlacementPositionTrait.CornerAndCardinal is in traits."
-            )
-
         if y_rotation_offset % 90 != 0:
             raise ValueError("y_rotation_offset must be a multiple of 90.")
         if not 360 >= y_rotation_offset >= 0:
@@ -82,12 +74,17 @@ class _BlockTraits:
                 raise ValueError(
                     "blocks_to_corner_with requires PlacementDirectionTrait.CornerAndCardinalDirection to be in traits."
                 )
+        trait = {}
+        if y_rotation_offset != 0:
+            trait["y_rotation_offset"] = y_rotation_offset
 
-        self._traits["minecraft:placement_direction"] = {
-            "enabled_states": traits,
-            "y_rotation_offset": y_rotation_offset,
-            "blocks_to_corner_with": blocks_to_corner_with,
-        }
+        if blocks_to_corner_with:
+            trait["blocks_to_corner_with"] = blocks_to_corner_with
+
+        if traits:
+            trait["enabled_states"] = traits
+
+        self._traits["minecraft:placement_direction"] = trait
 
     def placement_position(self, traits: list[PlacementPositionTrait]):
         """Can add states containing information about the position of the block when it is placed.

@@ -1,16 +1,22 @@
 import json
 import os
 
-import amulet
-from amulet.api.block import Block as amuletBlock
-from amulet.api.block import StringTag
+try:
+    import amulet
+    from amulet.api.block import Block as amuletBlock
+    from amulet.api.block import StringTag
+except ImportError as error:
+    raise ImportError(
+        "anvil.kit.world.ldtk needs Amulet to build the world. "
+        "Install it with: pip install mcanvil[ldtk]"
+    ) from error
+
 from anvil.api.vanilla.blocks import MinecraftBlockTypes
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import Directory
 
 
-# Requires Amulet core to build the world
 class LDtk:
     def _load_data(self):
         # Using the builtin json library becasue it's

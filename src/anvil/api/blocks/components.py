@@ -6,7 +6,7 @@ from typing import Dict, List, Literal, Optional, TypeAlias, Union, overload
 from anvil.api.core.components import Component, List
 from anvil.api.core.core import TerrainTexturesObject
 from anvil.api.core.enums import (
-    BlockFaces,
+    BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
@@ -14,19 +14,26 @@ from anvil.api.core.enums import (
     expand_block_face_sides,
 )
 from anvil.api.core.textures import FlipBookTexturesObject
-from anvil.api.core.types import Identifier, InstrumentSound
+from anvil.api.core.types import Identifier, InstrumentSound, Vector3D
 from anvil.api.logic.molang import Molang
+from anvil.api.models.geometry import Geometry
+from anvil.api.models.voxel_shape import VoxelShape
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
-from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.blocks import MinecraftBlockTags, MinecraftBlockTypes
 from anvil.api.world.loot_tables import LootTable
-from anvil.lib.blockbench import BlockBenchSource, _Blockbench, blockbench_geometry_name
+from anvil.lib.blockbench import (
+    _BlockBenchSource,
+    _Blockbench,
+    _blockbench_geometry_name,
+    _geometry_block_culling,
+)
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import (
     BLOCK_JSON_FORMAT_VERSION,
     BLOCK_SERVER_VERSION,
     ITEM_SERVER_VERSION,
 )
-from anvil.lib.lib import clamp
+from anvil.lib.lib import AnvilFormatter, Color, HexRGB, clamp
 from anvil.lib.schemas import MinecraftBlockDescriptor
 from anvil.lib.translator import AnvilTranslator
 
@@ -92,16 +99,19 @@ class MaterialParams:
 @dataclass(kw_only=True)
 class InstanceSpec:
     blockbench_name: str
-    face: Union[BlockFaces, str] = BlockFaces.All
+    face: Union[BlockFaceValues, str] = BlockFaceValues.All
     variations: List[InstanceVariant] = field(default_factory=list)
     params: MaterialParams = field(default_factory=MaterialParams)
     flipbooks: list[FlipbookParams] = field(default_factory=list)
 
     def validate(self) -> None:
-        if self.face == BlockFaces.Side:
+        if self.face == BlockFaceValues.Side:
             raise ValueError(
-                "BlockFaces.Side is not supported; use All or explicit faces."
+                "BlockFaceValues.Side is not supported; use All or explicit faces."
             )
+        if self.face == BlockFaceValues.All:
+            self.face = "*"
+
         if not self.variations:
             raise ValueError("At least one VariantPackage is required.")
         if any(v.weight <= 0 for v in self.variations):
@@ -166,16 +176,10 @@ class BlockMaterialInstance(Component):
                 force_vanilla=force_vanilla,
             )
 
-        self._add_dict(
-            {
-                (
-                    "*" if spec.face == BlockFaces.All else spec.face
-                ): self._material_payload(spec)
-            }
-        )
+        self._add_dict({spec.face: self._material_payload(spec)})
 
         for vp in spec.variations:
-            self._texture_set = TextureSet(vp.color, BlockBenchSource.BLOCK)
+            self._texture_set = TextureSet(vp.color, _BlockBenchSource.BLOCK)
             self._texture_set.set_blockbench_textures(spec.blockbench_name, vp)
             self._texture_set.queue()
 
@@ -231,124 +235,22 @@ class BlockFlowerPottable(Component):
         self._dependencies = [BlockGeometry, BlockMaterialInstance]
 
 
-class BlockEmbeddedVisual(Component):
-    _identifier = "minecraft:embedded_visual"
-
-    @overload
-    def __init__(self) -> None:
-        """Uses the default full block geometry for the item visual."""
-        pass
-
-    @overload
-    def __init__(
-        self,
-        blockbench_name: str,
-    ) -> None:
-        """The description identifier of the geometry and material used to render this block when it it is embedded inside of another block (for example, a flower inside of a flower pot).
-
-        Parameters:
-            blockbench_name (str): The geometry of the item.
-        """
-        pass
-
-    def __init__(
-        self,
-        blockbench_name: str = None,
-    ) -> None:
-        """The description identifier of the geometry and material used to render this block when it it is embedded inside of another block (for example, a flower inside of a flower pot).
-
-        Parameters:
-            blockbench_name (str, optional): The geometry of the item. Defaults to None for default full block geometry.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_embedded_visual)
-        """
-        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
-        super().__init__("embedded_visual")
-        self._is_default = blockbench_name is None
-
-        if blockbench_name is None:
-            self._add_field("geometry", {"identifier": "minecraft:geometry.full_block"})
-        else:
-            bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
-            bb.model.queue_model()
-
-            self._add_field(
-                "geometry",
-                {"identifier": f"geometry.{CONFIG.NAMESPACE}.{blockbench_name}"},
-            )
-
-        self._add_field("material_instances", {})
-
-    def material_instance(
-        self,
-        blockbench_name: str,
-        texture: str,
-        block_face: BlockFaces | str = BlockFaces.All,
-        render_method: BlockMaterial = BlockMaterial.Opaque,
-    ):
-        """Adds a material instance to the embedded visual.
-
-        Parameters:
-            blockbench_name (str): The blockbench reference name.
-            texture (str): The texture of the block.
-            block_face (BlockFaces): The face of the block to apply the texture to.
-
-        """
-        if block_face == BlockFaces.All:
-            face_key = "*"
-        else:
-            face_key = block_face
-
-        bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
-        bb.textures.queue_texture(texture)
-
-        TerrainTexturesObject().add_block(texture, blockbench_name, [texture])
-
-        self._component["material_instances"][face_key] = {
-            "texture": f"{CONFIG.NAMESPACE}:{texture}",
-            "render_method": (
-                render_method if render_method != BlockMaterial.Opaque else {}
-            ),
-        }
-        return self
-
-    def n_way_visual_rotation(self, **axes: str):
-        """Specifies the visual rotation mapping for the embedded visual geometry.
-
-        Parameters:
-            **axes: Axes to state mappings (e.g. y="minecraft:cardinal_direction").
-        """
-        valid_axes = ["x", "y", "z"]
-        for axis, state in axes.items():
-            if axis not in valid_axes:
-                raise ValueError(f"Invalid axis: {axis}. Must be one of {valid_axes}")
-            if not isinstance(state, str):
-                raise ValueError("State name must be a string")
-
-        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
-
-        geom = self._component.get("geometry", {})
-        geom["n_way_visual_rotation"] = {axis: state for axis, state in axes.items()}
-        self._add_field("geometry", geom)
-        return self
-
-
 class BlockRedstoneProducer(Component):
     _identifier = "minecraft:redstone_producer"
 
     def __init__(
         self,
         power: int = 0,
-        connected_faces: list[BlockFaces] = [BlockFaces.All],
-        strongly_powered_face: BlockFaces = None,
+        connected_faces: list[BlockFaceValues] = [BlockFaceValues.All],
+        strongly_powered_face: BlockFaceValues = None,
         transform_relative: bool = False,
     ) -> None:
         """Indicates that this block produces a redstone signal.
 
         Parameters:
             power (int, optional): Signal strength produced by the block (0-15). Defaults to 0.
-            connected_faces (list[BlockFaces], optional): Faces considered connected to the circuit. If omitted, all faces are connected.
-            strongly_powered_face (BlockFaces | str, optional): The face that will be strongly powered by this block.
+            connected_faces (list[BlockFaceValues], optional): Faces considered connected to the circuit. If omitted, all faces are connected.
+            strongly_powered_face (BlockFaceValues | str, optional): The face that will be strongly powered by this block.
             transform_relative (bool, optional): If true, connected_faces and strongly_powered_face are transformed relative to the block's transformation. Defaults to False.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_redstone_producer)
@@ -365,7 +267,7 @@ class BlockRedstoneProducer(Component):
             self._add_field("connected_faces", faces)
 
         if strongly_powered_face is not None:
-            # allow callers to pass either a BlockFaces enum or a raw string
+            # allow callers to pass either a BlockFaceValues enum or a raw string
             self._add_field("strongly_powered_face", strongly_powered_face)
 
         if transform_relative:
@@ -394,7 +296,7 @@ class BlockDestructionParticles(Component):
         """
         super().__init__("destruction_particles")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.100")
-        bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
+        bb = _Blockbench(blockbench_name, _BlockBenchSource.BLOCK)
         bb.textures.queue_texture(texture)
         self._add_field("texture", texture)
 
@@ -495,16 +397,16 @@ class BlockDestructibleByMining(Component):
             self._add_field("item_specific_speeds", [])
 
     def item_specific_speeds_name(self, destroy_speed: float, item_name: str):
-        if "item_specific_speeds" in self._component:
-            self._component["item_specific_speeds"].append(
-                {"item": item_name, "destroy_speed": destroy_speed}
-            )
+        self._component["item_specific_speeds"].append(
+            {"item": item_name, "destroy_speed": destroy_speed}
+        )
+        return self
 
     def item_specific_speeds_tag(self, destroy_speed: float, item_tag: str | Molang):
-        if "item_specific_speeds" in self._component:
-            self._component["item_specific_speeds"].append(
-                {"item": {"tags": item_tag}, "destroy_speed": destroy_speed}
-            )
+        self._component["item_specific_speeds"].append(
+            {"item": {"tags": item_tag}, "destroy_speed": destroy_speed}
+        )
+        return self
 
 
 class BlockFlammable(Component):
@@ -512,8 +414,8 @@ class BlockFlammable(Component):
 
     def __init__(
         self,
-        catch_chance_modifier: int,
-        destroy_chance_modifier: int,
+        catch_chance_modifier: int = 5,
+        destroy_chance_modifier: int = 20,
         lava_flammable: Optional[Literal["always", "never"]] = None,
     ) -> None:
         """Describes the flammable properties for this block.
@@ -629,7 +531,9 @@ class BlockLootTable(Component):
 class BlockMapColor(Component):
     _identifier = "minecraft:map_color"
 
-    def __init__(self, color: str, tint_method: TintMethod = TintMethod.None_) -> None:
+    def __init__(
+        self, color: Color, tint_method: TintMethod = TintMethod.None_
+    ) -> None:
         """Sets the color of the block when rendered to a map. If this component is omitted, the block will not show up on the map.
 
         Parameters:
@@ -638,9 +542,8 @@ class BlockMapColor(Component):
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_map_color)
         """
-        self._enforce_version(BLOCK_JSON_FORMAT_VERSION, "1.21.70")
         super().__init__("map_color")
-        self._add_field("color", color)
+        self._add_field("color", AnvilFormatter.convert_color(color, HexRGB))
         if tint_method is not TintMethod.None_:
             self._add_field("tint_method", tint_method)
 
@@ -650,12 +553,15 @@ class BlockGeometry(Component):
 
     @overload
     def __init__(
-        self, blockbench_name: str, uv_lock: bool = False, collection: str | None = None
+        self,
+        blockbench_name: str | Geometry,
+        uv_lock: bool = False,
+        collection: str | None = None,
     ) -> None:
         """The description identifier of the geometry file to use to render this block.
 
         Parameters:
-            blockbench_name (str): The name of the Blockbench model to use to render this block.
+            blockbench_name (str | Geometry): The name of the Blockbench model to use to render this block, or a Geometry built in code.
             uv_lock (bool, optional): A Boolean locking UV orientation of all bones in the geometry, or an array of strings locking UV orientation of specific bones in the geometry. For performance reasons it is recommended to use the Boolean. Note that for cubes using Box UVs, rather than Per-face UVs, 'uv_lock' is only supported if the cube faces are square.
             collection (str, optional): The exported Blockbench collection to use. When provided, the geometry identifier becomes ``geometry.<namespace>.<model>.<collection>``.
         """
@@ -668,13 +574,13 @@ class BlockGeometry(Component):
 
     def __init__(
         self,
-        blockbench_name: str = None,
+        blockbench_name: str | Geometry = None,
         uv_lock: bool = False,
         collection: str | None = None,
     ) -> None:
         """The description identifier of the geometry file to use to render this block.
         Parameters:
-            blockbench_name (str, optional): The name of the Blockbench model to use to render this block. Defaults to "minecraft:geometry.full_block".
+            blockbench_name (str | Geometry, optional): The name of the Blockbench model to use to render this block, or a Geometry built in code. Defaults to "minecraft:geometry.full_block".
             uv_lock (bool, optional): A Boolean locking UV orientation of all bones in the geometry, or an array of strings locking UV orientation of specific bones in the geometry. For performance reasons it is recommended to use the Boolean. Note that for cubes using Box UVs, rather than Per-face UVs, 'uv_lock' is only supported if the cube faces are square.
             collection (str, optional): The exported Blockbench collection to use. When provided, the geometry identifier becomes ``geometry.<namespace>.<model>.<collection>``.
         """
@@ -691,9 +597,24 @@ class BlockGeometry(Component):
                 )
             self._add_field("identifier", "minecraft:geometry.full_block")
 
+        elif isinstance(blockbench_name, Geometry):
+            if collection is not None:
+                raise ValueError(
+                    "Collection selection only applies to Blockbench models. Pass the collection's Geometry instead."
+                )
+            self._dependencies = [BlockMaterialInstance]
+            self._add_field("identifier", blockbench_name.geometry_identifier)
+            self._geometry_name = blockbench_name.name
+            if uv_lock:
+                self._add_field("uv_lock", uv_lock)
+
+            self._geometry = blockbench_name
+            self._bb = None
+            blockbench_name.queue(_BlockBenchSource.BLOCK)
+
         else:
             self._dependencies = [BlockMaterialInstance]
-            geometry_name = blockbench_geometry_name(blockbench_name, collection)
+            geometry_name = _blockbench_geometry_name(blockbench_name, collection)
             self._add_field(
                 "identifier", f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"
             )
@@ -702,7 +623,7 @@ class BlockGeometry(Component):
             if uv_lock:
                 self._add_field("uv_lock", uv_lock)
 
-            self._bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
+            self._bb = _Blockbench(blockbench_name, _BlockBenchSource.BLOCK)
             self._bb.model.queue_model(collection)
 
     def bone_visibility(self, **bone: dict[str, bool | str | Molang]):
@@ -718,8 +639,14 @@ class BlockGeometry(Component):
         self._add_field("bone_visibility", {b: v for b, v in bone.items()})
         return self
 
-    def block_culling(self, culling_shape: Literal["empty", "custom"] = "empty"):
-        """Specifies the block culling rules for the geometry file."""
+    def block_culling(
+        self, culling_shape: Literal["empty", "custom"] | VoxelShape = "empty"
+    ):
+        """Specifies the block culling rules for the geometry file.
+
+        Parameters:
+            culling_shape ("empty" | "custom" | VoxelShape, optional): "custom" uses the bounding boxes of the Blockbench model; a VoxelShape is used as is. Defaults to "empty".
+        """
         if self._is_default:
             raise ValueError("Cannot set block culling on default geometry.")
         # if self._collection is not None:
@@ -727,26 +654,38 @@ class BlockGeometry(Component):
         #        "Blockbench collection geometries do not support block culling yet."
         #    )
 
-        if culling_shape == "custom":
+        if isinstance(culling_shape, VoxelShape):
+            culling_shape.queue()
+            self._add_field("culling_shape", culling_shape.shape_identifier)
+        elif culling_shape == "custom":
+            if self._bb is None:
+                raise ValueError(
+                    "'custom' uses the bounding boxes of a Blockbench model, and this geometry was built in code. "
+                    "Pass a VoxelShape instead."
+                )
             self._bb.model.queue_voxel_shape(self._collection)
             self._add_field(
                 "culling_shape",
                 f"{CONFIG.NAMESPACE}:{self._geometry_name}_culling_shape",
             )
 
-        return self._bb.model.block_culling()
+        # Each geometry (model or collection) has its own culling rules file.
+        self._add_field("culling", f"{CONFIG.NAMESPACE}:{self._geometry_name}")
+        if self._bb is None:
+            return _geometry_block_culling(self._geometry)
+        return self._bb.model.block_culling(self._collection)
 
-    def n_way_visual_rotation(self, axis: Dict[str, Molang | str]) -> "BlockGeometry":
+    def n_way_visual_rotation(self, **axes: str) -> "BlockGeometry":
         """Specifies the visual rotation mapping for the geometry.
 
         Parameters:
-            axis (Dict[str, Molang | str]): Axes to state mappings (e.g. y="minecraft:cardinal_direction").
+            **axes: Axes to state mappings (e.g. y="minecraft:cardinal_direction").
 
         Returns:
             BlockGeometry: Self for method chaining.
         """
         valid_axes = ["x", "y", "z"]
-        for axis, state in axis.items():
+        for axis, state in axes.items():
             if axis not in valid_axes:
                 raise ValueError(f"Invalid axis: {axis}. Must be one of {valid_axes}")
             if not isinstance(state, str):
@@ -755,7 +694,7 @@ class BlockGeometry(Component):
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
 
         self._add_field(
-            "n_way_visual_rotation", {axis: state for axis, state in axis.items()}
+            "n_way_visual_rotation", {axis: state for axis, state in axes.items()}
         )
         return self
 
@@ -850,22 +789,20 @@ class BlockPlacementFilter(Component):
 
     def add_condition(
         self,
-        allowed_faces: list[BlockFaces],
+        allowed_faces: list[BlockFaceValues],
         block_filter: list[MinecraftBlockDescriptor | Identifier] | None = None,
     ):
         """Adds a condition to the placement filter.
 
         Parameters:
-            allowed_faces (list[BlockFaces]): The faces of the block that are allowed to be placed on.
+            allowed_faces (list[BlockFaceValues]): The faces of the block that are allowed to be placed on.
             block_filter (list[MinecraftBlockDescriptor | str]): The blocks that are allowed to be placed on.
         """
         allowed_faces = expand_block_face_sides(allowed_faces)
         self._component["conditions"].append(
             {
                 "allowed_faces": allowed_faces,
-                "block_filter": (
-                    [str(f) for f in block_filter] if block_filter is not None else None
-                ),
+                "block_filter": block_filter,
             }
         )
         return self
@@ -986,23 +923,24 @@ class BlockItemVisual(Component):
     @overload
     def __init__(
         self,
-        blockbench_name: str,
+        blockbench_name: str | Geometry,
     ) -> None:
         """The description identifier of the geometry and material used to render the item of this block.
 
         Parameters:
-            blockbench_name (str): The geometry of the item.
+            blockbench_name (str | Geometry): The Blockbench model of the item, or a Geometry built in code.
         """
         pass
 
     def __init__(
         self,
-        blockbench_name: str = None,
+        blockbench_name: str | Geometry = None,
+        collection: str | None = None,
     ) -> None:
         """The description identifier of the geometry and material used to render the item of this block.
 
         Parameters:
-            blockbench_name (str, optional): The geometry of the item. Defaults to None for default full block geometry.
+            blockbench_name (str | Geometry, optional): The Blockbench model of the item, or a Geometry built in code. Defaults to None for default full block geometry.
         """
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.60")
         super().__init__("item_visual")
@@ -1010,14 +948,25 @@ class BlockItemVisual(Component):
 
         if blockbench_name is None:
             self._add_field("geometry", {"identifier": "minecraft:geometry.full_block"})
+        elif isinstance(blockbench_name, Geometry):
+            if collection is not None:
+                raise ValueError(
+                    "Collection selection only applies to Blockbench models. Pass the collection's Geometry instead."
+                )
+            self._add_field(
+                "geometry", {"identifier": blockbench_name.geometry_identifier}
+            )
+            blockbench_name.queue(_BlockBenchSource.BLOCK)
         else:
-            bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
-            bb.model.queue_model()
+            geometry_name = _blockbench_geometry_name(blockbench_name, collection)
 
             self._add_field(
                 "geometry",
-                {"identifier": f"geometry.{CONFIG.NAMESPACE}.{blockbench_name}"},
+                {"identifier": f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"},
             )
+
+            self._bb = _Blockbench(blockbench_name, _BlockBenchSource.BLOCK)
+            self._bb.model.queue_model(collection)
 
         self._add_field("material_instances", {})
 
@@ -1025,7 +974,7 @@ class BlockItemVisual(Component):
         self,
         blockbench_name: str,
         texture: str,
-        block_face: BlockFaces | str = BlockFaces.All,
+        block_face: BlockFaceValues | str = BlockFaceValues.All,
         render_method: BlockMaterial = BlockMaterial.Opaque,
     ):
         """Adds a material instance to the item visual.
@@ -1033,15 +982,15 @@ class BlockItemVisual(Component):
         Parameters:
             blockbench_name (str): The blockbench reference name.
             texture (str): The texture of the item.
-            block_face (BlockFaces): The face of the block to apply the texture to.
+            block_face (BlockFaceValues): The face of the block to apply the texture to.
 
         """
-        if block_face == BlockFaces.All:
+        if block_face == BlockFaceValues.All:
             face_key = "*"
         else:
             face_key = block_face
 
-        bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
+        bb = _Blockbench(blockbench_name, _BlockBenchSource.BLOCK)
         bb.textures.queue_texture(texture)
 
         TerrainTexturesObject().add_block(texture, blockbench_name, [texture])
@@ -1074,6 +1023,150 @@ class BlockItemVisual(Component):
         self._add_field("geometry", geom)
         return self
 
+    def bone_visibility(self, **bone: dict[str, bool | str | Molang]):
+        """Specifies the visibility of bones in the geometry file.
+
+        Example:
+            >>> BlockGeometry('block').bone_visibility(bone0=True, bone1=False)
+
+        """
+        if self._is_default:
+            raise ValueError("Cannot set bone visibility on default geometry.")
+
+        geom = self._component.get("geometry", {})
+        geom.setdefault("bone_visibility", {})
+        geom["bone_visibility"].update({b: v for b, v in bone.items()})
+        return self
+
+
+class BlockEmbeddedVisual(Component):
+    _identifier = "minecraft:embedded_visual"
+
+    @overload
+    def __init__(self) -> None:
+        """Uses the default full block geometry for the item visual."""
+        pass
+
+    @overload
+    def __init__(
+        self,
+        blockbench_name: str | Geometry,
+    ) -> None:
+        """The description identifier of the geometry and material used to render this block when it it is embedded inside of another block (for example, a flower inside of a flower pot).
+
+        Parameters:
+            blockbench_name (str | Geometry): The Blockbench model of the item, or a Geometry built in code.
+        """
+        pass
+
+    def __init__(
+        self,
+        blockbench_name: str | Geometry = None,
+        collection: str | None = None,
+    ) -> None:
+        """The description identifier of the geometry and material used to render this block when it it is embedded inside of another block (for example, a flower inside of a flower pot).
+
+        Parameters:
+            blockbench_name (str | Geometry, optional): The Blockbench model of the item, or a Geometry built in code. Defaults to None for default full block geometry.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_embedded_visual)
+        """
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.21.120")
+        super().__init__("embedded_visual")
+        self._is_default = blockbench_name is None
+
+        if blockbench_name is None:
+            self._add_field("geometry", {"identifier": "minecraft:geometry.full_block"})
+        elif isinstance(blockbench_name, Geometry):
+            if collection is not None:
+                raise ValueError(
+                    "Collection selection only applies to Blockbench models. Pass the collection's Geometry instead."
+                )
+            self._add_field(
+                "geometry", {"identifier": blockbench_name.geometry_identifier}
+            )
+            blockbench_name.queue(_BlockBenchSource.BLOCK)
+        else:
+            geometry_name = _blockbench_geometry_name(blockbench_name, collection)
+
+            self._add_field(
+                "geometry",
+                {"identifier": f"geometry.{CONFIG.NAMESPACE}.{geometry_name}"},
+            )
+
+            self._bb = _Blockbench(blockbench_name, _BlockBenchSource.BLOCK)
+            self._bb.model.queue_model(collection)
+
+        self._add_field("material_instances", {})
+
+    def material_instance(
+        self,
+        blockbench_name: str,
+        texture: str,
+        block_face: BlockFaceValues | str = BlockFaceValues.All,
+        render_method: BlockMaterial = BlockMaterial.Opaque,
+    ):
+        """Adds a material instance to the embedded visual.
+
+        Parameters:
+            blockbench_name (str): The blockbench reference name.
+            texture (str): The texture of the block.
+            block_face (BlockFaceValues): The face of the block to apply the texture to.
+
+        """
+        if block_face == BlockFaceValues.All:
+            face_key = "*"
+        else:
+            face_key = block_face
+
+        bb = _Blockbench(blockbench_name, _BlockBenchSource.BLOCK)
+        bb.textures.queue_texture(texture)
+
+        TerrainTexturesObject().add_block(texture, blockbench_name, [texture])
+
+        self._component["material_instances"][face_key] = {
+            "texture": f"{CONFIG.NAMESPACE}:{texture}",
+            "render_method": (
+                render_method if render_method != BlockMaterial.Opaque else {}
+            ),
+        }
+        return self
+
+    def n_way_visual_rotation(self, **axes: str):
+        """Specifies the visual rotation mapping for the embedded visual geometry.
+
+        Parameters:
+            **axes: Axes to state mappings (e.g. y="minecraft:cardinal_direction").
+        """
+        valid_axes = ["x", "y", "z"]
+        for axis, state in axes.items():
+            if axis not in valid_axes:
+                raise ValueError(f"Invalid axis: {axis}. Must be one of {valid_axes}")
+            if not isinstance(state, str):
+                raise ValueError("State name must be a string")
+
+        self._enforce_version(BLOCK_SERVER_VERSION, "1.26.30")
+
+        geom = self._component.get("geometry", {})
+        geom["n_way_visual_rotation"] = {axis: state for axis, state in axes.items()}
+        self._add_field("geometry", geom)
+        return self
+
+    def bone_visibility(self, **bone: dict[str, bool | str | Molang]):
+        """Specifies the visibility of bones in the geometry file.
+
+        Example:
+            >>> BlockGeometry('block').bone_visibility(bone0=True, bone1=False)
+
+        """
+        if self._is_default:
+            raise ValueError("Cannot set bone visibility on default geometry.")
+
+        geom = self._component.get("geometry", {})
+        geom.setdefault("bone_visibility", {})
+        geom["bone_visibility"].update({b: v for b, v in bone.items()})
+        return self
+
 
 class BlockLiquidDetection(Component):
     _identifier = "minecraft:liquid_detection"
@@ -1086,10 +1179,10 @@ class BlockLiquidDetection(Component):
 
     def add_rule(
         self,
-        liquid_type: str = "minecraft:water",
+        liquid_type: Literal["water"] = "water",
         on_liquid_touches: BlockLiquidDetectionTouching = BlockLiquidDetectionTouching.Blocking,
         can_contain_liquid: bool = False,
-        stops_liquid_flowing_from_direction: list[BlockFaces] = [],
+        stops_liquid_flowing_from_direction: list[BlockFaceValues] = [],
         use_liquid_clipping: bool = False,
     ):
         """Adds a rule to the liquid detection.
@@ -1101,10 +1194,8 @@ class BlockLiquidDetection(Component):
             use_liquid_clipping (bool, optional): Whether this block uses the encompassing collider to visually clip the liquid. The encompassing collider is the smallest single AABB that contains all of the block's colliders. Defaults to False.
 
         """
-        if liquid_type != "minecraft:water":
-            raise ValueError(
-                "Currently, only 'minecraft:water' is supported as a liquid type."
-            )
+        if liquid_type != "water":
+            raise ValueError("Currently, only 'water' is supported as a liquid type.")
         stops_liquid_flowing_from_direction = expand_block_face_sides(
             stops_liquid_flowing_from_direction
         )
@@ -1119,33 +1210,6 @@ class BlockLiquidDetection(Component):
             }
         )
         return self
-
-
-class BlockDestructionParticles(Component):
-    _identifier = "minecraft:destruction_particles"
-
-    def __init__(
-        self,
-        blockbench_name: str,
-        texture: str = None,
-        tint_method: TintMethod = TintMethod.None_,
-    ) -> None:
-        """Sets the particles that will be used when the block is destroyed.
-
-        Parameters:
-            blockbench_name (str): The name of the blockbench model.
-            texture (str, optional): The texture name used for the particle.
-            tint_method (TintMethod, optional): Tint multiplied to the color. Defaults to TintMethod.None_.
-        """
-        super().__init__("destruction_particles")
-        if texture is not None:
-            bb = _Blockbench(blockbench_name, BlockBenchSource.BLOCK)
-            bb.textures.queue_texture(texture)
-
-            TerrainTexturesObject().add_block(texture, blockbench_name, [texture])
-            self._add_field("texture", f"{CONFIG.NAMESPACE}:{texture}")
-        if tint_method is not TintMethod.None_:
-            self._add_field("tint_method", tint_method)
 
 
 class BlockTick(Component):
@@ -1179,13 +1243,13 @@ class BlockConnectionRule(Component):
     def __init__(
         self,
         accepts_connections_from: Literal["all", "only_fences", "none"] = "all",
-        enabled_directions: List[BlockFaces] = [BlockFaces.Side],
+        enabled_directions: List[BlockFaceValues] = [BlockFaceValues.Side],
     ) -> None:
         """Defines whether other blocks such as fences, walls, bars, and glass panes are allowed to connect to this block.
 
         Parameters:
             accepts_connections_from (Literal["all", "only_fences", "none"], optional): Determines which types of blocks this block can connect to. "all" allows connections to any block, "only_fences" restricts connections to fence-type blocks, and "none" prevents any connections. Defaults to "all".
-            enabled_directions (List[BlockFaces], optional): Specifies the directions in which the block can connect to adjacent blocks. By default, connections are enabled in all four cardinal directions (North, South, East, West).
+            enabled_directions (List[BlockFaceValues], optional): Specifies the directions in which the block can connect to adjacent blocks. By default, connections are enabled in all four cardinal directions (North, South, East, West).
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_connection_rule)
         """
@@ -1194,13 +1258,15 @@ class BlockConnectionRule(Component):
         self._add_field("accepts_connections_from", accepts_connections_from)
 
         enabled_directions = expand_block_face_sides(enabled_directions)
-        if enabled_directions in [BlockFaces.Up, BlockFaces.Down]:
+        if enabled_directions in [BlockFaceValues.Up, BlockFaceValues.Down]:
             raise ValueError(
                 "Invalid enabled_directions: Up and Down are not valid directions for connections."
             )
 
-        self._add_field(
-            "enabled_directions", [direction.value for direction in enabled_directions]
+        self._add_field_if_not_default(
+            "enabled_directions",
+            enabled_directions,
+            expand_block_face_sides([BlockFaceValues.Side]),
         )
 
 
@@ -1210,7 +1276,7 @@ class BlockRedstoneConsumer(Component):
     def __init__(
         self,
         min_power: int = 0,
-        propagate_power: bool = True,
+        propagates_power: bool = True,
     ) -> None:
         """Indicates that this block can consume a redstone signal.
 
@@ -1226,7 +1292,7 @@ class BlockRedstoneConsumer(Component):
         if not 0 <= min_power <= 15:
             raise ValueError("min_power must be between 0 and 15.")
         self._add_field("min_power", int(min_power))
-        self._add_field("propagate_power", propagate_power)
+        self._add_field("propagates_power", propagates_power)
 
 
 class BlockSupport(Component):
@@ -1248,13 +1314,14 @@ class BlockSupport(Component):
 class BlockLeashable(Component):
     _identifier = "minecraft:leashable"
 
-    def __init__(self) -> None:
+    def __init__(self, offset: Vector3D = [0, 8, 0]) -> None:
         """Indicates that this block can be leashed by a lead.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_leashable)
         """
         super().__init__("leashable")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.26.0")
+        self._add_field_if_not_default("offset", offset, [0, 8, 0])
 
 
 class BlockTagComponent(Component):
@@ -1367,5 +1434,17 @@ class BlockEntity(Component):
         if slot_count is not None and (slot_count <= 0 or slot_count > 55):
             raise ValueError("Slot count must be between 1 and 54.")
 
-        self._add_field("container", {"slot_count": slot_count})
+        if slot_count is not None:
+            self._add_field("container", {"slot_count": slot_count})
         self._add_field("dynamic_properties", dynamic_properties)
+
+
+class BlockReplaceable(Component):
+    _identifier = "minecraft:replaceable"
+
+    def __init__(self) -> None:
+        """Indicates that this block can be replaced by other blocks when broken.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_replaceable)
+        """
+        super().__init__("replaceable")

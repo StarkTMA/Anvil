@@ -34,7 +34,7 @@ from anvil.api.blocks.components import (
     FlipbookParams,
     BlockMaterial
 )
-from anvil.api.core.enums import BlockFaces
+from anvil.api.core.enums import BlockFaceValues
 
 block.server.components.add(
     BlockMaterialInstance().add_instance(
@@ -48,7 +48,7 @@ block.server.components.add(
                     height="mystic_crystal_height",
                 )
             ],
-            face=BlockFaces.All,
+            face=BlockFaceValues.All,
             params=MaterialParams(render_method=BlockMaterial.Blend),
             # Define texture animation properties
             flipbooks=[

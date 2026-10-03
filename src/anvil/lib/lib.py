@@ -155,7 +155,7 @@ class AnvilIO:
             shortened = {}
 
             for key, item in value.items():
-                key_str = key if isinstance(key, str) else str(key)
+                key_str = str(key)
                 shortened_value = cls._normalize_json_like(item)
                 if cls._should_keep_shortened_value(key_str, shortened_value):
                     shortened[key_str] = shortened_value

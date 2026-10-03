@@ -94,6 +94,11 @@ nav:
                 - Items: api/items/items.md
                 - Components: api/items/components.md
                 - Crafting: api/items/crafting.md
+          - Models:
+                - Overview: api/models/index.md
+                - Geometry: api/models/geometry.md
+                - Animations: api/models/animations.md
+                - Voxel Shape: api/models/voxel_shape.md
           - PBR & Textures: guide/pbr.md
           - World:
                 - Overview: api/world/index.md
@@ -130,6 +135,8 @@ nav:
                 - Translator: api/core/translator.md
                 - Blockbench: api/core/blockbench.md
                 - Format Versions: api/core/format_versions.md
+    - Kit:
+          - Overview: kit/index.md
     - Beta API Reference:
           - Actors:
                 - Components: beta/actors/components.md

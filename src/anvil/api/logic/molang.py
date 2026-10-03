@@ -338,20 +338,20 @@ class Query(Molang):
         return self.__query__(self, self.handle, "actor_count")
 
     @classmethod
-    def All(self, query: "Query", target: "Query", *Parameters):
+    def All(self, query: Molang, queries: list[Molang]):
         """Requires at least 3 arguments. Evaluates the first argument, then returns 1.0 if all of the following arguments evaluate to the same value as the first. Otherwise it returns 0.0.
 
         Parameters:
             query (int): Query to evaluate.
-            Parameters (int): arguments to test against.
+            queries (int): arguments to test against.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        if len(Parameters) < 2:
+        if len(queries) < 2:
             raise ValueError("Query.All requires at least 3 arguments.")
 
-        return self.__query__(self, self.handle, "all", query, target, *Parameters)
+        return self.__query__(self, self.handle, "all", query, *queries)
 
     @classmethod
     def AllAnimationsFinished(self):
@@ -363,7 +363,7 @@ class Query(Molang):
         return self.__query__(self, self.handle, "all_animations_finished")
 
     @classmethod
-    def AllTags(self, *tags: str):
+    def AllTags(self, tags: list[str]):
         """Returns 1.0 if the item or block has all of the tags specified, else it return 0.0.
 
         Parameters:
@@ -372,6 +372,11 @@ class Query(Molang):
         Returns:
             Molang(Molang): A Molang Instance
         """
+        if isinstance(tags, str):
+            raise TypeError(
+                f"Query.AllTags takes a list of tags, got the string {str(tags)!r}. "
+                f"Use Query.AllTags([{str(tags)!r}])."
+            )
         return self.__query__(self, self.handle, "all_tags", *tags)
 
     @classmethod
@@ -393,17 +398,17 @@ class Query(Molang):
         return self.__query__(self, self.handle, "anim_time")
 
     @classmethod
-    def Any(self, query: "Query", *Parameters):
+    def Any(self, query: Molang, queries: list[Molang]):
         """Requires at least 3 arguments. Evaluates the first argument, then returns 1.0 if any of the following arguments evaluate to the same value as the first. Otherwise it returns 0.0.
 
         Parameters:
             query (int): Query to evaluate.
-            Parameters (int): arguments to test against.
+            queries (int): arguments to test against.
 
         Returns:
             Molang(Molang): A Molang Instance
         """
-        return self.__query__(self, self.handle, "any", query, *Parameters)
+        return self.__query__(self, self.handle, "any", query, *queries)
 
     @classmethod
     def AnyAnimationFinished(self):

@@ -15,6 +15,7 @@ class MinecraftItemTags(StrEnum):
     BookshelfBooks = "minecraft:bookshelf_books"
     ChainmailTier = "minecraft:chainmail_tier"
     Coals = "minecraft:coals"
+    CopperTier = "minecraft:copper_tier"
     CrimsonStems = "minecraft:crimson_stems"
     DecoratedPotSherds = "minecraft:decorated_pot_sherds"
     DiamondTier = "minecraft:diamond_tier"

@@ -77,6 +77,13 @@ from anvil.lib.lib import process_subcommand
     show_default=True,
     help="Compile a clean new build (Clears previous build artifacts).",
 )
+@click.option(
+    "--debug",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Enable debug mode for the build process.",
+)
 def build(
     js_only: bool,
     nocompile: bool,
@@ -88,6 +95,7 @@ def build(
     workflow: bool,
     minify: bool,
     clean: bool,
+    debug: bool,
 ) -> None:
     if not os.path.exists("anvilconfig.json"):
         click.echo(
@@ -130,6 +138,8 @@ def build(
         command.append("--minify")
     if clean:
         command.append("--clean")
+    if debug:
+        command.append("--debug")
 
     process_subcommand(
         " ".join(command),

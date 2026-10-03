@@ -19,6 +19,12 @@ class CraftingItemCatalog(AddonObject):
     _extension = ".json"
     _path = os.path.join(CONFIG.BP_PATH, "item_catalog")
 
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(CraftingItemCatalog, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self) -> None:
         if getattr(self, "_initialized", False):
             return
@@ -64,10 +70,10 @@ class CraftingItemCatalog(AddonObject):
                     cat["groups"] = []
                 for existing_group in cat["groups"]:
                     if existing_group["group_identifier"]["name"] == localized_key:
-                        existing_group.setdefault(
-                            "items", existing_group.get("items", [])
-                        ).extend([item.identifier for item in items_list])
-                    continue
+                        existing_group.setdefault("items", []).extend(
+                            [item.identifier for item in items_list]
+                        )
+                        break
                 else:
                     cat["groups"].append(group)
                 break

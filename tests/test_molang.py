@@ -603,23 +603,25 @@ class TestQuery:
 
     def test_All_raises_with_too_few_args(self):
         with pytest.raises(ValueError):
-            Query.All(Molang("q.health"), Molang("q.max_health"))
+            Query.All(Molang("q.health"), [Molang("q.max_health")])
 
     def test_All(self):
         result = Query.All(
             Molang("q.health"),
-            Molang("q.max_health"),
-            Molang("q.variant"),
-            Molang("q.skin_id"),
+            [Molang("q.max_health"), Molang("q.variant"), Molang("q.skin_id")],
         )
         assert str(result) == "q.all(q.health, q.max_health, q.variant, q.skin_id)"
 
     def test_AllTags(self):
-        assert str(Query.AllTags("mob", "animal")) == "q.all_tags('mob', 'animal')"
+        assert str(Query.AllTags(["mob", "animal"])) == "q.all_tags('mob', 'animal')"
+
+    def test_AllTags_rejects_a_bare_string(self):
+        with pytest.raises(TypeError):
+            Query.AllTags("mob")
 
     def test_Any(self):
         assert (
-            str(Query.Any(Molang("q.variant"), Molang("q.skin_id")))
+            str(Query.Any(Molang("q.variant"), [Molang("q.skin_id")]))
             == "q.any(q.variant, q.skin_id)"
         )
 

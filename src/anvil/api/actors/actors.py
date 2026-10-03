@@ -28,9 +28,11 @@ from anvil.api.core.sounds import EntitySoundEvent, SoundCategory
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import Vector2D
 from anvil.api.logic.molang import Molang, Variable
+from anvil.api.models.animations import _Animation
+from anvil.api.models.geometry import Geometry
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.vanilla.entities import vanilla_entity_ids
-from anvil.lib.blockbench import BlockBenchSource, _Blockbench
+from anvil.lib.blockbench import _BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import (
@@ -123,10 +125,14 @@ class _ActorReuseAssets:
     def animation(
         self,
         shortname: str,
-        animation_name: str,
+        animation_name: str | _Animation,
         animate: bool = False,
         condition: str | Molang = None,
     ):
+        if isinstance(animation_name, _Animation):
+            animation_name.file.queue(_BlockBenchSource.ACTOR)
+            animation_name = animation_name.identifier
+
         if animate is True:
             if condition is None:
                 self.client._animate_append(shortname)
@@ -159,7 +165,13 @@ class _ActorReuseAssets:
             {shortname: texture_name}
         )
 
-    def geometry(self, shortname: str, geometry_name: str) -> "_ActorReuseAssets":
+    def geometry(
+        self, shortname: str, geometry_name: str | Geometry
+    ) -> "_ActorReuseAssets":
+        if isinstance(geometry_name, Geometry):
+            geometry_name.queue(_BlockBenchSource.ACTOR)
+            geometry_name = geometry_name.geometry_identifier
+
         self.client._description["description"]["geometry"].update(
             {shortname: geometry_name}
         )
@@ -262,17 +274,28 @@ class _ActorDescription(MinecraftDescription):
 
         """
 
+        self._animation_reference(
+            animation_shortname,
+            f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}",
+            animate,
+            condition,
+        )
+
+    def _animation_reference(
+        self,
+        shortname: str,
+        identifier: str,
+        animate: bool = False,
+        condition: str = None,
+    ):
+        """Maps `shortname` to the animation `identifier`, and animates it if asked."""
         if animate is True:
             if condition is None:
-                self._animate_append(animation_shortname)
+                self._animate_append(shortname)
             else:
-                self._animate_append({animation_shortname: condition})
+                self._animate_append({shortname: condition})
 
-        self._description["description"]["animations"].update(
-            {
-                animation_shortname: f"animation.{CONFIG.NAMESPACE}.{geometry_name}.{animation_shortname}"
-            }
-        )
+        self._description["description"]["animations"].update({shortname: identifier})
 
 
 class _ActorClientDescription(_ActorDescription):
@@ -331,20 +354,38 @@ class _ActorClientDescription(_ActorDescription):
 
     def animation(
         self,
-        blockbench_name: str,
-        animation_name: str,
+        blockbench_name: str | _Animation,
+        animation_name: str | None = None,
         animate: bool = False,
         condition: str | Molang = None,
     ):
         """Sets the mapping of internal animation references to actual animations.
 
         Parameters:
-            animation_name (str): The name of the animation.
+            blockbench_name (str | Animation): The Blockbench model holding the animation, or an Animation built in code (then leave `animation_name` out; its name is the shortname).
+            animation_name (str, optional): The name of the animation in the Blockbench model.
             animate (bool, optional): Whether or not to animate the animation. Defaults to False.
             condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
 
         """
-        bb = _Blockbench(blockbench_name, BlockBenchSource.ACTOR)
+        if isinstance(blockbench_name, _Animation):
+            if animation_name is not None:
+                raise TypeError(
+                    "Pass either an Animation, or a Blockbench model name and an animation name, not both."
+                )
+            animation = blockbench_name
+            animation.file.queue(_BlockBenchSource.ACTOR)
+            self._animation_reference(
+                animation.name, animation.identifier, animate, condition
+            )
+            return self
+
+        if animation_name is None:
+            raise TypeError(
+                "animation_name is required when referencing a Blockbench model."
+            )
+
+        bb = _Blockbench(blockbench_name, _BlockBenchSource.ACTOR)
         bb.animations.queue_animation(animation_name)
 
         self._animations(blockbench_name, animation_name, animate, condition)
@@ -364,19 +405,30 @@ class _ActorClientDescription(_ActorDescription):
         )
         return self
 
-    def geometry(self, geometry_name: str, override_bounding_box: Vector2D = None):
+    def geometry(
+        self, geometry_name: str | Geometry, override_bounding_box: Vector2D = None
+    ):
         """
         This method manages the geometry for an entity.
 
         Parameters:
-            geometry_name (str): The name of the geometry.
+            geometry_name (str | Geometry): The name of the Blockbench model, or a Geometry built in code (its name is the shortname).
             override_bounding_box (Vector2D, optional): The bounding box to override the default bounding box. Defaults to None.
 
         Returns:
             self: Returns an instance of the class.
         """
+        if isinstance(geometry_name, Geometry):
+            geometry = geometry_name
+            if override_bounding_box:
+                geometry.visible_bounds = list(override_bounding_box)
+            geometry.queue(_BlockBenchSource.ACTOR)
+            self._description["description"]["geometry"].update(
+                {geometry.name: geometry.geometry_identifier}
+            )
+            return self
 
-        bb = _Blockbench(geometry_name, BlockBenchSource.ACTOR)
+        bb = _Blockbench(geometry_name, _BlockBenchSource.ACTOR)
         if override_bounding_box:
             bb.override_bounding_box(override_bounding_box)
         bb.model.queue_model()
@@ -417,7 +469,7 @@ class _ActorClientDescription(_ActorDescription):
             blockbench_name (str): The name of the texture.
             texture_name (str): The name of the texture.
         """
-        bb = _Blockbench(blockbench_name, BlockBenchSource.ACTOR)
+        bb = _Blockbench(blockbench_name, _BlockBenchSource.ACTOR)
         bb.textures.queue_texture(component.color)
 
         self._description["description"]["textures"].update(
@@ -434,7 +486,7 @@ class _ActorClientDescription(_ActorDescription):
         )
 
         if component.has_aux():
-            self._texture_set = TextureSet(component.color, BlockBenchSource.ACTOR)
+            self._texture_set = TextureSet(component.color, _BlockBenchSource.ACTOR)
             self._texture_set.set_blockbench_textures(blockbench_name, component)
             self._texture_set.queue()
         return self
@@ -760,7 +812,7 @@ class _EntityClientDescription(_ActorClientDescription):
             raise ValueError("TextureComponents must be provided")
 
         ItemTexturesObject().add_item(texture.color, [texture.color])
-        texture_set = TextureSet(texture.color, BlockBenchSource.ITEM)
+        texture_set = TextureSet(texture.color, _BlockBenchSource.ITEM)
         texture_set.set_item_textures(texture)
         texture_set.queue()
 

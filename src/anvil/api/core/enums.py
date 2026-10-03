@@ -340,13 +340,14 @@ class Population(StrEnum):
     WaterAnimal = "water_animal"
 
 
+# Vanilla traits, used to define the traits of blocks
 class PlacementDirectionTrait(StrEnum):
     CardinalDirection = "minecraft:cardinal_direction"  # North, South, East, West
     FacingDirection = "minecraft:facing_direction"  # Up, Down, North, South, East, West
     CornerAndCardinalDirection = "minecraft:corner_and_cardinal_direction"  # North, South, East, West, Northeast, Northwest, Southeast, Southwest
-    # SixteenWayRotation = (
-    #    "minecraft:sixteen_way_rotation"  # 16 distinct rotational positions (0-15)
-    # )
+    SixteenWayRotation = (
+        "minecraft:sixteen_way_rotation"  # 16 distinct rotational positions (0-15)
+    )
 
 
 class PlacementPositionTrait(StrEnum):
@@ -359,37 +360,8 @@ class ConnectionTrait(StrEnum):
     CardinalConnections = "minecraft:cardinal_connections"  # north, south, east, west
 
 
-class CardinalDirectionsTrait(StrEnum):
-    SOUTH = "south"
-    WEST = "west"
-    NORTH = "north"
-    EAST = "east"
-
-
-class FacingDirectionsTrait(StrEnum):
-    Up = "up"
-    Down = "down"
-    SOUTH = "south"
-    WEST = "west"
-    NORTH = "north"
-    EAST = "east"
-
-
-class BlockFacesTrait(StrEnum):
-    Up = "up"
-    Down = "down"
-    SOUTH = "south"
-    WEST = "west"
-    NORTH = "north"
-    EAST = "east"
-
-
-class VerticalHalfTrait(StrEnum):
-    TOP = "top"
-    BOTTOM = "bottom"
-
-
-class BlockCardinalConnection(StrEnum):
+# Vanilla states
+class CardinalConnectionStates(StrEnum):
     """
     Enumeration representing the connected faces of a block in Minecraft, used for blocks that can connect to adjacent blocks (e.g., fences, walls).
     """
@@ -400,7 +372,37 @@ class BlockCardinalConnection(StrEnum):
     West = "minecraft:connection_west"
 
 
-class BlockCorner(StrEnum):
+class BlockCornerState(StrEnum):
+    Corner = "minecraft:corner"
+
+
+class MultiblockPartState(StrEnum):
+    Part = "minecraft:multi_block_part"
+
+
+# Vanilla trait values, values of block states queries
+class CardinalDirectionsValues(StrEnum):
+    SOUTH = "south"
+    WEST = "west"
+    NORTH = "north"
+    EAST = "east"
+
+
+class FacingDirectionValues(StrEnum):
+    Up = "up"
+    Down = "down"
+    SOUTH = "south"
+    WEST = "west"
+    NORTH = "north"
+    EAST = "east"
+
+
+class VerticalHalfValues(StrEnum):
+    TOP = "top"
+    BOTTOM = "bottom"
+
+
+class BlockCornerValues(StrEnum):
     """
     Enumeration representing the corner and cardinal directions for block placement in Minecraft.
     """
@@ -412,7 +414,7 @@ class BlockCorner(StrEnum):
     None_ = "none"
 
 
-class BlockFaces(StrEnum):
+class BlockFaceValues(StrEnum):
     """
     Enumeration representing the different faces of a block in Minecraft.
     """
@@ -427,36 +429,45 @@ class BlockFaces(StrEnum):
     All = "all"
 
 
-_CARDINAL_FACES = [BlockFaces.North, BlockFaces.South, BlockFaces.East, BlockFaces.West]
+_CARDINAL_FACES = [
+    BlockFaceValues.North,
+    BlockFaceValues.South,
+    BlockFaceValues.East,
+    BlockFaceValues.West,
+]
 _ALL_FACES = [
-    BlockFaces.North,
-    BlockFaces.South,
-    BlockFaces.East,
-    BlockFaces.West,
-    BlockFaces.Up,
-    BlockFaces.Down,
+    BlockFaceValues.North,
+    BlockFaceValues.South,
+    BlockFaceValues.East,
+    BlockFaceValues.West,
+    BlockFaceValues.Up,
+    BlockFaceValues.Down,
 ]
 
 
-def expand_block_face_sides(faces: List[BlockFaces]) -> List[BlockFaces]:
-    """Expand ``BlockFaces.Side`` and ``BlockFaces.All`` into explicit face lists.
+def expand_block_face_sides(faces: List[BlockFaceValues]) -> List[BlockFaceValues]:
+    """Expand ``BlockFaceValues.Side`` and ``BlockFaceValues.All`` into explicit face lists.
 
     ``Side`` expands to the four cardinal directions (North, South, East, West).
     ``All`` expands to all six faces.
     The input list is not mutated; a new list is returned.
     """
-    has_all = BlockFaces.All in faces
-    has_side = BlockFaces.Side in faces
+    has_all = BlockFaceValues.All in faces
+    has_side = BlockFaceValues.Side in faces
 
     if not has_all and not has_side:
         return list(faces)
 
-    result = [f for f in faces if f is not BlockFaces.Side and f is not BlockFaces.All]
     if has_all:
-        result.extend(_ALL_FACES)
+        faces.remove(BlockFaceValues.All)
+    if has_side:
+        faces.remove(BlockFaceValues.Side)
+
+    if has_all:
+        faces.extend(_ALL_FACES)
     else:
-        result.extend(_CARDINAL_FACES)
-    return result
+        faces.extend(_CARDINAL_FACES)
+    return faces
 
 
 class BlockMaterial(StrEnum):

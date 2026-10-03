@@ -30,6 +30,8 @@ class MinecraftBlockTags(StrEnum):
     FertilizeArea = "fertilize_area"
     Leaves = "minecraft:leaves"
 
+    CornerableStairs = "minecraft:cornerable_stairs"
+    HasFenceConnections = "minecraft:has_fence_connections"
     DiamondTierDestructible = "minecraft:diamond_tier_destructible"
     IronTierDestructible = "minecraft:iron_tier_destructible"
     IsAxeItemDestructible = "minecraft:is_axe_item_destructible"

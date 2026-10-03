@@ -1,0 +1,12 @@
+import { StartupEvent, world } from "@minecraft/server";
+{{imports}}
+
+// Single entry point: call once from `system.beforeEvents.startup`.
+export function registerWoodSet(init: StartupEvent): void {
+{{components}}
+
+	// World events can't be subscribed during startup, so they wait for world load.
+	world.afterEvents.worldLoad.subscribe(() => {
+{{events}}
+	});
+}

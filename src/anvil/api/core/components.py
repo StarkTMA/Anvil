@@ -271,7 +271,7 @@ def components_validations(
 
     for group in group_components:
         component_clashes(addon_object, list(group))
-        component_dependencies(addon_object, list(group))
+        component_dependencies(addon_object, list(group) + list(root_components))
 
         for comp in group:
             if not comp._allowed_in_group:

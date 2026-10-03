@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.95**](#0995)
+- [**0.9.96**](#0996)
+- [0.9.95](#0995)
 - [0.9.94](#0994)
 - [0.9.93](#0993)
 - [0.9.92](#0992)
@@ -106,6 +107,106 @@
 ---
 
 # 0.9.x
+
+## 0.9.96
+
+### Anvil
+
+- Added the `--debug` flag to `anvil build`, enabling debug mode for that build.
+- Component dependencies of a permutation can now be satisfied by the block's root components.
+- Bumped the geometry format version to `1.26.0`.
+- Declared `requests` as a dependency (it was imported but only installed indirectly).
+
+### Models
+
+- Added `anvil.api.models`, builders for model files made in code:
+    - `Geometry` (`*.geo.json`): a tree of bones holding cubes and locators, with `clone()`, `merge()`, `translate()` and `scale()`. Cubes use box UV (`uv=(u, v)`) or per-face UVs as keyword arguments (`north=((0, 0), (4, 4))`, `up=((4, 0), (4, 4), 90)`, or a dict for a `material_instance`).
+    - `Animations` (`*.animations.json`): many animations in one file, with position/rotation/scale keyframes, particle, sound and timeline events, and `validate()` against a `Geometry`.
+    - `VoxelShape` (`*.shape.json`): named groups of boxes, built like a `Geometry`.
+- Geometry, animation and culling shape references now accept these objects as well as names:
+    - Entities and attachables: `geometry(...)`, `animation(...)` and `reuse_assets.geometry(...)` / `reuse_assets.animation(...)`.
+    - `BlockGeometry`, `BlockItemVisual` and `BlockEmbeddedVisual` accept a `Geometry`.
+    - `BlockGeometry.block_culling()` accepts a `VoxelShape`, and gives a code-built geometry its own culling rules.
+
+### Blockbench
+
+- The Blockbench importer now builds `anvil.api.models` objects and lives in the internal `anvil.lib.blockbench` package. Imported models export the same files as before.
+- Collections:
+    - Groups nested inside a collection are resolved with their full children.
+    - A node is no longer exported twice when one of its ancestors is also in the collection.
+    - `queue_model` checks the collection identifier.
+- Block culling rules are now one file per geometry (`<model>` or `<model>.<collection>`), checked against that geometry's bones; `cube_index` is checked against the bone's actual cubes.
+- Voxel shapes mirror the model's groups; exporting a voxel shape from a model with no bounding boxes now raises an error, and inverted boxes are normalized.
+- Animations:
+    - Empty particle and sound effects are skipped.
+    - Sounds without a locator no longer write `"locator": null`.
+    - Several events on the same keyframe are all kept.
+    - Animation files are exported under their source folder.
+    - Keyframe values are trimmed, and a blank value counts as 0 like in Blockbench, instead of exporting an invalid Molang expression.
+- Loading the same `.bbmodel` under two sources (e.g. as an item and as a block) now raises an error.
+- Duplicate bone names in a model now raise an error instead of silently dropping a bone.
+- A model with both top-level cubes and a `root` group keeps all cubes.
+- `override_bounding_box` now also applies to geometries that were already built.
+
+### Blocks
+
+- Added the `BlockReplaceable` component.
+- `BlockEntity` no longer writes an empty `container` when no `slot_count` is given.
+- `BlockMapColor` accepts any color format.
+- `BlockItemVisual` and `BlockEmbeddedVisual` support Blockbench collections (`collection=`) and `bone_visibility()`.
+- `placement_direction` only writes the fields that are set.
+- Removed a duplicate definition of `BlockDestructionParticles`.
+- Fixed `BlockGeometry.n_way_visual_rotation()`, which always failed; it now takes the axes as keywords like the visual components: `n_way_visual_rotation(y=...)`.
+
+### Molang
+
+- **Breaking:** `Query.All` and `Query.Any` take the compared queries as a list: `Query.All(query, [a, b])`.
+- **Breaking:** `Query.AllTags` takes a list of tags, `Query.AllTags(["minecraft:is_axe"])`, and raises an error when given a single string.
+
+### Enums
+
+- **Breaking:** block state enums were renamed and regrouped:
+    - `BlockFaces` → `BlockFaceValues`
+    - `BlockFacesTrait` → `FacingDirectionValues` (which also replaces `FacingDirectionsTrait`)
+    - `CardinalDirectionsTrait` → `CardinalDirectionsValues`
+    - `VerticalHalfTrait` → `VerticalHalfValues`
+    - `BlockCorner` → `BlockCornerValues`
+    - `BlockCardinalConnection` → `CardinalConnectionStates`
+- Added the `BlockCornerState` and `MultiblockPartState` enums.
+
+### Items
+
+- `CraftingItemCatalog` is now a true singleton, so groups added from different places end up in one catalog file instead of overwriting each other.
+- `CraftingItemCatalog.add_group()` extends an existing group instead of adding a duplicate.
+
+### Schemas
+
+- `MinecraftBlockDescriptor` can match blocks by tags alone: `tags` is now a Molang expression (e.g. `Query.AllTags([...])`) and `name` is optional. Block states still require a name.
+
+### Vanilla
+
+- Added `MinecraftBlockTags.CornerableStairs` and `MinecraftBlockTags.HasFenceConnections`.
+- Added `MinecraftItemTags.CopperTier`.
+
+### Kit
+
+- Added `anvil.kit.blocks.wood_set`: `create_wood_set(name, blocks=WoodBlock.ALL)` creates a complete wood set (planks, logs, wood, stripped variants, slabs, stairs, fences, fence gates, doors, trapdoors, buttons, pressure plates, wall signs, standing signs, hanging signs, boats and chest boats). The set includes:
+    - Its recipes.
+    - Vanilla wood tags, so every vanilla wood recipe accepts its planks, slabs and logs.
+    - Vanilla fuel values.
+    - Creative inventory placement next to the vanilla blocks, or in its own group with `own_creative_group=True`.
+    - The TypeScript components the blocks need, generated for every wood set in the project.
+    - Wall signs and standing signs (16-way rotation), placed with a single `<name>_sign` item like vanilla signs, that ask for their text in a form when placed, store it in the block's dynamic properties, and show it again for editing when used (needs `scriptui`).
+    - Hanging signs: one block hung under a block or on its side (cardinal rotation, a separate bone for each), 4 lines of 9 characters, broken with the block holding it.
+    - Signs can be dyed and made to glow with a glow ink sac (an ink sac removes the glow), in vanilla's dye colours and glow outline.
+    - Boats (two seats) and chest boats (one seat and a 27-slot chest, opened by sneaking) sharing one model. They float, face away from the player when placed, steer like vanilla boats (A/D turn, W/S row), can be leashed, and animate their paddles and shake when hit. They break after a few quick hits, or at once with an axe or in creative, dropping their item (not in creative) and the chest's contents.
+    - Its custom components as classes in `anvil.kit.blocks.wood_set.components`: `BlockWoodSetSign` (text position, scale, line length, double-sided text), `BlockWoodSetSupport` (breaks the block with the block below, the one it was placed against or the one it faces, set with `SupportedBy`), `BlockWoodSetInteractable`, `BlockWoodSetRedstoneConsumer`, `BlockWoodSetStrippable`, `BlockWoodSetTogglable` and `BlockWoodSetSlab`.
+- `anvil.kit.world.ldtk` now explains how to install Amulet (`pip install mcanvil[ldtk]`) when it is missing.
+
+### Documentation
+
+- Added the Models API pages and a Kit page, which notes that the kit may change between minor versions while `anvil.api` is the stable layer.
+- Updated the PBR guide to `BlockFaceValues`.
 
 ## 0.9.95
 

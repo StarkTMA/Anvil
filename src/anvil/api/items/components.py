@@ -11,7 +11,7 @@ from anvil.api.logic.molang import Molang
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.blockbench import BlockBenchSource
+from anvil.lib.blockbench import _BlockBenchSource
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import ITEM_SERVER_VERSION
 from anvil.lib.lib import AnvilFormatter, Color, HexRGB, clamp
@@ -1269,7 +1269,7 @@ class ItemIcon(Component):
         ItemTexturesObject().add_item(
             component.color, blockbench_model, [component.color]
         )
-        self._texture_set = TextureSet(component.color, BlockBenchSource.ITEM)
+        self._texture_set = TextureSet(component.color, _BlockBenchSource.ITEM)
         if blockbench_model:
             self._texture_set.set_blockbench_textures(blockbench_model, component)
         else:
