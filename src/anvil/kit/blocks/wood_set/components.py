@@ -38,6 +38,9 @@ class SupportedBy(StrEnum):
     """The block it was placed against, read from `minecraft:block_face`."""
     Facing = "facing"
     """The block its `minecraft:cardinal_direction` points at."""
+    Sign = "sign"
+    """The block below when its `standing` state is on, otherwise the block its
+    `minecraft:cardinal_direction` points at."""
 
 
 class BlockWoodSetSupport(_WoodSetComponent):
@@ -117,7 +120,7 @@ class BlockWoodSetSign(_WoodSetComponent):
         text_scale: float = 0.46,
         line_length: int = 15,
         double_sided: bool = False,
-        wall_sign: str | None = None,
+        wall_text_offset: Vector3D | None = None,
     ) -> None:
         """Asks for the text when placed or interacted with, and shows it on the sign.
 
@@ -129,8 +132,13 @@ class BlockWoodSetSign(_WoodSetComponent):
             line_length (int): The most visible characters on a line.
             double_sided (bool): Also shows the text on the back, turned around the block's
                 centre.
-            wall_sign (str, optional): The wall sign placed instead when the sign is put on
-                the side of a block.
+            wall_text_offset (Vector3D, optional): Makes the sign two shapes in one block,
+                told apart by its `standing` state: standing (on top of a block, turning in
+                16 steps) and on a wall (on the side of a block, with its cardinal direction
+                pointing at the wall). `text_offset` is where the text sits when standing and
+                this is where it sits on the wall, measured like `text_offset` with the sign
+                pointing north. A sign placed on the side of a block turns its `standing`
+                state off.
         """
         super().__init__()
         values = list(text_offset)
@@ -146,5 +154,10 @@ class BlockWoodSetSign(_WoodSetComponent):
         self._add_field("text_scale", text_scale)
         self._add_field_if_not_default("line_length", line_length, 15)
         self._add_field_if_not_default("double_sided", double_sided, False)
-        if wall_sign:
-            self._add_field("wall_sign", wall_sign)
+        if wall_text_offset is not None:
+            wall_values = list(wall_text_offset)
+            if len(wall_values) != 3 or any(not 0 <= value <= 16 for value in wall_values):
+                raise ValueError(
+                    f"wall_text_offset must be three values from 0 to 16, got {wall_text_offset}."
+                )
+            self._add_field("wall_text_offset", wall_values)

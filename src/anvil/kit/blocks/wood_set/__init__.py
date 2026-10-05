@@ -1,9 +1,9 @@
 """A complete wood set from one call: `create_wood_set("rotten")`.
 
-    create_wood_set("rotten")                                    # everything
-    create_wood_set("rotten", WoodBlock.PLANKS | WoodBlock.SLAB)  # only these
-    create_wood_set("rotten", WoodBlock.ALL & ~WoodBlock.DOOR)    # everything but these
-    create_wood_set("rotten", own_creative_group=True)           # in a "Rotten Wood" group
+    create_wood_set("rotten")                                          # everything
+    create_wood_set("rotten", [WoodBlock.DOOR, WoodBlock.BOAT])        # everything but these
+    create_wood_set("rotten", WoodBlock.DOOR | WoodBlock.BOAT)         # same, combined
+    create_wood_set("rotten", own_creative_group=True)                 # in a "Rotten Wood" group
 
 Every block and boat is its own file in `blocks/`: its `create(wood, selected)` builds it,
 names it, queues it and registers the recipes that make it. The custom components the
@@ -24,6 +24,7 @@ and `<name>_chest_boat` in `assets/textures/items/`, and two blockbench models:
 """
 
 from enum import Flag, auto
+from typing import Iterable
 
 from anvil.api.actors.actors import Entity
 from anvil.api.blocks.blocks import Block
@@ -43,11 +44,10 @@ from .blocks import (
     log_stripped,
     planks,
     pressure_plate,
+    sign,
     slab,
     stairs,
-    standing_sign,
     trapdoor,
-    wall_sign,
     wood,
     wood_stripped,
 )
@@ -72,8 +72,7 @@ class WoodBlock(Flag):
     LOG_STRIPPED = auto()
     WOOD = auto()
     WOOD_STRIPPED = auto()
-    WALL_SIGN = auto()
-    STANDING_SIGN = auto()
+    SIGN = auto()
     HANGING_SIGN = auto()
     BOAT = auto()
     CHEST_BOAT = auto()
@@ -92,8 +91,7 @@ class WoodBlock(Flag):
         | LOG_STRIPPED
         | WOOD
         | WOOD_STRIPPED
-        | WALL_SIGN
-        | STANDING_SIGN
+        | SIGN
         | HANGING_SIGN
         | BOAT
         | CHEST_BOAT
@@ -114,8 +112,7 @@ BLOCKS = {
     WoodBlock.LOG_STRIPPED: log_stripped.create,
     WoodBlock.WOOD: wood.create,
     WoodBlock.WOOD_STRIPPED: wood_stripped.create,
-    WoodBlock.WALL_SIGN: wall_sign.create,
-    WoodBlock.STANDING_SIGN: standing_sign.create,
+    WoodBlock.SIGN: sign.create,
     WoodBlock.HANGING_SIGN: hanging_sign.create,
     WoodBlock.BOAT: boat.create,
     WoodBlock.CHEST_BOAT: chest_boat.create,
@@ -124,15 +121,27 @@ BLOCKS = {
 
 def create_wood_set(
     name: str,
-    blocks: WoodBlock = WoodBlock.ALL,
+    exclude: WoodBlock | Iterable[WoodBlock] = (),
     *,
     own_creative_group: bool = False,
 ) -> None:
-    """Create the selected `blocks` of the `name` wood set.
+    """Create every block of the `name` wood set except `exclude`.
+
+    `exclude` is one `WoodBlock`, several combined with `|`, or a list of them. Blocks
+    that depend on an excluded one lose that part (a sign without planks has no recipe).
 
     In the creative inventory each block sits next to its vanilla counterparts, or with
     `own_creative_group`, all of them in one "<Name> Wood" group under Construction.
     """
+    blocks = WoodBlock.ALL
+    if isinstance(exclude, WoodBlock):
+        excluded = exclude
+    else:
+        excluded = WoodBlock(0)
+        for kind in exclude:
+            excluded |= kind
+    blocks &= ~excluded
+
     # Block names like "log_stripped", so each block knows what else is in the set
     selected = {kind.name.lower() for kind in BLOCKS if kind in blocks}
 

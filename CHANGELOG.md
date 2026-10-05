@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.96**](#0996)
+- [**0.9.97**](#0997)
+- [0.9.96](#0996)
 - [0.9.95](#0995)
 - [0.9.94](#0994)
 - [0.9.93](#0993)
@@ -107,6 +108,19 @@
 ---
 
 # 0.9.x
+
+## 0.9.97
+
+### Kit
+
+- Wood set signs: the wall sign and the standing sign are now one block, `<name>_sign`, with a `standing` state that picks its shape:
+    - Standing (the default) turns in 16 steps and is selected by a post; not standing hangs flat against the side of a block in one of four directions.
+    - Placing the sign item on the side of a block turns `standing` off and points the sign at that block. It breaks with the block below, or with the wall it hangs on.
+    - `WoodBlock.WALL_SIGN` and `WoodBlock.STANDING_SIGN` are replaced by `WoodBlock.SIGN`.
+    - `BlockWoodSetSign` takes `wall_text_offset` (where the text sits on a wall) in place of `wall_sign`.
+    - Added `SupportedBy.Sign` to `BlockWoodSetSupport`.
+- Wood set logs and wood: stripping with an axe is now done in a world event (`registerStrippableEvents`), so the blocks no longer handle interactions themselves, which stopped other blocks from being placed against them.
+- `create_wood_set(name, exclude=())` now lists the blocks to leave out instead of the ones to create (everything is created by default), as a `WoodBlock`, several combined with `|`, or a list: `create_wood_set("rotten", [WoodBlock.DOOR, WoodBlock.BOAT])`. The `blocks` argument is removed.
 
 ## 0.9.96
 

@@ -26,6 +26,7 @@ import {
 	SIGN_COMPONENT_ID,
 	SIGN_GLOWING,
 	SIGN_TEXT,
+	STANDING,
 	SignParams,
 	SIXTEEN_WAY_ROTATION,
 } from "./constants";
@@ -83,11 +84,16 @@ const OPPOSITE: Record<string, string> = {
 
 const signShapes = new Map<string, TextPrimitive[][]>();
 
+function onWall(permutation: BlockPermutation): boolean {
+	return permutation.getState(STANDING) === false;
+}
+
 function signAngle(permutation: BlockPermutation): number {
 	const face = permutation.getState(BLOCK_FACE) as string | undefined;
 	if (face && face in ANGLES) return (ANGLES[face] + 90) % 360;
 	const cardinal = permutation.getState(CARDINAL_DIRECTION) as string | undefined;
-	if (cardinal) return ANGLES[cardinal];
+	if (cardinal && (onWall(permutation) || permutation.getState(SIXTEEN_WAY_ROTATION) === undefined))
+		return ANGLES[cardinal];
 	return (
 		((permutation.getState(SIXTEEN_WAY_ROTATION) as number | undefined) ?? 0) *
 		-22.5
@@ -105,8 +111,17 @@ function turned(angle: number, x: number, z: number): [number, number] {
 	return [x * cos + z * sin, -x * sin + z * cos];
 }
 
-function textLocation(block: Block, angle: number, params?: SignParams): Vector3 {
-	const [x = 0, y = 0, z = 0] = params?.text_offset ?? [];
+function textLocation(
+	permutation: BlockPermutation,
+	block: Block,
+	angle: number,
+	params?: SignParams,
+): Vector3 {
+	const offset =
+		onWall(permutation) && params?.wall_text_offset
+			? params.wall_text_offset
+			: params?.text_offset;
+	const [x = 0, y = 0, z = 0] = offset ?? [];
 	const [dx, dz] = turned(angle, x - 8, z - 8);
 	return {
 		x: block.location.x + (8 + dx) / 16,
@@ -325,7 +340,9 @@ function updateBlockPrimitiveText(block: Block, params?: SignParams): void {
 	const outline = !dye || dye === "black" ? CREAM : dyeColor(dye, OUTLINE_BRIGHTNESS);
 	const scale = params?.text_scale ?? DEFAULT_TEXT_SCALE;
 	const angles = sideAngles(block.permutation, params);
-	const locations = angles.map((angle) => textLocation(block, angle, params));
+	const locations = angles.map((angle) =>
+		textLocation(block.permutation, block, angle, params),
+	);
 	const sides = trackedShapes(block, locations);
 
 	try {
@@ -361,10 +378,10 @@ export function registerSignComponent(init: StartupEvent): void {
 		beforeOnPlayerPlace: (event, { params }) => {
 			const sign = params as SignParams | undefined;
 			const wall = OPPOSITE[event.face.toLowerCase()];
-			if (sign?.wall_sign && wall) {
-				event.permutationToPlace = BlockPermutation.resolve(sign.wall_sign, {
-					[CARDINAL_DIRECTION]: wall,
-				} as Record<string, string>);
+			if (sign?.wall_text_offset && wall) {
+				event.permutationToPlace = event.permutationToPlace
+					.withState(STANDING, false)
+					.withState(CARDINAL_DIRECTION, wall);
 			}
 
 			const { block, player } = event;
@@ -388,7 +405,10 @@ export function registerSignComponent(init: StartupEvent): void {
 				shape.remove();
 			signShapes.delete(signKey(block));
 			for (const angle of sideAngles(brokenBlockPermutation, sign))
-				removeLeftovers(block, textLocation(block, angle, sign));
+				removeLeftovers(
+					block,
+					textLocation(brokenBlockPermutation, block, angle, sign),
+				);
 		},
 
 		onTick: ({ block }, { params }) => {

@@ -8,6 +8,7 @@ import {
 	BLOCK_FACE,
 	CARDINAL_DIRECTION,
 	FACE_OFFSETS,
+	STANDING,
 	SUPPORT_COMPONENT_ID,
 	SupportParams,
 } from "./constants";
@@ -26,6 +27,10 @@ function directionFromSupport(permutation: BlockPermutation, params?: SupportPar
 			return permutation.getState(BLOCK_FACE) as string;
 		case "facing":
 			return OPPOSITE[permutation.getState(CARDINAL_DIRECTION) as string];
+		case "sign":
+			return permutation.getState(STANDING) === false
+				? OPPOSITE[permutation.getState(CARDINAL_DIRECTION) as string]
+				: "up";
 		default:
 			return "up";
 	}

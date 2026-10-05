@@ -29,7 +29,12 @@ from anvil.api.core.enums import (
     ItemGroups,
     PlacementPositionTrait,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel, ItemTags
+from anvil.api.items.components import (
+    ItemBlockPlacer,
+    ItemDisplayName,
+    ItemFuel,
+    ItemTags,
+)
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
@@ -123,9 +128,7 @@ def create(wood: str, selected: set[str]) -> Block:
         ItemFuel(15),
         ItemTags([MinecraftItemTags.Logs, MinecraftItemTags.LogsThatBurn]),
     )
-    block.item.server.description.menu_category(
-        ItemCategory.Nature, ItemGroups.Log
-    )
+    block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Log)
 
     block.queue()
 

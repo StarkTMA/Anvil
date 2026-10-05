@@ -28,7 +28,7 @@ SCRIPTS = {
     "togglable": ("togglable", True, False),
     "interactable": ("interactable", True, False),
     "redstone_consumer": ("redstoneConsumer", True, False),
-    "strippable": ("strippable", True, False),
+    "strippable": ("strippable", True, True),
     "slab": ("slab", True, True),
     "sign": ("sign", True, False),
     "boat": ("boat", False, True),
@@ -50,7 +50,7 @@ def generate_typescript(created: Iterable[object]) -> None:
     if needs_ui and not CONFIG._SCRIPT_UI:
         raise ValueError(
             f"The wood set scripts {needs_ui} use @minecraft/server-ui. "
-            "Enable 'scriptui' in anvilconfig.json, or leave out WoodBlock.WALL_SIGN, WoodBlock.STANDING_SIGN and WoodBlock.HANGING_SIGN."
+            "Enable 'scriptui' in anvilconfig.json, or leave out WoodBlock.SIGN and WoodBlock.HANGING_SIGN."
         )
 
     output = Path(OUTPUT_DIRECTORY)

@@ -17,6 +17,7 @@ export const DOUBLE = `${NAMESPACE}:double` as any;
 export const VERTICAL_HALF = "minecraft:vertical_half" as any;
 export const BLOCK_FACE = "minecraft:block_face" as any;
 export const CARDINAL_DIRECTION = "minecraft:cardinal_direction" as any;
+export const STANDING = `${NAMESPACE}:standing` as any;
 export const SIXTEEN_WAY_ROTATION = "minecraft:sixteen_way_rotation" as any;
 
 // Dynamic properties of a sign: its text, the dye colouring it and whether it glows
@@ -46,7 +47,7 @@ export interface StrippableParams {
 }
 
 export interface SupportParams {
-	supported_by?: "below" | "block_face" | "facing";
+	supported_by?: "below" | "block_face" | "facing" | "sign";
 }
 
 export interface SignParams {
@@ -54,5 +55,5 @@ export interface SignParams {
 	text_scale?: number;
 	line_length?: number;
 	double_sided?: boolean;
-	wall_sign?: string;
+	wall_text_offset?: [number, number, number];
 }

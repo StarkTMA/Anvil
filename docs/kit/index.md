@@ -21,13 +21,13 @@ Importing a kit without its extra raises an `ImportError` naming the command to 
 
 ### Blocks
 
-- **`anvil.kit.blocks.wood_set`**: a complete wood set (planks, logs, wood, slabs, stairs, fences, gates, doors, trapdoors, buttons, pressure plates, wall, standing and hanging signs, boats and chest boats) with recipes, vanilla wood tags, fuel values, creative inventory placement and the TypeScript components they need.
+- **`anvil.kit.blocks.wood_set`**: a complete wood set (planks, logs, wood, slabs, stairs, fences, gates, doors, trapdoors, buttons, pressure plates, signs (standing and wall in one block), hanging signs, boats and chest boats) with recipes, vanilla wood tags, fuel values, creative inventory placement and the TypeScript components they need.
 
 ```python
 from anvil.kit.blocks.wood_set import WoodBlock, create_wood_set
 
 create_wood_set("rotten")                                    # everything
-create_wood_set("rotten", WoodBlock.ALL & ~WoodBlock.DOOR)    # everything but doors
+create_wood_set("rotten", WoodBlock.DOOR)                    # everything but doors
 create_wood_set("rotten", own_creative_group=True)           # in its own creative group
 ```
 
