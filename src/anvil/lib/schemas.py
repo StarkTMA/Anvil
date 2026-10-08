@@ -757,7 +757,7 @@ class JsonSchemes:
     def worldgen_feature(template_name: str, identifier: Identifier):
         return load_file(
             f"{template_name}.jsont",
-            {"format_version": MANIFEST_BUILD, "identifier": identifier},
+            {"format_version": FEATURE_VERSION, "identifier": identifier},
             is_json=True,
         )
 
@@ -766,7 +766,7 @@ class JsonSchemes:
         return load_file(
             "feature_rule.jsont",
             {
-                "format_version": MANIFEST_BUILD,
+                "format_version": FEATURE_RULE_VERSION,
                 "identifier": identifier,
                 "feature_identifier": feature_identifier,
             },
@@ -1080,7 +1080,7 @@ class MinecraftBlockDescriptor(AddonDescriptor):
         if states:
             for k, v in states.items():
                 if v is not None:
-                    self._states[str(k)] = str(v)
+                    self._states[str(k)] = v
         self._tags = tags
 
     @property
@@ -1103,7 +1103,7 @@ class MinecraftBlockDescriptor(AddonDescriptor):
 
     @property
     def states(self) -> Mapping[str, str | int | float | bool]:
-        """Returns a string representation of the block states."""
+        """Returns the block states to match, with their values as given (a bool stays a bool)."""
         return self._states
 
     def descriptor(self) -> Identifier | dict:

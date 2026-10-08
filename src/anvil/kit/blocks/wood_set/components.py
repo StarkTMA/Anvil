@@ -15,6 +15,8 @@ __all__ = [
     "BlockWoodSetStrippable",
     "BlockWoodSetSlab",
     "BlockWoodSetSign",
+    "BlockWoodSetLeaves",
+    "BlockWoodSetSapling",
 ]
 
 
@@ -156,8 +158,74 @@ class BlockWoodSetSign(_WoodSetComponent):
         self._add_field_if_not_default("double_sided", double_sided, False)
         if wall_text_offset is not None:
             wall_values = list(wall_text_offset)
-            if len(wall_values) != 3 or any(not 0 <= value <= 16 for value in wall_values):
+            if len(wall_values) != 3 or any(
+                not 0 <= value <= 16 for value in wall_values
+            ):
                 raise ValueError(
                     f"wall_text_offset must be three values from 0 to 16, got {wall_text_offset}."
                 )
             self._add_field("wall_text_offset", wall_values)
+
+
+class BlockWoodSetLeaves(_WoodSetComponent):
+    _name = "leaves"
+
+    def __init__(
+        self,
+        trunks: list[str],
+        sapling: str | None = None,
+        distance: int = 4,
+        sapling_chance: float = 0.05,
+        stick_chance: float = 0.02,
+    ) -> None:
+        """Decays the leaves that don't hold on to a trunk, and drops what leaves drop.
+
+        Only leaves whose `natural` state is on decay: those a player placed stay. On a
+        random tick they look for one of `trunks` within `distance` blocks, going through
+        leaves of the same kind, and break when there is none.
+
+        Breaking them with shears or a silk touch tool drops the leaves; any other way (or
+        decaying) drops a sapling or sticks by chance. Nothing drops in creative mode or from
+        explosions.
+
+        Parameters:
+            trunks (list[str]): The identifiers of the blocks that hold the leaves up.
+            sapling (str, optional): The identifier of the sapling they drop.
+            distance (int): The most blocks away a trunk can be.
+            sapling_chance (float): The chance of a sapling when broken or decayed.
+            stick_chance (float): The chance of sticks when broken or decayed.
+        """
+        super().__init__()
+        if distance < 1:
+            raise ValueError(f"distance must be at least 1, got {distance}.")
+        for name, chance in (
+            ("sapling_chance", sapling_chance),
+            ("stick_chance", stick_chance),
+        ):
+            if not 0 <= chance <= 1:
+                raise ValueError(f"{name} must be from 0 to 1, got {chance}.")
+        self._add_field("trunks", list(trunks))
+        if sapling is not None:
+            self._add_field("sapling", sapling)
+        self._add_field_if_not_default("distance", distance, 4)
+        self._add_field_if_not_default("sapling_chance", sapling_chance, 0.05)
+        self._add_field_if_not_default("stick_chance", stick_chance, 0.02)
+
+
+class BlockWoodSetSapling(_WoodSetComponent):
+    _name = "sapling"
+
+    def __init__(self, tree_feature: str) -> None:
+        """Grows into a tree on random ticks, or faster with bone meal.
+
+        As in vanilla, it has two stages. A random tick (1 in 7, only with light 9 or more
+        above it) or a bone meal (45% in survival, any light) advances it one stage, and
+        advancing the second stage turns it into the tree. It stays a sapling if the tree
+        doesn't fit. A bone meal in creative grows the tree at once.
+
+        Parameters:
+            tree_feature (str): The identifier of the feature `/place feature` builds the
+                tree with, at the sapling's position.
+        """
+        super().__init__()
+        self._add_field("tree_feature", tree_feature)

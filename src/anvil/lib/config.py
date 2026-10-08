@@ -295,11 +295,8 @@ class _AnvilConfig:
         self.RESOURCE_DESCRIPTION = self._handle_config(
             ConfigSection.PACKAGE, ConfigOption.RESOURCE_DESCRIPTION, "input"
         )
-        self._DEBUG = (
-            self._handle_config(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
-            or "--debug" in sys.argv
-        )
-        
+        self._DEBUG = "--debug" in sys.argv
+
         self._PASCAL_PROJECT_NAME = self._handle_config(
             ConfigSection.ANVIL,
             ConfigOption.PASCAL_PROJECT_NAME,

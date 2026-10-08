@@ -39,6 +39,7 @@ from anvil.api.items.components import (
     ItemDisplayName,
     ItemFuel,
     ItemIcon,
+    ItemMaxStackSize,
 )
 from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
@@ -48,6 +49,7 @@ from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
 from anvil.api.world.loot_tables import LootTable
 
 from ..components import BlockWoodSetSign, BlockWoodSetSupport, SupportedBy
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -73,7 +75,7 @@ WALL_ROTATIONS = {
 def _material(wood: str, color: str) -> BlockMaterialInstance:
     return BlockMaterialInstance().add_instance(
         InstanceSpec(
-            blockbench_name=f"{wood}_planks",
+            blockbench_name=MODEL,
             face=BlockFaceValues.All,
             variations=[InstanceVariant(color=color)],
             params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -102,7 +104,7 @@ def create(wood: str, selected: set[str]) -> Block:
             & (Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction)
         ).add(BlockTransformation().rotation(rotation))
     block.server.permutation(~standing).add(
-        BlockGeometry(f"{wood}_planks", collection="wall_sign"),
+        BlockGeometry(MODEL, collection="wall_sign"),
         _material(wood, f"{wood}_planks"),
         BlockSelectionBox((16, 8, 1), (-8, 4, -8)),
     )
@@ -116,9 +118,9 @@ def create(wood: str, selected: set[str]) -> Block:
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
-        BlockGeometry(
-            f"{wood}_planks", collection="standing_sign"
-        ).n_way_visual_rotation(y=PlacementDirectionTrait.SixteenWayRotation),
+        BlockGeometry(MODEL, collection="standing_sign").n_way_visual_rotation(
+            y=PlacementDirectionTrait.SixteenWayRotation
+        ),
         _material(wood, f"{wood}_standing_sign"),
         BlockCollisionBox((0, 0, 0), (0, 0, 0)),
         BlockSelectionBox((8, 16, 8), (-4, 0, -4)),
@@ -126,7 +128,9 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+        ),
         BlockConnectionRule("none"),
         BlockDestructibleByExplosion(5),
         BlockRedstoneConductivity(False, False),
@@ -135,7 +139,9 @@ def create(wood: str, selected: set[str]) -> Block:
         ),
         BlockTick((1, 1), True),
         BlockEntity(dynamic_properties=True),
-        BlockWoodSetSign((8, 9.5, 8.75), text_scale=0.46, wall_text_offset=(8, 5.5, 1.1)),
+        BlockWoodSetSign(
+            (8, 9.5, 8.75), text_scale=0.46, wall_text_offset=(8, 5.5, 1.1)
+        ),
         BlockWoodSetSupport(SupportedBy.Sign),
     )
 
@@ -149,6 +155,8 @@ def create(wood: str, selected: set[str]) -> Block:
         ItemDisplayName(display_name),
         ItemIcon(TextureComponents(color=f"{wood}_sign")),
         ItemFuel(10),
+        # Vanilla signs stack to 16
+        ItemMaxStackSize(16),
     )
     block.item.server.description.menu_category(ItemCategory.Items, ItemGroups.Sign)
 

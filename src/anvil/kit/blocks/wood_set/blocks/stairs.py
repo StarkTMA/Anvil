@@ -7,6 +7,7 @@ from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockFlammable,
     BlockGeometry,
+    BlockItemVisual,
     BlockLightDampening,
     BlockMapColor,
     BlockMaterialInstance,
@@ -41,6 +42,7 @@ from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.lib.schemas import MinecraftBlockDescriptor
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -105,7 +107,7 @@ def create(wood: str, selected: set[str]) -> Block:
     top = half == VerticalHalfValues.TOP
 
     # Each upper quadrant is a bone, visible when `(corner == value) == equal`.
-    geometry = BlockGeometry(f"{wood}_planks", collection="stairs", uv_lock=True)
+    geometry = BlockGeometry(MODEL, collection="stairs", uv_lock=True)
     geometry.bone_visibility(
         **{
             name: (bottom & (corner == b_value if b_equal else corner != b_value))
@@ -131,7 +133,9 @@ def create(wood: str, selected: set[str]) -> Block:
 
     # Rotation: towards the player, y+180 on the bottom half, flipped upside down on the top
     for direction, (x, y, z) in CARDINAL_ROTATIONS.items():
-        facing = Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
+        facing = (
+            Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
+        )
         block.server.permutation(facing & bottom).add(
             BlockTransformation().rotation((x, (y + 180) % 360, z))
         )
@@ -145,13 +149,33 @@ def create(wood: str, selected: set[str]) -> Block:
             speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
         )
 
+    item_visual = BlockItemVisual(MODEL, collection="stairs")
+    item_visual.material_instance(MODEL, f"{wood}_planks")
+    item_visual.item_display_transforms(
+        False,
+        gui={
+            "rotation": [30, -135, 0],
+            "scale": [0.625, 0.625, 0.625],
+            "fit_to_frame": False,
+        },
+        firstperson_righthand={
+            "rotation": [0, 135, 0],
+            "scale": [0.4, 0.4, 0.4],
+        },
+        thirdperson_righthand={
+            "rotation": [70, -45, 0],
+            "scale": [0.375, 0.375, 0.375],
+        },
+        fixed={"rotation": [0, 90, 0]},
+    )
+
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
         geometry,
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -163,7 +187,11 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
         BlockTagComponent(
-            [MinecraftBlockTags.Wood, MinecraftBlockTags.CornerableStairs]
+            [
+                MinecraftBlockTags.Wood,
+                MinecraftBlockTags.IsAxeItemDestructible,
+                MinecraftBlockTags.CornerableStairs,
+            ]
         ),
         BlockConnectionRule("all"),
         BlockDestructibleByExplosion(15),

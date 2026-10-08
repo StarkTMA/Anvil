@@ -1,4 +1,4 @@
-from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.blocks import Block, TextureComponents
 from anvil.api.blocks.components import (
     BlockCollisionBox,
     BlockConnectionRule,
@@ -34,7 +34,12 @@ from anvil.api.core.enums import (
     PlacementDirectionTrait,
     RecipeUnlockContext,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
+from anvil.api.items.components import (
+    ItemBlockPlacer,
+    ItemDisplayName,
+    ItemFuel,
+    ItemIcon,
+)
 from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
@@ -45,6 +50,7 @@ from ..components import (
     BlockWoodSetRedstoneConsumer,
     BlockWoodSetSupport,
 )
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -69,10 +75,10 @@ CARDINAL_ROTATIONS = {
 def _material(wood: str, texture: str) -> BlockMaterialInstance:
     return BlockMaterialInstance().add_instance(
         InstanceSpec(
-            blockbench_name=f"{wood}_planks",
+            blockbench_name=MODEL,
             face=BlockFaceValues.All,
             variations=[InstanceVariant(color=texture)],
-            params=MaterialParams(render_method=BlockMaterial.Opaque),
+            params=MaterialParams(render_method=BlockMaterial.AlphaTestSingleSided),
         )
     )
 
@@ -112,11 +118,10 @@ def create(wood: str, selected: set[str]) -> Block:
             speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
         )
 
-
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
-        BlockGeometry(f"{wood}_planks", collection="door").bone_visibility(
+        BlockGeometry(MODEL, collection="door").bone_visibility(
             door_open=Query.BlockState("open"),
             door_closed=~Query.BlockState("open"),
         ),
@@ -124,7 +129,9 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+        ),
         BlockConnectionRule("all"),
         BlockMovable(BlockMovementType.Immovable),
         BlockPlacementFilter().add_condition([BlockFaceValues.Up]),
@@ -144,6 +151,7 @@ def create(wood: str, selected: set[str]) -> Block:
         ItemBlockPlacer(block.identifier, replace_block_item=True),
         ItemDisplayName(display_name),
         ItemFuel(10),
+        ItemIcon(TextureComponents(color=f"{wood}_door")),
     )
     block.item.server.description.menu_category(
         ItemCategory.Construction, ItemGroups.Door

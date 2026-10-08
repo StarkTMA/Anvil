@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Optional, Union
 from anvil.api.core.enums import BlockFaceValues
 from anvil.api.core.types import Vector2D, Vector3D
 from anvil.api.logic.molang import Molang
-from anvil.api.models.geometry import _Bone, _Cube, Geometry
-from anvil.api.models.voxel_shape import _VoxelGroup, VoxelShape
-from anvil.lib.blockbench.common import _BlockBenchSource, _blockbench_geometry_name
+from anvil.api.models.geometry import Geometry, _Bone, _Cube
+from anvil.api.models.voxel_shape import VoxelShape, _VoxelGroup
+from anvil.lib.blockbench.common import _blockbench_geometry_name, _BlockBenchSource
 from anvil.lib.blockbench.mesh import _Mesh
 from anvil.lib.config import CONFIG
 from anvil.lib.schemas import AddonObject, JsonSchemes
@@ -71,7 +71,10 @@ class _BlockCulling(AddonObject):
             rule["geometry_part"]["face"] = face.value
         if cube_index is not None:
             rule["geometry_part"]["cube"] = cube_index
-        self._rules.append(rule)
+        # Geometries can be shared by many blocks, each adding the same rule, and
+        # Minecraft rejects a rule that matches an earlier one
+        if rule not in self._rules:
+            self._rules.append(rule)
 
     def compile(self) -> dict:
         content = JsonSchemes.block_culling_rules(self.identifier)
@@ -545,7 +548,8 @@ class _ModelManager:
                     ]
                 ):
                     # Minecraft will not accept fit_to_frame=False from "1.21.130" onwards
-                    transforms[display] = {**transform, "fit_to_frame": {}}
+                    # transforms[display] = {**transform, "fit_to_frame": {}} Works now I guess
+                    transforms[display] = transform
 
     def _build_geometry(
         self, model_name: str, nodes: List[Union[str, dict]]

@@ -2060,7 +2060,9 @@ class EntityProjectile(Component):
             raise TypeError("damage must be a list/tulip")
 
         if difficulty_randomization not in ["none", "additive", "multiplicative"]:
-            raise ValueError(f"{difficulty_randomization} must be one of ['none', 'additive', 'multiplicative'].")
+            raise ValueError(
+                f"{difficulty_randomization} must be one of ['none', 'additive', 'multiplicative']."
+            )
 
         if damage != (0, 0):
             impact["damage"] = AnvilFormatter.min_max_dict(damage, "damage")

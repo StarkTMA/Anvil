@@ -37,6 +37,7 @@ from anvil.api.items.crafting import ShapedCraftingRecipe, ShapelessRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -67,7 +68,7 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockGeometry(),
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -79,7 +80,9 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+        ),
         BlockConnectionRule("all"),
         BlockDestructibleByExplosion(15),
         BlockRedstoneConductivity(True, True),

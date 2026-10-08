@@ -31,6 +31,8 @@ SCRIPTS = {
     "strippable": ("strippable", True, True),
     "slab": ("slab", True, True),
     "sign": ("sign", True, False),
+    "leaves": ("leaves", True, False),
+    "sapling": ("sapling", True, False),
     "boat": ("boat", False, True),
 }
 

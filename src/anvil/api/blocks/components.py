@@ -1,7 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Literal, Optional, TypeAlias, Union, overload
+from typing import (
+    Dict,
+    List,
+    Literal,
+    Optional,
+    TypeAlias,
+    TypedDict,
+    Union,
+    Unpack,
+    overload,
+)
 
 from anvil.api.core.components import Component, List
 from anvil.api.core.core import TerrainTexturesObject
@@ -22,9 +32,9 @@ from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.vanilla.blocks import MinecraftBlockTags, MinecraftBlockTypes
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.blockbench import (
-    _BlockBenchSource,
     _Blockbench,
     _blockbench_geometry_name,
+    _BlockBenchSource,
     _geometry_block_culling,
 )
 from anvil.lib.config import CONFIG
@@ -551,10 +561,17 @@ class BlockMapColor(Component):
 class BlockGeometry(Component):
     _identifier = "minecraft:geometry"
 
-    @overload
     def __init__(
         self,
-        blockbench_name: str | Geometry,
+        blockbench_name: (
+            str
+            | Geometry
+            | Literal[
+                "minecraft:geometry.full_block",
+                "minecraft:geometry.full_block_v1",
+                "minecraft:geometry.cross",
+            ]
+        ) = "minecraft:geometry.full_block",
         uv_lock: bool = False,
         collection: str | None = None,
     ) -> None:
@@ -565,37 +582,23 @@ class BlockGeometry(Component):
             uv_lock (bool, optional): A Boolean locking UV orientation of all bones in the geometry, or an array of strings locking UV orientation of specific bones in the geometry. For performance reasons it is recommended to use the Boolean. Note that for cubes using Box UVs, rather than Per-face UVs, 'uv_lock' is only supported if the cube faces are square.
             collection (str, optional): The exported Blockbench collection to use. When provided, the geometry identifier becomes ``geometry.<namespace>.<model>.<collection>``.
         """
-        pass
 
-    @overload
-    def __init__(self) -> None:
-        """Used 'minecraft:geometry.full_block' to specify the default full cube geometry for a block. Which comes with built-in culling and lighting optimizations."""
-        pass
-
-    def __init__(
-        self,
-        blockbench_name: str | Geometry = None,
-        uv_lock: bool = False,
-        collection: str | None = None,
-    ) -> None:
-        """The description identifier of the geometry file to use to render this block.
-        Parameters:
-            blockbench_name (str | Geometry, optional): The name of the Blockbench model to use to render this block, or a Geometry built in code. Defaults to "minecraft:geometry.full_block".
-            uv_lock (bool, optional): A Boolean locking UV orientation of all bones in the geometry, or an array of strings locking UV orientation of specific bones in the geometry. For performance reasons it is recommended to use the Boolean. Note that for cubes using Box UVs, rather than Per-face UVs, 'uv_lock' is only supported if the cube faces are square.
-            collection (str, optional): The exported Blockbench collection to use. When provided, the geometry identifier becomes ``geometry.<namespace>.<model>.<collection>``.
-        """
         super().__init__("geometry")
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.80")
-        self._is_default = blockbench_name is None
+        self._is_default = blockbench_name in [
+            "minecraft:geometry.full_block",
+            "minecraft:geometry.full_block_v1",
+            "minecraft:geometry.cross",
+        ]
         self._collection = collection
         self._culling_shape = None
 
-        if blockbench_name is None:
+        if self._is_default:
             if collection is not None:
                 raise ValueError(
                     "Collection selection is only supported for custom Blockbench geometries."
                 )
-            self._add_field("identifier", "minecraft:geometry.full_block")
+            self._add_field("identifier", blockbench_name)
 
         elif isinstance(blockbench_name, Geometry):
             if collection is not None:
@@ -912,6 +915,35 @@ class BlockCraftingTable(Component):
         self._add_field("crafting_tags", crafting_tags)
 
 
+class ItemDisplayTransform(TypedDict, total=False):
+    """How an item is shown in one display slot. Vectors are three numbers (x, y, z)."""
+
+    rotation: Vector3D
+    translation: Vector3D
+    scale: Vector3D
+    rotation_pivot: Vector3D
+    scale_pivot: Vector3D
+
+
+class ItemDisplayGuiTransform(ItemDisplayTransform, total=False):
+    """The `gui` slot, the only one that accepts `fit_to_frame`."""
+
+    fit_to_frame: bool
+    """Only exported when given: True as `{}`, which is how Blockbench exports it, and False
+    as an explicit `false`, which Minecraft may reject from 1.21.130."""
+
+
+class _ItemDisplaySlots(TypedDict, total=False):
+    thirdperson_righthand: ItemDisplayTransform
+    thirdperson_lefthand: ItemDisplayTransform
+    firstperson_righthand: ItemDisplayTransform
+    firstperson_lefthand: ItemDisplayTransform
+    gui: ItemDisplayGuiTransform
+    head: ItemDisplayTransform
+    ground: ItemDisplayTransform
+    fixed: ItemDisplayTransform
+
+
 class BlockItemVisual(Component):
     _identifier = "minecraft:item_visual"
 
@@ -945,6 +977,8 @@ class BlockItemVisual(Component):
         self._enforce_version(BLOCK_SERVER_VERSION, "1.21.60")
         super().__init__("item_visual")
         self._is_default = blockbench_name is None
+        self._bb = None
+        self._collection = collection
 
         if blockbench_name is None:
             self._add_field("geometry", {"identifier": "minecraft:geometry.full_block"})
@@ -1021,6 +1055,75 @@ class BlockItemVisual(Component):
         geom = self._component.get("geometry", {})
         geom["n_way_visual_rotation"] = {axis: state for axis, state in axes.items()}
         self._add_field("geometry", geom)
+        return self
+
+    def item_display_transforms(
+        self, merge: bool = False, **slots: Unpack[_ItemDisplaySlots]
+    ):
+        """Overrides the `item_display_transforms` the Blockbench model brings with it.
+
+        Only works on a visual made from a Blockbench collection, e.g.
+        ``BlockItemVisual("oak_planks", collection="stairs")``: the transforms live in that
+        collection's geometry file, so every block that uses the same collection shares them.
+
+        Example:
+            >>> BlockItemVisual("planks", collection="stairs").item_display_transforms(
+            ...     gui={"rotation": (30, 225, 0), "scale": (0.6, 0.6, 0.6)},
+            ...     ground={"translation": (0, 3, 0), "scale": (0.5, 0.5, 0.5)},
+            ... )
+
+        Parameters:
+            merge (bool): Keep the model's transforms for the slots not given. By default
+                the model's transforms are dropped and only the ones given are used.
+            **slots (ItemDisplayTransform): The transform of each display slot:
+                `thirdperson_righthand`, `thirdperson_lefthand`, `firstperson_righthand`,
+                `firstperson_lefthand`, `gui`, `head`, `ground` or `fixed`. Only `gui`
+                accepts `fit_to_frame` (`ItemDisplayGuiTransform`).
+        """
+        if self._bb is None or self._collection is None:
+            raise ValueError(
+                "item_display_transforms only supports a visual made from a Blockbench "
+                "collection: pass `collection` to BlockItemVisual."
+            )
+        if not slots:
+            raise ValueError("Pass at least one display slot, e.g. gui={...}.")
+
+        vectors = list(ItemDisplayTransform.__annotations__)
+        transforms = {}
+        for slot, transform in slots.items():
+            if slot not in _ItemDisplaySlots.__annotations__:
+                raise ValueError(
+                    f"Invalid display slot: {slot}. Must be one of {list(_ItemDisplaySlots.__annotations__)}."
+                )
+            fields = [*vectors, "fit_to_frame"] if slot == "gui" else vectors
+            unknown = set(transform) - set(fields)
+            if unknown:
+                raise ValueError(
+                    f"Invalid transform field(s) for {slot}: {sorted(unknown)}. "
+                    f"Must be from {fields}."
+                    + (
+                        " `fit_to_frame` is only allowed in `gui`."
+                        if "fit_to_frame" in unknown
+                        else ""
+                    )
+                )
+            result = {}
+            for name in vectors:
+                if name in transform:
+                    value = list(transform[name])
+                    if len(value) != 3:
+                        raise ValueError(
+                            f"{slot}.{name} must be three values, got {transform[name]}."
+                        )
+                    result[name] = value
+            if "fit_to_frame" in transform:
+                result["fit_to_frame"] = {} if transform["fit_to_frame"] else False
+            transforms[slot] = result
+
+        geometry = self._bb.model.geometry(self._collection)
+        if merge:
+            transforms = {**(geometry.item_display_transforms or {}), **transforms}
+        geometry.item_display_transforms = transforms
         return self
 
     def bone_visibility(self, **bone: dict[str, bool | str | Molang]):

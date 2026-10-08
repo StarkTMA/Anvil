@@ -473,6 +473,15 @@ def expand_block_face_sides(faces: List[BlockFaceValues]) -> List[BlockFaceValue
 class BlockMaterial(StrEnum):
     """
     Enumeration representing the different types of rendering methods a block can use in Minecraft.
+
+    Opaque:	Used for a regular block texture without an alpha layer. Does not allow for transparency or translucency
+    DoubleSided:	Used for completely disabling backface culling.
+    Blend:	Used for a block like stained glass. Allows for transparency and translucency (slightly transparent textures).
+    AlphaTest:	Used for a block like the monster spawner. Does not allow for translucency, only fully opaque or fully transparent textures. Also disabled backface culling.
+    AlphaTestSingleSided: Used for a block like the (unstained) glass. Does not allow for translucency, only fully opaque or fully transparent textures. Also enables backface culling.
+    BlendToOpaque:	Will blend like stained glass in the near render and turn opaque on the far render.
+    AlphaTestToOpaque: Used for a block like the leaves. Does not allow for translucency, only fully opaque or fully transparent textures in the near render and turn only opaque on the far render. Also disabled backface culling.
+    AlphaTestSingleSidedToOpaque:	Used for a block like the sugar cane. Does not allow for translucency, only fully opaque or fully transparent textures in the near render and turn only opaque on the far render. Also enables backface culling.
     """
 
     Opaque = "opaque"

@@ -7,6 +7,7 @@ from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockFlammable,
     BlockGeometry,
+    BlockItemVisual,
     BlockMapColor,
     BlockMaterialInstance,
     BlockMovable,
@@ -37,6 +38,7 @@ from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
 
 from ..components import BlockWoodSetInteractable, BlockWoodSetRedstoneConsumer
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -86,16 +88,35 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockCollisionBox((0, 0, 0), (0, 0, 0))
     )
 
+    item_visual = BlockItemVisual(MODEL, collection="fence_gate")
+    item_visual.material_instance(MODEL, f"{wood}_planks")
+    item_visual.item_display_transforms(
+        False,
+        gui={
+            "rotation": [30, -45, 0],
+            "scale": [0.625, 0.625, 0.625],
+            "fit_to_frame": False,
+        },
+        firstperson_righthand={
+            "rotation": [0, -45, 0],
+            "scale": [0.375, 0.375, 0.375],
+        },
+        thirdperson_righthand={
+            "rotation": [70, -45, 0],
+            "scale": [0.375, 0.375, 0.375],
+        },
+    )
+    item_visual.bone_visibility(fence_gate_open="0")
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
-        BlockGeometry(f"{wood}_planks", collection="fence_gate").bone_visibility(
+        BlockGeometry(MODEL, collection="fence_gate").bone_visibility(
             fence_gate_closed=~Query.BlockState("open"),
             fence_gate_open=Query.BlockState("open"),
         ),
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -105,7 +126,9 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockMovable(BlockMovementType.Popped),
         BlockFlammable(),
         BlockMapColor("#19381F"),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+        ),
         BlockConnectionRule("all"),
         BlockDestructibleByExplosion(7),
         BlockRedstoneConductivity(False, False),
@@ -113,6 +136,7 @@ def create(wood: str, selected: set[str]) -> Block:
         # Scripts: opened by players and by redstone
         BlockWoodSetInteractable(),
         BlockWoodSetRedstoneConsumer(),
+        item_visual,
     )
 
     # Its item: shown in the creative inventory, burns in a furnace

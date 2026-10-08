@@ -40,6 +40,7 @@ from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 
 from ..components import BlockWoodSetStrippable
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -91,7 +92,7 @@ def create(wood: str, selected: set[str]) -> Block:
     ):
         materials.add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=face,
                 variations=[InstanceVariant(color=texture)],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -109,7 +110,13 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [
+                MinecraftBlockTags.Wood,
+                MinecraftBlockTags.IsAxeItemDestructible,
+                MinecraftBlockTags.Log,
+            ]
+        ),
         BlockConnectionRule("all"),
         BlockDestructibleByExplosion(15),
         BlockRedstoneConductivity(True, True),

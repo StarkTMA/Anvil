@@ -626,7 +626,6 @@ class SoundEvent(AddonObject):
             server_music_info=server_music_info,
         )
 
-
     def add_individual_named_sound(
         self,
         sound_identifier: str,
@@ -656,6 +655,7 @@ class SoundEvent(AddonObject):
             max_distance=max_distance,
             min_distance=min_distance,
         )
+
     def queue(self) -> "SoundEvent":
         if not self._changed:
             return self

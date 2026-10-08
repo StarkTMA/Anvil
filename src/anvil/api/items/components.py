@@ -371,7 +371,7 @@ class ItemCompostable(Component):
         """
         super().__init__("compostable")
         self._enforce_version(ITEM_SERVER_VERSION, "1.21.60")
-        self._add_field("chance", clamp(composting_chance, 0.0, 1.0))
+        self._add_field("composting_chance", clamp(composting_chance, 1.0, 100.0))
 
 
 # Require ITEM_SERVER_VERSION >= 1.21.40

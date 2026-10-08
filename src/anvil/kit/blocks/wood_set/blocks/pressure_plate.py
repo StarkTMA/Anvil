@@ -7,6 +7,7 @@ from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockFlammable,
     BlockGeometry,
+    BlockItemVisual,
     BlockLightDampening,
     BlockLiquidDetection,
     BlockMapColor,
@@ -41,6 +42,7 @@ from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 
 from ..components import BlockWoodSetSupport, BlockWoodSetTogglable, SupportedBy
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -66,6 +68,8 @@ def create(wood: str, selected: set[str]) -> Block:
     block.server.permutation(Query.BlockState("powered")).add(
         BlockRedstoneProducer(power=15, strongly_powered_face=BlockFaceValues.Up),
         BlockTransformation().translation((0, -0.5 / 16, 0)),
+        # Ticks only while pressed, to release; idle plates don't tick
+        BlockTick((20, 20), True),
     )
     block.server.permutation(~Query.BlockState("powered")).add(
         BlockRedstoneProducer(power=0, strongly_powered_face=BlockFaceValues.Down),
@@ -78,18 +82,34 @@ def create(wood: str, selected: set[str]) -> Block:
             speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
         )
 
-    geometry = BlockGeometry(f"{wood}_planks", collection="pressure_plate")
+    geometry = BlockGeometry(MODEL, collection="pressure_plate")
     geometry.block_culling("custom").add_rule(
         BlockFaceValues.Down, "pressure_plate", BlockFaceValues.Down, 0
     )
 
+    item_visual = BlockItemVisual(MODEL, collection="pressure_plate")
+    item_visual.material_instance(MODEL, f"{wood}_planks")
+    item_visual.item_display_transforms(
+        False,
+        gui={
+            "rotation": [30, 45, 0],
+            "scale": [0.625, 0.625, 0.625],
+            "fit_to_frame": False,
+        },
+        fixed={"translation": [0, 3.5, 0], "rotation": [0, 180, 0]},
+        firstperson_righthand={
+            "translation": [0, 3, 0],
+            "scale": [0.4, 0.4, 0.4],
+        },
+        thirdperson_righthand={"translation": [0, 3, 2.5]},
+    )
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
         geometry,
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -101,10 +121,14 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+        ),
         BlockConnectionRule("none"),
         BlockDestructibleByExplosion(7),
         BlockRedstoneConductivity(True, True),
+        # Format 1.26.20+ wants it in the base components too when a permutation sets it
+        BlockRedstoneProducer(power=0, strongly_powered_face=BlockFaceValues.Down),
         BlockPlacementFilter().add_condition(
             [BlockFaceValues.Up, BlockFaceValues.Side]
         ),
@@ -113,10 +137,13 @@ def create(wood: str, selected: set[str]) -> Block:
             can_contain_liquid=True,
             use_liquid_clipping=True,
         ),
-        # Scripts: pressed when stepped on and released on tick, broken with its support
-        BlockTick((20, 20), True),
+        # Scripts: pressed when stepped on and released on tick, broken with its support.
+        # The script's onTick needs a tick in the base components: it ticks once and stops,
+        # and only the powered permutation above keeps ticking
+        BlockTick((20, 20), False),
         BlockWoodSetTogglable(),
         BlockWoodSetSupport(SupportedBy.BlockFace),
+        item_visual,
     )
 
     # Its item: shown in the creative inventory, burns in a furnace

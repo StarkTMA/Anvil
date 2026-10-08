@@ -34,6 +34,7 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.items.items import Item
 from anvil.api.logic.molang import Math, Molang, Query, Variable
 from anvil.api.pbr.texture_set import TextureComponents
+from . import BOAT_MODEL
 
 # boat.ts steers, faces and breaks this family
 BOAT_FAMILY = "wood_set_boat"
@@ -52,14 +53,14 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
     entity = Entity(f"{wood}_boat")
     display_name = f"{wood.replace('_', ' ').title()} Boat"
 
-    entity.client.description.geometry(f"{wood}_boat")
+    entity.client.description.geometry(BOAT_MODEL)
     entity.client.description.texture(
-        f"{wood}_boat", TextureComponents(color=f"{wood}_boat")
+        BOAT_MODEL, TextureComponents(color=f"{wood}_boat")
     )
     entity.client.description.material("blend", "entity_alphablend")
     entity.client.description.material("alpha", "entity_alphatest")
     render = entity.client.description.render_controller("default")
-    render.geometry(f"{wood}_boat")
+    render.geometry(BOAT_MODEL)
     render.textures(f"{wood}_boat")
     render.part_visibility("chest", False)
     render.material("*", "alpha")
@@ -73,7 +74,7 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
         ("paddle", straight),
     ):
         entity.client.description.animation(
-            f"{wood}_boat", animation, True, Query.HasRider() & condition
+            BOAT_MODEL, animation, True, Query.HasRider() & condition
         )
 
     # The client can't tell who hit it, so boat.ts counts hits in a synced property
@@ -94,7 +95,7 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
     )
     entity.client.description.script(Variable.last_hits, hits)
     entity.client.description.animation(
-        f"{wood}_boat", "shake", True, Variable.shake_strength > 0
+        BOAT_MODEL, "shake", True, Variable.shake_strength > 0
     )
 
     rideable = EntityRideable(interact_text="Board")

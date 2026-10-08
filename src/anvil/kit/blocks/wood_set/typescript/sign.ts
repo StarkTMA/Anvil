@@ -1,5 +1,6 @@
 import {
 	Block,
+	BlockCustomComponentInstance,
 	BlockDynamicPropertiesComponent,
 	BlockPermutation,
 	EntityComponentTypes,
@@ -270,6 +271,7 @@ async function editSignText(
 	block
 		.getComponent(BlockDynamicPropertiesComponent.componentId)
 		?.set(SIGN_TEXT, lines.join("\n"));
+	updateBlockPrimitiveText(block, params);
 }
 
 function signKey(block: Block): string {
@@ -371,6 +373,17 @@ function updateBlockPrimitiveText(block: Block, params?: SignParams): void {
 		signShapes.delete(signKey(block));
 		throw error;
 	}
+}
+
+// Draws the sign's text again, for scripts that change its dynamic properties
+export function refreshSignText(block: Block): void {
+	const sign = block.getComponent(SIGN_COMPONENT_ID) as
+		| BlockCustomComponentInstance
+		| undefined;
+	updateBlockPrimitiveText(
+		block,
+		sign?.customComponentParameters.params as SignParams | undefined,
+	);
 }
 
 export function registerSignComponent(init: StartupEvent): void {

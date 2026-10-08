@@ -26,10 +26,16 @@ Importing a kit without its extra raises an `ImportError` naming the command to 
 ```python
 from anvil.kit.blocks.wood_set import WoodBlock, create_wood_set
 
-create_wood_set("rotten")                                    # everything
-create_wood_set("rotten", WoodBlock.DOOR)                    # everything but doors
-create_wood_set("rotten", own_creative_group=True)           # in its own creative group
+create_wood_set("rotten", tree=my_tree)                      # everything; saplings grow `my_tree`
+create_wood_set("rotten", WoodBlock.SAPLING)                 # everything but saplings: no tree needed
+create_wood_set("rotten", WoodBlock.DOOR, tree=my_tree)      # everything but doors
+create_wood_set("rotten", own_creative_group=True, tree=my_tree)  # in its own creative group
+
+wood = create_wood_set("rotten", tree=my_tree)
+block, item = wood["planks"]                                # each part is a (block, item) pair
 ```
+
+A set with saplings needs `tree`, the feature they grow into (a `Feature`, its identifier, or a function that builds it from the finished set: `tree=lambda wood: make_tree(wood["log"].block, wood["leaves"].block)`); the kit makes no trees. Build and queue it yourself: it can use the set's blocks by their identifiers (`<namespace>:<name>_log`, `<namespace>:<name>_leaves` with its `natural` state on).
 
 ### World
 
@@ -40,3 +46,20 @@ create_wood_set("rotten", own_creative_group=True)           # in its own creati
 
 - **`anvil.kit.actors.components`**: a custom projectile item component.
 - **`anvil.kit.actors.materials`**: an entity outline material.
+
+## The `WoodSet` class
+
+`create_wood_set` covers the simple case. For anything more, build the set with the class:
+
+```python
+palm = (
+    WoodSet("palm", exclude=WoodBlock.CHEST_BOAT)
+    .tree(lambda wood: make_palm(wood["log"].block, wood["leaves"].block))
+    .leaf_drop(coconut, 0.02)  # drops when the leaves are broken (no shears) or decay
+    .build()
+)
+palm["planks"].block
+```
+
+- `tree` is a feature, its identifier, or a function receiving the set once its blocks exist.  Once built, `palm.tree_feature` is the resolved feature.
+- `leaf_drop(item, chance, count=1)` takes an `Item` or an identifier like `minecraft:apple`.

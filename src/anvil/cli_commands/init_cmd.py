@@ -211,7 +211,6 @@ def handle_configuration(
         ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world"
     )
 
-    config.add_option(ConfigSection.ANVIL, ConfigOption.DEBUG, False)
     config.add_option(
         ConfigSection.ANVIL,
         ConfigOption.PASCAL_PROJECT_NAME,

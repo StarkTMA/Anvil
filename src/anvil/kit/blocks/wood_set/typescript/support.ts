@@ -21,7 +21,10 @@ const OPPOSITE: Record<string, string> = {
 };
 
 // Which way the block sits from the block holding it up
-function directionFromSupport(permutation: BlockPermutation, params?: SupportParams): string {
+function directionFromSupport(
+	permutation: BlockPermutation,
+	params?: SupportParams,
+): string {
 	switch (params?.supported_by) {
 		case "block_face":
 			return permutation.getState(BLOCK_FACE) as string;
@@ -45,17 +48,21 @@ export function registerSupportComponent(init: StartupEvent): void {
 export function registerSupportEvents(): void {
 	world.afterEvents.playerBreakBlock.subscribe(({ block }) => {
 		for (const [face, offset] of Object.entries(FACE_OFFSETS)) {
-			const neighbour = block.offset(offset);
-			const support = neighbour?.getComponent(SUPPORT_COMPONENT_ID) as
-				| BlockCustomComponentInstance
-				| undefined;
-			if (!neighbour || !support) continue;
-			const params = support.customComponentParameters.params as SupportParams | undefined;
-			if (directionFromSupport(neighbour.permutation, params) === face) {
-				neighbour.dimension.runCommand(
-					`setblock ${neighbour.x} ${neighbour.y} ${neighbour.z} air destroy`,
-				);
-			}
+			try {
+				const neighbour = block.offset(offset);
+				const support = neighbour?.getComponent(SUPPORT_COMPONENT_ID) as
+					| BlockCustomComponentInstance
+					| undefined;
+				if (!neighbour || !support) continue;
+				const params = support.customComponentParameters.params as
+					| SupportParams
+					| undefined;
+				if (directionFromSupport(neighbour.permutation, params) === face) {
+					neighbour.dimension.runCommand(
+						`setblock ${neighbour.x} ${neighbour.y} ${neighbour.z} air destroy`,
+					);
+				}
+			} catch (e) {}
 		}
 	});
 }

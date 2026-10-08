@@ -371,14 +371,27 @@ class Block(MinecraftBlockDescriptor):
         self,
         states: Mapping[str, str | int | float | bool] = None,
         tags: list[str] = None,
+        **state_values: str | int | float | bool,
     ) -> dict | str:
-        if any([states, tags]):
-            return {
-                "name": self.identifier,
-                "states": {str(k): v for k, v in states.items()} if states else {},
-                "tags": tags if tags else {},
-            }
-        return self.identifier
+        """The block as a descriptor: its identifier, or the states and tags to match.
+
+        States can also be given as keywords, `leaves.descriptor(natural=True)`. A name
+        without a namespace is one of this block's own states, so `natural` is
+        `<namespace>:natural`.
+        """
+        namespace = self.identifier.split(":")[0]
+        merged = dict(states or {})
+        for key, value in state_values.items():
+            merged[key if ":" in key else f"{namespace}:{key}"] = value
+        if not merged and not tags:
+            return self.identifier
+        result: dict = {
+            "name": self.identifier,
+            "states": {str(k): v for k, v in merged.items()},
+        }
+        if tags:
+            result["tags"] = tags
+        return result
 
     @property
     def item(self) -> "Item":

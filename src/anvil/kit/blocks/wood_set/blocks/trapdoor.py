@@ -7,6 +7,7 @@ from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockFlammable,
     BlockGeometry,
+    BlockItemVisual,
     BlockLightDampening,
     BlockMapColor,
     BlockMaterialInstance,
@@ -40,6 +41,7 @@ from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 
 from ..components import BlockWoodSetInteractable, BlockWoodSetRedstoneConsumer
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -75,7 +77,9 @@ def create(wood: str, selected: set[str]) -> Block:
     )
     half = Query.BlockState(PlacementPositionTrait.VerticalHalf)
     for direction, (x, y, z) in CARDINAL_ROTATIONS.items():
-        facing = Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
+        facing = (
+            Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
+        )
         block.server.permutation(facing & (half == VerticalHalfValues.BOTTOM)).add(
             BlockTransformation().rotation((x, (y + 180) % 360, z))
         )
@@ -99,17 +103,36 @@ def create(wood: str, selected: set[str]) -> Block:
             speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
         )
 
+    item_visual = BlockItemVisual(MODEL, collection="trapdoor")
+    item_visual.material_instance(
+        MODEL,
+        f"{wood}_trapdoor",
+        render_method=BlockMaterial.AlphaTestSingleSided,
+    )
+    item_visual.item_display_transforms(
+        False,
+        gui={
+            "translation": [0, 0, 0],
+            "fit_to_frame": False,
+        },
+        fixed={"translation": [0, 3.5, 0]},
+        firstperson_righthand={
+            "translation": [0, 3, 0],
+        },
+        thirdperson_righthand={"translation": [0, 3.5, 2.2]},
+    )
+    item_visual.bone_visibility(trapdoor_open="0")
 
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
-        BlockGeometry(f"{wood}_planks", collection="trapdoor").bone_visibility(
+        BlockGeometry(MODEL, collection="trapdoor").bone_visibility(
             trapdoor_closed=~Query.BlockState("open"),
             trapdoor_open=Query.BlockState("open"),
         ),
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_trapdoor")],
                 params=MaterialParams(render_method=BlockMaterial.AlphaTestSingleSided),
@@ -119,7 +142,13 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [
+                MinecraftBlockTags.Wood,
+                MinecraftBlockTags.IsAxeItemDestructible,
+                MinecraftBlockTags.Trapdoors,
+            ]
+        ),
         BlockConnectionRule("all"),
         BlockDestructibleByExplosion(7),
         BlockRedstoneConductivity(False, False),
@@ -127,6 +156,7 @@ def create(wood: str, selected: set[str]) -> Block:
         # Scripts: opened by players and by redstone
         BlockWoodSetInteractable(),
         BlockWoodSetRedstoneConsumer(),
+        item_visual,
     )
 
     # Its item: shown in the creative inventory, burns in a furnace

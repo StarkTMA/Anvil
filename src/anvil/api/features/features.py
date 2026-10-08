@@ -1185,7 +1185,7 @@ class SingleBlockFeature(Feature):
 
 
 class SnapToSurfaceFeature(Feature):
-    """Snaps a referenced feature to a floor, ceiling, or random horizontal surface.
+    """Snaps a referenced feature to a floor, ceiling, wall, or random horizontal surface.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraftsnap_to_surface_feature)
     """
@@ -1197,16 +1197,17 @@ class SnapToSurfaceFeature(Feature):
         self,
         name,
         feature_to_snap: Feature | Identifier,
-        vertical_search_range: int,
-        surface: Literal["ceiling", "floor", "random_horizontal"] = "floor",
+        search_range: int,
+        surface: Literal["ceiling", "floor", "random_horizontal", "wall"] = "floor",
         allow_air_placement: bool = True,
+        allow_non_air_placement: bool = False,
         allow_underwater_placement: bool = False,
         allowed_surface_blocks: (
             list[MinecraftBlockDescriptor | Identifier] | None
         ) = None,
         embed_in_surface: bool = False,
     ) -> None:
-        """Snaps the y-value of a feature placement position to the floor or ceiling within the provided vertical search range.
+        """Snaps the y-value of a feature placement position to a surface within the provided search range.
 
         Parameters:
             name (str): The name of this feature. The resulting identifier uses
@@ -1214,10 +1215,12 @@ class SnapToSurfaceFeature(Feature):
                 match the filename.
             feature_to_snap (Feature | Identifier): Named reference to the feature
                 that will be snapped to a surface.
-            vertical_search_range (int): Vertical distance searched for a valid
-                surface.
-            surface (Literal["ceiling", "floor", "random_horizontal"]): Surface type to snap to.
+            search_range (int): Distance searched for a valid surface.
+            surface (Literal["ceiling", "floor", "random_horizontal", "wall"]): Surface type to snap to.
             allow_air_placement (bool): Whether placement in air is allowed.
+            allow_non_air_placement (bool): Whether the feature can snap through
+                non-air blocks. Only used if the snap starts in a block that is
+                neither water nor air.
             allow_underwater_placement (bool): Whether underwater placement is
                 allowed.
             allowed_surface_blocks (list[MinecraftBlockDescriptor | Identifier] | None):
@@ -1229,9 +1232,10 @@ class SnapToSurfaceFeature(Feature):
         super().__init__(name)
         feature_content = self._content[self._feature_name]
         feature_content["feature_to_snap"] = str(feature_to_snap)
-        feature_content["vertical_search_range"] = vertical_search_range
+        feature_content["search_range"] = search_range
         feature_content["surface"] = surface
         feature_content["allow_air_placement"] = allow_air_placement
+        feature_content["allow_non_air_placement"] = allow_non_air_placement
         feature_content["allow_underwater_placement"] = allow_underwater_placement
 
         if allowed_surface_blocks is not None:
@@ -1354,6 +1358,16 @@ class TreeFeature(Feature):
     _template_name = "feature_tree"
     _feature_name = "minecraft:tree_feature"
 
+    def _sync_branch_canopy(
+        self, canopy_type: str, canopy_dict: dict[str, Any]
+    ) -> None:
+        target = self._content[self._feature_name]
+        for trunk_type in ("acacia_trunk", "cherry_trunk"):
+            if trunk_type in target and "branches" in target[trunk_type]:
+                target[trunk_type]["branches"].setdefault("branch_canopy", {})[
+                    canopy_type
+                ] = canopy_dict
+
     def base_block(
         self,
         blocks: (
@@ -1361,106 +1375,762 @@ class TreeFeature(Feature):
             | Identifier
             | list[MinecraftBlockDescriptor | Identifier]
         ),
-    ):
+    ) -> "TreeFeature":
         """Sets the single block or array of blocks for the base."""
         self._content[self._feature_name]["base_block"] = (
             list(blocks) if isinstance(blocks, list) else blocks
         )
+        return self
 
     def base_cluster(
         self,
-        may_replace: list[MinecraftBlockDescriptor | Identifier] | None = None,
         num_clusters: int = 1,
         cluster_radius: int = 0,
-    ):
-        """Sets the base_cluster object with may_replace, num_clusters, and cluster_radius."""
-        cluster = {
+        may_replace: list[MinecraftBlockDescriptor | Identifier] | None = None,
+    ) -> "TreeFeature":
+        """Sets the base_cluster object with num_clusters, cluster_radius, and may_replace."""
+        cluster: dict[str, Any] = {
             "num_clusters": clamp(num_clusters, 1, inf),
             "cluster_radius": clamp(cluster_radius, 0, inf),
         }
-
         if may_replace is not None:
             cluster["may_replace"] = list(may_replace)
-
         self._content[self._feature_name]["base_cluster"] = cluster
+        return self
 
-    def may_grow_on(self, blocks: list[MinecraftBlockDescriptor | Identifier]):
+    def may_grow_on(
+        self, blocks: list[MinecraftBlockDescriptor | Identifier]
+    ) -> "TreeFeature":
         """Sets the may_grow_on block reference array."""
         self._content[self._feature_name]["may_grow_on"] = list(blocks)
+        return self
 
-    def may_replace(self, blocks: list[MinecraftBlockDescriptor | Identifier]):
+    def may_replace(
+        self, blocks: list[MinecraftBlockDescriptor | Identifier]
+    ) -> "TreeFeature":
         """Sets the may_replace block reference array."""
         self._content[self._feature_name]["may_replace"] = list(blocks)
+        return self
 
-    def may_grow_through(self, blocks: list[MinecraftBlockDescriptor | Identifier]):
+    def may_grow_through(
+        self, blocks: list[MinecraftBlockDescriptor | Identifier]
+    ) -> "TreeFeature":
         """Sets the may_grow_through block reference array."""
         self._content[self._feature_name]["may_grow_through"] = list(blocks)
+        return self
 
-    def set_trunk(
+    # -------------------------------------------------------------------------
+    # Trunk builder methods
+    # -------------------------------------------------------------------------
+
+    def cherry_trunk(
         self,
-        trunk_type: Literal[
-            "acacia_trunk",
-            "cherry_trunk",
-            "fallen_trunk",
-            "fancy_trunk",
-            "mangrove_trunk",
-            "mega_trunk",
-            "trunk",
-        ],
-        **config: Any,
-    ):
-        """Sets one of the trunk objects that must be defined by tree_feature."""
-        if trunk_type not in [
-            "acacia_trunk",
-            "cherry_trunk",
-            "fallen_trunk",
-            "fancy_trunk",
-            "mangrove_trunk",
-            "mega_trunk",
-            "trunk",
-        ]:
-            raise ValueError(f"Unsupported tree trunk type: {trunk_type}")
+        trunk_block: MinecraftBlockDescriptor | Identifier,
+        base_height: int = 7,
+        height_intervals: list[int] | tuple[int, ...] | None = None,
+        one_branch_weight: int = 10,
+        two_branches_weight: int = 10,
+        two_branches_and_trunk_weight: int = 10,
+        branch_horizontal_length: tuple[int, int] | int = (2, 4),
+        branch_start_offset_from_top: tuple[int, int] | int = (-4, -3),
+        branch_end_offset_from_top: tuple[int, int] | int = (-1, 0),
+    ) -> "TreeFeature":
+        """Sets the cherry_trunk configuration using strictly typed plain arguments."""
+        trunk_height: dict[str, Any] = {"base": clamp(base_height, 2, inf)}
+        if height_intervals is not None:
+            trunk_height["intervals"] = [int(i) for i in height_intervals]
 
-        self._content[self._feature_name][trunk_type] = config
+        branches: dict[str, Any] = {
+            "tree_type_weights": {
+                "one_branch": clamp(one_branch_weight, 0, inf),
+                "two_branches": clamp(two_branches_weight, 0, inf),
+                "two_branches_and_trunk": clamp(two_branches_and_trunk_weight, 0, inf),
+            },
+            "branch_horizontal_length": AnvilFormatter.range_min_max_dict(
+                branch_horizontal_length, "branch_horizontal_length"
+            ),
+            "branch_start_offset_from_top": AnvilFormatter.range_min_max_dict(
+                branch_start_offset_from_top, "branch_start_offset_from_top"
+            ),
+            "branch_end_offset_from_top": AnvilFormatter.range_min_max_dict(
+                branch_end_offset_from_top, "branch_end_offset_from_top"
+            ),
+        }
 
-    def set_canopy(
+        existing_branch_canopy = (
+            self._content[self._feature_name]
+            .get("cherry_trunk", {})
+            .get("branches", {})
+            .get("branch_canopy")
+        )
+        if existing_branch_canopy:
+            branches["branch_canopy"] = existing_branch_canopy
+
+        self._content[self._feature_name]["cherry_trunk"] = {
+            "trunk_block": trunk_block,
+            "trunk_height": trunk_height,
+            "branches": branches,
+        }
+        return self
+
+    def acacia_trunk(
         self,
-        canopy_type: Literal[
-            "acacia_canopy",
-            "canopy",
-            "cherry_canopy",
-            "fancy_canopy",
-            "mangrove_canopy",
-            "mega_canopy",
-            "mega_pine_canopy",
-            "pine_canopy",
-            "roofed_canopy",
-            "spruce_canopy",
-            "random_spread_canopy",
-        ],
-        **config: Any,
-    ):
-        """Sets one of the canopy objects that can be at the root of tree_feature or inside branch_canopy."""
-        if canopy_type not in [
-            "acacia_canopy",
-            "canopy",
-            "cherry_canopy",
-            "fancy_canopy",
-            "mangrove_canopy",
-            "mega_canopy",
-            "mega_pine_canopy",
-            "pine_canopy",
-            "roofed_canopy",
-            "spruce_canopy",
-            "random_spread_canopy",
-        ]:
-            raise ValueError(f"Unsupported tree canopy type: {canopy_type}")
+        trunk_block: MinecraftBlockDescriptor | Identifier,
+        trunk_width: int = 1,
+        base_height: int = 5,
+        height_intervals: list[int] | tuple[int, ...] | None = None,
+        min_height_for_canopy: int | None = None,
+        allow_diagonal_growth: bool = True,
+        lean_height: tuple[int, int] | int = (1, 5),
+        lean_steps: tuple[int, int] | int = (1, 4),
+        lean_length: tuple[int, int] | int | None = None,
+        branch_chance: float = 0.0,
+        branch_length: tuple[int, int] | int = (1, 4),
+        branch_position: tuple[int, int] | int = (1, 3),
+    ) -> "TreeFeature":
+        """Sets the acacia_trunk configuration using strictly typed plain arguments."""
+        trunk_height: dict[str, Any] = {"base": clamp(base_height, 1, inf)}
+        if height_intervals is not None:
+            trunk_height["intervals"] = [int(i) for i in height_intervals]
+        if min_height_for_canopy is not None:
+            trunk_height["min_height_for_canopy"] = min_height_for_canopy
 
-        self._content[self._feature_name][canopy_type] = config
+        trunk_lean: dict[str, Any] = {
+            "allow_diagonal_growth": allow_diagonal_growth,
+            "lean_height": AnvilFormatter.range_min_max_dict(
+                lean_height, "lean_height"
+            ),
+            "lean_steps": AnvilFormatter.range_min_max_dict(lean_steps, "lean_steps"),
+        }
+        if lean_length is not None:
+            trunk_lean["lean_length"] = AnvilFormatter.range_min_max_dict(
+                lean_length, "lean_length"
+            )
 
-    def mangrove_roots(self, **config: Any):
-        """Sets the optional mangrove_roots object."""
-        self._content[self._feature_name]["mangrove_roots"] = config
+        branches: dict[str, Any] = {
+            "branch_chance": branch_chance,
+            "branch_length": AnvilFormatter.range_min_max_dict(
+                branch_length, "branch_length"
+            ),
+            "branch_position": AnvilFormatter.range_min_max_dict(
+                branch_position, "branch_position"
+            ),
+        }
+
+        existing_branch_canopy = (
+            self._content[self._feature_name]
+            .get("acacia_trunk", {})
+            .get("branches", {})
+            .get("branch_canopy")
+        )
+        if existing_branch_canopy:
+            branches["branch_canopy"] = existing_branch_canopy
+
+        self._content[self._feature_name]["acacia_trunk"] = {
+            "trunk_block": trunk_block,
+            "trunk_width": clamp(trunk_width, 1, inf),
+            "trunk_height": trunk_height,
+            "trunk_lean": trunk_lean,
+            "branches": branches,
+        }
+        return self
+
+    def trunk(
+        self,
+        trunk_block: MinecraftBlockDescriptor | Identifier,
+        trunk_height: tuple[int, int] | int = (4, 7),
+        height_modifier: tuple[int, int] | int | None = None,
+        can_be_submerged: bool | int | None = None,
+    ) -> "TreeFeature":
+        """Sets the standard trunk configuration using strictly typed plain arguments."""
+        config: dict[str, Any] = {
+            "trunk_block": trunk_block,
+            "trunk_height": (
+                AnvilFormatter.range_min_max_dict(trunk_height, "trunk_height")
+                if isinstance(trunk_height, (tuple, list))
+                else trunk_height
+            ),
+        }
+        if height_modifier is not None:
+            config["height_modifier"] = AnvilFormatter.range_min_max_dict(
+                height_modifier, "height_modifier"
+            )
+        if can_be_submerged is not None:
+            if isinstance(can_be_submerged, bool):
+                config["can_be_submerged"] = can_be_submerged
+            else:
+                config["can_be_submerged"] = {
+                    "max_depth": clamp(can_be_submerged, 1, inf)
+                }
+        self._content[self._feature_name]["trunk"] = config
+        return self
+
+    def fancy_trunk(
+        self,
+        trunk_block: MinecraftBlockDescriptor | Identifier,
+        trunk_width: int = 1,
+        base_height: int = 5,
+        height_variance: int = 12,
+        height_scale: float = 0.618,
+        branch_slope: float = 0.381,
+        branch_density: float = 1.0,
+        branch_min_altitude_factor: float = 0.2,
+        width_scale: float = 1.0,
+        foliage_altitude_factor: float = 0.3,
+    ) -> "TreeFeature":
+        """Sets the fancy_trunk configuration using strictly typed plain arguments."""
+        self._content[self._feature_name]["fancy_trunk"] = {
+            "trunk_block": trunk_block,
+            "trunk_width": clamp(trunk_width, 1, inf),
+            "trunk_height": {
+                "base": clamp(base_height, 1, inf),
+                "variance": clamp(height_variance, 1, inf),
+                "scale": clamp(height_scale, 0.0, 1.0),
+            },
+            "branches": {
+                "slope": branch_slope,
+                "density": branch_density,
+                "min_altitude_factor": clamp(branch_min_altitude_factor, 0.0, 1.0),
+            },
+            "width_scale": clamp(width_scale, 0.0, inf),
+            "foliage_altitude_factor": clamp(foliage_altitude_factor, 0.0, 1.0),
+        }
+        return self
+
+    def mega_trunk(
+        self,
+        trunk_block: MinecraftBlockDescriptor | Identifier,
+        trunk_width: int = 2,
+        base_height: int = 15,
+        height_intervals: list[int] | tuple[int, ...] | None = None,
+        height_modifier: tuple[int, int] | int | None = None,
+        branch_length: int | None = None,
+        branch_slope: float | None = None,
+        branch_interval: int | None = None,
+        branch_altitude_factor: float | None = None,
+    ) -> "TreeFeature":
+        """Sets the mega_trunk configuration using strictly typed plain arguments."""
+        trunk_height: dict[str, Any] = {"base": clamp(base_height, 1, inf)}
+        if height_intervals is not None:
+            trunk_height["intervals"] = [int(i) for i in height_intervals]
+
+        config: dict[str, Any] = {
+            "trunk_block": trunk_block,
+            "trunk_width": clamp(trunk_width, 1, inf),
+            "trunk_height": trunk_height,
+        }
+        if height_modifier is not None:
+            config["height_modifier"] = AnvilFormatter.range_min_max_dict(
+                height_modifier, "height_modifier"
+            )
+
+        branches: dict[str, Any] = {}
+        if branch_length is not None:
+            branches["branch_length"] = branch_length
+        if branch_slope is not None:
+            branches["branch_slope"] = branch_slope
+        if branch_interval is not None:
+            branches["branch_interval"] = branch_interval
+        if branch_altitude_factor is not None:
+            branches["branch_altitude_factor"] = branch_altitude_factor
+        if branches:
+            config["branches"] = branches
+
+        self._content[self._feature_name]["mega_trunk"] = config
+        return self
+
+    def poplar_trunk(
+        self,
+        trunk_block: MinecraftBlockDescriptor | Identifier,
+        trunk_height: tuple[int, int] | int = (5, 8),
+        remaining_trunk_height_above_branches: tuple[int, int] | int | None = None,
+        amount_of_foliage_support_branches: int | None = None,
+        height_modifier: tuple[int, int] | int | None = None,
+    ) -> "TreeFeature":
+        """Sets the poplar_trunk configuration using strictly typed plain arguments."""
+        config: dict[str, Any] = {
+            "trunk_block": trunk_block,
+            "trunk_height": AnvilFormatter.range_min_max_dict(
+                trunk_height, "trunk_height"
+            ),
+        }
+        if remaining_trunk_height_above_branches is not None:
+            config["remaining_trunk_height_above_branches"] = (
+                AnvilFormatter.range_min_max_dict(
+                    remaining_trunk_height_above_branches,
+                    "remaining_trunk_height_above_branches",
+                )
+            )
+        if amount_of_foliage_support_branches is not None:
+            config["amount_of_foliage_support_branches"] = (
+                amount_of_foliage_support_branches
+            )
+        if height_modifier is not None:
+            config["height_modifier"] = AnvilFormatter.range_min_max_dict(
+                height_modifier, "height_modifier"
+            )
+        self._content[self._feature_name]["poplar_trunk"] = config
+        return self
+
+    def mangrove_trunk(
+        self,
+        trunk_block: MinecraftBlockDescriptor | Identifier,
+        trunk_width: int = 1,
+        base_height: int = 5,
+        height_rand_a: int = 1,
+        height_rand_b: int = 1,
+        branch_length: tuple[int, int] | int = (2, 4),
+        branch_steps: tuple[int, int] | int = (1, 3),
+        branch_chance: float = 100.0,
+    ) -> "TreeFeature":
+        """Sets the mangrove_trunk configuration using strictly typed plain arguments."""
+        self._content[self._feature_name]["mangrove_trunk"] = {
+            "trunk_block": trunk_block,
+            "trunk_width": clamp(trunk_width, 1, inf),
+            "trunk_height": {
+                "base": clamp(base_height, 1, inf),
+                "height_rand_a": clamp(height_rand_a, 1, inf),
+                "height_rand_b": clamp(height_rand_b, 1, inf),
+            },
+            "branches": {
+                "branch_length": AnvilFormatter.range_min_max_dict(
+                    branch_length, "branch_length"
+                ),
+                "branch_steps": AnvilFormatter.range_min_max_dict(
+                    branch_steps, "branch_steps"
+                ),
+                "branch_chance": clamp(branch_chance, 0.0, 100.0),
+            },
+        }
+        return self
+
+    def fallen_trunk(
+        self,
+        trunk_block: MinecraftBlockDescriptor | Identifier,
+        log_length: tuple[int, int] | int = (4, 7),
+        stump_height: tuple[int, int] | int | None = None,
+        height_modifier: tuple[int, int] | int | None = None,
+        log_decoration_feature: str | Identifier | None = None,
+    ) -> "TreeFeature":
+        """Sets the fallen_trunk configuration using strictly typed plain arguments."""
+        config: dict[str, Any] = {
+            "trunk_block": trunk_block,
+            "log_length": AnvilFormatter.range_min_max_dict(log_length, "log_length"),
+        }
+        if stump_height is not None:
+            config["stump_height"] = AnvilFormatter.range_min_max_dict(
+                stump_height, "stump_height"
+            )
+        if height_modifier is not None:
+            config["height_modifier"] = AnvilFormatter.range_min_max_dict(
+                height_modifier, "height_modifier"
+            )
+        if log_decoration_feature is not None:
+            config["log_decoration_feature"] = str(log_decoration_feature)
+        self._content[self._feature_name]["fallen_trunk"] = config
+        return self
+
+    # -------------------------------------------------------------------------
+    # Canopy builder methods
+    # -------------------------------------------------------------------------
+
+    def cherry_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        height: tuple[int, int] | int = 4,
+        radius: tuple[int, int] | int = 4,
+        trunk_width: int | None = None,
+        wide_bottom_layer_hole_chance: float = 25.0,
+        corner_hole_chance: float = 50.0,
+        hanging_leaves_chance: float = 16.6666,
+        hanging_leaves_extension_chance: float = 33.3333,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the cherry_canopy configuration using strictly typed plain arguments.
+
+        Note: Bedrock schema requires height to be at least 4. Values below 4 are clamped.
+        """
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "height": AnvilFormatter.range_min_max_dict(height, "height", clamp_min=4),
+            "radius": AnvilFormatter.range_min_max_dict(radius, "radius"),
+            "wide_bottom_layer_hole_chance": wide_bottom_layer_hole_chance,
+            "corner_hole_chance": corner_hole_chance,
+            "hanging_leaves_chance": hanging_leaves_chance,
+            "hanging_leaves_extension_chance": hanging_leaves_extension_chance,
+        }
+        if trunk_width is not None:
+            canopy_dict["trunk_width"] = clamp(trunk_width, 1, inf)
+
+        self._content[self._feature_name]["cherry_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("cherry_canopy", canopy_dict)
+        return self
+
+    def fancy_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        height: int = 4,
+        radius: int = 4,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the fancy_canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "height": clamp(height, 1, inf),
+            "radius": clamp(radius, 0, inf),
+        }
+        self._content[self._feature_name]["fancy_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("fancy_canopy", canopy_dict)
+        return self
+
+    def acacia_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        canopy_size: int = 3,
+        simplify_canopy: bool = False,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the acacia_canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "canopy_size": clamp(canopy_size, 1, inf),
+        }
+        if simplify_canopy:
+            canopy_dict["simplify_canopy"] = True
+        self._content[self._feature_name]["acacia_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("acacia_canopy", canopy_dict)
+        return self
+
+    def canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        min_width: int | None = None,
+        canopy_offset_min: int | None = None,
+        canopy_offset_max: int | None = None,
+        slope_rise: int | None = None,
+        slope_run: int | None = None,
+        variation_chance: list[tuple[int, int]] | None = None,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the standard canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+        }
+        if min_width is not None:
+            canopy_dict["min_width"] = clamp(min_width, 0, inf)
+        if canopy_offset_min is not None and canopy_offset_max is not None:
+            canopy_dict["canopy_offset"] = AnvilFormatter.min_max_dict(
+                (canopy_offset_min, canopy_offset_max), "canopy_offset"
+            )
+        if slope_rise is not None and slope_run is not None:
+            canopy_dict["canopy_slope"] = {
+                "rise": slope_rise,
+                "run": slope_run,
+            }
+        if variation_chance is not None:
+            canopy_dict["variation_chance"] = [
+                {"numerator": item[0], "denominator": item[1]}
+                for item in variation_chance
+            ]
+        self._content[self._feature_name]["canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("canopy", canopy_dict)
+        return self
+
+    def roofed_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        canopy_height: int = 3,
+        core_width: int = 1,
+        outer_radius: int = 3,
+        inner_radius: int = 2,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the roofed_canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "canopy_height": clamp(canopy_height, 3, inf),
+            "core_width": clamp(core_width, 1, inf),
+            "outer_radius": clamp(outer_radius, 0, inf),
+            "inner_radius": clamp(inner_radius, 0, inf),
+        }
+        self._content[self._feature_name]["roofed_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("roofed_canopy", canopy_dict)
+        return self
+
+    def spruce_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        lower_offset: tuple[int, int] | int = (0, 0),
+        upper_offset: tuple[int, int] | int = (0, 0),
+        max_radius: tuple[int, int] | int = (2, 3),
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the spruce_canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "lower_offset": AnvilFormatter.range_min_max_dict(
+                lower_offset, "lower_offset"
+            ),
+            "upper_offset": AnvilFormatter.range_min_max_dict(
+                upper_offset, "upper_offset"
+            ),
+            "max_radius": AnvilFormatter.range_min_max_dict(max_radius, "max_radius"),
+        }
+        self._content[self._feature_name]["spruce_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("spruce_canopy", canopy_dict)
+        return self
+
+    def pine_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        canopy_height: tuple[int, int] | int = (4, 5),
+        base_radius: int = 2,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the pine_canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "canopy_height": AnvilFormatter.range_min_max_dict(
+                canopy_height, "canopy_height"
+            ),
+            "base_radius": clamp(base_radius, 1, inf),
+        }
+        self._content[self._feature_name]["pine_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("pine_canopy", canopy_dict)
+        return self
+
+    def mega_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        canopy_height: tuple[int, int] | int = (4, 6),
+        base_radius: int = 4,
+        core_width: int = 2,
+        simplify_canopy: bool = False,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the mega_canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "canopy_height": AnvilFormatter.range_min_max_dict(
+                canopy_height, "canopy_height"
+            ),
+            "base_radius": clamp(base_radius, 0, inf),
+            "core_width": clamp(core_width, 1, inf),
+        }
+        if simplify_canopy:
+            canopy_dict["simplify_canopy"] = True
+        self._content[self._feature_name]["mega_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("mega_canopy", canopy_dict)
+        return self
+
+    def mega_pine_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        canopy_height: tuple[int, int] | int = (8, 12),
+        base_radius: int = 4,
+        radius_step_modifier: float = 0.5,
+        core_width: int = 2,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the mega_pine_canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "canopy_height": AnvilFormatter.range_min_max_dict(
+                canopy_height, "canopy_height"
+            ),
+            "base_radius": clamp(base_radius, 0, inf),
+            "radius_step_modifier": radius_step_modifier,
+            "core_width": clamp(core_width, 1, inf),
+        }
+        self._content[self._feature_name]["mega_pine_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("mega_pine_canopy", canopy_dict)
+        return self
+
+    def poplar_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the poplar_canopy configuration using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+        }
+        self._content[self._feature_name]["poplar_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("poplar_canopy", canopy_dict)
+        return self
+
+    def mangrove_canopy(
+        self,
+        leaf_blocks: (
+            list[tuple[MinecraftBlockDescriptor | Identifier, float]]
+            | list[MinecraftBlockDescriptor | Identifier]
+        ),
+        canopy_height: tuple[int, int] | int = (3, 5),
+        canopy_radius: tuple[int, int] | int = (3, 5),
+        leaf_placement_attempts: int = 100,
+        hanging_block: MinecraftBlockDescriptor | Identifier | None = None,
+        hanging_block_placement_chance: float | None = None,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the mangrove_canopy configuration using strictly typed plain arguments."""
+        formatted_leaves: list[list[Any]] = []
+        for entry in leaf_blocks:
+            if isinstance(entry, (list, tuple)) and len(entry) == 2:
+                formatted_leaves.append([entry[0], float(entry[1])])
+            else:
+                formatted_leaves.append([entry, 1.0])
+
+        canopy_dict: dict[str, Any] = {
+            "leaf_blocks": formatted_leaves,
+            "canopy_height": AnvilFormatter.range_min_max_dict(
+                canopy_height, "canopy_height"
+            ),
+            "canopy_radius": AnvilFormatter.range_min_max_dict(
+                canopy_radius, "canopy_radius"
+            ),
+            "leaf_placement_attempts": clamp(leaf_placement_attempts, 1, inf),
+        }
+        if hanging_block is not None:
+            canopy_dict["hanging_block"] = hanging_block
+        if hanging_block_placement_chance is not None:
+            canopy_dict["hanging_block_placement_chance"] = (
+                hanging_block_placement_chance
+            )
+
+        self._content[self._feature_name]["mangrove_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("mangrove_canopy", canopy_dict)
+        return self
+
+    def random_spread_canopy(
+        self,
+        leaf_blocks: (
+            list[tuple[MinecraftBlockDescriptor | Identifier, float]]
+            | list[MinecraftBlockDescriptor | Identifier]
+        ),
+        canopy_height: tuple[int, int] | int = (3, 5),
+        canopy_radius: tuple[int, int] | int = (3, 5),
+        leaf_placement_attempts: int = 100,
+        sync_to_branches: bool = True,
+    ) -> "TreeFeature":
+        """Sets the random_spread_canopy configuration using strictly typed plain arguments."""
+        formatted_leaves: list[list[Any]] = []
+        for entry in leaf_blocks:
+            if isinstance(entry, (list, tuple)) and len(entry) == 2:
+                formatted_leaves.append([entry[0], float(entry[1])])
+            else:
+                formatted_leaves.append([entry, 1.0])
+
+        canopy_dict: dict[str, Any] = {
+            "leaf_blocks": formatted_leaves,
+            "canopy_height": AnvilFormatter.range_min_max_dict(
+                canopy_height, "canopy_height"
+            ),
+            "canopy_radius": AnvilFormatter.range_min_max_dict(
+                canopy_radius, "canopy_radius"
+            ),
+            "leaf_placement_attempts": clamp(leaf_placement_attempts, 1, inf),
+        }
+        self._content[self._feature_name]["random_spread_canopy"] = canopy_dict
+        if sync_to_branches:
+            self._sync_branch_canopy("random_spread_canopy", canopy_dict)
+        return self
+
+    # -------------------------------------------------------------------------
+    # Branch canopy override methods
+    # -------------------------------------------------------------------------
+
+    def branch_cherry_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        height: tuple[int, int] | int = 4,
+        radius: tuple[int, int] | int = 4,
+        trunk_width: int | None = None,
+        wide_bottom_layer_hole_chance: float = 25.0,
+        corner_hole_chance: float = 50.0,
+        hanging_leaves_chance: float = 16.6666,
+        hanging_leaves_extension_chance: float = 33.3333,
+    ) -> "TreeFeature":
+        """Explicitly sets cherry_canopy for trunk branches using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "height": AnvilFormatter.range_min_max_dict(height, "height", clamp_min=4),
+            "radius": AnvilFormatter.range_min_max_dict(radius, "radius"),
+            "wide_bottom_layer_hole_chance": wide_bottom_layer_hole_chance,
+            "corner_hole_chance": corner_hole_chance,
+            "hanging_leaves_chance": hanging_leaves_chance,
+            "hanging_leaves_extension_chance": hanging_leaves_extension_chance,
+        }
+        if trunk_width is not None:
+            canopy_dict["trunk_width"] = clamp(trunk_width, 1, inf)
+        self._sync_branch_canopy("cherry_canopy", canopy_dict)
+        return self
+
+    def branch_fancy_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        height: int = 4,
+        radius: int = 4,
+    ) -> "TreeFeature":
+        """Explicitly sets fancy_canopy for trunk branches using strictly typed plain arguments."""
+        canopy_dict = {
+            "leaf_block": leaf_block,
+            "height": clamp(height, 1, inf),
+            "radius": clamp(radius, 0, inf),
+        }
+        self._sync_branch_canopy("fancy_canopy", canopy_dict)
+        return self
+
+    def branch_acacia_canopy(
+        self,
+        leaf_block: MinecraftBlockDescriptor | Identifier,
+        canopy_size: int = 3,
+        simplify_canopy: bool = False,
+    ) -> "TreeFeature":
+        """Explicitly sets acacia_canopy for trunk branches using strictly typed plain arguments."""
+        canopy_dict: dict[str, Any] = {
+            "leaf_block": leaf_block,
+            "canopy_size": clamp(canopy_size, 1, inf),
+        }
+        if simplify_canopy:
+            canopy_dict["simplify_canopy"] = True
+        self._sync_branch_canopy("acacia_canopy", canopy_dict)
+        return self
+
+    def mangrove_roots(
+        self,
+        root_block: MinecraftBlockDescriptor | Identifier,
+        muddy_root_block: MinecraftBlockDescriptor | Identifier | None = None,
+        max_root_width: int = 5,
+        max_root_length: int = 15,
+        y_offset: int = 0,
+        roots_may_grow_through: (
+            list[MinecraftBlockDescriptor | Identifier] | None
+        ) = None,
+    ) -> "TreeFeature":
+        """Sets the mangrove_roots configuration using strictly typed plain arguments."""
+        roots: dict[str, Any] = {
+            "root_block": root_block,
+            "max_root_width": clamp(max_root_width, 1, inf),
+            "max_root_length": clamp(max_root_length, 1, inf),
+            "y_offset": y_offset,
+        }
+        if muddy_root_block is not None:
+            roots["muddy_root_block"] = muddy_root_block
+        if roots_may_grow_through is not None:
+            roots["roots_may_grow_through"] = list(roots_may_grow_through)
+        self._content[self._feature_name]["mangrove_roots"] = roots
+        return self
 
 
 class UnderwaterCaveCarverFeature(Feature):

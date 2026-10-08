@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.97**](#0997)
+- [**0.9.98**](#0998)
+- [0.9.97](#0997)
 - [0.9.96](#0996)
 - [0.9.95](#0995)
 - [0.9.94](#0994)
@@ -108,6 +109,41 @@
 ---
 
 # 0.9.x
+
+## 0.9.98
+
+### Anvil
+
+- `Block.descriptor()` takes states as keywords (`leaves.descriptor(natural=True)` uses the block's own namespace) and no longer exports empty tags.
+- Fixed `MinecraftBlockDescriptor` turning state values into strings, so a boolean state was exported as `"True"` and ignored by the game (feature-placed blocks kept the default state). Values now keep their type.
+- Added `BlockItemVisual.item_display_transforms()`, which replaces the `item_display_transforms` of a Blockbench model with your own per display slot (or keeps the rest with `merge=True`). In the `gui` slot, `fit_to_frame` is exported when given: `True` as `{}`, `False` as an explicit `false`. No other slot accepts it. It only works on a visual made from a collection, and the transforms are shared by every block using that collection's geometry.
+- Added loot table condition support (`LootConditions`) for `LootTable` pools and entries (`pool.conditions`, `entry.conditions`), supporting `match_tool`, `random_chance`, `random_chance_with_looting`, `random_difficulty_chance`, `random_regional_difficulty_chance`, `killed_by_player`, `killed_by_player_or_pets`, `killed_by_entity`, `entity_killed`, `has_variant`, `has_mark_variant`, and `entity_properties`.
+- Enhanced `TreeFeature` with method chaining, support for `poplar_trunk` and `poplar_canopy`, and shorthand builder methods for all trunk and canopy types (`trunk`, `fancy_trunk`, `acacia_trunk`, `cherry_trunk`, `fallen_trunk`, `mangrove_trunk`, `mega_trunk`, `poplar_trunk`, `canopy`, `fancy_canopy`, `acacia_canopy`, `cherry_canopy`, `mangrove_canopy`, `mega_canopy`, `mega_pine_canopy`, `pine_canopy`, `poplar_canopy`, `roofed_canopy`, `spruce_canopy`, `random_spread_canopy`).
+- Feature and feature rule files use the game version (`MANIFEST_BUILD`) as their format version, like the other content types.
+- **Breaking:** `SnapToSurfaceFeature` takes `search_range` in place of `vertical_search_range`, which the game no longer accepts from format version 1.26.50, and supports the `wall` surface and `allow_non_air_placement`.
+- Added `MinecraftItemTags.Leaves` and the other item tags missing from the enum.
+
+### Kit
+
+- A built `WoodSet` exposes the feature its saplings grow into as `tree_feature`, so what builds the tree from the set (`.tree(lambda palm: ...)`) doesn't need to hand it back through a closure.
+- Wood sets ship their two Blockbench models (`wood_set` and `wood_set_boat`): when either is missing from `assets/bbmodels`, `build()` asks whether to copy the base into the project, and never overwrites an existing model.
+- `WoodSet.build()` no longer special-cases the leaves and the sapling: every part is created and stored the same way.
+- Wood set saplings grow on random ticks instead of a scheduled tick, with vanilla's two stages (the `stage` state): a random tick (1 in 7, light 9 or more above) or a bone meal (45% in survival, with particles, using one) advances a stage, and the second stage places the tree. Bone meal in creative places it at once.
+- `WoodSet.sapling_on(blocks)` sets the blocks the sapling can be planted on (dirt, grass, sand... by default).
+- `WoodSet.leaf_distance(blocks)` sets how far from a log the leaves can still hold on (4 by default, like vanilla), for trees whose canopies reach further.
+- Wood set leaves carry the `minecraft:leaves` item tag, so vanilla recipes that take it (smelting leaves into leaf litter) work with them without a recipe of the kit's own.
+- Added the `WoodSet` class to the wood set kit: configure it with `.tree()` and `.leaf_drop(item, chance, count)` (extra leaf drops like the oak apple, for breaking and decaying), then `.build()`. It maps part names to parts as before. `create_wood_set` remains as a shortcut, now with `leaf_drops=`. **Breaking:** `WoodSet` was the type of what `create_wood_set` returned and is now this class.
+- Wood set leaves now behave like vanilla leaves: natural leaves decay on random ticks (the scheduled tick that never fired on generated leaves is gone), any log or wood within 4 blocks holds them up through any leaves, and flammability and blast resistance match vanilla. The kit's logs and wood carry the `log` tag.
+- `create_wood_set(tree=...)` also takes a function that receives the finished set and returns the tree, so the tree can use the set's own blocks (the sapling is made last).
+- Added `WoodBlock.LEAVES` and `WoodBlock.SAPLING` to wood sets (`<name>_leaves`, `<name>_sapling`, with `BlockWoodSetLeaves` and `BlockWoodSetSapling` for their scripts):
+    - Leaves work like vanilla's: they have a `natural` state, off for leaves a player placed, which stay forever. Whatever generates leaves (a feature, a jigsaw structure, a script) sets it on, and only those leaves decay, when none of the set's logs or wood is within 4 blocks through leaves of the same kind, dropping a sapling or sticks by chance.
+    - Shears and silk touch drop the leaves themselves; any other way drops a sapling or sticks by chance. These drops are defined in the block's loot table using `match_tool` and `random_chance` conditions, handled natively by the game engine rather than by break scripts.
+    - Saplings go on dirt-like blocks, grow by random ticks or bone meal through two stages, and then place the feature given as `tree` to `create_wood_set`, a `Feature` or its identifier. A set with saplings requires it (a `ValueError` otherwise, unless `WoodBlock.SAPLING` is excluded), and the kit makes no trees of its own: the caller builds and queues the feature, which can use the set's blocks by their identifiers (`<namespace>:<name>_log`, and `<namespace>:<name>_leaves` with `natural` on).
+- `create_wood_set` returns a `WoodSet`, a typed dict of what it made, one `WoodSetPart(block, item)` per block named like `WoodBlock` in lowercase (`wood["planks"]`, `wood["boat"]`; boats hold their entity). Parts left out with `exclude` are missing.
+- Wood sets share their Blockbench models: every block uses the `wood_set` model and every boat the `wood_set_boat` model, instead of `<name>_planks` and `<name>_boat` per set, so a set only differs by its names and textures. Each shared model must hold the textures of every set (`<name>_planks`, `<name>_log`, `<name>_boat` and so on). Existing projects rename `<name>_planks.bbmodel` to `wood_set.bbmodel` and `<name>_boat.bbmodel` to `wood_set_boat.bbmodel`, and merge the textures of their sets into them. Adding the same block culling rule twice to a geometry now keeps one, so blocks sharing a geometry can each add it.
+- Wood set buttons and pressure plates define `minecraft:redstone_producer` in their base components as well as their permutations, which format 1.26.20 and later require. They also keep ticking only while pressed (a looping tick in the `powered` permutation); the base components have a tick that runs once and stops, which a block with an `onTick` script needs, and their script releases them with a short timer as well, in case the engine does not start the tick when a script presses them.
+- Wood set signs and hanging signs tick once, not every tick: the text is drawn on the first tick and again when it is edited, dyed or made to glow, since it stays in the world until the sign is broken. `refreshSignText(block)` in the sign script draws it again for scripts that change a sign's properties.
+- Wood set signs and hanging signs now stack to 16, like vanilla. Boats and chest boats already stacked to 1, and every other block keeps the default of 64.
 
 ## 0.9.97
 

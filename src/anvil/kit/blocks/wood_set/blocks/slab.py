@@ -7,6 +7,7 @@ from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockFlammable,
     BlockGeometry,
+    BlockItemVisual,
     BlockLightDampening,
     BlockMapColor,
     BlockMaterialInstance,
@@ -29,13 +30,19 @@ from anvil.api.core.enums import (
     RecipeUnlockContext,
     VerticalHalfValues,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel, ItemTags
+from anvil.api.items.components import (
+    ItemBlockPlacer,
+    ItemDisplayName,
+    ItemFuel,
+    ItemTags,
+)
 from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 
 from ..components import BlockWoodSetSlab
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -85,16 +92,35 @@ def create(wood: str, selected: set[str]) -> Block:
             speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
         )
 
+    item_visual = BlockItemVisual(MODEL, collection="slab")
+    item_visual.material_instance(
+        MODEL,
+        f"{wood}_planks",
+    )
+    item_visual.item_display_transforms(
+        False,
+        gui={
+            "translation": [0, 0, 0],
+            "fit_to_frame": False,
+        },
+        fixed={"translation": [0, 2, 0]},
+        firstperson_righthand={
+            "translation": [0, 1.5, 0],
+        },
+        thirdperson_righthand={"translation": [0, 3, 1.5]},
+    )
+    item_visual.bone_visibility(slab_top="0")
+
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
-        BlockGeometry(f"{wood}_planks", collection="slab").bone_visibility(
+        BlockGeometry(MODEL, collection="slab").bone_visibility(
             slab_bottom=bottom | double,
             slab_top=top | double,
         ),
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -104,11 +130,14 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+        ),
         BlockConnectionRule("all"),
         BlockDestructibleByExplosion(15),
         BlockRedstoneConductivity(True, False),
         BlockWoodSetSlab(),
+        item_visual,
     )
 
     # Its item: shown in the creative inventory, burns in a furnace, and its vanilla tag lets every vanilla wood recipe use it

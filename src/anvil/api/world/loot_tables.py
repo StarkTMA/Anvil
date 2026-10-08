@@ -15,7 +15,7 @@ from anvil.lib.schemas import (
     MinecraftItemDescriptor,
 )
 
-__all__ = ["LootTable"]
+__all__ = ["LootTable", "LootConditions"]
 
 
 class _LootPoolEntryFunctions:
@@ -628,6 +628,355 @@ class _LootPoolEntryFunctions:
         return self._function
 
 
+class _LootConditions:
+    """Provides condition modifiers that can be applied to loot pools or entries.
+
+    Conditions are requirements that must be met before a pool can be rolled
+    or an individual entry can be selected. Each condition runs in sequence;
+    if any condition fails, the pool or entry is skipped.
+
+    All methods return self to enable method chaining.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable)
+    """
+
+    def __init__(self):
+        """Initialize the conditions list."""
+        self._conditions = []
+
+    def add(self, condition: dict) -> "_LootConditions":
+        """Add a raw condition dictionary.
+
+        Parameters:
+            condition (dict): Condition dictionary to append.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+        """
+        self._conditions.append(condition)
+        return self
+
+    def match_tool(
+        self,
+        item: Union[MinecraftItemDescriptor, Identifier, str, None] = None,
+        enchantments: Union[
+            str,
+            tuple[str, ...],
+            list[str],
+            dict,
+            list[dict],
+            tuple[dict, ...],
+            None,
+        ] = None,
+        count: Union[int, tuple[int, int], None] = None,
+        durability: Union[int, tuple[int, int], None] = None,
+        filter_any: Union[list[str], tuple[str, ...], None] = None,
+        filter_all: Union[list[str], tuple[str, ...], None] = None,
+        filter_none: Union[list[str], tuple[str, ...], None] = None,
+    ) -> "_LootConditions":
+        """Matches the tool used to break the block or make the loot drop.
+
+        Parameters:
+            item (MinecraftItemDescriptor | Identifier | str, optional): The item identifier (e.g. "minecraft:shears").
+            enchantments (str | list | dict, optional): Enchantment name (e.g. "silk_touch") or list of enchantment specifications.
+            count (int | tuple[int, int], optional): Tool count or [min, max] range.
+            durability (int | tuple[int, int], optional): Tool durability requirement.
+            filter_any (list[str], optional): Tool must match at least one of these item tags (minecraft:match_tool_filter_any).
+            filter_all (list[str], optional): Tool must match all of these item tags (minecraft:match_tool_filter_all).
+            filter_none (list[str], optional): Tool must not match any of these item tags (minecraft:match_tool_filter_none).
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#match_tool)
+        """
+        cond: dict = {"condition": "match_tool"}
+        if item is not None:
+            cond["item"] = str(item)
+        if count is not None:
+            if isinstance(count, int):
+                cond["count"] = count
+            elif isinstance(count, (tuple, list)):
+                cond["count"] = {"range_min": min(count), "range_max": max(count)}
+        if durability is not None:
+            if isinstance(durability, int):
+                cond["durability"] = {"range_min": durability}
+            elif isinstance(durability, (tuple, list)):
+                cond["durability"] = {
+                    "range_min": min(durability),
+                    "range_max": max(durability),
+                }
+        if enchantments is not None:
+            if isinstance(enchantments, str):
+                cond["enchantments"] = [
+                    {"enchantment": enchantments, "levels": {"range_min": 1}}
+                ]
+            elif isinstance(enchantments, dict):
+                cond["enchantments"] = [enchantments]
+            elif isinstance(enchantments, (list, tuple)):
+                ench_list = []
+                for e in enchantments:
+                    if isinstance(e, str):
+                        ench_list.append({"enchantment": e, "levels": {"range_min": 1}})
+                    elif isinstance(e, dict):
+                        ench_list.append(e)
+                    elif isinstance(e, (tuple, list)) and len(e) >= 2:
+                        ench_list.append(
+                            {"enchantment": str(e[0]), "levels": {"range_min": e[1]}}
+                        )
+                cond["enchantments"] = ench_list
+        if filter_any:
+            cond["minecraft:match_tool_filter_any"] = list(filter_any)
+        if filter_all:
+            cond["minecraft:match_tool_filter_all"] = list(filter_all)
+        if filter_none:
+            cond["minecraft:match_tool_filter_none"] = list(filter_none)
+        self._conditions.append(cond)
+        return self
+
+    def random_chance(self, chance: float) -> "_LootConditions":
+        """Applies a probability chance that loot will drop.
+
+        Parameters:
+            chance (float): Drop chance between 0.0 and 1.0.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#random_chance)
+        """
+        self._conditions.append(
+            {
+                "condition": "random_chance",
+                "chance": clamp(chance, 0.0, 1.0),
+            }
+        )
+        return self
+
+    def random_chance_with_looting(
+        self, chance: float, looting_multiplier: float
+    ) -> "_LootConditions":
+        """Applies a probability chance modified by the looting enchantment level.
+
+        Parameters:
+            chance (float): Base drop chance between 0.0 and 1.0.
+            looting_multiplier (float): Multiplier added per level of looting.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#random_chance_with_looting)
+        """
+        self._conditions.append(
+            {
+                "condition": "random_chance_with_looting",
+                "chance": clamp(chance, 0.0, 1.0),
+                "looting_multiplier": looting_multiplier,
+            }
+        )
+        return self
+
+    def random_difficulty_chance(
+        self,
+        default_chance: float,
+        peaceful: float | None = None,
+        easy: float | None = None,
+        normal: float | None = None,
+        hard: float | None = None,
+    ) -> "_LootConditions":
+        """Controls loot drop probability depending on world difficulty.
+
+        Parameters:
+            default_chance (float): Default drop chance.
+            peaceful (float, optional): Drop chance on Peaceful difficulty.
+            easy (float, optional): Drop chance on Easy difficulty.
+            normal (float, optional): Drop chance on Normal difficulty.
+            hard (float, optional): Drop chance on Hard difficulty.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#random_difficulty_chance)
+        """
+        payload: dict = {
+            "condition": "random_difficulty_chance",
+            "default_chance": clamp(default_chance, 0.0, 1.0),
+        }
+        if peaceful is not None:
+            payload["peaceful"] = clamp(peaceful, 0.0, 1.0)
+        if easy is not None:
+            payload["easy"] = clamp(easy, 0.0, 1.0)
+        if normal is not None:
+            payload["normal"] = clamp(normal, 0.0, 1.0)
+        if hard is not None:
+            payload["hard"] = clamp(hard, 0.0, 1.0)
+        self._conditions.append(payload)
+        return self
+
+    def random_regional_difficulty_chance(self, max_chance: float) -> "_LootConditions":
+        """Determines loot probability according to regional difficulty.
+
+        Parameters:
+            max_chance (float): Maximum drop chance.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#random_regional_difficulty_chance)
+        """
+        self._conditions.append(
+            {
+                "condition": "random_regional_difficulty_chance",
+                "max_chance": clamp(max_chance, 0.0, 1.0),
+            }
+        )
+        return self
+
+    def killed_by_player(self) -> "_LootConditions":
+        """Requires the entity to have been killed directly by a player.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#killed_by_player_or_pets)
+        """
+        self._conditions.append({"condition": "killed_by_player"})
+        return self
+
+    def killed_by_player_or_pets(self) -> "_LootConditions":
+        """Requires the entity to have been killed by a player or one of their tamed pets.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#killed_by_player_or_pets)
+        """
+        self._conditions.append({"condition": "killed_by_player_or_pets"})
+        return self
+
+    def killed_by_entity(self, entity_type: str) -> "_LootConditions":
+        """Requires the entity to have been killed by an entity of the specified type.
+
+        Parameters:
+            entity_type (str): Identifier of the killing entity type (e.g. "minecraft:skeleton").
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#pool-conditions)
+        """
+        self._conditions.append(
+            {
+                "condition": "killed_by_entity",
+                "entity_type": str(entity_type),
+            }
+        )
+        return self
+
+    def entity_killed(self, entity_type: str) -> "_LootConditions":
+        """Requires the victim entity to be of the specified type.
+
+        Parameters:
+            entity_type (str): Identifier of the victim entity type (e.g. "minecraft:magma_cube").
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#has_variant)
+        """
+        self._conditions.append(
+            {
+                "condition": "entity_killed",
+                "entity_type": str(entity_type),
+            }
+        )
+        return self
+
+    def has_variant(self, value: int) -> "_LootConditions":
+        """Specifies that the entity must have the given variant value.
+
+        Parameters:
+            value (int): Variant number.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#has_variant)
+        """
+        self._conditions.append(
+            {
+                "condition": "has_variant",
+                "value": int(value),
+            }
+        )
+        return self
+
+    def has_mark_variant(self, value: int) -> "_LootConditions":
+        """Specifies that the entity must have the given mark variant value.
+
+        Parameters:
+            value (int): Mark variant number.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/loottableconditions?view=minecraft-bedrock-stable#has_mark_variant)
+        """
+        self._conditions.append(
+            {
+                "condition": "has_mark_variant",
+                "value": int(value),
+            }
+        )
+        return self
+
+    def entity_properties(
+        self, entity: str = "this", properties: dict | None = None
+    ) -> "_LootConditions":
+        """Requires the target entity to have specific properties (e.g. on_fire).
+
+        Parameters:
+            entity (str, optional): Target entity ("this", "killer", etc.). Defaults to "this".
+            properties (dict, optional): Entity properties dictionary. Defaults to None.
+
+        Returns:
+            _LootConditions: Self for method chaining.
+        """
+        self._conditions.append(
+            {
+                "condition": "entity_properties",
+                "entity": entity,
+                "properties": properties if properties is not None else {},
+            }
+        )
+        return self
+
+    # PascalCase aliases for backwards compatibility
+    MatchTool = match_tool
+    RandomChance = random_chance
+    RandomChanceWithLooting = random_chance_with_looting
+    RandomDifficultyChance = random_difficulty_chance
+    RandomRegionalDifficultyChance = random_regional_difficulty_chance
+    KilledByPlayer = killed_by_player
+    KilledByPlayerOrPets = killed_by_player_or_pets
+    KilledByEntity = killed_by_entity
+    EntityKilled = entity_killed
+    HasVariant = has_variant
+    HasMarkVariant = has_mark_variant
+    EntityProperties = entity_properties
+
+    def __export__(self) -> list[dict]:
+        """Export the conditions list for JSON serialization.
+
+        Returns:
+            list[dict]: List of condition dictionaries.
+        """
+        return self._conditions
+
+
+LootConditions = _LootConditions
+
+
 class _LootPoolEntry:
     """Represents a single entry in a loot pool with its associated properties and functions.
 
@@ -656,6 +1005,7 @@ class _LootPoolEntry:
             weight (int, optional): Selection weight in the pool. Defaults to 1.
         """
         self._functions: _LootPoolEntryFunctions | None = None
+        self._conditions: _LootConditions | None = None
         self._LootPoolEntry = {
             "name": str(entry),
             "count": count,
@@ -691,17 +1041,31 @@ class _LootPoolEntry:
         Returns:
             _LootPoolEntryFunctions: Functions interface for modifying this entry.
         """
-        self._functions = _LootPoolEntryFunctions()
+        if self._functions is None:
+            self._functions = _LootPoolEntryFunctions()
         return self._functions
+
+    @property
+    def conditions(self) -> "_LootConditions":
+        """Access the conditions that must be met for this entry to be selected.
+
+        Returns:
+            _LootConditions: Conditions interface for configuring this entry.
+        """
+        if self._conditions is None:
+            self._conditions = _LootConditions()
+        return self._conditions
 
     def __export__(self):
         """Export the entry data for JSON serialization.
 
         Returns:
-            dict: Entry data including functions.
+            dict: Entry data including functions and conditions.
         """
         if self._functions:
             self._LootPoolEntry["functions"] = self._functions.__export__()
+        if self._conditions and self._conditions.__export__():
+            self._LootPoolEntry["conditions"] = self._conditions.__export__()
         return self._LootPoolEntry
 
 
@@ -724,10 +1088,22 @@ class _LootPool:
         """
         self._pool = {}
         self._entries: list[_LootPoolEntry] = []
+        self._conditions: _LootConditions | None = None
         if isinstance(rolls, int):
             self._pool["rolls"] = rolls
         elif isinstance(rolls, (tuple, list)):
             self._pool["rolls"] = {"min": min(rolls), "max": max(rolls)}
+
+    @property
+    def conditions(self) -> "_LootConditions":
+        """Access the conditions that must be met for this pool to be rolled.
+
+        Returns:
+            _LootConditions: Conditions interface for configuring this pool.
+        """
+        if self._conditions is None:
+            self._conditions = _LootConditions()
+        return self._conditions
 
     def tiers(
         self, bonus_chance: float = 0.0, bonus_rolls: int = 0, initial_range: int = 0
@@ -782,12 +1158,14 @@ class _LootPool:
         """Export the pool data for JSON serialization.
 
         Returns:
-            dict: Pool data including all entries.
+            dict: Pool data including all entries and pool-level conditions.
         """
         for entry in self._entries:
             if "entries" not in self._pool:
                 self._pool.update({"entries": []})
             self._pool["entries"].append(entry.__export__())
+        if self._conditions and self._conditions.__export__():
+            self._pool["conditions"] = self._conditions.__export__()
         return self._pool
 
 

@@ -45,7 +45,6 @@ def make_project(tmp_path, monkeypatch):
                 "data_module_uuid": "00000000-0000-0000-0000-000000000004",
             },
             "anvil": {
-                "debug": False,
                 "scriptapi": False,
                 "scriptui": False,
                 "pbr": False,

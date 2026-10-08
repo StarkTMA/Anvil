@@ -39,6 +39,7 @@ from anvil.api.items.components import (
     ItemDisplayName,
     ItemFuel,
     ItemIcon,
+    ItemMaxStackSize,
 )
 from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
@@ -47,6 +48,7 @@ from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
 
 from ..components import BlockWoodSetSign, BlockWoodSetSupport, SupportedBy
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -126,12 +128,12 @@ def create(wood: str, selected: set[str]) -> Block:
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
-        BlockGeometry(f"{wood}_planks", collection="hanging_sign").bone_visibility(
+        BlockGeometry(MODEL, collection="hanging_sign").bone_visibility(
             **{SIDE_BONE: ~hung_under, BOTTOM_BONE: hung_under}
         ),
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_hanging_sign")],
                 # The chains are flat cut-outs seen from both sides
@@ -144,7 +146,9 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+        ),
         BlockConnectionRule("none"),
         BlockDestructibleByExplosion(5),
         BlockRedstoneConductivity(False, False),
@@ -169,6 +173,8 @@ def create(wood: str, selected: set[str]) -> Block:
         ItemDisplayName(display_name),
         ItemIcon(TextureComponents(color=f"{wood}_hanging_sign")),
         ItemFuel(10),
+        # Vanilla signs stack to 16
+        ItemMaxStackSize(16),
     )
     block.item.server.description.menu_category(
         ItemCategory.Items, ItemGroups.HangingSign

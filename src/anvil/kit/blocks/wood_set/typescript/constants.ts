@@ -7,6 +7,8 @@ export const STRIPPABLE_COMPONENT_ID = `${NAMESPACE}:wood_set_strippable`;
 export const TOGGLABLE_COMPONENT_ID = `${NAMESPACE}:wood_set_togglable`;
 export const INTERACTABLE_COMPONENT_ID = `${NAMESPACE}:wood_set_interactable`;
 export const REDSTONE_CONSUMER_COMPONENT_ID = `${NAMESPACE}:wood_set_redstone_consumer`;
+export const LEAVES_COMPONENT_ID = `${NAMESPACE}:wood_set_leaves`;
+export const SAPLING_COMPONENT_ID = `${NAMESPACE}:wood_set_sapling`;
 export const SIGN_COMPONENT_ID = `${NAMESPACE}:wood_set_sign`;
 export const BOAT_FAMILY = "wood_set_boat";
 export const BOAT_HITS = `${NAMESPACE}:hits`;
@@ -17,6 +19,8 @@ export const DOUBLE = `${NAMESPACE}:double` as any;
 export const VERTICAL_HALF = "minecraft:vertical_half" as any;
 export const BLOCK_FACE = "minecraft:block_face" as any;
 export const CARDINAL_DIRECTION = "minecraft:cardinal_direction" as any;
+export const STAGE = `${NAMESPACE}:stage` as any;
+export const NATURAL = `${NAMESPACE}:natural` as any;
 export const STANDING = `${NAMESPACE}:standing` as any;
 export const SIXTEEN_WAY_ROTATION = "minecraft:sixteen_way_rotation" as any;
 
@@ -56,4 +60,16 @@ export interface SignParams {
 	line_length?: number;
 	double_sided?: boolean;
 	wall_text_offset?: [number, number, number];
+}
+
+export interface LeavesParams {
+	trunks: string[];
+	sapling?: string;
+	distance?: number;
+	sapling_chance?: number;
+	stick_chance?: number;
+}
+
+export interface SaplingParams {
+	tree_feature: string;
 }

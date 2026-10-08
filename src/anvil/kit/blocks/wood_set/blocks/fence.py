@@ -9,6 +9,7 @@ from anvil.api.blocks.components import (
     BlockDisplayName,
     BlockFlammable,
     BlockGeometry,
+    BlockItemVisual,
     BlockLeashable,
     BlockMapColor,
     BlockMaterialInstance,
@@ -37,6 +38,7 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -97,10 +99,28 @@ def create(wood: str, selected: set[str]) -> Block:
             speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
         )
 
+    item_visual = BlockItemVisual(MODEL, collection="fence_item_visual")
+    item_visual.material_instance(MODEL, f"{wood}_planks")
+    item_visual.item_display_transforms(
+        False,
+        gui={
+            "rotation": [30, -45, 0],
+            "scale": [0.625, 0.625, 0.625],
+            "fit_to_frame": False,
+        },
+        firstperson_righthand={
+            "rotation": [0, -45, 0],
+            "scale": [0.375, 0.375, 0.375],
+        },
+        thirdperson_righthand={
+            "rotation": [70, -45, 0],
+            "scale": [0.375, 0.375, 0.375],
+        },
+    )
     block.server.components.add(
         BlockDisplayName(display_name),
         mining,
-        BlockGeometry(f"{wood}_planks", collection="fence").bone_visibility(
+        BlockGeometry(MODEL, collection="fence").bone_visibility(
             fence_north=Query.BlockState(CardinalConnectionStates.North),
             fence_south=Query.BlockState(CardinalConnectionStates.South),
             fence_east=Query.BlockState(CardinalConnectionStates.East),
@@ -108,7 +128,7 @@ def create(wood: str, selected: set[str]) -> Block:
         ),
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -118,13 +138,18 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockTagComponent(
-            [MinecraftBlockTags.Wood, MinecraftBlockTags.HasFenceConnections]
+            [
+                MinecraftBlockTags.Wood,
+                MinecraftBlockTags.IsAxeItemDestructible,
+                MinecraftBlockTags.HasFenceConnections,
+            ]
         ),
         BlockConnectionRule("all"),
         BlockDestructibleByExplosion(7),
         BlockRedstoneConductivity(False, False),
         BlockSupport("fence"),
         BlockLeashable((0, 12, 0)),
+        item_visual,
     )
 
     # Its item: shown in the creative inventory, burns in a furnace

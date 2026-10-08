@@ -481,7 +481,7 @@ class AnvilFormatter:
     @staticmethod
     def _normalize_min_max(
         value: Any,
-        name: str,
+        name: str = "value",
         *,
         value_types: tuple[type, ...] = (int, float),
         clamp_min: int | float | None = None,
@@ -513,7 +513,7 @@ class AnvilFormatter:
     def min_max_dict(
         cls,
         value: Any,
-        name: str,
+        name: str = "value",
         *,
         value_types: tuple[type, ...] = (int, float),
         clamp_min: int | float | None = None,
@@ -532,7 +532,7 @@ class AnvilFormatter:
     def min_max_list(
         cls,
         value: Any,
-        name: str,
+        name: str = "value",
         *,
         value_types: tuple[type, ...] = (int, float),
         clamp_min: int | float | None = None,
@@ -551,7 +551,7 @@ class AnvilFormatter:
     def range_min_max_dict(
         cls,
         value: float | int | tuple[float | int, float | int],
-        name: str,
+        name: str = "value",
         *,
         value_types: tuple[type, ...] = (int, float),
         clamp_min: int | float | None = None,

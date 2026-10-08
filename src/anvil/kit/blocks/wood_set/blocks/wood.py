@@ -30,13 +30,19 @@ from anvil.api.core.enums import (
     PlacementPositionTrait,
     RecipeUnlockContext,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel, ItemTags
+from anvil.api.items.components import (
+    ItemBlockPlacer,
+    ItemDisplayName,
+    ItemFuel,
+    ItemTags,
+)
 from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 
 from ..components import BlockWoodSetStrippable
+from . import MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -86,7 +92,7 @@ def create(wood: str, selected: set[str]) -> Block:
         # Bark on every face
         BlockMaterialInstance().add_instance(
             InstanceSpec(
-                blockbench_name=f"{wood}_planks",
+                blockbench_name=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_log")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -98,7 +104,13 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockFlammable(),
         BlockMapColor("#19381F"),
         BlockLightDampening(0),
-        BlockTagComponent([MinecraftBlockTags.Wood]),
+        BlockTagComponent(
+            [
+                MinecraftBlockTags.Wood,
+                MinecraftBlockTags.IsAxeItemDestructible,
+                MinecraftBlockTags.Log,
+            ]
+        ),
         BlockConnectionRule("all"),
         BlockDestructibleByExplosion(15),
         BlockRedstoneConductivity(True, True),
@@ -117,9 +129,7 @@ def create(wood: str, selected: set[str]) -> Block:
         ItemFuel(15),
         ItemTags([MinecraftItemTags.Logs, MinecraftItemTags.LogsThatBurn]),
     )
-    block.item.server.description.menu_category(
-        ItemCategory.Nature, ItemGroups.Wood
-    )
+    block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Wood)
 
     block.queue()
 
