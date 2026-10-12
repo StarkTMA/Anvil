@@ -61,35 +61,79 @@ class BlockWoodSetSupport(_WoodSetComponent):
 class BlockWoodSetTogglable(_WoodSetComponent):
     _name = "togglable"
 
-    def __init__(self) -> None:
-        """Turns `powered` on when interacted with or stepped on, and off on tick once clear."""
+    def __init__(
+        self,
+        on_interact: bool = True,
+        on_sound: str | None = None,
+        off_sound: str | None = None,
+    ) -> None:
+        """Turns `powered` on when stepped on (and when interacted with, unless `on_interact` is
+        off), and off on tick once clear.
+
+        Parameters:
+            on_interact (bool): Whether a player interacting with it turns it on, like a
+                button. Off for a pressure plate, which only reacts to being stepped on.
+            on_sound (str, optional): The id of the sound played when it turns on.
+            off_sound (str, optional): The id of the sound played when it turns off.
+        """
         super().__init__()
+        self._add_field("on_interact", on_interact)
+        if on_sound is not None:
+            self._add_field("on_sound", on_sound)
+        if off_sound is not None:
+            self._add_field("off_sound", off_sound)
 
 
 class BlockWoodSetInteractable(_WoodSetComponent):
     _name = "interactable"
 
-    def __init__(self, multi_part: bool = False) -> None:
+    def __init__(
+        self,
+        multi_part: bool = False,
+        open_sound: str | None = None,
+        close_sound: str | None = None,
+    ) -> None:
         """Opens and closes the block when interacted with.
 
         Parameters:
             multi_part (bool): Also opens and closes the other part of a two-block block.
+            open_sound (str, optional): The id of the sound played when it opens.
+            close_sound (str, optional): The id of the sound played when it closes.
         """
         super().__init__()
         self._add_field("multi_part", multi_part)
+        if open_sound is not None:
+            self._add_field("open_sound", open_sound)
+        if close_sound is not None:
+            self._add_field("close_sound", close_sound)
 
 
 class BlockWoodSetRedstoneConsumer(_WoodSetComponent):
     _name = "redstone_consumer"
 
-    def __init__(self, multi_part: bool = False) -> None:
-        """Opens the block while it is powered.
+    def __init__(
+        self,
+        multi_part: bool = False,
+        open_sound: str | None = None,
+        close_sound: str | None = None,
+    ) -> None:
+        """Opens the block when it gets power and closes it when the power goes, like vanilla.
+
+        It only acts when the power changes, tracked in a `powered` state the block must
+        have, so a block a player opened stays open when the world reloads.
 
         Parameters:
-            multi_part (bool): Also opens and closes the other part of a two-block block.
+            multi_part (bool): Also opens and closes the other part of a two-block block,
+                and counts as powered while either part is.
+            open_sound (str, optional): The id of the sound played when it opens.
+            close_sound (str, optional): The id of the sound played when it closes.
         """
         super().__init__()
         self._add_field("multi_part", multi_part)
+        if open_sound is not None:
+            self._add_field("open_sound", open_sound)
+        if close_sound is not None:
+            self._add_field("close_sound", close_sound)
 
 
 class BlockWoodSetStrippable(_WoodSetComponent):

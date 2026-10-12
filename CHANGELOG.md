@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.98**](#0998)
+- [**0.9.99**](#0999)
+- [0.9.98](#0998)
 - [0.9.97](#0997)
 - [0.9.96](#0996)
 - [0.9.95](#0995)
@@ -109,6 +110,29 @@
 ---
 
 # 0.9.x
+
+## 0.9.99
+
+### Anvil
+
+- Fixed `blocks.json` nesting its blocks under a `"blocks"` key, which the game ignores: they now sit next to `format_version`, like vanilla. This affected every block with custom sounds.
+- Added `block.client.sound_group(BlockSoundGroup.Wood)`, which gives a block the sounds of a vanilla sound group through `blocks.json`, with no sound files (`block_sound` is still how you make your own). `BlockSoundGroup` lists the vanilla groups, and `BlocksJSONObject.add_block` takes the group.
+- `process_subcommand` takes `exit_on_error`, which exits with the subprocess's return code when it fails. The script build and `anvil build` use it, so a failed build fails the CI job instead of carrying on.
+- A Blockbench model already loaded as another source can also be loaded as `items`, this is particularly useful for Item Embeds and because there are no item model exports.
+- The generated GitHub release workflow runs on Ubuntu and can also be started by hand, never runs two releases of a ref at once, installs `mcanvil` at least as new as the Anvil that generated it, plus the project's `requirements.txt`, and builds with local export on. It releases only when no release exists for the version (any other API error fails the job instead of guessing), checks that the build made the `.mcaddon` or `.mcworld` the target needs, and tags the pushed commit.
+
+### Kit
+
+- Added `WoodSet.map_color(color)` (and `map_color=` on `create_wood_set`) to the wood set kit: the color every block of the set has on a map, "#e6d063" by default. Each block's `create` takes it as a keyword-only `map_color`.
+- Added `WoodSet.sound_group(group, parts)` and `WoodSet.options(parts, **options)` to the wood set kit: the first sets the vanilla sound group of some parts, the second passes keyword arguments to their `create`, like the ids of the sounds the scripts play (`open_sound`, `close_sound` for doors, trapdoors and fence gates, `on_sound`, `off_sound` for buttons and pressure plates). A block's own sounds from files are made with `block.client.block_sound(...)` on the built part.
+- Wood set blocks have vanilla sounds: the `wood` group, `hanging_sign` for the hanging sign and `grass` for leaves and saplings, as oak has.
+- Wood set doors, trapdoors, fence gates, buttons and pressure plates play their vanilla open, close and click sounds: the game only plays those for vanilla blocks, so the scripts play them (also when redstone opens or closes them). `BlockWoodSetInteractable`, `BlockWoodSetRedstoneConsumer` and `BlockWoodSetTogglable` take their ids as `open_sound`, `close_sound`, `on_sound` and `off_sound`.
+- Wood set blocks now use `BlockLiquidDetection` like vanilla Bedrock: slabs, stairs, fences, fence gates, doors, trapdoors, signs, hanging signs and leaves can be waterlogged, and saplings pop off and drop their loot when water flows into them. Leaves that decay while waterlogged leave their water behind.
+- Wood set doors, trapdoors and fence gates keep their open state when the world reloads. A `powered` state remembers the last redstone power, so they only open or close when it changes (before, any redstone update without power closed them). Doors count as powered while either half is. Blocks using `BlockWoodSetRedstoneConsumer` need a `powered` state.
+
+### Repository
+
+- Anvil's own GitHub workflows are split into `main`, `test`, `version`, `release`, `publish_pypi` and `docs` (renamed from `build_docs`), replacing `publish_to_pypi` and `publish_to_test_pypi`.
 
 ## 0.9.98
 

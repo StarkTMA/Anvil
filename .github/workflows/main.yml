@@ -1,0 +1,34 @@
+name: Main
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    test:
+        uses: ./.github/workflows/test.yml
+
+    version:
+        uses: ./.github/workflows/version.yml
+
+    docs:
+        needs: test
+        uses: ./.github/workflows/docs.yml
+        permissions:
+            contents: write
+
+    publish:
+        needs: [test, version]
+        if: needs.version.outputs.changed == 'true'
+        uses: ./.github/workflows/publish_pypi.yml
+        permissions:
+            id-token: write
+
+    release:
+        needs: [version, publish]
+        uses: ./.github/workflows/release.yml
+        with:
+            version: ${{ needs.version.outputs.version }}
+        permissions:
+            contents: write

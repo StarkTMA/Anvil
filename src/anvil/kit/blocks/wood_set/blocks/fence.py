@@ -11,6 +11,7 @@ from anvil.api.blocks.components import (
     BlockGeometry,
     BlockItemVisual,
     BlockLeashable,
+    BlockLiquidDetection,
     BlockMapColor,
     BlockMaterialInstance,
     BlockMovable,
@@ -25,8 +26,10 @@ from anvil.api.blocks.components import (
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import (
     BlockFaceValues,
+    BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     CardinalConnectionStates,
     ConnectionTrait,
     ItemCategory,
@@ -38,7 +41,8 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
-from . import MODEL
+from anvil.lib.lib import Color
+from . import MAP_COLOR, MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -61,9 +65,16 @@ ARMS = {
 }
 
 
-def create(wood: str, selected: set[str]) -> Block:
+def create(
+    wood: str,
+    selected: set[str],
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Wood,
+) -> Block:
     namespace = CONFIG.NAMESPACE
     block = Block(f"{wood}_fence")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Fence"
 
     # Connects to its neighbours, with a collision and selection box per combination
@@ -136,7 +147,12 @@ def create(wood: str, selected: set[str]) -> Block:
         ),
         BlockMovable(BlockMovementType.Push),
         BlockFlammable(),
-        BlockMapColor("#19381F"),
+        # Waterloggable like vanilla Bedrock: water flows into it and stays
+        BlockLiquidDetection().add_rule(
+            on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
+            can_contain_liquid=True,
+        ),
+        BlockMapColor(map_color),
         BlockTagComponent(
             [
                 MinecraftBlockTags.Wood,

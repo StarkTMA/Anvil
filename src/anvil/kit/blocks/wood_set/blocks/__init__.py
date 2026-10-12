@@ -6,6 +6,9 @@ to skip recipes and features that need a block the set doesn't have. `create` bu
 block, names it, queues it and registers the recipes that make it.
 """
 
+# The map color every block of a wood set has unless the set is given another
+MAP_COLOR = "#e6d063"
+
 # The Blockbench models every wood set shares, so only the names differ between sets
 MODEL = "wood_set"
 """The block collections (`assets/bbmodels/wood_set.bbmodel`). It also holds the block

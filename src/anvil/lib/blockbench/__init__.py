@@ -8,17 +8,16 @@ import json
 import os
 
 import click
-from packaging.version import Version
-
 from anvil.api.core.types import Vector2D
 from anvil.lib.blockbench.animations import _AnimationsManager
-from anvil.lib.blockbench.common import _BlockBenchSource, _blockbench_geometry_name
+from anvil.lib.blockbench.common import _blockbench_geometry_name, _BlockBenchSource
 from anvil.lib.blockbench.model import (
     _BlockCulling,
-    _ModelManager,
     _geometry_block_culling,
+    _ModelManager,
 )
 from anvil.lib.blockbench.textures import _TexturesManager
+from packaging.version import Version
 
 
 class _Blockbench:
@@ -43,7 +42,7 @@ class _Blockbench:
             FileNotFoundError: If the model file is not found.
         """
         if hasattr(self, "_path"):
-            if source != self._source:
+            if source != self._source and source != "items":
                 raise ValueError(
                     f"Blockbench model '{filename}' was already loaded as '{self._source}' and cannot also be used as '{source}'."
                 )

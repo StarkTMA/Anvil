@@ -30,6 +30,7 @@ from anvil.api.core.enums import (
     BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     ItemCategory,
     ItemGroups,
     PlacementPositionTrait,
@@ -40,9 +41,14 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.lib import Color
 
-from ..components import BlockWoodSetSupport, BlockWoodSetTogglable, SupportedBy
-from . import MODEL
+from ..components import (
+    BlockWoodSetSupport,
+    BlockWoodSetTogglable,
+    SupportedBy,
+)
+from . import MAP_COLOR, MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -56,9 +62,23 @@ AXE_SPEEDS = {
 }
 
 
-def create(wood: str, selected: set[str]) -> Block:
+# Vanilla's sounds for it, which the script plays when it is stepped on and released
+ON_SOUND = "click_on.wooden_pressure_plate"
+OFF_SOUND = "click_off.wooden_pressure_plate"
+
+
+def create(
+    wood: str,
+    selected: set[str],
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Wood,
+    on_sound: str = ON_SOUND,
+    off_sound: str = OFF_SOUND,
+) -> Block:
     namespace = CONFIG.NAMESPACE
     block = Block(f"{wood}_pressure_plate")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Pressure Plate"
 
     block.server.description.traits.placement_position(
@@ -119,7 +139,7 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockSelectionBox((14, 1, 14), (-7, 0, -7)),
         BlockMovable(BlockMovementType.Popped),
         BlockFlammable(),
-        BlockMapColor("#19381F"),
+        BlockMapColor(map_color),
         BlockLightDampening(0),
         BlockTagComponent(
             [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
@@ -141,7 +161,11 @@ def create(wood: str, selected: set[str]) -> Block:
         # The script's onTick needs a tick in the base components: it ticks once and stops,
         # and only the powered permutation above keeps ticking
         BlockTick((20, 20), False),
-        BlockWoodSetTogglable(),
+        BlockWoodSetTogglable(
+            on_interact=False,
+            on_sound=on_sound,
+            off_sound=off_sound,
+        ),
         BlockWoodSetSupport(SupportedBy.BlockFace),
         item_visual,
     )

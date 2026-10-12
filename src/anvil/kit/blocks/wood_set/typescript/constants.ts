@@ -1,3 +1,5 @@
+import { Block } from "@minecraft/server";
+
 export const NAMESPACE = "{{NAMESPACE}}";
 
 // Component ids match the `wood_set_<name>` custom components on the blocks in `blocks/`.
@@ -41,9 +43,22 @@ export const FACE_OFFSETS = {
 
 export type FaceName = keyof typeof FACE_OFFSETS;
 
+// Plays a sound by the id of its definition, at the block
+export function playSound(block: Block, sound?: string): void {
+	if (sound) block.dimension.playSound(sound, block.center());
+}
+
 // The parameters of the components in components.py
 export interface MultiPartParams {
 	multi_part: boolean;
+	open_sound?: string;
+	close_sound?: string;
+}
+
+export interface TogglableParams {
+	on_interact?: boolean;
+	on_sound?: string;
+	off_sound?: string;
 }
 
 export interface StrippableParams {

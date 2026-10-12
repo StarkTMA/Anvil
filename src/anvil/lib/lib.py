@@ -974,17 +974,23 @@ def frange(start: int, stop: int, num: float = 1) -> list[float]:
     return values
 
 
-def process_subcommand(command: str, error_handle: str = "Error"):
+def process_subcommand(
+    command: str, error_handle: str = "Error", exit_on_error: bool = False
+):
     """Executes a subprocess command with error handling.
 
     Args:
         command (str): The command to execute.
         error_handle (str, optional): Error message prefix. Defaults to "Error".
+        exit_on_error (bool, optional): Exit with the subprocess return code on
+            failure instead of continuing (needed for CI so a failed build fails the job).
     """
     try:
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"{error_handle}: {e}")
+        if exit_on_error:
+            sys.exit(e.returncode or 1)
 
 
 def salt_from_str(s: str) -> int:

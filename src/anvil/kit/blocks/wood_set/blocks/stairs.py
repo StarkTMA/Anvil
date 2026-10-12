@@ -9,6 +9,7 @@ from anvil.api.blocks.components import (
     BlockGeometry,
     BlockItemVisual,
     BlockLightDampening,
+    BlockLiquidDetection,
     BlockMapColor,
     BlockMaterialInstance,
     BlockMovable,
@@ -26,8 +27,10 @@ from anvil.api.core.enums import (
     BlockCornerState,
     BlockCornerValues,
     BlockFaceValues,
+    BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     CardinalDirectionsValues,
     ItemCategory,
     ItemGroups,
@@ -42,7 +45,8 @@ from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.lib.schemas import MinecraftBlockDescriptor
-from . import MODEL
+from anvil.lib.lib import Color
+from . import MAP_COLOR, MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -84,9 +88,16 @@ QUADRANTS = {
 }
 
 
-def create(wood: str, selected: set[str]) -> Block:
+def create(
+    wood: str,
+    selected: set[str],
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Wood,
+) -> Block:
     namespace = CONFIG.NAMESPACE
     block = Block(f"{wood}_stairs")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Stairs"
 
     block.server.description.traits.placement_direction(
@@ -184,7 +195,12 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockSelectionBox((16, 16, 16), (-8, 0, -8)),
         BlockMovable(BlockMovementType.PushPull),
         BlockFlammable(),
-        BlockMapColor("#19381F"),
+        # Waterloggable like vanilla Bedrock: water flows into it and stays
+        BlockLiquidDetection().add_rule(
+            on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
+            can_contain_liquid=True,
+        ),
+        BlockMapColor(map_color),
         BlockLightDampening(0),
         BlockTagComponent(
             [

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
+    BlockSoundGroup,
     DurationInfoMode,
     EntitySoundEvent,
     MusicCategory,
@@ -681,14 +682,21 @@ class BlocksJSONObject(AddonObject):
         self._initialized = True
         self._blocks = []
 
-    def add_block(self, block: Identifier) -> "BlocksJSONObject":
-        self._blocks.append({str(block): {"sound": str(block)}})
+    def add_block(
+        self, block: Identifier, sound_group: BlockSoundGroup | str | None = None
+    ) -> "BlocksJSONObject":
+        """Adds the block to `blocks.json`. Its `sound` is the block's own sound group, the one
+        the custom block sound events define, unless `sound_group` names another (a vanilla one
+        like `BlockSoundGroup.Wood`)."""
+        sound = str(block) if sound_group is None else str(sound_group)
+        self._blocks.append({str(block): {"sound": sound}})
         return self
 
     def queue(self) -> "BlocksJSONObject":
         if len(self._blocks) == 0:
             return
-        self._content["blocks"].update(
+        # Like vanilla, the blocks sit next to the format version
+        self._content.update(
             {k: v for d in self._blocks for k, v in d.items()}
         )
         return super().queue()

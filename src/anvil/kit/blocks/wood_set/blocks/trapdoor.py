@@ -9,6 +9,7 @@ from anvil.api.blocks.components import (
     BlockGeometry,
     BlockItemVisual,
     BlockLightDampening,
+    BlockLiquidDetection,
     BlockMapColor,
     BlockMaterialInstance,
     BlockMovable,
@@ -24,8 +25,10 @@ from anvil.api.blocks.components import (
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import (
     BlockFaceValues,
+    BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     CardinalDirectionsValues,
     ItemCategory,
     ItemGroups,
@@ -39,9 +42,13 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.lib import Color
 
-from ..components import BlockWoodSetInteractable, BlockWoodSetRedstoneConsumer
-from . import MODEL
+from ..components import (
+    BlockWoodSetInteractable,
+    BlockWoodSetRedstoneConsumer,
+)
+from . import MAP_COLOR, MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -63,9 +70,23 @@ CARDINAL_ROTATIONS = {
 }
 
 
-def create(wood: str, selected: set[str]) -> Block:
+# Vanilla's sounds for it, which the scripts play when it opens and closes
+OPEN_SOUND = "open.wooden_trapdoor"
+CLOSE_SOUND = "close.wooden_trapdoor"
+
+
+def create(
+    wood: str,
+    selected: set[str],
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Wood,
+    open_sound: str = OPEN_SOUND,
+    close_sound: str = CLOSE_SOUND,
+) -> Block:
     namespace = CONFIG.NAMESPACE
     block = Block(f"{wood}_trapdoor")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Trapdoor"
 
     # Rotation: towards the player, y+180 on the bottom half, flipped upside down on the top
@@ -88,6 +109,7 @@ def create(wood: str, selected: set[str]) -> Block:
         )
 
     block.server.description.add_state("open", (False, True))
+    block.server.description.add_state("powered", (False, True))
     block.server.permutation(~Query.BlockState("open")).add(
         BlockCollisionBox((16, 3, 16), (-8, 0, -8)),
         BlockSelectionBox((16, 3, 16), (-8, 0, -8)),
@@ -140,7 +162,12 @@ def create(wood: str, selected: set[str]) -> Block:
         ),
         BlockMovable(BlockMovementType.Popped),
         BlockFlammable(),
-        BlockMapColor("#19381F"),
+        # Waterloggable like vanilla Bedrock: water flows into it and stays
+        BlockLiquidDetection().add_rule(
+            on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
+            can_contain_liquid=True,
+        ),
+        BlockMapColor(map_color),
         BlockLightDampening(0),
         BlockTagComponent(
             [
@@ -154,8 +181,14 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockRedstoneConductivity(False, False),
         BlockRedstoneConsumer(0, True),
         # Scripts: opened by players and by redstone
-        BlockWoodSetInteractable(),
-        BlockWoodSetRedstoneConsumer(),
+        BlockWoodSetInteractable(
+            open_sound=open_sound,
+            close_sound=close_sound,
+        ),
+        BlockWoodSetRedstoneConsumer(
+            open_sound=open_sound,
+            close_sound=close_sound,
+        ),
         item_visual,
     )
 

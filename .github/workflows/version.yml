@@ -1,0 +1,44 @@
+name: Version
+
+on:
+    workflow_call:
+        outputs:
+            changed:
+                description: "true when this push changed src/anvil/__version__.py"
+                value: ${{ jobs.version.outputs.changed }}
+            version:
+                description: "The current version, e.g. 0.9.98"
+                value: ${{ jobs.version.outputs.version }}
+
+jobs:
+    version:
+        runs-on: ubuntu-latest
+        outputs:
+            changed: ${{ steps.check.outputs.changed }}
+            version: ${{ steps.check.outputs.version }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - name: Check whether the version changed in this push
+              id: check
+              env:
+                  BEFORE: ${{ github.event.before }}
+              run: |
+                  VERSION=$(sed -nE 's/^__version__ *= *"([^"]+)".*/\1/p' src/anvil/__version__.py)
+                  if [ -z "$VERSION" ]; then
+                      echo "Could not read the version from src/anvil/__version__.py" >&2
+                      exit 1
+                  fi
+                  echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+                  # New branch or force push: the previous commit may not exist, compare with the parent.
+                  if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+                      BEFORE=$(git rev-parse HEAD^ 2>/dev/null || true)
+                  fi
+
+                  if [ -z "$BEFORE" ] || ! git diff --quiet "$BEFORE" HEAD -- src/anvil/__version__.py; then
+                      echo "changed=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "changed=false" >> "$GITHUB_OUTPUT"
+                  fi

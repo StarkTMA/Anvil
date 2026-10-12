@@ -144,4 +144,5 @@ def build(
     process_subcommand(
         " ".join(command),
         "Unable to run the anvil project.",
+        exit_on_error=True,
     )

@@ -6,6 +6,7 @@ import traceback
 import uuid
 from typing import Dict, Mapping
 
+from anvil.__version__ import __version__
 from anvil.api.core.types import Identifier, Vector2D
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.format_versions import *
@@ -796,6 +797,7 @@ class JsonSchemes:
             {
                 "project_name": project_name,
                 "display_name": display_name,
+                "anvil_version": __version__,
                 "gha": "${{",
                 "end": "}}",
             },

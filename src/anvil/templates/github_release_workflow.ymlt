@@ -2,13 +2,22 @@ name: Release {{ project_name }}
 
 on:
   push:
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PYTHONUTF8: "1"
+
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
@@ -32,10 +41,25 @@ jobs:
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install mcanvil
+          python -m pip install "mcanvil>={{ anvil_version }}"
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt
+          fi
           if [ -f package.json ]; then
             npm install
           fi
+
+      - name: Enable local export
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("anvilconfig.json")
+          config = json.loads(path.read_text(encoding="utf-8"))
+          config.setdefault("anvil", {})["local_export"] = True
+          path.write_text(json.dumps(config, indent=4), encoding="utf-8")
+          PY
 
       - name: Detect version bump
         id: version
@@ -48,30 +72,37 @@ jobs:
           from pathlib import Path
 
           config_path = Path("anvilconfig.json")
-          if not config_path.exists(): raise SystemExit("anvilconfig.json not found")
+          if not config_path.exists():
+              raise SystemExit("anvilconfig.json not found")
 
-          current_config = json.loads(config_path.read_text(encoding="utf-8"))
-          current_version = str(current_config["build"]["release"]).strip()
-          current_target = str(current_config["package"].get("target", "addon")).strip().lower()
-          current_project_name = str(current_config["package"]["display_name"]).strip()
-          
-          def parse_version(v): return tuple(int(p) for p in v.split(".") if p)
-          
-          previous_version = ""
-          repo = os.environ.get("GITHUB_REPOSITORY")
-          token = os.environ.get("GITHUB_TOKEN")
-          
+          config = json.loads(config_path.read_text(encoding="utf-8"))
+          version = str(config["build"]["release"]).strip()
+          target = str(config["package"].get("target", "world")).strip().lower()
+          project_name = str(config["package"]["display_name"]).strip()
+
+          if target not in ("addon", "world"):
+              raise SystemExit(f"Unsupported package target: {target!r}")
+
+          # A release is made only when the tag for this version does not exist yet.
+          # Any API failure other than "not found" fails the job instead of guessing.
+          repo = os.environ["GITHUB_REPOSITORY"]
+          request = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/releases/tags/v{version}",
+              headers={
+                  "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+                  "Accept": "application/vnd.github+json",
+              },
+          )
           try:
-              req = urllib.request.Request(f"https://api.github.com/repos/{repo}/releases/latest", 
-                    headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"})
-              with urllib.request.urlopen(req) as res:
-                  previous_version = json.loads(res.read()).get("tag_name", "").removeprefix("v")
-          except: pass
-
-          should_release = not previous_version or parse_version(current_version) > parse_version(previous_version)
+              urllib.request.urlopen(request).close()
+              should_release = False
+          except urllib.error.HTTPError as error:
+              if error.code != 404:
+                  raise
+              should_release = True
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8", newline="\n") as f:
-              f.write(f"version={current_version}\ntarget={current_target}\nproject_name={current_project_name}\nshould_release={'true' if should_release else 'false'}\n")
+              f.write(f"version={version}\ntarget={target}\nproject_name={project_name}\nshould_release={'true' if should_release else 'false'}\n")
           PY
 
       - name: Build and package
@@ -79,28 +110,40 @@ jobs:
         env:
           TARGET: ${{ steps.version.outputs.target }}
         run: |
+          set -eo pipefail
           FLAGS="build"
           [ "$TARGET" == "addon" ] && FLAGS="$FLAGS --mcaddon"
           [ "$TARGET" == "world" ] && FLAGS="$FLAGS --mcworld"
           FLAGS="$FLAGS --zip --tech-notes"
-          
+
           anvil $FLAGS
 
       - name: Collect artifacts
         if: steps.version.outputs.should_release == 'true'
         id: artifacts
+        env:
+          TARGET: ${{ steps.version.outputs.target }}
         run: |
           python - <<'PY'
-          import os
+          import os, subprocess
           from pathlib import Path
-          files = [p.as_posix() for p in Path("output").glob("*") if p.suffix in [".mcaddon", ".mcworld", ".zip", ".pdf"]]
+
+          target = os.environ["TARGET"]
+          required = ".mcaddon" if target == "addon" else ".mcworld"
+          files = sorted(
+              p.as_posix()
+              for p in Path("output").glob("*")
+              if p.is_file() and p.suffix in [".mcaddon", ".mcworld", ".zip", ".pdf"]
+          )
+          if not any(f.endswith(required) for f in files):
+              raise SystemExit(f"Build did not produce a {required} file in output/: {files}")
+
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8", newline="\n") as f:
               f.write("files<<EOF\n")
               for file in files:
                   f.write(f"{file}\n")
               f.write("EOF\n")
-          
-          import subprocess
+
           notes = subprocess.check_output(["git", "log", "-1", "--pretty=%B"]).decode()
           Path("release-notes.md").write_text(notes, encoding="utf-8")
           PY
@@ -110,6 +153,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
           name: ${{ steps.version.outputs.project_name }} v${{ steps.version.outputs.version }}
           body_path: release-notes.md
           fail_on_unmatched_files: true

@@ -8,10 +8,11 @@ from anvil.api.core.components import (
     component_block_visuals,
     components_validations,
 )
-from anvil.api.core.core import ANVIL, SoundEvent
+from anvil.api.core.core import ANVIL, BlocksJSONObject, SoundEvent
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
+    BlockSoundGroup,
     ConnectionTrait,
     ItemCategory,
     ItemGroups,
@@ -309,6 +310,17 @@ class BlockServer(AddonObject):
 class BlockClient(AddonObject):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         super().__init__(name, is_vanilla)
+
+    def sound_group(self, group: BlockSoundGroup | str) -> "BlockClient":
+        """Gives the block the sounds of a vanilla sound group, like oak planks have the `wood`
+        group's: breaking, placing, walking, and the clicks of doors, buttons and plates. It
+        needs no sound files. To make your own sounds for the block, use `block_sound`.
+
+        Parameters:
+            group (BlockSoundGroup | str): The group, like `BlockSoundGroup.Wood`.
+        """
+        BlocksJSONObject().add_block(self.identifier, group)
+        return self
 
     def block_sound(
         self,

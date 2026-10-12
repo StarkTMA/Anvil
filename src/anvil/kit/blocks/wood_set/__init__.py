@@ -1,6 +1,7 @@
 """A complete wood set from one call: `create_wood_set("rotten")`.
 
     WoodSet("rotten").tree(my_tree).leaf_drop(coconut, 0.02).build()   # tree and drops
+    WoodSet("rotten").map_color("#5C4A32").build()                      # the color on maps
     WoodSet("rotten", [WoodBlock.DOOR, WoodBlock.BOAT]).tree(my_tree).build()   # all but these
     WoodSet("rotten", WoodBlock.SAPLING | WoodBlock.DOOR).build()      # no saplings: no tree
     create_wood_set("rotten", tree=my_tree)                            # a one-call shortcut
@@ -47,13 +48,16 @@ from typing import Callable, Iterable, NamedTuple
 from anvil.api.actors.actors import Entity
 from anvil.api.blocks.blocks import Block
 from anvil.api.core.enums import ItemCategory
+from anvil.api.core.enums import BlockSoundGroup
 from anvil.api.core.types import Identifier
 from anvil.api.features import Feature
 from anvil.api.items.crafting import CraftingItemCatalog
 from anvil.api.items.items import Item
+from anvil.lib.lib import Color
 
 from .blocks import (
     BOAT_MODEL,
+    MAP_COLOR,
     MODEL,
     boat,
     button,
@@ -151,6 +155,7 @@ class WoodSet(dict[str, WoodSetPart]):
             WoodSet("palm", exclude=WoodBlock.CHEST_BOAT)
             .tree(lambda wood: make_palm(wood["log"].block, wood["leaves"].block))
             .leaf_drop(coconut, 0.02)
+            .map_color("#C2A56B")
             .build()
         )
         block, item = palm["planks"]
@@ -182,6 +187,8 @@ class WoodSet(dict[str, WoodSetPart]):
         """The feature the saplings grow into, once the set is built."""
         self._drops: list[LeafDrop] = []
         self._leaf_distance = 4
+        self._map_color: Color = MAP_COLOR
+        self._options: list[tuple[WoodBlock, dict]] = []
         self._soil = list(sapling.DEFAULT_SOIL)
         self._built = False
 
@@ -220,6 +227,37 @@ class WoodSet(dict[str, WoodSetPart]):
         self._leaf_distance = blocks
         return self
 
+    def map_color(self, color: Color) -> "WoodSet":
+        """Sets the color every block of the set has on a map (a "#RRGGBB" hex value or an
+        [R, G, B] list from 0 to 255). By default it is "#e6d063". Boats are entities, so
+        they have none."""
+        self._map_color = color
+        return self
+
+    def sound_group(
+        self, group: BlockSoundGroup | str, parts: WoodBlock = WoodBlock.ALL
+    ) -> "WoodSet":
+        """Sets the vanilla sound group of the parts, which play all of its sounds. By default
+        the blocks have `BlockSoundGroup.Wood`, the hanging sign `HangingSign`, and the leaves
+        and saplings `Grass`.
+
+            WoodSet("rotten").sound_group(BlockSoundGroup.Mud)
+            WoodSet("rotten").sound_group(BlockSoundGroup.Mud, WoodBlock.LOG | WoodBlock.WOOD)
+        """
+        return self.options(parts, sound_group=group)
+
+    def options(self, parts: WoodBlock = WoodBlock.ALL, **options) -> "WoodSet":
+        """Passes keyword arguments to the `create` of the parts, to change what their files
+        document as options: the sound ids of the door (`open_sound`, `close_sound`), of the
+        button and the pressure plate (`on_sound`, `off_sound`)...
+
+            WoodSet("rotten").options(WoodBlock.DOOR, open_sound="rotten.door_open")
+
+        A part that doesn't take an option raises when the set is built; a later call wins.
+        """
+        self._options.append((parts, options))
+        return self
+
     def build(self) -> "WoodSet":
         """Creates and queues every block, and writes their scripts. Returns the set."""
         if self._built:
@@ -244,7 +282,13 @@ class WoodSet(dict[str, WoodSetPart]):
         for kind, create in BLOCKS.items():
             if kind in self.blocks:
                 arguments = extra_arguments.get(kind, lambda: ())()
-                self._add_part(kind, create(self.name, selected, *arguments))
+                options = {}
+                if kind not in ENTITY_PARTS:
+                    options["map_color"] = self._map_color
+                for parts, given in self._options:
+                    if kind in parts:
+                        options.update(given)
+                self._add_part(kind, create(self.name, selected, *arguments, **options))
 
         if self.own_creative_group and self:
             _add_creative_group(self.name, [part.item for part in self.values()])
@@ -266,6 +310,9 @@ class WoodSet(dict[str, WoodSetPart]):
 
 # The base models shipped with Anvil, which `_offer_base_models` copies on request
 BASE_MODELS = Path(__file__).parent / "models"
+
+# The parts that are entities, which have no map color
+ENTITY_PARTS = {WoodBlock.BOAT, WoodBlock.CHEST_BOAT}
 
 BLOCKS = {
     WoodBlock.PLANKS: planks.create,
@@ -298,16 +345,19 @@ def create_wood_set(
         Feature | Identifier | Callable[[WoodSet], Feature | Identifier] | None
     ) = None,
     leaf_drops: Iterable[LeafDrop] = (),
+    map_color: Color = MAP_COLOR,
     own_creative_group: bool = False,
 ) -> WoodSet:
     """Create every block of the `name` wood set except `exclude`, in one call.
 
-    A shortcut for `WoodSet(name, exclude, ...)` with its `tree` and `leaf_drops`, built right
+    A shortcut for `WoodSet(name, exclude, ...)` with its `tree`, `leaf_drops` and `map_color`, built right
     away. Use the `WoodSet` class to add leaf drops step by step.
 
         block, item = create_wood_set("rotten", tree=my_tree)["planks"]
     """
-    wood = WoodSet(name, exclude, own_creative_group=own_creative_group)
+    wood = WoodSet(name, exclude, own_creative_group=own_creative_group).map_color(
+        map_color
+    )
     if tree is not None:
         wood.tree(tree)
     for drop in leaf_drops:

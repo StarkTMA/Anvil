@@ -511,6 +511,7 @@ def compile_objects(
         process_subcommand(
             " ".join(args),
             "Building scripts error",
+            exit_on_error=True,
         )
 
     if js_only:

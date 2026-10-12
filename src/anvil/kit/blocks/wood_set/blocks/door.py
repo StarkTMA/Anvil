@@ -8,6 +8,7 @@ from anvil.api.blocks.components import (
     BlockFlammable,
     BlockGeometry,
     BlockLightDampening,
+    BlockLiquidDetection,
     BlockMapColor,
     BlockMaterialInstance,
     BlockMovable,
@@ -25,8 +26,10 @@ from anvil.api.blocks.components import (
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import (
     BlockFaceValues,
+    BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     CardinalDirectionsValues,
     ItemCategory,
     ItemGroups,
@@ -44,13 +47,14 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.lib import Color
 
 from ..components import (
     BlockWoodSetInteractable,
     BlockWoodSetRedstoneConsumer,
     BlockWoodSetSupport,
 )
-from . import MODEL
+from . import MAP_COLOR, MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -83,9 +87,23 @@ def _material(wood: str, texture: str) -> BlockMaterialInstance:
     )
 
 
-def create(wood: str, selected: set[str]) -> Block:
+# Vanilla's sounds for it, which the scripts play when it opens and closes
+OPEN_SOUND = "open.wooden_door"
+CLOSE_SOUND = "close.wooden_door"
+
+
+def create(
+    wood: str,
+    selected: set[str],
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Wood,
+    open_sound: str = OPEN_SOUND,
+    close_sound: str = CLOSE_SOUND,
+) -> Block:
     namespace = CONFIG.NAMESPACE
     block = Block(f"{wood}_door")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Door"
 
     block.server.description.traits.placement_direction(
@@ -98,6 +116,7 @@ def create(wood: str, selected: set[str]) -> Block:
 
     block.server.description.traits.multi_block("up", 2)
     block.server.description.add_state("open", (False, True))
+    block.server.description.add_state("powered", (False, True))
 
     # Part 0 is the lower half (base texture), part 1 the upper half.
     block.server.permutation(Query.BlockState(MultiblockPartState.Part) == 1).add(
@@ -127,7 +146,12 @@ def create(wood: str, selected: set[str]) -> Block:
         ),
         _material(wood, f"{wood}_door_bottom"),
         BlockFlammable(),
-        BlockMapColor("#19381F"),
+        # Waterloggable like vanilla Bedrock: water flows into it and stays
+        BlockLiquidDetection().add_rule(
+            on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
+            can_contain_liquid=True,
+        ),
+        BlockMapColor(map_color),
         BlockLightDampening(0),
         BlockTagComponent(
             [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
@@ -141,8 +165,16 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockReplaceable(),
         # Scripts: both halves open together, by players and by redstone; broken with
         # the block below
-        BlockWoodSetInteractable(multi_part=True),
-        BlockWoodSetRedstoneConsumer(multi_part=True),
+        BlockWoodSetInteractable(
+            multi_part=True,
+            open_sound=open_sound,
+            close_sound=close_sound,
+        ),
+        BlockWoodSetRedstoneConsumer(
+            multi_part=True,
+            open_sound=open_sound,
+            close_sound=close_sound,
+        ),
         BlockWoodSetSupport(),
     )
 

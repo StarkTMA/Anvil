@@ -11,6 +11,7 @@ from anvil.api.blocks.components import (
     BlockFlammable,
     BlockGeometry,
     BlockLightDampening,
+    BlockLiquidDetection,
     BlockLootTable,
     BlockMapColor,
     BlockMaterialInstance,
@@ -25,8 +26,10 @@ from anvil.api.blocks.components import (
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import (
     BlockFaceValues,
+    BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     ItemCategory,
     ItemGroups,
 )
@@ -41,9 +44,10 @@ from anvil.api.items.items import Item
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.api.world.loot_tables import LootTable
+from anvil.lib.lib import Color
 
 from ..components import BlockWoodSetLeaves
-from . import MODEL
+from . import MAP_COLOR, MODEL
 
 
 @dataclass(frozen=True)
@@ -83,9 +87,13 @@ def create(
     selected: set[str],
     drops: Sequence[LeafDrop] = (),
     distance: int = 4,
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Grass,
 ) -> Block:
     namespace = CONFIG.NAMESPACE
     block = Block(f"{wood}_leaves")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Leaves"
 
     # Off for leaves a player placed, which never decay. Whatever generates leaves (a feature,
@@ -145,7 +153,12 @@ def create(
         BlockSelectionBox((16, 16, 16), (-8, 0, -8)),
         BlockMovable(BlockMovementType.PushPull),
         BlockFlammable(60, 30),
-        BlockMapColor("#19381F"),
+        # Waterloggable like vanilla Bedrock: water flows into it and stays
+        BlockLiquidDetection().add_rule(
+            on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
+            can_contain_liquid=True,
+        ),
+        BlockMapColor(map_color),
         BlockLightDampening(1),
         BlockTagComponent(
             [MinecraftBlockTags.Leaves, MinecraftBlockTags.IsShearsItemDestructible]

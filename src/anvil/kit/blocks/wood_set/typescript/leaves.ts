@@ -58,7 +58,11 @@ function decay(block: Block, params: LeavesParams): void {
 	const location = block.center();
 	const dimension = block.dimension;
 
+	const waterlogged = block.isWaterlogged;
+
 	block.setPermutation(BlockPermutation.resolve("minecraft:air"));
+	// Waterlogged leaves leave their water behind, like vanilla
+	if (waterlogged) block.setType("minecraft:water");
 
 	try {
 		const loot = world

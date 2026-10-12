@@ -30,6 +30,10 @@ create_wood_set("rotten", tree=my_tree)                      # everything; sapli
 create_wood_set("rotten", WoodBlock.SAPLING)                 # everything but saplings: no tree needed
 create_wood_set("rotten", WoodBlock.DOOR, tree=my_tree)      # everything but doors
 create_wood_set("rotten", own_creative_group=True, tree=my_tree)  # in its own creative group
+create_wood_set("rotten", map_color="#5C4A32", tree=my_tree)  # the color of every block on maps
+
+WoodSet("rotten").sound_group(BlockSoundGroup.Mud)             # a vanilla sound group, for all parts
+WoodSet("rotten").options(WoodBlock.DOOR, open_sound="rotten.door_open")  # a sound a script plays
 
 wood = create_wood_set("rotten", tree=my_tree)
 block, item = wood["planks"]                                # each part is a (block, item) pair

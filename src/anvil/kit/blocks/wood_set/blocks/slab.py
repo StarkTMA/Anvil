@@ -9,6 +9,7 @@ from anvil.api.blocks.components import (
     BlockGeometry,
     BlockItemVisual,
     BlockLightDampening,
+    BlockLiquidDetection,
     BlockMapColor,
     BlockMaterialInstance,
     BlockMovable,
@@ -22,8 +23,10 @@ from anvil.api.blocks.components import (
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import (
     BlockFaceValues,
+    BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     ItemCategory,
     ItemGroups,
     PlacementPositionTrait,
@@ -40,9 +43,10 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.lib import Color
 
 from ..components import BlockWoodSetSlab
-from . import MODEL
+from . import MAP_COLOR, MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -56,9 +60,16 @@ AXE_SPEEDS = {
 }
 
 
-def create(wood: str, selected: set[str]) -> Block:
+def create(
+    wood: str,
+    selected: set[str],
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Wood,
+) -> Block:
     namespace = CONFIG.NAMESPACE
     block = Block(f"{wood}_slab")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Slab"
 
     block.server.description.traits.placement_position(
@@ -128,7 +139,12 @@ def create(wood: str, selected: set[str]) -> Block:
         ),
         BlockMovable(BlockMovementType.PushPull),
         BlockFlammable(),
-        BlockMapColor("#19381F"),
+        # Waterloggable like vanilla Bedrock: water flows into it and stays
+        BlockLiquidDetection().add_rule(
+            on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
+            can_contain_liquid=True,
+        ),
+        BlockMapColor(map_color),
         BlockLightDampening(0),
         BlockTagComponent(
             [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]

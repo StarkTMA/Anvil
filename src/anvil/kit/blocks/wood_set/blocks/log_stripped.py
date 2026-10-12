@@ -23,6 +23,7 @@ from anvil.api.core.enums import (
     BlockFaceValues,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     FacingDirectionValues,
     ItemCategory,
     ItemGroups,
@@ -37,7 +38,8 @@ from anvil.api.items.components import (
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
-from . import MODEL
+from anvil.lib.lib import Color
+from . import MAP_COLOR, MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -61,8 +63,15 @@ FACE_ROTATIONS = {
 }
 
 
-def create(wood: str, selected: set[str]) -> Block:
+def create(
+    wood: str,
+    selected: set[str],
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Wood,
+) -> Block:
     block = Block(f"{wood}_log_stripped")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Log Stripped"
 
     block.server.description.traits.placement_position(
@@ -104,7 +113,7 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockSelectionBox((16, 16, 16), (-8, 0, -8)),
         BlockMovable(BlockMovementType.PushPull),
         BlockFlammable(),
-        BlockMapColor("#19381F"),
+        BlockMapColor(map_color),
         BlockLightDampening(0),
         BlockTagComponent(
             [

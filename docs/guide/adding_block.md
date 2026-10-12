@@ -254,6 +254,14 @@ from anvil.api.core.enums import BlockSoundEvent
 block.client.block_sound("my_sound", BlockSoundEvent.Break).add_sound("my_custom_sound")
 ```
 
+To use the sounds of a vanilla block instead, give the block a vanilla sound group. It needs no sound files:
+
+```python
+from anvil.api.core.enums import BlockSoundGroup
+
+block.client.sound_group(BlockSoundGroup.Wood)
+```
+
 ### Custom Components
 
 For more complex logic, you can attach **Custom Components**. These are scripts that run in the game and can interact with the world.

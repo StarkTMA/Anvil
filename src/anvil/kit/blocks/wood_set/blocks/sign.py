@@ -9,6 +9,7 @@ from anvil.api.blocks.components import (
     BlockFlammable,
     BlockGeometry,
     BlockLightDampening,
+    BlockLiquidDetection,
     BlockLootTable,
     BlockMapColor,
     BlockMaterialInstance,
@@ -26,8 +27,10 @@ from anvil.api.blocks.components import (
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import (
     BlockFaceValues,
+    BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockMovementType,
+    BlockSoundGroup,
     CardinalDirectionsValues,
     ItemCategory,
     ItemGroups,
@@ -47,9 +50,10 @@ from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
 from anvil.api.world.loot_tables import LootTable
+from anvil.lib.lib import Color
 
 from ..components import BlockWoodSetSign, BlockWoodSetSupport, SupportedBy
-from . import MODEL
+from . import MAP_COLOR, MODEL
 
 # Mining time per axe tier
 AXE_SPEEDS = {
@@ -83,9 +87,16 @@ def _material(wood: str, color: str) -> BlockMaterialInstance:
     )
 
 
-def create(wood: str, selected: set[str]) -> Block:
+def create(
+    wood: str,
+    selected: set[str],
+    *,
+    map_color: Color = MAP_COLOR,
+    sound_group: BlockSoundGroup | str = BlockSoundGroup.Wood,
+) -> Block:
     namespace = CONFIG.NAMESPACE
     block = Block(f"{wood}_sign")
+    block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Sign"
 
     block.server.description.traits.placement_direction(
@@ -126,7 +137,12 @@ def create(wood: str, selected: set[str]) -> Block:
         BlockSelectionBox((8, 16, 8), (-4, 0, -4)),
         BlockMovable(BlockMovementType.Popped),
         BlockFlammable(),
-        BlockMapColor("#19381F"),
+        # Waterloggable like vanilla Bedrock: water flows into it and stays
+        BlockLiquidDetection().add_rule(
+            on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
+            can_contain_liquid=True,
+        ),
+        BlockMapColor(map_color),
         BlockLightDampening(0),
         BlockTagComponent(
             [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
