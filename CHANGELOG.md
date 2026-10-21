@@ -2,7 +2,8 @@
 
 ## 0.9.x
 
-- [**0.9.99**](#0999)
+- [**0.9.101**](#09101)
+- [0.9.99](#0999)
 - [0.9.98](#0998)
 - [0.9.97](#0997)
 - [0.9.96](#0996)
@@ -110,6 +111,17 @@
 ---
 
 # 0.9.x
+
+## 0.9.101
+
+### Anvil
+
+- Sound files given with forward-slash paths are copied under their file name: before, only backslashes were split on, so a `path/to/sound.ogg` source kept its whole path as its name.
+
+### Kit
+
+- Wood set doors make double doors like vanilla: a door placed with a door on its left and none on its right hinges on the right and opens the other way, so the pair opens from the middle. Doors from other namespaces count whatever way they face, the set's own doors only when they face the same way. Added the `hinge_right` state and the `BlockWoodSetDoor` component (`wood_set_door`), which needs that state.
+- The wood set redstone consumer script is now `redstone-consumer.ts` (was `redstoneConsumer.ts`); the generated script index turns kebab-case module names into `register<Name>Component`.
 
 ## 0.9.99
 

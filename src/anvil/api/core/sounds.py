@@ -183,7 +183,11 @@ class _SoundDescription:
         self._sound[self._sound_definition]["sounds"] = []
         for sound in self._sounds:
             sound = dict(sound)
-            sound_name = (sound["name"] if "name" in sound else sound).split("\\")[-1]
+            sound_name = (
+                (sound["name"] if "name" in sound else sound)
+                .replace("\\", "/")
+                .split("/")[-1]
+            )
             Directory.copy_files(
                 sound["source"],
                 os.path.join(
@@ -696,7 +700,5 @@ class BlocksJSONObject(AddonObject):
         if len(self._blocks) == 0:
             return
         # Like vanilla, the blocks sit next to the format version
-        self._content.update(
-            {k: v for d in self._blocks for k, v in d.items()}
-        )
+        self._content.update({k: v for d in self._blocks for k, v in d.items()})
         return super().queue()

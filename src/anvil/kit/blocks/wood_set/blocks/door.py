@@ -50,6 +50,7 @@ from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.lib.lib import Color
 
 from ..components import (
+    BlockWoodSetDoor,
     BlockWoodSetInteractable,
     BlockWoodSetRedstoneConsumer,
     BlockWoodSetSupport,
@@ -73,6 +74,20 @@ CARDINAL_ROTATIONS = {
     CardinalDirectionsValues.WEST: (0, 90, 0),
     CardinalDirectionsValues.SOUTH: (0, 180, 0),
     CardinalDirectionsValues.EAST: (0, 270, 0),
+}
+
+OPEN_SIDES = {
+    CardinalDirectionsValues.NORTH: (1, 0, 0),
+    CardinalDirectionsValues.WEST: (0, 0, -1),
+    CardinalDirectionsValues.SOUTH: (-1, 0, 0),
+    CardinalDirectionsValues.EAST: (0, 0, 1),
+}
+
+CLOSED_SIDES = {
+    CardinalDirectionsValues.NORTH: (0, 0, 1),
+    CardinalDirectionsValues.WEST: (1, 0, 0),
+    CardinalDirectionsValues.SOUTH: (0, 0, -1),
+    CardinalDirectionsValues.EAST: (-1, 0, 0),
 }
 
 
@@ -117,6 +132,7 @@ def create(
     block.server.description.traits.multi_block("up", 2)
     block.server.description.add_state("open", (False, True))
     block.server.description.add_state("powered", (False, True))
+    block.server.description.add_state("hinge_right", (False, True))
 
     # Part 0 is the lower half (base texture), part 1 the upper half.
     block.server.permutation(Query.BlockState(MultiblockPartState.Part) == 1).add(
@@ -130,6 +146,23 @@ def create(
         BlockCollisionBox((3, 16, 16), (5, 0, -8)),
         BlockSelectionBox((3, 16, 16), (5, 0, -8)),
     )
+
+    for direction, rotation in CARDINAL_ROTATIONS.items():
+        turned = (0, (rotation[1] + 180) % 360, 0)
+        facing = (
+            Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
+        )
+        left = Query.BlockState("hinge_right")
+        block.server.permutation(facing & left & Query.BlockState("open")).add(
+            BlockTransformation()
+            .rotation(rotation)
+            .translation(tuple(c * 13 / 16 for c in OPEN_SIDES[direction]))
+        )
+        block.server.permutation(facing & left & ~Query.BlockState("open")).add(
+            BlockTransformation()
+            .rotation(turned)
+            .translation(tuple(c * 13 / 16 for c in CLOSED_SIDES[direction]))
+        )
 
     mining = BlockDestructibleByMining(4.5)
     for tier, speed in AXE_SPEEDS.items():
@@ -175,6 +208,7 @@ def create(
             open_sound=open_sound,
             close_sound=close_sound,
         ),
+        BlockWoodSetDoor(),
         BlockWoodSetSupport(),
     )
 

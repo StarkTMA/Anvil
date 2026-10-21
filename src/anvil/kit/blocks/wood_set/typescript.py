@@ -27,7 +27,8 @@ SCRIPTS = {
     "support": ("support", True, True),
     "togglable": ("togglable", True, False),
     "interactable": ("interactable", True, False),
-    "redstone_consumer": ("redstoneConsumer", True, False),
+    "door": ("door", True, False),
+    "redstone_consumer": ("redstone-consumer", True, False),
     "strippable": ("strippable", True, True),
     "slab": ("slab", True, True),
     "sign": ("sign", True, False),
@@ -96,7 +97,7 @@ def _build_index(used: list[str]) -> str:
     events = []
     for name in used:
         module, has_component, has_events = SCRIPTS[name]
-        title = module[0].upper() + module[1:]
+        title = "".join(word.capitalize() for word in module.split("-"))
         names = []
         if has_component:
             names.append(f"register{title}Component")

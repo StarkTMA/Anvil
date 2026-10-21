@@ -11,6 +11,7 @@ __all__ = [
     "BlockWoodSetSupport",
     "BlockWoodSetTogglable",
     "BlockWoodSetInteractable",
+    "BlockWoodSetDoor",
     "BlockWoodSetRedstoneConsumer",
     "BlockWoodSetStrippable",
     "BlockWoodSetSlab",
@@ -106,6 +107,15 @@ class BlockWoodSetInteractable(_WoodSetComponent):
             self._add_field("open_sound", open_sound)
         if close_sound is not None:
             self._add_field("close_sound", close_sound)
+
+
+class BlockWoodSetDoor(_WoodSetComponent):
+    _name = "door"
+
+    def __init__(self) -> None:
+        """Hinges the door on the right as it is placed next to a door on its left, so the two
+        make a double door, as in vanilla. Needs the `hinge_right` state."""
+        super().__init__()
 
 
 class BlockWoodSetRedstoneConsumer(_WoodSetComponent):
