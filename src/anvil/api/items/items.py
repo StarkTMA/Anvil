@@ -1,108 +1,19 @@
-import os
-
 from anvil.api.actors.actors import Attachable
-from anvil.api.core.components import RootComponent, components_validations
 from anvil.api.core.core import ANVIL
-from anvil.api.core.enums import ItemCategory, ItemGroups
 from anvil.api.items.components import ItemDisplayName
+from anvil.api.items.server import ItemServer
 from anvil.lib.config import CONFIG
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (
-    AddonObject,
-    JsonSchemes,
-    MinecraftDescription,
-    MinecraftItemDescriptor,
-)
+from anvil.lib.schemas import MinecraftItemDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["Item"]
 
 
-# Items
-class _ItemServerDescription(MinecraftDescription):
-    def __init__(self, name, is_vanilla) -> None:
-        super().__init__(name, is_vanilla)
-        self._description["description"].update({"properties": {}, "menu_category": {}})
-
-    def menu_category(
-        self,
-        category: ItemCategory,
-        group: ItemGroups | None = None,
-        is_hidden_in_commands: bool = False,
-    ) -> "_ItemServerDescription":
-        """Sets the menu category for the item.
-
-        Parameters:
-            category (ItemCategory, optional): The category of the item. Defaults to ItemCategory.none.
-            group (str, optional): The group of the item. Defaults to None.
-            is_hidden_in_commands (bool, optional): Whether the item is hidden in commands. Defaults to False.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/itemreference/examples/itemdefinition)
-
-        """
-        self._description["description"]["menu_category"]["category"] = category
-        self._description["description"]["menu_category"]["group"] = group
-        self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
-            is_hidden_in_commands if is_hidden_in_commands else {}
-        )
-        return self
-
-    def __export__(self) -> dict:
-        return super().__export__()
-
-
-class _ItemServer(AddonObject):
-    _extension = ".item.json"
-    _path = os.path.join(CONFIG.BP_PATH, "items")
-    _object_type = "Item Server"
-
-    def __init__(self, name: str, is_vanilla: bool) -> None:
-        super().__init__(name)
-        self._server_item = JsonSchemes.server_item()
-        self._description = _ItemServerDescription(name, is_vanilla)
-        self._components = RootComponent()
-
-    @property
-    def description(self) -> "_ItemServerDescription":
-        return self._description
-
-    @property
-    def components(self) -> "RootComponent":
-        return self._components
-
-    def __export__(self) -> None:
-        if len(self._components._components) == 0:
-            raise ValueError(
-                f"Item '{self.name}' must have at least one component defined."
-            )
-
-        components_validations(self, self._components, [])
-
-        from anvil.api.items.components import ItemDisplayName
-
-        self._server_item["minecraft:item"].update(self.description.__export__())
-        self._server_item["minecraft:item"]["components"].update(
-            self._components.__export__()["components"]
-        )
-
-        if not self._components._has(ItemDisplayName):
-            self._server_item["minecraft:item"]["components"][
-                ItemDisplayName._identifier
-            ] = {"value": f"item.{self.identifier}.name"}
-
-            AnvilTranslator().add_localization_entry(
-                f"item.{self.identifier}.name",
-                self._display_name,
-            )
-
-        self.content(self._server_item)
-        super().__export__()
-
-
 class Item(MinecraftItemDescriptor):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         super().__init__(name, is_vanilla)
-        self.server = _ItemServer(name, is_vanilla)
+        self.server = ItemServer(name, is_vanilla)
         self._attachable = None
 
     @property
@@ -123,7 +34,7 @@ class Item(MinecraftItemDescriptor):
 
     def __export__(self) -> None:
         item_name_comp = self.server._server_item["minecraft:item"]["components"][
-            ItemDisplayName._identifier
+            ItemDisplayName.identifier
         ]["value"]
 
         if item_name_comp.startswith("item."):

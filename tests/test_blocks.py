@@ -21,6 +21,7 @@ from anvil.api.blocks.components import (
     BlockPlacementFilter,
     BlockPrecipitationInteractions,
     BlockRedstoneConsumer,
+    BlockRedstoneProducer,
     BlockSelectionBox,
     BlockTagComponent,
     BlockTick,
@@ -37,7 +38,6 @@ from anvil.api.core.enums import (
     BlockLiquidDetectionTouching,
     BlockMaterial,
     PlacementDirectionTrait,
-    TintMethod,
 )
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.lib.jsonmodel import json_field
@@ -144,6 +144,26 @@ def test_unset_options_are_left_out():
     }
 
 
+def test_redstone_producer():
+    assert _export(
+        BlockRedstoneProducer(
+            power=15,
+            connected_faces=["up", "north"],
+            strongly_powered_face="down",
+            transform_relative=True,
+        )
+    ) == {
+        "minecraft:redstone_producer": {
+            "power": 15,
+            "connected_faces": ["up", "north"],
+            "strongly_powered_face": "down",
+            "transform_relative": True,
+        }
+    }
+    with pytest.raises(ValueError, match="power"):
+        _export(BlockRedstoneProducer(power=16))
+
+
 def test_switchable_components():
     assert _export(BlockFlammable()) == {"minecraft:flammable": True}
     assert _export(BlockFlammable(enabled=False)) == {"minecraft:flammable": False}
@@ -158,6 +178,9 @@ def test_boxes():
     assert _export(BlockSelectionBox()) == {"minecraft:selection_box": True}
     assert _export(BlockCollisionBox(enabled=False)) == {
         "minecraft:collision_box": False
+    }
+    assert _export(BlockCollisionBox(origin=(-8, 0, -8), size=(16, 8, 16))) == {
+        "minecraft:collision_box": [{"origin": [-8, 0, -8], "size": [16, 8, 16]}]
     }
     box = BlockCollisionBox(origin=(-8, 0, -8), size=(16, 8, 16)).add_box(
         origin=(-8, 8, -8), size=(16, 16, 16)
@@ -223,7 +246,7 @@ def test_tick_and_transformation():
     assert _export(BlockTick(interval_range=(20, 60))) == {
         "minecraft:tick": {"interval_range": [20, 60]}
     }
-    with pytest.raises(ValueError, match="min, max"):
+    with pytest.raises(ValueError, match="greater than its maximum"):
         _export(BlockTick(interval_range=(60, 20)))
     assert _export(BlockTransformation(rotation=(0, 90, 0), translation=(0, 0, 1))) == {
         "minecraft:transformation": {"translation": [0, 0, 1], "rotation": [0, 90, 0]}
@@ -276,7 +299,7 @@ def test_material_params_checks():
     with pytest.raises(ValueError, match="opaque"):
         MaterialParams(
             alpha_masked_tint=True,
-            tint_method=TintMethod.Grass,
+            tint_method="grass",
             render_method=BlockMaterial.Blend,
         ).__json__()
     assert MaterialParams(ambient_occlusion=2.5).__json__() == {
@@ -459,6 +482,29 @@ def test_block_descriptor_states():
         block.descriptor(cardinal_direction="up")
     with pytest.raises(ValueError, match="Invalid namespace"):
         block.descriptor(**{"other:natural": True})
+
+
+def test_block_descriptor_trait_values_from_enums():
+    from anvil.api.blocks.blocks import Block
+    from anvil.api.core.enums import CardinalDirectionsValues, ConnectionTrait
+
+    fence = Block("fence")
+    fence.server.description.traits.connection([ConnectionTrait.CardinalConnections])
+    fence.server.description.traits.placement_direction(
+        traits=[PlacementDirectionTrait.CornerAndCardinalDirection]
+    )
+
+    assert fence.descriptor(
+        connection_north=True,
+        cardinal_direction=CardinalDirectionsValues.EAST,
+        corner="inner_left",
+    )["states"] == {
+        "minecraft:connection_north": True,
+        "minecraft:cardinal_direction": "east",
+        "minecraft:corner": "inner_left",
+    }
+    with pytest.raises(ValueError, match="Invalid value"):
+        fence.descriptor(connection_north="true")
 
 
 def test_block_descriptor_multi_block_part():
