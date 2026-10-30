@@ -16,7 +16,7 @@ from anvil.lib.config import CONFIG
 from anvil.lib.schemas import MinecraftBiomeDescriptor, MinecraftBlockDescriptor
 
 if TYPE_CHECKING:
-    from anvil.api.core.components import Component
+    from anvil.lib.jsonmodel import JsonComponent
 
 
 @dataclass
@@ -336,7 +336,7 @@ class Filter:
     @classmethod
     def has_component(
         cls,
-        value: "Component | str",
+        value: "JsonComponent | type[JsonComponent] | str",
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
@@ -344,7 +344,7 @@ class Filter:
         """Returns true when the subject entity contains the named component.
 
         Args:
-            value (str): The component identifier to test for (e.g., "minecraft:health")
+            value (JsonComponent | type[JsonComponent] | str): The component, its class, or its identifier (e.g., "minecraft:health")
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
@@ -353,7 +353,7 @@ class Filter:
 
         Example:
             # Test if entity has health component
-            Filter.has_component(Component.Health)
+            Filter.has_component(EntityHealth)
 
             # Test if target has tameable component
             Filter.has_component("minecraft:tameable", subject=FilterSubject.Target)
@@ -362,12 +362,12 @@ class Filter:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_component
         """
 
-        from anvil.api.core.components import Component
+        from anvil.lib.jsonmodel import JsonComponent
 
-        if isinstance(value, Component):
+        if isinstance(value, JsonComponent) or (
+            isinstance(value, type) and issubclass(value, JsonComponent)
+        ):
             value = value.identifier
-        elif isinstance(value, type) and issubclass(value, Component):
-            value = value.__component_identifier__()
 
         return Filter(
             "has_component",

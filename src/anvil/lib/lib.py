@@ -1,7 +1,6 @@
 """A collection of useful functions and classes used throughout the program."""
 
 import inspect
-import json
 import os
 import re
 import shutil
@@ -14,7 +13,6 @@ from functools import wraps
 from typing import Any, Dict, List
 
 import click
-import commentjson
 import orjson
 import requests
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
@@ -127,9 +125,7 @@ class AnvilIO:
         "mcfunction": "#",
         "lang": "##",
     }
-    _BLOCK_DESCRIPTOR_NAMES = frozenset(
-        {"MinecraftBlockDescriptor", "Block", "NoiseDescriptor", "NoiseBlockSpecifier"}
-    )
+    _BLOCK_DESCRIPTOR_NAMES = frozenset({"MinecraftBlockDescriptor", "Block"})
     _IDENTIFIER_NAMES = frozenset(
         {
             "MinecraftItemDescriptor",
@@ -154,10 +150,14 @@ class AnvilIO:
         if isinstance(value, dict):
             shortened = {}
 
+            from anvil.lib.jsonmodel.encoders import KeptObject
+
             for key, item in value.items():
                 key_str = str(key)
                 shortened_value = cls._normalize_json_like(item)
-                if cls._should_keep_shortened_value(key_str, shortened_value):
+                if isinstance(item, KeptObject) or cls._should_keep_shortened_value(
+                    key_str, shortened_value
+                ):
                     shortened[key_str] = shortened_value
 
             return shortened
@@ -186,13 +186,13 @@ class AnvilIO:
         if isinstance(value, Filter):
             return cls._normalize_json_like(value.__export_dict__())
 
-        from anvil.api.core.components import Component
+        from anvil.lib.jsonmodel import JsonComponent, JsonObject
 
-        if isinstance(value, Component):
-            return cls._normalize_json_like(value.__export__())
+        if isinstance(value, JsonObject):
+            return cls._normalize_json_like(value.__json__())
 
-        if isinstance(value, type) and issubclass(value, Component):
-            return cls._normalize_json_like(value.__component_identifier__())
+        if isinstance(value, type) and issubclass(value, JsonComponent):
+            return cls._normalize_json_like(value.identifier)
 
         class_name = value.__class__.__name__
 
@@ -764,7 +764,7 @@ class AnvilValidator:
             )
             if res.stdout and res.stdout.strip():
                 try:
-                    npm_data = json.loads(res.stdout)
+                    npm_data = orjson.loads(res.stdout)
                     for pkg_name, pkg_info in npm_data.items():
                         if isinstance(pkg_info, dict):
                             outdated_packages.append(
@@ -779,7 +779,7 @@ class AnvilValidator:
                                     ),
                                 }
                             )
-                except json.JSONDecodeError:
+                except orjson.JSONDecodeError:
                     for line in res.stdout.splitlines():
                         parts = line.split()
                         if len(parts) >= 4 and not line.startswith("Package"):
@@ -803,7 +803,7 @@ class AnvilValidator:
             )
             if res.stdout and res.stdout.strip():
                 try:
-                    pip_data = json.loads(res.stdout)
+                    pip_data = orjson.loads(res.stdout)
                     for pkg in pip_data:
                         if (
                             isinstance(pkg, dict)
@@ -817,7 +817,7 @@ class AnvilValidator:
                                     "latest": str(pkg.get("latest_version", "N/A")),
                                 }
                             )
-                except json.JSONDecodeError:
+                except orjson.JSONDecodeError:
                     for line in res.stdout.splitlines():
                         if "mcanvil" in line.lower():
                             parts = line.split()
@@ -861,9 +861,7 @@ class AnvilValidator:
             request = requests.get(
                 "https://raw.githubusercontent.com/Mojang/bedrock-samples/refs/heads/main/version.json"
             )
-            vanilla_latest_build: str = commentjson.loads(request.text)["latest"][
-                "version"
-            ]
+            vanilla_latest_build: str = orjson.loads(request.text)["latest"]["version"]
         except Exception:
             click.echo(
                 click.style(

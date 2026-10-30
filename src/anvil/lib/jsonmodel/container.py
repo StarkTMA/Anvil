@@ -3,6 +3,8 @@ keyed by each component's identifier, and `validate_components`, which checks th
 against each one's placement, requirements and clashes.
 """
 
+from __future__ import annotations
+
 from typing import Any, Iterator, Self
 
 from anvil.lib.jsonmodel.validators import each, instance_of, unique

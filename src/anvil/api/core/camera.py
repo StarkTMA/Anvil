@@ -175,13 +175,13 @@ class AimAssistCategories(AddonObject):
         self.content(JsonSchemes.aim_assist_categories())
         self._categories: list[AimAssistCategory] = []
 
-    def add_category(self, category_name: str) -> AimAssistCategory:
+    def add_category(self, category: str) -> AimAssistCategory:
         """Adds and returns a new Aim Assist Category.
 
         Parameters:
-            category_name (str): Name of the category.
+            category (str): Name of the category.
         """
-        category = AimAssistCategory(category_name)
+        category = AimAssistCategory(category)
         self._categories.append(category)
         return category
 

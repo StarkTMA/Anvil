@@ -29,24 +29,24 @@ class ItemTexturesObject(AddonObject):
             self._initialized = True
 
     @overload
-    def add_item(self, item_name: str, item_sprites: list[str]) -> "ItemTexturesObject":
+    def add_item(self, item_name: str, sprites: list[str]) -> "ItemTexturesObject":
         """Adds item textures to the content.
 
         Parameters:
             item_name (str): The name of the item.
-            item_sprites (list[str]): The names of the item sprites.
+            sprites (list[str]): The names of the item sprites.
         """
         ...
         return self
 
     @overload
-    def add_item(self, item_name: str, blockbench: str, item_sprites: list[str]):
+    def add_item(self, item_name: str, blockbench: str, sprites: list[str]):
         """Adds item textures to the content.
 
         Parameters:
             item_name (str): The name of the item.
             blockbench (str): The blockbench model name.
-            item_sprites (list[str]): The names of the item sprites.
+            sprites (list[str]): The names of the item sprites.
         """
         ...
 
@@ -54,29 +54,29 @@ class ItemTexturesObject(AddonObject):
         self,
         item_name: str,
         blockbench: str | list[str],
-        item_sprites: list[str] | None = None,
+        sprites: list[str] | None = None,
     ):
         """Adds item textures to the content.
 
         Parameters:
             item_name (str): The name of the item.
             blockbench (str | list[str]): Either blockbench model name (str) or item sprites list (list[str]).
-            item_sprites (list[str] | None): The names of the item sprites if blockbench is a string, otherwise None.
+            sprites (list[str] | None): The names of the item sprites if blockbench is a string, otherwise None.
         """
         # Handle overload: if blockbench is a list, it's actually item_sprites
         if isinstance(blockbench, list):
-            item_sprites = blockbench
+            sprites = blockbench
             blockbench_model = None
         else:
             blockbench_model = blockbench
 
         # Ensure item_sprites is set
-        if item_sprites is None:
-            item_sprites = []
+        if sprites is None:
+            sprites = []
 
         if blockbench_model:
             bb = _Blockbench(blockbench_model, _BlockBenchSource.ITEM)
-            for sprite in item_sprites:
+            for sprite in sprites:
                 bb.textures.queue_texture(sprite)
 
             self._content["texture_data"][f"{CONFIG.NAMESPACE}:{item_name}"] = {
@@ -89,12 +89,12 @@ class ItemTexturesObject(AddonObject):
                         blockbench_model,
                         sprite,
                     ).replace("\\", "/")
-                    for sprite in item_sprites
+                    for sprite in sprites
                 ]
             }
 
         else:
-            for item in item_sprites:
+            for item in sprites:
                 if not os.path.exists(
                     os.path.join("assets", "textures", "items", f"{item}.png")
                 ):
@@ -110,7 +110,7 @@ class ItemTexturesObject(AddonObject):
                     "items",
                     sprite,
                 ).replace("\\", "/")
-                for sprite in item_sprites
+                for sprite in sprites
             ]
 
             self._content["texture_data"][f"{CONFIG.NAMESPACE}:{item_name}"] = {
@@ -122,7 +122,7 @@ class ItemTexturesObject(AddonObject):
                         "items",
                         sprite,
                     ).replace("\\", "/")
-                    for sprite in item_sprites
+                    for sprite in sprites
                 ]
             }
 

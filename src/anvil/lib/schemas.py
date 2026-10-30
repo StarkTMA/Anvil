@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import json
+import orjson
 import os
 import traceback
 import uuid
@@ -42,7 +42,10 @@ class JsonSchemes:
     def esbuild_config_js(outDir, minify):
         return load_file(
             "esbuild.jsont",
-            {"out_dir": os.path.join(outDir, "scripts"), "minify": json.dumps(minify)},
+            {
+                "out_dir": os.path.join(outDir, "scripts"),
+                "minify": orjson.dumps(minify).decode(),
+            },
             is_json=False,
         )
 
@@ -76,7 +79,7 @@ class JsonSchemes:
                 "min_engine_version": (
                     MANIFEST_BUILD if not CONFIG._PREVIEW else MANIFEST_BUILD_PREVIEW
                 ),
-                "resource_module_uuid": str(uuid.uuid4()),
+                "resource_module_uuid": CONFIG._RESOURCE_MODULE_UUID,
                 "bp_uuid": CONFIG._BP_UUID[0],
                 "company": CONFIG.COMPANY,
             },
@@ -254,10 +257,10 @@ class JsonSchemes:
 
     @staticmethod
     def animation_controller(
-        identifier, controller_shortname, initial_state: str = "default"
+        identifier, controller_name, initial_state: str = "default"
     ):
         return {
-            f"controller.animation.{identifier.replace(':', '.')}.{controller_shortname}": {
+            f"controller.animation.{identifier.replace(':', '.')}.{controller_name}": {
                 "initial_state": initial_state,
                 "states": {},
             }
@@ -361,10 +364,10 @@ class JsonSchemes:
 
     @staticmethod
     def dialogue_scene(
-        scene_tag, npc_name, text, on_open_commands, on_close_commands, buttons
+        scene, npc_name, text, on_open_commands, on_close_commands, buttons
     ):
         return {
-            "scene_tag": scene_tag,
+            "scene_tag": scene,
             "npc_name": {"rawtext": [{"translate": npc_name}]},
             "text": {"rawtext": [{"translate": text}]},
             "on_open_commands": on_open_commands,
@@ -1119,94 +1122,6 @@ class MinecraftBlockDescriptor(AddonDescriptor):
                 result["tags"] = str(self._tags)
             return result
         return self.identifier
-
-
-class NoiseDescriptor:
-    def __init__(self, name: str, first_octave: int, amplitudes: list[float | int]):
-        if not isinstance(name, str):
-            raise ValueError("name must be a string")
-        if not isinstance(first_octave, int):
-            raise ValueError("first_octave must be an integer")
-        if not isinstance(amplitudes, list):
-            raise ValueError("amplitudes must be a list of numbers")
-        if len(amplitudes) == 0:
-            raise ValueError("amplitudes list cannot be empty")
-        if not all(isinstance(v, (int, float)) for v in amplitudes):
-            raise ValueError("All elements in amplitudes must be float or int")
-        self.name = name
-        self.first_octave = first_octave
-        self.amplitudes = amplitudes
-
-    def descriptor(self) -> dict:
-        return {
-            "name": self.name,
-            "first_octave": self.first_octave,
-            "amplitudes": self.amplitudes,
-        }
-
-
-class NoiseBlockSpecifier:
-    def __init__(
-        self,
-        block: MinecraftBlockDescriptor,
-        *,
-        noise: str | None = None,
-        threshold: float | int | None = None,
-        range: (
-            tuple[float | int, float | int]
-            | list[float | int]
-            | dict[str, float | int]
-            | None
-        ) = None,
-    ):
-        if not isinstance(block, MinecraftBlockDescriptor):
-            raise ValueError("block must be a MinecraftBlockDescriptor instance")
-        if noise is not None and not isinstance(noise, str):
-            raise ValueError("noise must be a string")
-        if threshold is not None and not isinstance(threshold, (int, float)):
-            raise ValueError("threshold must be a float or int")
-        if range is not None:
-            if isinstance(range, dict):
-                if "min" not in range or "max" not in range:
-                    raise ValueError("range dict must contain 'min' and 'max' keys")
-                min_val = range["min"]
-                max_val = range["max"]
-            elif isinstance(range, (list, tuple)) and len(range) == 2:
-                min_val = range[0]
-                max_val = range[1]
-            else:
-                raise ValueError(
-                    "range must be a list/tuple of two numbers or a dict with 'min' and 'max'"
-                )
-
-            if not isinstance(min_val, (int, float)) or not isinstance(
-                max_val, (int, float)
-            ):
-                raise ValueError("range min and max values must be numbers")
-            for val in [min_val, max_val]:
-                if not (-1.0 <= val <= 1.0):
-                    raise ValueError("range values must be on the interval [-1, 1]")
-            self.range = {"min": min_val, "max": max_val}
-        else:
-            self.range = None
-
-        if threshold is None and self.range is None:
-            raise ValueError("Either threshold or range must be provided")
-
-        self.block = block
-        self.noise = noise
-        self.threshold = threshold
-
-    def descriptor(self) -> dict:
-        data = {}
-        if self.noise is not None:
-            data["noise"] = self.noise
-        if self.threshold is not None:
-            data["threshold"] = self.threshold
-        if self.range is not None:
-            data["range"] = self.range
-        data["block"] = self.block
-        return data
 
 
 class MinecraftItemDescriptor(AddonDescriptor):

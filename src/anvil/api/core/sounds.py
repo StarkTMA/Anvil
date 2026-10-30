@@ -236,7 +236,7 @@ class SoundDefinition(AddonObject):
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
-        server_music_info: "MusicInfo" = None,
+        server_sound: "MusicInfo" = None,
     ) -> "_SoundDescription":
         """Defines a sound for the SoundDefinition instance.
 
@@ -247,7 +247,7 @@ class SoundDefinition(AddonObject):
             max_distance (int, optional): The maximum distance for the sound. Defaults to 0.
             min_distance (int, optional): The minimum distance for the sound. Defaults to 9999.
             subtitle (str, optional): The subtitle for the sound. Defaults to None.
-            server_music_info (MusicInfo, optional): If set, also registers this sound in the
+            server_sound (MusicInfo, optional): If set, also registers this sound in the
                 (experimental) behavior pack server-side sound definitions with this duration
                 tracking mode / music metadata / tags. Requires the experimental flag. Defaults to None.
         Returns:
@@ -269,9 +269,9 @@ class SoundDefinition(AddonObject):
         )
         self._sounds.append(sound)
 
-        if server_music_info is not None:
+        if server_sound is not None:
             ServerSoundDefinition().server_sound_reference(
-                sound.identifier, server_music_info
+                sound.identifier, server_sound
             )
 
         return sound
@@ -390,7 +390,7 @@ class MusicDefinition(AddonObject):
         music_reference: MusicCategory | str,
         min_delay: int = 60,
         max_delay: int = 180,
-        server_music_info: "MusicInfo" = None,
+        server_sound: "MusicInfo" = None,
     ) -> _SoundDescription:
         """Defines a music for the MusicDefinition instance.
 
@@ -398,7 +398,7 @@ class MusicDefinition(AddonObject):
             music_reference (MusicCategory | str): The reference/category of the music.
             min_delay (int, optional): The minimum delay for the music. Defaults to 60.
             max_delay (int, optional): The maximum delay for the music. Defaults to 180.
-            server_music_info (MusicInfo, optional): If set, also registers this music track in the
+            server_sound (MusicInfo, optional): If set, also registers this music track in the
                 (experimental) behavior pack server-side sound definitions (duration tracking mode,
                 music metadata, tags). Requires the experimental flag. Defaults to None.
 
@@ -418,7 +418,7 @@ class MusicDefinition(AddonObject):
         return sound_definition_object.sound_reference(
             f"music.{music_reference}",
             SoundCategory.Music,
-            server_music_info=server_music_info,
+            server_sound=server_sound,
         )
 
     def queue(self) -> "MusicDefinition":
@@ -465,8 +465,8 @@ class SoundEvent(AddonObject):
 
     def add_entity_event(
         self,
-        entity_identifier: Identifier,
-        sound_identifier: str,
+        entity: Identifier,
+        sound_reference: str,
         sound_event: EntitySoundEvent,
         category: SoundCategory,
         volume: float = 1.0,
@@ -476,164 +476,164 @@ class SoundEvent(AddonObject):
         variant_query: Molang = None,
         variant_map: str = None,
         subtitle: str = None,
-        server_music_info: "MusicInfo" = None,
+        server_sound: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
         self._content["entity_sounds"]["entities"].setdefault(
-            entity_identifier,
+            entity,
             {"events": {}, "variants": {"key": {}, "map": {}}},
         )
         if variant_query is not None:
-            self._content["entity_sounds"]["entities"][entity_identifier]["variants"][
+            self._content["entity_sounds"]["entities"][entity]["variants"][
                 "key"
             ] = variant_query
-            self._content["entity_sounds"]["entities"][entity_identifier]["variants"][
-                "map"
-            ][variant_map] = {
-                "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}",
+            self._content["entity_sounds"]["entities"][entity]["variants"]["map"][
+                variant_map
+            ] = {
+                "sound": f"{CONFIG.NAMESPACE}:{sound_reference}",
                 "pitch": pitch,
                 "volume": volume,
             }
         else:
-            self._content["entity_sounds"]["entities"][entity_identifier]["events"][
+            self._content["entity_sounds"]["entities"][entity]["events"][
                 sound_event.value
             ] = {
-                "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}",
+                "sound": f"{CONFIG.NAMESPACE}:{sound_reference}",
                 "pitch": pitch,
                 "volume": volume,
             }
 
-        key = f"subtitle.entity.{entity_identifier}.{sound_event.value}"
+        key = f"subtitle.entity.{entity}.{sound_event.value}"
         if subtitle is not None:
             AnvilTranslator().add_localization_entry(key, subtitle)
 
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
-            sound_identifier,
+            sound_reference,
             category,
             max_distance=max_distance,
             min_distance=min_distance,
             subtitle=key if subtitle is not None else None,
-            server_music_info=server_music_info,
+            server_sound=server_sound,
         )
 
     def add_block_event(
         self,
-        block_identifier: Identifier,
-        sound_identifier: str,
+        block: Identifier,
+        sound_reference: str,
         sound_event: BlockSoundEvent,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
-        server_music_info: "MusicInfo" = None,
+        server_sound: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
         self._content["block_sounds"].setdefault(
-            block_identifier,
+            block,
             {"events": {}},
         )
-        self._content["block_sounds"][block_identifier]["events"][sound_event.value] = {
-            "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}",
+        self._content["block_sounds"][block]["events"][sound_event.value] = {
+            "sound": f"{CONFIG.NAMESPACE}:{sound_reference}",
             "pitch": pitch,
             "volume": volume,
         }
 
-        BlocksJSONObject().add_block(block_identifier)
+        BlocksJSONObject().add_block(block)
 
-        key = f"subtitle.block.{block_identifier}.{sound_event.value}"
+        key = f"subtitle.block.{block}.{sound_event.value}"
         if subtitle is not None:
             AnvilTranslator().add_localization_entry(key, subtitle)
 
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
-            sound_identifier,
+            sound_reference,
             SoundCategory.Block,
             max_distance=max_distance,
             min_distance=min_distance,
             subtitle=key if subtitle is not None else None,
-            server_music_info=server_music_info,
+            server_sound=server_sound,
         )
 
     def add_block_interactive_event(
         self,
-        block_identifier: Identifier,
-        sound_identifier: str,
+        block: Identifier,
+        sound_reference: str,
         sound_event: BlockInteractiveSoundEvent,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
-        server_music_info: "MusicInfo" = None,
+        server_sound: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
         self._content["interactive_sounds"]["block_sounds"].setdefault(
-            block_identifier,
+            block,
             {"events": {}},
         )
-        self._content["interactive_sounds"]["block_sounds"][block_identifier]["events"][
+        self._content["interactive_sounds"]["block_sounds"][block]["events"][
             sound_event.value
         ] = {
-            "sound": f"{CONFIG.NAMESPACE}:{sound_identifier}",
+            "sound": f"{CONFIG.NAMESPACE}:{sound_reference}",
             "pitch": pitch,
             "volume": volume,
         }
 
-        BlocksJSONObject().add_block(block_identifier)
+        BlocksJSONObject().add_block(block)
 
-        key = f"subtitle.block.{block_identifier}.{sound_event.value}"
+        key = f"subtitle.block.{block}.{sound_event.value}"
         if subtitle is not None:
             AnvilTranslator().add_localization_entry(key, subtitle)
 
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
-            sound_identifier,
+            sound_reference,
             SoundCategory.Block,
             max_distance=max_distance,
             min_distance=min_distance,
             subtitle=key if subtitle is not None else None,
-            server_music_info=server_music_info,
+            server_sound=server_sound,
         )
 
     def add_individual_event(
         self,
-        sound_identifier: str,
+        sound_reference: str,
         category: SoundCategory,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: float = 0,
         min_distance: float = 9999,
         subtitle: str = None,
-        server_music_info: "MusicInfo" = None,
+        server_sound: "MusicInfo" = None,
     ) -> "_SoundDescription":
         self._changed = True
         self._content["individual_event_sounds"].setdefault("events", {})[
-            sound_identifier
+            sound_reference
         ] = {
-            "sound": sound_identifier,
+            "sound": sound_reference,
             "pitch": pitch if pitch != (0.8, 1.2) else {},
             "volume": volume,
         }
 
-        key = f"subtitle.individual.{sound_identifier}"
+        key = f"subtitle.individual.{sound_reference}"
         if subtitle is not None:
             AnvilTranslator().add_localization_entry(key, subtitle)
 
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
-            sound_identifier,
+            sound_reference,
             category,
             max_distance=max_distance,
             min_distance=min_distance,
             subtitle=key if subtitle is not None else None,
-            server_music_info=server_music_info,
+            server_sound=server_sound,
         )
 
     def add_individual_named_sound(
         self,
-        sound_identifier: str,
+        sound_reference: str,
         category: SoundCategory = SoundCategory.Ambient,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
@@ -646,16 +646,16 @@ class SoundEvent(AddonObject):
         """
         self._changed = True
         self._content["individual_named_sounds"].setdefault("sounds", {})[
-            sound_identifier
+            sound_reference
         ] = {
-            "sound": sound_identifier,
+            "sound": sound_reference,
             "pitch": pitch if pitch != (0.8, 1.2) else {},
             "volume": volume,
         }
 
         sound_definition_object = SoundDefinition()
         return sound_definition_object.sound_reference(
-            sound_identifier,
+            sound_reference,
             category,
             max_distance=max_distance,
             min_distance=min_distance,

@@ -548,17 +548,17 @@ def compile_objects(
             "w",
         )
 
-    from anvil.api.blocks.blocks import PermutationGroup
+    from anvil.api.core.components import Permutation
 
-    if PermutationGroup._count > 10000:
+    if Permutation._count > 10000:
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
             raise RuntimeError(
-                f"\rTotal Block permutations exceeded 10000 ({PermutationGroup._count}). Addons must not exceed this limit."
+                f"\rTotal Block permutations exceeded 10000 ({Permutation._count}). Addons must not exceed this limit."
             )
         else:
             click.echo(
                 click.style(
-                    f"\r[INFO]: Total Block permutations exceeded 10000 ({PermutationGroup._count}). This may cause issues when submitting to the Marketplace.",
+                    f"\r[INFO]: Total Block permutations exceeded 10000 ({Permutation._count}). This may cause issues when submitting to the Marketplace.",
                     fg="yellow",
                 )
             )

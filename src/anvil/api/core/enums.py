@@ -611,6 +611,8 @@ class FilterSubject(StrEnum):
     Self = "self"
     Target = "target"
     Baby = "baby"
+    Holder = "holder"
+    Item = "item"
 
 
 class FilterOperation(StrEnum):
@@ -644,6 +646,7 @@ class FilterEquipmentDomain(StrEnum):
 class Vibrations(StrEnum):
     EntityInteract = "entity_interact"
     EntityAct = "entity_act"
+    EntityDie = "entity_die"
     Shear = "shear"
     none = "none"
 
@@ -651,6 +654,7 @@ class Vibrations(StrEnum):
 class ControlFlags(StrEnum):
     Move = "move"
     Look = "look"
+    Jump = "jump"
 
 
 class MaterialStates(StrEnum):
@@ -1258,6 +1262,7 @@ class RideableDismountMode(StrEnum):
 
     Default = "default"
     OnTopCenter = "on_top_center"
+    LookDirection = "look_direction"
 
 
 class LeashSpringType(StrEnum):

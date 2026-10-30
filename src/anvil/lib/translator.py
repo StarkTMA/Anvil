@@ -1,5 +1,7 @@
 import csv
 import os
+import re
+import unicodedata
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -305,6 +307,38 @@ class AnvilTranslator:
         if formatted and formatted[0].isdigit():
             formatted = "_" + formatted
         return formatted
+
+    @staticmethod
+    def safe_key(text: str) -> str:
+        """Display text as a safe snake_case key segment.
+
+        Accents are dropped, `\\n` line breaks count as spaces, and every run of characters
+        other than lowercase letters and digits becomes one `_`. A segment that would start
+        with a digit gets a leading `_`.
+
+        Example:
+            >>> AnvilTranslator.safe_key("Captain's Log\\nDay 1")
+            'captain_s_log_day_1'
+        """
+        text = unicodedata.normalize("NFKD", text.replace("\\n", " "))
+        text = text.encode("ascii", "ignore").decode().lower()
+        key = re.sub(r"[^a-z0-9]+", "_", text).strip("_")
+        return f"_{key}" if key[:1].isdigit() else key
+
+    def localize(self, text: str, prefix: str, suffix: str | None = None) -> str:
+        """Adds `text` under a key made from it, and returns the key.
+
+        The key is `<prefix>.<safe_key(text)>`, followed by `.<suffix>` when given.
+
+        Example:
+            >>> AnvilTranslator().localize("Read Book", prefix="action.interact")
+            'action.interact.read_book'
+        """
+        key = f"{prefix}.{self.safe_key(text)}"
+        if suffix:
+            key = f"{key}.{suffix}"
+        self.add_localization_entry(key, text)
+        return key
 
     def _build_pack_lines(
         self, entries: Dict[str, Optional[str]], target: str
