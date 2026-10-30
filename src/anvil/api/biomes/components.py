@@ -1,134 +1,378 @@
-from typing import Literal, overload
+from typing import TYPE_CHECKING
 from warnings import deprecated
 
-from anvil.api.core.components import Component
-from anvil.api.core.enums import Dimension
-from anvil.api.core.types import Color, HexRGB
-from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
-from anvil.lib.format_versions import BIOME_SERVER_VERSION
-from anvil.lib.lib import AnvilFormatter
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    NoiseDescriptor,
-    NoiseBlockSpecifier,
+from anvil.api.core.enums import Dimension, MusicCategory
+from anvil.api.core.types import (
+    BiomeClimateCategory,
+    BiomeNoiseGradientBuilderType,
+    BiomeNoiseType,
+    BiomeTransformation,
+    BiomeVillageTypes,
+    Color,
+    FoliageColorMap,
+    GrassColorMap,
 )
+from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
+from anvil.lib.jsonmodel import JsonComponent, JsonObject, encoders, json_field
+from anvil.lib.jsonmodel.validators import each, in_range, instance_of, length, one_of
+from anvil.lib.schemas import MinecraftBlockDescriptor
 
-BiomeNoiseType = Literal[
-    "beach",
-    "deep_ocean",
-    "default",
-    "default_mutated",
-    "extreme",
-    "highlands",
-    "less_extreme",
-    "lowlands",
-    "mountains",
-    "mushroom",
-    "ocean",
-    "river",
-    "stone_beach",
-    "swamp",
-    "taiga",
-]
+if TYPE_CHECKING:
+    from anvil.api.pbr.atmosphere import AtmosphericSettings
+    from anvil.api.pbr.color_grading import ColorGradingSettings
+    from anvil.api.pbr.cubemap import CubeMapSettings
+    from anvil.api.pbr.fog import FogSettings
+    from anvil.api.pbr.lighting import LightingSettings
+    from anvil.api.pbr.water import WaterSettings
 
-BiomeNoiseGradientBuilderType = Literal[
-    "minecraft:capped",
-    "minecraft:frozen_ocean",
-    "minecraft:mesa",
-    "minecraft:noise_gradient",
-    "minecraft:overworld",
-    "minecraft:swamp",
-    "minecraft:the_end",
-]
+# region Validators
+
+_block = instance_of(MinecraftBlockDescriptor)
+_blocks = each(instance_of(MinecraftBlockDescriptor))
+_boolean = instance_of(bool)
+_sea_depth = (instance_of(int), in_range(maximum=127))
+_fraction = (instance_of(int, float), in_range(0, 1))
 
 
-class _BaseBiomeSurfaceBuilder(Component):
-    def _validate_materials(self, materials: list[MinecraftBlockDescriptor]):
-        for material in materials:
-            if not isinstance(material, MinecraftBlockDescriptor):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
+# endregion
 
-    def _validate_sea_floor_depth(self, sea_floor_depth: int = None):
-        if sea_floor_depth is not None:
-            if not isinstance(sea_floor_depth, int):
-                raise ValueError("Sea floor depth must be an integer")
-            if sea_floor_depth > 127:
-                raise ValueError("Sea floor depth must be <= 127")
+# region Parts: objects nested inside components
+
+
+class NoiseDescriptor(JsonObject):
+    """The noise a noise gradient surface builder samples.
+
+    Parameters:
+        name (str): The name of the noise.
+        first_octave (int): The first octave of the noise.
+        amplitudes (list[float]): The amplitude of each octave, at least 1.
+    """
+
+    name: str = json_field(validators=[instance_of(str)])
+    first_octave: int = json_field(validators=[instance_of(int)])
+    amplitudes: list[float] = json_field(
+        validators=[length(minimum=1), each(instance_of(int, float))]
+    )
+
+
+class NoiseBlockSpecifier(JsonObject):
+    """A block placed where the noise is above a threshold, or inside a range.
+
+    Parameters:
+        block (MinecraftBlockDescriptor): The block placed.
+        noise (str, optional): The noise sampled. Defaults to the builder's noise.
+        threshold (float, optional): The block is placed where the noise is above this value. Set this or `range`.
+        range (tuple[float, float], optional): The block is placed where the noise is inside this `(min, max)` range, each in [-1, 1]. Set this or `threshold`.
+    """
+
+    noise: str | None = json_field(default=None, validators=[instance_of(str)])
+    threshold: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+    range: tuple[float, float] | None = json_field(
+        default=None,
+        validators=[length(2, 2), each(in_range(-1.0, 1.0))],
+        encoder=lambda value: {"min": value[0], "max": value[1]},
+    )
+    block: MinecraftBlockDescriptor = json_field(validators=[_block])
+
+    def __validate__(self) -> None:
+        if self.threshold is None and self.range is None:
+            raise ValueError("NoiseBlockSpecifier needs `threshold` or `range`.")
+
+
+class Surface(JsonObject, abstract=True):
+    """Base of the surface builder variants. Each variant fixes its own `type`."""
+
+    type: str = json_field(init=False)
+
+
+class OverworldSurface(Surface):
+    """Controls the blocks used for the default Minecraft Overworld terrain generation.
+
+    Parameters:
+        foundation_material (MinecraftBlockDescriptor): The block used deep underground.
+        mid_material (MinecraftBlockDescriptor): The block used in a layer below the surface.
+        sea_floor_material (MinecraftBlockDescriptor): The block used as the floor of bodies of water.
+        sea_material (MinecraftBlockDescriptor): The block used in bodies of water.
+        top_material (MinecraftBlockDescriptor): The block used for the surface.
+        sea_floor_depth (int, optional): How deep the sea floor material goes, up to 127.
+    """
+
+    type: str = json_field(default="minecraft:overworld", init=False)
+    foundation_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    mid_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    top_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    sea_floor_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    sea_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    sea_floor_depth: int | None = json_field(default=None, validators=_sea_depth)
+
+
+class FrozenOceanSurface(OverworldSurface):
+    """Similar to the overworld surface. Adds icebergs."""
+
+    type: str = json_field(default="minecraft:frozen_ocean", init=False)
+
+
+class MesaSurface(OverworldSurface):
+    """Similar to the overworld surface. Adds colored strata and optional pillars.
+
+    Parameters:
+        clay_material (MinecraftBlockDescriptor): The base clay block.
+        hard_clay_material (MinecraftBlockDescriptor): The hardened clay block.
+        bryce_pillars (bool, optional): Whether to add Bryce pillars.
+        has_forest (bool, optional): Whether to add a forest on top.
+    """
+
+    type: str = json_field(default="minecraft:mesa", init=False)
+    clay_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    hard_clay_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    bryce_pillars: bool | None = json_field(default=None, validators=[_boolean])
+    has_forest: bool | None = json_field(default=None, validators=[_boolean])
+
+
+class SwampSurface(OverworldSurface):
+    """Used to add decoration to the surface of swamp biomes such as water lilies.
+
+    Parameters:
+        max_puddle_depth_below_sea_level (int, optional): How deep puddles may go, up to 127.
+    """
+
+    type: str = json_field(default="minecraft:swamp", init=False)
+    max_puddle_depth_below_sea_level: int | None = json_field(
+        default=None, validators=_sea_depth
+    )
+
+
+class CappedSurface(Surface):
+    """Generates surface on blocks with non-solid blocks above or below.
+
+    Parameters:
+        beach_material (MinecraftBlockDescriptor): The block used for beaches.
+        ceiling_materials (list[MinecraftBlockDescriptor]): Blocks used for ceilings, at least 1.
+        floor_materials (list[MinecraftBlockDescriptor]): Blocks used for floors, at least 1.
+        foundation_material (MinecraftBlockDescriptor): The block used deep underground.
+        sea_material (MinecraftBlockDescriptor): The block used in bodies of water.
+    """
+
+    type: str = json_field(default="minecraft:capped", init=False)
+    foundation_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    sea_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    beach_material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    ceiling_materials: list[MinecraftBlockDescriptor] = json_field(
+        validators=[length(minimum=1), _blocks]
+    )
+    floor_materials: list[MinecraftBlockDescriptor] = json_field(
+        validators=[length(minimum=1), _blocks]
+    )
+
+
+class TheEndSurface(Surface):
+    """Use default Minecraft End terrain generation."""
+
+    type: str = json_field(default="minecraft:the_end", init=False)
+
+
+class NoiseGradientSurface(Surface):
+    """Places continuous bands of blocks according to a noise distribution.
+
+    Parameters:
+        noise_descriptor (NoiseDescriptor): The noise used by the surface builder.
+        noise_block_specifiers (list[NoiseBlockSpecifier]): Which noise ranges map to which blocks, at least 1.
+        non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks the builder may not replace.
+    """
+
+    type: str = json_field(default="minecraft:noise_gradient", init=False)
+    noise_descriptor: NoiseDescriptor = json_field(
+        validators=[instance_of(NoiseDescriptor)]
+    )
+    noise_block_specifiers: list[NoiseBlockSpecifier] = json_field(
+        validators=[length(minimum=1), each(instance_of(NoiseBlockSpecifier))]
+    )
+    non_replaceable_blocks: list[MinecraftBlockDescriptor] | None = json_field(
+        default=None, validators=[_blocks]
+    )
+
+
+class SteepMaterialAdjustment(JsonObject):
+    """Surface material for steep slopes.
+
+    Parameters:
+        material (MinecraftBlockDescriptor): The block used on steep slopes.
+        north_slopes (bool, optional): Enable for north-facing slopes. Defaults to None.
+        south_slopes (bool, optional): Enable for south-facing slopes. Defaults to None.
+        east_slopes (bool, optional): Enable for east-facing slopes. Defaults to None.
+        west_slopes (bool, optional): Enable for west-facing slopes. Defaults to None.
+    """
+
+    material: MinecraftBlockDescriptor = json_field(validators=[_block])
+    north_slopes: bool | None = json_field(default=None, validators=[_boolean])
+    south_slopes: bool | None = json_field(default=None, validators=[_boolean])
+    east_slopes: bool | None = json_field(default=None, validators=[_boolean])
+    west_slopes: bool | None = json_field(default=None, validators=[_boolean])
+
+
+class TopSlide(JsonObject):
+    """Controls the top slide of mountain terrain.
+
+    Parameters:
+        enabled (bool): Whether top slide generation is enabled.
+    """
+
+    enabled: bool = json_field(validators=[_boolean])
+
+
+class BiomeReplacement(JsonObject):
+    """One biome replacement.
+
+    Parameters:
+        targets (list[MinecraftBiomeTypes | str]): Biomes that are going to be replaced by the overriding biome. Target biomes must not contain namespaces.
+        amount (float): Noise value used to determine whether or not the replacement is attempted, similar to a percentage. Must be in the range (0.0, 1.0].
+        noise_frequency_scale (float): Scaling value used to alter the frequency of replacement attempts. A lower frequency will mean a bigger contiguous biome area that occurs less often. A higher frequency will mean smaller contiguous biome areas that occur more often. Must be in the range (0.0, 100.0].
+        dimension (Dimension, optional): Dimension in which this replacement can happen: 'minecraft:overworld' or 'minecraft:nether'. Defaults to "minecraft:overworld".
+    """
+
+    targets: list[MinecraftBiomeTypes | str] = json_field(
+        validators=[length(minimum=1), each(instance_of(MinecraftBiomeTypes, str))]
+    )
+    amount: float = json_field(validators=[in_range(0.0, 1.0, min_exclusive=True)])
+    noise_frequency_scale: float = json_field(
+        validators=[in_range(0.0, 100.0, min_exclusive=True)]
+    )
+    dimension: Dimension = json_field(
+        default=Dimension.Overworld,
+        validators=[
+            instance_of(Dimension),
+            one_of(Dimension.Overworld, Dimension.Nether),
+        ],
+    )
+
+
+class SurfaceAdjustmentMaterials(JsonObject):
+    """The blocks a surface material adjustment uses while it is active.
+
+    Parameters:
+        foundation_material (MinecraftBlockDescriptor, optional): The block used deep underground.
+        mid_material (MinecraftBlockDescriptor, optional): The block used in a layer below the surface.
+        sea_floor_material (MinecraftBlockDescriptor, optional): The block used as the floor of bodies of water.
+        sea_material (MinecraftBlockDescriptor, optional): The block used in bodies of water.
+        top_material (MinecraftBlockDescriptor, optional): The block used for the surface.
+    """
+
+    foundation_material: MinecraftBlockDescriptor | None = json_field(
+        default=None, validators=[_block]
+    )
+    mid_material: MinecraftBlockDescriptor | None = json_field(
+        default=None, validators=[_block]
+    )
+    sea_floor_material: MinecraftBlockDescriptor | None = json_field(
+        default=None, validators=[_block]
+    )
+    sea_material: MinecraftBlockDescriptor | None = json_field(
+        default=None, validators=[_block]
+    )
+    top_material: MinecraftBlockDescriptor | None = json_field(
+        default=None, validators=[_block]
+    )
+
+
+class GrassTint(JsonObject):
+    """The color grass is tinted by on the map, for `BiomeMapTints`.
+
+    Parameters:
+        tint (Color): The tint color. Written as a hex color.
+    """
+
+    tint: Color = json_field(encoder=encoders.to_hex)
+
+
+class SurfaceMaterialAdjustment(JsonObject):
+    """An adjustment to generated terrain, replacing blocks based on the specified settings.
+
+    Parameters:
+        height_range (tuple[float | str, float | str], optional): The range of heights [min, max] for which this adjustment applies. Each bound is a number or a Molang expression.
+        noise_frequency_scale (float, optional): The scale to multiply by the position when accessing the noise value for the material adjustments.
+        noise_range (tuple[float, float], optional): The range of noise values [min, max] for which this adjustment applies.
+        materials (SurfaceAdjustmentMaterials): The blocks used while this adjustment is active.
+    """
+
+    height_range: tuple[float | str, float | str] | None = json_field(
+        default=None, validators=[length(2, 2), each(instance_of(int, float, str))]
+    )
+    noise_frequency_scale: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+    noise_range: tuple[float, float] | None = json_field(
+        default=None, validators=[length(2, 2), each(instance_of(int, float))]
+    )
+    materials: SurfaceAdjustmentMaterials = json_field(
+        default_factory=SurfaceAdjustmentMaterials,
+        validators=[instance_of(SurfaceAdjustmentMaterials)],
+    )
+
+
+# endregion
+
+# region Components
+
+
+class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
+    """Shared fields and builders of the surface and subsurface builder components.
+
+    Parameters:
+        builder (Surface, optional): The surface builder to use. Set it directly or
+            with one of the `set_*_builder` methods.
+    """
+
+    builder: Surface | None = json_field(
+        default=None, validators=[instance_of(Surface)]
+    )
 
     def set_overworld_builder(
         self,
+        *,
         foundation_material: MinecraftBlockDescriptor,
         mid_material: MinecraftBlockDescriptor,
         sea_floor_material: MinecraftBlockDescriptor,
         sea_material: MinecraftBlockDescriptor,
         top_material: MinecraftBlockDescriptor,
-        sea_floor_depth: int = None,
+        sea_floor_depth: int | None = None,
     ):
         """Controls the blocks used for the default Minecraft Overworld terrain generation."""
-        self._validate_materials(
-            [
-                foundation_material,
-                mid_material,
-                top_material,
-                sea_floor_material,
-                sea_material,
-            ]
+        self.builder = OverworldSurface(
+            foundation_material=foundation_material,
+            mid_material=mid_material,
+            sea_floor_material=sea_floor_material,
+            sea_material=sea_material,
+            top_material=top_material,
+            sea_floor_depth=sea_floor_depth,
         )
-        self._validate_sea_floor_depth(sea_floor_depth)
-
-        builder = {
-            "type": "minecraft:overworld",
-            "foundation_material": foundation_material,
-            "mid_material": mid_material,
-            "top_material": top_material,
-            "sea_floor_material": sea_floor_material,
-            "sea_material": sea_material,
-        }
-        if sea_floor_depth is not None:
-            builder["sea_floor_depth"] = sea_floor_depth
-
-        self._add_field("builder", builder)
         return self
 
     def set_frozen_ocean_builder(
         self,
+        *,
         foundation_material: MinecraftBlockDescriptor,
         mid_material: MinecraftBlockDescriptor,
         sea_floor_material: MinecraftBlockDescriptor,
         sea_material: MinecraftBlockDescriptor,
         top_material: MinecraftBlockDescriptor,
-        sea_floor_depth: int = None,
+        sea_floor_depth: int | None = None,
     ):
         """Similar to overworld_surface. Adds icebergs."""
-        self._validate_materials(
-            [
-                foundation_material,
-                mid_material,
-                top_material,
-                sea_floor_material,
-                sea_material,
-            ]
+        self.builder = FrozenOceanSurface(
+            foundation_material=foundation_material,
+            mid_material=mid_material,
+            sea_floor_material=sea_floor_material,
+            sea_material=sea_material,
+            top_material=top_material,
+            sea_floor_depth=sea_floor_depth,
         )
-        self._validate_sea_floor_depth(sea_floor_depth)
-
-        builder = {
-            "type": "minecraft:frozen_ocean",
-            "foundation_material": foundation_material,
-            "mid_material": mid_material,
-            "top_material": top_material,
-            "sea_floor_material": sea_floor_material,
-            "sea_material": sea_material,
-        }
-        if sea_floor_depth is not None:
-            builder["sea_floor_depth"] = sea_floor_depth
-
-        self._add_field("builder", builder)
         return self
 
     def set_mesa_builder(
         self,
+        *,
         clay_material: MinecraftBlockDescriptor,
         foundation_material: MinecraftBlockDescriptor,
         hard_clay_material: MinecraftBlockDescriptor,
@@ -136,97 +380,51 @@ class _BaseBiomeSurfaceBuilder(Component):
         sea_floor_material: MinecraftBlockDescriptor,
         sea_material: MinecraftBlockDescriptor,
         top_material: MinecraftBlockDescriptor,
-        bryce_pillars: bool = None,
-        has_forest: bool = None,
-        sea_floor_depth: int = None,
+        bryce_pillars: bool | None = None,
+        has_forest: bool | None = None,
+        sea_floor_depth: int | None = None,
     ):
         """Similar to overworld_surface. Adds colored strata and optional pillars."""
-        self._validate_materials(
-            [
-                foundation_material,
-                mid_material,
-                top_material,
-                sea_floor_material,
-                sea_material,
-                clay_material,
-                hard_clay_material,
-            ]
+        self.builder = MesaSurface(
+            clay_material=clay_material,
+            foundation_material=foundation_material,
+            hard_clay_material=hard_clay_material,
+            mid_material=mid_material,
+            sea_floor_material=sea_floor_material,
+            sea_material=sea_material,
+            top_material=top_material,
+            bryce_pillars=bryce_pillars,
+            has_forest=has_forest,
+            sea_floor_depth=sea_floor_depth,
         )
-        self._validate_sea_floor_depth(sea_floor_depth)
-
-        if bryce_pillars is not None and not isinstance(bryce_pillars, bool):
-            raise ValueError("Bryce pillars must be a boolean")
-        if has_forest is not None and not isinstance(has_forest, bool):
-            raise ValueError("Has forest must be a boolean")
-
-        builder = {
-            "type": "minecraft:mesa",
-            "foundation_material": foundation_material,
-            "mid_material": mid_material,
-            "top_material": top_material,
-            "sea_floor_material": sea_floor_material,
-            "sea_material": sea_material,
-            "clay_material": clay_material,
-            "hard_clay_material": hard_clay_material,
-        }
-        if bryce_pillars is not None:
-            builder["bryce_pillars"] = bryce_pillars
-        if has_forest is not None:
-            builder["has_forest"] = has_forest
-        if sea_floor_depth is not None:
-            builder["sea_floor_depth"] = sea_floor_depth
-
-        self._add_field("builder", builder)
         return self
 
     def set_swamp_builder(
         self,
+        *,
         foundation_material: MinecraftBlockDescriptor,
         mid_material: MinecraftBlockDescriptor,
         sea_floor_material: MinecraftBlockDescriptor,
         sea_material: MinecraftBlockDescriptor,
         top_material: MinecraftBlockDescriptor,
-        sea_floor_depth: int = None,
-        max_puddle_depth_below_sea_level: int = None,
+        sea_floor_depth: int | None = None,
+        max_puddle_depth_below_sea_level: int | None = None,
     ):
         """Used to add decoration to the surface of swamp biomes such as water lilies."""
-        self._validate_materials(
-            [
-                foundation_material,
-                mid_material,
-                top_material,
-                sea_floor_material,
-                sea_material,
-            ]
+        self.builder = SwampSurface(
+            foundation_material=foundation_material,
+            mid_material=mid_material,
+            sea_floor_material=sea_floor_material,
+            sea_material=sea_material,
+            top_material=top_material,
+            sea_floor_depth=sea_floor_depth,
+            max_puddle_depth_below_sea_level=max_puddle_depth_below_sea_level,
         )
-        self._validate_sea_floor_depth(sea_floor_depth)
-
-        if max_puddle_depth_below_sea_level is not None:
-            if not isinstance(max_puddle_depth_below_sea_level, int):
-                raise ValueError("Max puddle depth below sea level must be an integer")
-            if max_puddle_depth_below_sea_level > 127:
-                raise ValueError("Max puddle depth below sea level must be <= 127")
-
-        builder = {
-            "type": "minecraft:swamp",
-            "foundation_material": foundation_material,
-            "mid_material": mid_material,
-            "top_material": top_material,
-            "sea_floor_material": sea_floor_material,
-            "sea_material": sea_material,
-        }
-        if sea_floor_depth is not None:
-            builder["sea_floor_depth"] = sea_floor_depth
-        if max_puddle_depth_below_sea_level is not None:
-            builder["max_puddle_depth_below_sea_level"] = (
-                max_puddle_depth_below_sea_level
-            )
-
-        self._add_field("builder", builder)
         return self
 
     def set_capped_builder(
         self,
+        *,
         beach_material: MinecraftBlockDescriptor,
         ceiling_materials: list[MinecraftBlockDescriptor],
         floor_materials: list[MinecraftBlockDescriptor],
@@ -234,712 +432,702 @@ class _BaseBiomeSurfaceBuilder(Component):
         sea_material: MinecraftBlockDescriptor,
     ):
         """Generates surface on blocks with non-solid blocks above or below."""
-        if not isinstance(ceiling_materials, list) or len(ceiling_materials) < 1:
-            raise ValueError("Ceiling materials must be a list with at least 1 item")
-        if not isinstance(floor_materials, list) or len(floor_materials) < 1:
-            raise ValueError("Floor materials must be a list with at least 1 item")
-        self._validate_materials(
-            [
-                foundation_material,
-                sea_material,
-                beach_material,
-                *ceiling_materials,
-                *floor_materials,
-            ]
+        self.builder = CappedSurface(
+            beach_material=beach_material,
+            ceiling_materials=ceiling_materials,
+            floor_materials=floor_materials,
+            foundation_material=foundation_material,
+            sea_material=sea_material,
         )
-
-        builder = {
-            "type": "minecraft:capped",
-            "foundation_material": foundation_material,
-            "sea_material": sea_material,
-            "beach_material": beach_material,
-            "ceiling_materials": [material for material in ceiling_materials],
-            "floor_materials": [material for material in floor_materials],
-        }
-        self._add_field("builder", builder)
         return self
 
     def set_end_builder(self):
         """Use default Minecraft End terrain generation."""
-        self._add_field("builder", {"type": "minecraft:the_end"})
+        self.builder = TheEndSurface()
         return self
 
     def set_noise_gradient_builder(
         self,
-        noise: NoiseDescriptor,
+        *,
+        noise_descriptor: NoiseDescriptor,
         noise_block_specifiers: list[NoiseBlockSpecifier],
-        non_replaceable_blocks: list[MinecraftBlockDescriptor] = None,
+        non_replaceable_blocks: list[MinecraftBlockDescriptor] | None = None,
     ):
         """Places continuous bands of blocks according to a noise distribution.
 
         Parameters:
-            noise (NoiseDescriptor): The NoiseDescriptor used by the surface builder.
+            noise_descriptor (NoiseDescriptor): The NoiseDescriptor used by the surface builder.
             noise_block_specifiers (list[NoiseBlockSpecifier]): The noise block specifiers defining which ranges
                 of noise are associated with which blocks.
             non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks that the
                 surface builder is not allowed to replace. Defaults to None.
         """
-        if not isinstance(noise, NoiseDescriptor):
-            raise ValueError("noise must be a NoiseDescriptor instance")
-        if (
-            not isinstance(noise_block_specifiers, list)
-            or len(noise_block_specifiers) < 1
-        ):
-            raise ValueError(
-                "noise_block_specifiers must be a list with at least 1 item"
-            )
-        for specifier in noise_block_specifiers:
-            if not isinstance(specifier, NoiseBlockSpecifier):
-                raise ValueError(
-                    "All noise_block_specifiers must be NoiseBlockSpecifier instances"
-                )
-
-        builder = {
-            "type": "minecraft:noise_gradient",
-            "noise": noise,
-            "noise_block_specifiers": noise_block_specifiers,
-        }
-
-        if non_replaceable_blocks is not None:
-            if not isinstance(non_replaceable_blocks, list):
-                raise ValueError("non_replaceable_blocks must be a list")
-            for block in non_replaceable_blocks:
-                if not isinstance(block, MinecraftBlockDescriptor):
-                    raise ValueError(
-                        "All non_replaceable_blocks must be MinecraftBlockDescriptor instances"
-                    )
-            builder["non_replaceable_blocks"] = non_replaceable_blocks
-
-        self._add_field("builder", builder)
+        self.builder = NoiseGradientSurface(
+            noise_descriptor=noise_descriptor,
+            noise_block_specifiers=noise_block_specifiers,
+            non_replaceable_blocks=non_replaceable_blocks,
+        )
         return self
 
 
-class BiomeClimate(Component):
-    _identifier = "minecraft:climate"
+class BiomeClimate(JsonComponent):
+    """Sets the climate properties of the biome.
 
-    def __init__(
+    Parameters:
+        temperature (float, optional): Temperature affects a variety of visual and behavioral things, including snow and ice placement, sponge drying, and sky color. Between -50.0 and 50.0. Defaults to None.
+        downfall (float, optional): Amount that precipitation affects colors and block changes. Setting to 0 will stop rain from falling in the biome. Between 0.0 and 1.0. Defaults to None.
+        snow_accumulation (list[float], optional): Minimum and maximum snow level, each multiple of 0.125 is another snow layer. Exactly 2 values between 0.0 and 1.0. Defaults to None.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_climate)
+    """
+
+    identifier = "minecraft:climate"
+
+    temperature: float | None = json_field(
+        default=None, validators=[in_range(-50.0, 50.0)]
+    )
+    downfall: float | None = json_field(default=None, validators=[in_range(0.0, 1.0)])
+    snow_accumulation: list[float] | None = json_field(
+        default=None, validators=[length(2, 2), each(in_range(0.0, 1.0))]
+    )
+
+
+class BiomeCreatureSpawnProbability(JsonComponent):
+    """Sets the probability that creatures will spawn within the biome when a chunk is generated.
+
+    Parameters:
+        probability (float, optional): Probability between 0.0 and 0.75 of creatures spawning within the biome on chunk generation. Defaults to None.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_creature_spawn_probability)
+    """
+
+    identifier = "minecraft:creature_spawn_probability"
+
+    probability: float | None = json_field(
+        default=None, validators=[in_range(0.0, 0.75)]
+    )
+
+
+class BiomeHumidity(JsonComponent):
+    """Forces a biome to either always be humid or never humid. Humidity affects the spread chance and spread rate of fire in the biome.
+
+    Parameters:
+        is_humid (bool, optional): Whether the biome is humid or not. Affects fire spread mechanics. Defaults to None.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_humidity)
+    """
+
+    identifier = "minecraft:humidity"
+
+    is_humid: bool | None = json_field(default=None, validators=[_boolean])
+
+
+class BiomeMapTints(JsonComponent):
+    """Sets the color grass and foliage will be tinted by in this biome on the map.
+
+    Parameters:
+        foliage (Color, optional): Sets the color foliage will be tinted by in this biome on the map. Written as a hex color. Defaults to None.
+        grass (GrassTint, optional): The color grass is tinted by in this biome on the map. Defaults to None.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_map_tints)
+    """
+
+    identifier = "minecraft:map_tints"
+
+    foliage: Color | None = json_field(default=None, encoder=encoders.to_hex)
+    grass: GrassTint | None = json_field(
+        default=None, validators=[instance_of(GrassTint)]
+    )
+
+
+class BiomeMountainParameters(JsonComponent):
+    """Noise parameters used to drive mountain terrain generation in Overworld.
+
+    Parameters:
+        steep_material_adjustment (SteepMaterialAdjustment, optional): Surface material for steep slopes. Defaults to None.
+        top_slide (TopSlide, optional): Top slide settings. Defaults to None.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_mountain_parameters)
+    """
+
+    identifier = "minecraft:mountain_parameters"
+
+    steep_material_adjustment: SteepMaterialAdjustment | None = json_field(
+        default=None, validators=[instance_of(SteepMaterialAdjustment)]
+    )
+    top_slide: TopSlide | None = json_field(
+        default=None, validators=[instance_of(TopSlide)]
+    )
+
+    def set_steep_material_adjustment(
         self,
-        temperature: float = None,
-        downfall: float = None,
-        snow_accumulation: list[float] = None,
-    ) -> None:
-        """Sets the climate properties of the biome.
-
-        Parameters:
-            temperature (float, optional): Temperature affects a variety of visual and behavioral things, including snow and ice placement, sponge drying, and sky color. Defaults to None.
-            downfall (float, optional): Amount that precipitation affects colors and block changes. Setting to 0 will stop rain from falling in the biome. Defaults to None.
-            snow_accumulation (list[float], optional): Minimum and maximum snow level, each multiple of 0.125 is another snow layer Value must have at least 2 items. Value must have at most 2 items. Defaults to None.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_climate)
-        """
-        super().__init__("climate")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
-
-        if temperature is not None:
-            if not (-50.0 <= temperature <= 50.0):
-                raise ValueError("Temperature must be between -50.0 and 50.0")
-            self._add_field("temperature", temperature)
-
-        if downfall is not None:
-            if not (0.0 <= downfall <= 1.0):
-                raise ValueError("Downfall must be between 0.0 and 1.0")
-            self._add_field("downfall", downfall)
-
-        if snow_accumulation is not None:
-            if len(snow_accumulation) != 2:
-                raise ValueError("Snow accumulation must be a list of two values.")
-            for val in snow_accumulation:
-                if not (0.0 <= val <= 1.0):
-                    raise ValueError(
-                        "Snow accumulation values must be between 0.0 and 1.0"
-                    )
-            self._add_field("snow_accumulation", snow_accumulation)
-
-
-class BiomeCreatureSpawnProbability(Component):
-    _identifier = "minecraft:creature_spawn_probability"
-
-    def __init__(self, probability: float = None) -> None:
-        """Sets the probability that creatures will spawn within the biome when a chunk is generated.
-
-        Parameters:
-            probability (float, optional): Probability between 0.0 and 0.75 of creatures spawning within the biome on chunk generation. Defaults to None.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_creature_spawn_probability)
-        """
-        super().__init__("creature_spawn_probability")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
-
-        if probability is not None:
-            if not (0.0 <= probability <= 0.75):
-                raise ValueError("Probability must be between 0.0 and 0.75")
-            self._add_field("probability", probability)
-
-
-class BiomeHumidity(Component):
-    _identifier = "minecraft:humidity"
-
-    def __init__(self, is_humid: bool = None) -> None:
-        """Forces a biome to either always be humid or never humid. Humidity affects the spread chance and spread rate of fire in the biome.
-
-        Parameters:
-            is_humid (bool, optional): Whether the biome is humid or not. Affects fire spread mechanics. Defaults to None.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_humidity)
-        """
-        super().__init__("humidity")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
-
-        if is_humid is not None:
-            if not isinstance(is_humid, bool):
-                raise ValueError("is_humid must be a boolean value")
-            self._add_field("is_humid", is_humid)
-
-
-class BiomeMapTints(Component):
-    _identifier = "minecraft:map_tints"
-
-    def __init__(self, foliage: Color = None, grass: dict = None) -> None:
-        """Sets the color grass and foliage will be tinted by in this biome on the map.
-
-        Parameters:
-            foliage (Color, optional): Sets the color foliage will be tinted by in this biome on the map. Can be a string or array of numbers. Defaults to None.
-            grass (dict, optional): Controls whether the grass will use a custom tint color or a noise based tint color. Defaults to None.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_map_tints)
-        """
-        super().__init__("map_tints")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
-
-        if foliage is not None:
-            self._add_field("foliage", AnvilFormatter.convert_color(foliage, HexRGB))
-
-        if grass is not None:
-            if not isinstance(grass, dict):
-                raise ValueError("Grass must be a dictionary")
-            self._add_field("grass", grass)
-
-
-class BiomeMountainParameters(Component):
-    _identifier = "minecraft:mountain_parameters"
-
-    def __init__(
-        self,
-    ) -> None:
-        """Noise parameters used to drive mountain terrain generation in Overworld.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_mountain_parameters)
-        """
-        super().__init__("mountain_parameters")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
-
-    def steep_material_adjustment(
-        self,
-        block: MinecraftBlockDescriptor,
-        north_slopes: bool = None,
-        south_slopes: bool = None,
-        east_slopes: bool = None,
-        west_slopes: bool = None,
-    ) -> None:
-        """Defines surface material for steep slopes.
-
-        Parameters:
-            block (MinecraftBlockDescriptor): The block material definition.
-            north_slopes (bool, optional): Enable for north-facing slopes. Defaults to None.
-            south_slopes (bool, optional): Enable for south-facing slopes. Defaults to None.
-            east_slopes (bool, optional): Enable for east-facing slopes. Defaults to None.
-            west_slopes (bool, optional): Enable for west-facing slopes. Defaults to None.
-        """
-        steep = {"steep_material_adjustment": {}}
-
-        if north_slopes is not None:
-            if not isinstance(north_slopes, bool):
-                raise ValueError("North slopes setting must be a boolean")
-            steep["steep_material_adjustment"]["north_slopes"] = north_slopes
-
-        if south_slopes is not None:
-            if not isinstance(south_slopes, bool):
-                raise ValueError("South slopes setting must be a boolean")
-            steep["steep_material_adjustment"]["south_slopes"] = south_slopes
-
-        if east_slopes is not None:
-            if not isinstance(east_slopes, bool):
-                raise ValueError("East slopes setting must be a boolean")
-            steep["steep_material_adjustment"]["east_slopes"] = east_slopes
-
-        if west_slopes is not None:
-            if not isinstance(west_slopes, bool):
-                raise ValueError("West slopes setting must be a boolean")
-            steep["steep_material_adjustment"]["west_slopes"] = west_slopes
-
-        if not isinstance(block, MinecraftBlockDescriptor):
-            raise ValueError(
-                "Material name must be a MinecraftBlockDescriptor instance"
-            )
-
-        self._component.update(steep)
-
+        *,
+        material: MinecraftBlockDescriptor,
+        north_slopes: bool | None = None,
+        south_slopes: bool | None = None,
+        east_slopes: bool | None = None,
+        west_slopes: bool | None = None,
+    ):
+        """Defines surface material for steep slopes."""
+        self.steep_material_adjustment = SteepMaterialAdjustment(
+            material=material,
+            north_slopes=north_slopes,
+            south_slopes=south_slopes,
+            east_slopes=east_slopes,
+            west_slopes=west_slopes,
+        )
         return self
 
-    def set_top_slide(self, enabled: bool):
+    def set_top_slide(self, *, enabled: bool):
         """Enable or disable top slide generation."""
-        if not isinstance(enabled, bool):
-            raise ValueError("Enabled must be a boolean value")
-        self._add_field("top_slide", {"enabled": enabled})
+        self.top_slide = TopSlide(enabled=enabled)
         return self
 
 
 @deprecated("This is a pre-Caves and Cliffs component and is unused for custom biomes.")
-class BiomeMultiNoiseGenerationRules(Component):
-    _identifier = "minecraft:multinoise_generation_rules"
+class BiomeMultiNoiseGenerationRules(JsonComponent):
+    """Controls how this biome is instantiated (and then potentially modified) during world generation of the nether.
 
-    def __init__(self) -> None:
-        """Controls how this biome is instantiated (and then potentially modified) during world generation of the nether.
+    Parameters:
+        target_altitude (float, optional): Altitude with which this biome should be generated, relative to other biomes. Defaults to None.
+        target_humidity (float, optional): Humidity with which this biome should be generated, relative to other biomes. Defaults to None.
+        target_temperature (float, optional): Temperature with which this biome should be generated, relative to other biomes. Defaults to None.
+        target_weirdness (float, optional): Weirdness with which this biome should be generated, relative to other biomes. Defaults to None.
+        weight (float, optional): Weight with which this biome should be generated, relative to other biomes. Defaults to None.
 
-        Parameters:
-            target_altitude (float, optional): Altitude with which this biome should be generated, relative to other biomes. Defaults to None.
-            target_humidity (float, optional): Humidity with which this biome should be generated, relative to other biomes. Defaults to None.
-            target_temperature (float, optional): Temperature with which this biome should be generated, relative to other biomes. Defaults to None.
-            target_weirdness (float, optional): Weirdness with which this biome should be generated, relative to other biomes. Defaults to None.
-            weight (float, optional): Weight with which this biome should be generated, relative to other biomes. Defaults to None.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_multinoise_generation_rules)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_multinoise_generation_rules)
-        """
-        super().__init__("multinoise_generation_rules")
+    identifier = "minecraft:multinoise_generation_rules"
+
+    target_altitude: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+    target_humidity: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+    target_temperature: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+    target_weirdness: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+    weight: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+
+
+class BiomeNoiseGradient(JsonComponent):
+    """Places continuous bands of blocks according to a noise distribution.
+    This surface builder's processing has been implemented with sub-terrain height ranges in mind.
+
+    Parameters:
+        type (BiomeNoiseGradientBuilderType, optional): The builder type. Defaults to None.
+        noise_descriptor (NoiseDescriptor, optional): The specification for the noise used by the surface builder. Defaults to None.
+        noise_block_specifiers (list[NoiseBlockSpecifier], optional): Which ranges of noise are associated with which blocks.
+        non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks the surface builder may not replace. Defaults to None.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_noise_gradient)
+    """
+
+    identifier = "minecraft:noise_gradient"
+
+    type: BiomeNoiseGradientBuilderType | None = json_field(
+        default=None, validators=[one_of(*BiomeNoiseGradientBuilderType.__args__)]
+    )
+    noise_descriptor: NoiseDescriptor | None = json_field(
+        default=None, validators=[instance_of(NoiseDescriptor)]
+    )
+    noise_block_specifiers: list[NoiseBlockSpecifier] = json_field(
+        default_factory=list,
+        omit_default=True,
+        validators=[each(instance_of(NoiseBlockSpecifier))],
+    )
+    non_replaceable_blocks: list[MinecraftBlockDescriptor] | None = json_field(
+        default=None, validators=[_blocks]
+    )
+
+    def set_type(self, *, builder_type: BiomeNoiseGradientBuilderType):
+        """Sets the builder type for this noise gradient component."""
+        self.type = builder_type
+        return self
+
+    def set_noise_descriptor(self, *, noise_descriptor: NoiseDescriptor):
+        """Sets the noise descriptor specification for the surface builder."""
+        self.noise_descriptor = noise_descriptor
+        return self
+
+    def set_noise_block_specifiers(self, *, specifiers: list[NoiseBlockSpecifier]):
+        """Sets the noise block specifiers, replacing any already added. At least 1."""
+        self.noise_block_specifiers = list(specifiers)
+        return self
+
+    def add_noise_block_specifier(self, *, specifier: NoiseBlockSpecifier):
+        """Adds a noise block specifier associating a noise range or threshold with a block."""
+        self.noise_block_specifiers.append(specifier)
+        return self
+
+    def set_non_replaceable_blocks(self, *, blocks: list[MinecraftBlockDescriptor]):
+        """Sets the list of blocks that the surface builder is not allowed to replace."""
+        self.non_replaceable_blocks = list(blocks)
+        return self
 
 
 @deprecated("This is a pre-Caves and Cliffs component and is unused for custom biomes.")
-class BiomeOverworldGenerationRules(Component):
-    _identifier = "minecraft:overworld_generation_rules"
+class BiomeOverworldGenerationRules(JsonComponent):
+    """Controls how this biome is instantiated (and then potentially modified) during world generation of the overworld.
 
-    def __init__(self) -> None:
-        """Controls how this biome is instantiated (and then potentially modified) during world generation of the overworld.
+    Parameters:
+        generate_for_climates (list[tuple[BiomeClimateCategory, int]], optional): The climate categories this biome can spawn for, as `[climate, weight]` pairs. Defaults to None.
+        hills_transformation (BiomeTransformation, optional): What biome to switch to when converting to a hilly biome. Defaults to None.
+        mutate_transformation (BiomeTransformation, optional): What biome to switch to when converting to a mutated biome. Defaults to None.
+        river_transformation (BiomeTransformation, optional): What biome to switch to when converting to a river biome (if not the Vanilla 'river' biome). Defaults to None.
+        shore_transformation (BiomeTransformation, optional): What biome to switch to when adjacent to an ocean biome. Defaults to None.
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_generation_rules)
-        """
-        super().__init__("overworld_generation_rules")
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_generation_rules)
+    """
+
+    identifier = "minecraft:overworld_generation_rules"
+
+    generate_for_climates: list[tuple[BiomeClimateCategory, int]] | None = json_field(
+        default=None, validators=[each(length(2, 2))]
+    )
+    hills_transformation: BiomeTransformation | None = json_field(
+        default=None, validators=[instance_of(str, list, tuple)]
+    )
+    mutate_transformation: BiomeTransformation | None = json_field(
+        default=None, validators=[instance_of(str, list, tuple)]
+    )
+    river_transformation: BiomeTransformation | None = json_field(
+        default=None, validators=[instance_of(str, list, tuple)]
+    )
+    shore_transformation: BiomeTransformation | None = json_field(
+        default=None, validators=[instance_of(str, list, tuple)]
+    )
 
 
 @deprecated(
     "This is a pre-Caves and Cliffs component. It does not change overworld height, and currently only affects map item rendering."
 )
-class BiomeOverworldHeight(Component):
-    _identifier = "minecraft:overworld_height"
+class BiomeOverworldHeight(JsonComponent):
+    """Noise parameters used to drive terrain height in the Overworld. Set either `noise_params` or `noise_type`.
 
-    @overload
-    def __init__(
-        self,
-        noise_params: tuple[float, float],
-    ) -> None:
-        """Noise parameters used to drive terrain height in the Overworld.
+    Parameters:
+        noise_params (tuple[float, float], optional): First value is depth - more negative means deeper underwater, while more positive means higher. Second value is scale, which affects how much noise changes as it moves from the surface. Defaults to None.
+        noise_type (BiomeNoiseType, optional): Specifies a preset based on a built-in setting rather than manually using noise_params. Defaults to None.
 
-        Parameters:
-            noise_params (tuple[float, float]): First value is depth - more negative means deeper underwater, while more positive means higher. Second value is scale, which affects how much noise changes as it moves from the surface. Value must have at least 2 items. Value must have at most 2 items.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height)
-        """
-        ...
+    identifier = "minecraft:overworld_height"
 
-    @overload
-    def __init__(self, noise_type: BiomeNoiseType) -> None:
-        """Noise parameters used to drive terrain height in the Overworld.
+    noise_params: tuple[float, float] | None = json_field(
+        default=None, validators=[length(2, 2), each(instance_of(int, float))]
+    )
+    noise_type: BiomeNoiseType | None = json_field(
+        default=None, validators=[one_of(*BiomeNoiseType.__args__)]
+    )
 
-        Parameters:
-            noise_type (BiomeNoiseType): Specifies a preset based on a built-in setting rather than manually using noise_params.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_height)
-        """
-        ...
-
-    def __init__(
-        self,
-        arg: tuple[float, float] | BiomeNoiseType | None = None,
-    ) -> None:
-        super().__init__("overworld_height")
-        if arg is not None:
-            if isinstance(arg, tuple):
-                if len(arg) != 2:
-                    raise ValueError("Noise params must have exactly 2 values")
-                for param in arg:
-                    if not isinstance(param, (int, float)):
-                        raise ValueError("All noise params must be numbers")
-                self._add_field("noise_params", list(arg))
-            elif isinstance(arg, str):
-                if arg not in BiomeNoiseType.__args__:
-                    raise ValueError(
-                        f"Noise type must be one of: {BiomeNoiseType}. Got {arg}"
-                    )
-                self._add_field("noise_type", arg)
+    def __validate__(self) -> None:
+        if self.noise_params is not None and self.noise_type is not None:
+            raise ValueError("Set either noise_params or noise_type, not both.")
 
 
-class BiomeReplaceBiomes(Component):
-    _identifier = "minecraft:replace_biomes"
+class BiomePartiallyFrozen(JsonComponent):
+    """Impacts the temperature in a frozen biome, causing some areas to not be frozen. For example patchy ice or patchy snow.
 
-    def __init__(self) -> None:
-        """Replaces a specified portion of one or more Minecraft biomes.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_partially_frozen)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_replace_biomes)
-        """
-        super().__init__("replace_biomes")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
-        self._replacements = []
+    identifier = "minecraft:partially_frozen"
+
+
+class BiomeReplaceBiomes(JsonComponent):
+    """Replaces a specified portion of one or more Minecraft biomes.
+
+    Parameters:
+        replacements (list[BiomeReplacement], optional): The replacements. Set them directly or add them with `add_replacement`.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_replace_biomes)
+    """
+
+    identifier = "minecraft:replace_biomes"
+
+    replacements: list[BiomeReplacement] = json_field(
+        default_factory=list,
+        omit_default=True,
+        validators=[each(instance_of(BiomeReplacement))],
+    )
 
     def add_replacement(
         self,
+        *,
         targets: list[MinecraftBiomeTypes | str],
         amount: float,
         noise_frequency_scale: float,
         dimension: Dimension = Dimension.Overworld,
     ):
-        """Add a biome replacement configuration.
-
-        Parameters:
-            targets (list[MinecraftBiomeTypes | str]): Biomes that are going to be replaced by the overriding biome. Target biomes must not contain namespaces.
-            amount (float): Noise value used to determine whether or not the replacement is attempted, similar to a percentage. Must be in the range (0.0, 1.0].
-            noise_frequency_scale (float): Scaling value used to alter the frequency of replacement attempts. A lower frequency will mean a bigger contiguous biome area that occurs less often. A higher frequency will mean smaller contiguous biome areas that occur more often. Must be in the range (0.0, 100.0].
-            dimension (Dimension, optional): Dimension in which this replacement can happen. Must be 'minecraft:overworld'. Defaults to "minecraft:overworld".
+        """Add a biome replacement configuration. See `BiomeReplacement` for the parameters.
 
         Returns:
             BiomeReplaceBiomes: Self for method chaining.
         """
-        # Validate targets
-        if not isinstance(targets, list):
-            raise ValueError("Targets must be a list of MinecraftBiomeTypes or strings")
-        if len(targets) < 1:
-            raise ValueError("Targets must have at least 1 item")
-
-        for target in targets:
-            if not isinstance(target, (MinecraftBiomeTypes, str)):
-                raise ValueError("All targets must be MinecraftBiomeTypes or strings")
-
-        # Validate amount
-        if not isinstance(amount, (int, float)):
-            raise ValueError("Amount must be a number")
-        if not (0.0 < amount <= 1.0):
-            raise ValueError("Amount must be in the range [0.0, 1.0)")
-
-        # Validate noise_frequency_scale
-        if not isinstance(noise_frequency_scale, (int, float)):
-            raise ValueError("Noise frequency scale must be a number")
-        if not (0.0 < noise_frequency_scale <= 100.0):
-            raise ValueError("Noise frequency scale must be in the range [0.0, 100.0]")
-
-        # Validate dimension
-        if not isinstance(dimension, Dimension):
-            raise ValueError("Dimension must be a Dimension")
-        if dimension != Dimension.Overworld:
-            raise ValueError("Dimension must be 'minecraft:overworld'")
-
-        replacement = {
-            "targets": targets,
-            "amount": amount,
-            "noise_frequency_scale": noise_frequency_scale,
-            "dimension": dimension,
-        }
-
-        self._replacements.append(replacement)
-        self._add_field("replacements", self._replacements)
-
+        self.replacements.append(
+            BiomeReplacement(
+                targets=targets,
+                amount=amount,
+                noise_frequency_scale=noise_frequency_scale,
+                dimension=dimension,
+            )
+        )
         return self
-
-
-class BiomeSurfaceMaterialAdjustments(Component):
-    _identifier = "minecraft:surface_material_adjustments"
-
-    def __init__(self):
-        """Specify fine-detail changes to blocks used in terrain generation (based on a noise function).
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_material_adjustments)
-        """
-        super().__init__("minecraft:surface_material_adjustments")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
-
-        self._adjustments = []
-
-    def add_adjustment(
-        self,
-        height_range: tuple[int, int] = None,
-        noise_frequency_scale: float = None,
-        noise_range: tuple[float, float] = None,
-        foundation_material: MinecraftBlockDescriptor = None,
-        mid_material: MinecraftBlockDescriptor = None,
-        sea_floor_material: MinecraftBlockDescriptor = None,
-        sea_material: MinecraftBlockDescriptor = None,
-        top_material: MinecraftBlockDescriptor = None,
-    ):
-        """An adjustment to generated terrain, replacing blocks based on the specified settings.
-        Parameters:
-            height_range (tuple[int, int]): Defines a range of noise values [min, max] for which this adjustment should be applied. Value must have at least 2 items. Value must have at most 2 items.
-            noise_frequency_scale (float): The scale to multiply by the position when accessing the noise value for the material adjustments.
-            noise_range (tuple[float, float]): Defines a range of noise values [min, max] for which this adjustment should be applied. Value must have at least 2 items. Value must have at most 2 items.
-            foundation_material (MinecraftBlockDescriptor): Controls the block type used deep underground in this biome when this adjustment is active.
-            mid_material (MinecraftBlockDescriptor): Controls the block type used in a layer below the surface of this biome when this adjustment is active.
-            sea_floor_material (MinecraftBlockDescriptor): Controls the block type used as a floor for bodies of water in this biome when this adjustment is active.
-            sea_material (MinecraftBlockDescriptor): Controls the block type used in the bodies of water in this biome when this adjustment is active.
-            top_material (MinecraftBlockDescriptor): Controls the block type used for the surface of this biome when this adjustment is active.
-        """
-
-        if height_range is not None and (
-            not isinstance(height_range, (list, tuple))
-            or len(height_range) != 2
-            or any(not isinstance(val, int) for val in height_range)
-        ):
-            raise ValueError("Height range must be a list or tuple of two integers")
-
-        if noise_frequency_scale is not None and not isinstance(
-            noise_frequency_scale, (int, float)
-        ):
-            raise ValueError("Noise frequency scale must be a number")
-
-        if noise_range is not None and (
-            not isinstance(noise_range, (list, tuple))
-            or len(noise_range) != 2
-            or any(not isinstance(val, (int, float)) for val in noise_range)
-        ):
-            raise ValueError("Noise range must be a list or tuple of two floats")
-
-        for material in [
-            foundation_material,
-            mid_material,
-            sea_floor_material,
-            sea_material,
-            top_material,
-        ]:
-            if material is not None and not isinstance(
-                material, MinecraftBlockDescriptor
-            ):
-                raise ValueError(
-                    "All materials must be MinecraftBlockDescriptor instances"
-                )
-
-        adjustment = {
-            "height_range": height_range,
-            "noise_frequency_scale": noise_frequency_scale,
-            "noise_range": noise_range,
-            "materials": {
-                "foundation_material": foundation_material,
-                "mid_material": mid_material,
-                "sea_floor_material": sea_floor_material,
-                "sea_material": sea_material,
-                "top_material": top_material,
-            },
-        }
-
-        self._adjustments.append(adjustment)
-        self._add_field("adjustments", self._adjustments)
-
-        return self
-
-
-class BiomeSurfaceBuilder(_BaseBiomeSurfaceBuilder):
-    _identifier = "minecraft:surface_builder"
-
-    def __init__(self):
-        """Controls the materials used for terrain generation.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_builder)
-        """
-        super().__init__("surface_builder")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
 
 
 class BiomeSubSurfaceBuilder(_BaseBiomeSurfaceBuilder):
-    _identifier = "minecraft:subsurface_builder"
+    """Allow specifying a minecraft:surface_builder to be applied to biomes located underneath regular terrain surface.
 
-    def __init__(self):
-        """Allow specifying a minecraft:surface_builder to be applied to biomes located underneath regular terrain surface.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_subsurface_builder)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_subsurface_builder)
-        """
-        super().__init__("subsurface_builder")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
+    identifier = "minecraft:subsurface_builder"
 
 
-class BiomeNoiseGradient(Component):
-    _identifier = "minecraft:noise_gradient"
+class BiomeSurfaceBuilder(_BaseBiomeSurfaceBuilder):
+    """Controls the materials used for terrain generation.
 
-    def __init__(self):
-        """Places continuous bands of blocks according to a noise distribution.
-        This surface builder's processing has been implemented with sub-terrain height ranges in mind.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_builder)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_noise_gradient)
-        """
-        super().__init__("noise_gradient")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.26.30")
-        self._noise_block_specifiers = []
+    identifier = "minecraft:surface_builder"
 
-    def noise_type(self, builder_type: BiomeNoiseGradientBuilderType):
-        """Sets the builder type for this noise gradient component.
 
-        Parameters:
-            builder_type (BiomeNoiseGradientBuilderType): The type of builder to use.
-        """
-        valid_types = [
-            "minecraft:capped",
-            "minecraft:frozen_ocean",
-            "minecraft:mesa",
-            "minecraft:noise_gradient",
-            "minecraft:overworld",
-            "minecraft:swamp",
-            "minecraft:the_end",
-        ]
-        if builder_type not in valid_types:
-            raise ValueError(f"Builder type must be one of: {valid_types}")
-        self._add_field("type", builder_type)
-        return self
+class BiomeSurfaceMaterialAdjustments(JsonComponent):
+    """Specify fine-detail changes to blocks used in terrain generation (based on a noise function).
 
-    def noise(self, noise: NoiseDescriptor):
-        """Sets the noise descriptor specification for the surface builder.
+    Parameters:
+        adjustments (list[SurfaceMaterialAdjustment], optional): The adjustments. Set them directly or add them with `add_adjustment`.
 
-        Parameters:
-            noise (NoiseDescriptor): The specification for the noise used by the surface builder.
-        """
-        if not isinstance(noise, NoiseDescriptor):
-            raise ValueError("noise must be a NoiseDescriptor instance")
-        self._add_field("noise", noise)
-        return self
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_material_adjustments)
+    """
 
-    def noise_block_specifiers(self, specifiers: list[NoiseBlockSpecifier]):
-        """Sets the noise block specifiers defining which ranges of noise are associated with which blocks.
+    identifier = "minecraft:surface_material_adjustments"
 
-        Parameters:
-            specifiers (list[NoiseBlockSpecifier]): The noise block specifiers.
-        """
-        if not isinstance(specifiers, list) or len(specifiers) < 1:
-            raise ValueError(
-                "specifiers must be a non-empty list of NoiseBlockSpecifier instances"
-            )
-        for specifier in specifiers:
-            if not isinstance(specifier, NoiseBlockSpecifier):
-                raise ValueError("All specifiers must be NoiseBlockSpecifier instances")
-        self._noise_block_specifiers = list(specifiers)
-        self._add_field("noise_block_specifiers", self._noise_block_specifiers)
-        return self
+    adjustments: list[SurfaceMaterialAdjustment] = json_field(
+        default_factory=list,
+        omit_default=True,
+        validators=[each(instance_of(SurfaceMaterialAdjustment))],
+    )
 
-    def non_replaceable_blocks(self, blocks: list[MinecraftBlockDescriptor]):
-        """Sets the list of blocks that the surface builder is not allowed to replace.
-
-        Parameters:
-            blocks (list[MinecraftBlockDescriptor]): The blocks to prevent replacement of.
-        """
-        if not isinstance(blocks, list):
-            raise ValueError(
-                "blocks must be a list of MinecraftBlockDescriptor instances"
-            )
-        if not all(isinstance(block, MinecraftBlockDescriptor) for block in blocks):
-            raise ValueError(
-                "All elements in blocks must be MinecraftBlockDescriptor instances"
-            )
-
-        self._add_field("non_replaceable_blocks", blocks)
-        return self
-
-    def noise_block_specifier(
+    def add_adjustment(
         self,
-        noise_range_or_specifier: tuple[float, float] | NoiseBlockSpecifier,
-        block: MinecraftBlockDescriptor = None,
+        *,
+        height_range: tuple[float | str, float | str] | None = None,
+        noise_frequency_scale: float | None = None,
+        noise_range: tuple[float, float] | None = None,
+        foundation_material: MinecraftBlockDescriptor | None = None,
+        mid_material: MinecraftBlockDescriptor | None = None,
+        sea_floor_material: MinecraftBlockDescriptor | None = None,
+        sea_material: MinecraftBlockDescriptor | None = None,
+        top_material: MinecraftBlockDescriptor | None = None,
     ):
-        """Add a noise block specifier associating a noise range/condition with a block.
-        Supports both the new NoiseBlockSpecifier object and the legacy (noise_range, block) signature.
-
-        Parameters:
-            noise_range_or_specifier: The NoiseBlockSpecifier instance, or the [min, max] range (legacy).
-            block (MinecraftBlockDescriptor, optional): The block for the legacy signature.
-        """
-        if isinstance(noise_range_or_specifier, NoiseBlockSpecifier):
-            self._noise_block_specifiers.append(noise_range_or_specifier)
-        else:
-            # Legacy signature compatibility
-            noise_range = noise_range_or_specifier
-            if (
-                not isinstance(noise_range, (list, tuple))
-                or len(noise_range) != 2
-                or any(not isinstance(v, (int, float)) for v in noise_range)
-            ):
-                raise ValueError("noise_range must be a list or tuple of two numbers")
-            for val in noise_range:
-                if not (-1.0 <= val <= 1.0):
-                    raise ValueError("noise_range values must be in [-1.0, 1.0]")
-            if not isinstance(block, MinecraftBlockDescriptor):
-                raise ValueError("block must be a MinecraftBlockDescriptor instance")
-
-            self._noise_block_specifiers.append(
-                {"noise_range": list(noise_range), "block": block}
+        """Adds an adjustment. See `SurfaceMaterialAdjustment` and `SurfaceAdjustmentMaterials` for the parameters."""
+        self.adjustments.append(
+            SurfaceMaterialAdjustment(
+                height_range=height_range,
+                noise_frequency_scale=noise_frequency_scale,
+                noise_range=noise_range,
+                materials=SurfaceAdjustmentMaterials(
+                    foundation_material=foundation_material,
+                    mid_material=mid_material,
+                    sea_floor_material=sea_floor_material,
+                    sea_material=sea_material,
+                    top_material=top_material,
+                ),
             )
-        self._add_field("noise_block_specifiers", self._noise_block_specifiers)
+        )
         return self
 
-    def noise_descriptor(self, noise_descriptor: dict):
-        """Set the noise descriptor specification for the surface builder.
-        Deprecated: Use the `noise` method instead.
 
-        Parameters:
-            noise_descriptor (dict): The specification for the noise used by the surface builder.
-        """
-        if not isinstance(noise_descriptor, dict):
-            raise ValueError("noise_descriptor must be a dictionary")
-        self._add_field("noise_descriptor", noise_descriptor)
-        return self
+class BiomeTags(JsonComponent):
+    """Attach arbitrary string tags to this biome. Most biome tags are referenced by JSON settings, but some meanings of tags are directly implemented in the game's code.
 
-    def non_replaceable_block(self, blocks: list[MinecraftBlockDescriptor]):
-        """Add a block to the list of blocks that the surface builder is not allowed to replace.
-        Deprecated: Use `non_replaceable_blocks` instead.
+    Parameters:
+        tags (list[str | MinecraftBiomeTags], optional): Array of string tags used by other systems such as entity spawning. Common tags include: birch, cold, deep, desert, extreme_hills, flower_forest, forest, forest_generation, frozen, ice, ice_plains, jungle, hills, meadow, mesa, mountain, mutated, no_legacy_worldgen, ocean, pale_garden, plains, rare, swamp, taiga. Defaults to None.
 
-        Parameters:
-            blocks (list[MinecraftBlockDescriptor]): The blocks to prevent replacement of.
-        """
-        return self.non_replaceable_blocks(blocks)
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_tags)
+    """
+
+    identifier = "minecraft:tags"
+
+    tags: list[str | MinecraftBiomeTags] | None = json_field(
+        default=None, validators=[each(instance_of(str, MinecraftBiomeTags))]
+    )
 
 
-class BiomeTags(Component):
-    _identifier = "minecraft:tags"
+class BiomeVillageType(JsonComponent):
+    """Determines the type of village for the Biome.
 
-    def __init__(self, tags: list[str | MinecraftBiomeTags] = None) -> None:
-        """Attach arbitrary string tags to this biome. Most biome tags are referenced by JSON settings, but some meanings of tags are directly implemented in the game's code.
+    Parameters:
+        type (BiomeVillageTypes): The village type for this biome. Must be one of: "default", "desert", "ice", "savanna", "taiga".
 
-        Parameters:
-            tags (list[str | MinecraftBiomeTags], optional): Array of string tags used by other systems such as entity spawning. Common tags include: birch, cold, deep, desert, extreme_hills, flower_forest, forest, forest_generation, frozen, ice, ice_plains, jungle, hills, meadow, mesa, mountain, mutated, no_legacy_worldgen, ocean, pale_garden, plains, rare, swamp, taiga. Defaults to None.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_village_type)
+    """
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_tags)
-        """
-        super().__init__("tags")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
+    identifier = "minecraft:village_type"
 
-        if tags is not None:
-            if not isinstance(tags, list):
-                raise ValueError("Tags must be a list of strings")
-
-            for tag in tags:
-                if not isinstance(tag, (str, MinecraftBiomeTags)):
-                    raise ValueError(
-                        "All tags must be strings or MinecraftBiomeTags enum values"
-                    )
-
-            self._add_field("tags", tags)
+    type: BiomeVillageTypes = json_field(
+        validators=[instance_of(str), one_of(*BiomeVillageTypes.__args__)],
+    )
 
 
-class BiomeVillageType(Component):
-    _identifier = "minecraft:village_type"
+# endregion
 
-    def __init__(
-        self, village_type: Literal["default", "desert", "ice", "savanna", "taiga"]
-    ) -> None:
-        """SDetermines the type of village for the Biome.
+# region Client components
 
-        Parameters:
-            village_type (Literal["default", "desert", "ice", "savanna", "taiga"]): The village type for this biome. Must be one of: "default", "desert", "ice", "savanna", "taiga".
 
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_village_type)
-        """
-        super().__init__("village_type")
-        self._enforce_version(BIOME_SERVER_VERSION, "1.21.100")
+class BiomeClientComponent(JsonComponent, abstract=True):
+    """Base class of the client biome components, written to the client biome file.
+    `BiomeClient` takes only these and `BiomeServer` refuses them.
+    """
 
-        if not isinstance(village_type, str):
-            raise ValueError("Village type must be a string")
 
-        if village_type not in ["default", "desert", "ice", "savanna", "taiga"]:
+class BiomeClientAmbientSounds(BiomeClientComponent):
+    """Sets the ambient sounds of the biome. The sounds must be individual named sounds in
+    `sounds.json`; `BiomeClient.ambient_sounds` adds the component and registers them.
+
+    Parameters:
+        addition (str, optional): Named sound that occasionally plays at the listener position.
+        loop (str, optional): Named sound that loops while the listener is inside the biome.
+        mood (str, optional): Named sound that rarely plays at a nearby air block when the light
+            level is low. Without it, the biome uses `ambient.cave`.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_ambient_sounds)
+    """
+
+    identifier = "minecraft:ambient_sounds"
+
+    addition: str | None = json_field(default=None, validators=[instance_of(str)])
+    loop: str | None = json_field(default=None, validators=[instance_of(str)])
+    mood: str | None = json_field(default=None, validators=[instance_of(str)])
+
+
+class BiomeClientAtmosphereIdentifier(BiomeClientComponent):
+    """Sets the atmospherics used in Vibrant Visuals mode.
+
+    Parameters:
+        atmosphere_identifier (AtmosphericSettings | str): The atmospherics definition.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_atmosphere_identifier)
+    """
+
+    identifier = "minecraft:atmosphere_identifier"
+
+    atmosphere_identifier: AtmosphericSettings | str = json_field(encoder=str)
+
+
+class BiomeClientMusic(BiomeClientComponent):
+    """Sets the music played in the biome. `BiomeClient.biome_music` adds the component and
+    registers the music definitions.
+
+    Parameters:
+        music_definition (MusicCategory | str, optional): Music played in the biome. Without it
+            the dimension decides; an empty string plays no music.
+        underwater_music (MusicCategory | str, optional): Music played underwater in the biome.
+        volume_multiplier (float, optional): Applied gradually to the music volume, from 0 to 1.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_biome_music)
+    """
+
+    identifier = "minecraft:biome_music"
+
+    music_definition: MusicCategory | str | None = json_field(
+        default=None, validators=[instance_of(str)]
+    )
+    underwater_music: MusicCategory | str | None = json_field(
+        default=None, validators=[instance_of(str)]
+    )
+    volume_multiplier: float | None = json_field(default=None, validators=[*_fraction])
+
+
+class BiomeClientColorGradingIdentifier(BiomeClientComponent):
+    """Sets the color grading used in Vibrant Visuals mode.
+
+    Parameters:
+        color_grading_identifier (ColorGradingSettings | str): The color grading definition.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_color_grading_identifier)
+    """
+
+    identifier = "minecraft:color_grading_identifier"
+
+    color_grading_identifier: ColorGradingSettings | str = json_field(encoder=str)
+
+
+class BiomeClientCubemapIdentifier(BiomeClientComponent):
+    """Sets the cubemap used for the Vibrant Visuals skybox lighting.
+
+    Parameters:
+        cubemap_identifier (CubeMapSettings | str): The cubemap definition.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_cubemap_identifier)
+    """
+
+    identifier = "minecraft:cubemap_identifier"
+
+    cubemap_identifier: CubeMapSettings | str = json_field(encoder=str)
+
+
+class BiomeClientDryFoliageColor(BiomeClientComponent):
+    """Sets the dry foliage color.
+
+    Parameters:
+        color (Color): The dry foliage color. Written as a hex color.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_dry_foliage_color)
+    """
+
+    identifier = "minecraft:dry_foliage_color"
+
+    color: Color = json_field(encoder=encoders.to_hex)
+
+
+class BiomeClientFogAppearance(BiomeClientComponent):
+    """Sets the fog used during rendering.
+
+    Parameters:
+        fog_identifier (FogSettings | str): The fog definition.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_fog_appearance)
+    """
+
+    identifier = "minecraft:fog_appearance"
+
+    fog_identifier: FogSettings | str = json_field(encoder=str)
+
+
+class BiomeClientFoliageAppearance(BiomeClientComponent):
+    """Sets the foliage color or color map.
+
+    Parameters:
+        color (Color | FoliageColorMap): A color, written as hex, or a color map name, written
+            as `{"color_map": name}`.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_foliage_appearance)
+    """
+
+    identifier = "minecraft:foliage_appearance"
+
+    color: Color | FoliageColorMap = json_field(
+        encoder=encoders.color_or_map(FoliageColorMap.__args__)
+    )
+
+
+class BiomeClientGrassAppearance(BiomeClientComponent):
+    """Sets the grass color or color map.
+
+    Parameters:
+        color (Color | GrassColorMap): A color, written as hex, or a color map name, written
+            as `{"color_map": name}`.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_grass_appearance)
+    """
+
+    identifier = "minecraft:grass_appearance"
+
+    color: Color | GrassColorMap = json_field(
+        encoder=encoders.color_or_map(GrassColorMap.__args__)
+    )
+
+
+class BiomeClientLightingIdentifier(BiomeClientComponent):
+    """Sets the lighting used in Vibrant Visuals mode.
+
+    Parameters:
+        lighting_identifier (LightingSettings | str): The lighting definition.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_lighting_identifier)
+    """
+
+    identifier = "minecraft:lighting_identifier"
+
+    lighting_identifier: LightingSettings | str = json_field(encoder=str)
+
+
+class BiomeClientPrecipitation(BiomeClientComponent):
+    """Sets the precipitation visuals. Set at most one of them.
+
+    Parameters:
+        ash (float, optional): Density of ash, as in the soul sand valley.
+        blue_spores (float, optional): Density of blue spores, as in the warped forest.
+        red_spores (float, optional): Density of red spores, as in the crimson forest.
+        white_ash (float, optional): Density of white ash, as in the basalt deltas.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_precipitation)
+    """
+
+    identifier = "minecraft:precipitation"
+
+    ash: float | None = json_field(default=None, validators=[instance_of(int, float)])
+    blue_spores: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+    red_spores: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+    white_ash: float | None = json_field(
+        default=None, validators=[instance_of(int, float)]
+    )
+
+    def __validate__(self) -> None:
+        values = (self.ash, self.blue_spores, self.red_spores, self.white_ash)
+        if sum(value is not None for value in values) > 1:
             raise ValueError(
-                "Village type must be one of: 'default', 'desert', 'ice', 'savanna', 'taiga'"
+                "BiomeClientPrecipitation takes at most one precipitation type."
             )
 
-        self._add_field("village_type", village_type)
+
+class BiomeClientSkyColor(BiomeClientComponent):
+    """Sets the sky color.
+
+    Parameters:
+        sky_color (Color): The sky color. Written as a hex color.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_sky_color)
+    """
+
+    identifier = "minecraft:sky_color"
+
+    sky_color: Color = json_field(encoder=encoders.to_hex)
+
+
+class BiomeClientWaterAppearance(BiomeClientComponent):
+    """Sets the water surface color.
+
+    Parameters:
+        surface_color (Color, optional): The water surface color. Written as a hex color.
+        surface_opacity (float, optional): From 0, invisible, to 1, opaque.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_water_appearance)
+    """
+
+    identifier = "minecraft:water_appearance"
+
+    surface_color: Color | None = json_field(default=None, encoder=encoders.to_hex)
+    surface_opacity: float | None = json_field(default=None, validators=[*_fraction])
+
+
+class BiomeClientWaterIdentifier(BiomeClientComponent):
+    """Sets the water rendering used in Vibrant Visuals mode.
+
+    Parameters:
+        water_identifier (WaterSettings | str): The water definition.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_water_identifier)
+    """
+
+    identifier = "minecraft:water_identifier"
+
+    water_identifier: WaterSettings | str = json_field(encoder=str)
+
+
+# endregion
