@@ -14,7 +14,14 @@ from anvil.api.core.types import (
 )
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
 from anvil.lib.jsonmodel import JsonComponent, JsonObject, encoders, json_field
-from anvil.lib.jsonmodel.validators import each, in_range, instance_of, length, one_of
+from anvil.lib.jsonmodel.validators import (
+    each,
+    in_range,
+    instance_of,
+    length,
+    literal_of,
+    one_of,
+)
 from anvil.lib.schemas import MinecraftBlockDescriptor
 
 if TYPE_CHECKING:
@@ -633,7 +640,7 @@ class BiomeNoiseGradient(JsonComponent):
     identifier = "minecraft:noise_gradient"
 
     type: BiomeNoiseGradientBuilderType | None = json_field(
-        default=None, validators=[one_of(*BiomeNoiseGradientBuilderType.__args__)]
+        default=None, validators=[literal_of(BiomeNoiseGradientBuilderType)]
     )
     noise_descriptor: NoiseDescriptor | None = json_field(
         default=None, validators=[instance_of(NoiseDescriptor)]
@@ -725,7 +732,7 @@ class BiomeOverworldHeight(JsonComponent):
         default=None, validators=[length(2, 2), each(instance_of(int, float))]
     )
     noise_type: BiomeNoiseType | None = json_field(
-        default=None, validators=[one_of(*BiomeNoiseType.__args__)]
+        default=None, validators=[literal_of(BiomeNoiseType)]
     )
 
     def __validate__(self) -> None:
@@ -876,7 +883,7 @@ class BiomeVillageType(JsonComponent):
     identifier = "minecraft:village_type"
 
     type: BiomeVillageTypes = json_field(
-        validators=[instance_of(str), one_of(*BiomeVillageTypes.__args__)],
+        validators=[instance_of(str), literal_of(BiomeVillageTypes)],
     )
 
 

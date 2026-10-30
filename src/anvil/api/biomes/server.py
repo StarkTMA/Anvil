@@ -1,8 +1,6 @@
-import os
-
 from anvil.api.biomes.components import BiomeClientComponent
 from anvil.api.core.components import ComponentGroup
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.jsonmodel import encoders, validate_components
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 
@@ -24,7 +22,8 @@ class BiomeServer(AddonObject):
     """The biome server object."""
 
     _extension = ".biome.json"
-    _path = os.path.join(CONFIG.BP_PATH, "biomes")
+    _pack = Pack.BP
+    _folder = "biomes"
     _object_type = "Biomes Server"
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:

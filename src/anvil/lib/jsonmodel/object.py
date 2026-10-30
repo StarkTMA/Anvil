@@ -77,6 +77,11 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
     def __post_init__(self) -> None:
         """Side effects after construction."""
 
+    def __prepare_export__(self, owner: Any, *, root: bool = True) -> None:
+        """Finishes the object for export, where its owner calls it. Components with a
+        localized name override it. `root` is False for a permutation's components.
+        """
+
     def __validate__(self) -> None:
         """Cross-field checks, run on export after the field validators."""
 

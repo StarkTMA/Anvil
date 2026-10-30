@@ -6,8 +6,8 @@ import { mkdirSync, writeFileSync, readFileSync } from "fs";
 // Read anvilconfig.json next to this file
 const configPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "anvilconfig.json");
 const anvilConfig = JSON.parse(readFileSync(configPath, "utf8"));
-const minify = anvilConfig.anvil?.minify ?? false;
-const scriptui = anvilConfig.anvil?.scriptui ?? false;
+const minify = anvilConfig.build?.minify ?? false;
+const scriptui = anvilConfig.features?.scriptui ?? false;
 
 // Resolve outDir exclusively from the --outdir argument
 const outDir = process.argv

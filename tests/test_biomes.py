@@ -52,9 +52,9 @@ def anvil_project(tmp_path, monkeypatch):
     )
     monkeypatch.chdir(tmp_path)
 
-    from anvil.lib.config import CONFIG
+    import anvil.lib.config as config
 
-    monkeypatch.setattr(CONFIG, "_instance", None)
+    config.use(None)
 
 
 def test_new_biomes():

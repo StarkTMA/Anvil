@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-import json
 import os
 import re
 from typing import Any, Callable, Dict
+
+import orjson
 
 _TOKEN_RE = re.compile(r"\{\{\s*([A-Za-z_]\w*)\s*(?:\|([A-Za-z_]\w*))?\s*\}\}")
 
 _DEFAULT_FILTERS: Dict[str, Callable[[object], str]] = {
     "upper": lambda v: str(v).upper(),
     "lower": lambda v: str(v).lower(),
-    "json": lambda v: json.dumps(v, ensure_ascii=False),
+    "json": lambda v: orjson.dumps(v, option=orjson.OPT_NON_STR_KEYS).decode(),
     "path": lambda v: str(v).replace("\\", "/"),
     "dquote": lambda v: str(v).replace("'", '"'),
 }
@@ -49,6 +50,6 @@ def load_file(
     result = _TOKEN_RE.sub(replace, text)
 
     if is_json:
-        return json.loads(result)
+        return orjson.loads(result)
 
     return str(result)

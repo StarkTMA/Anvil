@@ -1,370 +1,19 @@
-import os
-from typing import TYPE_CHECKING, Literal, Mapping
+from typing import TYPE_CHECKING
 
-from anvil.api.blocks.components import BlockDisplayName
-from anvil.api.core.components import (
-    PermutationGroup,
-    RootComponent,
-    component_block_visuals,
-    components_validations,
-)
-from anvil.api.core.core import ANVIL, BlocksJSONObject, SoundEvent
-from anvil.api.core.enums import (
-    BlockInteractiveSoundEvent,
-    BlockSoundEvent,
-    BlockSoundGroup,
-    ConnectionTrait,
-    ItemCategory,
-    ItemGroups,
-    PlacementDirectionTrait,
-    PlacementPositionTrait,
-)
-from anvil.api.logic.molang import Molang
+from anvil.api.blocks.client import BlockClient
+from anvil.api.blocks.server import BlockServer
+from anvil.api.core.core import ANVIL
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG
+from anvil.lib.jsonmodel import VANILLA_NAMESPACE, Identifier
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import (
-    AddonObject,
-    JsonSchemes,
-    MinecraftBlockDescriptor,
-    MinecraftDescription,
-)
+from anvil.lib.schemas import JsonSchemes, MinecraftBlockDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 if TYPE_CHECKING:
     from anvil.api.items.items import Item
 
 __all__ = ["Block"]
-
-
-class _BlockTraits:
-    def __init__(self) -> None:
-        self._traits = {}
-
-    def placement_direction(
-        self,
-        *,
-        y_rotation_offset: float = 0,
-        blocks_to_corner_with: list[MinecraftBlockDescriptor] = None,
-        traits: list[PlacementDirectionTrait] = None,
-    ):
-        """can add states containing information about the player's rotation when the block is placed.
-
-        Parameters:
-            y_rotation_offset (float, optional): The y rotation offset. Defaults to 0.
-            blocks_to_corner_with (list[MinecraftBlockDescriptor], optional): A list of blocks that when placed next to this block, will cause the block to rotate to face the corner between them. Defaults to None.
-            traits (list[PlacementDirectionTrait], optional): The traits for the block. Defaults to None.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_direction-example)
-        """
-
-        if self._traits.get("minecraft:multi_block") and traits != [
-            PlacementDirectionTrait.CardinalDirection
-        ]:
-            raise ValueError(
-                "placement_direction can only be used with multi_block with the trait [PlacementDirectionTrait.CardinalDirection]."
-            )
-
-        if y_rotation_offset % 90 != 0:
-            raise ValueError("y_rotation_offset must be a multiple of 90.")
-        if not 360 >= y_rotation_offset >= 0:
-            raise ValueError("y_rotation_offset must be between 0 and 360.")
-
-        if blocks_to_corner_with:
-            if PlacementDirectionTrait.CornerAndCardinalDirection not in traits:
-                raise ValueError(
-                    "blocks_to_corner_with requires PlacementDirectionTrait.CornerAndCardinalDirection to be in traits."
-                )
-        trait = {}
-        if y_rotation_offset != 0:
-            trait["y_rotation_offset"] = y_rotation_offset
-
-        if blocks_to_corner_with:
-            trait["blocks_to_corner_with"] = blocks_to_corner_with
-
-        if traits:
-            trait["enabled_states"] = traits
-
-        self._traits["minecraft:placement_direction"] = trait
-
-    def placement_position(self, traits: list[PlacementPositionTrait]):
-        """Can add states containing information about the position of the block when it is placed.
-
-        Parameters:
-            traits (list[PlacementPositionTrait]): The traits for the block.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_position-example)
-        """
-        if self._traits.get("minecraft:multi_block"):
-            raise ValueError("connection trait cannot be used with placement_position.")
-        self._traits["minecraft:placement_position"] = {"enabled_states": traits}
-
-    def connection(self, traits: list[ConnectionTrait]):
-        """Can add states containing information about the connection of the block to other blocks.
-
-        Parameters:
-            traits (list[ConnectionTrait]): The traits for the block.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#connection_trait_example)
-        """
-        if self._traits.get("minecraft:multi_block"):
-            raise ValueError("connection trait cannot be used with multi_block.")
-
-        self._traits["minecraft:connection"] = {"enabled_states": traits}
-
-    def multi_block(
-        self,
-        direction: Literal["up", "down", "north", "south", "east", "west"],
-        part_count: int = 2,
-    ):
-        """Defines a block composed of multiple block parts.
-
-        Multi blocks treat all parts as a single block, similar to doors. When the
-        block uses ``minecraft:selection_box`` with a raw ``true`` value, Bedrock
-        expands the selection outline by combining the AABBs of each part.
-
-        Parameters:
-            direction (Literal["up", "down", "north", "south", "east", "west"]): Direction the parts are placed from.
-            part_count (int, optional): Number of parts in the multi block. Valid range is [2, 4]. Defaults to 2.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits)
-        """
-        if {
-            "minecraft:placement_position",
-            "minecraft:connection",
-        } & self._traits.keys():
-            raise ValueError(
-                "multi_block cannot be used with placement_position, or connection traits."
-            )
-
-        if self._traits.get("minecraft:placement_direction"):
-            if self._traits["minecraft:placement_direction"]["enabled_states"] != [
-                PlacementDirectionTrait.CardinalDirection
-            ]:
-                raise ValueError(
-                    "multi_block can only be used with placement_direction with the trait [PlacementDirectionTrait.CardinalDirection]."
-                )
-
-        if direction not in ("up", "down", "north", "south", "east", "west"):
-            raise ValueError(
-                "multi_block direction must be one of 'up', 'down', 'north', 'south', 'east', or 'west'."
-            )
-        if direction in ("north", "south", "east", "west") and not CONFIG._EXPERIMENTAL:
-            raise ValueError(
-                "Horizontal multi_block directions (north, south, east, west) require the experimental flag to be enabled in the config."
-            )
-
-        if not 2 <= part_count <= 4:
-            raise ValueError("multi_block part_count must be between 2 and 4.")
-
-        self._traits["minecraft:multi_block"] = {
-            "enabled_states": ["minecraft:multi_block_part"],
-            "parts": part_count,
-            "direction": direction,
-        }
-
-        return self
-
-    @property
-    def export(self):
-        return self._traits
-
-
-class _BlockServerDescription(MinecraftDescription):
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """The block description.
-
-        Parameters:
-            name (str): The name of the block.
-            is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
-        """
-        super().__init__(name, is_vanilla)
-        self._traits = _BlockTraits()
-        self._description["description"].update(
-            {"states": {}, "traits": {}, "menu_category": {}}
-        )
-
-    def add_state(
-        self, name: str, range: set[float | str | bool]
-    ) -> "_BlockServerDescription":
-        """Adds a state to the block.
-
-        Parameters:
-            name (str): The name of the state.
-            range (float | str |bool): Values this state can have.
-
-        """
-        if len(range) > 16:
-            raise ValueError(
-                f"A block state can only have up to 16 values. {self._object_type}[{self.name}]."
-            )
-
-        state_name = name if ":" in name else f"{CONFIG.NAMESPACE}:{name}"
-        self._description["description"]["states"][state_name] = range
-        return self
-
-    def menu_category(
-        self,
-        category: ItemCategory,
-        group: ItemGroups | None = None,
-        is_hidden_in_commands: bool = False,
-    ) -> "_BlockServerDescription":
-        """Sets the menu category for the Block.
-
-        Parameters:
-            category (ItemCategory): The category of the Block.
-            group (ItemGroups | None, optional): The group of the Block. Defaults to None.
-            is_hidden_in_commands (bool, optional): Whether the Block is hidden in commands. Defaults to False.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blockdescription?view=minecraft-bedrock-stable#menu_category-parameters)
-
-        """
-        self._description["description"]["menu_category"]["category"] = str(category)
-        self._description["description"]["menu_category"]["group"] = (
-            group if group else None
-        )
-        self._description["description"]["menu_category"]["is_hidden_in_commands"] = (
-            is_hidden_in_commands if is_hidden_in_commands else {}
-        )
-        return self
-
-    @property
-    def traits(self) -> "_BlockTraits":
-        """Sets the traits for the block.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits)
-        """
-        return self._traits
-
-    def __export__(self) -> dict:
-        self._description["description"]["traits"] = self._traits.export
-        return super().__export__()
-
-
-class BlockServer(AddonObject):
-    """The block server object."""
-
-    _extension = ".block.json"
-    _path = os.path.join(CONFIG.BP_PATH, "blocks")
-    _object_type = "Block Server"
-
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """The block server object.
-
-        Parameters:
-            name (str): The name of the block.
-            is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
-        """
-        super().__init__(name)
-        self._server_block = JsonSchemes.server_block()
-        self._description = _BlockServerDescription(name, is_vanilla)
-        self._components = PermutationGroup()
-        self._permutations: list[PermutationGroup] = []
-
-    @property
-    def description(self) -> "_BlockServerDescription":
-        """The block description."""
-        return self._description
-
-    @property
-    def components(self) -> "PermutationGroup":
-        """The block components."""
-        return self._components
-
-    def permutation(self, condition: str | Molang):
-        """Adds a permutation to the block.
-
-        Parameters:
-            condition (str | Molang): The condition for the permutation.
-        """
-        self._permutation = PermutationGroup(condition)
-        self._permutations.append(self._permutation)
-        return self._permutation
-
-    def __export__(self) -> None:
-        """Queues the block to be exported."""
-        components_validations(
-            self, self._components, self._permutations, is_block=True
-        )
-        component_block_visuals(self, self._components, self._permutations)
-
-        self._server_block["minecraft:block"].update(self.description.__export__())
-        self._server_block["minecraft:block"].update(self._components.__export__())
-        self._server_block["minecraft:block"]["permutations"] = [
-            permutation.__export__() for permutation in self._permutations
-        ]
-
-        components = [
-            component.__component_identifier__() for component in self._components
-        ]
-
-        if not BlockDisplayName.__component_identifier__() in components:
-            self._server_block["minecraft:block"]["components"][
-                BlockDisplayName.__component_identifier__()
-            ] = self._display_name
-
-        self.content(self._server_block)
-        super().__export__()
-
-
-class BlockClient(AddonObject):
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        super().__init__(name, is_vanilla)
-
-    def sound_group(self, group: BlockSoundGroup | str) -> "BlockClient":
-        """Gives the block the sounds of a vanilla sound group, like oak planks have the `wood`
-        group's: breaking, placing, walking, and the clicks of doors, buttons and plates. It
-        needs no sound files. To make your own sounds for the block, use `block_sound`.
-
-        Parameters:
-            group (BlockSoundGroup | str): The group, like `BlockSoundGroup.Wood`.
-        """
-        BlocksJSONObject().add_block(self.identifier, group)
-        return self
-
-    def block_sound(
-        self,
-        sound_identifier: str,
-        sound_event: BlockSoundEvent | BlockInteractiveSoundEvent,
-        volume: float = 1.0,
-        pitch: tuple[float, float] = (0.8, 1.2),
-        max_distance: float = 0,
-        min_distance: float = 9999,
-        subtitle: str = None,
-    ):
-        sound_event_obj = SoundEvent()
-        if isinstance(sound_event, BlockSoundEvent):
-            sound_def = sound_event_obj.add_block_event(
-                self.identifier,
-                sound_identifier,
-                sound_event,
-                volume,
-                pitch,
-                max_distance,
-                min_distance,
-                subtitle,
-            )
-            return sound_def
-        elif isinstance(sound_event, BlockInteractiveSoundEvent):
-            sound_def = sound_event_obj.add_block_interactive_event(
-                self.identifier,
-                sound_identifier,
-                sound_event,
-                volume,
-                pitch,
-                max_distance,
-                min_distance,
-                subtitle,
-            )
-            return sound_def
-        else:
-            raise TypeError("Invalid sound event type.")
-
-    def queue(self) -> "BlockClient":
-        return self
-
-
-# ===========================================
 
 
 class Block(MinecraftBlockDescriptor):
@@ -380,27 +29,56 @@ class Block(MinecraftBlockDescriptor):
         self._texture_only = False
 
     def descriptor(
-        self,
-        states: Mapping[str, str | int | float | bool] = None,
-        tags: list[str] = None,
-        **state_values: str | int | float | bool,
-    ) -> dict | str:
+        self, tags: list[str] = None, **state_values: str | int | float | bool
+    ) -> Identifier | dict:
         """The block as a descriptor: its identifier, or the states and tags to match.
 
-        States can also be given as keywords, `leaves.descriptor(natural=True)`. A name
-        without a namespace is one of this block's own states, so `natural` is
-        `<namespace>:natural`.
+        States are keywords, `leaves.descriptor(natural=True)`. A name without a namespace is
+        one of this block's states, `natural` is `<namespace>:natural`, or a state a trait
+        adds, `cardinal_direction` is `minecraft:cardinal_direction`.
+
+        Raises:
+            ValueError: When the block has no such state, or the state cannot have the value.
         """
-        namespace = self.identifier.split(":")[0]
-        merged = dict(states or {})
+        identifier = Identifier.parse(
+            self.identifier, vanilla=self._is_vanilla, object_type=self._object_type
+        )
+        vanilla_block = identifier.is_vanilla
+        description = self.server.description
+        registered = (
+            description._description["description"]["states"]
+            | description.traits.states
+        )
+        states = {}
         for key, value in state_values.items():
-            merged[key if ":" in key else f"{namespace}:{key}"] = value
-        if not merged and not tags:
-            return self.identifier
-        result: dict = {
-            "name": self.identifier,
-            "states": {str(k): v for k, v in merged.items()},
-        }
+            if ":" not in key and (
+                vanilla_block or f"{VANILLA_NAMESPACE}:{key}" in registered
+            ):
+                key = f"{VANILLA_NAMESPACE}:{key}"
+            state = Identifier.parse(
+                key,
+                vanilla=vanilla_block or key.startswith(f"{VANILLA_NAMESPACE}:"),
+                object_type=f"{self._object_type}[{identifier}] state",
+            )
+            if not vanilla_block:
+                if state not in registered:
+                    raise ValueError(
+                        f"Unknown state [{state}], the states are {[str(name) for name in registered]}. "
+                        f"{self._object_type}[{identifier}]"
+                    )
+                if not any(
+                    isinstance(allowed, bool) == isinstance(value, bool)
+                    and allowed == value
+                    for allowed in registered[state]
+                ):
+                    raise ValueError(
+                        f"Invalid value {value!r} for state [{state}], the values are "
+                        f"{[str(allowed) for allowed in registered[state]]}. {self._object_type}[{identifier}]"
+                    )
+            states[str(state)] = value
+        if not states and not tags:
+            return identifier
+        result: dict = {"name": identifier, "states": states}
         if tags:
             result["tags"] = tags
         return result
@@ -415,21 +93,21 @@ class Block(MinecraftBlockDescriptor):
         return self._item
 
     def override_vanilla_texture(
-        self, blockbench_name: str, component: TextureComponents, subfolder: str = ""
+        self, blockbench: str, component: TextureComponents, subfolder: str = ""
     ) -> None:
         """Extracts textures from a Blockbench model and exports them as the block's texture layout,
         bypassing the generation of block configuration files (server/client JSON files).
         Generates a .texture_set.json file under RP_PATH/textures/blocks/{subfolder}.
 
         Parameters:
-            blockbench_name (str): The name of the Blockbench model (without extension).
+            blockbench (str): The name of the Blockbench model (without extension).
             component (TextureComponents): A TextureComponents object containing color/normal/height/MER/MERS map names.
             subfolder (str, optional): Subfolder under RP_PATH/textures/blocks. Defaults to "".
         """
         self._texture_only = True
         texture_set = TextureSet(self.name, "blocks", overriding_vanilla=True)
         texture_set.content(JsonSchemes.texture_set())
-        texture_set.set_vanilla_texture(blockbench_name, component, subfolder)
+        texture_set.set_vanilla_texture(blockbench, component, subfolder)
         texture_set.queue(subfolder)
 
     def queue(self) -> "Block":
@@ -451,7 +129,7 @@ class Block(MinecraftBlockDescriptor):
         from anvil.api.blocks.components import BlockDisplayName
 
         block_name_comp = self.server._server_block["minecraft:block"]["components"][
-            BlockDisplayName.__component_identifier__()
+            BlockDisplayName.identifier
         ]
         if block_name_comp.startswith("tile."):
             display_name = AnvilTranslator().get_localization_value(block_name_comp)

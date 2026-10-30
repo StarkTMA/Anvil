@@ -10,12 +10,12 @@ import math
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
+from anvil.api.core.enums import BlockFaceValues
 from anvil.api.core.types import (
     RGB,
     RGB255,
     RGBA,
     RGBA255,
-    BlockFaces,
     BlockReference,
     Color,
     Encoder,
@@ -225,7 +225,7 @@ def color_or_map(color_maps: tuple[str, ...]):
 # api.blocks.components
 
 
-def expand_faces(faces: BlockFaces) -> list[str]:
+def expand_faces(faces: list[BlockFaceValues]) -> list[str]:
     from anvil.api.core.enums import expand_block_face_sides
 
     return [str(face) for face in expand_block_face_sides(list(faces))]

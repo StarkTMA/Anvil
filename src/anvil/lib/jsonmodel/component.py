@@ -1,15 +1,15 @@
 """The `JsonComponent` base class: a `JsonObject` that is a Minecraft component.
 
-`JsonValueComponent` is a component written as `{identifier: value}`, and `ComponentPlacement`
-says where a component may go.
+`JsonValueComponent` is a component written as `{identifier: value}`, `JsonCustomComponent` is
+the base of custom components, and `ComponentPlacement` says where a component may go.
 
 A component has an `identifier` (its JSON key, such as `"minecraft:climate"`) and exports as
 `{identifier: payload}`. Every concrete subclass must set `identifier`; shared bases are declared
 with `abstract=True`. The text is parsed into an `Identifier` when the class is defined.
 
 The components Anvil implements are Minecraft's, so their identifier is in the `minecraft`
-namespace. Custom components (registered by a script) set `_custom = True` on their base, and
-their identifier is in the project namespace, `CONFIG.NAMESPACE`. `Identifier.parse` checks both.
+namespace. Custom components (registered by a script) subclass `JsonCustomComponent`, and their
+identifier is in the project namespace, `CONFIG.NAMESPACE`. `Identifier.parse` checks both.
 """
 
 from __future__ import annotations
@@ -40,16 +40,12 @@ class JsonComponent(JsonObject, abstract=True):
 
     Class settings:
         identifier: The component key, for example `"minecraft:climate"`. Required. Parsed
-            with `Identifier.parse`, which refuses another namespace than `minecraft`, or the
-            project namespace for a custom component. A custom component may leave out the
-            namespace.
-        _custom: True on the base of custom components.
+            with `Identifier.parse`, which refuses another namespace than `minecraft`.
         _placement: Where the component may go: root, groups (permutations for blocks), or both.
         _requires: Component classes that must be present next to this one.
         _clashes: Component classes that must not be present next to this one.
     """
 
-    _custom: ClassVar[bool] = False
     _placement: ClassVar[ComponentPlacement] = ComponentPlacement.ANY
     _requires: ClassVar[ComponentClasses] = ()
     _clashes: ClassVar[ComponentClasses] = ()
@@ -64,13 +60,28 @@ class JsonComponent(JsonObject, abstract=True):
             raise TypeError(
                 f"{cls.__name__} must set `identifier`, or be declared with abstract=True."
             )
-        cls.identifier = Identifier.parse(
-            identifier, vanilla=not cls._custom, object_type=cls.__name__
-        )
+        cls.identifier = cls._parse_identifier(identifier)
+
+    @classmethod
+    def _parse_identifier(cls, identifier: str) -> Identifier:
+        return Identifier.parse(identifier, vanilla=True, object_type=cls.__name__)
 
     def __json__(self) -> JsonExport:
         """The component as `{identifier: payload}`."""
         return {self.identifier: JsonObject.__json__(self)}
+
+
+class JsonCustomComponent(JsonComponent, abstract=True):
+    """Base of custom components: components registered by a script.
+
+    The identifier is in the project namespace, `CONFIG.NAMESPACE`, and may leave it out:
+    `"explosive"` is `<namespace>:explosive`. The `minecraft` namespace, or any other, is
+    refused.
+    """
+
+    @classmethod
+    def _parse_identifier(cls, identifier: str) -> Identifier:
+        return Identifier.parse(identifier, vanilla=False, object_type=cls.__name__)
 
 
 class JsonValueComponent(JsonComponent, abstract=True):

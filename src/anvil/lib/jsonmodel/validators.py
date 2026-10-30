@@ -7,7 +7,7 @@ Validators never see `None`: an unset optional field is skipped. Pass them to `j
 """
 
 import operator
-from typing import Any
+from typing import Any, get_args
 
 from anvil.api.core.enums import DamageSensor
 from anvil.api.core.types import Validator
@@ -98,6 +98,11 @@ def one_of(*allowed: Any) -> Validator:
             )
 
     return check
+
+
+def literal_of(alias: Any) -> Validator:
+    """The value must be one of the values of a `Literal` alias."""
+    return one_of(*get_args(alias))
 
 
 def unique(attribute: str) -> Validator:
@@ -220,7 +225,7 @@ def integer_pair(name: str, value: Any) -> None:
     each(_integer)(name, value)
 
 
-def distance_range(name: str, value: Any) -> None:
+def non_negative_range(name: str, value: Any) -> None:
     """A `(min, max)` pair of whole numbers from 0, with min not above max."""
     length(2, 2)(name, value)
     each(_integer)(name, value)

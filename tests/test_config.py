@@ -1,8 +1,14 @@
 """Tests for anvil/lib/config.py — Config CRUD operations."""
 
-import json
+import orjson
 import pytest
-from anvil.lib.config import Config, ConfigSection, ConfigOption, ConfigPackageTarget
+from anvil.lib.config import (
+    Config,
+    ConfigOption,
+    ConfigPackageTarget,
+    ConfigSection,
+    validate_namespace_project_name,
+)
 
 
 @pytest.fixture
@@ -20,7 +26,7 @@ def config_file(tmp_path):
         }
     }
     cfg = tmp_path / "anvilconfig.json"
-    cfg.write_text(json.dumps(data))
+    cfg.write_bytes(orjson.dumps(data))
     return tmp_path
 
 
@@ -105,6 +111,44 @@ def test_config_package_target_enum():
 def test_config_local_export_option(config_file, monkeypatch):
     monkeypatch.chdir(config_file)
     cfg = Config()
-    cfg.add_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT, True)
-    assert cfg.has_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT)
-    assert cfg.get_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT) is True
+    cfg.add_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT, True)
+    assert cfg.has_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT)
+    assert cfg.get_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT) is True
+
+
+# ---------------------------------------------------------------------------
+# validate_namespace_project_name
+# ---------------------------------------------------------------------------
+
+
+class TestValidateNamespace:
+    def test_valid(self):
+        validate_namespace_project_name("stark", "my_project")
+
+    def test_reserved_minecraft(self):
+        with pytest.raises(ValueError, match="cannot be 'minecraft'"):
+            validate_namespace_project_name("minecraft", "test")
+
+    def test_namespace_too_long(self):
+        with pytest.raises(ValueError, match="1 to 8"):
+            validate_namespace_project_name("verylongnamespace", "test")
+
+    def test_project_name_too_long(self):
+        with pytest.raises(ValueError, match="1 to 16"):
+            validate_namespace_project_name("stark", "a_very_long_project_name_here")
+
+    def test_addon_valid_suffix(self):
+        # project_name="my_project" -> initials="MP" -> namespace must end with "_mp"
+        validate_namespace_project_name("stark_mp", "my_project", is_addon=True)
+
+    def test_addon_wrong_suffix(self):
+        with pytest.raises(ValueError, match="initials"):
+            validate_namespace_project_name("stark", "my_project", is_addon=True)
+
+    def test_namespace_characters(self):
+        with pytest.raises(ValueError, match="1 to 8"):
+            validate_namespace_project_name("Stark-1", "test")
+
+    def test_project_name_characters(self):
+        with pytest.raises(ValueError, match="1 to 16"):
+            validate_namespace_project_name("stark", "my project")

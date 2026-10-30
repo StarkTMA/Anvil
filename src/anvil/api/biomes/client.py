@@ -1,4 +1,3 @@
-import os
 from typing import TYPE_CHECKING, Literal
 
 from anvil.api.biomes.components import (
@@ -23,7 +22,7 @@ from anvil.api.core.components import ComponentGroup
 from anvil.api.core.enums import MusicCategory, SoundCategory
 from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
 from anvil.api.core.types import Color, FoliageColorMap, GrassColorMap
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.jsonmodel import encoders, validate_components
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -42,7 +41,8 @@ class BiomeClient(AddonObject):
     """The biome client object."""
 
     _extension = ".client_biome.json"
-    _path = os.path.join(CONFIG.RP_PATH, "biomes")
+    _pack = Pack.RP
+    _folder = "biomes"
     _object_type = "Biome Client"
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:

@@ -9,6 +9,7 @@ from anvil.lib.jsonmodel import (
     ComponentPlacement,
     Identifier,
     JsonComponent,
+    JsonCustomComponent,
     JsonObject,
     JsonValue,
     JsonValueComponent,
@@ -155,23 +156,18 @@ def test_identifier_is_parsed_into_an_identifier():
 
 
 @pytest.fixture
-def project_namespace(monkeypatch):
-    import types
-
+def project_namespace():
     from anvil.lib import config
 
-    monkeypatch.setattr(config, "CONFIG", types.SimpleNamespace(NAMESPACE="proj"))
-
-
-class _Custom(JsonComponent, abstract=True):
-    _custom = True
+    with config.override(NAMESPACE="proj"):
+        yield
 
 
 def test_custom_identifier_must_be_in_the_project_namespace(project_namespace):
-    class _Mine(_Custom):
+    class _Mine(JsonCustomComponent):
         identifier = "proj:explosive"
 
-    class _Bare(_Custom):
+    class _Bare(JsonCustomComponent):
         identifier = "explosive"
 
     assert _Mine().__json__() == {"proj:explosive": {}}
@@ -179,12 +175,12 @@ def test_custom_identifier_must_be_in_the_project_namespace(project_namespace):
     assert not _Bare.identifier.is_vanilla
     with pytest.raises(ValueError, match="'proj:name'"):
 
-        class _Theirs(_Custom):
+        class _Theirs(JsonCustomComponent):
             identifier = "other:explosive"
 
     with pytest.raises(ValueError, match="'proj:name'"):
 
-        class _Vanilla(_Custom):
+        class _Vanilla(JsonCustomComponent):
             identifier = "minecraft:explosive"
 
 
@@ -298,7 +294,7 @@ def test_valid_identifiers(identifier):
 
 @pytest.mark.parametrize("identifier", ["proj:custom.part-2", "proj:sub/path"])
 def test_valid_custom_identifiers(identifier, project_namespace):
-    _Ok = type("_Ok", (_Custom,), {"identifier": identifier})
+    _Ok = type("_Ok", (JsonCustomComponent,), {"identifier": identifier})
     assert _Ok.identifier == identifier
 
 

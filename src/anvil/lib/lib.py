@@ -712,44 +712,6 @@ class AnvilFormatter:
 
 class AnvilValidator:
     @classmethod
-    def validate_namespace_project_name(
-        cls, namespace: str, project_name: str, is_addon: bool = False
-    ):
-        """Validates namespace and project name according to Minecraft requirements.
-
-        Args:
-            namespace (str): The namespace to validate.
-            project_name (str): The project name to validate.
-            is_addon (bool, optional): Whether this is for an addon. Defaults to False.
-
-        Raises:
-            ValueError: If validation fails for any requirement.
-        """
-        pascal_project_name = "".join(x[0] for x in project_name.split("_")).upper()
-
-        if namespace == "minecraft":
-            raise ValueError(
-                "The namespace 'minecraft' is reserved and cannot be used for custom packs. Please choose a different namespace."
-            )
-
-        if len(namespace) > 8:
-            raise ValueError(
-                f"Namespace must be 8 characters or less. '{namespace}' is {len(namespace)} characters long."
-            )
-
-        if len(project_name) > 16:
-            raise ValueError(
-                f"Project name must be 16 characters or less. '{project_name}' is {len(project_name)} characters long."
-            )
-
-        if is_addon:
-            model_name = f"{namespace}_{pascal_project_name}"
-            if not namespace.endswith(f"_{pascal_project_name.lower()}"):
-                raise ValueError(
-                    f"Every namespace must be unique to the pack ending with project name initials. For this pack it should be {model_name}."
-                )
-
-    @classmethod
     def check_new_versions(cls):
         click.echo(click.style("Checking for package updates...", fg="cyan"))
         outdated_packages: List[Dict[str, str]] = []

@@ -8,7 +8,7 @@ from typing import Dict, Mapping
 
 from anvil.__version__ import __version__
 from anvil.api.core.types import Identifier, Vector2D
-from anvil.lib.config import CONFIG, ConfigPackageTarget
+from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA, AnvilIO, salt_from_str
 from anvil.lib.templater import load_file
@@ -969,7 +969,8 @@ class AddonObject(AddonDescriptor):
     """
 
     _extension = ".json"
-    _path = ""
+    _pack: Pack | None = None
+    _folder = ""
     _object_type = "addon_object"
     _queued = False
 
@@ -1014,10 +1015,15 @@ class AddonObject(AddonDescriptor):
             return self
 
         self._directory = directory if not directory is None else ""
-        self._path = os.path.join(self._path, self._directory)
         self._queued = True
         ANVIL.__queue__(self)
         return self
+
+    @property
+    def _path(self) -> str:
+        """The folder the object is written to: its folder in its pack, then its directory."""
+        pack = CONFIG.RP_PATH if self._pack == Pack.RP else CONFIG.BP_PATH
+        return os.path.normpath(os.path.join(pack, self._folder, self._directory))
 
     def __export__(self) -> None:
         """
