@@ -1,24 +1,8 @@
-import json
+import orjson
 import os
-from unittest.mock import MagicMock
 import pytest
+from anvil.lib import config
 
-# Setup mock CONFIG at module level before importing components that resolve CONFIG
-mock_config = MagicMock()
-mock_config.NAMESPACE = "my_namespace"
-mock_config.PROJECT_NAME = "test_project"
-mock_config._WORLD_PATH = "dummy_world_path"
-mock_config.BP_PATH = "dummy_bp_path"
-mock_config.RP_PATH = "dummy_rp_path"
-
-# We must mock config & schemas before importing ldtk
-import anvil.lib.config
-
-anvil.lib.config.CONFIG = mock_config
-
-import anvil.lib.schemas
-
-anvil.lib.schemas.CONFIG = mock_config
 is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
 
 try:
@@ -38,12 +22,15 @@ elif not has_amulet:
     pytestmark = pytest.mark.skip(reason="amulet is not installed")
 
 
+@pytest.fixture(autouse=True)
+def project_namespace():
+    with config.override(NAMESPACE="my_ns", PROJECT_NAME="test_project"):
+        yield
+
+
 def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
     # Change current working directory to tmp_path
     monkeypatch.chdir(tmp_path)
-
-    # Patch ldtk module CONFIG to use our mock
-    monkeypatch.setattr(ldtk, "CONFIG", mock_config)
 
     # Prepare LDtk file directory structure
     os.makedirs(os.path.join("world", "ldtk"), exist_ok=True)
@@ -112,8 +99,8 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
         ],
     }
 
-    with open(ldtk_file_path, "w") as f:
-        json.dump(ldtk_data, f)
+    with open(ldtk_file_path, "wb") as f:
+        f.write(orjson.dumps(ldtk_data))
 
     # Initialize LDtk
     ldtk_instance = LDtk("test_map")
@@ -134,8 +121,8 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
     # Verify that the level with entities exists and is correctly populated
     assert os.path.exists(entities_level_json)
 
-    with open(entities_level_json, "r") as f:
-        data = json.load(f)
+    with open(entities_level_json, "rb") as f:
+        data = orjson.loads(f.read())
 
     # Check corners
     # level origin = [10, -20]
@@ -168,7 +155,7 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
     assert not any(e["id"] == "minecraft:spawn" for e in entities_list)
 
     # Zombie entity
-    zombie_ent = next(e for e in entities_list if e["id"] == "my_namespace:zombie")
+    zombie_ent = next(e for e in entities_list if e["id"] == "my_ns:zombie")
     # local x: 5, y: 10
     #   x = 10 + 5 + 100 = 115
     #   y = -64 - origin_y - 10 + 200 = 146
@@ -181,7 +168,7 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
     assert zombie_ent["data"]["point"] == {"cx": 115, "cy": 146}
 
     # Skeleton entity (without vanilla field)
-    skeleton_ent = next(e for e in entities_list if e["id"] == "my_namespace:skeleton")
+    skeleton_ent = next(e for e in entities_list if e["id"] == "my_ns:skeleton")
     # local x: 10, y: 20
     #   x = 10 + 10 + 100 = 120
     #   y = -64 - origin_y - 20 + 200 = 136
@@ -193,9 +180,6 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
 def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
     # Change current working directory to tmp_path
     monkeypatch.chdir(tmp_path)
-
-    # Patch ldtk module CONFIG to use our mock
-    monkeypatch.setattr(ldtk, "CONFIG", mock_config)
 
     # Prepare LDtk file directory structure
     os.makedirs(os.path.join("world", "ldtk"), exist_ok=True)
@@ -235,8 +219,8 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
         ],
     }
 
-    with open(ldtk_file_path, "w") as f:
-        json.dump(ldtk_data, f)
+    with open(ldtk_file_path, "wb") as f:
+        f.write(orjson.dumps(ldtk_data))
 
     # Initialize LDtk
     ldtk_instance = LDtk("test_map")
@@ -252,8 +236,8 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
 
     assert os.path.exists(entities_level_json)
 
-    with open(entities_level_json, "r") as f:
-        data = json.load(f)
+    with open(entities_level_json, "rb") as f:
+        data = orjson.loads(f.read())
 
     # level origin = [10, -20]
     # level size = [20, 30]
@@ -282,9 +266,6 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
     # Change current working directory to tmp_path
     monkeypatch.chdir(tmp_path)
 
-    # Patch ldtk module CONFIG to use our mock
-    monkeypatch.setattr(ldtk, "CONFIG", mock_config)
-
     # Prepare LDtk file directory structure
     os.makedirs(os.path.join("world", "ldtk"), exist_ok=True)
     ldtk_file_path = os.path.join("world", "ldtk", "test_map.ldtk")
@@ -323,8 +304,8 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
         ],
     }
 
-    with open(ldtk_file_path, "w") as f:
-        json.dump(ldtk_data, f)
+    with open(ldtk_file_path, "wb") as f:
+        f.write(orjson.dumps(ldtk_data))
 
     # Initialize LDtk
     ldtk_instance = LDtk("test_map")
@@ -340,8 +321,8 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
 
     assert os.path.exists(entities_level_json)
 
-    with open(entities_level_json, "r") as f:
-        data = json.load(f)
+    with open(entities_level_json, "rb") as f:
+        data = orjson.loads(f.read())
 
     # Check corners in YZ plane
     # level origin = [10, -20]

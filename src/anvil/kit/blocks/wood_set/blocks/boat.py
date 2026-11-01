@@ -1,20 +1,20 @@
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.entity import Entity
 from anvil.api.actors.components import (
-    DamageSensor,
     EntityBodyRotationAlwaysFollowsHead,
     EntityAIRiseToLiquidLevel,
     EntityCollisionBox,
     EntityDamageSensor,
     EntityIsCollidable,
     EntityLeashable,
-    EntityMovementType,
-    EntityNavigationType,
+    EntityMovementBasic,
+    EntityNavigationGeneric,
     EntityPhysics,
     EntityPushableByBlock,
     EntityPushableByEntity,
     EntityRideable,
     EntityTypeFamily,
 )
+from anvil.api.core.enums import DamageSensor
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import (
     DamageCause,
@@ -55,7 +55,7 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
 
     entity.client.description.geometry(BOAT_MODEL)
     entity.client.description.texture(
-        BOAT_MODEL, TextureComponents(color=f"{wood}_boat")
+        blockbench=BOAT_MODEL, component=TextureComponents(color=f"{wood}_boat")
     )
     entity.client.description.material("blend", "entity_alphablend")
     entity.client.description.material("alpha", "entity_alphatest")
@@ -74,7 +74,10 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
         ("paddle", straight),
     ):
         entity.client.description.animation(
-            BOAT_MODEL, animation, True, Query.HasRider() & condition
+            blockbench=BOAT_MODEL,
+            animation_name=animation,
+            animate=True,
+            condition=Query.HasRider() & condition,
         )
 
     # The client can't tell who hit it, so boat.ts counts hits in a synced property
@@ -95,29 +98,38 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
     )
     entity.client.description.script(Variable.last_hits, hits)
     entity.client.description.animation(
-        BOAT_MODEL, "shake", True, Variable.shake_strength > 0
+        blockbench=BOAT_MODEL,
+        animation_name="shake",
+        animate=True,
+        condition=Variable.shake_strength > 0,
     )
 
-    rideable = EntityRideable(interact_text="Board")
+    rideable = EntityRideable(
+        interact_text="Board", family_types=["player"], seat_count=len(SEATS)
+    )
     for min_riders, position in enumerate(SEATS):
         rideable.add_seat(
-            position, len(SEATS), min_riders, lock_rider_rotation=RIDER_ROTATION
+            position=position,
+            max_rider_count=len(SEATS),
+            min_rider_count=min_riders,
+            lock_rider_rotation=RIDER_ROTATION,
         )
-    rideable.family_types(["player"])
 
-    entity.server.description.config(summonable=True, spawnable=False)
+    entity.server.description.config(is_summonable=True, is_spawnable=False)
     entity.server.components.add(
-        EntityTypeFamily([BOAT_FAMILY, "boat", "inanimate"]),
-        EntityCollisionBox(0.455, 1.4),
-        EntityPhysics(True, True, True),
-        EntityAIRiseToLiquidLevel(0, 0.005, 0.005).priority(0),
-        EntityNavigationType.Generic(can_sink=False, can_walk=False, can_jump=False),
-        EntityMovementType.Basic(),
+        EntityTypeFamily(family=[BOAT_FAMILY, "boat", "inanimate"]),
+        EntityCollisionBox(height=0.455, width=1.4),
+        EntityPhysics(push_towards_closest_space=True),
+        EntityAIRiseToLiquidLevel(
+            priority=0, liquid_y_offset=0, rise_delta=0.005, sink_delta=0.005
+        ),
+        EntityNavigationGeneric(can_sink=False, can_walk=False, can_jump=False),
+        EntityMovementBasic(),
         # boat.ts turns the head; without this the body lags and snaps on the spot
         EntityBodyRotationAlwaysFollowsHead(),
         rideable,
         EntityLeashable(),
-        EntityDamageSensor().add_trigger(DamageCause.All, DamageSensor.No),
+        EntityDamageSensor().add_trigger(deals_damage=DamageSensor.No),
         EntityIsCollidable(),
         EntityPushableByEntity(),
         EntityPushableByBlock(),
@@ -126,12 +138,12 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
 
     item = Item(f"{wood}_boat")
     item.server.components.add(
-        ItemDisplayName(display_name),
-        ItemIcon(TextureComponents(color=f"{wood}_boat")),
-        ItemEntityPlacer(entity),
-        ItemLiquidClipped(True),
-        ItemMaxStackSize(1),
-        ItemFuel(60),
+        ItemDisplayName(value=display_name),
+        ItemIcon(textures=TextureComponents(color=f"{wood}_boat")),
+        ItemEntityPlacer(entity=entity),
+        ItemLiquidClipped(),
+        ItemMaxStackSize(value=1),
+        ItemFuel(duration=60),
     )
     item.server.description.menu_category(ItemCategory.Items, ItemGroups.Boat)
     item.queue()

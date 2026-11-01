@@ -77,39 +77,43 @@ def create(
     block.server.description.add_state("stage", (False, True))
 
     block.server.components.add(
-        BlockDisplayName(display_name),
-        BlockDestructibleByMining(0),
-        BlockGeometry("minecraft:geometry.cross"),
+        BlockDisplayName(value=display_name),
+        BlockDestructibleByMining(seconds_to_destroy=0),
+        BlockGeometry(blockbench="minecraft:geometry.cross"),
         BlockMaterialInstance().add_instance(
-            InstanceSpec(
-                blockbench_name=MODEL,
+            spec=InstanceSpec(
+                blockbench=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_sapling")],
                 params=MaterialParams(render_method=BlockMaterial.AlphaTestSingleSided),
             )
         ),
-        BlockCollisionBox((0, 0, 0), (0, 0, 0)),
-        BlockSelectionBox((12, 12, 12), (-6, 0, -6)),
+        BlockCollisionBox(enabled=False),
+        BlockSelectionBox(origin=(-6, 0, -6), size=(12, 12, 12)),
         BlockFlammable(),
         # Flowing water pops it off and drops its loot, like vanilla saplings
-        BlockLiquidDetection().add_rule(
+        BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.Popped,
         ),
-        BlockMapColor(map_color),
-        BlockLightDampening(0),
-        BlockConnectionRule("none"),
-        BlockDestructibleByExplosion(0),
-        BlockRedstoneConductivity(False, False),
-        BlockPlacementFilter().add_condition([BlockFaceValues.Up], list(soil)),
-        BlockLootTable(drop),
-        BlockWoodSetSapling(str(tree)),
-        BlockWoodSetSupport(SupportedBy.Below),
+        BlockMapColor(color=map_color),
+        BlockLightDampening(value=0),
+        BlockConnectionRule(accepts_connections_from="none"),
+        BlockDestructibleByExplosion(explosion_resistance=0),
+        BlockRedstoneConductivity(
+            allows_wire_to_step_down=False, redstone_conductor=False
+        ),
+        BlockPlacementFilter().add_condition(
+            allowed_faces=[BlockFaceValues.Up], block_filter=list(soil)
+        ),
+        BlockLootTable(value=drop),
+        BlockWoodSetSapling(tree_feature=str(tree)),
+        BlockWoodSetSupport(supported_by=SupportedBy.Below),
     )
 
     block.item.server.components.add(
-        ItemBlockPlacer(block.identifier, replace_block_item=True),
-        ItemDisplayName(display_name),
-        ItemIcon(TextureComponents(color=f"{wood}_sapling")),
+        ItemBlockPlacer(block=block.identifier, replace_block_item=True),
+        ItemDisplayName(value=display_name),
+        ItemIcon(textures=TextureComponents(color=f"{wood}_sapling")),
     )
     block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Sapling)
 

@@ -1,31 +1,13 @@
 import pytest
+from types import SimpleNamespace
 from anvil.api.blocks import components as block_components
+from anvil.kit.blocks.wood_set.components import BlockWoodSetSapling
 from anvil.kit.blocks.wood_set.blocks import leaves
 from anvil.kit.blocks.wood_set.components import BlockWoodSetLeaves
-from anvil.lib import config as anvil_config
-
-
-@pytest.fixture(autouse=True)
-def project_config(monkeypatch):
-    # Other test modules replace CONFIG with a mock, and not every module sees the
-    # replacement, so give the lazy proxy the values these blocks read
-    values = {
-        "NAMESPACE": "test",
-        "BP_PATH": "BP",
-        "RP_PATH": "RP",
-        "PROJECT_NAME": "test",
-    }
-    monkeypatch.setattr(
-        anvil_config._AnvilConfig._Proxy,
-        "__getattr__",
-        lambda self, name: values[name],
-        raising=False,
-    )
 
 
 @pytest.fixture
 def make_leaves(monkeypatch):
-    # The shared Blockbench model isn't part of the tests
     monkeypatch.setattr(
         block_components.BlockMaterialInstance, "add_instance", lambda self, spec: self
     )
@@ -48,14 +30,14 @@ def test_natural_state_is_off_for_placed_leaves(make_leaves):
 def test_leaves_decay_on_random_ticks_not_a_scheduled_tick(make_leaves):
     # The script's onRandomTick does the decay (like vanilla), so no tick is scheduled
     block = make_leaves("rotten", {"log"})
-    base = block.server.components.__export__()["components"]
+    base = block.server.components.__json__()["components"]
     assert "minecraft:tick" not in base
     assert not block.server._permutations
 
 
 def test_trunks_are_the_selected_ones_only(make_leaves):
     block = make_leaves("rotten", {"log", "wood", "sapling"})
-    components = block.server.components.__export__()["components"]
+    components = block.server.components.__json__()["components"]
     (params,) = [v for k, v in components.items() if k.endswith(":wood_set_leaves")]
     assert [trunk.split(":")[1] for trunk in params["trunks"]] == [
         "rotten_log",
@@ -66,7 +48,7 @@ def test_trunks_are_the_selected_ones_only(make_leaves):
 
 def test_no_sapling_when_not_selected(make_leaves):
     block = make_leaves("rotten", {"log"})
-    components = block.server.components.__export__()["components"]
+    components = block.server.components.__json__()["components"]
     (params,) = [v for k, v in components.items() if k.endswith(":wood_set_leaves")]
     assert "sapling" not in params
 
@@ -76,12 +58,12 @@ def test_no_sapling_when_not_selected(make_leaves):
 )
 def test_invalid_params(kwargs):
     with pytest.raises(ValueError):
-        BlockWoodSetLeaves(["a:log"], **kwargs)
+        BlockWoodSetLeaves(trunks=["a:log"], **kwargs).__json__()
 
 
 def test_leaves_loot_table_conditions(make_leaves):
     block = make_leaves("rotten", {"log", "sapling"})
-    components = block.server.components.__export__()["components"]
+    components = block.server.components.__json__()["components"]
     assert "minecraft:loot" in components
 
     # Find the queued loot table for rotten_leaves

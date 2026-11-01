@@ -1,4 +1,4 @@
-import json
+import orjson
 import os
 
 try:
@@ -19,12 +19,8 @@ from anvil.lib.lib import Directory
 
 class LDtk:
     def _load_data(self):
-        # Using the builtin json library becasue it's
-        # much faster at loading json compared to commentjson
-        # and ldtk is a very big json file
-
-        with open(self._file, "r") as f:
-            self._data = json.load(f)
+        with open(self._file, "rb") as f:
+            self._data = orjson.loads(f.read())
 
         if self._data["defaultGridSize"] != 16:
             raise ValueError("Grid size incompatible, must be 16px.")
@@ -81,9 +77,9 @@ class LDtk:
 
             else:
                 with open(
-                    os.path.join("world", "ldtk", level["externalRelPath"]), "r"
+                    os.path.join("world", "ldtk", level["externalRelPath"]), "rb"
                 ) as File:
-                    level_data = json.load(File)["layerInstances"]
+                    level_data = orjson.loads(File.read())["layerInstances"]
 
             # Level Layers
             for layer_ix, layer in enumerate(reversed(level_data)):
@@ -137,8 +133,8 @@ class LDtk:
                     )
 
     def _dump_dictionary(self):
-        with open(self._file.split(".")[0] + ".json", "w") as File:
-            json.dump(self.dictionary, File)
+        with open(self._file.split(".")[0] + ".json", "wb") as File:
+            File.write(orjson.dumps(self.dictionary, option=orjson.OPT_NON_STR_KEYS))
 
     def _prepare_level(self):
         world = amulet.load_level(CONFIG._WORLD_PATH)
@@ -165,7 +161,7 @@ class LDtk:
     ) -> None:
         """Converts LDtk map to Minecraft worlds.
 
-        Parameters:
+        Args:
             filename (str): filename of the map, no extension.
             clear_chunks (bool, optional): If chunks should be cleared before writing to the map. Defaults to False.
         """
@@ -354,6 +350,6 @@ class LDtk:
                         path,
                         level_name + ".json",
                     ),
-                    "w",
+                    "wb",
                 ) as File:
-                    File.write(json.dumps(level_data, indent=4))
+                    File.write(orjson.dumps(level_data, option=orjson.OPT_INDENT_2))

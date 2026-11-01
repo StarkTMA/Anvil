@@ -1,15 +1,9 @@
-from unittest.mock import MagicMock
 import pytest
-import anvil.lib.config
+from types import SimpleNamespace
 
-mock_config = MagicMock()
-mock_config.BP_PATH = "dummy_bp_path"
-mock_config.RP_PATH = "dummy_rp_path"
-mock_config.NAMESPACE = "test"
-mock_config.PROJECT_NAME = "test"
-anvil.lib.config.CONFIG = mock_config
 
 from anvil.api.blocks import components as block_components
+from anvil.kit.blocks.wood_set.components import BlockWoodSetSapling
 from anvil.api.core.core import ANVIL
 from anvil.api.features import WeightedRandomFeature
 from anvil.kit.blocks.wood_set import WoodBlock, create_wood_set
@@ -32,7 +26,7 @@ def mock_material(monkeypatch):
 
 
 def _tree_of(block) -> str:
-    components = block.server.components.__export__()["components"]
+    components = block.server.components.__json__()["components"]
     (params,) = [v for k, v in components.items() if k.endswith(":wood_set_sapling")]
     return params["tree_feature"]
 

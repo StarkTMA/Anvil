@@ -1,18 +1,17 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Union
 
-from anvil.api.actors.actors import (
-    Entity,
-    EntityPushableByBlock,
-    EntityPushableByEntity,
-)
+from anvil.api.actors.entity import Entity
 from anvil.api.actors.components import (
+    BandwidthValues,
     EntityBodyRotationBlocked,
     EntityCollisionBox,
     EntityConditionalBandwidthOptimization,
     EntityPhysics,
     EntityProjectile,
-    EntityPushable,
+    EntityPushableByBlock,
+    EntityPushableByEntity,
+    ProjectileOnHit,
 )
 from anvil.api.blocks.blocks import Block
 from anvil.api.core.core import CONFIG
@@ -20,13 +19,14 @@ from anvil.api.core.enums import ItemCategory
 from anvil.api.core.types import RGBA, Vector3D
 from anvil.api.items.components import (
     ItemBlockPlacer,
-    ItemCustomComponents,
+    ItemCustomComponent,
     ItemDisplayName,
     ItemFood,
     ItemIcon,
     ItemMaxStackSize,
     ItemProjectile,
     ItemStackedByData,
+    ItemThrowable,
     ItemUseAnimation,
     ItemUseModifiers,
 )
@@ -35,8 +35,9 @@ from anvil.api.items.items import Item
 from anvil.api.logic.molang import Query
 from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.vanilla.items import MinecraftItemTypes
-from anvil.kit.actors.components import ItemCustomProjectile
-from anvil.lib.lib import Color, clamp, AnvilFormatter
+from anvil.lib.jsonmodel import encoders, json_field
+from anvil.lib.jsonmodel.validators import in_range
+from anvil.lib.lib import Color, AnvilFormatter
 
 # ========================== Utility Functions ===============================
 
@@ -80,17 +81,23 @@ def create_universal_potion_projectile() -> Entity:
 
     # Components - optimized grouping
     entity.server.components.add(
-        EntityCollisionBox(0.25, 0.25),
-        EntityPhysics(has_gravity=False),
+        EntityCollisionBox(height=0.25, width=0.25),
+        EntityPhysics(),
         EntityPushableByBlock(),
         EntityPushableByEntity(),
         EntityProjectile(
-            angle_offset=-18, gravity=0.02, hit_sound="glass", power=0.35, inertia=0.96
-        ).on_hit(douse_fire=True),
+            angle_offset=-20,
+            gravity=0.05,
+            hit_sound="glass",
+            power=0.5,
+            on_hit=ProjectileOnHit(douse_fire=True),
+        ),
         EntityConditionalBandwidthOptimization(
-            max_optimized_distance=80,
-            max_dropped_ticks=10,
-            use_motion_prediction_hints=True,
+            default_values=BandwidthValues(
+                max_optimized_distance=80,
+                max_dropped_ticks=10,
+                use_motion_prediction_hints=True,
+            )
         ),
         EntityBodyRotationBlocked(),
     )
@@ -132,13 +139,12 @@ class PotionVariant:
         )
 
         components = [
-            ItemDisplayName(
-                display_name,
-                localized_key=f"item.{CONFIG.NAMESPACE}:{self.potion_type}_{config.effect_key}_potion_{index}.name",
+            ItemDisplayName(value=display_name),
+            ItemIcon(
+                textures=TextureComponents(color=icon_name), blockbench="potion_model"
             ),
-            ItemIcon("potion_model", TextureComponents(color=icon_name)),
-            ItemMaxStackSize(1),
-            ItemStackedByData(False),
+            ItemMaxStackSize(value=1),
+            ItemStackedByData(value=False),
         ]
 
         item.server.components.add(*components)
@@ -173,8 +179,13 @@ class Drinkable(PotionVariant):
                 potion_color=config.color_hex,
             ),
             ItemUseModifiers(use_duration=self.use_duration),
-            ItemFood(True, 0, 0, MinecraftItemTypes.GlassBottle()),
-            ItemUseAnimation("drink"),
+            ItemFood(
+                can_always_eat=True,
+                nutrition=0,
+                saturation_modifier=0,
+                using_converts_to=MinecraftItemTypes.GlassBottle(),
+            ),
+            ItemUseAnimation(value="drink"),
         ]
 
         item.server.components.add(*components)
@@ -199,13 +210,11 @@ class Splash(PotionVariant):
         event_name = f"{config.effect_key}_splash_{index}"
 
         components = [
-            ItemCustomProjectile(
-                projectile=projectile,
-                spawn_event=event_name,
-                offset=self.projectile_offset,
-                angle_offset=self.projectile_angle,
+            ItemThrowable(),
+            ItemProjectile(
+                projectile_entity=f"{projectile}<{event_name}>",
+                minimum_critical_power=1,
             ),
-            ItemProjectile(f"{projectile}<{event_name}>", 1),
         ]
 
         item.server.components.add(*components)
@@ -251,13 +260,11 @@ class Lingering(PotionVariant):
         event_name = f"{config.effect_key}_lingering_{index}"
 
         components = [
-            ItemCustomProjectile(
-                projectile=projectile,
-                spawn_event=event_name,
-                offset=self.projectile_offset,
-                angle_offset=self.projectile_angle,
+            ItemThrowable(),
+            ItemProjectile(
+                projectile_entity=f"{projectile}<{event_name}>",
+                minimum_critical_power=1,
             ),
-            ItemProjectile(f"{projectile}<{event_name}>", 1),
         ]
 
         item.server.components.add(*components)
@@ -364,18 +371,12 @@ class PotionAPI:
 
         component_id = f"{CONFIG.NAMESPACE}:{effect_key}_potion_effect"
 
-        class DynamicPotionEffect(ItemCustomComponents):
-            _identifier = component_id
+        class DynamicPotionEffect(ItemCustomComponent):
+            identifier = component_id
 
-            def __init__(
-                self, *, amplifier: float, duration: float, potion_color: Color
-            ) -> None:
-                super().__init__(self._identifier)
-                self._add_field("amplifier", clamp(amplifier, 0.0, 255.0))
-                self._add_field("duration", duration)
-                self._add_field(
-                    "potion_color", AnvilFormatter.convert_color(potion_color, RGBA)
-                )
+            amplifier: float = json_field(validators=[in_range(0.0, 255.0)])
+            duration: float = json_field()
+            potion_color: Color = json_field(encoder=encoders.to_rgba)
 
         cls._component_cache[effect_key] = DynamicPotionEffect
         return DynamicPotionEffect

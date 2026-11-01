@@ -45,7 +45,7 @@ from enum import Flag, auto
 from pathlib import Path
 from typing import Callable, Iterable, NamedTuple
 
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.entity import Entity
 from anvil.api.blocks.blocks import Block
 from anvil.api.core.enums import ItemCategory
 from anvil.api.core.enums import BlockSoundGroup
@@ -172,7 +172,7 @@ class WoodSet(dict[str, WoodSetPart]):
         own_creative_group: bool = False,
     ) -> None:
         """
-        Parameters:
+        Args:
             name (str): The name of the wood, which prefixes every block.
             exclude (WoodBlock | Iterable[WoodBlock]): The parts to leave out. Blocks that depend
                 on an excluded one lose that part (a sign without planks has no recipe).
@@ -373,13 +373,17 @@ def _offer_base_models() -> None:
     """
     models = Path("assets") / "bbmodels"
     missing = [
-        name for name in (MODEL, BOAT_MODEL) if not (models / f"{name}.bbmodel").exists()
+        name
+        for name in (MODEL, BOAT_MODEL)
+        if not (models / f"{name}.bbmodel").exists()
     ]
     if not missing or not sys.stdin.isatty():
         return
 
     files = " and ".join(f"{name}.bbmodel" for name in missing)
-    answer = input(f"Wood sets need {files} in {models}. Copy the base to work with? [Y/n] ")
+    answer = input(
+        f"Wood sets need {files} in {models}. Copy the base to work with? [Y/n] "
+    )
     if answer.strip().lower() in ("", "y", "yes"):
         models.mkdir(parents=True, exist_ok=True)
         for name in missing:

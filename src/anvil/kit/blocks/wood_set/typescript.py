@@ -11,7 +11,7 @@ created so far, so creating a second set doesn't drop the first one's.
 from pathlib import Path
 from typing import Iterable
 
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.entity import Entity
 from anvil.api.blocks.blocks import Block
 from anvil.api.core.core import CONFIG
 

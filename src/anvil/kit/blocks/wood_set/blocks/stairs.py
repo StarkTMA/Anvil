@@ -1,5 +1,7 @@
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
     BlockCollisionBox,
     BlockConnectionRule,
     BlockDestructibleByExplosion,
@@ -20,6 +22,7 @@ from anvil.api.blocks.components import (
     BlockTransformation,
     InstanceSpec,
     InstanceVariant,
+    ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
@@ -29,7 +32,6 @@ from anvil.api.core.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
-    BlockMovementType,
     BlockSoundGroup,
     CardinalDirectionsValues,
     ItemCategory,
@@ -118,8 +120,11 @@ def create(
     top = half == VerticalHalfValues.TOP
 
     # Each upper quadrant is a bone, visible when `(corner == value) == equal`.
-    geometry = BlockGeometry(MODEL, collection="stairs", uv_lock=True)
-    geometry.bone_visibility(
+    geometry = BlockGeometry(
+        blockbench=MODEL,
+        collection="stairs",
+        uv_lock=True,
+    ).add_bone_visibility(
         **{
             name: (bottom & (corner == b_value if b_equal else corner != b_value))
             | (top & (corner == t_value if t_equal else corner != t_value))
@@ -133,13 +138,13 @@ def create(
         (VerticalHalfValues.TOP, 1),
     ):
         for value in BlockCornerValues:
-            collision = BlockCollisionBox((16, 8, 16), (-8, 0, -8))
+            collision = BlockCollisionBox(origin=(-8, 0, -8), size=(16, 8, 16))
             for origin, rules in QUADRANTS.values():
                 equal, rule_value = rules[rule_index]
                 if (value == rule_value) == equal:
                     x, y, z = origin
                     # Collision x is mirrored relative to the geometry's x.
-                    collision.add_box((8, 8, 8), (-x - 8, y, z))
+                    collision.add_box(origin=(-x - 8, y, z), size=(8, 8, 8))
             block.server.permutation((half == h) & (corner == value)).add(collision)
 
     # Rotation: towards the player, y+180 on the bottom half, flipped upside down on the top
@@ -148,78 +153,77 @@ def create(
             Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
         )
         block.server.permutation(facing & bottom).add(
-            BlockTransformation().rotation((x, (y + 180) % 360, z))
+            BlockTransformation(rotation=(x, (y + 180) % 360, z))
         )
         block.server.permutation(facing & top).add(
-            BlockTransformation().rotation(((x + 180) % 360, y, z))
+            BlockTransformation(rotation=((x + 180) % 360, y, z))
         )
 
-    mining = BlockDestructibleByMining(3)
+    mining = BlockDestructibleByMining(seconds_to_destroy=3)
     for tier, speed in AXE_SPEEDS.items():
-        mining.item_specific_speeds_tag(
-            speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
+        mining.add_item_specific_speed(
+            item=ItemTagFilter(tags=Query.AllTags([MinecraftItemTags.IsAxe, tier])),
+            destroy_speed=speed,
         )
 
-    item_visual = BlockItemVisual(MODEL, collection="stairs")
-    item_visual.material_instance(MODEL, f"{wood}_planks")
+    item_visual = BlockItemVisual(blockbench=MODEL, collection="stairs")
+    item_visual.add_material_instance(blockbench=MODEL, texture=f"{wood}_planks")
     item_visual.item_display_transforms(
-        False,
-        gui={
-            "rotation": [30, -135, 0],
-            "scale": [0.625, 0.625, 0.625],
-            "fit_to_frame": False,
-        },
-        firstperson_righthand={
-            "rotation": [0, 135, 0],
-            "scale": [0.4, 0.4, 0.4],
-        },
-        thirdperson_righthand={
-            "rotation": [70, -45, 0],
-            "scale": [0.375, 0.375, 0.375],
-        },
-        fixed={"rotation": [0, 90, 0]},
+        merge=False,
+        gui=ItemDisplayGuiTransform(
+            rotation=[30, -135, 0], scale=[0.625, 0.625, 0.625], fit_to_frame=False
+        ),
+        firstperson_righthand=ItemDisplayTransform(
+            rotation=[0, 135, 0], scale=[0.4, 0.4, 0.4]
+        ),
+        thirdperson_righthand=ItemDisplayTransform(
+            rotation=[70, -45, 0], scale=[0.375, 0.375, 0.375]
+        ),
+        fixed=ItemDisplayTransform(rotation=[0, 90, 0]),
     )
 
     block.server.components.add(
-        BlockDisplayName(display_name),
+        BlockDisplayName(value=display_name),
         mining,
         geometry,
         BlockMaterialInstance().add_instance(
-            InstanceSpec(
-                blockbench_name=MODEL,
+            spec=InstanceSpec(
+                blockbench=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
             )
         ),
-        BlockSelectionBox((16, 16, 16), (-8, 0, -8)),
-        BlockMovable(BlockMovementType.PushPull),
+        BlockSelectionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockMovable(movement_type="push_pull"),
         BlockFlammable(),
         # Waterloggable like vanilla Bedrock: water flows into it and stays
-        BlockLiquidDetection().add_rule(
+        BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
         ),
-        BlockMapColor(map_color),
-        BlockLightDampening(0),
+        BlockMapColor(color=map_color),
+        BlockLightDampening(value=0),
         BlockTagComponent(
-            [
+            value=[
                 MinecraftBlockTags.Wood,
                 MinecraftBlockTags.IsAxeItemDestructible,
                 MinecraftBlockTags.CornerableStairs,
             ]
         ),
-        BlockConnectionRule("all"),
-        BlockDestructibleByExplosion(15),
-        BlockRedstoneConductivity(True, False),
-        BlockSupport("stair"),
+        BlockConnectionRule(accepts_connections_from="all"),
+        BlockDestructibleByExplosion(explosion_resistance=15),
+        BlockRedstoneConductivity(
+            allows_wire_to_step_down=True, redstone_conductor=False
+        ),
+        BlockSupport(shape="stair"),
     )
 
     # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
-        ItemBlockPlacer(block.identifier, replace_block_item=True),
-        ItemDisplayName(display_name),
-        ItemFuel(15),
+        ItemBlockPlacer(block=block.identifier, replace_block_item=True),
+        ItemDisplayName(value=display_name),
+        ItemFuel(duration=15),
     )
     block.item.server.description.menu_category(
         ItemCategory.Construction, ItemGroups.Stairs

@@ -16,13 +16,13 @@ from anvil.api.blocks.components import (
     BlockTagComponent,
     InstanceSpec,
     InstanceVariant,
+    ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import (
     BlockFaceValues,
     BlockMaterial,
-    BlockMovementType,
     BlockSoundGroup,
     ItemCategory,
     ItemGroups,
@@ -65,44 +65,47 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Planks"
 
-    mining = BlockDestructibleByMining(3)
+    mining = BlockDestructibleByMining(seconds_to_destroy=3)
     for tier, speed in AXE_SPEEDS.items():
-        mining.item_specific_speeds_tag(
-            speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
+        mining.add_item_specific_speed(
+            item=ItemTagFilter(tags=Query.AllTags([MinecraftItemTags.IsAxe, tier])),
+            destroy_speed=speed,
         )
 
     block.server.components.add(
-        BlockDisplayName(display_name),
+        BlockDisplayName(value=display_name),
         mining,
         BlockGeometry(),
         BlockMaterialInstance().add_instance(
-            InstanceSpec(
-                blockbench_name=MODEL,
+            spec=InstanceSpec(
+                blockbench=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_planks")],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
             )
         ),
-        BlockCollisionBox((16, 16, 16), (-8, 0, -8)),
-        BlockSelectionBox((16, 16, 16), (-8, 0, -8)),
-        BlockMovable(BlockMovementType.PushPull),
+        BlockCollisionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockSelectionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockMovable(movement_type="push_pull"),
         BlockFlammable(),
-        BlockMapColor(map_color),
-        BlockLightDampening(0),
+        BlockMapColor(color=map_color),
+        BlockLightDampening(value=0),
         BlockTagComponent(
-            [MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
+            value=[MinecraftBlockTags.Wood, MinecraftBlockTags.IsAxeItemDestructible]
         ),
-        BlockConnectionRule("all"),
-        BlockDestructibleByExplosion(15),
-        BlockRedstoneConductivity(True, True),
+        BlockConnectionRule(accepts_connections_from="all"),
+        BlockDestructibleByExplosion(explosion_resistance=15),
+        BlockRedstoneConductivity(
+            allows_wire_to_step_down=True, redstone_conductor=True
+        ),
     )
 
     # Its item: shown in the creative inventory, burns in a furnace, and its vanilla tag lets every vanilla wood recipe use it
     block.item.server.components.add(
-        ItemBlockPlacer(block.identifier, replace_block_item=True),
-        ItemDisplayName(display_name),
-        ItemFuel(15),
-        ItemTags([MinecraftItemTags.Planks]),
+        ItemBlockPlacer(block=block.identifier, replace_block_item=True),
+        ItemDisplayName(value=display_name),
+        ItemFuel(duration=15),
+        ItemTags(tags=[MinecraftItemTags.Planks]),
     )
     block.item.server.description.menu_category(
         ItemCategory.Construction, ItemGroups.Planks

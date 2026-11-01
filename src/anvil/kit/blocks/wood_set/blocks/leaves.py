@@ -28,7 +28,6 @@ from anvil.api.core.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
-    BlockMovementType,
     BlockSoundGroup,
     ItemCategory,
     ItemGroups,
@@ -136,12 +135,12 @@ def create(
     sapling = f"{namespace}:{wood}_sapling" if "sapling" in selected else None
 
     block.server.components.add(
-        BlockDisplayName(display_name),
-        BlockDestructibleByMining(0.2),
+        BlockDisplayName(value=display_name),
+        BlockDestructibleByMining(seconds_to_destroy=0.2),
         BlockGeometry(),
         BlockMaterialInstance().add_instance(
-            InstanceSpec(
-                blockbench_name=MODEL,
+            spec=InstanceSpec(
+                blockbench=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_leaves")],
                 params=MaterialParams(
@@ -149,33 +148,38 @@ def create(
                 ),
             )
         ),
-        BlockCollisionBox((16, 16, 16), (-8, 0, -8)),
-        BlockSelectionBox((16, 16, 16), (-8, 0, -8)),
-        BlockMovable(BlockMovementType.PushPull),
-        BlockFlammable(60, 30),
+        BlockCollisionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockSelectionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockMovable(movement_type="push_pull"),
+        BlockFlammable(catch_chance_modifier=60, destroy_chance_modifier=30),
         # Waterloggable like vanilla Bedrock: water flows into it and stays
-        BlockLiquidDetection().add_rule(
+        BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
         ),
-        BlockMapColor(map_color),
-        BlockLightDampening(1),
+        BlockMapColor(color=map_color),
+        BlockLightDampening(value=1),
         BlockTagComponent(
-            [MinecraftBlockTags.Leaves, MinecraftBlockTags.IsShearsItemDestructible]
+            value=[
+                MinecraftBlockTags.Leaves,
+                MinecraftBlockTags.IsShearsItemDestructible,
+            ]
         ),
-        BlockConnectionRule("none"),
-        BlockDestructibleByExplosion(0.2),
-        BlockRedstoneConductivity(False, False),
-        BlockLootTable(loot),
-        BlockWoodSetLeaves(trunks, sapling, distance),
+        BlockConnectionRule(accepts_connections_from="none"),
+        BlockDestructibleByExplosion(explosion_resistance=0.2),
+        BlockRedstoneConductivity(
+            allows_wire_to_step_down=False, redstone_conductor=False
+        ),
+        BlockLootTable(value=loot),
+        BlockWoodSetLeaves(trunks=trunks, sapling=sapling, distance=distance),
     )
 
     block.item.server.components.add(
-        ItemBlockPlacer(block.identifier, replace_block_item=True),
-        ItemDisplayName(display_name),
+        ItemBlockPlacer(block=block.identifier, replace_block_item=True),
+        ItemDisplayName(value=display_name),
         # Vanilla recipes take leaves by this tag, like smelting them into leaf litter
-        ItemTags([MinecraftItemTags.Leaves]),
-        ItemCompostable(30),
+        ItemTags(tags=[MinecraftItemTags.Leaves]),
+        ItemCompostable(composting_chance=30),
     )
     block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Leaves)
 

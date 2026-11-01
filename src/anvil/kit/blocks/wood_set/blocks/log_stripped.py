@@ -17,12 +17,12 @@ from anvil.api.blocks.components import (
     BlockTransformation,
     InstanceSpec,
     InstanceVariant,
+    ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.enums import (
     BlockFaceValues,
     BlockMaterial,
-    BlockMovementType,
     BlockSoundGroup,
     FacingDirectionValues,
     ItemCategory,
@@ -80,12 +80,13 @@ def create(
     for direction, rotation in FACE_ROTATIONS.items():
         block.server.permutation(
             Query.BlockState(PlacementPositionTrait.BlockFace) == direction
-        ).add(BlockTransformation().rotation(rotation))
+        ).add(BlockTransformation(rotation=rotation))
 
-    mining = BlockDestructibleByMining(3)
+    mining = BlockDestructibleByMining(seconds_to_destroy=3)
     for tier, speed in AXE_SPEEDS.items():
-        mining.item_specific_speeds_tag(
-            speed, Query.AllTags([MinecraftItemTags.IsAxe, tier])
+        mining.add_item_specific_speed(
+            item=ItemTagFilter(tags=Query.AllTags([MinecraftItemTags.IsAxe, tier])),
+            destroy_speed=speed,
         )
 
     # Stripped wood all round, rings on the ends
@@ -96,8 +97,8 @@ def create(
         (BlockFaceValues.Down, f"{wood}_log_stripped_top"),
     ):
         materials.add_instance(
-            InstanceSpec(
-                blockbench_name=MODEL,
+            spec=InstanceSpec(
+                blockbench=MODEL,
                 face=face,
                 variations=[InstanceVariant(color=texture)],
                 params=MaterialParams(render_method=BlockMaterial.Opaque),
@@ -105,36 +106,38 @@ def create(
         )
 
     block.server.components.add(
-        BlockDisplayName(display_name),
+        BlockDisplayName(value=display_name),
         mining,
         BlockGeometry(),
         materials,
-        BlockCollisionBox((16, 16, 16), (-8, 0, -8)),
-        BlockSelectionBox((16, 16, 16), (-8, 0, -8)),
-        BlockMovable(BlockMovementType.PushPull),
+        BlockCollisionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockSelectionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
+        BlockMovable(movement_type="push_pull"),
         BlockFlammable(),
-        BlockMapColor(map_color),
-        BlockLightDampening(0),
+        BlockMapColor(color=map_color),
+        BlockLightDampening(value=0),
         BlockTagComponent(
-            [
+            value=[
                 MinecraftBlockTags.Wood,
                 MinecraftBlockTags.IsAxeItemDestructible,
                 MinecraftBlockTags.Log,
             ]
         ),
-        BlockConnectionRule("all"),
-        BlockDestructibleByExplosion(15),
-        BlockRedstoneConductivity(True, True),
+        BlockConnectionRule(accepts_connections_from="all"),
+        BlockDestructibleByExplosion(explosion_resistance=15),
+        BlockRedstoneConductivity(
+            allows_wire_to_step_down=True, redstone_conductor=True
+        ),
     )
 
     block.descriptor()
 
     # Its item: shown in the creative inventory, burns in a furnace, and its vanilla tag lets every vanilla wood recipe use it
     block.item.server.components.add(
-        ItemBlockPlacer(block.identifier, replace_block_item=True),
-        ItemDisplayName(display_name),
-        ItemFuel(15),
-        ItemTags([MinecraftItemTags.Logs, MinecraftItemTags.LogsThatBurn]),
+        ItemBlockPlacer(block=block.identifier, replace_block_item=True),
+        ItemDisplayName(value=display_name),
+        ItemFuel(duration=15),
+        ItemTags(tags=[MinecraftItemTags.Logs, MinecraftItemTags.LogsThatBurn]),
     )
     block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Log)
 
