@@ -17,7 +17,7 @@ from anvil.lib.jsonmodel import (
 class AIGoal(JsonComponent, abstract=True):
     """Base of the AI goals (`minecraft:behavior.*`).
 
-    Parameters:
+    Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over while it runs.
     """
@@ -33,7 +33,7 @@ class AIGoal(JsonComponent, abstract=True):
 class EventTrigger(JsonObject):
     """An event to run, the entity it runs on, and the conditions for it to run.
 
-    Parameters:
+    Args:
         event (str): The event to run.
         filters (Filter, optional): The conditions for the event to run.
         target (FilterSubject, optional): The entity the event runs on. Game default self.
@@ -51,7 +51,7 @@ class EventTrigger(JsonObject):
 class MenuCategory(JsonObject):
     """Where a block or item appears in the creative inventory and the crafting book.
 
-    Parameters:
+    Args:
         category (ItemCategory): The tab. Without a menu category the block or item is hidden.
         group (ItemGroups | str, optional): The expandable group in the tab, as its group key.
         is_hidden_in_commands (bool, optional): Hides it from commands such as /give. Game default False.
@@ -73,7 +73,7 @@ class ComponentGroup(JsonContainer):
     """The components of an entity, block, item or biome. The root components are the group
     named `components`; any other name is an entity component group, added and removed by events.
 
-    Parameters:
+    Args:
         name (str): The group name: `components` for the root, or the key under `component_groups`.
         components (list[JsonComponent], optional): The components. Add more with `add`.
     """
@@ -82,7 +82,7 @@ class ComponentGroup(JsonContainer):
 class Permutation(JsonContainer):
     """Block components that apply while a condition is true.
 
-    Parameters:
+    Args:
         condition (Molang | str): The Molang condition.
         components (list[JsonComponent], optional): The components. Add more with `add`.
 

@@ -1,7 +1,6 @@
-import os
 from typing import Literal
 
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -9,7 +8,8 @@ class ShadowSettings(AddonObject):
     """Global shadow settings for Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "shadows")
+    _pack = Pack.RP
+    _folder = "shadows"
     _object_type = "Shadow Settings"
 
     def __init__(self) -> None:
@@ -30,7 +30,7 @@ class ShadowSettings(AddonObject):
     ) -> "ShadowSettings":
         """Sets the shadow style and resolution.
 
-        Parameters:
+        Args:
             style (Literal["blocky_shadows", "soft_shadows"]): The style of shadows to render.
             texel_size (float, optional): Texel size for shadows. Defaults to 16.
         """

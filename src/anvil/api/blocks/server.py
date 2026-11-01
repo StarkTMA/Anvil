@@ -46,7 +46,7 @@ class _BlockTraits:
     ):
         """can add states containing information about the player's rotation when the block is placed.
 
-        Parameters:
+        Args:
             y_rotation_offset (float, optional): The y rotation offset. Defaults to 0.
             blocks_to_corner_with (list[MinecraftBlockDescriptor], optional): A list of blocks that when placed next to this block, will cause the block to rotate to face the corner between them. Defaults to None.
             traits (list[PlacementDirectionTrait], optional): The traits for the block. Defaults to None.
@@ -86,7 +86,7 @@ class _BlockTraits:
     def placement_position(self, traits: list[PlacementPositionTrait]):
         """Can add states containing information about the position of the block when it is placed.
 
-        Parameters:
+        Args:
             traits (list[PlacementPositionTrait]): The traits for the block.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#placement_position-example)
@@ -98,7 +98,7 @@ class _BlockTraits:
     def connection(self, traits: list[ConnectionTrait]):
         """Can add states containing information about the connection of the block to other blocks.
 
-        Parameters:
+        Args:
             traits (list[ConnectionTrait]): The traits for the block.
 
         ## [Documentation reference](https://learn.microsoft.com/en-gb/minecraft/creator/reference/content/blockreference/examples/blocktraits#connection_trait_example)
@@ -119,7 +119,7 @@ class _BlockTraits:
         block uses ``minecraft:selection_box`` with a raw ``true`` value, Bedrock
         expands the selection outline by combining the AABBs of each part.
 
-        Parameters:
+        Args:
             direction (Literal["up", "down", "north", "south", "east", "west"]): Direction the parts are placed from.
             part_count (int, optional): Number of parts in the multi block. Valid range is [2, 4]. Defaults to 2.
 
@@ -197,7 +197,7 @@ class _BlockServerDescription(MinecraftDescription):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """The block description.
 
-        Parameters:
+        Args:
             name (str): The name of the block.
             is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
         """
@@ -212,7 +212,7 @@ class _BlockServerDescription(MinecraftDescription):
     ) -> "_BlockServerDescription":
         """Adds a state to the block.
 
-        Parameters:
+        Args:
             name (str): The name of the state.
             values (float | str |bool): Values this state can have.
 
@@ -234,7 +234,7 @@ class _BlockServerDescription(MinecraftDescription):
     ) -> "_BlockServerDescription":
         """Sets the menu category for the Block.
 
-        Parameters:
+        Args:
             category (ItemCategory): The category of the Block.
             group (ItemGroups | None, optional): The group of the Block. Defaults to None.
             is_hidden_in_commands (bool, optional): Whether the Block is hidden in commands. Defaults to False.
@@ -275,7 +275,7 @@ class BlockServer(AddonObject):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """The block server object.
 
-        Parameters:
+        Args:
             name (str): The name of the block.
             is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
         """
@@ -298,7 +298,7 @@ class BlockServer(AddonObject):
     def permutation(self, condition: str | Molang) -> Permutation:
         """Adds a permutation to the block.
 
-        Parameters:
+        Args:
             condition (str | Molang): The condition for the permutation.
         """
         permutation = Permutation(condition=condition)

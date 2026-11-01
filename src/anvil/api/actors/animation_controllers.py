@@ -1,16 +1,15 @@
-import os
 from typing import TYPE_CHECKING, overload
 
 from anvil.api.core.enums import Target
 from anvil.api.logic.molang import Molang
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.schemas import (
     AddonObject,
     JsonSchemes,
 )
 
 if TYPE_CHECKING:
-    from .actors import _ActorClientDescription
+    from .description import _ActorClientDescription
 
 __all__ = ["BPAnimationControllers", "RPAnimationControllers"]
 
@@ -363,11 +362,9 @@ class _RP_ControllerState:
 
 
 class _BP_Controller:
-    def __init__(
-        self, identifier, controller_shortname, initial_state: str = "default"
-    ):
+    def __init__(self, identifier, controller_name, initial_state: str = "default"):
         self._identifier = identifier
-        self._controller_shortname = controller_shortname
+        self._controller_shortname = controller_name
         self._controllers = JsonSchemes.animation_controller(
             self._identifier, self._controller_shortname, initial_state
         )
@@ -422,10 +419,10 @@ class _RP_Controller(_BP_Controller):
         self,
         actor: "_ActorClientDescription",
         name,
-        controller_shortname,
+        controller_name,
         initial_state: str = "default",
     ):
-        super().__init__(name, controller_shortname, initial_state)
+        super().__init__(name, controller_name, initial_state)
         self._actor = actor
         self._side = "Client"
         self._controller_states: list[_RP_ControllerState] = []
@@ -439,10 +436,8 @@ class _RP_Controller(_BP_Controller):
 
 class BPAnimationControllers(AddonObject):
     _extension = ".bp_ac.json"
-    _path = os.path.join(
-        CONFIG.BP_PATH,
-        "animation_controllers",
-    )
+    _pack = Pack.BP
+    _folder = "animation_controllers"
     _object_type = "Behavior Pack Animation Controller"
 
     def __init__(self, identifier) -> None:
@@ -451,13 +446,13 @@ class BPAnimationControllers(AddonObject):
         self._controllers_list: list[_BP_Controller] = []
 
     def add_controller(
-        self, controller_shortname: str, initial_state: str = "default"
+        self, controller_name: str, initial_state: str = "default"
     ) -> _BP_Controller:
         """Adds a new animation controller to the current actor with `default` as the `initial_state`.
 
         Parameters
         ----------
-        controller_shortname : str
+        controller_name : str
             The shortname of the controller you want to add.
 
         Returns
@@ -465,7 +460,7 @@ class BPAnimationControllers(AddonObject):
             Animation controller.
 
         """
-        ctrl = _BP_Controller(self.identifier, controller_shortname, initial_state)
+        ctrl = _BP_Controller(self.identifier, controller_name, initial_state)
         self._controllers_list.append(ctrl)
         return ctrl
 
@@ -481,7 +476,8 @@ class BPAnimationControllers(AddonObject):
 
 class RPAnimationControllers(AddonObject):
     _extension = ".rp_ac.json"
-    _path = os.path.join(CONFIG.RP_PATH, "animation_controllers")
+    _pack = Pack.RP
+    _folder = "animation_controllers"
     _object_type = "Resource Pack Animation Controller"
 
     def __init__(self, actor: "_ActorClientDescription", name) -> None:
@@ -491,13 +487,13 @@ class RPAnimationControllers(AddonObject):
         self._controllers_list: list[_RP_Controller] = []
 
     def add_controller(
-        self, controller_shortname: str, initial_state: str = "default"
+        self, controller_name: str, initial_state: str = "default"
     ) -> _RP_Controller:
         """Adds a new animation controller to the current actor with `default` as the `initial_state`.
 
         Parameters
         ----------
-        controller_shortname : str
+        controller_name : str
             The shortname of the controller you want to add.
         initial_state : str, optional
             The initial state of the controller, by default "default".
@@ -508,7 +504,7 @@ class RPAnimationControllers(AddonObject):
 
         """
         self._animation_controller = _RP_Controller(
-            self._actor, self.identifier, controller_shortname, initial_state
+            self._actor, self.identifier, controller_name, initial_state
         )
         self._controllers_list.append(self._animation_controller)
         return self._animation_controller

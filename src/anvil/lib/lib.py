@@ -55,7 +55,7 @@ class Directory:
         """
         Creates a new directory.
 
-        Parameters:
+        Args:
             path (str): The path to the new directory.
         """
         if not path:
@@ -73,7 +73,7 @@ class Directory:
         """
         Copies a file from one directory to another.
 
-        Parameters:
+        Args:
             old_dir (str): The path to the source directory.
             new_dir (str): The path to the destination directory.
             target_file (str): The name of the file to be copied.
@@ -94,7 +94,7 @@ class Directory:
         """
         Copies a folder and all its contents to a new location.
 
-        Parameters:
+        Args:
             old_dir (str): The path to the source directory.
             new_dir (str): The path to the destination directory.
         """
@@ -108,7 +108,7 @@ class Directory:
         """
         Moves a folder and all its contents to a new location.
 
-        Parameters:
+        Args:
             old_dir (str): The path to the source directory.
             new_dir (str): The path to the destination directory.
         """
@@ -253,7 +253,7 @@ class AnvilIO:
         """
         Create or modify a file with the given content.
 
-        Parameters:
+        Args:
             name (str): The name of the file.
             content (Any): The content of the file.
             directory (str): The directory path where the file should be created or modified.
@@ -328,7 +328,7 @@ class AnvilArchive:
         """
         Create a ZIP archive containing multiple directories and files.
 
-        Parameters:
+        Args:
             zip_name (str): The name of the ZIP archive.
             dir_list (dict): A dictionary where the keys are source directories and the values are target directories.
 
@@ -906,7 +906,7 @@ def clamp(value: float | int, _min: float | int, _max: float | int) -> float | i
     """
     Clamps a value between a minimum and maximum limit.
 
-    Parameters:
+    Args:
         value (float | int): The value to be clamped.
         _min (float | int): The lower limit.
         _max (float | int): The upper limit.
@@ -921,7 +921,7 @@ def frange(start: int, stop: int, num: float = 1) -> list[float]:
     """
     Generate a list of interpolated float values between start and stop.
 
-    Parameters:
+    Args:
         start (int): The starting value.
         stop (int): The ending value.
         num (float, optional): The number of values to generate. Defaults to 1.

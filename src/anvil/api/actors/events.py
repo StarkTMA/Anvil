@@ -1,4 +1,4 @@
-from anvil.api.actors.components import Filter
+from anvil.api.core.filters import Filter
 from anvil.api.core.enums import Vibrations
 from anvil.lib.config import CONFIG
 
@@ -65,7 +65,7 @@ class _BaseEvent:
     def unleash(self, unleash_self: bool = False, unleash_others: bool = False):
         """Unleashes the entity.
 
-        Parameters:
+        Args:
             unleash_self (bool, optional): If true, unleashes the entity from the entity it is leashed to. Defaults to False.
             unleash_others (bool, optional): If true, unleashes all entities that are leashed to the entity. Defaults to False.
         """

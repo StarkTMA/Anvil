@@ -1,5 +1,3 @@
-import os
-
 from anvil.api.core.enums import (
     MaterialDefinitions,
     MaterialFunc,
@@ -7,7 +5,7 @@ from anvil.api.core.enums import (
     MaterialStates,
 )
 from anvil.api.core.types import Identifier
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -20,7 +18,8 @@ class MaterialsObject(AddonObject):
 
     _instance = None
     _extension = ".material"
-    _path = os.path.join(CONFIG.RP_PATH, "materials")
+    _pack = Pack.RP
+    _folder = "materials"
     _object_type = "Materials"
 
     def __new__(cls):
@@ -62,7 +61,7 @@ class Material:
         """
         Initializes a Material instance.
 
-        Parameters:
+        Args:
             material_name (str): The name of the material.
             baseMaterial (str): The base material's name, if any.
         """
@@ -85,7 +84,7 @@ class Material:
         Rendering states control basic graphics pipeline settings, such as whether to enable blending,
         disable culling (rendering backfaces), or write to the depth buffer.
 
-        Parameters:
+        Args:
             states (MaterialStates): One or more `MaterialStates` enum values (e.g., `MaterialStates.DisableCulling`, `MaterialStates.Blending`).
 
         Returns:
@@ -101,7 +100,7 @@ class Material:
         Use this to disable default behaviors inherited from a base material.
         For example, removing `DisableCulling` to restore backface culling.
 
-        Parameters:
+        Args:
             states (MaterialStates): The material states to remove.
 
         Returns:
@@ -116,7 +115,7 @@ class Material:
 
         This appends to the states inherited from the base material instead of replacing them.
 
-        Parameters:
+        Args:
             states (MaterialStates): The material states to add.
 
         Returns:
@@ -139,7 +138,7 @@ class Material:
         The stencil buffer is used to mask pixels and control drawing based on custom rules.
         This method defines how the stencil test behaves for the front side of the geometry.
 
-        Parameters:
+        Args:
             stencilFunc (MaterialFunc, optional): The comparison function (e.g. Equal, Always) used to determine if the stencil test passes.
             stencilFailOp (MaterialOperation, optional): The operation to perform on the stencil buffer value if the stencil test fails.
             stencilDepthFailOp (MaterialOperation, optional): The operation to perform if the stencil test passes but the depth test fails.
@@ -175,7 +174,7 @@ class Material:
         Functionally identical to `frontFace`, but applied to the back side of geometry.
         This allows for double-sided stencil effects (e.g. treating the inside of a volume differently).
 
-        Parameters:
+        Args:
             stencilFunc (MaterialFunc, optional): The comparison function.
             stencilFailOp (MaterialOperation, optional): Operation on stencil fail.
             stencilDepthFailOp (MaterialOperation, optional): Operation on stencil pass but depth fail.
@@ -204,7 +203,7 @@ class Material:
         This value is compared against the value in the stencil buffer using the `stencilFunc`.
         For example, if `stencilFunc` is `Equal` and `stencilRef` is 1, pixels are only drawn where the stencil buffer is 1.
 
-        Parameters:
+        Args:
             stencilRef (int): The integer reference value (0-255).
 
         Returns:
@@ -222,7 +221,7 @@ class Material:
         Standard depth testing uses `LessEqual` (draw if closer or equal).
         Changing this allows valid rendering of objects behind others (e.g. `Greater`) or always drawing on top (`Always`).
 
-        Parameters:
+        Args:
             depthFunc (MaterialFunc): The comparison function to use (e.g. `MaterialFunc.LessEqual`, `MaterialFunc.Always`).
 
         Returns:
@@ -238,7 +237,7 @@ class Material:
         Blending combines the source color with the destination color (the pixel already in the buffer).
         Example: `SourceAlpha` uses the texture's alpha channel for transparency.
 
-        Parameters:
+        Args:
             blendSrc (str): The source blend factor string (e.g., "SourceAlpha", "One").
 
         Returns:
@@ -254,7 +253,7 @@ class Material:
         Together with `blendSrc`, this determines the final pixel color.
         Example: `OneMinusSrcAlpha` is commonly used for standard transparency (inverted alpha).
 
-        Parameters:
+        Args:
             blendDst (str): The destination blend factor (e.g., "OneMinusSrcAlpha", "Zero").
 
         Returns:
@@ -270,7 +269,7 @@ class Material:
         The vertex shader processes each vertex's position and attributes (UVs, normals).
         It transforms 3D model coordinates into screen space.
 
-        Parameters:
+        Args:
             shader (str): The relative path to the vertex shader (e.g., "shaders/entity.vertex").
 
         Returns:
@@ -285,7 +284,7 @@ class Material:
 
         The fragment shader calculates the color of each pixel, applying textures, lighting, and effects.
 
-        Parameters:
+        Args:
             shader (str): The relative path to the fragment shader (e.g., "shaders/entity.fragment").
 
         Returns:
@@ -301,7 +300,7 @@ class Material:
         Geometry shaders can generate new geometry (vertices/primitives) on the fly.
         (Less commonly used in standard Bedrock entity materials).
 
-        Parameters:
+        Args:
             shader (str): The relative path to the geometry shader file.
 
         Returns:
@@ -316,7 +315,7 @@ class Material:
 
         Used when playing in Virtual Reality mode to handle stereo rendering adjustments.
 
-        Parameters:
+        Args:
             shader (str): The relative path to the shader (e.g., "shaders/entity.geometry").
 
         Returns:
@@ -332,7 +331,7 @@ class Material:
         Specifies what information (Position, Normal, UVs, Color/BoneWeights) is available
         in the shader input attributes. Must match the shader's expectation.
 
-        Parameters:
+        Args:
             fields (list[dict]): List of field objects (e.g., `[{"field": "Position"}, {"field": "UV0"}]`).
 
         Returns:
@@ -348,7 +347,7 @@ class Material:
         Variants allow switching between different shader setups (defines, vertex fields)
         based on conditions, such as skinning support or specific defines being active.
 
-        Parameters:
+        Args:
             variants (list[dict]): A list of variant configuration dictionaries.
 
         Returns:
@@ -363,7 +362,7 @@ class Material:
 
         Controls whether the material benefits from MSAA to smooth jagged edges.
 
-        Parameters:
+        Args:
             support (str): The support mode (e.g., "Both", "None", "MSAA").
 
         Returns:
@@ -381,7 +380,7 @@ class Material:
         - "Line": Draws wireframe lines.
         - "Quad": Draws quads.
 
-        Parameters:
+        Args:
             mode (str): The primitive mode string.
 
         Returns:
@@ -397,7 +396,7 @@ class Material:
         Offsets the depth value of the rendered geometry. Positive values pull the geometry "closer" to the camera
         without changing its actual position. Used to prevent z-fighting (flickering) when two surfaces overlap.
 
-        Parameters:
+        Args:
             bias (float): The bias value (typically small, e.g., 100.0).
 
         Returns:
@@ -413,7 +412,7 @@ class Material:
         Offsets depth based on the polygon's angle to the camera. Surfaces viewed at a steep angle need more bias
         to prevent z-fighting. Works in conjunction with `depthBias`.
 
-        Parameters:
+        Args:
             bias (float): The slope-scale factor (e.g., 0.1).
 
         Returns:
@@ -429,7 +428,7 @@ class Material:
         Similar to `depthBias`, but specifically for the OpenGL backend (some platforms).
         Usually kept consistent with `depthBias`.
 
-        Parameters:
+        Args:
             bias (float): The OpenGL depth bias value.
 
         Returns:
@@ -444,7 +443,7 @@ class Material:
 
         Similar to `slopeScaledDepthBias`, but for the OpenGL backend.
 
-        Parameters:
+        Args:
             bias (float): The OpenGL slope-scale factor.
 
         Returns:
@@ -460,7 +459,7 @@ class Material:
         Defines how textures are filtered (Nearest/Linear) and wrapped (Repeat/Clamp).
         Example: Setting filter to 'Point' creates a pixelated look (Minecraft default).
 
-        Parameters:
+        Args:
             states (list[dict]): A list of sampler state objects.
 
         Returns:
@@ -475,7 +474,7 @@ class Material:
 
         Appends to existing sampler states inherited from the base material.
 
-        Parameters:
+        Args:
             states (list[dict]): A list of sampler state objects to add.
 
         Returns:
@@ -492,7 +491,7 @@ class Material:
         glint effects (`GLINT`), or color masking (`USE_COLOR_MASK`).
         **Overwrites** all existing defines.
 
-        Parameters:
+        Args:
             defines (MaterialDefinitions): Variable arguments of `MaterialDefinitions`.
 
         Returns:
@@ -508,7 +507,7 @@ class Material:
         Use this to disable features inherited from a base material.
         Example: Removing `USE_OVERLAY` to stop an entity from flashing red when hit.
 
-        Parameters:
+        Args:
             defines (MaterialDefinitions): The defines to remove.
 
         Returns:
@@ -523,7 +522,7 @@ class Material:
 
         Enables additional features like emulation or multi-texturing on top of the base material's configuration.
 
-        Parameters:
+        Args:
             defines (MaterialDefinitions): The defines to add.
 
         Returns:

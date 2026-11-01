@@ -4,7 +4,7 @@ into the builders of `anvil.api.models` (geometry, animations, voxel shapes) plu
 Not meant to be used directly: entities, blocks and items load models through it.
 """
 
-import json
+import orjson
 import os
 
 import click
@@ -33,7 +33,7 @@ class _Blockbench:
     def __init__(self, filename: str, source: str = "actors") -> None:
         """Handles loading and managing Blockbench models.
 
-        Parameters:
+        Args:
             filename (str): The name of the model file (without extension).
             source (str, optional): The source of the model. Defaults to "actors".
 
@@ -60,8 +60,8 @@ class _Blockbench:
         self._source = source
 
         if os.path.exists(self._path):
-            with open(self._path, "r", encoding="utf-8") as model:
-                self.bbmodel = json.load(model)
+            with open(self._path, "rb") as model:
+                self.bbmodel = orjson.loads(model.read())
                 if self.bbmodel["model_identifier"] != filename:
                     raise ValueError(
                         f"Blockbench model identifier mismatch: expected '{filename}', found '{self.bbmodel['model_identifier']}'."

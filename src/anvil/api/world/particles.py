@@ -1,8 +1,8 @@
-import json
+import orjson
 import os
 
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject
 
@@ -34,7 +34,8 @@ class Particle(AddonObject):
     _non_queued_particles: set[str] = set()
     _queued_particles: set[str] = set()
     _extension = ".particle.json"
-    _path = os.path.join(CONFIG.RP_PATH, "particles")
+    _pack = Pack.RP
+    _folder = "particles"
     _object_type = "Particle"
 
     def _check_event_particles(self):
@@ -70,8 +71,8 @@ class Particle(AddonObject):
             raise ParticleReferencedNotFoundError(self._name, reference_name)
 
     def _load_file_content(self, source_path):
-        with open(source_path, "r") as file:
-            self._content = json.loads(file.read())
+        with open(source_path, "rb") as file:
+            self._content = orjson.loads(file.read())
 
     def _set_particle_id_texture(self, texture_name: str):
         texture_path = os.path.join(

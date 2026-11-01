@@ -49,7 +49,7 @@ _fraction = (instance_of(int, float), in_range(0, 1))
 class NoiseDescriptor(JsonObject):
     """The noise a noise gradient surface builder samples.
 
-    Parameters:
+    Args:
         name (str): The name of the noise.
         first_octave (int): The first octave of the noise.
         amplitudes (list[float]): The amplitude of each octave, at least 1.
@@ -65,7 +65,7 @@ class NoiseDescriptor(JsonObject):
 class NoiseBlockSpecifier(JsonObject):
     """A block placed where the noise is above a threshold, or inside a range.
 
-    Parameters:
+    Args:
         block (MinecraftBlockDescriptor): The block placed.
         noise (str, optional): The noise sampled. Defaults to the builder's noise.
         threshold (float, optional): The block is placed where the noise is above this value. Set this or `range`.
@@ -97,7 +97,7 @@ class Surface(JsonObject, abstract=True):
 class OverworldSurface(Surface):
     """Controls the blocks used for the default Minecraft Overworld terrain generation.
 
-    Parameters:
+    Args:
         foundation_material (MinecraftBlockDescriptor): The block used deep underground.
         mid_material (MinecraftBlockDescriptor): The block used in a layer below the surface.
         sea_floor_material (MinecraftBlockDescriptor): The block used as the floor of bodies of water.
@@ -124,7 +124,7 @@ class FrozenOceanSurface(OverworldSurface):
 class MesaSurface(OverworldSurface):
     """Similar to the overworld surface. Adds colored strata and optional pillars.
 
-    Parameters:
+    Args:
         clay_material (MinecraftBlockDescriptor): The base clay block.
         hard_clay_material (MinecraftBlockDescriptor): The hardened clay block.
         bryce_pillars (bool, optional): Whether to add Bryce pillars.
@@ -141,7 +141,7 @@ class MesaSurface(OverworldSurface):
 class SwampSurface(OverworldSurface):
     """Used to add decoration to the surface of swamp biomes such as water lilies.
 
-    Parameters:
+    Args:
         max_puddle_depth_below_sea_level (int, optional): How deep puddles may go, up to 127.
     """
 
@@ -154,7 +154,7 @@ class SwampSurface(OverworldSurface):
 class CappedSurface(Surface):
     """Generates surface on blocks with non-solid blocks above or below.
 
-    Parameters:
+    Args:
         beach_material (MinecraftBlockDescriptor): The block used for beaches.
         ceiling_materials (list[MinecraftBlockDescriptor]): Blocks used for ceilings, at least 1.
         floor_materials (list[MinecraftBlockDescriptor]): Blocks used for floors, at least 1.
@@ -183,7 +183,7 @@ class TheEndSurface(Surface):
 class NoiseGradientSurface(Surface):
     """Places continuous bands of blocks according to a noise distribution.
 
-    Parameters:
+    Args:
         noise_descriptor (NoiseDescriptor): The noise used by the surface builder.
         noise_block_specifiers (list[NoiseBlockSpecifier]): Which noise ranges map to which blocks, at least 1.
         non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks the builder may not replace.
@@ -204,7 +204,7 @@ class NoiseGradientSurface(Surface):
 class SteepMaterialAdjustment(JsonObject):
     """Surface material for steep slopes.
 
-    Parameters:
+    Args:
         material (MinecraftBlockDescriptor): The block used on steep slopes.
         north_slopes (bool, optional): Enable for north-facing slopes. Defaults to None.
         south_slopes (bool, optional): Enable for south-facing slopes. Defaults to None.
@@ -222,7 +222,7 @@ class SteepMaterialAdjustment(JsonObject):
 class TopSlide(JsonObject):
     """Controls the top slide of mountain terrain.
 
-    Parameters:
+    Args:
         enabled (bool): Whether top slide generation is enabled.
     """
 
@@ -232,7 +232,7 @@ class TopSlide(JsonObject):
 class BiomeReplacement(JsonObject):
     """One biome replacement.
 
-    Parameters:
+    Args:
         targets (list[MinecraftBiomeTypes | str]): Biomes that are going to be replaced by the overriding biome. Target biomes must not contain namespaces.
         amount (float): Noise value used to determine whether or not the replacement is attempted, similar to a percentage. Must be in the range (0.0, 1.0].
         noise_frequency_scale (float): Scaling value used to alter the frequency of replacement attempts. A lower frequency will mean a bigger contiguous biome area that occurs less often. A higher frequency will mean smaller contiguous biome areas that occur more often. Must be in the range (0.0, 100.0].
@@ -258,7 +258,7 @@ class BiomeReplacement(JsonObject):
 class SurfaceAdjustmentMaterials(JsonObject):
     """The blocks a surface material adjustment uses while it is active.
 
-    Parameters:
+    Args:
         foundation_material (MinecraftBlockDescriptor, optional): The block used deep underground.
         mid_material (MinecraftBlockDescriptor, optional): The block used in a layer below the surface.
         sea_floor_material (MinecraftBlockDescriptor, optional): The block used as the floor of bodies of water.
@@ -286,7 +286,7 @@ class SurfaceAdjustmentMaterials(JsonObject):
 class GrassTint(JsonObject):
     """The color grass is tinted by on the map, for `BiomeMapTints`.
 
-    Parameters:
+    Args:
         tint (Color): The tint color. Written as a hex color.
     """
 
@@ -296,7 +296,7 @@ class GrassTint(JsonObject):
 class SurfaceMaterialAdjustment(JsonObject):
     """An adjustment to generated terrain, replacing blocks based on the specified settings.
 
-    Parameters:
+    Args:
         height_range (tuple[float | str, float | str], optional): The range of heights [min, max] for which this adjustment applies. Each bound is a number or a Molang expression.
         noise_frequency_scale (float, optional): The scale to multiply by the position when accessing the noise value for the material adjustments.
         noise_range (tuple[float, float], optional): The range of noise values [min, max] for which this adjustment applies.
@@ -326,7 +326,7 @@ class SurfaceMaterialAdjustment(JsonObject):
 class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
     """Shared fields and builders of the surface and subsurface builder components.
 
-    Parameters:
+    Args:
         builder (Surface, optional): The surface builder to use. Set it directly or
             with one of the `set_*_builder` methods.
     """
@@ -462,7 +462,7 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
     ):
         """Places continuous bands of blocks according to a noise distribution.
 
-        Parameters:
+        Args:
             noise_descriptor (NoiseDescriptor): The NoiseDescriptor used by the surface builder.
             noise_block_specifiers (list[NoiseBlockSpecifier]): The noise block specifiers defining which ranges
                 of noise are associated with which blocks.
@@ -480,7 +480,7 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
 class BiomeClimate(JsonComponent):
     """Sets the climate properties of the biome.
 
-    Parameters:
+    Args:
         temperature (float, optional): Temperature affects a variety of visual and behavioral things, including snow and ice placement, sponge drying, and sky color. Between -50.0 and 50.0. Defaults to None.
         downfall (float, optional): Amount that precipitation affects colors and block changes. Setting to 0 will stop rain from falling in the biome. Between 0.0 and 1.0. Defaults to None.
         snow_accumulation (list[float], optional): Minimum and maximum snow level, each multiple of 0.125 is another snow layer. Exactly 2 values between 0.0 and 1.0. Defaults to None.
@@ -502,7 +502,7 @@ class BiomeClimate(JsonComponent):
 class BiomeCreatureSpawnProbability(JsonComponent):
     """Sets the probability that creatures will spawn within the biome when a chunk is generated.
 
-    Parameters:
+    Args:
         probability (float, optional): Probability between 0.0 and 0.75 of creatures spawning within the biome on chunk generation. Defaults to None.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_creature_spawn_probability)
@@ -518,7 +518,7 @@ class BiomeCreatureSpawnProbability(JsonComponent):
 class BiomeHumidity(JsonComponent):
     """Forces a biome to either always be humid or never humid. Humidity affects the spread chance and spread rate of fire in the biome.
 
-    Parameters:
+    Args:
         is_humid (bool, optional): Whether the biome is humid or not. Affects fire spread mechanics. Defaults to None.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_humidity)
@@ -532,9 +532,9 @@ class BiomeHumidity(JsonComponent):
 class BiomeMapTints(JsonComponent):
     """Sets the color grass and foliage will be tinted by in this biome on the map.
 
-    Parameters:
+    Args:
         foliage (Color, optional): Sets the color foliage will be tinted by in this biome on the map. Written as a hex color. Defaults to None.
-        grass (GrassTint, optional): The color grass is tinted by in this biome on the map. Defaults to None.
+        grass (GrassTint, optional): The color grass is tinted by in this biome on the map. Defaults to None. Set it with `set_grass`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_map_tints)
     """
@@ -546,11 +546,22 @@ class BiomeMapTints(JsonComponent):
         default=None, validators=[instance_of(GrassTint)]
     )
 
+    def set_grass(
+        self,
+        *,
+        tint: Color,
+    ) -> "BiomeMapTints":
+        """Sets the color grass is tinted by on the map. See `GrassTint` for the parameters."""
+        self.grass = GrassTint(
+            tint=tint,
+        )
+        return self
+
 
 class BiomeMountainParameters(JsonComponent):
     """Noise parameters used to drive mountain terrain generation in Overworld.
 
-    Parameters:
+    Args:
         steep_material_adjustment (SteepMaterialAdjustment, optional): Surface material for steep slopes. Defaults to None.
         top_slide (TopSlide, optional): Top slide settings. Defaults to None.
 
@@ -595,7 +606,7 @@ class BiomeMountainParameters(JsonComponent):
 class BiomeMultiNoiseGenerationRules(JsonComponent):
     """Controls how this biome is instantiated (and then potentially modified) during world generation of the nether.
 
-    Parameters:
+    Args:
         target_altitude (float, optional): Altitude with which this biome should be generated, relative to other biomes. Defaults to None.
         target_humidity (float, optional): Humidity with which this biome should be generated, relative to other biomes. Defaults to None.
         target_temperature (float, optional): Temperature with which this biome should be generated, relative to other biomes. Defaults to None.
@@ -628,7 +639,7 @@ class BiomeNoiseGradient(JsonComponent):
     """Places continuous bands of blocks according to a noise distribution.
     This surface builder's processing has been implemented with sub-terrain height ranges in mind.
 
-    Parameters:
+    Args:
         type (BiomeNoiseGradientBuilderType, optional): The builder type. Defaults to None.
         noise_descriptor (NoiseDescriptor, optional): The specification for the noise used by the surface builder. Defaults to None.
         noise_block_specifiers (list[NoiseBlockSpecifier], optional): Which ranges of noise are associated with which blocks.
@@ -684,7 +695,7 @@ class BiomeNoiseGradient(JsonComponent):
 class BiomeOverworldGenerationRules(JsonComponent):
     """Controls how this biome is instantiated (and then potentially modified) during world generation of the overworld.
 
-    Parameters:
+    Args:
         generate_for_climates (list[tuple[BiomeClimateCategory, int]], optional): The climate categories this biome can spawn for, as `[climate, weight]` pairs. Defaults to None.
         hills_transformation (BiomeTransformation, optional): What biome to switch to when converting to a hilly biome. Defaults to None.
         mutate_transformation (BiomeTransformation, optional): What biome to switch to when converting to a mutated biome. Defaults to None.
@@ -719,7 +730,7 @@ class BiomeOverworldGenerationRules(JsonComponent):
 class BiomeOverworldHeight(JsonComponent):
     """Noise parameters used to drive terrain height in the Overworld. Set either `noise_params` or `noise_type`.
 
-    Parameters:
+    Args:
         noise_params (tuple[float, float], optional): First value is depth - more negative means deeper underwater, while more positive means higher. Second value is scale, which affects how much noise changes as it moves from the surface. Defaults to None.
         noise_type (BiomeNoiseType, optional): Specifies a preset based on a built-in setting rather than manually using noise_params. Defaults to None.
 
@@ -752,7 +763,7 @@ class BiomePartiallyFrozen(JsonComponent):
 class BiomeReplaceBiomes(JsonComponent):
     """Replaces a specified portion of one or more Minecraft biomes.
 
-    Parameters:
+    Args:
         replacements (list[BiomeReplacement], optional): The replacements. Set them directly or add them with `add_replacement`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_replace_biomes)
@@ -811,7 +822,7 @@ class BiomeSurfaceBuilder(_BaseBiomeSurfaceBuilder):
 class BiomeSurfaceMaterialAdjustments(JsonComponent):
     """Specify fine-detail changes to blocks used in terrain generation (based on a noise function).
 
-    Parameters:
+    Args:
         adjustments (list[SurfaceMaterialAdjustment], optional): The adjustments. Set them directly or add them with `add_adjustment`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_surface_material_adjustments)
@@ -858,7 +869,7 @@ class BiomeSurfaceMaterialAdjustments(JsonComponent):
 class BiomeTags(JsonComponent):
     """Attach arbitrary string tags to this biome. Most biome tags are referenced by JSON settings, but some meanings of tags are directly implemented in the game's code.
 
-    Parameters:
+    Args:
         tags (list[str | MinecraftBiomeTags], optional): Array of string tags used by other systems such as entity spawning. Common tags include: birch, cold, deep, desert, extreme_hills, flower_forest, forest, forest_generation, frozen, ice, ice_plains, jungle, hills, meadow, mesa, mountain, mutated, no_legacy_worldgen, ocean, pale_garden, plains, rare, swamp, taiga. Defaults to None.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_tags)
@@ -874,7 +885,7 @@ class BiomeTags(JsonComponent):
 class BiomeVillageType(JsonComponent):
     """Determines the type of village for the Biome.
 
-    Parameters:
+    Args:
         type (BiomeVillageTypes): The village type for this biome. Must be one of: "default", "desert", "ice", "savanna", "taiga".
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_village_type)
@@ -902,7 +913,7 @@ class BiomeClientAmbientSounds(BiomeClientComponent):
     """Sets the ambient sounds of the biome. The sounds must be individual named sounds in
     `sounds.json`; `BiomeClient.ambient_sounds` adds the component and registers them.
 
-    Parameters:
+    Args:
         addition (str, optional): Named sound that occasionally plays at the listener position.
         loop (str, optional): Named sound that loops while the listener is inside the biome.
         mood (str, optional): Named sound that rarely plays at a nearby air block when the light
@@ -921,7 +932,7 @@ class BiomeClientAmbientSounds(BiomeClientComponent):
 class BiomeClientAtmosphereIdentifier(BiomeClientComponent):
     """Sets the atmospherics used in Vibrant Visuals mode.
 
-    Parameters:
+    Args:
         atmosphere_identifier (AtmosphericSettings | str): The atmospherics definition.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_atmosphere_identifier)
@@ -936,7 +947,7 @@ class BiomeClientMusic(BiomeClientComponent):
     """Sets the music played in the biome. `BiomeClient.biome_music` adds the component and
     registers the music definitions.
 
-    Parameters:
+    Args:
         music_definition (MusicCategory | str, optional): Music played in the biome. Without it
             the dimension decides; an empty string plays no music.
         underwater_music (MusicCategory | str, optional): Music played underwater in the biome.
@@ -959,7 +970,7 @@ class BiomeClientMusic(BiomeClientComponent):
 class BiomeClientColorGradingIdentifier(BiomeClientComponent):
     """Sets the color grading used in Vibrant Visuals mode.
 
-    Parameters:
+    Args:
         color_grading_identifier (ColorGradingSettings | str): The color grading definition.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_color_grading_identifier)
@@ -973,7 +984,7 @@ class BiomeClientColorGradingIdentifier(BiomeClientComponent):
 class BiomeClientCubemapIdentifier(BiomeClientComponent):
     """Sets the cubemap used for the Vibrant Visuals skybox lighting.
 
-    Parameters:
+    Args:
         cubemap_identifier (CubeMapSettings | str): The cubemap definition.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_cubemap_identifier)
@@ -987,7 +998,7 @@ class BiomeClientCubemapIdentifier(BiomeClientComponent):
 class BiomeClientDryFoliageColor(BiomeClientComponent):
     """Sets the dry foliage color.
 
-    Parameters:
+    Args:
         color (Color): The dry foliage color. Written as a hex color.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_dry_foliage_color)
@@ -1001,7 +1012,7 @@ class BiomeClientDryFoliageColor(BiomeClientComponent):
 class BiomeClientFogAppearance(BiomeClientComponent):
     """Sets the fog used during rendering.
 
-    Parameters:
+    Args:
         fog_identifier (FogSettings | str): The fog definition.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_fog_appearance)
@@ -1015,7 +1026,7 @@ class BiomeClientFogAppearance(BiomeClientComponent):
 class BiomeClientFoliageAppearance(BiomeClientComponent):
     """Sets the foliage color or color map.
 
-    Parameters:
+    Args:
         color (Color | FoliageColorMap): A color, written as hex, or a color map name, written
             as `{"color_map": name}`.
 
@@ -1032,7 +1043,7 @@ class BiomeClientFoliageAppearance(BiomeClientComponent):
 class BiomeClientGrassAppearance(BiomeClientComponent):
     """Sets the grass color or color map.
 
-    Parameters:
+    Args:
         color (Color | GrassColorMap): A color, written as hex, or a color map name, written
             as `{"color_map": name}`.
 
@@ -1049,7 +1060,7 @@ class BiomeClientGrassAppearance(BiomeClientComponent):
 class BiomeClientLightingIdentifier(BiomeClientComponent):
     """Sets the lighting used in Vibrant Visuals mode.
 
-    Parameters:
+    Args:
         lighting_identifier (LightingSettings | str): The lighting definition.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_lighting_identifier)
@@ -1063,7 +1074,7 @@ class BiomeClientLightingIdentifier(BiomeClientComponent):
 class BiomeClientPrecipitation(BiomeClientComponent):
     """Sets the precipitation visuals. Set at most one of them.
 
-    Parameters:
+    Args:
         ash (float, optional): Density of ash, as in the soul sand valley.
         blue_spores (float, optional): Density of blue spores, as in the warped forest.
         red_spores (float, optional): Density of red spores, as in the crimson forest.
@@ -1096,7 +1107,7 @@ class BiomeClientPrecipitation(BiomeClientComponent):
 class BiomeClientSkyColor(BiomeClientComponent):
     """Sets the sky color.
 
-    Parameters:
+    Args:
         sky_color (Color): The sky color. Written as a hex color.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_sky_color)
@@ -1110,7 +1121,7 @@ class BiomeClientSkyColor(BiomeClientComponent):
 class BiomeClientWaterAppearance(BiomeClientComponent):
     """Sets the water surface color.
 
-    Parameters:
+    Args:
         surface_color (Color, optional): The water surface color. Written as a hex color.
         surface_opacity (float, optional): From 0, invisible, to 1, opaque.
 
@@ -1126,7 +1137,7 @@ class BiomeClientWaterAppearance(BiomeClientComponent):
 class BiomeClientWaterIdentifier(BiomeClientComponent):
     """Sets the water rendering used in Vibrant Visuals mode.
 
-    Parameters:
+    Args:
         water_identifier (WaterSettings | str): The water definition.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_water_identifier)

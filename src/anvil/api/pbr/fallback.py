@@ -1,9 +1,7 @@
-import os
-
 from anvil.api.core.types import (
     RGBA255,
 )
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import AnvilFormatter
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -12,7 +10,8 @@ class PBRFallback(AddonObject):
     """PBR fallback settings acting as default values when texture sets are not provided."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "pbr")
+    _pack = Pack.RP
+    _folder = "pbr"
     _object_type = "PBR Fallback Settings"
 
     def __init__(self) -> None:
@@ -29,7 +28,7 @@ class PBRFallback(AddonObject):
     def block_fallback(self, MERS: RGBA255) -> None:
         """Sets the fallback MERS (Metallic, Emissive, Roughness, Specular) values for blocks that do not have PBR textures.
 
-        Parameters:
+        Args:
             MERS (RGBA255): The RGBA values representing the fallback MERS in the 0-255 range.
         """
         self._content["minecraft:pbr_fallback_settings"]["blocks"] = {
@@ -41,7 +40,7 @@ class PBRFallback(AddonObject):
     def actors_fallback(self, MERS: RGBA255) -> None:
         """Sets the fallback MERS (Metallic, Emissive, Roughness, Specular) values for actors that do not have PBR textures.
 
-        Parameters:
+        Args:
             MERS (RGBA255): The RGBA values representing the fallback MERS in the 0-255 range.
         """
         self._content["minecraft:pbr_fallback_settings"]["actors"] = {
@@ -53,7 +52,7 @@ class PBRFallback(AddonObject):
     def particles_fallback(self, MERS: RGBA255) -> None:
         """Sets the fallback MERS (Metallic, Emissive, Roughness, Specular) values for particles that do not have PBR textures.
 
-        Parameters:
+        Args:
             MERS (RGBA255): The RGBA values representing the fallback MERS in the 0-255 range.
         """
         self._content["minecraft:pbr_fallback_settings"]["particles"] = {
@@ -65,7 +64,7 @@ class PBRFallback(AddonObject):
     def items_fallback(self, MERS: RGBA255) -> None:
         """Sets the fallback MERS (Metallic, Emissive, Roughness, Specular) values for items that do not have PBR textures.
 
-        Parameters:
+        Args:
             MERS (RGBA255): The RGBA values representing the fallback MERS in the 0-255 range.
         """
         self._content["minecraft:pbr_fallback_settings"]["items"] = {

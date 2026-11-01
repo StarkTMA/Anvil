@@ -99,7 +99,7 @@ class Block(MinecraftBlockDescriptor):
         bypassing the generation of block configuration files (server/client JSON files).
         Generates a .texture_set.json file under RP_PATH/textures/blocks/{subfolder}.
 
-        Parameters:
+        Args:
             blockbench (str): The name of the Blockbench model (without extension).
             component (TextureComponents): A TextureComponents object containing color/normal/height/MER/MERS map names.
             subfolder (str, optional): Subfolder under RP_PATH/textures/blocks. Defaults to "".

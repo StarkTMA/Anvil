@@ -106,7 +106,7 @@ _short_tag = max_characters(64)
 class FlipbookParams:
     """A flipbook animation of a material instance's texture, added to `flipbook_textures.json`.
 
-    Parameters:
+    Args:
         frames (list[int]): The atlas frames to play, in order.
         ticks_per_frame (int, optional): How long each frame shows. Defaults to 20.
         atlas_index (int, optional): The atlas index. Defaults to 0.
@@ -151,7 +151,7 @@ class InstanceVariant(TextureComponents):
 class MaterialParams(JsonObject):
     """How a material instance renders. Unset options are left out, so the game defaults apply.
 
-    Parameters:
+    Args:
         render_method (BlockMaterial, optional): The render method. Game default opaque.
         ambient_occlusion (float, optional): Exponent applied to ambient occlusion after lighting, from 0 to 10. Game default 1.
         face_dimming (bool, optional): Whether faces are dimmed by their direction. Game default true.
@@ -191,7 +191,7 @@ class MaterialInstance(MaterialParams):
     """A material instance: a texture and how it renders. It also takes every option of
     `MaterialParams`.
 
-    Parameters:
+    Args:
         face (BlockFaceValues | str, optional): The face, or the name of a material instance in the geometry. Written as the instance's key. Defaults to every face.
         texture (str): The texture's short name in `terrain_texture.json`.
     """
@@ -212,7 +212,7 @@ class InstanceSpec:
     """A material instance to add with `BlockMaterialInstance.add_instance`, and the textures
     to take from a Blockbench model for it.
 
-    Parameters:
+    Args:
         blockbench (str): The Blockbench model the textures come from.
         face (BlockFaceValues | str, optional): The face, or the name of a material instance in the geometry. Defaults to every face.
         variations (list[InstanceVariant]): The textures. With more than one, the game picks one at random, by weight.
@@ -261,7 +261,7 @@ class InstanceSpec:
 class BlockBox(JsonObject):
     """A box inside the block, in pixels, measured from the bottom centre of the block.
 
-    Parameters:
+    Args:
         origin (Vector3D): The minimal corner, x and z from -8 to 8, y from 0.
         size (Vector3D): The size along each axis.
     """
@@ -273,7 +273,7 @@ class BlockBox(JsonObject):
 class ItemTagFilter(JsonObject):
     """Items matched by their tags, for `BlockDestructibleByMining`.
 
-    Parameters:
+    Args:
         tags (Molang | str): A tag query, for example `Query.AnyTag("minecraft:is_pickaxe")`.
     """
 
@@ -283,7 +283,7 @@ class ItemTagFilter(JsonObject):
 class ItemSpecificSpeed(JsonObject):
     """How long the block takes to mine with specific items.
 
-    Parameters:
+    Args:
         item (ItemReference | ItemTagFilter): The item, or the tags of the items.
         destroy_speed (float): The seconds to destroy the block with those items.
     """
@@ -297,7 +297,7 @@ class ItemSpecificSpeed(JsonObject):
 class PlacementCondition(JsonObject):
     """Where the block can be placed and stay, for `BlockPlacementFilter`.
 
-    Parameters:
+    Args:
         allowed_faces (list[BlockFaceValues], optional): The faces of the block below or beside it the block can be placed on. Game default every face.
         block_filter (list[BlockReference], optional): The blocks it can be placed on, at most 64. Game default any block.
     """
@@ -317,7 +317,7 @@ class PlacementCondition(JsonObject):
 class LiquidDetectionRule(JsonObject):
     """How the block reacts to a liquid, for `BlockLiquidDetection`.
 
-    Parameters:
+    Args:
         liquid_type (Literal["water"], optional): The liquid. Only water is supported. Game default water.
         on_liquid_touches (BlockLiquidDetectionTouching, optional): What happens when the liquid flows into the block. Game default blocking.
         can_contain_liquid (bool, optional): Whether the block can be waterlogged. Game default false.
@@ -341,7 +341,7 @@ class LiquidDetectionRule(JsonObject):
 class NWayVisualRotation(JsonObject):
     """The block states that turn a visual's geometry around each axis.
 
-    Parameters:
+    Args:
         x (str, optional): The state for the x axis.
         y (str, optional): The state for the y axis, for example "minecraft:cardinal_direction".
         z (str, optional): The state for the z axis.
@@ -355,7 +355,7 @@ class NWayVisualRotation(JsonObject):
 class BoneVisibility(JsonValue):
     """Whether one bone of a custom geometry is visible. Added with `add_bone_visibility`.
 
-    Parameters:
+    Args:
         bone (str): The bone name. Written as the key.
         visible (bool | Molang): True, False, or a Molang expression evaluated against the block states.
     """
@@ -367,7 +367,7 @@ class BoneVisibility(JsonValue):
 class VisualGeometry(JsonObject):
     """The geometry of an item or embedded visual.
 
-    Parameters:
+    Args:
         identifier (str): The geometry identifier.
         n_way_visual_rotation (NWayVisualRotation, optional): The states that turn it.
 
@@ -390,7 +390,7 @@ class VisualGeometry(JsonObject):
 class BlockEntityContainer(JsonObject):
     """The inventory of a block entity.
 
-    Parameters:
+    Args:
         slot_count (int): The number of slots, from 1 to 54.
     """
 
@@ -400,7 +400,7 @@ class BlockEntityContainer(JsonObject):
 class OffsetRange(JsonObject):
     """The random offset along one axis, for `BlockRandomOffset`.
 
-    Parameters:
+    Args:
         range (tuple[float, float], optional): The `(min, max)` offset, in pixels. Game default (0, 0).
         steps (int, optional): How many positions the range is split into. 0 allows any value between. Game default 0.
     """
@@ -529,7 +529,7 @@ class _BlockVisual(JsonComponent, abstract=True):
         Example:
             >>> BlockItemVisual(blockbench="door").add_bone_visibility(door_open=False)
 
-        Parameters:
+        Args:
             **bones (bool | Molang): Each bone name, and True, False or a Molang expression.
         """
         self.geometry.bone_visibility.extend(
@@ -548,7 +548,7 @@ class _BlockVisual(JsonComponent, abstract=True):
     ):
         """Adds a material instance, and its texture to the resource pack.
 
-        Parameters:
+        Args:
             blockbench (str): The Blockbench model the texture comes from.
             texture (str): The texture.
             face (BlockFaceValues | str, optional): The face, or a material instance name. Defaults to every face.
@@ -591,7 +591,7 @@ class BlockCustomComponent(JsonCustomComponent, abstract=True):
 class BlockChestObstruction(JsonComponent):
     """Defines how this block obstructs a chest directly below it from opening.
 
-    Parameters:
+    Args:
         obstruction_rule (BlockChestObstructionRule, optional): "always", "never", or "shape" to use the block's shape. Game default "shape".
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_chest_obstruction)
@@ -607,7 +607,7 @@ class BlockChestObstruction(JsonComponent):
 class BlockCollisionBox(_BlockBoxComponent):
     """The area of the block that collides with entities. With no box, the full block collides.
 
-    Parameters:
+    Args:
         origin (Vector3D, optional): The minimal corner of the box, in pixels from the bottom centre of the block.
         size (Vector3D, optional): The size of the box. The box must stay within (-8, 0, -8) and (8, 24, 8).
         enabled (bool, optional): False makes the block collide with nothing, written as `false`. Defaults to True.
@@ -625,7 +625,7 @@ class BlockCollisionBox(_BlockBoxComponent):
     def add_box(self, *, origin: Vector3D, size: Vector3D) -> "BlockCollisionBox":
         """Adds another collision box, for more complex shapes.
 
-        Parameters:
+        Args:
             origin (Vector3D): The minimal corner of the box.
             size (Vector3D): The size of the box.
         """
@@ -650,7 +650,7 @@ class BlockCollisionBox(_BlockBoxComponent):
 class BlockConnectionRule(JsonComponent):
     """Defines whether fences, walls, bars and glass panes can connect to this block.
 
-    Parameters:
+    Args:
         accepts_connections_from (BlockConnectionSource, optional): "all", "only_fences" or "none". Game default "all".
         enabled_directions (list[BlockFaceValues], optional): The sides that can connect. Game default every side.
 
@@ -670,7 +670,7 @@ class BlockConnectionRule(JsonComponent):
 class BlockCraftingTable(JsonComponent):
     """Makes the block a crafting table: it opens the crafting table UI and crafts the recipes with its tags.
 
-    Parameters:
+    Args:
         crafting_tags (list[str]): The tags of the recipes it crafts, at most 64, each at most 64 characters.
         table_name (str, optional): The name shown on the UI. Anvil adds it to the language file under a key made from the block identifier.
 
@@ -704,7 +704,7 @@ class BlockCraftingTable(JsonComponent):
 class BlockDestructibleByExplosion(_Switchable):
     """Describes how the block resists explosions.
 
-    Parameters:
+    Args:
         explosion_resistance (float, optional): The resistance to explosions. Game default 0.
         enabled (bool, optional): False makes the block indestructible by explosions, written as `false`. Defaults to True.
 
@@ -721,7 +721,7 @@ class BlockDestructibleByExplosion(_Switchable):
 class BlockDestructibleByMining(_Switchable):
     """Describes how long the block takes to mine.
 
-    Parameters:
+    Args:
         seconds_to_destroy (float, optional): The seconds to mine the block with base equipment. Game default 0.
         item_specific_speeds (list[ItemSpecificSpeed], optional): The seconds to mine it with specific items. Set them directly or add them with `add_item_specific_speed`.
         enabled (bool, optional): False makes the block indestructible by mining, written as `false`. Defaults to True.
@@ -759,7 +759,7 @@ class BlockDestructibleByMining(_Switchable):
 class BlockDestructionParticles(JsonComponent):
     """Sets the particles shown when the block is destroyed.
 
-    Parameters:
+    Args:
         texture (str, optional): The texture of the particles.
         particle_count (int, optional): How many particles, at most 255. Game default 100.
         tint_method (TintMethod, optional): Tint multiplied to the texture.
@@ -788,7 +788,7 @@ class BlockDisplayName(JsonValueComponent):
     """Sets the name of the block. Anvil adds it to the language file under a key made from the
     block identifier, and writes the key.
 
-    Parameters:
+    Args:
         value (str): The name.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_display_name)
@@ -817,7 +817,7 @@ class BlockEmbeddedVisual(_BlockVisual):
     """The geometry and material instances used to render the block when it is embedded in
     another block, such as a flower in a flower pot.
 
-    Parameters:
+    Args:
         blockbench (str | Geometry, optional): The Blockbench model, or a Geometry built in code. Defaults to the full block.
         collection (str, optional): The exported Blockbench collection to use.
         n_way_visual_rotation (NWayVisualRotation, optional): The states that turn the geometry.
@@ -834,8 +834,8 @@ class BlockEmbeddedVisual(_BlockVisual):
 class BlockEntity(JsonComponent):
     """Gives each placed block its own data.
 
-    Parameters:
-        container (BlockEntityContainer, optional): An inventory.
+    Args:
+        container (BlockEntityContainer, optional): An inventory. Set it with `set_container`.
         dynamic_properties (bool, optional): Whether scripts can store dynamic properties on the block. Game default false.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_block_entity)
@@ -848,11 +848,22 @@ class BlockEntity(JsonComponent):
     )
     dynamic_properties: bool | None = json_field(default=None, validators=[_boolean])
 
+    def set_container(
+        self,
+        *,
+        slot_count: int,
+    ) -> "BlockEntity":
+        """Gives the block an inventory. See `BlockEntityContainer` for the parameters."""
+        self.container = BlockEntityContainer(
+            slot_count=slot_count,
+        )
+        return self
+
 
 class BlockEntityFallOn(JsonComponent):
     """Sets how far an entity must fall onto the block to trigger the `onEntityFallOn` event of its custom components.
 
-    Parameters:
+    Args:
         minimum_fall_distance (float, optional): The distance, in blocks. Game default 1.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_entity_fall_on)
@@ -868,7 +879,7 @@ class BlockEntityFallOn(JsonComponent):
 class BlockFlammable(_Switchable):
     """Describes how the block catches fire from its neighbours.
 
-    Parameters:
+    Args:
         catch_chance_modifier (int, optional): The chance the block catches fire. Game default 5.
         destroy_chance_modifier (int, optional): The chance the fire destroys the block. Game default 20.
         lava_flammable (BlockLavaFlammable, optional): Whether lava next to the block sets it on fire: "always" or "never".
@@ -903,7 +914,7 @@ class BlockFlowerPottable(JsonComponent):
 class BlockFriction(JsonValueComponent):
     """How slippery the block is, from 0.0 to 0.9. Higher is less slippery.
 
-    Parameters:
+    Args:
         value (float, optional): The friction. Defaults to 0.4, ice uses 0.02.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_friction)
@@ -917,12 +928,12 @@ class BlockFriction(JsonValueComponent):
 class BlockGeometry(JsonComponent):
     """The geometry used to render the block. The block also needs `BlockMaterialInstance`.
 
-    Parameters:
+    Args:
         blockbench (str | Geometry | BlockDefaultGeometry, optional): The Blockbench model of the block, a Geometry built in code, or a vanilla geometry. Defaults to "minecraft:geometry.full_block". Written as `"identifier"`, a name the base class reserves.
         collection (str, optional): The exported Blockbench collection to use. The geometry identifier becomes `geometry.<namespace>.<model>.<collection>`.
         culling_layer (BlockCullingLayer, optional): The culling layer. Game default "minecraft:culling_layer.undefined".
         culling_shape (str, optional): The shape used to cull neighbouring faces, such as "minecraft:unit_cube". Set by `block_culling`.
-        n_way_visual_rotation (NWayVisualRotation, optional): The block states that turn the geometry around each axis, for example `NWayVisualRotation(y="minecraft:cardinal_direction")`.
+        n_way_visual_rotation (NWayVisualRotation, optional): The block states that turn the geometry around each axis, for example `NWayVisualRotation(y="minecraft:cardinal_direction")`. Set it with `set_n_way_visual_rotation`.
         uv_lock (bool | list[str], optional): Locks the UV orientation of every bone, or of the bones named.
 
     Set which bones are visible with `add_bone_visibility`.
@@ -984,7 +995,7 @@ class BlockGeometry(JsonComponent):
             ...     door_open=Query.BlockState("open"), door_closed=~Query.BlockState("open")
             ... )
 
-        Parameters:
+        Args:
             **bones (bool | Molang): Each bone name, and True, False or a Molang expression.
         """
         self.bone_visibility.extend(
@@ -998,7 +1009,7 @@ class BlockGeometry(JsonComponent):
     ):
         """Gives the geometry culling rules, and returns them to add rules to.
 
-        Parameters:
+        Args:
             culling_shape ("empty" | "custom" | VoxelShape, optional): "custom" uses the bounding boxes of the Blockbench model; a VoxelShape is used as is. Defaults to "empty".
         """
         if self._model is None:
@@ -1021,11 +1032,26 @@ class BlockGeometry(JsonComponent):
             return _geometry_block_culling(self._model)
         return self._model.model.block_culling(self._collection)
 
+    def set_n_way_visual_rotation(
+        self,
+        *,
+        x: str | None = None,
+        y: str | None = None,
+        z: str | None = None,
+    ) -> "BlockGeometry":
+        """Sets the block states that turn the geometry around each axis. See `NWayVisualRotation` for the parameters."""
+        self.n_way_visual_rotation = NWayVisualRotation(
+            x=x,
+            y=y,
+            z=z,
+        )
+        return self
+
 
 class BlockInstrumentSound(JsonComponent):
     """Sets the sound a note block plays when it is above or below this block. At least one face is needed.
 
-    Parameters:
+    Args:
         up (InstrumentSound, optional): The sound when the note block is above. Game default "note.harp".
         down (InstrumentSound, optional): The sound when the note block is below. Game default "note.none".
 
@@ -1051,7 +1077,7 @@ class BlockInstrumentSound(JsonComponent):
 class BlockItemVisual(_BlockVisual):
     """The geometry and material instances used to render the block's item.
 
-    Parameters:
+    Args:
         blockbench (str | Geometry, optional): The Blockbench model, or a Geometry built in code. Defaults to the full block.
         collection (str, optional): The exported Blockbench collection to use.
         n_way_visual_rotation (NWayVisualRotation, optional): The states that turn the geometry.
@@ -1090,7 +1116,7 @@ class BlockItemVisual(_BlockVisual):
             ...     ground=ItemDisplayTransform(translation=(0, 3, 0), scale=(0.5, 0.5, 0.5)),
             ... )
 
-        Parameters:
+        Args:
             merge (bool): Keep the model's transforms for the slots not given. By default
                 the model's transforms are dropped and only the ones given are used.
             thirdperson_righthand (ItemDisplayTransform, optional): The transform of the `thirdperson_righthand` slot.
@@ -1137,7 +1163,7 @@ class BlockItemVisual(_BlockVisual):
 class BlockLeashable(JsonComponent):
     """The block can be leashed to by a lead.
 
-    Parameters:
+    Args:
         offset (Vector3D, optional): Where the lead attaches, in pixels. Game default (0, 8, 0).
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_leashable)
@@ -1151,7 +1177,7 @@ class BlockLeashable(JsonComponent):
 class BlockLightDampening(JsonValueComponent):
     """How much light is dampened as it passes through the block, from 0 to 15.
 
-    Parameters:
+    Args:
         value (int, optional): 15 is fully opaque, like stone; 0 is fully transparent, like glass. Defaults to 15.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_light_dampening)
@@ -1165,7 +1191,7 @@ class BlockLightDampening(JsonValueComponent):
 class BlockLightEmission(JsonValueComponent):
     """How much light the block emits, from 0 to 15.
 
-    Parameters:
+    Args:
         value (int, optional): The light level. Defaults to 0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_light_emission)
@@ -1179,7 +1205,7 @@ class BlockLightEmission(JsonValueComponent):
 class BlockLiquidDetection(JsonComponent):
     """How the block reacts to liquids. Only one rule per liquid is used.
 
-    Parameters:
+    Args:
         detection_rules (list[LiquidDetectionRule], optional): The rules, at least one. Set them directly or add them with `add_detection_rule`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_liquid_detection)
@@ -1217,7 +1243,7 @@ class BlockLiquidDetection(JsonComponent):
 class BlockLootTable(JsonValueComponent):
     """The loot table the block drops when broken. Without it, the block drops itself.
 
-    Parameters:
+    Args:
         value (LootTable | str): The loot table, or its path from the behaviour pack root.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_loot)
@@ -1235,7 +1261,7 @@ class BlockLootTable(JsonValueComponent):
 class BlockMapColor(JsonComponent):
     """The color of the block on a map. Without it, the block doesn't show on maps.
 
-    Parameters:
+    Args:
         color (Color): The color, written as "#RRGGBB".
         tint_method (TintMethod, optional): Tint multiplied to the color by the biome.
 
@@ -1252,7 +1278,7 @@ class BlockMaterialInstance(JsonValueComponent):
     """The material instances of the block: the texture and render options of each face, or
     of each material instance named in the geometry. The block also needs `BlockGeometry`.
 
-    Parameters:
+    Args:
         instances (list[MaterialInstance], optional): The instances, one per face or name. Add them with `add_instance`, which also adds the textures to the resource pack.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_material_instances)
@@ -1271,7 +1297,7 @@ class BlockMaterialInstance(JsonValueComponent):
     ) -> "BlockMaterialInstance":
         """Adds a material instance, and its textures to the resource pack.
 
-        Parameters:
+        Args:
             spec (InstanceSpec): The instance and its textures.
             force_vanilla (bool, optional): Registers the textures as vanilla textures. Defaults to False.
         """
@@ -1333,7 +1359,7 @@ class BlockMaterialInstance(JsonValueComponent):
 class BlockMovable(JsonComponent):
     """How the block reacts to pistons.
 
-    Parameters:
+    Args:
         movement_type (BlockMovementType, optional): Pushed and pulled, pushed only, popped or immovable. Game default push_pull.
         sticky (BlockSticky, optional): "same" also moves the neighbouring blocks with the same setting. Game default "none".
 
@@ -1353,7 +1379,7 @@ class BlockMovable(JsonComponent):
 class BlockPlacementFilter(JsonComponent):
     """Where the block can be placed and stay. When a condition stops being met, the block pops off.
 
-    Parameters:
+    Args:
         conditions (list[PlacementCondition], optional): The conditions, at most 64. Set them directly or add them with `add_condition`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_placement_filter)
@@ -1382,7 +1408,7 @@ class BlockPlacementFilter(JsonComponent):
 class BlockPrecipitationInteractions(JsonComponent):
     """How the block interacts with rain and snow.
 
-    Parameters:
+    Args:
         precipitation_behavior (BlockPrecipitationBehavior): "obstruct_rain", "obstruct_rain_accumulate_snow", "none" or "snowlogging".
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_precipitation_interactions)
@@ -1398,10 +1424,10 @@ class BlockPrecipitationInteractions(JsonComponent):
 class BlockRandomOffset(JsonComponent):
     """Offsets the block by a random amount seeded from its position. It moves what is drawn, the outline and the collision.
 
-    Parameters:
-        x (OffsetRange, optional): The offset along x.
-        y (OffsetRange, optional): The offset along y.
-        z (OffsetRange, optional): The offset along z.
+    Args:
+        x (OffsetRange, optional): The offset along x. Set it with `set_x`.
+        y (OffsetRange, optional): The offset along y. Set it with `set_y`.
+        z (OffsetRange, optional): The offset along z. Set it with `set_z`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_random_offset)
     """
@@ -1418,11 +1444,50 @@ class BlockRandomOffset(JsonComponent):
         default=None, validators=[instance_of(OffsetRange)]
     )
 
+    def set_z(
+        self,
+        *,
+        range: tuple[float, float] | None = None,
+        steps: int | None = None,
+    ) -> "BlockRandomOffset":
+        """Sets the random offset along z. See `OffsetRange` for the parameters."""
+        self.z = OffsetRange(
+            range=range,
+            steps=steps,
+        )
+        return self
+
+    def set_y(
+        self,
+        *,
+        range: tuple[float, float] | None = None,
+        steps: int | None = None,
+    ) -> "BlockRandomOffset":
+        """Sets the random offset along y. See `OffsetRange` for the parameters."""
+        self.y = OffsetRange(
+            range=range,
+            steps=steps,
+        )
+        return self
+
+    def set_x(
+        self,
+        *,
+        range: tuple[float, float] | None = None,
+        steps: int | None = None,
+    ) -> "BlockRandomOffset":
+        """Sets the random offset along x. See `OffsetRange` for the parameters."""
+        self.x = OffsetRange(
+            range=range,
+            steps=steps,
+        )
+        return self
+
 
 class BlockRedstoneConductivity(JsonComponent):
     """The redstone properties of the block.
 
-    Parameters:
+    Args:
         allows_wire_to_step_down (bool, optional): Whether redstone wire can step down over the block. Game default true.
         redstone_conductor (bool, optional): Whether the block can be powered by redstone. Game default false.
 
@@ -1440,7 +1505,7 @@ class BlockRedstoneConductivity(JsonComponent):
 class BlockRedstoneConsumer(JsonComponent):
     """The block consumes a redstone signal, and may pass it on. Root components only.
 
-    Parameters:
+    Args:
         min_power (int, optional): The signal strength, from 0 to 15, at which the `onRedstoneUpdate` script event fires. Game default 0.
         propagates_power (bool, optional): Whether the block passes the signal on. Game default false.
 
@@ -1457,7 +1522,7 @@ class BlockRedstoneConsumer(JsonComponent):
 class BlockRedstoneProducer(JsonComponent):
     """The block produces a redstone signal.
 
-    Parameters:
+    Args:
         power (int, optional): The signal strength, from 0 to 15.
         connected_faces (list[BlockFaceValues], optional): The faces connected to the circuit. Game default every face.
         strongly_powered_face (BlockFaceValues, optional): The face that is strongly powered.
@@ -1490,7 +1555,7 @@ class BlockReplaceable(JsonComponent):
 class BlockSelectionBox(_BlockBoxComponent):
     """The area of the block the player's cursor selects. With no box, the full block is selected.
 
-    Parameters:
+    Args:
         origin (Vector3D, optional): The minimal corner of the box, in pixels from the bottom centre of the block.
         size (Vector3D, optional): The size of the box. The box must stay within (-8, 0, -8) and (8, 16, 8).
         enabled (bool, optional): False makes the block unselectable, written as `false`. Defaults to True.
@@ -1504,7 +1569,7 @@ class BlockSelectionBox(_BlockBoxComponent):
 class BlockSupport(JsonComponent):
     """The support shape of the block. Without it, the block supports like a full cube.
 
-    Parameters:
+    Args:
         shape (BlockSupportShape): "fence" or "stair". Stairs need the `minecraft:vertical_half` and a direction state.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_support)
@@ -1518,7 +1583,7 @@ class BlockSupport(JsonComponent):
 class BlockTagComponent(JsonValueComponent):
     """The tags of the block. Custom tags must be in the project namespace.
 
-    Parameters:
+    Args:
         value (list[MinecraftBlockTags | str]): The tags.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blocktags)
@@ -1538,7 +1603,7 @@ class BlockTagComponent(JsonValueComponent):
 class BlockTick(JsonComponent):
     """Makes the block tick at intervals chosen at random from `interval_range`, sending `onTick` to its custom components.
 
-    Parameters:
+    Args:
         interval_range (tuple[int, int]): The `(min, max)` ticks between ticks. The game rejects the block without it.
         looping (bool, optional): Whether the block keeps ticking. Game default true.
 
@@ -1554,7 +1619,7 @@ class BlockTick(JsonComponent):
 class BlockTransformation(JsonComponent):
     """Translates, rotates and scales the block around its centre.
 
-    Parameters:
+    Args:
         translation (Vector3D, optional): The offset, in blocks.
         rotation (Vector3D, optional): The rotation, in degrees, in steps of 90.
         rotation_pivot (Vector3D, optional): The point the rotation turns around.

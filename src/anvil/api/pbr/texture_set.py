@@ -8,7 +8,7 @@ from anvil.api.core.types import (
     HexRGBA,
 )
 from anvil.lib.blockbench import _Blockbench
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import AnvilFormatter, AnvilValidator, Directory, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -90,12 +90,7 @@ class TextureSet(AddonObject):
 
     _object_type = "Texture Set"
     _extension = ".texture_set.json"
-    _path = os.path.join(
-        CONFIG.RP_PATH,
-        "textures",
-        CONFIG.NAMESPACE,
-        CONFIG.PROJECT_NAME,
-    )
+    _pack = Pack.RP
 
     def __init__(
         self,
@@ -117,14 +112,9 @@ class TextureSet(AddonObject):
         self._target = target
         self._overriding_vanilla = overriding_vanilla
         if self._overriding_vanilla:
-            self._path = os.path.join(
-                CONFIG.RP_PATH,
-                "textures",
-                target,
-            )
+            self._folder = os.path.join("textures", target)
         else:
-            self._path = os.path.join(
-                CONFIG.RP_PATH,
+            self._folder = os.path.join(
                 "textures",
                 CONFIG.NAMESPACE,
                 CONFIG.PROJECT_NAME,
@@ -256,7 +246,7 @@ class TextureSet(AddonObject):
             )
 
         self._content["minecraft:texture_set"].update(color_map)
-        self._path = os.path.join(self._path, self._target)
+        self._folder = os.path.join(self._folder, self._target)
 
     def set_particle_textures(
         self,
@@ -287,18 +277,18 @@ class TextureSet(AddonObject):
 
     def set_blockbench_textures(
         self,
-        blockbench_name: str,
+        blockbench: str,
         components: TextureComponents,
     ) -> "TextureSet":
         """Sets texture components using standard Blockbench exporter conventions.
 
         Args:
-            blockbench_name (str): The name of the blockbench model asset directory.
+            blockbench (str): The name of the blockbench model asset directory.
             components (TextureComponents): The PBR texture components.
         """
         color_map = self.__validate(components)
 
-        self._blockbench = _Blockbench(blockbench_name, self._target)
+        self._blockbench = _Blockbench(blockbench, self._target)
         self._blockbench.textures.queue_texture(components.color)
         color_map["color"] = components.color
         if isinstance(components.normal, str) and not components.normal.startswith("#"):
@@ -314,20 +304,20 @@ class TextureSet(AddonObject):
             self._blockbench.textures.queue_texture(components.mers)
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
 
-        self._path = os.path.join(self._path, self._target, blockbench_name)
+        self._folder = os.path.join(self._folder, self._target, blockbench)
         self._content["minecraft:texture_set"].update(color_map)
         return self
 
     def set_vanilla_texture(
         self,
-        blockbench_name: str,
+        blockbench: str,
         components: TextureComponents,
         subfolder: str = "",
     ) -> "TextureSet":
         """Sets texture components for overriding a vanilla texture.
 
         Args:
-            blockbench_name (str): The name of the blockbench model asset directory.
+            blockbench (str): The name of the blockbench model asset directory.
             components (TextureComponents): The PBR texture components.
             subfolder (str, optional): Subfolder under RP_PATH/textures/blocks. Defaults to "".
         """
@@ -340,7 +330,7 @@ class TextureSet(AddonObject):
             subfolder,
         )
 
-        self._blockbench = _Blockbench(blockbench_name, self._target)
+        self._blockbench = _Blockbench(blockbench, self._target)
         self._blockbench.textures.queue_texture(components.color, dest_dir=dest_dir)
         color_map["color"] = components.color
         if isinstance(components.normal, str) and not components.normal.startswith("#"):

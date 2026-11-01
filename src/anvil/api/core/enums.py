@@ -898,7 +898,8 @@ class BlockInteractiveSoundEvent(StrEnum):
 
 class BlockSoundGroup(StrEnum):
     """The vanilla block sound groups, the ones `blocks.json` gives vanilla blocks (oak planks use
-    `Wood`). They hold every sound event of a block: break, place, step, door and button clicks."""
+    `Wood`). They hold every sound event of a block: break, place, step, door and button clicks.
+    """
 
     AmethystBlock = "amethyst_block"
     AmethystCluster = "amethyst_cluster"
@@ -1163,13 +1164,6 @@ class HudVisibility(StrEnum):
     Reset = "reset"
 
 
-class Rarity(StrEnum):
-    Common = "common"
-    Uncommon = "uncommon"
-    Rare = "rare"
-    Epic = "epic"
-
-
 class ExplosionParticleEffect(StrEnum):
     Explosion = "explosion"
     WindBurst = "wind_burst"
@@ -1237,16 +1231,6 @@ class InputModes(StrEnum):
     Touch = "touch"
     Gamepad = "gamepad"
     MotionController = "motion_controller"
-
-
-class TintMethod(StrEnum):
-    None_ = "none"
-    DefaultFoliage = "default_foliage"
-    BirchFoliage = "birch_foliage"
-    EvergreenFoliage = "evergreen_foliage"
-    DryFoliage = "dry_foliage"
-    Grass = "grass"
-    Water = "water"
 
 
 class RecipeUnlockContext(StrEnum):
@@ -1321,22 +1305,6 @@ class EnchantmentTypes(StrEnum):
     Unbreaking = "minecraft:unbreaking"
     Vanishing = "minecraft:vanishing"
     WindBurst = "minecraft:wind_burst"
-
-
-class BlockMovementType(StrEnum):
-    """
-    Enumeration for the different types of block movement in Minecraft.
-
-    PushPull: The default value for this field. The block will be pushed and pulled by a piston.
-    Push: The block will only be pulled by a piston and will ignore a sticky piston.
-    Popped: The block is destroyed when moved by a piston.
-    Immovable: The block is unaffected by a piston.
-    """
-
-    PushPull = "push_pull"
-    Push = "push"
-    Popped = "popped"
-    Immovable = "immovable"
 
 
 class BlockStickyType(StrEnum):

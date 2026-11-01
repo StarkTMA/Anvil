@@ -1,6 +1,4 @@
-import os
-
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 from anvil.lib.translator import AnvilTranslator
 
@@ -16,7 +14,7 @@ class _DialogueButton:
     def __init__(self, button_name: str, commands: list[str]):
         """Initializes a _DialogueButton instance.
 
-        Parameters:
+        Args:
             button_name (str): The name of the button.
             commands (list[str]): The commands for the button.
         """
@@ -51,13 +49,13 @@ class _DialogueScene:
         _text (str, optional): The text for the scene. Defaults to None.
     """
 
-    def __init__(self, scene_tag: str):
+    def __init__(self, scene: str):
         """Initializes a _DialogueScene instance.
 
-        Parameters:
-            scene_tag (str): The tag of the scene.
+        Args:
+            scene (str): The tag of the scene.
         """
-        self._scene_tag = f"{CONFIG.NAMESPACE}:{scene_tag}"
+        self._scene_tag = f"{CONFIG.NAMESPACE}:{scene}"
         self._buttons: list[_DialogueButton] = []
         self._on_open_commands = []
         self._on_close_commands = []
@@ -71,7 +69,7 @@ class _DialogueScene:
     def properties(self, npc_name: str, text: str):
         """Sets the properties for the dialogue scene.
 
-        Parameters:
+        Args:
             npc_name (str): The name of the NPC.
             text (str, optional): The text for the scene. Defaults to ''.
 
@@ -93,7 +91,7 @@ class _DialogueScene:
     def button(self, button_name: str, commands: list[str]):
         """Adds a button to the dialogue scene.
 
-        Parameters:
+        Args:
             button_name (str): The name of the button.
             commands (list[str]): A list of commands for the button.
 
@@ -112,7 +110,7 @@ class _DialogueScene:
     def on_open_commands(self, commands: list[str]):
         """Sets the commands to be executed when the scene opens.
 
-        Parameters:
+        Args:
             commands (list[str]): The commands to be executed.
 
         Returns:
@@ -124,7 +122,7 @@ class _DialogueScene:
     def on_close_commands(self, commands: list[str]):
         """Sets the commands to be executed when the scene closes.
 
-        Parameters:
+        Args:
             commands (list[str]): The commands to be executed.
 
         Returns:
@@ -151,7 +149,8 @@ class _DialogueScene:
 
 class Dialogue(AddonObject):
     _extension = ".dialogue.json"
-    _path = os.path.join(CONFIG.BP_PATH, "dialogue")
+    _pack = Pack.BP
+    _folder = "dialogue"
     _object_type = "Dialogue"
 
     def __init__(self, name: str) -> None:
@@ -159,8 +158,8 @@ class Dialogue(AddonObject):
         self._dialogues = JsonSchemes.dialogues()
         self._scenes: list[_DialogueScene] = []
 
-    def add_scene(self, scene_tag: str) -> "_DialogueScene":
-        scene = _DialogueScene(scene_tag)
+    def add_scene(self, scene: str) -> "_DialogueScene":
+        scene = _DialogueScene(scene)
         self._scenes.append(scene)
         return scene
 

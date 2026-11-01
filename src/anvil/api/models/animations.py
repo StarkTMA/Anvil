@@ -21,11 +21,10 @@ Example:
     ```
 """
 
-import os
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 from anvil.api.models.geometry import Geometry
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 _Value = Sequence[Union[float, int, str]]
@@ -270,7 +269,8 @@ class Animations(AddonObject):
     """An animations file (``<name>.animations.json``) holding many animations."""
 
     _extension = ".animations.json"
-    _path = os.path.join(CONFIG.RP_PATH, "animations")
+    _pack = Pack.RP
+    _folder = "animations"
 
     def __init__(self, name: str) -> None:
         super().__init__(name)

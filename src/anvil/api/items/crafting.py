@@ -41,7 +41,7 @@ class CraftingItemCatalog(AddonObject):
         """
         Adds a group to an existing category.
 
-        Parameters:
+        Args:
             category (ItemCategory): The category to update.
             name (str): The group name to add.
             icon (MinecraftItemDescriptor | MinecraftBlockDescriptor): The item to use as the icon for the group.
@@ -92,7 +92,7 @@ class CraftingItemCatalog(AddonObject):
     ) -> "CraftingItemCatalog":
         """Adds loose items to a category.
 
-        Parameters:
+        Args:
             category (ItemCategory): The category name to update.
             items (list[MinecraftItemDescriptor | MinecraftBlockDescriptor]): List of items to add to the category.
 

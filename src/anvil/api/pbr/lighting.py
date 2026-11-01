@@ -1,4 +1,3 @@
-import os
 from typing import Literal
 
 from anvil.api.core.types import (
@@ -6,7 +5,7 @@ from anvil.api.core.types import (
     Identifier,
 )
 from anvil.api.pbr.texture_set import KeyFrame
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import AnvilFormatter, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
 
@@ -15,7 +14,8 @@ class LightingSettings(AddonObject):
     """Global lighting settings for Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "lighting")
+    _pack = Pack.RP
+    _folder = "lighting"
     _object_type = "Lighting Settings"
 
     def __init__(self, name: str = "default_lighting") -> None:
@@ -49,7 +49,7 @@ class LightingSettings(AddonObject):
     ) -> None:
         """Configures the orbital celestial lights (sun and moon).
 
-        Parameters:
+        Args:
             sun_illuminance (float | list[KeyFrame]): Brightness of the sun in lux (lx).
             sun_color (Color | list[KeyFrame]): Color contributed by the sun. Supports RGB array or HEX string.
             moon_illuminance (float | list[KeyFrame]): Brightness of the moon in lux (lx).
@@ -117,7 +117,7 @@ class LightingSettings(AddonObject):
     def flash_light(self, illuminance: float, color: Color) -> None:
         """Configures the End flash light source (exclusive to the End dimension).
 
-        Parameters:
+        Args:
             illuminance (float): Peak brightness of the End flash in lux (lx).
             color (Color): Color contributed by the End flash. Supports RGB array or HEX string.
         """
@@ -129,7 +129,7 @@ class LightingSettings(AddonObject):
     def emissive(self, desaturation: float) -> None:
         """Configures global settings for emissive light sources.
 
-        Parameters:
+        Args:
             desaturation (float): Factor (0.0 to 1.0) controlling how much the albedo of a given pixel is desaturated.
         """
         self._content["minecraft:lighting_settings"]["emissive"] = {
@@ -141,7 +141,7 @@ class LightingSettings(AddonObject):
     ) -> None:
         """Controls how surfaces are lit when there are no other light sources available.
 
-        Parameters:
+        Args:
             illuminance (float | list[KeyFrame]): Minimum fallback light strength in lux (lx). Valid range: 0.0 to 5.0.
             color (Color | list[KeyFrame]): Color of the ambient fallback light. Supports RGB array or HEX string.
         """
@@ -165,7 +165,7 @@ class LightingSettings(AddonObject):
     def sky(self, intensity: float | list[KeyFrame]) -> None:
         """Controls indirect lighting contribution from the sky.
 
-        Parameters:
+        Args:
             intensity (float | list[KeyFrame]): Energy scaling factor. Valid range: 0.1 to 1.0.
         """
         self._content["minecraft:lighting_settings"]["sky"] = {
@@ -186,7 +186,8 @@ class LocalLighting(AddonObject):
     """Local lighting configurations (point lights and static lights) for Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "local_lighting")
+    _pack = Pack.RP
+    _folder = "local_lighting"
     _object_type = "Local Lighting Settings"
 
     def __init__(self) -> None:
@@ -210,7 +211,7 @@ class LocalLighting(AddonObject):
     ) -> None:
         """Adds a local light to the local lighting configuration.
 
-        Parameters:
+        Args:
             block_identifier (MinecraftBlockDescriptor | Identifier): The identifier of the block that emits the light.
             color (Color): The color of the light.
             light_type (Literal["static_light", "point_light"]): The type of local light.
@@ -225,7 +226,7 @@ class LocalLighting(AddonObject):
     ) -> None:
         """Adds a point light to the point lights configuration (legacy fallback).
 
-        Parameters:
+        Args:
             block_identifier (MinecraftBlockDescriptor | Identifier): The identifier of the block that emits the light.
             color (Color): The color of the light.
         """

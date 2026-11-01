@@ -46,7 +46,7 @@ from enum import StrEnum
 from typing import Literal
 
 import click
-from anvil.lib.config import CONFIG, ConfigPackageTarget
+from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
 from anvil.lib.lib import *
 from anvil.lib.schemas import AddonObject
 from PIL import Image
@@ -282,7 +282,8 @@ class UIFontSize(StrEnum):
 
 class NinesliceJson(AddonObject):
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "textures", "ui")
+    _pack = Pack.RP
+    _folder = os.path.join("textures", "ui")
     _object_type = "Nineslice Json"
 
     def __init__(self, name) -> None:
@@ -1893,7 +1894,7 @@ class _UICreditsConstructor:
     ):
         """Adds an image to the credits panel.
 
-        Parameters:
+        Args:
             texture_name (str): The name of the texture.
             scale_factor (int, optional): The scale factor of the texture. Defaults to 1.
             anchor (UIAnchor, optional): The anchor of the image. Defaults to UIAnchor.Center.
@@ -1925,7 +1926,7 @@ class _UICreditsConstructor:
     ):
         """Adds a title to the credits panel.
 
-        Parameters:
+        Args:
             text (str): The text of the title.
             font_size (UIFontSize, optional): The font size of the title. Defaults to UIFontSize.Normal.
             color (tuple[float], optional): The color of the title. Defaults to (1, 1, 1).
@@ -1956,7 +1957,7 @@ class _UICreditsConstructor:
     def add_space(self, size: int | str):
         """Adds a space to the credits panel.
 
-        Parameters:
+        Args:
             size (int | str): The size of the space.
 
         Returns:
@@ -2050,7 +2051,8 @@ class _UIVariables(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "ui")
+    _pack = Pack.RP
+    _folder = "ui"
     _object_type = "UI Variables"
 
     def __init__(self) -> None:
@@ -2078,7 +2080,7 @@ class _UIDefs(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH)
+    _pack = Pack.RP
     _object_type = "UI Definitions"
 
     def __init__(self) -> None:
@@ -2120,7 +2122,8 @@ class _UIAnimation(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "ui")
+    _pack = Pack.RP
+    _folder = "ui"
     _object_type = "UI Animation"
 
     def __init__(self, name: str, namespace: str, defs: _UIDefs) -> None:
@@ -2189,7 +2192,8 @@ class _UIScreen(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "ui")
+    _pack = Pack.RP
+    _folder = "ui"
     _object_type = "UI Screen"
 
     def __init__(

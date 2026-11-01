@@ -73,7 +73,7 @@ class Filter:
                 Filter.is_difficulty(Difficulty.Hard)
             )
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filterlist
         """
         return Filter(is_all_of=filters)
@@ -94,7 +94,7 @@ class Filter:
                 Filter.is_family("creature")
             )
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filterlist
         """
         return Filter(is_any_of=filters)
@@ -115,7 +115,7 @@ class Filter:
                 Filter.has_tag("peaceful")
             )
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filterlist
         """
         return Filter(is_none_of=filters)
@@ -210,7 +210,7 @@ class Filter:
         Note:
             Use hourly_clock_time for integer-based time (0-24000 range)
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/clock_time
         """
         return Filter("clock_time", subject, operator, None, max(0.0, min(1.0, value)))
@@ -237,7 +237,7 @@ class Filter:
             # Test if entity is within 10 blocks of nearest player
             Filter.distance_to_nearest_player(10.0, operator=FilterOperation.LessEqual)
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/distance_to_nearest_player
         """
         return Filter(
@@ -295,7 +295,7 @@ class Filter:
             Filter.has_ability("instabuild")  # Test if player has creative mode
             Filter.has_ability("flying")      # Test if player can fly
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_ability
         """
         return Filter("has_ability", subject, operator, None, value)
@@ -358,7 +358,7 @@ class Filter:
             # Test if target has tameable component
             Filter.has_component("minecraft:tameable", subject=FilterSubject.Target)
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_component
         """
 
@@ -398,7 +398,7 @@ class Filter:
         Example:
             Filter.has_container_open(True)  # Test if player has container open
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_container_open
         """
         return Filter("has_container_open", subject, operator, None, value)
@@ -468,7 +468,7 @@ class Filter:
             Filter.has_mob_effect("poison")       # Test if entity is poisoned
             Filter.has_mob_effect("regeneration") # Test if entity is regenerating
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_mob_effect
         """
         return Filter("has_mob_effect", subject, operator, None, value)
@@ -494,7 +494,7 @@ class Filter:
         Example:
             Filter.has_nametag(True)  # Test if entity has been named
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_nametag
         """
         return Filter("has_nametag", subject, operator, None, value)
@@ -532,7 +532,7 @@ class Filter:
         Example:
             Filter.has_ranged_weapon(True)  # Test if entity has bow/crossbow
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_ranged_weapon
         """
         return Filter("has_ranged_weapon", subject, operator, None, value)
@@ -558,7 +558,7 @@ class Filter:
         Example:
             Filter.has_silk_touch(True)  # Test if held item has silk touch
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_silk_touch
         """
         return Filter("has_silk_touch", subject, operator, None, value)
@@ -604,7 +604,7 @@ class Filter:
         Example:
             Filter.has_trade_supply(True)  # Test if villager has trades available
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_trade_supply
         """
         return Filter("has_trade_supply", subject, operator, None, value)
@@ -643,7 +643,7 @@ class Filter:
             Filter.hourly_clock_time(6000)   # Test for noon
             Filter.hourly_clock_time(18000)  # Test for midnight
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/hourly_clock_time
         """
         return Filter(
@@ -671,7 +671,7 @@ class Filter:
         Example:
             Filter.inactivity_timer(300, operator=FilterOperation.GreaterEqual)  # 5+ minutes inactive
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/inactivity_timer
         """
         return Filter("inactivity_timer", subject, operator, None, max(0, value))
@@ -698,7 +698,7 @@ class Filter:
             Filter.in_block("minecraft:water")  # Test if entity is in water block
             Filter.in_block("minecraft:lava")   # Test if entity is in lava
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_block
         """
         return Filter("in_block", subject, operator, None, value)
@@ -724,7 +724,7 @@ class Filter:
         Example:
             Filter.in_caravan(True)  # Test if llama is in caravan
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_caravan
         """
         return Filter("in_caravan", subject, operator, None, value)
@@ -750,7 +750,7 @@ class Filter:
         Example:
             Filter.in_clouds(True)  # Test if entity is at cloud level
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_clouds
         """
         return Filter("in_clouds", subject, operator, None, value)
@@ -776,7 +776,7 @@ class Filter:
         Example:
             Filter.in_contact_with_water(True)  # Test if entity touches any water source
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_contact_with_water
         """
         return Filter("in_contact_with_water", subject, operator, None, value)
@@ -802,7 +802,7 @@ class Filter:
         Example:
             Filter.in_lava(True)  # Test if entity is in lava
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_lava
         """
         return Filter("in_lava", subject, operator, None, value)
@@ -828,7 +828,7 @@ class Filter:
         Example:
             Filter.in_nether(True)  # Test if entity is in Nether
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_nether
         """
         return Filter("in_nether", subject, operator, None, value)
@@ -854,7 +854,7 @@ class Filter:
         Example:
             Filter.in_overworld(True)  # Test if entity is in Overworld
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_overworld
         """
         return Filter("in_overworld", subject, operator, None, value)
@@ -903,7 +903,7 @@ class Filter:
         Example:
             Filter.in_water_or_rain(True)  # Test if entity is wet
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/in_water_or_rain
         """
         return Filter("in_water_or_rain", subject, operator, None, value)
@@ -929,7 +929,7 @@ class Filter:
         Example:
             Filter.is_altitude(64, operator=FilterOperation.Greater)  # Above sea level
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_altitude
         """
         return Filter("is_altitude", subject, operator, None, value)
@@ -955,7 +955,7 @@ class Filter:
         Example:
             Filter.is_avoiding_mobs(True)  # Test if entity is fleeing
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_avoiding_mobs
         """
         return Filter("is_avoiding_mobs", subject, operator, None, value)
@@ -981,7 +981,7 @@ class Filter:
         Example:
             Filter.is_baby(True)  # Test if entity is baby/child
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_baby
         """
         return Filter("is_baby", subject, operator, None, value)
@@ -1017,7 +1017,7 @@ class Filter:
         Example:
             Filter.is_block("minecraft:stone")  # Test if block is stone
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_block
         """
         return Filter(
@@ -1059,7 +1059,7 @@ class Filter:
         Example:
             Filter.is_brightness(0.5, operator=FilterOperation.Less)  # Test if dim
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_brightness
         """
         return Filter(
@@ -1087,7 +1087,7 @@ class Filter:
         Example:
             Filter.is_climbing(True)  # Test if entity is on ladder/vines
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_climbing
         """
         return Filter("is_climbing", subject, operator, None, value)
@@ -1114,7 +1114,7 @@ class Filter:
             Filter.is_color("red")   # Test if sheep is red
             Filter.is_color("white") # Test if wolf is white
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_color
         """
         return Filter("is_color", subject, operator, None, value)
@@ -1164,7 +1164,7 @@ class Filter:
             # Test if target is not a player
             Filter.is_family("player", subject=FilterSubject.Target, operator=FilterOperation.Not)
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_family
         """
         return Filter("is_family", subject, operator, None, value)
@@ -1190,7 +1190,7 @@ class Filter:
         Example:
             Filter.is_game_rule("doMobSpawning")  # Test if mob spawning enabled
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_game_rule
         """
         return Filter("is_game_rule", subject, operator, None, value)
@@ -1216,7 +1216,7 @@ class Filter:
         Example:
             Filter.is_humid(True)  # Test if in humid biome (jungle, swamp)
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_humid
         """
         return Filter("is_humid", subject, operator, None, value)
@@ -1242,7 +1242,7 @@ class Filter:
         Example:
             Filter.is_immobile(True)  # Test if entity cannot move
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_immobile
         """
         return Filter("is_immobile", subject, operator, None, value)
@@ -1268,7 +1268,7 @@ class Filter:
         Example:
             Filter.is_in_village(True)  # Test if entity is within village
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_in_village
         """
         return Filter("is_in_village", subject, operator, None, value)
@@ -1294,7 +1294,7 @@ class Filter:
         Example:
             Filter.is_leashed(True)  # Test if mob is on leash
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_leashed
         """
         return Filter("is_leashed", subject, operator, None, value)
@@ -1320,7 +1320,7 @@ class Filter:
         Example:
             Filter.is_leashed_to(True, subject=FilterSubject.Target)  # Test if target is leashed to cls
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_leashed_to
         """
         return Filter("is_leashed_to", subject, operator, None, value)
@@ -1356,7 +1356,7 @@ class Filter:
         Example:
             Filter.is_missing_health(True)  # Test if entity is damaged
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_missing_health
         """
         return Filter("is_missing_health", subject, operator, None, value)
@@ -1382,7 +1382,7 @@ class Filter:
         Example:
             Filter.is_moving(True)  # Test if entity is moving
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_moving
         """
         return Filter("is_moving", subject, operator, None, value)
@@ -1408,7 +1408,7 @@ class Filter:
         Example:
             Filter.is_navigating(True)  # Test if mob is pathfinding to destination
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_navigating
         """
         return Filter("is_navigating", subject, operator, None, value)
@@ -1454,7 +1454,7 @@ class Filter:
         Example:
             Filter.is_persistent(True)  # Test if entity won't despawn
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_persistent
         """
         return Filter("is_persistent", subject, operator, None, value)
@@ -1500,7 +1500,7 @@ class Filter:
         Example:
             Filter.is_riding_self(True, subject=FilterSubject.Target)  # Test if target is riding cls
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_riding_self
         """
         return Filter("is_riding_self", subject, operator, None, value)
@@ -1546,7 +1546,7 @@ class Filter:
         Example:
             Filter.is_sleeping(True)  # Test if villager is sleeping in bed
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_sleeping
         """
         return Filter("is_sleeping", subject, operator, None, value)
@@ -1572,7 +1572,7 @@ class Filter:
         Example:
             Filter.is_sneak_held(True)  # Test if player is holding sneak button
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_sneak_held
         """
         return Filter("is_sneak_held", subject, operator, None, value)
@@ -1598,7 +1598,7 @@ class Filter:
         Example:
             Filter.is_sneaking(True)  # Test if player is sneaking
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_sneaking
         """
         return Filter("is_sneaking", subject, operator, None, value)
@@ -1624,7 +1624,7 @@ class Filter:
         Example:
             Filter.is_snow_covered(True)  # Test if in snowy biome
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_snow_covered
         """
         return Filter("is_snow_covered", subject, operator, None, value)
@@ -1670,7 +1670,7 @@ class Filter:
         Example:
             Filter.is_temperature_type("cold")  # Test if in cold biome
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_temperature_type
         """
         return Filter("is_temperature_type", subject, operator, None, value)
@@ -1698,7 +1698,7 @@ class Filter:
         Example:
             Filter.is_temperature_value(0.8, operator=FilterOperation.Greater)  # Test if very hot
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_temperature_value
         """
         return Filter(
@@ -1726,7 +1726,7 @@ class Filter:
         Example:
             Filter.is_underground(True)  # Test if entity is below surface
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_underground
         """
         return Filter("is_underground", subject, operator, None, value)
@@ -1772,7 +1772,7 @@ class Filter:
         Example:
             Filter.is_vehicle_family("boat")  # Test if riding boat
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_vehicle_family
         """
         return Filter("is_vehicle_family", subject, operator, None, value)
@@ -1808,7 +1808,7 @@ class Filter:
         Example:
             Filter.is_waterlogged(True, subject=FilterSubject.Block)  # Test if block is waterlogged
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_waterlogged
         """
         return Filter("is_waterlogged", subject, operator, None, value)
@@ -1834,7 +1834,7 @@ class Filter:
         Example:
             Filter.light_level(7, operator=FilterOperation.Less)  # Test if dark enough for mob spawning
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/light_level
         """
         return Filter("light_level", subject, operator, None, max(0, min(16, value)))
@@ -1860,7 +1860,7 @@ class Filter:
         Example:
             Filter.moon_intensity(1.0)  # Test for full moon
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/moon_intensity
         """
         return Filter(
@@ -1889,7 +1889,7 @@ class Filter:
             Filter.moon_phase(0)  # Test for full moon
             Filter.moon_phase(4)  # Test for new moon
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/moon_phase
         """
         return Filter("moon_phase", subject, operator, None, max(0, min(7, value)))
@@ -1915,7 +1915,7 @@ class Filter:
         Example:
             Filter.on_fire(True)  # Test if entity is burning
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/on_fire
         """
         return Filter("on_fire", subject, operator, None, value)
@@ -1951,7 +1951,7 @@ class Filter:
         Example:
             Filter.on_hot_block(True)  # Test if standing on magma block
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/on_hot_block
         """
         return Filter("on_hot_block", subject, operator, None, value)
@@ -1977,7 +1977,7 @@ class Filter:
         Example:
             Filter.on_ladder(True)  # Test if entity is climbing ladder
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/on_ladder
         """
         return Filter("on_ladder", subject, operator, None, value)
@@ -2033,7 +2033,7 @@ class Filter:
         Example:
             Filter.surface_mob(True)  # Test if mob spawns on surface
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/surface_mob
         """
         return Filter("surface_mob", subject, operator, None, value)
@@ -2059,7 +2059,7 @@ class Filter:
         Example:
             Filter.taking_fire_damage(True)  # Test if entity is burning and taking damage
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/taking_fire_damage
         """
         return Filter("taking_fire_damage", subject, operator, None, value)
@@ -2095,7 +2095,7 @@ class Filter:
         Example:
             Filter.trusts(True, subject=FilterSubject.Player)  # Test if entity trusts player
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/trusts
         """
         return Filter("trusts", subject, operator, None, value)
@@ -2132,7 +2132,7 @@ class Filter:
             Filter.weather("rain")     # Test if raining
             Filter.weather("thunder")  # Test if thunderstorm
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/weather
         """
         return Filter("weather", subject, operator, None, value)
@@ -2158,7 +2158,7 @@ class Filter:
         Example:
             Filter.weather_at_position("rain")  # Test if raining at exact position
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/weather_at_position
         """
         return Filter("weather_at_position", subject, operator, None, value)
@@ -2184,7 +2184,7 @@ class Filter:
         Example:
             Filter.y_rotation(0.0, operator=FilterOperation.Less)  # Test if facing north-ish
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/y_rotation
         """
         return Filter("y_rotation", subject, operator, None, value)
@@ -2239,7 +2239,7 @@ class Filter:
         Example:
             Filter.has_item_with_component("minecraft:enchantments")  # Test if entity has an enchanted item
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/has_item_with_component
         """
         return Filter("has_item_with_component", subject, operator, None, component)
@@ -2265,7 +2265,7 @@ class Filter:
         Example:
             Filter.is_tamed(True)  # Test if entity is tamed
 
-        Reference:
+        References:
             https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/filters/is_tamed
         """
         return Filter("is_tamed", subject, operator, None, value)

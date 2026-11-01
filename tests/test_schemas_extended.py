@@ -1,10 +1,9 @@
 """Tests for anvil/lib/schemas.py — JsonSchemes structural assertions.
 
 These tests verify that key schema methods produce the expected JSON structure.
-They use monkeypatching to avoid spinning up the full _AnvilConfig singleton.
+They use monkeypatching to avoid spinning up the full AnvilConfig loading.
 """
 
-import json
 import uuid
 import pytest
 from unittest.mock import MagicMock, patch
@@ -21,6 +20,7 @@ def mock_config(monkeypatch):
     cfg._RP_UUID = [str(uuid.uuid4())]
     cfg._PACK_UUID = str(uuid.uuid4())
     cfg._DATA_MODULE_UUID = str(uuid.uuid4())
+    cfg._RESOURCE_MODULE_UUID = str(uuid.uuid4())
     cfg._SCRIPT_MODULE_UUID = str(uuid.uuid4())
     cfg._RELEASE = "1.0.0"
     cfg._PREVIEW = False

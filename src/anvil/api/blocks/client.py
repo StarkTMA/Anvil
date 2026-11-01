@@ -18,7 +18,7 @@ class BlockClient(AddonObject):
         group's: breaking, placing, walking, and the clicks of doors, buttons and plates. It
         needs no sound files. To make your own sounds for the block, use `block_sound`.
 
-        Parameters:
+        Args:
             group (BlockSoundGroup | str): The group, like `BlockSoundGroup.Wood`.
         """
         BlocksJSONObject().add_block(self.identifier, group)

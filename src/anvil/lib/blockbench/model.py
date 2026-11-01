@@ -1,6 +1,5 @@
 """Converts Blockbench models into geometries, voxel shapes and block culling rules."""
 
-import os
 from typing import Any, Dict, List, Optional, Union
 
 from anvil.api.core.enums import BlockFaceValues
@@ -10,7 +9,7 @@ from anvil.api.models.geometry import Geometry, _Bone, _Cube
 from anvil.api.models.voxel_shape import VoxelShape, _VoxelGroup
 from anvil.lib.blockbench.common import _blockbench_geometry_name, _BlockBenchSource
 from anvil.lib.blockbench.mesh import _Mesh
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -22,7 +21,8 @@ class _BlockCulling(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "block_culling")
+    _pack = Pack.RP
+    _folder = "block_culling"
 
     def __init__(self, name: str, geometry: Geometry) -> None:
         super().__init__(name)
@@ -209,7 +209,7 @@ class _ModelManager:
     def __init__(self, filename, source: str, bbmodel: dict) -> None:
         """Handles loading and managing Blockbench models.
 
-        Parameters:
+        Args:
             filename (str): The name of the model file (without extension).
             source (str): The source of the model. Defaults to "actors".
             bbmodel (dict): The Blockbench model data.

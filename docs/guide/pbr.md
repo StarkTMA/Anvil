@@ -70,7 +70,7 @@ block.server.components.add(
 This example shows a **Mystic Wisp** entity using PBR textures defined in its client description.
 
 ```python title="entities/mystic_wisp.py"
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.entity import Entity
 from anvil.api.pbr.texture_set import TextureComponents
 
 def mystic_wisp():

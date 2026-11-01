@@ -78,7 +78,7 @@ The **Structure Set** ties everything together. It defines the generation rules 
 ```python
 from anvil.api.world.structures import JigsawStructureSet
 from anvil.api.vanilla.biomes import MinecraftBiomeTags
-from anvil.api.actors.components import Filter
+from anvil.api.core.filters import Filter
 
 def generate_dungeon():
     # 1. Initialize pools

@@ -1,4 +1,3 @@
-import os
 from collections.abc import Sequence
 from dataclasses import dataclass
 from math import inf
@@ -7,7 +6,7 @@ from typing import Any, Literal, overload
 from anvil.api.core.enums import BlockFaceValues
 from anvil.api.core.types import Identifier, Vector3DInt
 from anvil.api.logic.molang import Molang
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.lib import AnvilFormatter, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
 
@@ -134,15 +133,13 @@ class Feature(AddonObject):
     _object_type = "Feature"
     _extension = ".json"
     _template_name = "feature_base"
-    _path = os.path.join(
-        CONFIG.BP_PATH,
-        "features",
-    )
+    _pack = Pack.BP
+    _folder = "features"
 
     def __init__(self, name) -> None:
         """Initializes the base feature definition content.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -169,7 +166,7 @@ class AggregateFeature(Feature):
     def __init__(self, name) -> None:
         """Places a collection of features in an arbitrary order.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -219,7 +216,7 @@ class CaveCarverFeature(Feature):
     ) -> None:
         """Carves caves through the world during pregeneration.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -293,7 +290,7 @@ class FossilFeature(Feature):
     ) -> None:
         """Generates a fossil structure with a configurable ore block.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -346,7 +343,7 @@ class GeodeFeature(Feature):
     ) -> None:
         """Generates a geode with configurable shell layers, point distribution, and crack behavior.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -470,7 +467,7 @@ class GrowingPlantFeature(Feature):
     ) -> None:
         """Places a growing plant in the world.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -570,7 +567,7 @@ class MultifaceFeature(Feature):
     ) -> None:
         """Places one or a few multiface blocks on floors, walls, and ceilings.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -641,7 +638,7 @@ class MultiBlockFeature(Feature):
     ) -> None:
         """Places a multi-block in the world as a biome decoration feature.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -673,7 +670,7 @@ class MultiBlockFeature(Feature):
         Specifies which blocks each part of the multi-block may replace.
         Other multi-blocks can never be replaced regardless of this list.
 
-        Parameters:
+        Args:
             blocks (list[MinecraftBlockDescriptor | Identifier]): List of
                 blocks that the multi-block parts are allowed to replace.
         """
@@ -703,7 +700,7 @@ class NetherCaveCarverFeature(Feature):
     ) -> None:
         """Carves cave systems through the Nether.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -777,7 +774,7 @@ class OreFeature(Feature):
     ) -> None:
         """Places a vein of blocks to simulate ore deposits.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -828,7 +825,7 @@ class PartiallyExposedBlobFeature(Feature):
     ) -> None:
         """Generates a blob where one face may remain exposed.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -874,7 +871,7 @@ class ScatterFeature(Feature, DistributionMixin):
     ) -> None:
         """Scatters a feature throughout a chunk.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -914,7 +911,7 @@ class SearchFeature(Feature):
     ) -> None:
         """Sweeps a volume searching for a valid placement location for its referenced feature.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -978,7 +975,7 @@ class SculkPatchFeature(Feature):
     ) -> None:
         """Places a sculk patch with cursor spread settings and an optional central block.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -1089,7 +1086,7 @@ class SingleBlockFeature(Feature):
     ) -> None:
         """Places a single block in the world.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -1209,7 +1206,7 @@ class SnapToSurfaceFeature(Feature):
     ) -> None:
         """Snaps the y-value of a feature placement position to a surface within the provided search range.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -1272,7 +1269,7 @@ class StructureTemplateFeature(Feature):
     ) -> None:
         """Places a structure in the world.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -1330,7 +1327,7 @@ class SurfaceRelativeThresholdFeature(Feature):
     ) -> None:
         """Determines whether the provided position is below the estimated surface level of the world and places a feature if so.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -2157,7 +2154,7 @@ class UnderwaterCaveCarverFeature(Feature):
     ) -> None:
         """Carves underwater caves below sea level during pregeneration.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.
@@ -2244,7 +2241,7 @@ class VegetationPatchFeature(Feature):
     ) -> None:
         """Creates a patch of ground blocks and scatters a vegetation feature over it.
 
-        Parameters:
+        Args:
             name (str): The name of this feature. The resulting identifier uses
                 the format 'namespace_name:feature_name'. 'feature_name' must
                 match the filename.

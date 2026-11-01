@@ -1,11 +1,10 @@
-import os
 from typing import Any
 
 from anvil.api.core.enums import FeatureRulePlacementPass
 from anvil.api.core.filters import Filter
 from anvil.api.core.types import Identifier
 from anvil.api.features.features import DistributionMixin, Feature
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -22,10 +21,8 @@ class FeatureRule(AddonObject, DistributionMixin):
     _object_type = "Feature Rule"
     _extension = ".json"
     _template_name = "feature_rule_base"
-    _path = os.path.join(
-        CONFIG.BP_PATH,
-        "feature_rules",
-    )
+    _pack = Pack.BP
+    _folder = "feature_rules"
 
     def __init__(
         self,
@@ -35,7 +32,7 @@ class FeatureRule(AddonObject, DistributionMixin):
     ) -> None:
         """Creates a feature rule that controls where and when one feature is placed.
 
-        Parameters:
+        Args:
             name (str): The name of this feature rule. The resulting identifier
                 uses the format 'namespace_name:rule_name'. 'rule_name' must
                 match the filename.

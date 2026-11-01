@@ -1,4 +1,4 @@
-from anvil.api.actors.actors import Attachable
+from anvil.api.actors.attachable import Attachable
 from anvil.api.core.core import ANVIL
 from anvil.api.items.components import ItemDisplayName
 from anvil.api.items.server import ItemServer

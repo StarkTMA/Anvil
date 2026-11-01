@@ -1,32 +1,8 @@
 import sys
 import os
-from unittest.mock import MagicMock
-
-# Setup mock CONFIG in config module, schemas, and pbr module to prevent exits and ensure PBR is enabled
-mock_config = MagicMock()
-mock_config.BP_PATH = "dummy_bp_path"
-mock_config.RP_PATH = "dummy_rp_path"
-mock_config.PBR = True
-mock_config.NAMESPACE = "testns"
-mock_config.PROJECT_NAME = "test_project"
-
-import anvil.lib.config
-
-anvil.lib.config.CONFIG = mock_config
-
-import anvil.lib.schemas
-
-anvil.lib.schemas.CONFIG = mock_config
-
-import anvil.api.pbr.texture_set
-
-anvil.api.pbr.texture_set.CONFIG = mock_config
-
-import anvil.api.pbr.fog
-
-anvil.api.pbr.fog.CONFIG = mock_config
 
 import pytest
+from anvil.lib import config
 from anvil.api.core.types import RGB
 from anvil.api.pbr.texture_set import KeyFrame
 from anvil.api.pbr.atmosphere import AtmosphericSettings
@@ -36,6 +12,12 @@ from anvil.api.pbr.color_grading import ColorGradingSettings
 from anvil.api.pbr.lighting import LightingSettings, LocalLighting
 from anvil.api.pbr.fallback import PBRFallback
 from anvil.api.pbr.fog import Fog
+
+
+@pytest.fixture(autouse=True)
+def pbr_project():
+    with config.override(PBR=True, NAMESPACE="testns"):
+        yield
 
 
 def test_keyframe_serialization():
@@ -133,7 +115,7 @@ def test_atmospheric_settings():
 def test_fog_settings_path_and_serialization():
     settings = FogSettings()
     # Path should end with 'fogs' (not 'fog')
-    assert settings._path == os.path.join("dummy_rp_path", "fogs")
+    assert settings._path == os.path.join(config.CONFIG.RP_PATH, "fogs")
     assert settings._name == "fog"
 
     settings.water_density(0.5, uniform=True)
@@ -158,7 +140,7 @@ def test_fog_settings_path_and_serialization():
 def test_shadow_settings():
     settings = ShadowSettings()
     # Path should end with 'shadows' and filename should be 'global' (resulting in shadows/global.json)
-    assert settings._path == os.path.join("dummy_rp_path", "shadows")
+    assert settings._path == os.path.join(config.CONFIG.RP_PATH, "shadows")
     assert settings._name == "global"
 
     settings.shadow_style("soft_shadows", 32)
@@ -311,7 +293,7 @@ def test_combined_fog():
 
 
 def test_fog_disabled_pbr():
-    mock_config.PBR = False
+    config.CONFIG.PBR = False
     try:
         fog = Fog("test_fog_no_pbr")
 
@@ -327,7 +309,7 @@ def test_fog_disabled_pbr():
         with pytest.raises(RuntimeError):
             fog.henyey_greenstein_g()
     finally:
-        mock_config.PBR = True
+        config.CONFIG.PBR = True
 
 
 def test_fog_density_height_validation():
@@ -352,7 +334,7 @@ def test_textureset_vanilla_override():
 
         tset = TextureSet("test_block", "blocks", overriding_vanilla=True)
         assert tset._overriding_vanilla is True
-        assert tset._path == os.path.join("dummy_rp_path", "textures", "blocks")
+        assert tset._path == os.path.join(config.CONFIG.RP_PATH, "textures", "blocks")
 
         components = TextureComponents(
             color="test_color", normal="test_normal", mer="test_mer"
@@ -365,7 +347,7 @@ def test_textureset_vanilla_override():
 
         # Verify queue_texture was called for all textures with correct dest_dir
         expected_dest_dir = os.path.join(
-            "dummy_rp_path", "textures", "blocks", "deepslate"
+            config.CONFIG.RP_PATH, "textures", "blocks", "deepslate"
         )
 
         mock_bb.textures.queue_texture.assert_any_call(
@@ -391,7 +373,7 @@ def test_textureset_pbr_disabled_color_only():
     from anvil.api.pbr.texture_set import TextureSet, TextureComponents
     from unittest.mock import patch
 
-    mock_config.PBR = False
+    config.CONFIG.PBR = False
     try:
         with patch("anvil.api.pbr.texture_set._Blockbench") as MockBlockbench, patch(
             "anvil.lib.schemas.AnvilIO.file"
@@ -404,14 +386,14 @@ def test_textureset_pbr_disabled_color_only():
             # Verify json export was NOT called because PBR is False
             mock_file.assert_not_called()
     finally:
-        mock_config.PBR = True
+        config.CONFIG.PBR = True
 
 
 def test_textureset_pbr_disabled_aux_map_raises_error():
     from anvil.api.pbr.texture_set import TextureSet, TextureComponents
     from unittest.mock import patch
 
-    mock_config.PBR = False
+    config.CONFIG.PBR = False
     try:
         with patch("anvil.api.pbr.texture_set._Blockbench"):
             tset = TextureSet("test_block", "blocks")
@@ -443,14 +425,14 @@ def test_textureset_pbr_disabled_aux_map_raises_error():
                     TextureComponents(color="test_color", mers="test_mers"),
                 )
     finally:
-        mock_config.PBR = True
+        config.CONFIG.PBR = True
 
 
 def test_textureset_pbr_enabled_export():
     from anvil.api.pbr.texture_set import TextureSet, TextureComponents
     from unittest.mock import patch
 
-    mock_config.PBR = True
+    config.CONFIG.PBR = True
     with patch("anvil.api.pbr.texture_set._Blockbench"), patch(
         "anvil.lib.schemas.AnvilIO.file"
     ) as mock_file:

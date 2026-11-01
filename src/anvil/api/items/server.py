@@ -21,7 +21,7 @@ class _ItemServerDescription(MinecraftDescription):
     ) -> "_ItemServerDescription":
         """Sets the menu category for the item.
 
-        Parameters:
+        Args:
             category (ItemCategory, optional): The category of the item. Defaults to ItemCategory.none.
             group (str, optional): The group of the item. Defaults to None.
             is_hidden_in_commands (bool, optional): Whether the item is hidden in commands. Defaults to False.

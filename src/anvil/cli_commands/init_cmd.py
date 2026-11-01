@@ -4,7 +4,12 @@ import uuid
 from datetime import datetime
 
 import click
-from anvil.lib.config import Config, ConfigOption, ConfigSection
+from anvil.lib.config import (
+    Config,
+    ConfigOption,
+    ConfigSection,
+    validate_namespace_project_name,
+)
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
     DESKTOP,
@@ -186,10 +191,6 @@ def handle_configuration(
 ):
     config = Config(allow_missing=True)
 
-    config.add_option(
-        ConfigSection.MINECRAFT, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD
-    )
-
     config.add_option(ConfigSection.PACKAGE, ConfigOption.NAMESPACE, namespace)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME, project_name)
     config.add_option(ConfigSection.PACKAGE, ConfigOption.COMPANY, namespace.title())
@@ -211,42 +212,41 @@ def handle_configuration(
         ConfigSection.PACKAGE, ConfigOption.TARGET, "addon" if addon else "world"
     )
 
+    config.add_option(ConfigSection.MANIFEST, ConfigOption.RELEASE, "1.0.0")
+    config.add_option(ConfigSection.MANIFEST, ConfigOption.RP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.MANIFEST, ConfigOption.BP_UUID, [str(uuid.uuid4())])
+    config.add_option(ConfigSection.MANIFEST, ConfigOption.PACK_UUID, str(uuid.uuid4()))
     config.add_option(
-        ConfigSection.ANVIL,
-        ConfigOption.PASCAL_PROJECT_NAME,
-        "".join(x[0] for x in project_name.split("_")).upper(),
+        ConfigSection.MANIFEST, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4())
     )
+    config.add_option(
+        ConfigSection.MANIFEST, ConfigOption.RESOURCE_MODULE_UUID, str(uuid.uuid4())
+    )
+
+    config.add_option(ConfigSection.FEATURES, ConfigOption.SCRIPT_API, scriptapi)
+    config.add_option(ConfigSection.FEATURES, ConfigOption.SCRIPT_UI, scriptapi)
+    config.add_option(ConfigSection.FEATURES, ConfigOption.PBR, False)
+    config.add_option(ConfigSection.FEATURES, ConfigOption.RANDOM_SEED, False)
+    config.add_option(ConfigSection.FEATURES, ConfigOption.EXPERIMENTAL, False)
+
+    config.add_option(ConfigSection.BUILD, ConfigOption.PREVIEW, preview)
+    config.add_option(
+        ConfigSection.BUILD, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
+    )
+    config.add_option(ConfigSection.BUILD, ConfigOption.MINIFY, False)
+    config.add_option(ConfigSection.BUILD, ConfigOption.ADD_STAMP, True)
+    config.add_option(
+        ConfigSection.BUILD,
+        ConfigOption.LOCAL_EXPORT,
+        sys.platform != "win32",
+    )
+
     config.add_option(
         ConfigSection.ANVIL,
         ConfigOption.LAST_CHECK,
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
-    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_API, scriptapi)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.SCRIPT_UI, scriptapi)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PBR, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.RANDOM_SEED, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.EXPERIMENTAL, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.PREVIEW, preview)
-    config.add_option(
-        ConfigSection.ANVIL, ConfigOption.ENTRY_POINT, "scripts/python/main.py"
-    )
-    config.add_option(ConfigSection.ANVIL, ConfigOption.MINIFY, False)
-    config.add_option(ConfigSection.ANVIL, ConfigOption.ADD_STAMP, True)
-    config.add_option(
-        ConfigSection.ANVIL,
-        ConfigOption.LOCAL_EXPORT,
-        sys.platform != "win32",
-    )
-
-    config.add_option(ConfigSection.BUILD, ConfigOption.RELEASE, "1.0.0")
-    config.add_option(ConfigSection.BUILD, ConfigOption.RP_UUID, [str(uuid.uuid4())])
-    config.add_option(ConfigSection.BUILD, ConfigOption.BP_UUID, [str(uuid.uuid4())])
-    config.add_option(ConfigSection.BUILD, ConfigOption.PACK_UUID, str(uuid.uuid4()))
-    config.add_option(
-        ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, str(uuid.uuid4())
-    )
-
-    config.add_section(namespace)
+    config.add_option(ConfigSection.ANVIL, ConfigOption.VANILLA_VERSION, MANIFEST_BUILD)
 
     return config
 
@@ -255,7 +255,7 @@ def create_directories_from_tree(tree: dict) -> None:
     """
     Recursively creates directories based on the structure of a tree.
 
-    Parameters:
+    Args:
         tree (dict): The tree structure representing the directories.
 
     Returns:
@@ -266,7 +266,7 @@ def create_directories_from_tree(tree: dict) -> None:
         """
         Recursively finds keys in the tree structure.
 
-        Parameters:
+        Args:
             tree (dict): The tree structure.
             path (str): The current path.
             a (list): The list to store the found keys.
@@ -304,9 +304,11 @@ def handle_script(
     ]
 
     script_uuid = str(uuid.uuid4())
-    config.add_option(ConfigSection.BUILD, ConfigOption.DATA_MODULE_UUID, script_uuid)
     config.add_option(
-        ConfigSection.ANVIL, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
+        ConfigSection.MANIFEST, ConfigOption.DATA_MODULE_UUID, script_uuid
+    )
+    config.add_option(
+        ConfigSection.BUILD, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
     )
     DEV_BEH_DIR = os.path.join(
         DEV_BEH_DIR,
@@ -331,7 +333,7 @@ def handle_script(
         "esbuild.js",
         JsonSchemes.esbuild_config_js(
             os.path.join(DEV_BEH_DIR, "scripts"),
-            bool(config.get_option(ConfigSection.ANVIL, ConfigOption.MINIFY)),
+            bool(config.get_option(ConfigSection.BUILD, ConfigOption.MINIFY)),
         ),
         "",
         "w",
@@ -411,7 +413,7 @@ def init(
     addon: bool = False,
     vscode: bool = False,
 ) -> None:
-    AnvilValidator.validate_namespace_project_name(namespace, project_name, addon)
+    validate_namespace_project_name(namespace, project_name, addon)
     display_name = project_name.title().replace("-", " ").replace("_", " ")
     AnvilDisplay.copyright()
     click.echo(f"Initiating {display_name}")
@@ -444,8 +446,8 @@ def init(
     config.save()
     WORKING_DIR = os.getcwd()
     local_export = (
-        bool(config.get_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT))
-        if config.has_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT)
+        bool(config.get_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT))
+        if config.has_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT)
         else (sys.platform != "win32")
     )
     if local_export or sys.platform != "win32":

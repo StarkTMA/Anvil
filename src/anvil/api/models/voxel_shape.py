@@ -17,10 +17,9 @@ Example:
     ```
 """
 
-import os
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -135,7 +134,8 @@ class VoxelShape(AddonObject):
     """
 
     _extension = ".shape.json"
-    _path = os.path.join(CONFIG.BP_PATH, "shapes")
+    _pack = Pack.BP
+    _folder = "shapes"
 
     def __init__(self, name: str, identifier_name: Optional[str] = None) -> None:
         super().__init__(name)

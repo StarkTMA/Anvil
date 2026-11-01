@@ -77,7 +77,7 @@ class JsonContainer(JsonObject):
     group. The owner merges it into its own object. The root components of an entity, block, item or biome are the container named
     `components`; any other name is an entity component group, added and removed by events.
 
-    Parameters:
+    Args:
         name (str): The group name: `components` for the root, or the key under `component_groups`.
     """
 
@@ -95,7 +95,7 @@ class JsonContainer(JsonObject):
     def add(self, *components: JsonComponent) -> Self:
         """Adds components. A component replaces the one with the same identifier, in its place.
 
-        Parameters:
+        Args:
             *components (JsonComponent): The components to add.
         """
         for component in components:
@@ -110,7 +110,7 @@ class JsonContainer(JsonObject):
     def remove(self, *components: JsonComponent | type[JsonComponent]) -> Self:
         """Removes components by identifier.
 
-        Parameters:
+        Args:
             *components (JsonComponent | type[JsonComponent]): The components, or their classes.
         """
         identifiers = {component.identifier for component in components}
@@ -141,7 +141,7 @@ class JsonContainer(JsonObject):
     def has(self, component: JsonComponent | type[JsonComponent]) -> bool:
         """Whether a component with the same identifier is present.
 
-        Parameters:
+        Args:
             component (JsonComponent | type[JsonComponent]): The component, or its class.
         """
         identifier = component.identifier

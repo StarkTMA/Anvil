@@ -4,7 +4,7 @@ import os
 from typing import Literal
 
 from anvil.api.core.enums import AimAssistTargetMode, CameraPresets, ControlSchemes
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import Directory, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -22,13 +22,14 @@ class AimAssistPreset(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "cameras", "presets")
+    _pack = Pack.BP
+    _folder = os.path.join("cameras", "presets")
     _object_type = "Aim Assist Preset"
 
     def __init__(self, name: str) -> None:
         """Initializes the Aim Assist Preset.
 
-        Parameters:
+        Args:
             name (str): Unique name of the preset.
         """
         super().__init__(name)
@@ -37,7 +38,7 @@ class AimAssistPreset(AddonObject):
     def item_settings(self, settings: dict) -> "AimAssistPreset":
         """Specifies which category of aim assist rules to use when specific items are held.
 
-        Parameters:
+        Args:
             settings (dict): Key-value pairs of item names and category IDs.
         """
         self._content["minecraft:aim_assist_preset"]["item_settings"] = settings
@@ -46,7 +47,7 @@ class AimAssistPreset(AddonObject):
     def default_item_settings(self, setting: str) -> "AimAssistPreset":
         """Sets the default aim assist category for items not listed in item_settings.
 
-        Parameters:
+        Args:
             setting (str): The category name.
         """
         self._content["minecraft:aim_assist_preset"]["default_item_settings"] = setting
@@ -55,7 +56,7 @@ class AimAssistPreset(AddonObject):
     def hand_settings(self, setting: str) -> "AimAssistPreset":
         """Sets the aim assist behavior applied when the player is not holding any items.
 
-        Parameters:
+        Args:
             setting (str): The category name.
         """
         self._content["minecraft:aim_assist_preset"]["hand_settings"] = setting
@@ -64,7 +65,7 @@ class AimAssistPreset(AddonObject):
     def exclusion_list(self, exclusions: dict) -> "AimAssistPreset":
         """Specifies entities or blocks that the aim assist will ignore.
 
-        Parameters:
+        Args:
             exclusions (dict): Dictionary specifying blocks and/or entities to exclude.
         """
         self._content["minecraft:aim_assist_preset"]["exclusion_list"] = exclusions
@@ -73,7 +74,7 @@ class AimAssistPreset(AddonObject):
     def liquid_targeting_list(self, targets: dict) -> "AimAssistPreset":
         """Lists the items that are allowed to target liquids.
 
-        Parameters:
+        Args:
             targets (dict): Dictionary specifying liquid targeting items.
         """
         self._content["minecraft:aim_assist_preset"]["liquid_targeting_list"] = targets
@@ -97,7 +98,7 @@ class AimAssistCategory:
     def __init__(self, name: str):
         """Initializes the Aim Assist Category.
 
-        Parameters:
+        Args:
             name (str): Name of the category.
         """
         self._category = {"name": name, "priorities": {}}
@@ -105,7 +106,7 @@ class AimAssistCategory:
     def entity_default(self, value: int):
         """Sets the default priority for entities in this category.
 
-        Parameters:
+        Args:
             value (int): Default priority value.
         """
         self._category["entity_default"] = value
@@ -114,7 +115,7 @@ class AimAssistCategory:
     def block_default(self, value: int):
         """Sets the default priority for blocks in this category.
 
-        Parameters:
+        Args:
             value (int): Default priority value.
         """
         self._category["block_default"] = value
@@ -123,7 +124,7 @@ class AimAssistCategory:
     def block_priority(self, block: str, priority: int):
         """Sets the priority for a specific block type.
 
-        Parameters:
+        Args:
             block (str): Block identifier.
             priority (int): Priority value.
         """
@@ -137,7 +138,7 @@ class AimAssistCategory:
     def entity_priority(self, entity: str, priority: int):
         """Sets the priority for a specific entity type.
 
-        Parameters:
+        Args:
             entity (str): Entity identifier.
             priority (int): Priority value.
         """
@@ -166,7 +167,8 @@ class AimAssistCategories(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "cameras", "presets")
+    _pack = Pack.BP
+    _folder = os.path.join("cameras", "presets")
     _object_type = "Aim Assist Categories"
 
     def __init__(self) -> None:
@@ -178,7 +180,7 @@ class AimAssistCategories(AddonObject):
     def add_category(self, category: str) -> AimAssistCategory:
         """Adds and returns a new Aim Assist Category.
 
-        Parameters:
+        Args:
             category (str): Name of the category.
         """
         category = AimAssistCategory(category)
@@ -207,7 +209,8 @@ class CameraPreset(AddonObject):
     """
 
     _extension = ".camera.json"
-    _path = os.path.join(CONFIG.BP_PATH, "cameras", "presets")
+    _pack = Pack.BP
+    _folder = os.path.join("cameras", "presets")
     _object_type = "Camera Preset"
 
     def __init__(
@@ -215,7 +218,7 @@ class CameraPreset(AddonObject):
     ) -> None:
         """Initializes the CameraPreset instance.
 
-        Parameters:
+        Args:
             name (str): Unique name identifier for the preset.
             inherit_from (CameraPresets | CameraPreset | str): The base preset to inherit settings from.
                 Can be a vanilla `CameraPresets` enum, another custom `CameraPreset` instance, or its identifier string.
@@ -240,7 +243,7 @@ class CameraPreset(AddonObject):
     ) -> "CameraPreset":
         """Sets the constant coordinate overrides for the camera.
 
-        Parameters:
+        Args:
             x (float, optional): Override for target camera's X position.
             y (float, optional): Override for target camera's Y position.
             z (float, optional): Override for target camera's Z position.
@@ -256,7 +259,7 @@ class CameraPreset(AddonObject):
     def rotation(self, x: float = None, y: float = None) -> "CameraPreset":
         """Sets the default rotation pitch and yaw overrides for the camera.
 
-        Parameters:
+        Args:
             x (float, optional): The pitch (vertical rotation) of the camera in degrees. Clamped between -90 and 90.
             y (float, optional): The yaw (horizontal rotation) of the camera in degrees.
         """
@@ -271,7 +274,7 @@ class CameraPreset(AddonObject):
     def starting_rotation(self, x: float = None, y: float = None) -> "CameraPreset":
         """Sets the initial starting rotation pitch and yaw of the camera.
 
-        Parameters:
+        Args:
             x (float, optional): The initial pitch in degrees. Clamped between -90 and 90.
             y (float, optional): The initial yaw in degrees.
         """
@@ -286,7 +289,7 @@ class CameraPreset(AddonObject):
     def player_effects(self, value: bool) -> "CameraPreset":
         """Enables or disables screen effects (like fire, night vision, blindness) for this camera preset.
 
-        Parameters:
+        Args:
             value (bool): Whether the camera renders player effects.
         """
         self._camera_preset["minecraft:camera_preset"]["player_effects"] = value
@@ -295,7 +298,7 @@ class CameraPreset(AddonObject):
     def listener(self, value: bool | str) -> "CameraPreset":
         """Specifies where the sound listener "ears" are positioned while using the camera.
 
-        Parameters:
+        Args:
             value (bool | str): If True or 'player', uses the player's position.
                 If False or 'camera', uses the camera's position.
         """
@@ -311,7 +314,7 @@ class CameraPreset(AddonObject):
     def control_scheme(self, value: ControlSchemes | str) -> "CameraPreset":
         """Overrides the default input response scheme for this camera.
 
-        Parameters:
+        Args:
             value (ControlSchemes | str): The control scheme, such as 'camera_relative'.
         """
         if isinstance(value, ControlSchemes):
@@ -327,7 +330,7 @@ class CameraPreset(AddonObject):
 
         Optimized to render the player and leashed entities.
 
-        Parameters:
+        Args:
             value (bool): Whether to extend rendering distance. Defaults to True.
         """
         self._camera_preset["minecraft:camera_preset"][
@@ -338,7 +341,7 @@ class CameraPreset(AddonObject):
     def view_offset(self, x_offset: float, y_offset: float) -> "CameraPreset":
         """Sets the view offset relative to the camera position.
 
-        Parameters:
+        Args:
             x_offset (float): X view offset.
             y_offset (float): Y view offset.
         """
@@ -353,7 +356,7 @@ class CameraPreset(AddonObject):
     ) -> "CameraPreset":
         """Sets the target entity tracking offset.
 
-        Parameters:
+        Args:
             x_offset (float): X coordinate offset.
             y_offset (float): Y coordinate offset.
             z_offset (float): Z coordinate offset.
@@ -368,7 +371,7 @@ class CameraPreset(AddonObject):
     def radius(self, radius: float) -> "CameraPreset":
         """Sets the orbital radius (distance from target) for boom/follow/orbit cameras.
 
-        Parameters:
+        Args:
             radius (float): Radius in blocks. Clamped between 0.1 and 100.0.
         """
         self._camera_preset["minecraft:camera_preset"]["radius"] = clamp(
@@ -386,7 +389,7 @@ class CameraPreset(AddonObject):
     ) -> "CameraPreset":
         """Configures targeting aid/assist options for the camera.
 
-        Parameters:
+        Args:
             preset (AimAssistPreset): Aim assist preset to apply.
             target_mode (AimAssistTargetMode): Evaluation mode (e.g. Distance, Angle).
             angle (list[float]): Horizontal/vertical angles defining target search cone.
@@ -415,7 +418,7 @@ class CameraPreset(AddonObject):
     ) -> "CameraPreset":
         """Enables target tracking of a specific entity with custom boundaries.
 
-        Parameters:
+        Args:
             rotation_speed (float): Degrees per second tracking rotation speed. Defaults to 0.0 (perfect tracking).
             snap_to_target (bool): If True, snaps tracking immediately on first frame.
             horizontal_rotation_limit (list[float]): Left and right rotation angle limit degrees. Max sum 360.0.

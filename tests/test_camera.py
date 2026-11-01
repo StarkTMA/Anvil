@@ -1,22 +1,7 @@
 import os
 import pytest
-from unittest.mock import MagicMock
 
-# Setup mock CONFIG
-mock_config = MagicMock()
-mock_config.BP_PATH = "dummy_bp_path"
-mock_config.RP_PATH = "dummy_rp_path"
-mock_config.NAMESPACE = "testns"
-mock_config.PROJECT_NAME = "test_project"
-
-import anvil.lib.config
-
-anvil.lib.config.CONFIG = mock_config
-
-import anvil.lib.schemas
-
-anvil.lib.schemas.CONFIG = mock_config
-
+from anvil.lib import config
 from anvil.api.core.enums import CameraPresets, AimAssistTargetMode, ControlSchemes
 from anvil.api.core.camera import (
     AimAssistPreset,
@@ -26,9 +11,15 @@ from anvil.api.core.camera import (
 )
 
 
+@pytest.fixture(autouse=True)
+def project_namespace():
+    with config.override(NAMESPACE="testns"):
+        yield
+
+
 def test_aim_assist_preset():
     preset = AimAssistPreset("test_preset")
-    assert preset._path == os.path.join("dummy_bp_path", "cameras", "presets")
+    assert preset._path == os.path.join(config.CONFIG.BP_PATH, "cameras", "presets")
     assert preset.identifier == "testns:test_preset"
 
     preset.item_settings({"minecraft:stone_axe": "axe_category"})
@@ -56,7 +47,7 @@ def test_aim_assist_preset():
 
 def test_aim_assist_category_and_categories():
     categories = AimAssistCategories()
-    assert categories._path == os.path.join("dummy_bp_path", "cameras", "presets")
+    assert categories._path == os.path.join(config.CONFIG.BP_PATH, "cameras", "presets")
     assert categories._name == "categories"
 
     cat = categories.add_category("test_cat")

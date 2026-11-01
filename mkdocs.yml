@@ -78,7 +78,7 @@ nav:
           - Overview: api/index.md
           - Actors:
                 - Overview: api/actors/index.md
-                - Actors: api/actors/actors.md
+                - Entity: api/actors/entity.md
                 - Components: api/actors/components.md
                 - Materials: api/actors/materials.md
                 - Spawn Rules: api/actors/spawn_rules.md

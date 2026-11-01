@@ -1,8 +1,7 @@
-import os
 from typing import Dict, Literal
 
 from anvil.api.logic.molang import Molang
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -202,10 +201,8 @@ class _RenderController:
 
 class RenderControllers(AddonObject):
     _extension = ".rc.json"
-    _path = os.path.join(
-        CONFIG.RP_PATH,
-        "render_controllers",
-    )
+    _pack = Pack.RP
+    _folder = "render_controllers"
     _object_type = "Render Controller"
 
     def __init__(self, identifier: str, actor_type: str) -> None:

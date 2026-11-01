@@ -12,7 +12,7 @@ class Fonts:
     def __init__(self, font_name: str, character_size: int = 32) -> None:
         """Initializes a Fonts instance.
 
-        Parameters:
+        Args:
             font_name (str): The name of the font.
             character_size (int, optional): The size of the character. Defaults to 32.
         """

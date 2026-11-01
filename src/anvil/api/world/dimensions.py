@@ -1,10 +1,9 @@
-import os
 import warnings
 from typing import Literal
 
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import Dimension
-from anvil.lib.config import ConfigPackageTarget
+from anvil.lib.config import ConfigPackageTarget, Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 DIMENSION_FORMAT_VERSION = "1.18.0"
@@ -23,13 +22,14 @@ class DimensionConfiguration(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "dimensions")
+    _pack = Pack.BP
+    _folder = "dimensions"
     _object_type = "Dimension Configuration"
 
     def __init__(self, dimension: Dimension, void: bool = False) -> None:
         """Overrides a vanilla dimension.
 
-        Parameters:
+        Args:
             dimension (Dimension): The dimension to configure.
             void (bool, optional): Generate the dimension as an empty void. Defaults to False.
                 The Nether and the End only support void generation, so it is always set for them.
@@ -56,7 +56,7 @@ class DimensionConfiguration(AddonObject):
     def height_bounds(self, range: tuple[int, int]) -> "DimensionConfiguration":
         """Sets the height bounds of the Overworld.
 
-        Parameters:
+        Args:
             range (tuple[int, int]): Minimum and maximum height. Both must be multiples of 16
                 between -512 and 512, and the minimum must be lower than the maximum.
 

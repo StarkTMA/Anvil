@@ -1,8 +1,7 @@
-import os
 from typing import overload
 
 from anvil.api.pbr.texture_set import KeyFrame
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -11,7 +10,8 @@ class CubeMapSettings(AddonObject):
     """Cubemap settings for sky and indirect lighting in Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "cubemaps")
+    _pack = Pack.RP
+    _folder = "cubemaps"
     _object_type = "Cube Map Settings"
 
     @overload
@@ -23,7 +23,7 @@ class CubeMapSettings(AddonObject):
     def __init__(self, identifier: str = "minecraft:default_cubemap") -> None:
         """Initializes a CubeMapSettings instance.
 
-        Parameters:
+        Args:
             identifier (str, optional): Unique identifier for the cubemap. Defaults to "minecraft:default_cubemap".
 
         Raises:
@@ -54,7 +54,7 @@ class CubeMapSettings(AddonObject):
     ) -> "CubeMapSettings":
         """Set lighting parameters for the cubemap.
 
-        Parameters:
+        Args:
             ambient_light_illuminance (list[KeyFrame], optional): Keyframed ambient illuminance (lux) over the day cycle. Each keyframe's time is clamped to [0.0, 1.0] and values should be in [0.0, 100000.0]. Defaults to a constant 5.625 lux across the day.
             sky_light_contribution (float, optional): How much the sky light contributes to the cubemap, in [0.0, 1.0]. Default 1.0.
             directional_light_contribution (float, optional): How much directional light (sun/moon) contributes to the cubemap, in [0.0, 1.0]. Default 1.0.

@@ -1,7 +1,5 @@
-import os
-
 from anvil.api.core.enums import FogCameraLocation, RenderDistanceType
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import RGB, AnvilFormatter, Color, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 
@@ -113,7 +111,8 @@ class FogSettings(AddonObject):
     """
 
     _extension = ".fog.json"
-    _path = os.path.join(CONFIG.RP_PATH, "fogs")
+    _pack = Pack.RP
+    _folder = "fogs"
     _object_type = "Fog"
 
     def __init__(self, name: str = "fog", is_vanilla: bool = False) -> None:

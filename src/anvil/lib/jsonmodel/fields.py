@@ -27,7 +27,7 @@ def json_field(
 ) -> Any:
     """Declares a `JsonObject` field.
 
-    Parameters:
+    Args:
         default: The default value. `None` means the key is left out of the JSON.
         default_factory: A factory for mutable defaults such as lists.
         key: The JSON key, when it differs from the field name (for example `"minecraft:foo"`).

@@ -1,22 +1,5 @@
 import pytest
 from anvil.api.world.loot_tables import LootConditions, LootTable
-from anvil.lib import config as anvil_config
-
-
-@pytest.fixture(autouse=True)
-def project_config(monkeypatch):
-    values = {
-        "NAMESPACE": "test",
-        "BP_PATH": "BP",
-        "RP_PATH": "RP",
-        "PROJECT_NAME": "test",
-    }
-    monkeypatch.setattr(
-        anvil_config._AnvilConfig._Proxy,
-        "__getattr__",
-        lambda self, name: values[name],
-        raising=False,
-    )
 
 
 def test_pool_conditions_match_tool():

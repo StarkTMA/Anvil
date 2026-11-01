@@ -831,7 +831,7 @@ class AddonDescriptor:
     ) -> tuple[str, str]:
         """Validates the name of the Minecraft object.
 
-        Parameters:
+        Args:
             name (str): The name of the Minecraft object.
             is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
             is_vanilla_allowed (bool, optional): If overriding vanilla objects is allowed, used for vanilla definitions. Defaults to False.
@@ -877,7 +877,7 @@ class AddonDescriptor:
         """
         Constructs all the necessary attributes for the AddonObject object.
 
-        Parameters:
+        Args:
             name (str): The name of the addon object.
             is_vanilla (bool, optional): If the object is from vanilla Minecraft. Defaults to False.
             is_vanilla_allowed (bool, optional): If overriding vanilla objects is allowed. Defaults to False.
@@ -921,7 +921,7 @@ class AddonDescriptor:
         """
         Sets the data of the addon object.
 
-        Parameters:
+        Args:
             data (any): The data to be set for the addon object.
         """
         self._data = data
@@ -978,7 +978,7 @@ class AddonObject(AddonDescriptor):
         """
         Constructs all the necessary attributes for the AddonObject object.
 
-        Parameters:
+        Args:
             name (str): The name of the addon object.
         """
         super().__init__(name, is_vanilla)
@@ -990,7 +990,7 @@ class AddonObject(AddonDescriptor):
         """
         Sets the content of the addon object and returns the object.
 
-        Parameters:
+        Args:
             content (any): The content to be set for the addon object.
 
         Returns:
@@ -1003,7 +1003,7 @@ class AddonObject(AddonDescriptor):
         """
         Queues the addon object for processing and logs the event.
 
-        Parameters:
+        Args:
             directory (str, optional): The directory of the addon object.
 
         Returns:
@@ -1058,7 +1058,7 @@ class MinecraftBlockDescriptor(AddonDescriptor):
     ) -> None:
         """A block descriptor, matching a block by name, by tags, or both.
 
-        Parameters:
+        Args:
             name (str | None, optional): The block identifier. May be omitted when matching by tags only. Defaults to None.
             is_vanilla (bool, optional): If the block is from vanilla Minecraft. Defaults to False.
             states (Mapping, optional): Block states to match. Requires a name. Defaults to None.

@@ -49,7 +49,7 @@ class BiomeClient(AddonObject):
         """The biome client object. Set the client biome components with the builder methods,
         or add the `BiomeClient` components from `anvil.api.biomes.components` to `components`.
 
-        Parameters:
+        Args:
             name (str): The name of the biome.
             is_vanilla (bool, optional): Whether or not the biome is a vanilla biome. Defaults to False.
         """
@@ -72,7 +72,7 @@ class BiomeClient(AddonObject):
     ) -> dict[Literal["addition", "loop", "mood"], _SoundDescription]:
         """Adds `BiomeClientAmbientSounds` and registers each sound as an ambient sound event.
 
-        Parameters:
+        Args:
             addition (str, optional): Named sound that occasionally plays at the listener position.
             loop (str, optional): Named sound that loops while the listener is inside the biome.
             mood (str, optional): Named sound that rarely plays at a nearby air block when the
@@ -99,7 +99,7 @@ class BiomeClient(AddonObject):
     ) -> dict[Literal["music_definition", "underwater_music"], _SoundDescription]:
         """Adds `BiomeClientMusic` and registers each music definition.
 
-        Parameters:
+        Args:
             music_definition (MusicCategory | str, optional): Music played in the biome.
             underwater_music (MusicCategory | str, optional): Music played underwater in the biome.
             volume_multiplier (float, optional): Applied gradually to the music volume, from 0 to 1.
@@ -129,7 +129,7 @@ class BiomeClient(AddonObject):
     ) -> "BiomeClient":
         """Sets the atmospherics used in Vibrant Visuals mode.
 
-        Parameters:
+        Args:
             atmosphere_identifier (AtmosphericSettings | str): The atmospherics definition.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_atmosphere_identifier)
@@ -144,7 +144,7 @@ class BiomeClient(AddonObject):
     ) -> "BiomeClient":
         """Sets the color grading used in Vibrant Visuals mode.
 
-        Parameters:
+        Args:
             color_grading_identifier (ColorGradingSettings | str): The color grading definition.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_color_grading_identifier)
@@ -161,7 +161,7 @@ class BiomeClient(AddonObject):
     ) -> "BiomeClient":
         """Sets the cubemap used for the Vibrant Visuals skybox lighting.
 
-        Parameters:
+        Args:
             cubemap_identifier (CubeMapSettings | str): The cubemap definition.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_cubemap_identifier)
@@ -174,7 +174,7 @@ class BiomeClient(AddonObject):
     def dry_foliage_appearance(self, color: Color) -> "BiomeClient":
         """Sets the dry foliage color.
 
-        Parameters:
+        Args:
             color (Color): The dry foliage color.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_dry_foliage_color)
@@ -185,7 +185,7 @@ class BiomeClient(AddonObject):
     def fog_appearance(self, fog: "FogSettings | str") -> "BiomeClient":
         """Sets the fog used during rendering.
 
-        Parameters:
+        Args:
             fog (FogSettings | str): The fog definition.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_fog_appearance)
@@ -196,7 +196,7 @@ class BiomeClient(AddonObject):
     def foliage_appearance(self, color: Color | FoliageColorMap) -> "BiomeClient":
         """Sets the foliage color or color map.
 
-        Parameters:
+        Args:
             color (Color | FoliageColorMap): A color, or a foliage color map name.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_foliage_appearance)
@@ -207,7 +207,7 @@ class BiomeClient(AddonObject):
     def grass_appearance(self, color: Color | GrassColorMap) -> "BiomeClient":
         """Sets the grass color or color map.
 
-        Parameters:
+        Args:
             color (Color | GrassColorMap): A color, or a grass color map name.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_grass_appearance)
@@ -220,7 +220,7 @@ class BiomeClient(AddonObject):
     ) -> "BiomeClient":
         """Sets the lighting used in Vibrant Visuals mode.
 
-        Parameters:
+        Args:
             lighting_identifier (LightingSettings | str): The lighting definition.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_lighting_identifier)
@@ -239,7 +239,7 @@ class BiomeClient(AddonObject):
     ) -> "BiomeClient":
         """Sets the precipitation visuals. Set at most one of them.
 
-        Parameters:
+        Args:
             ash (float, optional): Density of ash, as in the soul sand valley.
             blue_spores (float, optional): Density of blue spores, as in the warped forest.
             red_spores (float, optional): Density of red spores, as in the crimson forest.
@@ -260,7 +260,7 @@ class BiomeClient(AddonObject):
     def sky_color(self, color: Color) -> "BiomeClient":
         """Sets the sky color.
 
-        Parameters:
+        Args:
             color (Color): The sky color.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_sky_color)
@@ -273,7 +273,7 @@ class BiomeClient(AddonObject):
     ) -> "BiomeClient":
         """Sets the water surface color.
 
-        Parameters:
+        Args:
             surface_color (Color): The water surface color.
             surface_opacity (float, optional): From 0, invisible, to 1, opaque. Defaults to 0.8.
 
@@ -291,7 +291,7 @@ class BiomeClient(AddonObject):
     ) -> "BiomeClient":
         """Sets the water rendering used in Vibrant Visuals mode.
 
-        Parameters:
+        Args:
             water_identifier (WaterSettings | str): The water definition.
 
         [Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_water_identifier)

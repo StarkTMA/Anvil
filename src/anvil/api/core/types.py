@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, Callable, Literal, TypeAlias
 
-from anvil.api.core.enums import BlockFaceValues, Slots
+from anvil.api.core.enums import Slots
 
 if TYPE_CHECKING:
     from anvil.lib.jsonmodel import JsonComponent
@@ -47,7 +47,7 @@ type StructureProcessors = Literal[
 # Command selectors
 type Target = Literal["@p", "@r", "@a", "@e", "@s", "@c", "@v", "@initiator"]
 
-InstrumentSound: TypeAlias = Literal[
+InstrumentSound = Literal[
     "note.harp",
     "note.bd",
     "note.snare",
@@ -174,9 +174,21 @@ BlockLavaFlammable = Literal["always", "never"]
 
 BlockSticky = Literal["none", "same"]
 
-type BlockFaces = list[BlockFaceValues]
+BlockMovementType = Literal["push_pull", "push", "popped", "immovable"]
+
+TintMethod = Literal[
+    "none",
+    "default_foliage",
+    "birch_foliage",
+    "evergreen_foliage",
+    "dry_foliage",
+    "grass",
+    "water",
+]
 
 # Items
+Rarity = Literal["common", "uncommon", "rare", "epic"]
+
 ItemUseAnimations = Literal[
     "eat",
     "drink",

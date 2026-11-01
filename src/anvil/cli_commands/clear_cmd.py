@@ -9,12 +9,12 @@ from anvil.lib.lib import PREVIEW_COM_MOJANG, RELEASE_COM_MOJANG
 
 def get_project_dev_pack_paths(config: Config) -> list[str]:
     """Returns the current project's development pack directories."""
-    preview = config.get_option(ConfigSection.ANVIL, ConfigOption.PREVIEW)
+    preview = config.get_option(ConfigSection.BUILD, ConfigOption.PREVIEW)
     project_name = config.get_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME)
 
     local_export = (
-        bool(config.get_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT))
-        if config.has_option(ConfigSection.ANVIL, ConfigOption.LOCAL_EXPORT)
+        bool(config.get_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT))
+        if config.has_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT)
         else (sys.platform != "win32")
     )
 

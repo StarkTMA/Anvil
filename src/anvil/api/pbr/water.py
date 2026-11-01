@@ -1,6 +1,4 @@
-import os
-
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -9,7 +7,8 @@ class WaterSettings(AddonObject):
     """Water effects customization settings for Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "water")
+    _pack = Pack.RP
+    _folder = "water"
     _object_type = "Water Settings"
 
     def __init__(
@@ -40,7 +39,7 @@ class WaterSettings(AddonObject):
         The composition of particles in a body of water determines its color and how light behaves as it
         travels through the water. We've boiled them down to three concentrations in mg/L. Use these values
         to simulate crystal clear lakes, deep oceans, or muddy rivers.
-        Parameters:
+        Args:
             cdom (float | None): Concentration of colored dissolved organic matter (CDOM) in the water.
             chlorophyll (float | None): Concentration of chlorophyll in the water.
             suspended_sediment (float | None): Concentration of suspended sediment in the water.
@@ -76,7 +75,7 @@ class WaterSettings(AddonObject):
         realistic. You can blend them with existing water texture animations, or replace them entirely.
         The waves in Vibrant Visuals are purely an image-based effect—waves don't actually move the vertices of the water
         surface, so the water surface geometry will remain unchanged.
-        Parameters:
+        Args:
             enabled (bool, optional): Whether or not waves are on or off.
             depth (float, optional): Controls the amount of wave displacement. Valid range: 0.0 to 3.0.
             direction_increment (float, optional): Controls how much the heading changes between each octave. Valid range: 0.0 to 360.0.
@@ -131,7 +130,7 @@ class WaterSettings(AddonObject):
         These rays then scatter and dance as the surface of the water moves. This effect is enabled by default,
         but can be selectively disabled in given water configurations.
 
-        Parameters:
+        Args:
             enabled (bool, optional): Whether or not caustics are on or off.
             frame_length (float, optional): Duration for each frame in the caustics texture animation (0.01 - 5.0).
             power (int, optional): Controls brightness of the caustics effect (1 - 6).

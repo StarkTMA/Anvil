@@ -12,7 +12,7 @@ from anvil.api.core.enums import (
 )
 from anvil.api.core.types import Identifier
 from anvil.api.logic.molang import Molang
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import Directory
 from anvil.lib.reports import ReportType
 from anvil.lib.schemas import AddonObject, JsonSchemes
@@ -82,7 +82,7 @@ class _SoundDescription:
     ) -> None:
         """Initializes a _SoundDescription instance.
 
-        Parameters:
+        Args:
             sound_reference (str): The definition of the sound.
             category (SoundCategory): The category of the sound.
             use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
@@ -118,7 +118,7 @@ class _SoundDescription:
     ):
         """Adds a sound to the _SoundDescription instance.
 
-        Parameters:
+        Args:
             sound_name (str): The name of the sound.
             volume (int, optional): The volume of the sound. Defaults to 1.
             weight (int, optional): The weight of the sound. Defaults to 1.
@@ -212,7 +212,8 @@ class SoundDefinition(AddonObject):
     """
 
     _instance = None
-    _path = os.path.join(CONFIG.RP_PATH, "sounds")
+    _pack = Pack.RP
+    _folder = "sounds"
 
     def __new__(cls):
         if cls._instance is None:
@@ -240,7 +241,7 @@ class SoundDefinition(AddonObject):
     ) -> "_SoundDescription":
         """Defines a sound for the SoundDefinition instance.
 
-        Parameters:
+        Args:
             sound_reference (str): The sound_reference of the sound.
             category (SoundCategory): The category of the sound.
             use_legacy_max_distance (bool, optional): Use legacy max distance if True. Defaults to False.
@@ -308,7 +309,8 @@ class ServerSoundDefinition(AddonObject):
     """
 
     _instance = None
-    _path = os.path.join(CONFIG.BP_PATH, "sounds")
+    _pack = Pack.BP
+    _folder = "sounds"
 
     def __new__(cls):
         if cls._instance is None:
@@ -331,7 +333,7 @@ class ServerSoundDefinition(AddonObject):
     ) -> "ServerSoundDefinition":
         """Registers server-side metadata for a sound already registered on the client side.
 
-        Parameters:
+        Args:
             sound_identifier (str): The fully-qualified sound identifier (e.g. "namespace:sound_ref")
                 as already registered in the client-side sound definitions.
             music_info (MusicInfo): The duration tracking mode, music metadata, and/or tags to
@@ -369,7 +371,8 @@ class MusicDefinition(AddonObject):
     """
 
     _instance = None
-    _path = os.path.join(CONFIG.RP_PATH, "sounds")
+    _pack = Pack.RP
+    _folder = "sounds"
 
     def __new__(cls):
         if cls._instance is None:
@@ -394,7 +397,7 @@ class MusicDefinition(AddonObject):
     ) -> _SoundDescription:
         """Defines a music for the MusicDefinition instance.
 
-        Parameters:
+        Args:
             music_reference (MusicCategory | str): The reference/category of the music.
             min_delay (int, optional): The minimum delay for the music. Defaults to 60.
             max_delay (int, optional): The maximum delay for the music. Defaults to 180.
@@ -446,7 +449,7 @@ class SoundEvent(AddonObject):
     """
 
     _instance = None
-    _path = os.path.join(CONFIG.RP_PATH)
+    _pack = Pack.RP
 
     def __new__(cls):
         if cls._instance is None:
@@ -670,7 +673,7 @@ class SoundEvent(AddonObject):
 class BlocksJSONObject(AddonObject):
     _instance = None
     _extension = ".json"
-    _path = CONFIG.RP_PATH
+    _pack = Pack.RP
 
     def __new__(cls):
         if cls._instance is None:

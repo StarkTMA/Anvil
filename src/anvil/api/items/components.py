@@ -72,7 +72,7 @@ _range = (length(2, 2), each(_number))
 class KineticEffectConditions(JsonObject):
     """Conditions that need to be satisfied for an effect of a kinetic weapon to be applied.
 
-    Parameters:
+    Args:
         max_duration (Tick, optional): Time, in ticks, during which the effect can be applied after `delay` elapses. If negative, the effect is applied indefinitely. Game default -1.
         min_relative_speed (float, optional): Minimum relative speed of the user with respect to the target, projected onto the view vector. Game default 0.
         min_speed (float, optional): Minimum speed of the user, projected onto the view vector. Game default 0.
@@ -88,7 +88,7 @@ class KineticEffectConditions(JsonObject):
 class DurabilityThreshold(JsonObject):
     """A durability threshold, and the effects emitted when it is met.
 
-    Parameters:
+    Args:
         durability (int): The effects are emitted when the item durability is less than or equal to this value.
         particle_type (str, optional): Particle effect to emit when the threshold is met.
         sound_event (str, optional): Sound effect to emit when the threshold is met.
@@ -104,7 +104,7 @@ class DurabilityThreshold(JsonObject):
 class DestroySpeed(JsonObject):
     """How fast a digger item breaks a block.
 
-    Parameters:
+    Args:
         block (BlockReference): The block, by descriptor, identifier or tag query.
         speed (int): Digging speed for the block.
     """
@@ -116,7 +116,7 @@ class DestroySpeed(JsonObject):
 class RepairItem(JsonObject):
     """Items that repair an item, and how much durability they restore.
 
-    Parameters:
+    Args:
         items (list[ItemReference]): Items that may be used to repair the item.
         repair_amount (Molang | float, optional): How much the item is repaired.
     """
@@ -128,7 +128,7 @@ class RepairItem(JsonObject):
 class Ammunition(JsonObject):
     """An item a shooter can fire.
 
-    Parameters:
+    Args:
         item (ItemReference): The ammunition item. It needs a `minecraft:projectile` component.
         search_inventory (bool, optional): Whether the inventory is searched for the ammunition. Game default false.
         use_in_creative (bool, optional): Whether the ammunition can be used in creative mode. Game default false.
@@ -149,7 +149,7 @@ class Ammunition(JsonObject):
 class ItemDurability(JsonComponent):
     """Sets how much damage the item can take before breaking, and allows the item to be combined at an anvil, grindstone, or crafting table.
 
-    Parameters:
+    Args:
         max_durability (int): The amount of damage this item can take before breaking. Minimum 0.
         damage_chance (NumberRange, optional): The `(min, max)` percentage chance of this item losing durability, each between 0 and 100. Game default (100, 100).
 
@@ -169,7 +169,7 @@ class ItemDurability(JsonComponent):
 class ItemMaxStackSize(JsonValueComponent):
     """Determines how many of an item can be stacked together.
 
-    Parameters:
+    Args:
         value (int): How many of the item can be stacked together, from 1 to 64.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_max_stack_size)
@@ -183,7 +183,7 @@ class ItemMaxStackSize(JsonValueComponent):
 class ItemStorageItem(JsonComponent):
     """Enables an item to store data of the dynamic container associated with it. A dynamic container is a container for storing items that is linked to an item instead of a block or an entity.
 
-    Parameters:
+    Args:
         allow_nested_storage_items (bool, optional): Whether another storage item is allowed inside this item. Game default true.
         allowed_items (list[ItemReference], optional): Items that are exclusively allowed in this storage item. If empty, all items are allowed.
         banned_items (list[ItemReference], optional): Items that are not allowed in this storage item.
@@ -211,7 +211,7 @@ class ItemStorageItem(JsonComponent):
 class ItemUseModifiers(JsonComponent):
     """Determines how long an item takes to use in combination with components such as Shooter, Throwable, or Food.
 
-    Parameters:
+    Args:
         use_duration (float): Time, in seconds, that the item takes to use. Minimum 0.
         movement_modifier (float, optional): Multiplier applied to the player's movement speed while the item is in use. At most 1.
         emit_vibrations (bool, optional): Whether vibrations are emitted when the item starts or stops being used. Game default true.
@@ -257,7 +257,7 @@ class ItemCustomComponent(JsonCustomComponent, abstract=True):
 class ItemAllowOffHand(JsonValueComponent):
     """Determines whether the item can be placed in the off hand slot.
 
-    Parameters:
+    Args:
         value (bool, optional): Whether the item can be placed in the off hand slot. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_allow_off_hand)
@@ -271,7 +271,7 @@ class ItemAllowOffHand(JsonValueComponent):
 class ItemBlockPlacer(JsonComponent):
     """Sets the item as a placer item component for blocks. Items with this component will place a block when used.
 
-    Parameters:
+    Args:
         block (BlockReference): The block that will be placed.
         replace_block_item (bool, optional): If true, the item is registered as the item for this block, and is returned when the block is broken or picked. The item identifier must match the block identifier. Game default false.
         aligned_placement (bool, optional): Whether block placement is aligned while the interaction button is held down. Requires format version 1.26.10.
@@ -293,7 +293,7 @@ class ItemBlockPlacer(JsonComponent):
 class ItemBundleInteraction(JsonComponent):
     """Enables the bundle-specific interaction scheme and tooltip for an item.
 
-    Parameters:
+    Args:
         num_viewable_slots (int, optional): The maximum number of slots in the bundle viewable by the player, from 1 to 64. Game default 12.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_bundle_interaction)
@@ -310,7 +310,7 @@ class ItemBundleInteraction(JsonComponent):
 class ItemCanDestroyInCreative(JsonValueComponent):
     """Determines whether the item can be used to destroy blocks while in creative mode.
 
-    Parameters:
+    Args:
         value (bool, optional): Whether the item breaks blocks in creative mode while swinging. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_can_destroy_in_creative)
@@ -324,7 +324,7 @@ class ItemCanDestroyInCreative(JsonValueComponent):
 class ItemCompostable(JsonComponent):
     """Specifies that an item is compostable and provides the chance of creating a composting layer in the composter.
 
-    Parameters:
+    Args:
         composting_chance (int): The chance of this item to create a layer upon composting, from 1 to 100.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_compostable)
@@ -338,7 +338,7 @@ class ItemCompostable(JsonComponent):
 class ItemCooldown(JsonComponent):
     """Adds a cooldown to an item, preventing it from being used again for a specified duration. Items sharing the same category enter cooldown together.
 
-    Parameters:
+    Args:
         category (str): Groups items together. When an item is used, all items of its category enter cooldown.
         duration (Seconds): How long, in seconds, the items of the category spend cooling down.
         type (ItemCooldownType, optional): The action that triggers the cooldown, "use" or "attack". Game default "use".
@@ -358,7 +358,7 @@ class ItemCooldown(JsonComponent):
 class ItemDamage(JsonValueComponent):
     """Determines how much extra damage the item deals when attacking.
 
-    Parameters:
+    Args:
         value (int): Extra damage added to the base attack damage, from 0 to 32767.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage)
@@ -372,7 +372,7 @@ class ItemDamage(JsonValueComponent):
 class ItemDamageAbsorption(JsonComponent):
     """Allows an item worn in an armor slot to absorb damage that would otherwise be dealt to its wearer. The absorbed damage reduces the item's durability.
 
-    Parameters:
+    Args:
         absorbable_causes (list[DamageCause]): The damage causes the item can absorb, at least 1.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_damage_absorption)
@@ -389,7 +389,7 @@ class ItemDamageAbsorption(JsonComponent):
 class ItemDigger(JsonComponent):
     """Configures an item as a digging tool, allowing it to break specific blocks faster than normal.
 
-    Parameters:
+    Args:
         destroy_speeds (list[DestroySpeed], optional): The blocks this item digs, and how fast. Set them directly or add them with `add_destroy_speed`.
         use_efficiency (bool, optional): Whether the Efficiency enchantment increases the dig speed. Game default false.
 
@@ -418,7 +418,7 @@ class ItemDigger(JsonComponent):
 class ItemDisplayName(JsonComponent):
     """Sets the item display name. The item writes it as the localization key `item.<identifier>.name` and adds the name to the language file under that key.
 
-    Parameters:
+    Args:
         value (str): The name shown for the item.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_display_name)
@@ -440,7 +440,7 @@ class ItemDisplayName(JsonComponent):
 class ItemDurabilitySensor(JsonComponent):
     """Enables an item to emit effects when it receives damage.
 
-    Parameters:
+    Args:
         durability_thresholds (list[DurabilityThreshold]): The thresholds and their effects, at least 1. Set them directly or add them with `add_durability_threshold`. When several thresholds are met, only the one with the lowest durability is used.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor)
@@ -479,7 +479,7 @@ class ItemDurabilitySensor(JsonComponent):
 class ItemDyeable(JsonComponent):
     """Enables players to dye this item, like leather armor.
 
-    Parameters:
+    Args:
         default_color (Color, optional): The color of the item when undyed. Written as a hex color. Game default white.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_dyeable)
@@ -493,7 +493,7 @@ class ItemDyeable(JsonComponent):
 class ItemEnchantable(JsonComponent):
     """Determines what enchantments can be applied to the item. Not all enchantments will have an effect on all item components.
 
-    Parameters:
+    Args:
         slot (EnchantsSlots): Which types of enchantments can be applied. For example, `bow` lets the item be enchanted as if it were a bow.
         value (int): The enchantability of the item. Minimum 0.
 
@@ -509,7 +509,7 @@ class ItemEnchantable(JsonComponent):
 class ItemEntityPlacer(JsonComponent):
     """Allows an item to place entities into the world, and to set the spawn type of a monster spawner.
 
-    Parameters:
+    Args:
         entity (MinecraftEntityDescriptor | Identifier): The entity to be placed in the world.
         dispense_on (list[BlockReference], optional): Blocks this item can be dispensed on. If empty, all blocks are allowed.
         use_on (list[BlockReference], optional): Blocks this item can be used on. If empty, all blocks are allowed.
@@ -529,7 +529,7 @@ class ItemEntityPlacer(JsonComponent):
 class ItemFireResistant(JsonComponent):
     """Determines whether the item is immune to burning when dropped in fire or lava.
 
-    Parameters:
+    Args:
         value (bool, optional): Whether the item is immune to burning. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fire_resistant)
@@ -543,7 +543,7 @@ class ItemFireResistant(JsonComponent):
 class ItemFood(JsonComponent):
     """Sets the item as a food component, allowing it to be edible to the player.
 
-    Parameters:
+    Args:
         can_always_eat (bool, optional): Whether the item can be eaten even when not hungry. Game default false.
         nutrition (int, optional): The value added to the entity's nutrition when the item is used. Game default 0.
         saturation_modifier (float, optional): Used in `nutrition * saturation_modifier * 2` to compute the saturation buff. Game default 0.6.
@@ -568,7 +568,7 @@ class ItemFood(JsonComponent):
 class ItemFuel(JsonComponent):
     """Allows this item to be used as fuel in a furnace to 'cook' other items.
 
-    Parameters:
+    Args:
         duration (Seconds): How long, in seconds, this fuel cooks items for. Minimum 0.05.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fuel)
@@ -582,7 +582,7 @@ class ItemFuel(JsonComponent):
 class ItemGlint(JsonValueComponent):
     """Determines whether the item has the enchanted glint render effect on it.
 
-    Parameters:
+    Args:
         value (bool, optional): Whether the item has the enchanted glint. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_glint)
@@ -596,7 +596,7 @@ class ItemGlint(JsonValueComponent):
 class ItemHandEquipped(JsonValueComponent):
     """Determines whether the item is rendered like a tool while in the player's hand.
 
-    Parameters:
+    Args:
         value (bool, optional): Whether the item is rendered like a tool. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hand_equipped)
@@ -610,7 +610,7 @@ class ItemHandEquipped(JsonValueComponent):
 class ItemHoverTextColor(JsonValueComponent):
     """Determines the color of the item name when hovering over it.
 
-    Parameters:
+    Args:
         value (Color): The color of the item hover text. Written as a hex color.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hover_text_color)
@@ -624,7 +624,7 @@ class ItemHoverTextColor(JsonValueComponent):
 class ItemIcon(JsonComponent):
     """Determines the icon that represents the item in the UI and elsewhere. The texture is added to the resource pack and to `item_texture.json`.
 
-    Parameters:
+    Args:
         textures (TextureComponents): The icon texture and its PBR maps. Written as `{"default": "<namespace>:<color>"}`.
         blockbench (str, optional): The Blockbench project to take the textures from. Not written to the JSON.
 
@@ -655,7 +655,7 @@ class ItemIcon(JsonComponent):
 class ItemInteractButton(JsonValueComponent):
     """Determines whether the interact button is shown in touch controls, and the text on it.
 
-    Parameters:
+    Args:
         value (bool | str, optional): True shows the default "Use Item" text. A string is added to the language file and shown instead. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_interact_button)
@@ -675,7 +675,7 @@ class ItemInteractButton(JsonValueComponent):
 class ItemKineticWeapon(JsonComponent):
     """Allows an item to deal kinetic damage and its effects every tick while in use, along the user's view vector. Damage depends on the user's and the target's velocity.
 
-    Parameters:
+    Args:
         reach (NumberRange, optional): The `(min, max)` range, in blocks, along the view vector where entities can be hit. Game default (0, 3).
         creative_reach (NumberRange, optional): The reach in Creative mode. Defaults to `reach`.
         damage_modifier (float, optional): Value added to the scaled dot product, after `damage_multiplier`. Game default 0.
@@ -775,7 +775,7 @@ class ItemKineticWeapon(JsonComponent):
 class ItemLiquidClipped(JsonValueComponent):
     """Determines whether the item interacts with liquid blocks on use.
 
-    Parameters:
+    Args:
         value (bool, optional): Whether the item interacts with liquid blocks on use. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_liquid_clipped)
@@ -789,7 +789,7 @@ class ItemLiquidClipped(JsonValueComponent):
 class ItemPiercingWeapon(JsonComponent):
     """Allows an item to deal damage to all entities detected in a straight line along the user's view vector. Items with this component cannot destroy blocks.
 
-    Parameters:
+    Args:
         reach (NumberRange, optional): The `(min, max)` range, in blocks, along the view vector where entities can be hit. Game default (0, 3).
         creative_reach (NumberRange, optional): The reach in Creative mode. Defaults to `reach`.
         hitbox_margin (float, optional): Added tolerance to the view vector raycast. Game default 0.
@@ -811,7 +811,7 @@ class ItemPiercingWeapon(JsonComponent):
 class ItemProjectile(JsonComponent):
     """Defines an item as a projectile that can be shot from dispensers or used as ammunition by `minecraft:shooter`. With `minecraft:throwable`, sets the entity spawned when the item is thrown.
 
-    Parameters:
+    Args:
         projectile_entity (MinecraftEntityDescriptor | Identifier): The entity fired as a projectile. A spawn event can be added as `"entity<event>"`.
         minimum_critical_power (float, optional): How long the projectile must be charged to critically hit. Game default 0.
 
@@ -831,7 +831,7 @@ class ItemProjectile(JsonComponent):
 class ItemRarity(JsonValueComponent):
     """Specifies the base rarity of the item, and so the color of its name when hovered. Overridden by `minecraft:hover_text_color`.
 
-    Parameters:
+    Args:
         value (Rarity): The base rarity. It rises when the item is enchanted.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_rarity)
@@ -845,7 +845,7 @@ class ItemRarity(JsonValueComponent):
 class ItemRecord(JsonComponent):
     """Used by record items to play music.
 
-    Parameters:
+    Args:
         sound_event (str): The sound event played.
         duration (Seconds, optional): Duration of the sound event, in seconds. Game default 0.
         comparator_signal (int, optional): Signal strength for comparator blocks, from 1 to 13. Game default 1.
@@ -865,7 +865,7 @@ class ItemRecord(JsonComponent):
 class ItemRepairable(JsonComponent):
     """Defines the items that can repair this item, and how much durability each restores.
 
-    Parameters:
+    Args:
         repair_items (list[RepairItem], optional): The repair entries. Set them directly or add them with `add_repair_item`.
         on_repaired (str, optional): Event triggered when this item has been repaired, for example "minecraft:celebrate".
 
@@ -899,7 +899,7 @@ class ItemRepairable(JsonComponent):
 class ItemSeed(JsonComponent):
     """Sets the item as a seed that can be planted to grow crops.
 
-    Parameters:
+    Args:
         crop_result (BlockReference): The block placed when the seed is planted.
         plant_at (list[BlockReference], optional): Blocks this seed can be planted on or attached to. If not set, standard farmland rules apply.
         plant_at_any_solid_surface (bool, optional): Deprecated. Has no effect from format version 1.19.0.
@@ -925,7 +925,7 @@ class ItemSeed(JsonComponent):
 class ItemShooter(JsonComponent):
     """Compels an item to shoot projectiles, like a bow or crossbow.
 
-    Parameters:
+    Args:
         ammunition (list[Ammunition], optional): The items that can be fired. Set them directly or add them with `add_ammunition`.
         charge_on_draw (bool, optional): Whether the shooter charges when the player starts drawing, like a crossbow. Game default false.
         max_draw_duration (Seconds, optional): How long, in seconds, the shooter can be drawn before it fires or reaches full power. Game default 0.
@@ -977,7 +977,7 @@ class ItemShooter(JsonComponent):
 class ItemShouldDespawn(JsonValueComponent):
     """Determines whether the item should eventually despawn while floating in the world.
 
-    Parameters:
+    Args:
         value (bool, optional): Whether the item despawns. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_should_despawn)
@@ -991,7 +991,7 @@ class ItemShouldDespawn(JsonValueComponent):
 class ItemStackedByData(JsonValueComponent):
     """Determines whether the same item with different aux values can stack, and whether the item entities can merge while floating in the world.
 
-    Parameters:
+    Args:
         value (bool, optional): Whether items with different aux values stack and merge. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_stacked_by_data)
@@ -1005,7 +1005,7 @@ class ItemStackedByData(JsonValueComponent):
 class ItemStorageWeightLimit(JsonComponent):
     """Specifies the maximum weight limit that a storage item can hold.
 
-    Parameters:
+    Args:
         max_weight_limit (int, optional): The maximum allowed weight of the sum of all contained items, at most 64. Game default 64.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_limit)
@@ -1021,7 +1021,7 @@ class ItemStorageWeightLimit(JsonComponent):
 class ItemStorageWeightModifier(JsonComponent):
     """Specifies the weight of this item when inside another storage item.
 
-    Parameters:
+    Args:
         weight_in_storage_item (int, optional): The weight of this item inside another storage item. 0 means the item is not allowed in one. Game default 4.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_weight_modifier)
@@ -1037,7 +1037,7 @@ class ItemStorageWeightModifier(JsonComponent):
 class ItemSwingDuration(JsonComponent):
     """Duration, in seconds, of the item's swing animation when mining or attacking. Affects visuals only.
 
-    Parameters:
+    Args:
         value (Seconds, optional): The swing duration in seconds. Game default 0.3.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_duration)
@@ -1051,7 +1051,7 @@ class ItemSwingDuration(JsonComponent):
 class ItemSwingSounds(JsonComponent):
     """Overrides the swing sounds emitted by the user. Each field takes a sound event from `sound_definitions.json`, including vanilla ones.
 
-    Parameters:
+    Args:
         attack_critical_hit (str, optional): Sound played when an attack hits and deals critical damage.
         attack_hit (str, optional): Sound played when an attack hits.
         attack_miss (str, optional): Sound played when an attack misses or deals no damage due to invulnerability.
@@ -1069,7 +1069,7 @@ class ItemSwingSounds(JsonComponent):
 class ItemTags(JsonComponent):
     """Determines which tags are included on the item.
 
-    Parameters:
+    Args:
         tags (list[MinecraftItemTags | str]): The item tags.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_tags)
@@ -1083,7 +1083,7 @@ class ItemTags(JsonComponent):
 class ItemThrowable(JsonComponent):
     """Makes an item throwable by the player, like a snowball or ender pearl. Use with `minecraft:projectile` to set the entity spawned.
 
-    Parameters:
+    Args:
         do_swing_animation (bool, optional): Whether the item uses the swing animation when thrown. Game default false.
         launch_power_scale (float, optional): The scale at which the power of the throw increases. Game default 1.0.
         max_draw_duration (Seconds, optional): The maximum duration to draw the item. Game default 0.
@@ -1113,7 +1113,7 @@ class ItemThrowable(JsonComponent):
 class ItemUseAnimation(JsonValueComponent):
     """Specifies which animation is played when the player uses the item.
 
-    Parameters:
+    Args:
         value (ItemUseAnimations): The animation played when the item is used.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_use_animation)
@@ -1127,7 +1127,7 @@ class ItemUseAnimation(JsonValueComponent):
 class ItemWearable(JsonComponent):
     """Allows an item to be worn by a player in an equipment slot. A non-hand slot sets the max stack size to 1.
 
-    Parameters:
+    Args:
         slot (ItemWearableSlots): Where the item can be worn.
         protection (int, optional): How much protection the item provides. Game default 0.
         hides_player_location (bool, optional): Whether the wearer is hidden on locator maps and the locator bar. Game default false.

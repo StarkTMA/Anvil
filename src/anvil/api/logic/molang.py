@@ -319,7 +319,7 @@ class Query(Molang):
     def AboveTopSolid(self, x: int, z: int):
         """Returns the height of the block immediately above the highest solid block at the input (x,z) position.
 
-        Parameters:
+        Args:
             x (int): X position.
             z (int): Y position.
 
@@ -341,7 +341,7 @@ class Query(Molang):
     def All(self, query: Molang, queries: list[Molang]):
         """Requires at least 3 arguments. Evaluates the first argument, then returns 1.0 if all of the following arguments evaluate to the same value as the first. Otherwise it returns 0.0.
 
-        Parameters:
+        Args:
             query (int): Query to evaluate.
             queries (int): arguments to test against.
 
@@ -366,7 +366,7 @@ class Query(Molang):
     def AllTags(self, tags: list[str]):
         """Returns 1.0 if the item or block has all of the tags specified, else it return 0.0.
 
-        Parameters:
+        Args:
             tags (str): entity tags to test for.
 
         Returns:
@@ -401,7 +401,7 @@ class Query(Molang):
     def Any(self, query: Molang, queries: list[Molang]):
         """Requires at least 3 arguments. Evaluates the first argument, then returns 1.0 if any of the following arguments evaluate to the same value as the first. Otherwise it returns 0.0.
 
-        Parameters:
+        Args:
             query (int): Query to evaluate.
             queries (int): arguments to test against.
 
@@ -423,7 +423,7 @@ class Query(Molang):
     def AnyTag(self, *tags: str):
         """Returns 1.0 if the item or block has any of the tags specified, else it returns 0.0.
 
-        Parameters:
+        Args:
             tags (str): entity tags to test for.
 
         Returns:
@@ -435,7 +435,7 @@ class Query(Molang):
     def ApproxEq(self, *Parameters):
         """Returns 1.0 if all of the arguments are within 0.000000 of each other, else it returns 0.0.
 
-        Parameters:
+        Args:
             Parameters (Any): Arguments to test for approximate equality.
 
         Returns:
@@ -447,7 +447,7 @@ class Query(Molang):
     def ArmorColorSlot(self, index: int, colorChannel: int):
         """Takes the armor slot index as a parameter and returns the color of the armor in the requested slot.
 
-        Parameters:
+        Args:
             index (int): Armour slot index.
 
         Returns:
@@ -465,7 +465,7 @@ class Query(Molang):
     def ArmorMaterialSlot(self, index: int):
         """Takes the armor slot index as a parameter and returns the armor material type in the requested armor slot.
 
-        Parameters:
+        Args:
             index (int): Armour slot index.
 
         Returns:
@@ -477,7 +477,7 @@ class Query(Molang):
     def ArmorTextureSlot(self, index: int):
         """Takes the armor slot index as a parameter and returns the texture type of the requested slot.
 
-        Parameters:
+        Args:
             index (int): Armour slot index.
 
         Returns:
@@ -496,7 +496,7 @@ class Query(Molang):
         Currently we store the history of the last 30 frames, although note that this may change in the future.
         Asking for more frames will result in only sampling the number of frames stored.
 
-        Parameters:
+        Args:
             frame (int): Frame number.
 
         Returns:
@@ -528,7 +528,7 @@ class Query(Molang):
     def BlockState(self, state: str):
         """Returns the value of the associated block's Block State.
 
-        Parameters:
+        Args:
             state (str): The block state to query, no namespace.
 
         Returns:
@@ -543,7 +543,7 @@ class Query(Molang):
     def Property(self, property: str):
         """Returns the value of the associated property.
 
-        Parameters:
+        Args:
             property (str): The property to query, no namespace.
 
 
@@ -558,7 +558,7 @@ class Query(Molang):
     def HasProperty(self, property: str):
         """Returns true if the entity has the property.
 
-        Parameters:
+        Args:
             property (str): The block property to query, no namespace.
 
         Returns:
@@ -643,7 +643,7 @@ class Query(Molang):
     def CameraRotation(self, axis: int):
         """Returns the rotation of the camera. Requires one argument representing the rotation axis you would like.
 
-        Parameters:
+        Args:
             axis (int): 0 for x, 1 for y
 
         Returns:
@@ -896,7 +896,7 @@ class Query(Molang):
     def EquippedItemIsAttachable(self, hand: int = 0):
         """Takes the desired hand slot as a parameter and returns whether the item is an attachable or not.
 
-        Parameters:
+        Args:
             hand (int): 0 for main hand, 1 for off hand
 
         Returns:
@@ -1070,7 +1070,7 @@ class Query(Molang):
     def has_block_state(self, state: str):
         """Returns 1.0 if the associated block has the given block state or 0.0 if not.
 
-        Parameters:
+        Args:
             state (str): The block state to query, no namespace.
 
         Returns:
@@ -3008,7 +3008,7 @@ class Query(Molang):
         """### Server Only
         Returns the specified scoreboard value for this entity.
 
-        Parameters:
+        Args:
             score (str): The name of the scoreboard to query.
 
         Returns:
@@ -3148,7 +3148,7 @@ class Query(Molang):
 
         Returns value of Pack Setting slider, parameter is name of slider. Available on the Client (Resource Packs) only.
 
-        Parameters:
+        Args:
             id (str): The name of the pack setting slider to query.
         Returns:
             Molang(Molang): A Molang Instance representing a numerical value of the slider.
@@ -3178,7 +3178,7 @@ class Query(Molang):
 
         Returns 1.0 if Pack Setting toggle is enabled, else it returns 0.0. Parameter is name of toggle. Available on the Client (Resource Packs) only.
 
-        Parameters:
+        Args:
             id (str): The name of the pack setting toggle to query.
 
         Returns:
@@ -3209,7 +3209,7 @@ class Query(Molang):
 
         Returns 1.0 if Pack Setting dropdown selection matches the specified option, else it returns 0.0.
 
-        Parameters:
+        Args:
             id (str): The name of the pack setting selection to query.
             option (str): The option to check for.
 

@@ -35,7 +35,9 @@ from typing import (
 )
 
 from anvil.api.core.types import Vector2D, Vector3D
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
+from anvil.lib.jsonmodel import JsonObject, json_field
+from anvil.lib.jsonmodel.validators import each, instance_of, length
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 _FACES = ("north", "east", "south", "west", "up", "down")
@@ -452,7 +454,8 @@ class Geometry(AddonObject):
     """A Bedrock geometry file (``*.geo.json``) built from a tree of bones."""
 
     _extension = ".geo.json"
-    _path = os.path.join(CONFIG.RP_PATH, "models", "entity")
+    _pack = Pack.RP
+    _folder = os.path.join("models", "entity")
 
     def __init__(
         self,
@@ -612,3 +615,90 @@ class Geometry(AddonObject):
     def __export__(self) -> None:
         self.content(self.compile())
         super().__export__()
+
+
+# region Item display transforms
+
+
+_boolean = instance_of(bool)
+_vector = (length(3, 3), each(instance_of(int, float)))
+
+
+class _FitToFrame(JsonObject):
+    """The empty object Blockbench writes for `fit_to_frame`."""
+
+
+class ItemDisplayTransform(JsonObject):
+    """How a block's item is shown in one display slot. Vectors are (x, y, z).
+
+    Args:
+        rotation (Vector3D, optional): The rotation, in degrees.
+        translation (Vector3D, optional): The offset.
+        scale (Vector3D, optional): The scale.
+        rotation_pivot (Vector3D, optional): The point the rotation turns around.
+        scale_pivot (Vector3D, optional): The point the scale grows from.
+    """
+
+    rotation: Vector3D | None = json_field(default=None, validators=_vector)
+    translation: Vector3D | None = json_field(default=None, validators=_vector)
+    scale: Vector3D | None = json_field(default=None, validators=_vector)
+    rotation_pivot: Vector3D | None = json_field(default=None, validators=_vector)
+    scale_pivot: Vector3D | None = json_field(default=None, validators=_vector)
+
+
+class ItemDisplayGuiTransform(ItemDisplayTransform):
+    """The `gui` display slot, the only one that accepts `fit_to_frame`. It also takes every
+    option of `ItemDisplayTransform`.
+
+    Args:
+        fit_to_frame (bool, optional): True is written as `{}`, which is how Blockbench exports it; False as `false`, which Minecraft may reject from 1.21.130.
+    """
+
+    fit_to_frame: bool | None = json_field(
+        default=None,
+        validators=[_boolean],
+        encoder=lambda fit: _FitToFrame() if fit else False,
+    )
+
+
+class ItemDisplayTransforms(JsonObject):
+    """How a block's item is shown in each display slot.
+
+    Args:
+        thirdperson_righthand (ItemDisplayTransform, optional): The transform of the `thirdperson_righthand` slot.
+        thirdperson_lefthand (ItemDisplayTransform, optional): The transform of the `thirdperson_lefthand` slot.
+        firstperson_righthand (ItemDisplayTransform, optional): The transform of the `firstperson_righthand` slot.
+        firstperson_lefthand (ItemDisplayTransform, optional): The transform of the `firstperson_lefthand` slot.
+        head (ItemDisplayTransform, optional): The transform of the `head` slot.
+        ground (ItemDisplayTransform, optional): The transform of the `ground` slot.
+        fixed (ItemDisplayTransform, optional): The transform of the `fixed` slot.
+        gui (ItemDisplayGuiTransform, optional): The transform of the `gui` slot.
+    """
+
+    thirdperson_righthand: ItemDisplayTransform | None = json_field(
+        default=None, validators=[instance_of(ItemDisplayTransform)]
+    )
+    thirdperson_lefthand: ItemDisplayTransform | None = json_field(
+        default=None, validators=[instance_of(ItemDisplayTransform)]
+    )
+    firstperson_righthand: ItemDisplayTransform | None = json_field(
+        default=None, validators=[instance_of(ItemDisplayTransform)]
+    )
+    firstperson_lefthand: ItemDisplayTransform | None = json_field(
+        default=None, validators=[instance_of(ItemDisplayTransform)]
+    )
+    gui: ItemDisplayGuiTransform | None = json_field(
+        default=None, validators=[instance_of(ItemDisplayGuiTransform)]
+    )
+    head: ItemDisplayTransform | None = json_field(
+        default=None, validators=[instance_of(ItemDisplayTransform)]
+    )
+    ground: ItemDisplayTransform | None = json_field(
+        default=None, validators=[instance_of(ItemDisplayTransform)]
+    )
+    fixed: ItemDisplayTransform | None = json_field(
+        default=None, validators=[instance_of(ItemDisplayTransform)]
+    )
+
+
+# endregion

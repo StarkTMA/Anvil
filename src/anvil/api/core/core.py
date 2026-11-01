@@ -28,7 +28,8 @@ from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import (
     CONFIG,
     ConfigPackageTarget,
-    _AnvilConfig,
+    AnvilConfig,
+    Pack,
 )
 from anvil.lib.format_versions import (
     MANIFEST_VERSION,
@@ -40,7 +41,6 @@ from anvil.lib.format_versions import (
 from anvil.lib.lib import (
     AnvilArchive,
     AnvilIO,
-    AnvilValidator,
     Directory,
     process_subcommand,
 )
@@ -107,7 +107,7 @@ def format_bytes(size_bytes: int) -> str:
     return f"{size_bytes} B"
 
 
-def output_development_pack_sizes(config: _AnvilConfig) -> None:
+def output_development_pack_sizes(config: AnvilConfig) -> None:
     """Outputs the uncompressed size of the generated development packs."""
     behavior_pack_size = development_pack_size(config.BP_PATH)
     resource_pack_size = development_pack_size(config.RP_PATH)
@@ -298,7 +298,7 @@ def pack_art(apply_overlay: bool = False):
 
 
 def process_art(
-    config: _AnvilConfig,
+    config: AnvilConfig,
     apply_overlay: bool = False,
     zip: bool = True,
 ):
@@ -443,7 +443,7 @@ def process_art(
 
 
 def package_zip_core(
-    config: _AnvilConfig,
+    config: AnvilConfig,
     apply_overlay: bool = False,
 ):
     """Core logic for packaging the project into a zip file for Marketplace."""
@@ -469,7 +469,7 @@ def mcaddon_core(config):
     output_development_pack_sizes(CONFIG)
 
 
-def mcworld_core(config: _AnvilConfig):
+def mcworld_core(config: AnvilConfig):
     """Core logic for packaging the project into a .mcworld file."""
     import click
 
@@ -601,7 +601,7 @@ def translate(languages: Optional[list[str]] = None) -> None:
     AnvilTranslator().auto_translate_all(languages)
 
 
-def clean_old_dev(config: _AnvilConfig):
+def clean_old_dev(config: AnvilConfig):
     pack_paths = [
         config.RP_PATH,
         config.BP_PATH,
@@ -621,7 +621,7 @@ def clean_old_dev(config: _AnvilConfig):
 class ManifestRP(AddonObject):
     _instance = None
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH)
+    _pack = Pack.RP
     _setting_ids: set[str] = set()
 
     def __new__(cls):
@@ -657,7 +657,7 @@ class ManifestRP(AddonObject):
 class ManifestBP(AddonObject):
     _instance = None
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH)
+    _pack = Pack.BP
     _setting_ids: set[str] = set()
 
     def __new__(cls):
@@ -869,7 +869,7 @@ class _Anvil:
     def __init__(self):
         """Initializes an Anvil instance.
 
-        Parameters:
+        Args:
             config (_Config): The config of the Anvil instance.
         """
         if _Anvil._instance is None:
@@ -878,12 +878,6 @@ class _Anvil:
             raise Exception("Anvil instance already exists.")
 
         self.config = CONFIG
-        AnvilValidator.validate_namespace_project_name(
-            CONFIG.NAMESPACE, CONFIG.PROJECT_NAME
-        )
-
-        if "--clean" in sys.argv:
-            clean_old_dev(CONFIG)
 
     def translate(self, languages: Optional[list[str]] = None) -> None:
         """Translates the project."""

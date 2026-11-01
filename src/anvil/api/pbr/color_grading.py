@@ -1,10 +1,9 @@
-import os
 from typing import Literal
 
 from anvil.api.core.types import (
     Vector3D,
 )
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -13,7 +12,8 @@ class ColorGradingSettings(AddonObject):
     """Color grading and tone mapping configuration settings for Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "color_grading")
+    _pack = Pack.RP
+    _folder = "color_grading"
     _object_type = "Color Grading Settings"
 
     def __init__(self, name: str = "default_color_grading") -> None:
@@ -47,7 +47,7 @@ class ColorGradingSettings(AddonObject):
     ) -> "ColorGradingSettings":
         """Sets color grading parameters for midtones (or globally if highlights/shadows are disabled).
 
-        Parameters:
+        Args:
             contrast (Vector3D, optional): Tonal range contrast multiplier per RGB channel. Valid range: 0.0 to 4.0.
             gain (Vector3D, optional): Multiplicative gain per RGB channel. Valid range: 0.0 to 10.0.
             gamma (Vector3D, optional): Exponential gamma correction per RGB channel. Valid range: 0.0 to 4.0.
@@ -83,7 +83,7 @@ class ColorGradingSettings(AddonObject):
     ) -> "ColorGradingSettings":
         """Sets color grading parameters for highlights.
 
-        Parameters:
+        Args:
             enabled (bool): Whether to enable highlight color grading.
             highlightsMin (float, optional): Multiplier for average luminance determining highlight threshold. Valid range: 1.0 to 4.0.
             contrast (list[float], optional): Highlight contrast multiplier per RGB channel. Valid range: 0.0 to 4.0.
@@ -125,7 +125,7 @@ class ColorGradingSettings(AddonObject):
     ) -> "ColorGradingSettings":
         """Sets color grading parameters for shadows.
 
-        Parameters:
+        Args:
             enabled (bool): Whether to enable shadow color grading.
             shadowsMax (float, optional): Multiplier for average luminance determining shadow threshold. Valid range: 0.1 to 1.0.
             contrast (list[float], optional): Shadow contrast multiplier per RGB channel. Valid range: 0.0 to 4.0.
@@ -162,7 +162,7 @@ class ColorGradingSettings(AddonObject):
     ) -> "ColorGradingSettings":
         """Globally adjusts how warm or cool the scene is.
 
-        Parameters:
+        Args:
             temp_value (float, optional): Overall image temperature in Kelvin. Default is 6500.0. Valid range: 1000.0 to 15000.0.
             type (Literal["white_balance", "color_temperature"], optional): Inverts scale logic. Default is "white_balance".
         """
@@ -192,7 +192,7 @@ class ColorGradingSettings(AddonObject):
     ) -> "ColorGradingSettings":
         """Remaps HDR colors to SDR-space for display.
 
-        Parameters:
+        Args:
             operator (Literal["reinhard", "reinhard_luma", "reinhard_luminance", "hable", "aces", "generic"]): The tone mapping operator.
         """
         self._content["minecraft:color_grading_settings"].setdefault("tone_mapping", {})

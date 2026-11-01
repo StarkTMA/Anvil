@@ -7,7 +7,7 @@ from anvil.api.core.core import ANVIL
 from anvil.api.core.filters import Filter
 from anvil.api.core.types import Identifier
 from anvil.api.features.features import Feature
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import Directory, clamp
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
 
@@ -265,7 +265,7 @@ class Structure:
     def __init__(self, structure_name: str):
         """Initializes a Structure instance.
 
-        Parameters:
+        Args:
             structure_name (str): The name of the structure.
         """
         splits = structure_name.split("/")
@@ -318,7 +318,8 @@ class _JigsawStructureProcess(AddonObject, _processor_builder):
     """A class representing a Structure Process in Minecraft."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "worldgen", "processors")
+    _pack = Pack.BP
+    _folder = os.path.join("worldgen", "processors")
     _object_type = "Jigsaw Structure Process"
 
     def __init__(self, name: str) -> None:
@@ -335,7 +336,8 @@ class _JigsawStructure(AddonObject):
     """A class representing a Jigsaw structure in Minecraft."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "worldgen", "structures")
+    _pack = Pack.BP
+    _folder = os.path.join("worldgen", "structures")
     _object_type = "Jigsaw Structure"
 
     class _pool:
@@ -347,7 +349,7 @@ class _JigsawStructure(AddonObject):
         def direct_pool_alias(self, alias: str, target: str):
             """Creates a direct pool alias.
 
-            Parameters:
+            Args:
                 target (str): The target structure.
             """
             if not isinstance(target, str):
@@ -363,7 +365,7 @@ class _JigsawStructure(AddonObject):
         def random_pool_aliases(self, alias: str):
             """Creates a random pool alias.
 
-            Parameters:
+            Args:
                 alias (str): The alias for the random pool.
             """
             if not isinstance(alias, str):
@@ -376,7 +378,7 @@ class _JigsawStructure(AddonObject):
         def random_pool_group(self, weight: int):
             """Creates a random pool group.
 
-            Parameters:
+            Args:
                 weight (int): The weight of the random pool group.
             """
             if not isinstance(weight, int):
@@ -396,7 +398,7 @@ class _JigsawStructure(AddonObject):
         def __init__(self, alias: str, target: str):
             """Initializes a direct pool alias.
 
-            Parameters:
+            Args:
                 alias (str): The alias for the direct pool.
                 target (str): The target structure.
             """
@@ -417,7 +419,7 @@ class _JigsawStructure(AddonObject):
         def add_target(self, target: str, weight: int):
             """Adds a target to the random pool alias.
 
-            Parameters:
+            Args:
                 target (str): The target structure.
                 weight (int): The weight of the target.
             """
@@ -469,7 +471,7 @@ class _JigsawStructure(AddonObject):
     ) -> None:
         """Initializes a Jigsaw instance.
 
-        Parameters:
+        Args:
             name (str): The name of the jigsaw structure.
             start_pool (JigsawStructureTemplatePool): The first Template Pool to use when generating the Jigsaw Structure.
             max_depth (int): The maximum recursion depth for Jigsaw Structure generation.
@@ -517,7 +519,7 @@ class _JigsawStructure(AddonObject):
     def add_biome_filters(self, filter: Filter) -> "_JigsawStructure":
         """Adds biome filters to the jigsaw structure.
 
-        Parameters:
+        Args:
             *filters (Filter): The biome filters to add.
         """
         self._content["minecraft:jigsaw"]["biome_filters"].append(filter)
@@ -531,7 +533,7 @@ class _JigsawStructure(AddonObject):
     ) -> "_JigsawStructure":
         """Sets the terrain adaptation for the jigsaw structure.
 
-        Parameters:
+        Args:
             terrain_adaptation (Literal['none', 'bury', 'beard_thin', 'beard_box', 'encapsulate']): The terrain adaptation to set.
             - "none" Do not adjust ambient block density.
             - "bury" Ambient block density will be added to all pieces of a structure, but only within the Y bounds of its starting piece. This is ideal for structures that need to bury themselves below the surface, but want another set of pieces to stick up through the terrain uncovered.
@@ -555,7 +557,7 @@ class _JigsawStructure(AddonObject):
     ) -> "_JigsawStructure":
         """Sets the heightmap projection for the jigsaw structure.
 
-        Parameters:
+        Args:
             heightmap_projection (Literal['none', 'world_surface', 'ocean_floor']): The heightmap projection to set.
         """
         if heightmap_projection not in ["none", "world_surface", "ocean_floor"]:
@@ -568,7 +570,7 @@ class _JigsawStructure(AddonObject):
     ) -> "_JigsawStructure":
         """Sets the dimension padding for the jigsaw structure.
 
-        Parameters:
+        Args:
             dimension_padding (tuple[int, int]): The dimension padding to set.
         """
         if not isinstance(dimension_padding, tuple) or len(dimension_padding) != 2:
@@ -581,7 +583,7 @@ class _JigsawStructure(AddonObject):
     ) -> "_JigsawStructure":
         """Sets the maximum distance from center for the jigsaw structure.
 
-        Parameters:
+        Args:
             horizontal (int): The maximum horizontal distance from center to set.
             vertical (int): The maximum vertical distance from center to set.
         """
@@ -615,13 +617,14 @@ class JigsawStructureTemplatePool(AddonObject):
     """A class representing a Structure Template Pool in Minecraft."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "worldgen", "template_pools")
+    _pack = Pack.BP
+    _folder = os.path.join("worldgen", "template_pools")
     _object_type = "Jigsaw Structure Template Pool"
 
     def __init__(self, name: str, fallback: str | None = None) -> None:
         """Initializes a JigsawStructureTemplatePool instance.
 
-        Parameters:
+        Args:
             name (str): The name of the template pool.
             fallback (str, optional): The fallback structure for the pool. Defaults to None.
         """
@@ -640,7 +643,7 @@ class JigsawStructureTemplatePool(AddonObject):
     ) -> _JigsawStructureProcess | None:
         """Adds a structure to the template pool.
 
-        Parameters:
+        Args:
             structure (str | Structure | Feature | None): The structure to add to the pool.
             weight (int, optional): The weight of the structure. Defaults to 1.
             processors (str | _JigsawStructureProcess | None, optional): The processors for the structure. Defaults to None.
@@ -717,7 +720,8 @@ class JigsawStructureSet(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "worldgen", "structure_sets")
+    _pack = Pack.BP
+    _folder = os.path.join("worldgen", "structure_sets")
     _structures: list[_JigsawStructure] = []
     _object_type = "Jigsaw Structure Set"
 
@@ -731,7 +735,7 @@ class JigsawStructureSet(AddonObject):
     ) -> None:
         """Initializes a JigsawStructureSet instance.
 
-        Parameters:
+        Args:
             name (str): The name of the structure set.
             separation (int): Padding (in chunks) within each grid cell. Structures will not generate within the padded area.
             spacing (int): Grid cell size (in chunks) to use when generating the structure. Structures will attempt to generate at a random position within each cell.
@@ -777,7 +781,7 @@ class JigsawStructureSet(AddonObject):
     ) -> "_JigsawStructure":
         """Adds a jigsaw structure to the structure set.
 
-        Parameters:
+        Args:
             structure_name (str): The name of the jigsaw structure to add.
             weight (int): The weight of the structure in the set. Defaults to 1.
         """

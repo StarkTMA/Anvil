@@ -1,7 +1,5 @@
-import os
-
 from anvil.api.logic.molang import Molang, Query
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
 
@@ -92,7 +90,8 @@ class _BPAnimation:
 
 class BPAnimations(AddonObject):
     _extension = ".animation.json"
-    _path = os.path.join(CONFIG.BP_PATH, "animations")
+    _pack = Pack.BP
+    _folder = "animations"
     _object_type = "behavior Pack Animation"
 
     def __init__(self, identifier) -> None:

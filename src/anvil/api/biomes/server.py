@@ -11,7 +11,7 @@ class BiomeDescription(MinecraftDescription):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         """The biome description.
 
-        Parameters:
+        Args:
             name (str): The name of the biome.
             is_vanilla (bool, optional): Whether or not the biome is a vanilla biome. Defaults to False.
         """
@@ -30,7 +30,7 @@ class BiomeServer(AddonObject):
         """The biome server object. Add the biome components from
         `anvil.api.biomes.components` to `components`.
 
-        Parameters:
+        Args:
             name (str): The name of the biome.
             is_vanilla (bool, optional): Whether or not the biome is a vanilla biome. Defaults to False.
         """

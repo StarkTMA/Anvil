@@ -1,10 +1,8 @@
-import os
-
 from anvil.api.core.types import (
     Color,
 )
 from anvil.api.pbr.texture_set import KeyFrame
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import AnvilFormatter
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -16,7 +14,8 @@ class AtmosphericSettings(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "atmospherics")
+    _pack = Pack.RP
+    _folder = "atmospherics"
     _object_type = "Atmospheric Settings"
 
     def __init__(self, name: str = "default_atmospherics") -> None:
@@ -49,7 +48,7 @@ class AtmosphericSettings(AddonObject):
     ) -> "AtmosphericSettings":
         """How the atmosphere is divided up.
 
-        Parameters:
+        Args:
             min (float | list[KeyFrame]): The minimum horizon height.
             start (float | list[KeyFrame]): The height relative to the horizon where the zenith contribution will take over.
             mie_start (float | list[KeyFrame]): The height relative to the horizon where mie scattering begins.
@@ -78,7 +77,7 @@ class AtmosphericSettings(AddonObject):
     def rayleigh_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
         """How strong the atmosphere's rayleigh scattering term is.
 
-        Parameters:
+        Args:
             value (float | list[KeyFrame]): Rayleigh scattering strength.
         """
         self._content["minecraft:atmosphere_settings"]["rayleigh_strength"] = (
@@ -89,7 +88,7 @@ class AtmosphericSettings(AddonObject):
     def sun_mie_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
         """How strong the sun's mie scattering term is.
 
-        Parameters:
+        Args:
             value (float | list[KeyFrame]): Sun Mie scattering strength.
         """
         self._content["minecraft:atmosphere_settings"]["sun_mie_strength"] = (
@@ -100,7 +99,7 @@ class AtmosphericSettings(AddonObject):
     def moon_mie_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
         """How strong the moon's mie scattering term is.
 
-        Parameters:
+        Args:
             value (float | list[KeyFrame]): Moon Mie scattering strength.
         """
         self._content["minecraft:atmosphere_settings"]["moon_mie_strength"] = (
@@ -111,7 +110,7 @@ class AtmosphericSettings(AddonObject):
     def sun_glare_shape(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
         """How the lobe of the mie scattering is shaped.
 
-        Parameters:
+        Args:
             value (float | list[KeyFrame]): Sun glare shape factor.
         """
         self._content["minecraft:atmosphere_settings"]["sun_glare_shape"] = (
@@ -122,7 +121,7 @@ class AtmosphericSettings(AddonObject):
     def sky_zenith_color(self, color: Color | list[KeyFrame]) -> "AtmosphericSettings":
         """The RGB color of the zenith region of the atmosphere. Supports RGB array or HEX string.
 
-        Parameters:
+        Args:
             color (Color | list[KeyFrame]): Sky zenith color.
         """
         is_kf = (
@@ -140,7 +139,7 @@ class AtmosphericSettings(AddonObject):
     def sky_horizon_color(self, color: Color | list[KeyFrame]) -> "AtmosphericSettings":
         """The RGB color of the horizon region of the atmosphere. Supports RGB array or HEX string.
 
-        Parameters:
+        Args:
             color (Color | list[KeyFrame]): Sky horizon color.
         """
         is_kf = (

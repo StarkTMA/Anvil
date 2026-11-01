@@ -7,7 +7,7 @@ This tutorial walks you through creating a compact **Redstone Golem** entity wit
 ## Define the Entity
 
 ```py title="entities/redstone_golem.py"
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.entity import Entity
 
 # Namespace is inferred from your anvilconfig; only provide the short name here.
 def redstone_golem():
@@ -125,7 +125,7 @@ return entity
 ## Full Example — Redstone Golem
 
 ```py title="entities/redstone_golem.py"
-from anvil.api.actors.actors import Entity
+from anvil.api.actors.entity import Entity
 from anvil.api.actors.components import (
     EntityCollisionBox,
     EntityPhysics,

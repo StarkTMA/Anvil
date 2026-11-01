@@ -128,7 +128,7 @@ class Config:
     def add_section(self, section: str) -> None:
         """Adds a section to the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (str): The section to add.
         """
         self._config[section] = {}
@@ -136,7 +136,7 @@ class Config:
     def has_section(self, section: str) -> bool:
         """Checks if a section exists in the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (str): The section to check.
 
         Returns:
@@ -152,7 +152,7 @@ class Config:
     ) -> None:
         """Sets a value in the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (str): The section to set the value in.
             option (str): The option to set the value in.
             value (Any): The value to set.
@@ -166,7 +166,7 @@ class Config:
     def has_option(self, section: str, option: str) -> bool:
         """Checks if an option exists in the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (str): The section to check the option in.
             option (str): The option to check.
 
@@ -178,7 +178,7 @@ class Config:
     def get_option(self, section: ConfigSection, option: ConfigOption) -> Any:
         """Gets a value from the anvilconfig.json file.
 
-        Parameters:
+        Args:
             section (ConfigSection): The section to get the value from.
             option (ConfigOption): The option to get the value from.
 
@@ -245,7 +245,7 @@ def _option(
 ) -> Any:
     """A setting read from the `name` option of the `section` section of `anvilconfig.json`.
 
-    Parameters:
+    Args:
         section (ConfigSection): The section the option is in.
         name (ConfigOption): The option.
         default (Any, optional): The value when the option is missing. Without a default or
@@ -383,7 +383,7 @@ class AnvilConfig:
     def from_dict(cls, data: dict[str, dict[str, Any]]) -> "AnvilConfig":
         """Reads the settings of a project from the content of its `anvilconfig.json`.
 
-        Parameters:
+        Args:
             data (dict): The `package`, `manifest`, `features`, `build` and `anvil` sections. Missing
                 options other than the package ones get their default.
 
@@ -408,7 +408,7 @@ class AnvilConfig:
     def from_file(cls, path: str = "anvilconfig.json") -> "AnvilConfig":
         """Reads the settings of the project whose `anvilconfig.json` is at `path`.
 
-        Parameters:
+        Args:
             path (str, optional): The config file. Defaults to the one in the current folder.
         """
         with open(path, "rb") as f:
@@ -503,7 +503,7 @@ def load_project() -> AnvilConfig:
 def use(config: AnvilConfig | None) -> None:
     """Makes `CONFIG` hold the settings of `config`.
 
-    Parameters:
+    Args:
         config (AnvilConfig | None): The settings. None empties `CONFIG`, so it loads the
             project in the current folder on the next read.
     """
@@ -516,7 +516,7 @@ def use(config: AnvilConfig | None) -> None:
 def override(config: AnvilConfig | None = None, **values: Any) -> Iterator[AnvilConfig]:
     """Changes the settings in `CONFIG` for the length of a `with` block.
 
-    Parameters:
+    Args:
         config (AnvilConfig, optional): The settings to use. Defaults to the current ones.
         **values: Settings to change, by attribute name, such as `PBR=True`.
 

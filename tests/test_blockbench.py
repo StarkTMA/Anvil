@@ -1,20 +1,8 @@
 import os
 import tempfile
 import base64
-from unittest.mock import MagicMock
 from PIL import Image
 import io
-
-# Setup mock CONFIG in config module, schemas, etc.
-mock_config = MagicMock()
-mock_config.BP_PATH = "dummy_bp_path"
-mock_config.RP_PATH = "dummy_rp_path"
-mock_config.NAMESPACE = "testns"
-mock_config.PROJECT_NAME = "test_project"
-
-import anvil.lib.config
-
-anvil.lib.config.CONFIG = mock_config
 
 from anvil.lib.blockbench import _TexturesManager
 

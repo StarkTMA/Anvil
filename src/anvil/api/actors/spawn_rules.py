@@ -1,9 +1,8 @@
-import os
 from typing import List, Literal
 
 from anvil.api.core.enums import Difficulty, Population
 from anvil.api.core.filters import Filter
-from anvil.lib.config import CONFIG
+from anvil.lib.config import Pack
 from anvil.lib.lib import AnvilFormatter
 from anvil.lib.schemas import (
     AddonObject,
@@ -19,7 +18,7 @@ class _SpawnRuleDescription(MinecraftDescription):
     def __init__(self, spawn_rule_obj, name: str, is_vanilla) -> None:
         """Initialize the spawn rule description.
 
-        Parameters:
+        Args:
             spawn_rule_obj: Reference to the parent SpawnRule object.
             name (str): The entity identifier for this spawn rule.
             is_vanilla (bool): Whether this is a vanilla Minecraft entity.
@@ -41,7 +40,7 @@ class _SpawnRuleDescription(MinecraftDescription):
         - **Monster**: Hostile mobs (zombies, skeletons, etc.)
         - **Ambient**: Ambient creatures (bats, etc.)
 
-        Parameters:
+        Args:
             population (Population): The population pool to assign this entity to.
 
         Returns:
@@ -78,7 +77,7 @@ class _SpawnRuleCondition:
         - nether: All nether dimension biomes
         - ocean: All ocean biomes
 
-        Parameters:
+        Args:
             filter (list[Filter]): List of filter conditions to test biome tags
                 (e.g., [Filter.has_biome_tag("monster")]).
 
@@ -104,7 +103,7 @@ class _SpawnRuleCondition:
         Most hostile mobs spawn in low light (0-7), while peaceful mobs typically
         require higher light levels.
 
-        Parameters:
+        Args:
             min_brightness (int): Minimum light level for spawning (0-15). Defaults to 0.
             max_brightness (int): Maximum light level for spawning (0-15). Defaults to 15.
             adjust_for_weather (bool): Whether weather affects light level calculations
@@ -136,7 +135,7 @@ class _SpawnRuleCondition:
         This creates a delay mechanism where the entity specified by identifier
         has a chance to spawn after a random delay period.
 
-        Parameters:
+        Args:
             minimum (int): Minimum delay time before spawning can occur.
             maximum (int): Maximum delay time before spawning can occur.
             identifier (str): The entity identifier that will spawn after the delay.
@@ -166,7 +165,7 @@ class _SpawnRuleCondition:
         This provides local density control separate from global population limits.
         Useful for preventing overcrowding of specific entity types in small areas.
 
-        Parameters:
+        Args:
             surface (int): Maximum number of this entity type on the surface.
                 Use -1 for unlimited. Defaults to -1.
             underground (int): Maximum number of this entity type underground.
@@ -197,7 +196,7 @@ class _SpawnRuleCondition:
 
         Difficulty levels: Peaceful < Easy < Normal < Hard
 
-        Parameters:
+        Args:
             min_difficulty (Difficulty): Minimum difficulty for spawning. Defaults to Easy.
             max_difficulty (Difficulty): Maximum difficulty for spawning. Defaults to Hard.
 
@@ -243,7 +242,7 @@ class _SpawnRuleCondition:
         Typical values are 24-128 blocks for most mobs to prevent spawning too close
         or too far from players.
 
-        Parameters:
+        Args:
             range (tuple[int, int]): Distance range from a player for spawning (min, max) in blocks. Defaults to (24, 128).
 
         Returns:
@@ -274,7 +273,7 @@ class _SpawnRuleCondition:
         This encapsulates entity data used in certain spawn behaviors and components
         that need to reference or interact with other entities during spawning.
 
-        Parameters:
+        Args:
             filters (Filter, optional): Conditions that make entities valid targets.
             max_dist (float): Maximum distance for entity interactions. Defaults to 16.
             must_see (bool): Whether line of sight is required. Defaults to False.
@@ -307,7 +306,7 @@ class _SpawnRuleCondition:
         Useful for creating entities that only spawn at certain heights,
         such as cave-dwelling mobs or high-altitude creatures.
 
-        Parameters:
+        Args:
             min (int): Minimum Y-coordinate (height level) for spawning.
             max (int): Maximum Y-coordinate (height level) for spawning.
 
@@ -331,7 +330,7 @@ class _SpawnRuleCondition:
         When entities spawn, they will appear in groups (herds) of the specified size.
         Useful for animals that naturally appear in groups or for creating pack behaviors.
 
-        Parameters:
+        Args:
             min_size (int): Minimum number of entities in a spawn group. Defaults to 1.
             max_size (int): Maximum number of entities in a spawn group. Defaults to 4.
             spawn_event (str, optional): Event to trigger on some spawned entities.
@@ -366,7 +365,7 @@ class _SpawnRuleCondition:
         Allows entities to spawn only during certain game events like pillager patrols,
         wandering trader visits, or ender dragon encounters.
 
-        Parameters:
+        Args:
             event (Literal): The mob event that triggers spawning. Options:
                 - "minecraft:pillager_patrols_event": Pillager patrol spawns
                 - "minecraft:wandering_trader_event": Wandering trader spawns
@@ -388,7 +387,7 @@ class _SpawnRuleCondition:
         a different entity type instead. Commonly used for zombie/zombie villager
         variations or baby/adult variants.
 
-        Parameters:
+        Args:
             entity_type (str): The entity identifier to potentially spawn instead.
             weight (int): Relative weight for this permutation. Defaults to 10.
             spawn_event (str, optional): Event to trigger on the permuted entity.
@@ -410,7 +409,7 @@ class _SpawnRuleCondition:
         Controls whether entities can spawn based on how close players are to villages.
         Useful for village-related spawns or preventing certain spawns near villages.
 
-        Parameters:
+        Args:
             distance (int): Required distance from village center.
             village_border_tolerance (int): Additional tolerance from village borders.
 
@@ -436,7 +435,7 @@ class _SpawnRuleCondition:
 
         Entity will only spawn above the specified blocks, at a distance defined by the `distance` parameter.
 
-        Parameters:
+        Args:
             blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types the entity can spawn above.
             distance (int): Distance above the block to check for spawning. Defaults to 1.
 
@@ -478,7 +477,7 @@ class _SpawnRuleCondition:
         Entity will only spawn on top of the specified blocks. Useful for creating
         specialized spawning requirements like mushroom island mobs or desert creatures.
 
-        Parameters:
+        Args:
             blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types the entity can spawn on.
 
         Returns:
@@ -504,7 +503,7 @@ class _SpawnRuleCondition:
         Entity will not spawn on the specified blocks, even if other conditions are met.
         Useful for preventing spawning on inappropriate surfaces.
 
-        Parameters:
+        Args:
             blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types to prevent spawning on.
 
         Returns:
@@ -569,7 +568,7 @@ class _SpawnRuleCondition:
         when multiple valid conditions exist. Weight acts as a probability multiplier
         in the spawn selection process.
 
-        Parameters:
+        Args:
             weight (int): Spawn weight/priority value. Higher values = higher priority.
                 Defaults to 0.
 
@@ -587,7 +586,7 @@ class _SpawnRuleCondition:
         Useful for creating entities that only appear in established worlds
         or after certain progression milestones.
 
-        Parameters:
+        Args:
             min (int): Minimum world age (in ticks) before spawning can occur.
 
         Returns:
@@ -605,7 +604,7 @@ class _SpawnRuleCondition:
         Allows custom initialization or setup when entities are spawned through spawn rules.
         Default behavior uses "minecraft:entity_spawned" event.
 
-        Parameters:
+        Args:
             event (str): Event identifier to trigger on spawn.
                 Defaults to "minecraft:entity_spawned".
 
@@ -628,13 +627,14 @@ class _SpawnRuleCondition:
 
 class SpawnRule(AddonObject):
     _extension = ".spawn_rules.json"
-    _path = os.path.join(CONFIG.BP_PATH, "spawn_rules")
+    _pack = Pack.BP
+    _folder = "spawn_rules"
     _object_type = "Spawn Rule"
 
     def __init__(self, identifier, is_vanilla):
         """Initialize a spawn rule for the specified entity.
 
-        Parameters:
+        Args:
             identifier (str): Entity identifier (e.g., "mypack:custom_mob").
             is_vanilla (bool): Whether this is a vanilla Minecraft entity.
         """
@@ -674,7 +674,7 @@ class SpawnRule(AddonObject):
         Exports the description and all conditions to JSON format and adds the
         spawn rule file to the generation queue. Only queues if conditions exist.
 
-        Parameters:
+        Args:
             directory (str, optional): Custom directory path. Uses default if None.
 
         Returns:

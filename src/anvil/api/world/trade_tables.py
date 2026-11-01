@@ -2,7 +2,7 @@ import os
 from typing import Any, List, Union
 
 from anvil.api.core.types import Identifier
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.schemas import AddonObject, MinecraftItemDescriptor
 
 from .loot_tables import _LootPoolEntryFunctions
@@ -174,11 +174,12 @@ class TradeTable(AddonObject):
     """
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.BP_PATH, "trading", CONFIG.NAMESPACE)
+    _pack = Pack.BP
     _object_type = "Trade Table"
 
     def __init__(self, name: str) -> None:
         super().__init__(name)
+        self._folder = os.path.join("trading", CONFIG.NAMESPACE)
         self.tiers_list: List[_TradeTier] = []
         self._content = {"tiers": []}
 

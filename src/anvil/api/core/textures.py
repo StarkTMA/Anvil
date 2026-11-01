@@ -2,7 +2,7 @@ import os
 from typing import Any, overload
 
 from anvil.lib.blockbench import _BlockBenchSource, _Blockbench
-from anvil.lib.config import CONFIG
+from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import Directory
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
@@ -11,7 +11,8 @@ class ItemTexturesObject(AddonObject):
     """Handles item textures for the addon (singleton)."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "textures")
+    _pack = Pack.RP
+    _folder = "textures"
     _instance = None
     _items: dict[str, list[str]] = {}
 
@@ -32,7 +33,7 @@ class ItemTexturesObject(AddonObject):
     def add_item(self, item_name: str, sprites: list[str]) -> "ItemTexturesObject":
         """Adds item textures to the content.
 
-        Parameters:
+        Args:
             item_name (str): The name of the item.
             sprites (list[str]): The names of the item sprites.
         """
@@ -43,7 +44,7 @@ class ItemTexturesObject(AddonObject):
     def add_item(self, item_name: str, blockbench: str, sprites: list[str]):
         """Adds item textures to the content.
 
-        Parameters:
+        Args:
             item_name (str): The name of the item.
             blockbench (str): The blockbench model name.
             sprites (list[str]): The names of the item sprites.
@@ -58,7 +59,7 @@ class ItemTexturesObject(AddonObject):
     ):
         """Adds item textures to the content.
 
-        Parameters:
+        Args:
             item_name (str): The name of the item.
             blockbench (str | list[str]): Either blockbench model name (str) or item sprites list (list[str]).
             sprites (list[str] | None): The names of the item sprites if blockbench is a string, otherwise None.
@@ -158,7 +159,8 @@ class TerrainTexturesObject(AddonObject):
     """Handles terrain textures for the addon."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "textures")
+    _pack = Pack.RP
+    _folder = "textures"
     _instance = None
 
     def __new__(cls):
@@ -183,7 +185,7 @@ class TerrainTexturesObject(AddonObject):
     ) -> "TerrainTexturesObject":
         """Adds block textures to the content.
 
-        Parameters:
+        Args:
             block_name (str): The name of the block.
             directory (str): The directory path for the textures.
             block_textures (str): The names of the block textures.
@@ -216,7 +218,7 @@ class TerrainTexturesObject(AddonObject):
     ) -> None:
         """Adds block textures with variations to the content.
 
-        Parameters:
+        Args:
             block_name (str): The name of the block.
             directory (str): The directory containing the texture files.
             block_variant (list[dict[str, str]]): List of variations for the block textures.
@@ -273,7 +275,8 @@ class FlipBookTexturesObject(AddonObject):
     """Handles flip book textures for the addon."""
 
     _extension = ".json"
-    _path = os.path.join(CONFIG.RP_PATH, "textures")
+    _pack = Pack.RP
+    _folder = "textures"
     _instance = None
 
     def __new__(cls):
@@ -306,7 +309,7 @@ class FlipBookTexturesObject(AddonObject):
         Flipbook textures are animated textures used by blocks like fire, water, lava and magma.
         The animation parameters defined here will be applied to blocks using this texture shortname.
 
-        Parameters:
+        Args:
             block_name (str): The shortname defined in terrain_texture.json for this block.
             directory (str): The directory path for the textures relative to the project blocks folder.
             block_texture (str): The name of the block texture file (without extension).

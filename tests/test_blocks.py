@@ -518,3 +518,47 @@ def test_block_descriptor_multi_block_part():
     }
     with pytest.raises(ValueError, match="Invalid value"):
         door.descriptor(multi_block_part=3)
+
+
+def test_part_builders_for_blocks_and_biomes():
+    from anvil.api.biomes.components import BiomeMapTints, GrassTint
+    from anvil.api.blocks.components import (
+        BlockEntity,
+        BlockEntityContainer,
+        BlockGeometry,
+        BlockRandomOffset,
+        NWayVisualRotation,
+        OffsetRange,
+    )
+
+    pairs = [
+        (
+            BiomeMapTints().set_grass(tint="#00FF00"),
+            BiomeMapTints(grass=GrassTint(tint="#00FF00")),
+        ),
+        (
+            BlockEntity().set_container(slot_count=9),
+            BlockEntity(container=BlockEntityContainer(slot_count=9)),
+        ),
+        (
+            BlockGeometry().set_n_way_visual_rotation(y="minecraft:cardinal_direction"),
+            BlockGeometry(
+                n_way_visual_rotation=NWayVisualRotation(
+                    y="minecraft:cardinal_direction"
+                )
+            ),
+        ),
+        (
+            BlockRandomOffset()
+            .set_x(range=(-1, 1), steps=4)
+            .set_y(range=(0, 2))
+            .set_z(steps=2),
+            BlockRandomOffset(
+                x=OffsetRange(range=(-1, 1), steps=4),
+                y=OffsetRange(range=(0, 2)),
+                z=OffsetRange(steps=2),
+            ),
+        ),
+    ]
+    for built, constructed in pairs:
+        assert built.__json__() == constructed.__json__()

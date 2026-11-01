@@ -26,7 +26,7 @@ class Identifier(str):
     It is a `str` of that text, so it compares, formats and is written to JSON as the text,
     and it also has its parts as `namespace`, `name` and `data`.
 
-    Parameters:
+    Args:
         namespace (str): The namespace.
         name (str): The name.
         data (str | int, optional): Data after the name, as in `minecraft:potion_type:long_swiftness`.
@@ -58,7 +58,7 @@ class Identifier(str):
         """Parses `name` or `namespace:name`. A name without a namespace gets the project
         namespace, `CONFIG.NAMESPACE`.
 
-        Parameters:
+        Args:
             text (str): The name, with or without its namespace.
             vanilla (bool, optional): True when it must be in the `minecraft` namespace, False
                 when it must be in the project namespace. Defaults to False.
