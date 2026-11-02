@@ -1,7 +1,7 @@
 from anvil.api.biomes.components import BiomeClientComponent
 from anvil.api.core.components import ComponentGroup
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import encoders, validate_components
+from anvil.lib.jsonmodel import validate_components
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 
 __all__ = ["BiomeDescription", "BiomeServer"]
@@ -63,9 +63,7 @@ class BiomeServer(AddonObject):
                 )
         validate_components(self, self._components, [])
         self._content["minecraft:biome"].update(self.description.__export__())
-        self._content["minecraft:biome"]["components"] = encoders.contents(
-            self._components
-        )
+        self._content["minecraft:biome"]["components"] = self._components.__payload__()
 
         self.content(self._content)
         super().queue()

@@ -17,10 +17,10 @@ from __future__ import annotations
 from enum import Flag, auto
 from typing import ClassVar
 
-from anvil.api.core.types import ComponentClasses, JsonExport
+from anvil.api.core.types import ComponentClasses, JsonExport, JsonSchema
 
 from .identifier import Identifier
-from .object import JsonObject, only_value
+from .object import JsonObject, only_schema, only_value
 
 
 class ComponentPlacement(Flag):
@@ -70,6 +70,21 @@ class JsonComponent(JsonObject, abstract=True):
         """The component as `{identifier: payload}`."""
         return {self.identifier: JsonObject.__json__(self)}
 
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+        """The schema of `{identifier: payload}`."""
+        return {
+            "type": "object",
+            "properties": {cls.identifier: cls.__payload_schema__(definitions)},
+            "required": [cls.identifier],
+            "additionalProperties": False,
+        }
+
+    @classmethod
+    def __payload_schema__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+        """The schema of the payload under the identifier."""
+        return JsonObject.__schema_body__.__func__(cls, definitions)
+
 
 class JsonCustomComponent(JsonComponent, abstract=True):
     """Base of custom components: components registered by a script.
@@ -92,3 +107,7 @@ class JsonValueComponent(JsonComponent, abstract=True):
     def __json__(self) -> JsonExport:
         exported = JsonComponent.__json__(self)
         return {self.identifier: only_value(self, exported[self.identifier])}
+
+    @classmethod
+    def __payload_schema__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+        return only_schema(cls, definitions)

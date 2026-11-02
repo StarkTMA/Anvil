@@ -150,7 +150,7 @@ class AnvilIO:
         if isinstance(value, dict):
             shortened = {}
 
-            from anvil.lib.jsonmodel.encoders import KeptObject
+            from anvil.lib.jsonmodel.jsontypes import KeptObject
 
             for key, item in value.items():
                 key_str = str(key)

@@ -2,7 +2,7 @@ from anvil.api.core.components import ComponentGroup
 from anvil.api.core.enums import ItemCategory, ItemGroups
 from anvil.api.items.components import ItemDisplayName
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import encoders, validate_components
+from anvil.lib.jsonmodel import validate_components
 from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
 
 __all__ = ["ItemServer"]
@@ -75,7 +75,7 @@ class ItemServer(AddonObject):
 
         self._server_item["minecraft:item"].update(self.description.__export__())
         self._server_item["minecraft:item"]["components"].update(
-            encoders.contents(self._components)
+            self._components.__payload__()
         )
 
         self.content(self._server_item)

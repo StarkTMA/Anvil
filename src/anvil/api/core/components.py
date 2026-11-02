@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import Annotated, ClassVar
 
 from anvil.api.core.enums import ControlFlags, FilterSubject, ItemCategory
 from anvil.api.core.filters import Filter
-from anvil.lib.jsonmodel.validators import each, in_range, instance_of, one_of
 from anvil.api.logic.molang import Molang
 from anvil.lib.jsonmodel import (
     JsonComponent,
     JsonContainer,
     JsonObject,
+    NonNegative,
     json_field,
 )
 
@@ -22,12 +22,8 @@ class AIGoal(JsonComponent, abstract=True):
         control_flags (list[ControlFlags], optional): The controls this goal takes over while it runs.
     """
 
-    priority: int | None = json_field(
-        default=None, validators=[instance_of(int), in_range(minimum=0)]
-    )
-    control_flags: list[ControlFlags] | None = json_field(
-        default=None, validators=[each(one_of(*ControlFlags))]
-    )
+    priority: Annotated[int, NonNegative] | None = json_field(default=None)
+    control_flags: list[ControlFlags] | None = json_field(default=None)
 
 
 class EventTrigger(JsonObject):
@@ -41,11 +37,9 @@ class EventTrigger(JsonObject):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/triggers)
     """
 
-    event: str = json_field(validators=[instance_of(str)])
-    filters: Filter | None = json_field(default=None, validators=[instance_of(Filter)])
-    target: FilterSubject | None = json_field(
-        default=None, validators=[one_of(*FilterSubject)]
-    )
+    event: str = json_field()
+    filters: Filter | None = json_field(default=None)
+    target: FilterSubject | None = json_field(default=None)
 
 
 class MenuCategory(JsonObject):
@@ -59,11 +53,9 @@ class MenuCategory(JsonObject):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockdescription)
     """
 
-    category: ItemCategory = json_field(validators=[one_of(*ItemCategory)])
-    group: str | None = json_field(default=None, validators=[instance_of(str)])
-    is_hidden_in_commands: bool | None = json_field(
-        default=None, validators=[instance_of(bool)]
-    )
+    category: ItemCategory = json_field()
+    group: str | None = json_field(default=None)
+    is_hidden_in_commands: bool | None = json_field(default=None)
 
 
 # region Containers
@@ -93,7 +85,7 @@ class Permutation(JsonContainer):
     """Permutations made in this run. The game allows 10000 across all blocks."""
 
     name: str = json_field(default="components", init=False, exclude=True)
-    condition: Molang | str = json_field(validators=[instance_of(str)])
+    condition: Molang | str = json_field()
 
     def __post_init__(self) -> None:
         Permutation._count += 1

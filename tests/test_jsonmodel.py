@@ -1,34 +1,37 @@
 """Tests for anvil/lib/jsonmodel — the JsonObject and JsonComponent base classes."""
 
 import dataclasses
-from typing import ClassVar
+from typing import Annotated, Any, ClassVar, Literal
 
 import pytest
 
 from anvil.lib.jsonmodel import (
+    Chance,
     ComponentPlacement,
     Identifier,
+    InRange,
     JsonComponent,
     JsonCustomComponent,
     JsonObject,
+    JsonType,
     JsonValue,
     JsonValueComponent,
+    Length,
     json_field,
 )
-from anvil.lib.jsonmodel.validators import each, in_range, instance_of, length, one_of
 
 
 class _Point(JsonObject):
-    x: int = json_field(default=0, validators=[instance_of(int)])
-    y: int = json_field(default=0, validators=[instance_of(int)])
+    x: int = json_field(default=0)
+    y: int = json_field(default=0)
 
 
 class _Climate(JsonComponent):
     identifier = "minecraft:climate"
 
-    temperature: float | None = json_field(default=None, validators=[in_range(-50, 50)])
-    snow_accumulation: list[float] | None = json_field(
-        default=None, validators=[length(2, 2), each(in_range(0, 1))]
+    temperature: Annotated[float, InRange(-50, 50)] | None = json_field(default=None)
+    snow_accumulation: Annotated[list[float], Length(2, 2), Chance] | None = json_field(
+        default=None
     )
     points: list[_Point] = json_field(default_factory=list)
 
@@ -80,7 +83,7 @@ def test_nested_objects_and_builders():
     ]
 
 
-def test_validators_run_at_export_only():
+def test_fields_are_checked_at_export_only():
     climate = _Climate(temperature=99)
     with pytest.raises(ValueError):
         climate.__json__()
@@ -196,15 +199,16 @@ def test_abstract_bases_skip_the_identifier_and_cannot_be_instantiated():
     assert _Concrete(a=2).__json__() == {"minecraft:concrete": {"a": 2}}
 
 
-def test_validate_hook_runs_at_export_after_field_validators():
+def test_validate_hook_runs_at_export_after_field_checks():
     calls = []
 
-    def field_check(name, value):
-        calls.append(name)
+    class _Recorded(JsonType):
+        def validate(self, name: str, value: Any) -> None:
+            calls.append(name)
 
     class _Hooked(JsonComponent):
         identifier = "minecraft:hooked"
-        low: int = json_field(default=0, validators=[field_check])
+        low: Annotated[int, _Recorded()] = json_field(default=0)
         high: int = json_field(default=1)
 
         def __validate__(self) -> None:
@@ -239,9 +243,9 @@ def test_dependencies_and_clashes_are_class_level():
     assert [c.identifier for c in type(needs)._clashes] == ["minecraft:bare"]
 
 
-def test_one_of():
+def test_literal():
     class _Choice(JsonObject):
-        kind: str = json_field(default="a", validators=[one_of("a", "b")])
+        kind: Literal["a", "b"] = json_field(default="a")
 
     with pytest.raises(ValueError):
         _Choice(kind="c").__json__()
@@ -328,12 +332,15 @@ def test_component_types_resolve_for_type_checkers():
 
     assert evaluate(types.ComponentClass) == "type[JsonComponent]"
     assert evaluate(types.ComponentClasses) == "tuple[ComponentClass, ...]"
-    assert types.Validator.__value__.__args__[0] is str
 
 
-def test_encoder_converts_only_the_json_form():
+def test_metadata_converts_only_the_json_form():
+    class _Upper(JsonType):
+        def encode(self, value: Any) -> Any:
+            return value.upper()
+
     class _Tinted(JsonObject):
-        color: str | None = json_field(default=None, encoder=str.upper)
+        color: Annotated[str, _Upper()] | None = json_field(default=None)
 
     tinted = _Tinted(color="#abc")
     assert tinted.__json__() == {"color": "#ABC"}
@@ -353,7 +360,7 @@ def test_fields_are_read_only_from_outside():
 
 def test_builders_change_related_fields_in_any_order():
     class _Range(JsonObject):
-        low: int = json_field(default=0, validators=[instance_of(int)])
+        low: int = json_field(default=0)
         high: int = json_field(default=1)
 
         def __validate__(self) -> None:

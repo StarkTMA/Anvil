@@ -102,7 +102,7 @@ Icon/Marketing requirements differ per target; Anvil refuses to package until ma
 
 ## Version Support & Performance
 
-- **Python ≥ 3.13** on **Windows**, **Linux**, or **macOS**.
+- **Python ≥ 3.15** on **Windows**, **Linux**, or **macOS**.
 - Always tracks the **latest Bedrock release**; back‑targets are intentionally unsupported.
 
 ---

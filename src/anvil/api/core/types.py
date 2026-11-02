@@ -95,13 +95,9 @@ type ComponentClass = type[JsonComponent]
 
 type ComponentClasses = tuple[ComponentClass, ...]
 
-type Validator = Callable[[str, Any], None]
-
-type Validators = tuple[Validator, ...] | list[Validator]
+type JsonSchema = dict[str, Any]
 
 type DefaultFactory = Callable[[], Any]
-
-type Encoder = Callable[[Any], Any]
 
 # Biomes
 BiomeNoiseType = Literal[

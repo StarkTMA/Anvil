@@ -1,16 +1,7 @@
-from anvil.lib.jsonmodel.validators import each, instance_of
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import JsonComponent, json_field
 from anvil.lib.schemas import MinecraftEntityDescriptor
-
-# region Validators
-
-_string = instance_of(str)
-_molang = instance_of(str, int, float)
-_entity = instance_of(str, MinecraftEntityDescriptor)
-
-# endregion
 
 
 class EntityReflectProjectiles(JsonComponent):
@@ -28,19 +19,13 @@ class EntityReflectProjectiles(JsonComponent):
 
     identifier = "minecraft:reflect_projectiles"
 
-    azimuth_angle: Molang | str | float | None = json_field(
-        default=None, validators=[_molang]
-    )
-    elevation_angle: Molang | str | float | None = json_field(
-        default=None, validators=[_molang]
-    )
+    azimuth_angle: Molang | str | float | None = json_field(default=None)
+    elevation_angle: Molang | str | float | None = json_field(default=None)
     reflected_projectiles: list[MinecraftEntityDescriptor | str] | None = json_field(
-        default=None, validators=[each(_entity)]
+        default=None
     )
-    reflection_scale: Molang | str | float | None = json_field(
-        default=None, validators=[_molang]
-    )
-    reflection_sound: str | None = json_field(default=None, validators=[_string])
+    reflection_scale: Molang | str | float | None = json_field(default=None)
+    reflection_sound: str | None = json_field(default=None)
 
     def __validate__(self) -> None:
         if not CONFIG._EXPERIMENTAL:

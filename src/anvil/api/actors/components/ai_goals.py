@@ -1,25 +1,9 @@
 from typing import (
+    Annotated,
     Literal,
     Self,
 )
 
-from anvil.api.actors.components._validators import (
-    _block,
-    _blocks,
-    _boolean,
-    _chance,
-    _damage_cause,
-    _entity,
-    _event,
-    _events,
-    _filter,
-    _integer,
-    _items,
-    _molang,
-    _number,
-    _positive,
-    _string,
-)
 from anvil.api.core.components import (
     AIGoal,
     EventTrigger,
@@ -29,31 +13,25 @@ from anvil.api.core.enums import (
     FilterSubject,
 )
 from anvil.api.core.filters import Filter
-from anvil.api.core.types import (
-    RGBA255,
-    BlockReference,
-    ItemReference,
-    NumberRange,
-    Vector3D,
-)
 from anvil.api.logic.molang import Molang
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.jsonmodel import (
+    AtLeastOne,
+    BlockObject,
+    Chance,
+    InRange,
     JsonObject,
-    encoders,
+    MinMax,
+    NonNegative,
+    Positive,
+    Trigger,
     json_field,
 )
-from anvil.lib.jsonmodel.validators import (
-    each,
-    in_range,
-    instance_of,
-    integer_pair,
-    number_or_range,
-    one_of,
-    rgba_or_hex,
-    vector3,
+from anvil.lib.schemas import (
+    MinecraftBlockDescriptor,
+    MinecraftEntityDescriptor,
+    MinecraftItemDescriptor,
 )
-from anvil.lib.schemas import MinecraftEntityDescriptor
 
 # region Parts: objects nested inside components
 
@@ -62,12 +40,12 @@ class EatBlockPair(JsonObject):
     """A block an entity eats, and the block that replaces it.
 
     Args:
-        eat_block (BlockReference): The block the entity eats.
-        replace_block (BlockReference): The block that replaces the eaten block.
+        eat_block (str | MinecraftBlockDescriptor): The block the entity eats.
+        replace_block (str | MinecraftBlockDescriptor): The block that replaces the eaten block.
     """
 
-    eat_block: BlockReference = json_field(validators=[_block])
-    replace_block: BlockReference = json_field(validators=[_block])
+    eat_block: str | MinecraftBlockDescriptor = json_field()
+    replace_block: str | MinecraftBlockDescriptor = json_field()
 
 
 class GoalEntityType(JsonObject):
@@ -88,24 +66,20 @@ class GoalEntityType(JsonObject):
         walk_speed_multiplier (float, optional): Multiplier for the walking speed. Game default 1.
     """
 
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    check_if_outnumbered: bool | None = json_field(default=None, validators=[_boolean])
-    cooldown: float | None = json_field(default=None, validators=[_positive])
-    max_dist: float | None = json_field(default=None, validators=[_number])
-    max_flee: float | None = json_field(default=None, validators=[_number])
-    max_height: float | None = json_field(default=None, validators=[_number])
-    must_see: bool | None = json_field(default=None, validators=[_boolean])
-    must_see_forget_duration: float | None = json_field(
-        default=None, validators=[_positive]
+    filters: Filter | None = json_field(default=None)
+    check_if_outnumbered: bool | None = json_field(default=None)
+    cooldown: Annotated[float, NonNegative] | None = json_field(default=None)
+    max_dist: float | None = json_field(default=None)
+    max_flee: float | None = json_field(default=None)
+    max_height: float | None = json_field(default=None)
+    must_see: bool | None = json_field(default=None)
+    must_see_forget_duration: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    priority: int | None = json_field(default=None, validators=[_integer])
-    reevaluate_description: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    sprint_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    walk_speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    priority: int | None = json_field(default=None)
+    reevaluate_description: bool | None = json_field(default=None)
+    sprint_speed_multiplier: float | None = json_field(default=None)
+    walk_speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityTypesAIGoal(AIGoal, abstract=True):
@@ -116,9 +90,7 @@ class EntityTypesAIGoal(AIGoal, abstract=True):
     """
 
     entity_types: list[GoalEntityType] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(GoalEntityType))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def add_entity_type(
@@ -161,16 +133,14 @@ class PlaceableBlock(JsonObject):
     """A block an entity places at random, with its weight.
 
     Args:
-        block (BlockReference): The block to place.
+        block (str | MinecraftBlockDescriptor): The block to place.
         filter (Filter, optional): Conditions for this entry to be picked. Self, Target and Block are set.
         weight (int, optional): Weight of this entry. Game default 1.
     """
 
-    block: BlockReference = json_field(
-        validators=[_block], encoder=encoders.block_object
-    )
-    filter: Filter | None = json_field(default=None, validators=[_filter])
-    weight: int | None = json_field(default=None, validators=[_integer, _positive])
+    block: Annotated[str | MinecraftBlockDescriptor, BlockObject] = json_field()
+    filter: Filter | None = json_field(default=None)
+    weight: Annotated[int, NonNegative] | None = json_field(default=None)
 
 
 class PotionChoice(JsonObject):
@@ -182,9 +152,9 @@ class PotionChoice(JsonObject):
         filters (Filter, optional): Conditions for this potion to be picked.
     """
 
-    id: int = json_field(validators=[_integer])
-    chance: float | None = json_field(default=None, validators=[_number, _chance])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
+    id: int = json_field()
+    chance: Annotated[float, Chance] | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
 
 
 class SendEventStep(JsonObject):
@@ -196,9 +166,9 @@ class SendEventStep(JsonObject):
         sound_event (str, optional): The sound event to play when this step happens.
     """
 
-    event: str = json_field(validators=[_string])
-    base_delay: float | None = json_field(default=None, validators=[_positive])
-    sound_event: str | None = json_field(default=None, validators=[_string])
+    event: str = json_field()
+    base_delay: Annotated[float, NonNegative] | None = json_field(default=None)
+    sound_event: str | None = json_field(default=None)
 
 
 class SendEventChoice(JsonObject):
@@ -212,33 +182,27 @@ class SendEventChoice(JsonObject):
         look_at_target (bool, optional): The mob faces the entity it sends the event to. Game default true.
         max_activation_range (float, optional): Maximum distance in blocks to the target. Game default 32.
         min_activation_range (float, optional): Minimum distance in blocks to the target. Game default 1.
-        particle_color (str | RGBA255, optional): Color of the particles spawned while casting.
+        particle_color (str | tuple[int, int, int, int], optional): Color of the particles spawned while casting.
         sequence (list[SendEventStep], optional): The events to send. Add more with `add_step`.
         start_sound_event (str, optional): The sound event to play when this choice starts.
         weight (float, optional): Weight of this choice when one is picked at random. Game default 0.
     """
 
-    cast_duration: float | None = json_field(default=None, validators=[_positive])
-    cooldown_time: float | None = json_field(default=None, validators=[_positive])
-    do_casting: bool | None = json_field(default=None, validators=[_boolean])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    look_at_target: bool | None = json_field(default=None, validators=[_boolean])
-    max_activation_range: float | None = json_field(
-        default=None, validators=[_positive]
+    cast_duration: Annotated[float, NonNegative] | None = json_field(default=None)
+    cooldown_time: Annotated[float, NonNegative] | None = json_field(default=None)
+    do_casting: bool | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    look_at_target: bool | None = json_field(default=None)
+    max_activation_range: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    min_activation_range: float | None = json_field(
-        default=None, validators=[_positive]
+    min_activation_range: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    particle_color: str | RGBA255 | None = json_field(
-        default=None, validators=[rgba_or_hex]
-    )
-    sequence: list[SendEventStep] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(SendEventStep))],
-        omit_default=True,
-    )
-    start_sound_event: str | None = json_field(default=None, validators=[_string])
-    weight: float | None = json_field(default=None, validators=[_positive])
+    particle_color: str | tuple[int, int, int, int] | None = json_field(default=None)
+    sequence: list[SendEventStep] = json_field(default_factory=list, omit_default=True)
+    start_sound_event: str | None = json_field(default=None)
+    weight: Annotated[float, NonNegative] | None = json_field(default=None)
 
     def add_step(
         self,
@@ -272,24 +236,18 @@ class SummonStep(JsonObject):
         target (FilterSubject, optional): Where the spell starts: a line starts there, a circle is centered there. Game default self.
     """
 
-    entity_type: MinecraftEntityDescriptor | str = json_field(validators=[_entity])
-    base_delay: float | None = json_field(default=None, validators=[_positive])
-    delay_per_summon: float | None = json_field(default=None, validators=[_positive])
-    entity_lifespan: float | None = json_field(default=None, validators=[_number])
-    num_entities_spawned: int | None = json_field(
-        default=None, validators=[_integer, _positive]
-    )
-    shape: Literal["circle", "line"] | None = json_field(
-        default=None, validators=[one_of("circle", "line")]
-    )
-    size: float | None = json_field(default=None, validators=[_number])
-    sound_event: str | None = json_field(default=None, validators=[_string])
-    summon_cap: int | None = json_field(default=None, validators=[_integer, _positive])
-    summon_cap_radius: float | None = json_field(default=None, validators=[_positive])
-    summon_event: str | None = json_field(default=None, validators=[_string])
-    target: FilterSubject | None = json_field(
-        default=None, validators=[one_of(*FilterSubject)]
-    )
+    entity_type: MinecraftEntityDescriptor | str = json_field()
+    base_delay: Annotated[float, NonNegative] | None = json_field(default=None)
+    delay_per_summon: Annotated[float, NonNegative] | None = json_field(default=None)
+    entity_lifespan: float | None = json_field(default=None)
+    num_entities_spawned: Annotated[int, NonNegative] | None = json_field(default=None)
+    shape: Literal["circle", "line"] | None = json_field(default=None)
+    size: float | None = json_field(default=None)
+    sound_event: str | None = json_field(default=None)
+    summon_cap: Annotated[int, NonNegative] | None = json_field(default=None)
+    summon_cap_radius: Annotated[float, NonNegative] | None = json_field(default=None)
+    summon_event: str | None = json_field(default=None)
+    target: FilterSubject | None = json_field(default=None)
 
 
 class SummonChoice(JsonObject):
@@ -302,32 +260,26 @@ class SummonChoice(JsonObject):
         filters (Filter, optional): Conditions for the spell to be used.
         max_activation_range (float, optional): Maximum distance in blocks to the target. Game default 32.
         min_activation_range (float, optional): Minimum distance in blocks to the target. Game default 1.
-        particle_color (str | RGBA255, optional): Color of the spell particles.
+        particle_color (str | tuple[int, int, int, int], optional): Color of the spell particles.
         sequence (list[SummonStep], optional): The steps of the spell. Add more with `add_step`.
         start_sound_event (str, optional): The sound event to play when the spell starts.
         weight (float, optional): Weight of this spell when one is picked at random. Game default 0.
     """
 
-    cast_duration: float | None = json_field(default=None, validators=[_number])
-    cooldown_time: float | None = json_field(default=None, validators=[_positive])
-    do_casting: bool | None = json_field(default=None, validators=[_boolean])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    max_activation_range: float | None = json_field(
-        default=None, validators=[_positive]
+    cast_duration: float | None = json_field(default=None)
+    cooldown_time: Annotated[float, NonNegative] | None = json_field(default=None)
+    do_casting: bool | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    max_activation_range: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    min_activation_range: float | None = json_field(
-        default=None, validators=[_positive]
+    min_activation_range: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    particle_color: str | RGBA255 | None = json_field(
-        default=None, validators=[rgba_or_hex]
-    )
-    sequence: list[SummonStep] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(SummonStep))],
-        omit_default=True,
-    )
-    start_sound_event: str | None = json_field(default=None, validators=[_string])
-    weight: float | None = json_field(default=None, validators=[_positive])
+    particle_color: str | tuple[int, int, int, int] | None = json_field(default=None)
+    sequence: list[SummonStep] = json_field(default_factory=list, omit_default=True)
+    start_sound_event: str | None = json_field(default=None)
+    weight: Annotated[float, NonNegative] | None = json_field(default=None)
 
     def add_step(
         self,
@@ -379,22 +331,22 @@ class EntityAIAdmireItem(AIGoal):
         admire_item_sound (str, optional): The sound event to play when admiring the item.
         on_admire_item_start (EventTrigger | str, optional): Event to run when the mob starts admiring an item.
         on_admire_item_stop (EventTrigger | str, optional): Event to run when the mob stops admiring an item.
-        sound_interval (float | NumberRange, optional): The range of time in seconds to randomly wait before playing the sound again. Can be a number, an array [min, max], or an object with range_min and range_max. Game default 0.
+        sound_interval (float | tuple[float, float], optional): The range of time in seconds to randomly wait before playing the sound again. Can be a number, an array [min, max], or an object with range_min and range_max. Game default 0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_admire_item)
     """
 
     identifier = "minecraft:behavior.admire_item"
 
-    admire_item_sound: str | None = json_field(default=None, validators=[_string])
-    on_admire_item_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    admire_item_sound: str | None = json_field(default=None)
+    on_admire_item_start: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_admire_item_stop: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_admire_item_stop: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    sound_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    sound_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
 
 
@@ -405,7 +357,7 @@ class EntityAIAquaticChargeAttack(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         attack_reach (float, optional): Horizontal reach grown around the mob's AABB to register a hit. Game default 0.05.
-        charge_cooldown_time (float | NumberRange, optional): Range of time in seconds to wait before starting another charge. Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
+        charge_cooldown_time (float | tuple[float, float], optional): Range of time in seconds to wait before starting another charge. Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
         charge_overshoot_distance (float, optional): Distance beyond the target the mob aims during a charge. Game default 1.5.
         charge_speed (float, optional): Absolute speed used during the charge attack. Game default 0.06.
         knockback_force (float, optional): Knockback force applied to the target on hit. Game default 2.
@@ -416,18 +368,16 @@ class EntityAIAquaticChargeAttack(AIGoal):
 
     identifier = "minecraft:behavior.aquatic_charge_attack"
 
-    attack_reach: float | None = json_field(default=None, validators=[_number])
-    charge_cooldown_time: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    attack_reach: float | None = json_field(default=None)
+    charge_cooldown_time: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
-    charge_overshoot_distance: float | None = json_field(
-        default=None, validators=[_number]
+    charge_overshoot_distance: float | None = json_field(default=None)
+    charge_speed: Annotated[float, InRange(minimum=0.05000000074505806)] | None = (
+        json_field(default=None)
     )
-    charge_speed: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0.05000000074505806)]
-    )
-    knockback_force: float | None = json_field(default=None, validators=[_number])
-    max_charge_distance: float | None = json_field(default=None, validators=[_number])
+    knockback_force: float | None = json_field(default=None)
+    max_charge_distance: float | None = json_field(default=None)
 
 
 class EntityAIAvoidBlock(AIGoal):
@@ -440,9 +390,9 @@ class EntityAIAvoidBlock(AIGoal):
         on_escape (EventTrigger | str, optional): Event triggers that fire when the entity escapes from the avoided block. Can be a single trigger or an array of triggers.
         search_height (int, optional): Maximum distance to look for a block in y. Game default 0.
         search_range (int, optional): Maximum distance to look for a block in xz. Game default 0.
-        sound_interval (float | NumberRange, optional): The range of time in seconds to randomly wait before playing the sound again.
+        sound_interval (float | tuple[float, float], optional): The range of time in seconds to randomly wait before playing the sound again.
         sprint_speed_modifier (float, optional): Modifier for sprint speed. 1.0 means keep the regular speed, while higher numbers make the sprint speed faster. Game default 1.
-        target_blocks (list[BlockReference], optional): List of block types this mob avoids.
+        target_blocks (list[str | MinecraftBlockDescriptor], optional): List of block types this mob avoids.
         target_selection_method (str, optional): Block search method. Game default nearest.
         tick_interval (int, optional): Should start tick interval. Game default 1.
         walk_speed_modifier (float, optional): Modifier for walking speed. 1.0 means keep the regular speed, while higher numbers make the walking speed faster. Game default 1.
@@ -452,22 +402,20 @@ class EntityAIAvoidBlock(AIGoal):
 
     identifier = "minecraft:behavior.avoid_block"
 
-    avoid_block_sound: str | None = json_field(default=None, validators=[_string])
-    on_escape: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    avoid_block_sound: str | None = json_field(default=None)
+    on_escape: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    search_height: int | None = json_field(default=None)
+    search_range: int | None = json_field(default=None)
+    sound_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    search_height: int | None = json_field(default=None, validators=[_integer])
-    search_range: int | None = json_field(default=None, validators=[_integer])
-    sound_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    sprint_speed_modifier: float | None = json_field(default=None)
+    target_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
+        default=None
     )
-    sprint_speed_modifier: float | None = json_field(default=None, validators=[_number])
-    target_blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
-    )
-    target_selection_method: str | None = json_field(default=None, validators=[_string])
-    tick_interval: int | None = json_field(default=None, validators=[_integer])
-    walk_speed_modifier: float | None = json_field(default=None, validators=[_number])
+    target_selection_method: str | None = json_field(default=None)
+    tick_interval: int | None = json_field(default=None)
+    walk_speed_modifier: float | None = json_field(default=None)
 
 
 class EntityAIAvoidMobType(EntityTypesAIGoal):
@@ -487,7 +435,7 @@ class EntityAIAvoidMobType(EntityTypesAIGoal):
         probability_per_strength (float, optional): Percent chance this entity will stop avoiding another entity based on that entity's strength, where 1.0 = 100%. Game default 1.
         remove_target (bool, optional): Determine if we should remove target when fleeing or not. Game default false.
         river_speed_multiplier (float, optional): Multiplier for speed when following river. 1.0 means keep the regular speed, while higher numbers make the speed faster. Game default 0.75.
-        sound_interval (float | NumberRange, optional): The range of time in seconds to randomly wait before playing the sound again.
+        sound_interval (float | tuple[float, float], optional): The range of time in seconds to randomly wait before playing the sound again.
         sprint_distance (float, optional): How many blocks within range of its avoid target the entity must be for it to begin sprinting away from the avoid target. Game default 7.
         sprint_speed_multiplier (float, optional): Multiplier for sprint speed. 1.0 means keep the regular speed, while higher numbers make the sprint speed faster. Game default 1.
         walk_speed_multiplier (float, optional): Multiplier for walking speed. 1.0 means keep the regular speed, while higher numbers make the walking speed faster. Game default 1.
@@ -497,30 +445,26 @@ class EntityAIAvoidMobType(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.avoid_mob_type"
 
-    avoid_mob_sound: str | None = json_field(default=None, validators=[_string])
-    avoid_target_xz: int | None = json_field(default=None, validators=[_integer])
-    avoid_target_y: int | None = json_field(default=None, validators=[_integer])
-    ignore_visibility: bool | None = json_field(default=None, validators=[_boolean])
-    max_dist: float | None = json_field(default=None, validators=[_number])
-    max_flee: float | None = json_field(default=None, validators=[_number])
-    on_escape_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    avoid_mob_sound: str | None = json_field(default=None)
+    avoid_target_xz: int | None = json_field(default=None)
+    avoid_target_y: int | None = json_field(default=None)
+    ignore_visibility: bool | None = json_field(default=None)
+    max_dist: float | None = json_field(default=None)
+    max_flee: float | None = json_field(default=None)
+    on_escape_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    probability_per_strength: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
+    probability_per_strength: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
-    remove_target: bool | None = json_field(default=None, validators=[_boolean])
-    river_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number]
+    remove_target: bool | None = json_field(default=None)
+    river_speed_multiplier: float | None = json_field(default=None)
+    sound_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    sound_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    sprint_distance: float | None = json_field(default=None, validators=[_number])
-    sprint_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    walk_speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    sprint_distance: float | None = json_field(default=None)
+    sprint_speed_multiplier: float | None = json_field(default=None)
+    walk_speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIBarter(AIGoal):
@@ -542,7 +486,7 @@ class EntityAIBeg(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        items (list[ItemReference], optional): List of items that this mob likes.
+        items (list[str | MinecraftItemDescriptor], optional): List of items that this mob likes.
         look_distance (float, optional): Distance in blocks the mob will beg from. Game default 8.
         look_time (tuple[int, int], optional): The range of time in seconds this mob will stare at the player holding a food they like, begging for it.
 
@@ -551,11 +495,9 @@ class EntityAIBeg(AIGoal):
 
     identifier = "minecraft:behavior.beg"
 
-    items: list[ItemReference] | None = json_field(default=None, validators=[_items])
-    look_distance: float | None = json_field(default=None, validators=[_number])
-    look_time: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair], encoder=encoders.min_max
-    )
+    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    look_distance: float | None = json_field(default=None)
+    look_time: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
 
 
 class EntityAIBreakDoor(AIGoal):
@@ -584,7 +526,7 @@ class EntityAIBreed(AIGoal):
 
     identifier = "minecraft:behavior.breed"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAICelebrate(AIGoal):
@@ -595,25 +537,25 @@ class EntityAICelebrate(AIGoal):
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         celebration_sound (str, optional): The sound event to trigger during the celebration. Game default celebrate.
         duration (float, optional): The duration in seconds that the celebration lasts for. Game default 30.
-        jump_interval (float | NumberRange, optional): Minimum and maximum time between jumping (positive, in seconds). Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
+        jump_interval (float | tuple[float, float], optional): Minimum and maximum time between jumping (positive, in seconds). Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
         on_celebration_end_event (EventTrigger | str, optional): The event to trigger when the goal's duration expires.
-        sound_interval (float | NumberRange, optional): Minimum and maximum time between sound events (positive, in seconds). Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
+        sound_interval (float | tuple[float, float], optional): Minimum and maximum time between sound events (positive, in seconds). Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_celebrate)
     """
 
     identifier = "minecraft:behavior.celebrate"
 
-    celebration_sound: str | None = json_field(default=None, validators=[_string])
-    duration: float | None = json_field(default=None, validators=[_number])
-    jump_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    celebration_sound: str | None = json_field(default=None)
+    duration: float | None = json_field(default=None)
+    jump_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    on_celebration_end_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_celebration_end_event: Annotated[EventTrigger | str, Trigger] | None = (
+        json_field(default=None)
     )
-    sound_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    sound_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
 
 
@@ -624,7 +566,7 @@ class EntityAICelebrateSurvive(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         duration (float, optional): The duration in seconds that the celebration lasts for. Game default 30.
-        fireworks_interval (float | NumberRange, optional): Minimum and maximum time between firework (positive, in seconds).
+        fireworks_interval (float | tuple[float, float], optional): Minimum and maximum time between firework (positive, in seconds).
         on_celebration_end_event (EventTrigger | str, optional): The event to trigger when the goal's duration expires.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_celebrate_survive)
@@ -632,12 +574,12 @@ class EntityAICelebrateSurvive(AIGoal):
 
     identifier = "minecraft:behavior.celebrate_survive"
 
-    duration: float | None = json_field(default=None, validators=[_number])
-    fireworks_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    duration: float | None = json_field(default=None)
+    fireworks_interval: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
-    on_celebration_end_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_celebration_end_event: Annotated[EventTrigger | str, Trigger] | None = (
+        json_field(default=None)
     )
 
 
@@ -658,11 +600,11 @@ class EntityAIChargeAttack(AIGoal):
 
     identifier = "minecraft:behavior.charge_attack"
 
-    max_distance: float | None = json_field(default=None, validators=[_number])
-    min_distance: float | None = json_field(default=None, validators=[_number])
-    sound_event: str | None = json_field(default=None, validators=[_string])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    success_rate: float | None = json_field(default=None, validators=[_number])
+    max_distance: float | None = json_field(default=None)
+    min_distance: float | None = json_field(default=None)
+    sound_event: str | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    success_rate: float | None = json_field(default=None)
 
 
 class EntityAIChargeHeldItem(AIGoal):
@@ -671,14 +613,14 @@ class EntityAIChargeHeldItem(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        items (list[ItemReference], optional): The list of items that can be used to charge the held item. This list is required and must have at least one item in it. Value must have at least 1 items.
+        items (list[str | MinecraftItemDescriptor], optional): The list of items that can be used to charge the held item. This list is required and must have at least one item in it. Value must have at least 1 items.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_held_item)
     """
 
     identifier = "minecraft:behavior.charge_held_item"
 
-    items: list[ItemReference] | None = json_field(default=None, validators=[_items])
+    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
 
 
 class EntityAICircleAroundAnchor(AIGoal):
@@ -689,12 +631,12 @@ class EntityAICircleAroundAnchor(AIGoal):
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         angle_change (float, optional): Number of degrees to change this entity's facing by, when the entity selects its next anchor point. Game default 15.
         goal_radius (float, optional): Maximum distance from the anchor-point in which this entity considers itself to have reached the anchor point. Game default 0.5.
-        height_above_target_range (float | NumberRange, optional): The number of blocks above the target that the next anchor point can be set.
+        height_above_target_range (float | tuple[float, float], optional): The number of blocks above the target that the next anchor point can be set.
         height_adjustment_chance (float, optional): Percent chance to determine how often to increase or decrease the current height around the anchor point. Game default 0.0029.
-        height_offset_range (float | NumberRange, optional): Vertical distance from the anchor point this entity must stay within, upon a successful height adjustment.
+        height_offset_range (float | tuple[float, float], optional): Vertical distance from the anchor point this entity must stay within, upon a successful height adjustment.
         radius_adjustment_chance (float, optional): Percent chance to determine how often to increase the size of the current movement radius around the anchor point. Game default 0.004.
         radius_change (float, optional): The number of blocks to increase the current movement radius by, upon successful "radius_adjustment_chance". Game default 1.
-        radius_range (float | NumberRange, optional): Horizontal distance from the anchor point this entity must stay within upon a successful radius adjustment.
+        radius_range (float | tuple[float, float], optional): Horizontal distance from the anchor point this entity must stay within upon a successful radius adjustment.
         speed_multiplier (float, optional): Multiplies the speed at which this entity travels to its next desired position. Game default 1.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_circle_around_anchor)
@@ -702,25 +644,21 @@ class EntityAICircleAroundAnchor(AIGoal):
 
     identifier = "minecraft:behavior.circle_around_anchor"
 
-    angle_change: float | None = json_field(default=None, validators=[_number])
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    height_above_target_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    angle_change: float | None = json_field(default=None)
+    goal_radius: float | None = json_field(default=None)
+    height_above_target_range: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
-    height_adjustment_chance: float | None = json_field(
-        default=None, validators=[_number]
+    height_adjustment_chance: float | None = json_field(default=None)
+    height_offset_range: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
-    height_offset_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    radius_adjustment_chance: float | None = json_field(default=None)
+    radius_change: float | None = json_field(default=None)
+    radius_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    radius_adjustment_chance: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    radius_change: float | None = json_field(default=None, validators=[_number])
-    radius_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIControlledByPlayer(AIGoal):
@@ -738,13 +676,9 @@ class EntityAIControlledByPlayer(AIGoal):
 
     identifier = "minecraft:behavior.controlled_by_player"
 
-    fractional_rotation: float | None = json_field(default=None, validators=[_number])
-    fractional_rotation_limit: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    mount_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
+    fractional_rotation: float | None = json_field(default=None)
+    fractional_rotation_limit: float | None = json_field(default=None)
+    mount_speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAICroak(AIGoal):
@@ -753,21 +687,21 @@ class EntityAICroak(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        duration (float | NumberRange, optional): Random range in seconds after which the croaking stops. Can also be a constant. Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
+        duration (float | tuple[float, float], optional): Random range in seconds after which the croaking stops. Can also be a constant. Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
         filters (Filter, optional): Conditions for the behavior to start and keep running. The interval between runs only starts after passing the filters.
-        interval (float | NumberRange, optional): Random range in seconds between runs of this behavior. Can also be a constant. Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
+        interval (float | tuple[float, float], optional): Random range in seconds between runs of this behavior. Can also be a constant. Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_croak)
     """
 
     identifier = "minecraft:behavior.croak"
 
-    duration: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    duration: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    filters: Filter | None = json_field(default=None)
+    interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
 
 
@@ -790,16 +724,14 @@ class EntityAIDefendTrustedTarget(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.defend_trusted_target"
 
-    aggro_sound: str | None = json_field(default=None, validators=[_string])
-    attack_interval: int | None = json_field(default=None, validators=[_integer])
-    must_see: bool | None = json_field(default=None, validators=[_boolean])
-    must_see_forget_duration: float | None = json_field(
-        default=None, validators=[_number]
+    aggro_sound: str | None = json_field(default=None)
+    attack_interval: int | None = json_field(default=None)
+    must_see: bool | None = json_field(default=None)
+    must_see_forget_duration: float | None = json_field(default=None)
+    on_defend_start: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_defend_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAIDefendVillageTarget(EntityTypesAIGoal):
@@ -822,17 +754,15 @@ class EntityAIDefendVillageTarget(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.defend_village_target"
 
-    attack_chance: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
+    attack_chance: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
-    attack_owner: bool | None = json_field(default=None, validators=[_boolean])
-    must_reach: bool | None = json_field(default=None, validators=[_boolean])
-    must_see: bool | None = json_field(default=None, validators=[_boolean])
-    must_see_forget_duration: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    persist_time: float | None = json_field(default=None, validators=[_number])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    attack_owner: bool | None = json_field(default=None)
+    must_reach: bool | None = json_field(default=None)
+    must_see: bool | None = json_field(default=None)
+    must_see_forget_duration: float | None = json_field(default=None)
+    persist_time: float | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAIDelayedAttack(AIGoal):
@@ -870,41 +800,31 @@ class EntityAIDelayedAttack(AIGoal):
 
     identifier = "minecraft:behavior.delayed_attack"
 
-    attack_duration: float | None = json_field(default=None, validators=[_number])
-    attack_once: bool | None = json_field(default=None, validators=[_boolean])
-    attack_types: str | None = json_field(default=None, validators=[_string])
-    can_spread_on_fire: bool | None = json_field(default=None, validators=[_boolean])
-    hit_delay_pct: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
+    attack_duration: float | None = json_field(default=None)
+    attack_once: bool | None = json_field(default=None)
+    attack_types: str | None = json_field(default=None)
+    can_spread_on_fire: bool | None = json_field(default=None)
+    hit_delay_pct: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
-    inner_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    max_path_time: float | None = json_field(default=None, validators=[_number])
-    melee_fov: float | None = json_field(default=None, validators=[_number])
-    min_path_time: float | None = json_field(default=None, validators=[_number])
-    on_attack: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_kill: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    outer_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_fail_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_inner_boundary: float | None = json_field(default=None, validators=[_number])
-    path_outer_boundary: float | None = json_field(default=None, validators=[_number])
-    random_stop_interval: int | None = json_field(default=None, validators=[_integer])
-    reach_multiplier: float | None = json_field(default=None, validators=[_number])
-    require_complete_path: bool | None = json_field(default=None, validators=[_boolean])
-    sound_event: str | None = json_field(default=None, validators=[_string])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    track_target: bool | None = json_field(default=None, validators=[_boolean])
-    x_max_rotation: float | None = json_field(default=None, validators=[_number])
-    y_max_head_rotation: float | None = json_field(default=None, validators=[_number])
+    inner_boundary_time_increase: float | None = json_field(default=None)
+    max_path_time: float | None = json_field(default=None)
+    melee_fov: float | None = json_field(default=None)
+    min_path_time: float | None = json_field(default=None)
+    on_attack: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_kill: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    outer_boundary_time_increase: float | None = json_field(default=None)
+    path_fail_time_increase: float | None = json_field(default=None)
+    path_inner_boundary: float | None = json_field(default=None)
+    path_outer_boundary: float | None = json_field(default=None)
+    random_stop_interval: int | None = json_field(default=None)
+    reach_multiplier: float | None = json_field(default=None)
+    require_complete_path: bool | None = json_field(default=None)
+    sound_event: str | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    track_target: bool | None = json_field(default=None)
+    x_max_rotation: float | None = json_field(default=None)
+    y_max_head_rotation: float | None = json_field(default=None)
 
 
 class EntityAIDig(AIGoal):
@@ -926,19 +846,13 @@ class EntityAIDig(AIGoal):
 
     identifier = "minecraft:behavior.dig"
 
-    allow_dig_when_named: bool | None = json_field(default=None, validators=[_boolean])
-    digs_in_daylight: bool | None = json_field(default=None, validators=[_boolean])
-    duration: float | None = json_field(default=None, validators=[_number])
-    idle_time: float | None = json_field(default=None, validators=[_number])
-    on_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    suspicion_is_disturbance: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    vibration_is_disturbance: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    allow_dig_when_named: bool | None = json_field(default=None)
+    digs_in_daylight: bool | None = json_field(default=None)
+    duration: float | None = json_field(default=None)
+    idle_time: float | None = json_field(default=None)
+    on_start: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    suspicion_is_disturbance: bool | None = json_field(default=None)
+    vibration_is_disturbance: bool | None = json_field(default=None)
 
 
 class EntityAIDoorInteract(AIGoal):
@@ -968,8 +882,8 @@ class EntityAIDrinkMilk(AIGoal):
 
     identifier = "minecraft:behavior.drink_milk"
 
-    cooldown_seconds: float | None = json_field(default=None, validators=[_number])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
+    cooldown_seconds: float | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
 
 
 class EntityAIDrinkPotion(AIGoal):
@@ -986,12 +900,8 @@ class EntityAIDrinkPotion(AIGoal):
 
     identifier = "minecraft:behavior.drink_potion"
 
-    potions: list[PotionChoice] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(PotionChoice))],
-        omit_default=True,
-    )
-    speed_modifier: float | None = json_field(default=None, validators=[_number])
+    potions: list[PotionChoice] = json_field(default_factory=list, omit_default=True)
+    speed_modifier: float | None = json_field(default=None)
 
     def add_potion(
         self,
@@ -1025,48 +935,36 @@ class EntityAIDropItemFor(EntityTypesAIGoal):
         search_range (int, optional): The distance in blocks the entity will search within to find a valid target position. Game default 0.
         seconds_before_pickup (float, optional): The numbers of seconds that will pass before the dropped entity can be picked up from the ground. Game default 0.
         speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Game default 1.
-        target_range (Vector3D, optional): The range in blocks within which the entity searches to find a target to drop an item for.
-        teleport_offset (Vector3D, optional): When the entity teleports, offset the teleport position by this many blocks in the X, Y, and Z coordinate.
-        time_of_day_range (float | NumberRange, optional): The valid times of day that this goal can be used. For reference: noon is 0.0, sunset is 0.25, midnight is 0.5, and sunrise is 0.75, and back to noon for 1.0.
+        target_range (tuple[float, float, float], optional): The range in blocks within which the entity searches to find a target to drop an item for.
+        teleport_offset (tuple[float, float, float], optional): When the entity teleports, offset the teleport position by this many blocks in the X, Y, and Z coordinate.
+        time_of_day_range (float | tuple[float, float], optional): The valid times of day that this goal can be used. For reference: noon is 0.0, sunset is 0.25, midnight is 0.5, and sunrise is 0.75, and back to noon for 1.0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_drop_item_for)
     """
 
     identifier = "minecraft:behavior.drop_item_for"
 
-    cooldown: float | None = json_field(default=None, validators=[_number])
-    drop_item_chance: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
+    cooldown: float | None = json_field(default=None)
+    drop_item_chance: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    loot_table: LootTable | str | None = json_field(default=None)
+    max_head_look_at_height: float | None = json_field(default=None)
+    minimum_teleport_distance: float | None = json_field(default=None)
+    offering_distance: float | None = json_field(default=None)
+    on_drop_attempt: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    loot_table: LootTable | str | None = json_field(
-        default=None, validators=[instance_of(LootTable, str)]
-    )
-    max_head_look_at_height: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    minimum_teleport_distance: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    offering_distance: float | None = json_field(default=None, validators=[_number])
-    on_drop_attempt: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    seconds_before_pickup: float | None = json_field(default=None, validators=[_number])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    target_range: Vector3D | None = json_field(default=None, validators=[vector3])
-    teleport_offset: Vector3D | None = json_field(default=None, validators=[vector3])
-    time_of_day_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    search_count: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    seconds_before_pickup: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    target_range: tuple[float, float, float] | None = json_field(default=None)
+    teleport_offset: tuple[float, float, float] | None = json_field(default=None)
+    time_of_day_range: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
 
 
@@ -1087,20 +985,17 @@ class EntityAIEatBlock(AIGoal):
     identifier = "minecraft:behavior.eat_block"
 
     eat_and_replace_block_pairs: list[EatBlockPair] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(EatBlockPair))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    on_eat: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    success_chance: Molang | str | float | None = json_field(
-        default=None, validators=[_molang]
-    )
-    time_until_eat: float | None = json_field(default=None, validators=[_number])
+    on_eat: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    success_chance: Molang | str | float | None = json_field(default=None)
+    time_until_eat: float | None = json_field(default=None)
 
     def add_block_pair(
-        self, *, eat_block: BlockReference, replace_block: BlockReference
+        self,
+        *,
+        eat_block: str | MinecraftBlockDescriptor,
+        replace_block: str | MinecraftBlockDescriptor,
     ) -> "EntityAIEatBlock":
         """Adds a block to eat and the block that replaces it."""
         self.eat_and_replace_block_pairs.append(
@@ -1122,7 +1017,7 @@ class EntityAIEatCarriedItem(AIGoal):
 
     identifier = "minecraft:behavior.eat_carried_item"
 
-    delay_before_eating: float | None = json_field(default=None, validators=[_number])
+    delay_before_eating: float | None = json_field(default=None)
 
 
 class EntityAIEatMob(AIGoal):
@@ -1143,14 +1038,12 @@ class EntityAIEatMob(AIGoal):
 
     identifier = "minecraft:behavior.eat_mob"
 
-    eat_animation_time: float | None = json_field(default=None, validators=[_number])
-    eat_mob_sound: str | None = json_field(default=None, validators=[_string])
-    loot_table: LootTable | str | None = json_field(
-        default=None, validators=[instance_of(LootTable, str)]
-    )
-    pull_in_force: float | None = json_field(default=None, validators=[_number])
-    reach_mob_distance: float | None = json_field(default=None, validators=[_number])
-    run_speed: float | None = json_field(default=None, validators=[_number])
+    eat_animation_time: float | None = json_field(default=None)
+    eat_mob_sound: str | None = json_field(default=None)
+    loot_table: LootTable | str | None = json_field(default=None)
+    pull_in_force: float | None = json_field(default=None)
+    reach_mob_distance: float | None = json_field(default=None)
+    run_speed: float | None = json_field(default=None)
 
 
 class EntityAIEmerge(AIGoal):
@@ -1168,11 +1061,9 @@ class EntityAIEmerge(AIGoal):
 
     identifier = "minecraft:behavior.emerge"
 
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    duration: float | None = json_field(default=None, validators=[_number])
-    on_done: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
+    cooldown_time: float | None = json_field(default=None)
+    duration: float | None = json_field(default=None)
+    on_done: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
 
 
 class EntityAIEndermanLeaveBlock(AIGoal):
@@ -1220,7 +1111,7 @@ class EntityAIExploreOutskirts(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        dist_from_boundary (Vector3D, optional): The distance from the boundary the villager must be within in to explore the outskirts.
+        dist_from_boundary (tuple[float, float, float], optional): The distance from the boundary the villager must be within in to explore the outskirts.
         explore_dist (float, optional): Total distance in blocks the the entity will explore beyond the village bounds when choosing its travel point. Game default 5.
         max_travel_time (float, optional): This is the maximum amount of time an entity will attempt to reach it's travel point on the outskirts of the village before the goal exits. Game default 60.
         max_wait_time (float, optional): The wait time in seconds between choosing new explore points will be chosen on a random interval between this value and the minimum wait time. Game default 0.
@@ -1237,17 +1128,17 @@ class EntityAIExploreOutskirts(AIGoal):
 
     identifier = "minecraft:behavior.explore_outskirts"
 
-    dist_from_boundary: Vector3D | None = json_field(default=None, validators=[vector3])
-    explore_dist: float | None = json_field(default=None, validators=[_number])
-    max_travel_time: float | None = json_field(default=None, validators=[_number])
-    max_wait_time: float | None = json_field(default=None, validators=[_number])
-    min_dist_from_target: float | None = json_field(default=None, validators=[_number])
-    min_perimeter: float | None = json_field(default=None, validators=[_number])
-    min_wait_time: float | None = json_field(default=None, validators=[_number])
-    next_xz: int | None = json_field(default=None, validators=[_integer])
-    next_y: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    timer_ratio: float | None = json_field(default=None, validators=[_number])
+    dist_from_boundary: tuple[float, float, float] | None = json_field(default=None)
+    explore_dist: float | None = json_field(default=None)
+    max_travel_time: float | None = json_field(default=None)
+    max_wait_time: float | None = json_field(default=None)
+    min_dist_from_target: float | None = json_field(default=None)
+    min_perimeter: float | None = json_field(default=None)
+    min_wait_time: float | None = json_field(default=None)
+    next_xz: int | None = json_field(default=None)
+    next_y: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    timer_ratio: float | None = json_field(default=None)
 
 
 class EntityAIFertilizeFarmBlock(AIGoal):
@@ -1269,23 +1160,15 @@ class EntityAIFertilizeFarmBlock(AIGoal):
 
     identifier = "minecraft:behavior.fertilize_farm_block"
 
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    max_fertilizer_usage: Annotated[int, Positive] | None = json_field(default=None)
+    search_cooldown_max_seconds: Annotated[float, Positive] | None = json_field(
+        default=None
     )
-    max_fertilizer_usage: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_cooldown_max_seconds: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    search_count: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIFindCover(AIGoal):
@@ -1302,8 +1185,8 @@ class EntityAIFindCover(AIGoal):
 
     identifier = "minecraft:behavior.find_cover"
 
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    cooldown_time: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIFindMount(AIGoal):
@@ -1324,12 +1207,12 @@ class EntityAIFindMount(AIGoal):
 
     identifier = "minecraft:behavior.find_mount"
 
-    avoid_water: bool | None = json_field(default=None, validators=[_boolean])
-    max_failed_attempts: int | None = json_field(default=None, validators=[_integer])
-    mount_distance: float | None = json_field(default=None, validators=[_number])
-    start_delay: int | None = json_field(default=None, validators=[_integer])
-    target_needed: bool | None = json_field(default=None, validators=[_boolean])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    avoid_water: bool | None = json_field(default=None)
+    max_failed_attempts: int | None = json_field(default=None)
+    mount_distance: float | None = json_field(default=None)
+    start_delay: int | None = json_field(default=None)
+    target_needed: bool | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAIFindUnderwaterTreasure(AIGoal):
@@ -1347,9 +1230,9 @@ class EntityAIFindUnderwaterTreasure(AIGoal):
 
     identifier = "minecraft:behavior.find_underwater_treasure"
 
-    search_range: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    stop_distance: float | None = json_field(default=None, validators=[_number])
+    search_range: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    stop_distance: float | None = json_field(default=None)
 
 
 class EntityAIFireAtTarget(AIGoal):
@@ -1359,41 +1242,39 @@ class EntityAIFireAtTarget(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         attack_cooldown (float, optional): The cooldown time in seconds before this goal can be used again. Game default 0.5.
-        attack_range (float | NumberRange, optional): Target needs to be within this range for the attack to happen.
+        attack_range (float | tuple[float, float], optional): Target needs to be within this range for the attack to happen.
         filters (Filter, optional): Conditions that need to be met for the behavior to start.
         max_head_rotation_x (float, optional): Maximum head rotation (in degrees), on the X-axis, that this entity can apply while trying to look at the target. Game default 30.
         max_head_rotation_y (float, optional): Maximum head rotation (in degrees), on the Y-axis, that this entity can apply while trying to look at the target. Game default 30.
         owner_anchor (int, optional): Entity anchor for the projectile spawn location. Game default 2.
-        owner_offset (Vector3D, optional): Offset vector from the owner_anchor.
+        owner_offset (tuple[float, float, float], optional): Offset vector from the owner_anchor.
         post_shoot_delay (float, optional): Time in seconds between firing the projectile and ending the goal. Game default 0.2.
         pre_shoot_delay (float, optional): Time in seconds before firing the projectile. Game default 0.75.
         projectile_def (MinecraftEntityDescriptor | str, optional): Actor definition to use as projectile for the ranged attack. The actor must be a projectile. This field is required for the goal to be usable.
         ranged_fov (float, optional): Field of view (in degrees) when using sensing to detect a target for attack. Game default 90.
         target_anchor (int, optional): Entity anchor for projectile target. Game default 2.
-        target_offset (Vector3D, optional): Offset vector from the target_anchor.
+        target_offset (tuple[float, float, float], optional): Offset vector from the target_anchor.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_fire_at_target)
     """
 
     identifier = "minecraft:behavior.fire_at_target"
 
-    attack_cooldown: float | None = json_field(default=None, validators=[_number])
-    attack_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    attack_cooldown: float | None = json_field(default=None)
+    attack_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    max_head_rotation_x: float | None = json_field(default=None, validators=[_number])
-    max_head_rotation_y: float | None = json_field(default=None, validators=[_number])
-    owner_anchor: int | None = json_field(default=None, validators=[_integer])
-    owner_offset: Vector3D | None = json_field(default=None, validators=[vector3])
-    post_shoot_delay: float | None = json_field(default=None, validators=[_number])
-    pre_shoot_delay: float | None = json_field(default=None, validators=[_number])
-    projectile_def: MinecraftEntityDescriptor | str | None = json_field(
-        default=None, validators=[_entity]
-    )
-    ranged_fov: float | None = json_field(default=None, validators=[_number])
-    target_anchor: int | None = json_field(default=None, validators=[_integer])
-    target_offset: Vector3D | None = json_field(default=None, validators=[vector3])
+    filters: Filter | None = json_field(default=None)
+    max_head_rotation_x: float | None = json_field(default=None)
+    max_head_rotation_y: float | None = json_field(default=None)
+    owner_anchor: int | None = json_field(default=None)
+    owner_offset: tuple[float, float, float] | None = json_field(default=None)
+    post_shoot_delay: float | None = json_field(default=None)
+    pre_shoot_delay: float | None = json_field(default=None)
+    projectile_def: MinecraftEntityDescriptor | str | None = json_field(default=None)
+    ranged_fov: float | None = json_field(default=None)
+    target_anchor: int | None = json_field(default=None)
+    target_offset: tuple[float, float, float] | None = json_field(default=None)
 
 
 class EntityAIFleeSun(AIGoal):
@@ -1409,7 +1290,7 @@ class EntityAIFleeSun(AIGoal):
 
     identifier = "minecraft:behavior.flee_sun"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIFloat(AIGoal):
@@ -1427,13 +1308,9 @@ class EntityAIFloat(AIGoal):
 
     identifier = "minecraft:behavior.float"
 
-    chance_per_tick_to_float: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    sink_with_passengers: bool | None = json_field(default=None, validators=[_boolean])
-    time_under_water_to_dismount_passengers: float | None = json_field(
-        default=None, validators=[_number]
-    )
+    chance_per_tick_to_float: float | None = json_field(default=None)
+    sink_with_passengers: bool | None = json_field(default=None)
+    time_under_water_to_dismount_passengers: float | None = json_field(default=None)
 
 
 class EntityAIFloatTempt(AIGoal):
@@ -1445,10 +1322,10 @@ class EntityAIFloatTempt(AIGoal):
         can_get_scared (bool, optional): If true, the mob can stop being tempted if the player moves too fast while close to this mob. Game default false.
         can_tempt_vertically (bool, optional): If true, vertical distance to the player will be considered when tempting. Game default false.
         can_tempt_while_ridden (bool, optional): If true, the mob can be tempted even if it has a passenger (i.e. if being ridden). Game default false.
-        items (list[ItemReference], optional): List of items that can tempt the mob.
+        items (list[str | MinecraftItemDescriptor], optional): List of items that can tempt the mob.
         on_tempt_end (EventTrigger | str, optional): Event to trigger when this mob stops being tempted.
         on_tempt_start (EventTrigger | str, optional): Event to trigger when this mob starts being tempted.
-        sound_interval (float | NumberRange, optional): Range of random ticks to wait between tempt sounds.
+        sound_interval (float | tuple[float, float], optional): Range of random ticks to wait between tempt sounds.
         speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Game default 1.
         stop_distance (float, optional): The distance at which the mob will stop following the player. Game default 1.5.
         tempt_sound (str, optional): Sound to play while the mob is being tempted.
@@ -1459,25 +1336,23 @@ class EntityAIFloatTempt(AIGoal):
 
     identifier = "minecraft:behavior.float_tempt"
 
-    can_get_scared: bool | None = json_field(default=None, validators=[_boolean])
-    can_tempt_vertically: bool | None = json_field(default=None, validators=[_boolean])
-    can_tempt_while_ridden: bool | None = json_field(
-        default=None, validators=[_boolean]
+    can_get_scared: bool | None = json_field(default=None)
+    can_tempt_vertically: bool | None = json_field(default=None)
+    can_tempt_while_ridden: bool | None = json_field(default=None)
+    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    on_tempt_end: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    items: list[ItemReference] | None = json_field(default=None, validators=[_items])
-    on_tempt_end: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_tempt_start: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_tempt_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    sound_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    sound_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    stop_distance: float | None = json_field(default=None, validators=[_number])
-    tempt_sound: str | None = json_field(default=None, validators=[_string])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
+    stop_distance: float | None = json_field(default=None)
+    tempt_sound: str | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAIFloatWander(AIGoal):
@@ -1488,7 +1363,7 @@ class EntityAIFloatWander(AIGoal):
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         additional_collision_buffer (bool, optional): If true, the mob will have an additional buffer zone around it to avoid collisions with blocks when picking a position to wander to. Game default false.
         allow_navigating_through_liquids (bool, optional): If true allows the mob to navigate through liquids on its way to the target position. Game default false.
-        float_duration (float | NumberRange, optional): Range of time in seconds the mob will float around before landing and choosing to do something else.
+        float_duration (float | tuple[float, float], optional): Range of time in seconds the mob will float around before landing and choosing to do something else.
         float_wander_has_move_control (bool, optional): If true, the MoveControl flag will be added to the behavior which means that it can no longer be active at the same time as other behaviors with MoveControl. Game default true.
         must_reach (bool, optional): If true, the point has to be reachable to be a valid target. Game default false.
         navigate_around_surface (bool, optional): If true, will prioritize finding random positions in the vicinity of surfaces, i.e. blocks that are not Air or Liquid. Game default false.
@@ -1505,35 +1380,21 @@ class EntityAIFloatWander(AIGoal):
 
     identifier = "minecraft:behavior.float_wander"
 
-    additional_collision_buffer: bool | None = json_field(
-        default=None, validators=[_boolean]
+    additional_collision_buffer: bool | None = json_field(default=None)
+    allow_navigating_through_liquids: bool | None = json_field(default=None)
+    float_duration: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    allow_navigating_through_liquids: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    float_duration: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    float_wander_has_move_control: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    must_reach: bool | None = json_field(default=None, validators=[_boolean])
-    navigate_around_surface: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    random_reselect: bool | None = json_field(default=None, validators=[_boolean])
-    surface_xz_dist: int | None = json_field(default=None, validators=[_integer])
-    surface_y_dist: int | None = json_field(default=None, validators=[_integer])
-    use_home_position_restriction: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    xz_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_offset: float | None = json_field(default=None, validators=[_number])
+    float_wander_has_move_control: bool | None = json_field(default=None)
+    must_reach: bool | None = json_field(default=None)
+    navigate_around_surface: bool | None = json_field(default=None)
+    random_reselect: bool | None = json_field(default=None)
+    surface_xz_dist: int | None = json_field(default=None)
+    surface_y_dist: int | None = json_field(default=None)
+    use_home_position_restriction: bool | None = json_field(default=None)
+    xz_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_offset: float | None = json_field(default=None)
 
 
 class EntityAIFollowCaravan(EntityTypesAIGoal):
@@ -1551,8 +1412,8 @@ class EntityAIFollowCaravan(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.follow_caravan"
 
-    entity_count: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    entity_count: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIFollowMob(AIGoal):
@@ -1573,16 +1434,14 @@ class EntityAIFollowMob(AIGoal):
 
     identifier = "minecraft:behavior.follow_mob"
 
-    filters: Filter | None = json_field(default=None, validators=[_filter])
+    filters: Filter | None = json_field(default=None)
     preferred_actor_type: MinecraftEntityDescriptor | str | None = json_field(
-        default=None, validators=[_entity]
+        default=None
     )
-    search_range: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    stop_distance: float | None = json_field(default=None, validators=[_number])
-    use_home_position_restriction: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    search_range: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    stop_distance: float | None = json_field(default=None)
+    use_home_position_restriction: bool | None = json_field(default=None)
 
 
 class EntityAIFollowOwner(AIGoal):
@@ -1604,13 +1463,13 @@ class EntityAIFollowOwner(AIGoal):
 
     identifier = "minecraft:behavior.follow_owner"
 
-    can_teleport: bool | None = json_field(default=None, validators=[_boolean])
-    ignore_vibration: bool | None = json_field(default=None, validators=[_boolean])
-    max_distance: float | None = json_field(default=None, validators=[_number])
-    post_teleport_distance: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    start_distance: float | None = json_field(default=None, validators=[_number])
-    stop_distance: float | None = json_field(default=None, validators=[_number])
+    can_teleport: bool | None = json_field(default=None)
+    ignore_vibration: bool | None = json_field(default=None)
+    max_distance: float | None = json_field(default=None)
+    post_teleport_distance: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    start_distance: float | None = json_field(default=None)
+    stop_distance: float | None = json_field(default=None)
 
 
 class EntityAIFollowParent(AIGoal):
@@ -1626,7 +1485,7 @@ class EntityAIFollowParent(AIGoal):
 
     identifier = "minecraft:behavior.follow_parent"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIFollowTargetLead(AIGoal):
@@ -1644,13 +1503,11 @@ class EntityAIFollowTargetLead(AIGoal):
 
     identifier = "minecraft:behavior.follow_target_lead"
 
-    always_look_for_leader: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    follow_distance: float | None = json_field(default=None, validators=[_positive])
-    leader_filters: Filter | None = json_field(default=None, validators=[_filter])
-    search_cooldown: float | None = json_field(default=None, validators=[_positive])
-    within_radius: float | None = json_field(default=None, validators=[_positive])
+    always_look_for_leader: bool | None = json_field(default=None)
+    follow_distance: Annotated[float, NonNegative] | None = json_field(default=None)
+    leader_filters: Filter | None = json_field(default=None)
+    search_cooldown: Annotated[float, NonNegative] | None = json_field(default=None)
+    within_radius: Annotated[float, NonNegative] | None = json_field(default=None)
 
 
 class EntityAIGoAndGiveItemsToNoteblock(AIGoal):
@@ -1672,15 +1529,17 @@ class EntityAIGoAndGiveItemsToNoteblock(AIGoal):
 
     identifier = "minecraft:behavior.go_and_give_items_to_noteblock"
 
-    listen_time: int | None = json_field(default=None, validators=[_integer])
-    on_item_throw: EventTrigger | str | list[EventTrigger | str] | None = json_field(
-        default=None, validators=[_events], encoder=encoders.trigger
-    )
-    reach_block_distance: float | None = json_field(default=None, validators=[_number])
-    run_speed: float | None = json_field(default=None, validators=[_number])
-    throw_force: float | None = json_field(default=None, validators=[_number])
-    throw_sound: str | None = json_field(default=None, validators=[_string])
-    vertical_throw_mul: float | None = json_field(default=None, validators=[_number])
+    listen_time: int | None = json_field(default=None)
+    on_item_throw: (
+        Annotated[EventTrigger | str, Trigger]
+        | list[Annotated[EventTrigger | str, Trigger]]
+        | None
+    ) = json_field(default=None)
+    reach_block_distance: float | None = json_field(default=None)
+    run_speed: float | None = json_field(default=None)
+    throw_force: float | None = json_field(default=None)
+    throw_sound: str | None = json_field(default=None)
+    vertical_throw_mul: float | None = json_field(default=None)
 
 
 class EntityAIGoAndGiveItemsToOwner(AIGoal):
@@ -1701,14 +1560,16 @@ class EntityAIGoAndGiveItemsToOwner(AIGoal):
 
     identifier = "minecraft:behavior.go_and_give_items_to_owner"
 
-    on_item_throw: EventTrigger | str | list[EventTrigger | str] | None = json_field(
-        default=None, validators=[_events], encoder=encoders.trigger
-    )
-    reach_mob_distance: float | None = json_field(default=None, validators=[_number])
-    run_speed: float | None = json_field(default=None, validators=[_number])
-    throw_force: float | None = json_field(default=None, validators=[_number])
-    throw_sound: str | None = json_field(default=None, validators=[_string])
-    vertical_throw_mul: float | None = json_field(default=None, validators=[_number])
+    on_item_throw: (
+        Annotated[EventTrigger | str, Trigger]
+        | list[Annotated[EventTrigger | str, Trigger]]
+        | None
+    ) = json_field(default=None)
+    reach_mob_distance: float | None = json_field(default=None)
+    run_speed: float | None = json_field(default=None)
+    throw_force: float | None = json_field(default=None)
+    throw_sound: str | None = json_field(default=None)
+    vertical_throw_mul: float | None = json_field(default=None)
 
 
 class EntityAIGoHome(AIGoal):
@@ -1729,18 +1590,20 @@ class EntityAIGoHome(AIGoal):
 
     identifier = "minecraft:behavior.go_home"
 
-    calculate_new_path_radius: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    interval: int | None = json_field(default=None, validators=[_integer])
-    on_failed: EventTrigger | str | list[EventTrigger | str] | None = json_field(
-        default=None, validators=[_events], encoder=encoders.trigger
-    )
-    on_home: EventTrigger | str | list[EventTrigger | str] | None = json_field(
-        default=None, validators=[_events], encoder=encoders.trigger
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    calculate_new_path_radius: float | None = json_field(default=None)
+    goal_radius: float | None = json_field(default=None)
+    interval: int | None = json_field(default=None)
+    on_failed: (
+        Annotated[EventTrigger | str, Trigger]
+        | list[Annotated[EventTrigger | str, Trigger]]
+        | None
+    ) = json_field(default=None)
+    on_home: (
+        Annotated[EventTrigger | str, Trigger]
+        | list[Annotated[EventTrigger | str, Trigger]]
+        | None
+    ) = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIGuardianAttack(AIGoal):
@@ -1762,25 +1625,15 @@ class EntityAIGuardianAttack(AIGoal):
 
     identifier = "minecraft:behavior.guardian_attack"
 
-    elder_extra_magic_damage: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
+    elder_extra_magic_damage: Annotated[int, Positive] | None = json_field(default=None)
+    hard_mode_extra_magic_damage: Annotated[int, Positive] | None = json_field(
+        default=None
     )
-    hard_mode_extra_magic_damage: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    magic_damage: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    min_distance: float | None = json_field(default=None, validators=[_number])
-    sound_delay_time: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    x_max_rotation: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    y_max_head_rotation: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
+    magic_damage: Annotated[int, Positive] | None = json_field(default=None)
+    min_distance: float | None = json_field(default=None)
+    sound_delay_time: Annotated[float, Positive] | None = json_field(default=None)
+    x_max_rotation: Annotated[float, Positive] | None = json_field(default=None)
+    y_max_head_rotation: Annotated[float, Positive] | None = json_field(default=None)
 
 
 class EntityAIHarvestFarmBlock(AIGoal):
@@ -1803,26 +1656,18 @@ class EntityAIHarvestFarmBlock(AIGoal):
 
     identifier = "minecraft:behavior.harvest_farm_block"
 
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    max_seconds_before_search: Annotated[float, Positive] | None = json_field(
+        default=None
     )
-    max_seconds_before_search: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
+    search_cooldown_max_seconds: Annotated[float, Positive] | None = json_field(
+        default=None
     )
-    search_cooldown_max_seconds: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    seconds_until_new_task: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    search_count: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    seconds_until_new_task: Annotated[float, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIHide(AIGoal):
@@ -1841,12 +1686,12 @@ class EntityAIHide(AIGoal):
 
     identifier = "minecraft:behavior.hide"
 
-    duration: float | None = json_field(default=None, validators=[_number])
+    duration: float | None = json_field(default=None)
     poi_type: Literal["bed", "jobsite", "meeting_area"] | None = json_field(
-        default=None, validators=[one_of("bed", "jobsite", "meeting_area")]
+        default=None
     )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    timeout_cooldown: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
+    timeout_cooldown: float | None = json_field(default=None)
 
 
 class EntityAIHoldGround(AIGoal):
@@ -1865,11 +1710,11 @@ class EntityAIHoldGround(AIGoal):
 
     identifier = "minecraft:behavior.hold_ground"
 
-    broadcast: bool | None = json_field(default=None, validators=[_boolean])
-    broadcast_range: float | None = json_field(default=None, validators=[_number])
-    min_radius: float | None = json_field(default=None, validators=[_number])
-    within_radius_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    broadcast: bool | None = json_field(default=None)
+    broadcast_range: float | None = json_field(default=None)
+    min_radius: float | None = json_field(default=None)
+    within_radius_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
 
 
@@ -1888,8 +1733,8 @@ class EntityAIHurtByTarget(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.hurt_by_target"
 
-    alert_same_type: bool | None = json_field(default=None, validators=[_boolean])
-    hurt_owner: bool | None = json_field(default=None, validators=[_boolean])
+    alert_same_type: bool | None = json_field(default=None)
+    hurt_owner: bool | None = json_field(default=None)
 
 
 class EntityAIInspectBookshelf(AIGoal):
@@ -1909,17 +1754,11 @@ class EntityAIInspectBookshelf(AIGoal):
 
     identifier = "minecraft:behavior.inspect_bookshelf"
 
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    search_count: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIInvestigateSuspiciousLocation(AIGoal):
@@ -1936,8 +1775,8 @@ class EntityAIInvestigateSuspiciousLocation(AIGoal):
 
     identifier = "minecraft:behavior.investigate_suspicious_location"
 
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIJumpAroundTarget(AIGoal):
@@ -1952,7 +1791,7 @@ class EntityAIJumpAroundTarget(AIGoal):
         jump_angles (list[float], optional): The jump angles in float degrees that are allowed when performing the jump. The order in which the angles are chosen is randomized.
         jump_cooldown_duration (float, optional): The time in seconds to spend in cooldown before this goal can be used again. Game default 0.5.
         jump_cooldown_when_hurt_duration (float, optional): The time in seconds to spend in cooldown after being hurt before this goal can be used again. Game default 0.1.
-        landing_distance_from_target (float | NumberRange, optional): The range deciding how close to and how far away from the target the landing position can be when jumping.
+        landing_distance_from_target (float | tuple[float, float], optional): The range deciding how close to and how far away from the target the landing position can be when jumping.
         landing_position_spread_degrees (int, optional): This angle (in degrees) is used for controlling the spread when picking a landing position behind the target. Game default 90.
         last_hurt_duration (float, optional): If the entity was hurt within these last seconds, the jump_cooldown_when_hurt_duration will be used instead of jump_cooldown_duration. Game default 2.
         line_of_sight_obstruction_height_ignore (int, optional): If the entity's line of sight towards its target is obstructed by an obstacle with a height below this number, the obstacle will be ignored, and the goal will try to find a valid landing position. Game default 4.
@@ -1960,47 +1799,31 @@ class EntityAIJumpAroundTarget(AIGoal):
         prepare_jump_duration (float, optional): The time in seconds to spend preparing for the jump. Game default 0.5.
         required_vertical_space (int, optional): The number of blocks above the entity's head that has to be air for this goal to be usable. Game default 4.
         snap_to_surface_block_range (int, optional): The number of blocks above and below from the jump target position that will be checked to find a surface to land on. Game default 10.
-        valid_distance_to_target (float | NumberRange, optional): Target needs to be within this range for the jump to happen.
+        valid_distance_to_target (float | tuple[float, float], optional): Target needs to be within this range for the jump to happen.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_jump.around_target)
     """
 
     identifier = "minecraft:behavior.jump_around_target"
 
-    check_collision: bool | None = json_field(default=None, validators=[_boolean])
-    entity_bounding_box_scale: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    jump_angles: list[float] | None = json_field(
-        default=None, validators=[each(_number)]
-    )
-    jump_cooldown_duration: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    jump_cooldown_when_hurt_duration: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    landing_distance_from_target: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    landing_position_spread_degrees: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    last_hurt_duration: float | None = json_field(default=None, validators=[_number])
-    line_of_sight_obstruction_height_ignore: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    max_jump_velocity: float | None = json_field(default=None, validators=[_number])
-    prepare_jump_duration: float | None = json_field(default=None, validators=[_number])
-    required_vertical_space: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    snap_to_surface_block_range: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    valid_distance_to_target: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    check_collision: bool | None = json_field(default=None)
+    entity_bounding_box_scale: float | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    jump_angles: list[float] | None = json_field(default=None)
+    jump_cooldown_duration: float | None = json_field(default=None)
+    jump_cooldown_when_hurt_duration: float | None = json_field(default=None)
+    landing_distance_from_target: (
+        Annotated[float | tuple[float, float], MinMax] | None
+    ) = json_field(default=None)
+    landing_position_spread_degrees: int | None = json_field(default=None)
+    last_hurt_duration: float | None = json_field(default=None)
+    line_of_sight_obstruction_height_ignore: int | None = json_field(default=None)
+    max_jump_velocity: float | None = json_field(default=None)
+    prepare_jump_duration: float | None = json_field(default=None)
+    required_vertical_space: int | None = json_field(default=None)
+    snap_to_surface_block_range: int | None = json_field(default=None)
+    valid_distance_to_target: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
 
 
@@ -2010,12 +1833,12 @@ class EntityAIJumpToBlock(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        cooldown_range (float | NumberRange, optional): Minimum and maximum cooldown time-range (positive, in seconds) between each attempted jump.
-        forbidden_blocks (list[BlockReference], optional): Blocks that the mob can't jump to.
+        cooldown_range (float | tuple[float, float], optional): Minimum and maximum cooldown time-range (positive, in seconds) between each attempted jump.
+        forbidden_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks that the mob can't jump to.
         max_velocity (float, optional): The maximum velocity with which the mob can jump. Game default 1.5.
         minimum_distance (int, optional): The minimum distance (in blocks) from the mob to a block, in order to consider jumping to it. Game default 2.
         minimum_path_length (int, optional): The minimum length (in blocks) of the mobs path to a block, in order to consider jumping to it. Game default 5.
-        preferred_blocks (list[BlockReference], optional): Blocks that the mob prefers jumping to.
+        preferred_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks that the mob prefers jumping to.
         preferred_blocks_chance (float, optional): Chance (between 0.0 and 1.0) that the mob will jump to a preferred block, if in range. Only matters if preferred blocks are defined. Game default 1.
         scale_factor (float, optional): The scalefactor of the bounding box of the mob while it is jumping. Game default 0.7.
         search_height (int, optional): The height (in blocks, in range [1, 15]) of the search box, centered around the mob. Game default 10.
@@ -2026,27 +1849,27 @@ class EntityAIJumpToBlock(AIGoal):
 
     identifier = "minecraft:behavior.jump_to_block"
 
-    cooldown_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    cooldown_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    forbidden_blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
+    forbidden_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
+        default=None
     )
-    max_velocity: float | None = json_field(default=None, validators=[_number])
-    minimum_distance: int | None = json_field(default=None, validators=[_integer])
-    minimum_path_length: int | None = json_field(default=None, validators=[_integer])
-    preferred_blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
+    max_velocity: float | None = json_field(default=None)
+    minimum_distance: int | None = json_field(default=None)
+    minimum_path_length: int | None = json_field(default=None)
+    preferred_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
+        default=None
     )
-    preferred_blocks_chance: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
+    preferred_blocks_chance: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
-    scale_factor: float | None = json_field(default=None, validators=[_number])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1, maximum=15)]
+    scale_factor: float | None = json_field(default=None)
+    search_height: Annotated[int, InRange(minimum=1, maximum=15)] | None = json_field(
+        default=None
     )
-    search_width: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1, maximum=15)]
+    search_width: Annotated[int, InRange(minimum=1, maximum=15)] | None = json_field(
+        default=None
     )
 
 
@@ -2073,22 +1896,18 @@ class EntityAIKnockbackRoar(AIGoal):
 
     identifier = "minecraft:behavior.knockback_roar"
 
-    attack_time: float | None = json_field(default=None, validators=[_number])
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    damage_filters: Filter | None = json_field(default=None, validators=[_filter])
-    duration: float | None = json_field(default=None, validators=[_number])
-    knockback_damage: int | None = json_field(default=None, validators=[_integer])
-    knockback_filters: Filter | None = json_field(default=None, validators=[_filter])
-    knockback_height_cap: float | None = json_field(default=None, validators=[_number])
-    knockback_horizontal_strength: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    knockback_range: int | None = json_field(default=None, validators=[_integer])
-    knockback_vertical_strength: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    on_roar_end: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    attack_time: float | None = json_field(default=None)
+    cooldown_time: float | None = json_field(default=None)
+    damage_filters: Filter | None = json_field(default=None)
+    duration: float | None = json_field(default=None)
+    knockback_damage: int | None = json_field(default=None)
+    knockback_filters: Filter | None = json_field(default=None)
+    knockback_height_cap: float | None = json_field(default=None)
+    knockback_horizontal_strength: int | None = json_field(default=None)
+    knockback_range: int | None = json_field(default=None)
+    knockback_vertical_strength: int | None = json_field(default=None)
+    on_roar_end: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
 
 
@@ -2106,8 +1925,8 @@ class EntityAILayDown(AIGoal):
 
     identifier = "minecraft:behavior.lay_down"
 
-    interval: int | None = json_field(default=None, validators=[_integer])
-    random_stop_interval: int | None = json_field(default=None, validators=[_integer])
+    interval: int | None = json_field(default=None)
+    random_stop_interval: int | None = json_field(default=None)
 
 
 class EntityAILayEgg(AIGoal):
@@ -2117,7 +1936,7 @@ class EntityAILayEgg(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         allow_laying_from_below (bool, optional): Allows the mob to lay its eggs from below the target if it can't get there. This is useful if the target block is water with air above, since mobs may not be able to get to the air block above water. Game default false.
-        egg_type (BlockReference, optional): Block type for the egg to lay. If this is a turtle egg, the number of eggs in the block is randomly set. Game default minecraft:turtle_egg.
+        egg_type (str | MinecraftBlockDescriptor, optional): Block type for the egg to lay. If this is a turtle egg, the number of eggs in the block is randomly set. Game default minecraft:turtle_egg.
         goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Game default 0.5.
         lay_egg_sound (str, optional): Name of the sound event played when laying the egg. Defaults to lay_egg, which is used for Turtles. Game default lay_egg.
         lay_seconds (float, optional): Duration of the laying egg process in seconds. From 1.26.10 onward, `lay_seconds` only accepts values greater than or equal to 0; entity JSON with negative values will fail to load. Game default 10.
@@ -2125,7 +1944,7 @@ class EntityAILayEgg(AIGoal):
         search_height (int, optional): The height in blocks the mob will look for the block to move towards. Game default 1.
         search_range (int, optional): The distance in blocks it will look for the block to move towards. Game default 0.
         speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Game default 1.
-        target_blocks (list[BlockReference], optional): Blocks that the mob can lay its eggs on top of.
+        target_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks that the mob can lay its eggs on top of.
         target_materials_above_block (list[Literal["Air", "Lava", "Water"]], optional): Types of materials that can exist above the target block. Valid types are Air, Water, and Lava.
         use_default_animation (bool, optional): Specifies if the default lay-egg animation should be played when the egg is placed or not. Game default true.
 
@@ -2134,32 +1953,22 @@ class EntityAILayEgg(AIGoal):
 
     identifier = "minecraft:behavior.lay_egg"
 
-    allow_laying_from_below: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    egg_type: BlockReference | None = json_field(default=None, validators=[_block])
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    lay_egg_sound: str | None = json_field(default=None, validators=[_string])
-    lay_seconds: float | None = json_field(default=None, validators=[_number])
-    on_lay: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    target_blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
+    allow_laying_from_below: bool | None = json_field(default=None)
+    egg_type: str | MinecraftBlockDescriptor | None = json_field(default=None)
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    lay_egg_sound: str | None = json_field(default=None)
+    lay_seconds: float | None = json_field(default=None)
+    on_lay: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    target_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
+        default=None
     )
     target_materials_above_block: list[Literal["Air", "Lava", "Water"]] | None = (
-        json_field(default=None, validators=[each(one_of("Air", "Lava", "Water"))])
+        json_field(default=None)
     )
-    use_default_animation: bool | None = json_field(default=None, validators=[_boolean])
+    use_default_animation: bool | None = json_field(default=None)
 
 
 class EntityAILeapAtTarget(AIGoal):
@@ -2177,9 +1986,9 @@ class EntityAILeapAtTarget(AIGoal):
 
     identifier = "minecraft:behavior.leap_at_target"
 
-    must_be_on_ground: bool | None = json_field(default=None, validators=[_boolean])
-    set_persistent: bool | None = json_field(default=None, validators=[_boolean])
-    yd: float | None = json_field(default=None, validators=[_number])
+    must_be_on_ground: bool | None = json_field(default=None)
+    set_persistent: bool | None = json_field(default=None)
+    yd: float | None = json_field(default=None)
 
 
 class EntityAILookAtEntity(AIGoal):
@@ -2192,7 +2001,7 @@ class EntityAILookAtEntity(AIGoal):
         angle_of_view_vertical (int, optional): The angle in degrees that the mob can see rotated on the X-axis (up-down). Game default 360.
         filters (Filter, optional): Filter to determine the conditions for this mob to look at the entity.
         look_distance (float, optional): The distance in blocks from which the entity will look at the nearest entity. Game default 8.
-        look_time (float | NumberRange, optional): Time range to look at the nearest entity.
+        look_time (float | tuple[float, float], optional): Time range to look at the nearest entity.
         probability (float, optional): The probability of looking at the target. A value of 1.00 is 100%. Game default 0.02.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_entity)
@@ -2200,20 +2009,18 @@ class EntityAILookAtEntity(AIGoal):
 
     identifier = "minecraft:behavior.look_at_entity"
 
-    angle_of_view_horizontal: int | None = json_field(
-        default=None, validators=[_integer, in_range(maximum=360)]
+    angle_of_view_horizontal: Annotated[int, InRange(maximum=360)] | None = json_field(
+        default=None
     )
-    angle_of_view_vertical: int | None = json_field(
-        default=None, validators=[_integer, in_range(maximum=360)]
+    angle_of_view_vertical: Annotated[int, InRange(maximum=360)] | None = json_field(
+        default=None
     )
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    look_distance: float | None = json_field(default=None, validators=[_number])
-    look_time: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    filters: Filter | None = json_field(default=None)
+    look_distance: float | None = json_field(default=None)
+    look_time: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    probability: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
-    )
+    probability: Annotated[float, InRange(maximum=1)] | None = json_field(default=None)
 
 
 class EntityAILookAtPlayer(AIGoal):
@@ -2225,7 +2032,7 @@ class EntityAILookAtPlayer(AIGoal):
         angle_of_view_horizontal (int, optional): The angle in degrees that the mob can see rotated on the Y-axis (left-right). Game default 360.
         angle_of_view_vertical (int, optional): The angle in degrees that the mob can see rotated on the X-axis (up-down). Game default 360.
         look_distance (float, optional): The distance in blocks from which the entity will look at the nearest entity. Game default 8.
-        look_time (float | NumberRange, optional): Time range to look at the nearest entity.
+        look_time (float | tuple[float, float], optional): Time range to look at the nearest entity.
         max_look_time (float, optional):
         min_look_time (float, optional):
         probability (float, optional): The probability of looking at the target. A value of 1.00 is 100%. Game default 0.02.
@@ -2236,22 +2043,20 @@ class EntityAILookAtPlayer(AIGoal):
 
     identifier = "minecraft:behavior.look_at_player"
 
-    angle_of_view_horizontal: int | None = json_field(
-        default=None, validators=[_integer, in_range(maximum=360)]
+    angle_of_view_horizontal: Annotated[int, InRange(maximum=360)] | None = json_field(
+        default=None
     )
-    angle_of_view_vertical: int | None = json_field(
-        default=None, validators=[_integer, in_range(maximum=360)]
+    angle_of_view_vertical: Annotated[int, InRange(maximum=360)] | None = json_field(
+        default=None
     )
-    look_distance: float | None = json_field(default=None, validators=[_number])
-    look_time: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    look_distance: float | None = json_field(default=None)
+    look_time: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    max_look_time: float | None = json_field(default=None, validators=[_number])
-    min_look_time: float | None = json_field(default=None, validators=[_number])
-    probability: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
-    )
-    target_distance: float | None = json_field(default=None, validators=[_number])
+    max_look_time: float | None = json_field(default=None)
+    min_look_time: float | None = json_field(default=None)
+    probability: Annotated[float, InRange(maximum=1)] | None = json_field(default=None)
+    target_distance: float | None = json_field(default=None)
 
 
 class EntityAILookAtTarget(AIGoal):
@@ -2263,7 +2068,7 @@ class EntityAILookAtTarget(AIGoal):
         angle_of_view_horizontal (int, optional): The angle in degrees that the mob can see rotated on the Y-axis (left-right). Game default 360.
         angle_of_view_vertical (int, optional): The angle in degrees that the mob can see rotated on the X-axis (up-down). Game default 360.
         look_distance (float, optional): The distance in blocks from which the entity will look at the nearest entity. Game default 8.
-        look_time (float | NumberRange, optional): Time range to look at the nearest entity.
+        look_time (float | tuple[float, float], optional): Time range to look at the nearest entity.
         probability (float, optional): The probability of looking at the target. A value of 1.00 is 100%. Game default 0.02.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_target)
@@ -2271,19 +2076,17 @@ class EntityAILookAtTarget(AIGoal):
 
     identifier = "minecraft:behavior.look_at_target"
 
-    angle_of_view_horizontal: int | None = json_field(
-        default=None, validators=[_integer, in_range(maximum=360)]
+    angle_of_view_horizontal: Annotated[int, InRange(maximum=360)] | None = json_field(
+        default=None
     )
-    angle_of_view_vertical: int | None = json_field(
-        default=None, validators=[_integer, in_range(maximum=360)]
+    angle_of_view_vertical: Annotated[int, InRange(maximum=360)] | None = json_field(
+        default=None
     )
-    look_distance: float | None = json_field(default=None, validators=[_number])
-    look_time: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    look_distance: float | None = json_field(default=None)
+    look_time: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    probability: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
-    )
+    probability: Annotated[float, InRange(maximum=1)] | None = json_field(default=None)
 
 
 class EntityAILookAtTradingPlayer(AIGoal):
@@ -2295,7 +2098,7 @@ class EntityAILookAtTradingPlayer(AIGoal):
         angle_of_view_horizontal (int, optional): The angle in degrees that the mob can see rotated on the Y-axis (left-right). Game default 360.
         angle_of_view_vertical (int, optional): The angle in degrees that the mob can see rotated on the X-axis (up-down). Game default 360.
         look_distance (float, optional): The distance in blocks from which the entity will look at the nearest entity. Game default 8.
-        look_time (float | NumberRange, optional): Time range to look at the nearest entity.
+        look_time (float | tuple[float, float], optional): Time range to look at the nearest entity.
         probability (float, optional): The probability of looking at the target. A value of 1.00 is 100%. Game default 0.02.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_look_at_trading_player)
@@ -2303,19 +2106,17 @@ class EntityAILookAtTradingPlayer(AIGoal):
 
     identifier = "minecraft:behavior.look_at_trading_player"
 
-    angle_of_view_horizontal: int | None = json_field(
-        default=None, validators=[_integer, in_range(maximum=360)]
+    angle_of_view_horizontal: Annotated[int, InRange(maximum=360)] | None = json_field(
+        default=None
     )
-    angle_of_view_vertical: int | None = json_field(
-        default=None, validators=[_integer, in_range(maximum=360)]
+    angle_of_view_vertical: Annotated[int, InRange(maximum=360)] | None = json_field(
+        default=None
     )
-    look_distance: float | None = json_field(default=None, validators=[_number])
-    look_time: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    look_distance: float | None = json_field(default=None)
+    look_time: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    probability: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
-    )
+    probability: Annotated[float, InRange(maximum=1)] | None = json_field(default=None)
 
 
 class EntityAIMakeLove(AIGoal):
@@ -2364,37 +2165,27 @@ class EntityAIMeleeAttack(AIGoal):
 
     identifier = "minecraft:behavior.melee_attack"
 
-    attack_once: bool | None = json_field(default=None, validators=[_boolean])
-    attack_types: str | None = json_field(default=None, validators=[_string])
-    can_spread_on_fire: bool | None = json_field(default=None, validators=[_boolean])
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    inner_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    max_path_time: float | None = json_field(default=None, validators=[_number])
-    melee_fov: float | None = json_field(default=None, validators=[_number])
-    min_path_time: float | None = json_field(default=None, validators=[_number])
-    on_attack: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_kill: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    outer_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_fail_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_inner_boundary: float | None = json_field(default=None, validators=[_number])
-    path_outer_boundary: float | None = json_field(default=None, validators=[_number])
-    random_stop_interval: int | None = json_field(default=None, validators=[_integer])
-    reach_multiplier: float | None = json_field(default=None, validators=[_number])
-    require_complete_path: bool | None = json_field(default=None, validators=[_boolean])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    track_target: bool | None = json_field(default=None, validators=[_boolean])
-    x_max_rotation: float | None = json_field(default=None, validators=[_number])
-    y_max_head_rotation: float | None = json_field(default=None, validators=[_number])
+    attack_once: bool | None = json_field(default=None)
+    attack_types: str | None = json_field(default=None)
+    can_spread_on_fire: bool | None = json_field(default=None)
+    cooldown_time: float | None = json_field(default=None)
+    inner_boundary_time_increase: float | None = json_field(default=None)
+    max_path_time: float | None = json_field(default=None)
+    melee_fov: float | None = json_field(default=None)
+    min_path_time: float | None = json_field(default=None)
+    on_attack: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_kill: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    outer_boundary_time_increase: float | None = json_field(default=None)
+    path_fail_time_increase: float | None = json_field(default=None)
+    path_inner_boundary: float | None = json_field(default=None)
+    path_outer_boundary: float | None = json_field(default=None)
+    random_stop_interval: int | None = json_field(default=None)
+    reach_multiplier: float | None = json_field(default=None)
+    require_complete_path: bool | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    track_target: bool | None = json_field(default=None)
+    x_max_rotation: float | None = json_field(default=None)
+    y_max_head_rotation: float | None = json_field(default=None)
 
 
 class EntityAIMeleeBoxAttack(AIGoal):
@@ -2430,37 +2221,27 @@ class EntityAIMeleeBoxAttack(AIGoal):
 
     identifier = "minecraft:behavior.melee_box_attack"
 
-    attack_once: bool | None = json_field(default=None, validators=[_boolean])
-    attack_types: str | None = json_field(default=None, validators=[_string])
-    can_spread_on_fire: bool | None = json_field(default=None, validators=[_boolean])
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    horizontal_reach: float | None = json_field(default=None, validators=[_number])
-    inner_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    max_path_time: float | None = json_field(default=None, validators=[_number])
-    melee_fov: float | None = json_field(default=None, validators=[_number])
-    min_path_time: float | None = json_field(default=None, validators=[_number])
-    on_attack: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_kill: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    outer_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_fail_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_inner_boundary: float | None = json_field(default=None, validators=[_number])
-    path_outer_boundary: float | None = json_field(default=None, validators=[_number])
-    random_stop_interval: int | None = json_field(default=None, validators=[_integer])
-    require_complete_path: bool | None = json_field(default=None, validators=[_boolean])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    track_target: bool | None = json_field(default=None, validators=[_boolean])
-    x_max_rotation: float | None = json_field(default=None, validators=[_number])
-    y_max_head_rotation: float | None = json_field(default=None, validators=[_number])
+    attack_once: bool | None = json_field(default=None)
+    attack_types: str | None = json_field(default=None)
+    can_spread_on_fire: bool | None = json_field(default=None)
+    cooldown_time: float | None = json_field(default=None)
+    horizontal_reach: float | None = json_field(default=None)
+    inner_boundary_time_increase: float | None = json_field(default=None)
+    max_path_time: float | None = json_field(default=None)
+    melee_fov: float | None = json_field(default=None)
+    min_path_time: float | None = json_field(default=None)
+    on_attack: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_kill: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    outer_boundary_time_increase: float | None = json_field(default=None)
+    path_fail_time_increase: float | None = json_field(default=None)
+    path_inner_boundary: float | None = json_field(default=None)
+    path_outer_boundary: float | None = json_field(default=None)
+    random_stop_interval: int | None = json_field(default=None)
+    require_complete_path: bool | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    track_target: bool | None = json_field(default=None)
+    x_max_rotation: float | None = json_field(default=None)
+    y_max_head_rotation: float | None = json_field(default=None)
 
 
 class EntityAIMingle(AIGoal):
@@ -2480,13 +2261,13 @@ class EntityAIMingle(AIGoal):
 
     identifier = "minecraft:behavior.mingle"
 
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    duration: float | None = json_field(default=None, validators=[_number])
-    mingle_distance: float | None = json_field(default=None, validators=[_number])
+    cooldown_time: float | None = json_field(default=None)
+    duration: float | None = json_field(default=None)
+    mingle_distance: float | None = json_field(default=None)
     mingle_partner_type: MinecraftEntityDescriptor | str | None = json_field(
-        default=None, validators=[_entity]
+        default=None
     )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMountPathing(AIGoal):
@@ -2504,9 +2285,9 @@ class EntityAIMountPathing(AIGoal):
 
     identifier = "minecraft:behavior.mount_pathing"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    target_dist: float | None = json_field(default=None, validators=[_number])
-    track_target: bool | None = json_field(default=None, validators=[_boolean])
+    speed_multiplier: float | None = json_field(default=None)
+    target_dist: float | None = json_field(default=None)
+    track_target: bool | None = json_field(default=None)
 
 
 class EntityAIMoveAroundTarget(AIGoal):
@@ -2516,7 +2297,7 @@ class EntityAIMoveAroundTarget(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         destination_pos_spread_degrees (float, optional): This angle (in degrees) is used for controlling the spread when picking a destination position behind the target. Game default 90.
-        destination_position_range (float | NumberRange, optional): The range of distances from the target entity within which the goal should look for a position to move the owner entity to.
+        destination_position_range (float | tuple[float, float], optional): The range of distances from the target entity within which the goal should look for a position to move the owner entity to.
         filters (Filter, optional): Conditions that need to be met for the behavior to start.
         height_difference_limit (float, optional): Distance in height (in blocks) between the owner entity and the target has to be less than this value when owner checks if it is too close and should move away from the target. Game default 10.
         horizontal_search_distance (int, optional): Horizontal search distance (in blocks) when searching for a position to move away from target. Game default 5.
@@ -2528,23 +2309,15 @@ class EntityAIMoveAroundTarget(AIGoal):
 
     identifier = "minecraft:behavior.move_around_target"
 
-    destination_pos_spread_degrees: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    destination_position_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    height_difference_limit: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    horizontal_search_distance: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    movement_speed: float | None = json_field(default=None, validators=[_number])
-    vertical_search_distance: int | None = json_field(
-        default=None, validators=[_integer]
-    )
+    destination_pos_spread_degrees: float | None = json_field(default=None)
+    destination_position_range: (
+        Annotated[float | tuple[float, float], MinMax] | None
+    ) = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    height_difference_limit: float | None = json_field(default=None)
+    horizontal_search_distance: int | None = json_field(default=None)
+    movement_speed: float | None = json_field(default=None)
+    vertical_search_distance: int | None = json_field(default=None)
 
 
 class EntityAIMoveIndoors(AIGoal):
@@ -2561,8 +2334,8 @@ class EntityAIMoveIndoors(AIGoal):
 
     identifier = "minecraft:behavior.move_indoors"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    timeout_cooldown: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
+    timeout_cooldown: float | None = json_field(default=None)
 
 
 class EntityAIMoveOutdoors(AIGoal):
@@ -2583,12 +2356,12 @@ class EntityAIMoveOutdoors(AIGoal):
 
     identifier = "minecraft:behavior.move_outdoors"
 
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(default=None, validators=[_integer])
-    search_range: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    timeout_cooldown: float | None = json_field(default=None, validators=[_number])
+    goal_radius: float | None = json_field(default=None)
+    search_count: int | None = json_field(default=None)
+    search_height: int | None = json_field(default=None)
+    search_range: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    timeout_cooldown: float | None = json_field(default=None)
 
 
 class EntityAIMoveThroughVillage(AIGoal):
@@ -2605,8 +2378,8 @@ class EntityAIMoveThroughVillage(AIGoal):
 
     identifier = "minecraft:behavior.move_through_village"
 
-    only_at_night: bool | None = json_field(default=None, validators=[_boolean])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    only_at_night: bool | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveToBlock(AIGoal):
@@ -2624,8 +2397,8 @@ class EntityAIMoveToBlock(AIGoal):
         start_chance (float, optional): Chance to start the behavior (applied after each random tick_interval). Game default 1.
         stay_duration (float, optional): Number of ticks needed to complete a stay at the block. Game default 0.
         target_block_filters (Filter, optional): Conditions that need to be met for a block to be a valid target.
-        target_blocks (list[BlockReference], optional): Block types to move to.
-        target_offset (Vector3D, optional): Offset to add to the selected target position.
+        target_blocks (list[str | MinecraftBlockDescriptor], optional): Block types to move to.
+        target_offset (tuple[float, float, float], optional): Offset to add to the selected target position.
         target_selection_method (Literal["nearest", "random"], optional): Kind of block to find fitting the specification. Valid values are "random" and "nearest". Game default nearest.
         tick_interval (int, optional): Average interval in ticks to try to run this behavior. Game default 20.
 
@@ -2634,27 +2407,31 @@ class EntityAIMoveToBlock(AIGoal):
 
     identifier = "minecraft:behavior.move_to_block"
 
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    on_reach: EventTrigger | str | list[EventTrigger | str] | None = json_field(
-        default=None, validators=[_events], encoder=encoders.trigger
+    goal_radius: float | None = json_field(default=None)
+    on_reach: (
+        Annotated[EventTrigger | str, Trigger]
+        | list[Annotated[EventTrigger | str, Trigger]]
+        | None
+    ) = json_field(default=None)
+    on_stay_completed: (
+        Annotated[EventTrigger | str, Trigger]
+        | list[Annotated[EventTrigger | str, Trigger]]
+        | None
+    ) = json_field(default=None)
+    search_height: int | None = json_field(default=None)
+    search_range: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    start_chance: float | None = json_field(default=None)
+    stay_duration: float | None = json_field(default=None)
+    target_block_filters: Filter | None = json_field(default=None)
+    target_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
+        default=None
     )
-    on_stay_completed: EventTrigger | str | list[EventTrigger | str] | None = (
-        json_field(default=None, validators=[_events], encoder=encoders.trigger)
-    )
-    search_height: int | None = json_field(default=None, validators=[_integer])
-    search_range: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    start_chance: float | None = json_field(default=None, validators=[_number])
-    stay_duration: float | None = json_field(default=None, validators=[_number])
-    target_block_filters: Filter | None = json_field(default=None, validators=[_filter])
-    target_blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
-    )
-    target_offset: Vector3D | None = json_field(default=None, validators=[vector3])
+    target_offset: tuple[float, float, float] | None = json_field(default=None)
     target_selection_method: Literal["nearest", "random"] | None = json_field(
-        default=None, validators=[one_of("nearest", "random")]
+        default=None
     )
-    tick_interval: int | None = json_field(default=None, validators=[_integer])
+    tick_interval: int | None = json_field(default=None)
 
 
 class EntityAIMoveToLand(AIGoal):
@@ -2674,17 +2451,11 @@ class EntityAIMoveToLand(AIGoal):
 
     identifier = "minecraft:behavior.move_to_land"
 
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    search_count: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveToLava(AIGoal):
@@ -2702,19 +2473,11 @@ class EntityAIMoveToLava(AIGoal):
 
     identifier = "minecraft:behavior.move_to_lava"
 
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_count: int | None = json_field(
-        default=None, validators=[_integer, _positive]
-    )
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, _positive]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, _positive]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    search_count: Annotated[int, NonNegative] | None = json_field(default=None)
+    search_height: Annotated[int, NonNegative] | None = json_field(default=None)
+    search_range: Annotated[int, NonNegative] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveToLiquid(AIGoal):
@@ -2735,20 +2498,12 @@ class EntityAIMoveToLiquid(AIGoal):
 
     identifier = "minecraft:behavior.move_to_liquid"
 
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    material_type: Literal["Any", "Lava", "Water"] | None = json_field(
-        default=None, validators=[one_of("Any", "Lava", "Water")]
-    )
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    material_type: Literal["Any", "Lava", "Water"] | None = json_field(default=None)
+    search_count: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveToPOI(AIGoal):
@@ -2766,9 +2521,9 @@ class EntityAIMoveToPOI(AIGoal):
     identifier = "minecraft:behavior.move_to_poi"
 
     poi_type: Literal["bed", "jobsite", "meeting_area"] | None = json_field(
-        default=None, validators=[one_of("bed", "jobsite", "meeting_area")]
+        default=None
     )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveToRandomBlock(AIGoal):
@@ -2786,9 +2541,9 @@ class EntityAIMoveToRandomBlock(AIGoal):
 
     identifier = "minecraft:behavior.move_to_random_block"
 
-    block_distance: float | None = json_field(default=None, validators=[_number])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    block_distance: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAIMoveToVillage(AIGoal):
@@ -2807,10 +2562,10 @@ class EntityAIMoveToVillage(AIGoal):
 
     identifier = "minecraft:behavior.move_to_village"
 
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    search_range: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    cooldown_time: float | None = json_field(default=None)
+    goal_radius: float | None = json_field(default=None)
+    search_range: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveToWater(AIGoal):
@@ -2830,17 +2585,11 @@ class EntityAIMoveToWater(AIGoal):
 
     identifier = "minecraft:behavior.move_to_water"
 
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    search_count: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveTowardsDwellingRestriction(AIGoal):
@@ -2856,7 +2605,7 @@ class EntityAIMoveTowardsDwellingRestriction(AIGoal):
 
     identifier = "minecraft:behavior.move_towards_dwelling_restriction"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveTowardsHomeRestriction(AIGoal):
@@ -2872,7 +2621,7 @@ class EntityAIMoveTowardsHomeRestriction(AIGoal):
 
     identifier = "minecraft:behavior.move_towards_home_restriction"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveTowardsRestriction(AIGoal):
@@ -2888,7 +2637,7 @@ class EntityAIMoveTowardsRestriction(AIGoal):
 
     identifier = "minecraft:behavior.move_towards_restriction"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIMoveTowardsTarget(AIGoal):
@@ -2905,8 +2654,8 @@ class EntityAIMoveTowardsTarget(AIGoal):
 
     identifier = "minecraft:behavior.move_towards_target"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAINap(AIGoal):
@@ -2927,12 +2676,12 @@ class EntityAINap(AIGoal):
 
     identifier = "minecraft:behavior.nap"
 
-    can_nap_filters: Filter | None = json_field(default=None, validators=[_filter])
-    cooldown_max: float | None = json_field(default=None, validators=[_number])
-    cooldown_min: float | None = json_field(default=None, validators=[_number])
-    mob_detect_dist: float | None = json_field(default=None, validators=[_number])
-    mob_detect_height: float | None = json_field(default=None, validators=[_number])
-    wake_mob_exceptions: Filter | None = json_field(default=None, validators=[_filter])
+    can_nap_filters: Filter | None = json_field(default=None)
+    cooldown_max: float | None = json_field(default=None)
+    cooldown_min: float | None = json_field(default=None)
+    mob_detect_dist: float | None = json_field(default=None)
+    mob_detect_height: float | None = json_field(default=None)
+    wake_mob_exceptions: Filter | None = json_field(default=None)
 
 
 class EntityAINearestAttackableTarget(EntityTypesAIGoal):
@@ -2941,7 +2690,7 @@ class EntityAINearestAttackableTarget(EntityTypesAIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        attack_interval (float | NumberRange, optional): Time range (in seconds) between searching for an attack target, range is in (0, "attack_interval"].
+        attack_interval (float | tuple[float, float], optional): Time range (in seconds) between searching for an attack target, range is in (0, "attack_interval"].
         attack_interval_min (float, optional): Minimum time in seconds between searches for an attack target.
         attack_owner (bool, optional): If true, this entity can attack its owner. Game default false.
         entity_types (list[GoalEntityType], optional): List of entity types that this mob considers valid targets. Add entries with `add_entity_type`.
@@ -2963,33 +2712,25 @@ class EntityAINearestAttackableTarget(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.nearest_attackable_target"
 
-    attack_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    attack_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    attack_interval_min: float | None = json_field(default=None, validators=[_positive])
-    attack_owner: bool | None = json_field(default=None, validators=[_boolean])
-    must_reach: bool | None = json_field(default=None, validators=[_boolean])
-    must_see: bool | None = json_field(default=None, validators=[_boolean])
-    must_see_forget_duration: float | None = json_field(
-        default=None, validators=[_number]
+    attack_interval_min: Annotated[float, NonNegative] | None = json_field(default=None)
+    attack_owner: bool | None = json_field(default=None)
+    must_reach: bool | None = json_field(default=None)
+    must_see: bool | None = json_field(default=None)
+    must_see_forget_duration: float | None = json_field(default=None)
+    persist_time: float | None = json_field(default=None)
+    reselect_targets: bool | None = json_field(default=None)
+    scan_interval: int | None = json_field(default=None)
+    set_persistent: bool | None = json_field(default=None)
+    target_acquisition_probability: float | None = json_field(default=None)
+    target_invisible_multiplier: float | None = json_field(default=None)
+    target_search_height: Annotated[float, InRange(minimum=-1)] | None = json_field(
+        default=None
     )
-    persist_time: float | None = json_field(default=None, validators=[_number])
-    reselect_targets: bool | None = json_field(default=None, validators=[_boolean])
-    scan_interval: int | None = json_field(default=None, validators=[_integer])
-    set_persistent: bool | None = json_field(default=None, validators=[_boolean])
-    target_acquisition_probability: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    target_invisible_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    target_search_height: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=-1)]
-    )
-    target_sneak_visibility_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    target_sneak_visibility_multiplier: float | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAINearestPrioritizedAttackableTarget(EntityTypesAIGoal):
@@ -3017,20 +2758,18 @@ class EntityAINearestPrioritizedAttackableTarget(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.nearest_prioritized_attackable_target"
 
-    attack_interval: int | None = json_field(default=None, validators=[_integer])
-    cooldown: float | None = json_field(default=None, validators=[_number])
-    hurt_owner: bool | None = json_field(default=None, validators=[_boolean])
-    must_reach: bool | None = json_field(default=None, validators=[_boolean])
-    must_see: bool | None = json_field(default=None, validators=[_boolean])
-    must_see_forget_duration: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    persist_time: float | None = json_field(default=None, validators=[_number])
-    reselect_targets: bool | None = json_field(default=None, validators=[_boolean])
-    scan_interval: int | None = json_field(default=None, validators=[_integer])
-    set_persistent: bool | None = json_field(default=None, validators=[_boolean])
-    target_search_height: float | None = json_field(default=None, validators=[_number])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    attack_interval: int | None = json_field(default=None)
+    cooldown: float | None = json_field(default=None)
+    hurt_owner: bool | None = json_field(default=None)
+    must_reach: bool | None = json_field(default=None)
+    must_see: bool | None = json_field(default=None)
+    must_see_forget_duration: float | None = json_field(default=None)
+    persist_time: float | None = json_field(default=None)
+    reselect_targets: bool | None = json_field(default=None)
+    scan_interval: int | None = json_field(default=None)
+    set_persistent: bool | None = json_field(default=None)
+    target_search_height: float | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAIOcelotAttack(AIGoal):
@@ -3055,36 +2794,18 @@ class EntityAIOcelotAttack(AIGoal):
 
     identifier = "minecraft:behavior.ocelotattack"
 
-    cooldown_time: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
+    cooldown_time: Annotated[float, Positive] | None = json_field(default=None)
+    max_distance: Annotated[float, Positive] | None = json_field(default=None)
+    max_sneak_range: Annotated[float, Positive] | None = json_field(default=None)
+    max_sprint_range: Annotated[float, Positive] | None = json_field(default=None)
+    reach_multiplier: Annotated[float, Positive] | None = json_field(default=None)
+    sneak_speed_multiplier: Annotated[float, Positive] | None = json_field(default=None)
+    sprint_speed_multiplier: Annotated[float, Positive] | None = json_field(
+        default=None
     )
-    max_distance: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    max_sneak_range: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    max_sprint_range: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    reach_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    sneak_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    sprint_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    walk_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    x_max_rotation: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    y_max_head_rotation: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
+    walk_speed_multiplier: Annotated[float, Positive] | None = json_field(default=None)
+    x_max_rotation: Annotated[float, Positive] | None = json_field(default=None)
+    y_max_head_rotation: Annotated[float, Positive] | None = json_field(default=None)
 
 
 class EntityAIOcelotSitOnBlock(AIGoal):
@@ -3100,7 +2821,7 @@ class EntityAIOcelotSitOnBlock(AIGoal):
 
     identifier = "minecraft:behavior.ocelot_sit_on_block"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIOfferFlower(AIGoal):
@@ -3114,23 +2835,21 @@ class EntityAIOfferFlower(AIGoal):
         max_head_rotation_y (float, optional): Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. Game default 30.
         max_offer_flower_duration (float, optional): The max amount of time (in seconds) that the mob will offer the flower for before exiting the Goal. Game default 20.
         max_rotation_x (float, optional): Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. Game default 30.
-        search_area (Vector3D, optional): The dimensions of the AABB used to search for a potential mob to offer flower to.
+        search_area (tuple[float, float, float], optional): The dimensions of the AABB used to search for a potential mob to offer flower to.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_offer_flower)
     """
 
     identifier = "minecraft:behavior.offer_flower"
 
-    chance_to_start: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
+    chance_to_start: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    max_head_rotation_y: float | None = json_field(default=None, validators=[_number])
-    max_offer_flower_duration: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    max_rotation_x: float | None = json_field(default=None, validators=[_number])
-    search_area: Vector3D | None = json_field(default=None, validators=[vector3])
+    filters: Filter | None = json_field(default=None)
+    max_head_rotation_y: float | None = json_field(default=None)
+    max_offer_flower_duration: float | None = json_field(default=None)
+    max_rotation_x: float | None = json_field(default=None)
+    search_area: tuple[float, float, float] | None = json_field(default=None)
 
 
 class EntityAIOpenDoor(AIGoal):
@@ -3146,7 +2865,7 @@ class EntityAIOpenDoor(AIGoal):
 
     identifier = "minecraft:behavior.open_door"
 
-    close_door_after: bool | None = json_field(default=None, validators=[_boolean])
+    close_door_after: bool | None = json_field(default=None)
 
 
 class EntityAIOwnerHurtByTarget(EntityTypesAIGoal):
@@ -3188,7 +2907,7 @@ class EntityAIPanic(AIGoal):
         ignore_mob_damage (bool, optional): If true, the mob will not panic in response to damage from other mobs. This overrides the damage types in "damage_sources". Game default false.
         panic_sound (str, optional): Sound to play while the mob is panicking.
         prefer_water (bool, optional): If true, the mob will prefer water over land. Game default false.
-        sound_interval (float | NumberRange, optional): Range of random ticks to wait between playing the panic sound.
+        sound_interval (float | tuple[float, float], optional): Range of random ticks to wait between playing the panic sound.
         speed_multiplier (float, optional): Movement speed multiplier when using this goal. Game default 1.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_panic)
@@ -3196,17 +2915,15 @@ class EntityAIPanic(AIGoal):
 
     identifier = "minecraft:behavior.panic"
 
-    damage_sources: list[DamageCause] | None = json_field(
-        default=None, validators=[each(_damage_cause)]
+    damage_sources: list[DamageCause] | None = json_field(default=None)
+    force: bool | None = json_field(default=None)
+    ignore_mob_damage: bool | None = json_field(default=None)
+    panic_sound: str | None = json_field(default=None)
+    prefer_water: bool | None = json_field(default=None)
+    sound_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    force: bool | None = json_field(default=None, validators=[_boolean])
-    ignore_mob_damage: bool | None = json_field(default=None, validators=[_boolean])
-    panic_sound: str | None = json_field(default=None, validators=[_string])
-    prefer_water: bool | None = json_field(default=None, validators=[_boolean])
-    sound_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIPetSleepWithOwner(AIGoal):
@@ -3225,10 +2942,10 @@ class EntityAIPetSleepWithOwner(AIGoal):
 
     identifier = "minecraft:behavior.pet_sleep_with_owner"
 
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    search_height: int | None = json_field(default=None, validators=[_integer])
-    search_range: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: float | None = json_field(default=None)
+    search_height: int | None = json_field(default=None)
+    search_range: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIPickupItems(AIGoal):
@@ -3240,7 +2957,7 @@ class EntityAIPickupItems(AIGoal):
         can_pickup_any_item (bool, optional): If true, the mob can pick up any item. Game default false.
         can_pickup_to_hand_or_equipment (bool, optional): If true, the mob can pick up items to its hand or armor slots. Game default true.
         cooldown_after_being_attacked (int, optional): Time in seconds the mob cannot pickup items after being attacked. Game default 0.
-        excluded_items (list[ItemReference], optional): List of items this mob will not pick up.
+        excluded_items (list[str | MinecraftItemDescriptor], optional): List of items this mob will not pick up.
         goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Game default 0.5.
         max_dist (int, optional): Maximum distance this mob will look for items to pick up. Game default 1.
         on_pickup_item_end (EventTrigger | str, optional): Event to run when this mob either finishes or loses interest in picking up an item.
@@ -3257,34 +2974,26 @@ class EntityAIPickupItems(AIGoal):
 
     identifier = "minecraft:behavior.pickup_items"
 
-    can_pickup_any_item: bool | None = json_field(default=None, validators=[_boolean])
-    can_pickup_to_hand_or_equipment: bool | None = json_field(
-        default=None, validators=[_boolean]
+    can_pickup_any_item: bool | None = json_field(default=None)
+    can_pickup_to_hand_or_equipment: bool | None = json_field(default=None)
+    cooldown_after_being_attacked: int | None = json_field(default=None)
+    excluded_items: list[str | MinecraftItemDescriptor] | None = json_field(
+        default=None
     )
-    cooldown_after_being_attacked: int | None = json_field(
-        default=None, validators=[_integer]
+    goal_radius: float | None = json_field(default=None)
+    max_dist: int | None = json_field(default=None)
+    on_pickup_item_end: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    excluded_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
+    on_pickup_item_start: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    max_dist: int | None = json_field(default=None, validators=[_integer])
-    on_pickup_item_end: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_pickup_item_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    pickup_based_on_chance: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    pickup_same_items_as_in_hand: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    search_height: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    stop_if_holding_item: bool | None = json_field(default=None, validators=[_boolean])
-    track_target: bool | None = json_field(default=None, validators=[_boolean])
+    pickup_based_on_chance: bool | None = json_field(default=None)
+    pickup_same_items_as_in_hand: bool | None = json_field(default=None)
+    search_height: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    stop_if_holding_item: bool | None = json_field(default=None)
+    track_target: bool | None = json_field(default=None)
 
 
 class EntityAIPlaceBlock(AIGoal):
@@ -3297,7 +3006,7 @@ class EntityAIPlaceBlock(AIGoal):
         can_place (Filter, optional): Filters for if the entity should try to place its block. Self and Target are set.
         chance (float, optional): Chance each tick for the entity to try and place a block. Game default 1.
         on_place (EventTrigger | str, optional): Trigger ran if the entity does place its block. Self, Target, and Block are set.
-        placeable_carried_blocks (list[BlockReference], optional): Block descriptors for which blocks are valid to be placed from the entity's carried item, if empty all blocks are valid.
+        placeable_carried_blocks (list[str | MinecraftBlockDescriptor], optional): Block descriptors for which blocks are valid to be placed from the entity's carried item, if empty all blocks are valid.
         randomly_placeable_blocks (list[PlaceableBlock], optional): Weighted block descriptors for which blocks should be randomly placed, if empty the entity will try to place its carried block from placeable_carried_blocks. Add more with `add_randomly_placeable_block`.
         xz_range (tuple[int, int], optional): XZ range from which the entity will try and place blocks in.
         y_range (tuple[int, int], optional): Y range from which the entity will try and place blocks in.
@@ -3307,35 +3016,23 @@ class EntityAIPlaceBlock(AIGoal):
 
     identifier = "minecraft:behavior.place_block"
 
-    affected_by_griefing_rule: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    can_place: Filter | None = json_field(default=None, validators=[_filter])
-    chance: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
-    )
-    on_place: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    placeable_carried_blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks], encoder=encoders.block_objects
-    )
+    affected_by_griefing_rule: bool | None = json_field(default=None)
+    can_place: Filter | None = json_field(default=None)
+    chance: Annotated[float, InRange(maximum=1)] | None = json_field(default=None)
+    on_place: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    placeable_carried_blocks: (
+        list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None
+    ) = json_field(default=None)
     randomly_placeable_blocks: list[PlaceableBlock] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(PlaceableBlock))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    xz_range: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair], encoder=encoders.min_max
-    )
-    y_range: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair], encoder=encoders.min_max
-    )
+    xz_range: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
+    y_range: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
 
     def add_randomly_placeable_block(
         self,
         *,
-        block: BlockReference,
+        block: str | MinecraftBlockDescriptor,
         filter: Filter | None = None,
         weight: int | None = None,
     ) -> "EntityAIPlaceBlock":
@@ -3354,7 +3051,7 @@ class EntityAIPlay(AIGoal):
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         chance_to_start (float, optional): Percent chance that the mob will start this goal, from 0 to 1. Game default 0.0025.
         follow_distance (int, optional): The distance (in blocks) that the mob tries to be in range of the friend it's following. Game default 2.
-        friend_search_area (Vector3D, optional): The dimensions of the AABB used to search for a potential friend to play with.
+        friend_search_area (tuple[float, float, float], optional): The dimensions of the AABB used to search for a potential friend to play with.
         friend_types (list[GoalEntityType], optional): The entity type(s) to consider when searching for a potential friend to play with. Add more with `add_friend_type`.
         max_play_duration_seconds (float, optional): The max amount of seconds that the mob will play for before exiting the Goal. Game default 50.
         random_pos_search_height (int, optional): The height (in blocks) that the mob will search within to find a random position position to move to. Must be at least 1. Game default 3.
@@ -3366,26 +3063,22 @@ class EntityAIPlay(AIGoal):
 
     identifier = "minecraft:behavior.play"
 
-    chance_to_start: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
+    chance_to_start: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
-    follow_distance: int | None = json_field(default=None, validators=[_integer])
-    friend_search_area: Vector3D | None = json_field(default=None, validators=[vector3])
+    follow_distance: int | None = json_field(default=None)
+    friend_search_area: tuple[float, float, float] | None = json_field(default=None)
     friend_types: list[GoalEntityType] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(GoalEntityType))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    max_play_duration_seconds: float | None = json_field(
-        default=None, validators=[_number]
+    max_play_duration_seconds: float | None = json_field(default=None)
+    random_pos_search_height: Annotated[int, AtLeastOne] | None = json_field(
+        default=None
     )
-    random_pos_search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
+    random_pos_search_range: Annotated[int, AtLeastOne] | None = json_field(
+        default=None
     )
-    random_pos_search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
     def add_friend_type(
         self,
@@ -3442,17 +3135,15 @@ class EntityAIPlayDead(AIGoal):
 
     identifier = "minecraft:behavior.play_dead"
 
-    apply_regeneration: bool | None = json_field(default=None, validators=[_boolean])
-    damage_sources: list[DamageCause] | None = json_field(
-        default=None, validators=[each(_damage_cause)]
+    apply_regeneration: bool | None = json_field(default=None)
+    damage_sources: list[DamageCause] | None = json_field(default=None)
+    duration: float | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    force_below_health: int | None = json_field(default=None)
+    random_damage_range: Annotated[tuple[int, int], MinMax] | None = json_field(
+        default=None
     )
-    duration: float | None = json_field(default=None, validators=[_number])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    force_below_health: int | None = json_field(default=None, validators=[_integer])
-    random_damage_range: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair], encoder=encoders.min_max
-    )
-    random_start_chance: float | None = json_field(default=None, validators=[_number])
+    random_start_chance: float | None = json_field(default=None)
 
 
 class EntityAIPlayerRideTamed(AIGoal):
@@ -3474,7 +3165,7 @@ class EntityAIRaidGarden(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        blocks (list[BlockReference], optional): Blocks that the mob is looking for to eat/raid.
+        blocks (list[str | MinecraftBlockDescriptor], optional): Blocks that the mob is looking for to eat/raid.
         eat_delay (int, optional): Time in seconds between each time it eats/raids. Game default 2.
         full_delay (int, optional): Amount of time in seconds before this mob wants to eat/raid again after eating its maximum. Game default 100.
         goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Game default 0.5.
@@ -3489,21 +3180,15 @@ class EntityAIRaidGarden(AIGoal):
 
     identifier = "minecraft:behavior.raid_garden"
 
-    blocks: list[BlockReference] | None = json_field(default=None, validators=[_blocks])
-    eat_delay: int | None = json_field(default=None, validators=[_integer])
-    full_delay: int | None = json_field(default=None, validators=[_integer])
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    initial_eat_delay: int | None = json_field(default=None, validators=[_integer])
-    max_to_eat: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    blocks: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
+    eat_delay: int | None = json_field(default=None)
+    full_delay: int | None = json_field(default=None)
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    initial_eat_delay: int | None = json_field(default=None)
+    max_to_eat: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIRamAttack(AIGoal):
@@ -3513,7 +3198,7 @@ class EntityAIRamAttack(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         baby_knockback_modifier (float, optional): The modifier to knockback that babies have. Game default 0.3333.
-        cooldown_range (float | NumberRange, optional): Minimum and maximum cooldown time-range (positive, in seconds) between each attempted ram attack.
+        cooldown_range (float | tuple[float, float], optional): Minimum and maximum cooldown time-range (positive, in seconds) between each attempted ram attack.
         knockback_force (float, optional): The force of the knockback of the ram attack. Game default 5.
         knockback_height (float, optional): The height of the knockback of the ram attack. Game default 0.1.
         min_ram_distance (int, optional): The minimum distance at which the mob can start a ram attack. Game default 4.
@@ -3529,23 +3214,19 @@ class EntityAIRamAttack(AIGoal):
 
     identifier = "minecraft:behavior.ram_attack"
 
-    baby_knockback_modifier: float | None = json_field(
-        default=None, validators=[_number]
+    baby_knockback_modifier: float | None = json_field(default=None)
+    cooldown_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    cooldown_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    knockback_force: float | None = json_field(default=None, validators=[_number])
-    knockback_height: float | None = json_field(default=None, validators=[_number])
-    min_ram_distance: int | None = json_field(default=None, validators=[_integer])
-    on_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    pre_ram_sound: str | None = json_field(default=None, validators=[_string])
-    ram_distance: int | None = json_field(default=None, validators=[_integer])
-    ram_impact_sound: str | None = json_field(default=None, validators=[_string])
-    ram_speed: float | None = json_field(default=None, validators=[_number])
-    run_speed: float | None = json_field(default=None, validators=[_number])
+    knockback_force: float | None = json_field(default=None)
+    knockback_height: float | None = json_field(default=None)
+    min_ram_distance: int | None = json_field(default=None)
+    on_start: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    pre_ram_sound: str | None = json_field(default=None)
+    ram_distance: int | None = json_field(default=None)
+    ram_impact_sound: str | None = json_field(default=None)
+    ram_speed: float | None = json_field(default=None)
+    run_speed: float | None = json_field(default=None)
 
 
 class EntityAIRandomBreach(AIGoal):
@@ -3565,15 +3246,11 @@ class EntityAIRandomBreach(AIGoal):
 
     identifier = "minecraft:behavior.random_breach"
 
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    interval: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    xz_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
+    cooldown_time: float | None = json_field(default=None)
+    interval: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    xz_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
 
 
 class EntityAIRandomFly(AIGoal):
@@ -3594,16 +3271,12 @@ class EntityAIRandomFly(AIGoal):
 
     identifier = "minecraft:behavior.random_fly"
 
-    avoid_damage_blocks: bool | None = json_field(default=None, validators=[_boolean])
-    can_land_on_trees: bool | None = json_field(default=None, validators=[_boolean])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    xz_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_offset: float | None = json_field(default=None, validators=[_number])
+    avoid_damage_blocks: bool | None = json_field(default=None)
+    can_land_on_trees: bool | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    xz_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_offset: float | None = json_field(default=None)
 
 
 class EntityAIRandomHover(AIGoal):
@@ -3624,18 +3297,12 @@ class EntityAIRandomHover(AIGoal):
 
     identifier = "minecraft:behavior.random_hover"
 
-    hover_height: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair], encoder=encoders.min_max
-    )
-    interval: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    xz_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_offset: float | None = json_field(default=None, validators=[_number])
+    hover_height: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
+    interval: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    xz_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_offset: float | None = json_field(default=None)
 
 
 class EntityAIRandomLookAround(AIGoal):
@@ -3654,16 +3321,10 @@ class EntityAIRandomLookAround(AIGoal):
 
     identifier = "minecraft:behavior.random_look_around"
 
-    look_time: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair], encoder=encoders.min_max
-    )
-    max_angle_of_view_horizontal: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    min_angle_of_view_horizontal: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    probability: float | None = json_field(default=None, validators=[_number])
+    look_time: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
+    max_angle_of_view_horizontal: float | None = json_field(default=None)
+    min_angle_of_view_horizontal: float | None = json_field(default=None)
+    probability: float | None = json_field(default=None)
 
 
 class EntityAIRandomLookAroundAndSit(AIGoal):
@@ -3688,24 +3349,16 @@ class EntityAIRandomLookAroundAndSit(AIGoal):
 
     identifier = "minecraft:behavior.random_look_around_and_sit"
 
-    continue_if_leashed: bool | None = json_field(default=None, validators=[_boolean])
-    continue_sitting_on_reload: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    max_angle_of_view_horizontal: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    max_look_count: int | None = json_field(default=None, validators=[_integer])
-    max_look_time: int | None = json_field(default=None, validators=[_integer])
-    min_angle_of_view_horizontal: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    min_look_count: int | None = json_field(default=None, validators=[_integer])
-    min_look_time: int | None = json_field(default=None, validators=[_integer])
-    probability: float | None = json_field(default=None, validators=[_number])
-    random_look_around_cooldown: int | None = json_field(
-        default=None, validators=[_integer]
-    )
+    continue_if_leashed: bool | None = json_field(default=None)
+    continue_sitting_on_reload: bool | None = json_field(default=None)
+    max_angle_of_view_horizontal: float | None = json_field(default=None)
+    max_look_count: int | None = json_field(default=None)
+    max_look_time: int | None = json_field(default=None)
+    min_angle_of_view_horizontal: float | None = json_field(default=None)
+    min_look_count: int | None = json_field(default=None)
+    min_look_time: int | None = json_field(default=None)
+    probability: float | None = json_field(default=None)
+    random_look_around_cooldown: int | None = json_field(default=None)
 
 
 class EntityAIRandomSearchAndDig(AIGoal):
@@ -3714,8 +3367,8 @@ class EntityAIRandomSearchAndDig(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        cooldown_range (float | NumberRange, optional): Goal cooldown range in seconds.
-        digging_duration_range (float | NumberRange, optional): Digging duration in seconds.
+        cooldown_range (float | tuple[float, float], optional): Goal cooldown range in seconds.
+        digging_duration_range (float | tuple[float, float], optional): Digging duration in seconds.
         find_valid_position_retries (int, optional): Amount of retries to find a valid target position within search range. Game default 5.
         goal_radius (float, optional): Distance in blocks within the entity to considers it has reached it's target position. Game default 1.5.
         item_table (LootTable | str, optional): File path relative to the resource pack root for items to spawn list (loot table format).
@@ -3730,7 +3383,7 @@ class EntityAIRandomSearchAndDig(AIGoal):
         spawn_item_after_seconds (float, optional): Digging duration before spawning item in seconds. Game default 0.
         spawn_item_pos_offset (float, optional): Distance to offset the item's spawn location in the direction the mob is facing. Game default 0.
         speed_multiplier (float, optional): Searching movement speed multiplier. Game default 1.
-        target_blocks (list[BlockReference], optional): List of target block types the goal will look to dig on. Overrides the default list.
+        target_blocks (list[str | MinecraftBlockDescriptor], optional): List of target block types the goal will look to dig on. Overrides the default list.
         target_dig_position_offset (float, optional): Dig target position offset from the feet position of the mob in their facing direction. Game default 2.25.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_search_and_dig)
@@ -3738,50 +3391,40 @@ class EntityAIRandomSearchAndDig(AIGoal):
 
     identifier = "minecraft:behavior.random_search_and_dig"
 
-    cooldown_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    cooldown_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    digging_duration_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    digging_duration_range: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
-    find_valid_position_retries: int | None = json_field(
-        default=None, validators=[_integer]
+    find_valid_position_retries: int | None = json_field(default=None)
+    goal_radius: float | None = json_field(default=None)
+    item_table: LootTable | str | None = json_field(default=None)
+    on_digging_start: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    item_table: LootTable | str | None = json_field(
-        default=None, validators=[instance_of(LootTable, str)]
+    on_fail_during_digging: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_digging_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_fail_during_searching: Annotated[EventTrigger | str, Trigger] | None = (
+        json_field(default=None)
     )
-    on_fail_during_digging: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_item_found: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_fail_during_searching: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_searching_start: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_item_found: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_searching_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_success: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    search_range_xz: int | None = json_field(default=None, validators=[_integer])
-    search_range_y: int | None = json_field(default=None, validators=[_integer])
-    spawn_item_after_seconds: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    spawn_item_pos_offset: float | None = json_field(default=None, validators=[_number])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    target_blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks], encoder=encoders.block_objects
-    )
-    target_dig_position_offset: float | None = json_field(
-        default=None, validators=[_number]
-    )
+    on_success: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    search_range_xz: int | None = json_field(default=None)
+    search_range_y: int | None = json_field(default=None)
+    spawn_item_after_seconds: float | None = json_field(default=None)
+    spawn_item_pos_offset: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    target_blocks: (
+        list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None
+    ) = json_field(default=None)
+    target_dig_position_offset: float | None = json_field(default=None)
 
 
 class EntityAIRandomSitting(AIGoal):
@@ -3801,11 +3444,11 @@ class EntityAIRandomSitting(AIGoal):
 
     identifier = "minecraft:behavior.random_sitting"
 
-    cooldown: float | None = json_field(default=None, validators=[_number])
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    min_sit_time: float | None = json_field(default=None, validators=[_number])
-    start_chance: float | None = json_field(default=None, validators=[_number])
-    stop_chance: float | None = json_field(default=None, validators=[_number])
+    cooldown: float | None = json_field(default=None)
+    cooldown_time: float | None = json_field(default=None)
+    min_sit_time: float | None = json_field(default=None)
+    start_chance: float | None = json_field(default=None)
+    stop_chance: float | None = json_field(default=None)
 
 
 class EntityAIRandomStroll(AIGoal):
@@ -3824,14 +3467,10 @@ class EntityAIRandomStroll(AIGoal):
 
     identifier = "minecraft:behavior.random_stroll"
 
-    interval: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    xz_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
+    interval: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    xz_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
 
 
 class EntityAIRandomSwim(AIGoal):
@@ -3851,15 +3490,11 @@ class EntityAIRandomSwim(AIGoal):
 
     identifier = "minecraft:behavior.random_swim"
 
-    avoid_surface: bool | None = json_field(default=None, validators=[_boolean])
-    interval: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    xz_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    y_dist: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
+    avoid_surface: bool | None = json_field(default=None)
+    interval: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    xz_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    y_dist: Annotated[int, AtLeastOne] | None = json_field(default=None)
 
 
 class EntityAIRangedAttack(AIGoal):
@@ -3868,10 +3503,10 @@ class EntityAIRangedAttack(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        attack_interval (float | NumberRange, optional): Reload-time range (in seconds), when not using a charged shot.
+        attack_interval (float | tuple[float, float], optional): Reload-time range (in seconds), when not using a charged shot.
         attack_interval_max (float, optional): Maximum bound for reload-time range (in seconds), when not using a charged shot. Reload-time range scales with target-distance. Game default 0.
         attack_interval_min (float, optional): Minimum bound for reload-time range (in seconds), when not using a charged shot. Reload-time range scales with target-distance. Game default 0.
-        attack_range (float | NumberRange, optional): Range of distances from the target within which the entity can perform a ranged attack. Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
+        attack_range (float | tuple[float, float], optional): Range of distances from the target within which the entity can perform a ranged attack. Check that the limits imposed on the range (minimum, maximum and maximum distance between values) are respected.
         burst_interval (float, optional): Time (in seconds) between each individual shot when firing a burst of shots from a charged up attack. Game default 0.
         burst_shots (int, optional): Number of shots fired every time the attacking entity uses a charged up attack. Game default 1.
         charge_charged_trigger (float, optional): Time (in seconds, then add "charge_shoot_trigger"), before a charged up attack is done charging. Charge-time decays while target is not in sight. Game default 0.
@@ -3890,38 +3525,28 @@ class EntityAIRangedAttack(AIGoal):
 
     identifier = "minecraft:behavior.ranged_attack"
 
-    attack_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    attack_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    attack_interval_max: float | None = json_field(default=None, validators=[_number])
-    attack_interval_min: float | None = json_field(default=None, validators=[_number])
-    attack_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    attack_interval_max: float | None = json_field(default=None)
+    attack_interval_min: float | None = json_field(default=None)
+    attack_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    burst_interval: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    burst_shots: int | None = json_field(default=None, validators=[_integer])
-    charge_charged_trigger: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    charge_shoot_trigger: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
+    burst_interval: Annotated[float, Positive] | None = json_field(default=None)
+    burst_shots: int | None = json_field(default=None)
+    charge_charged_trigger: Annotated[float, Positive] | None = json_field(default=None)
+    charge_shoot_trigger: Annotated[float, Positive] | None = json_field(default=None)
     in_range_movement_mode: Literal["follow_target", "hold_position"] | None = (
-        json_field(default=None, validators=[one_of("follow_target", "hold_position")])
+        json_field(default=None)
     )
-    ranged_fov: float | None = json_field(default=None, validators=[_number])
-    set_persistent: bool | None = json_field(default=None, validators=[_boolean])
-    speed_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    swing: bool | None = json_field(default=None, validators=[_boolean])
-    target_in_sight_time: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    x_max_rotation: float | None = json_field(default=None, validators=[_number])
-    y_max_head_rotation: float | None = json_field(default=None, validators=[_number])
+    ranged_fov: float | None = json_field(default=None)
+    set_persistent: bool | None = json_field(default=None)
+    speed_multiplier: Annotated[float, Positive] | None = json_field(default=None)
+    swing: bool | None = json_field(default=None)
+    target_in_sight_time: Annotated[float, Positive] | None = json_field(default=None)
+    x_max_rotation: float | None = json_field(default=None)
+    y_max_head_rotation: float | None = json_field(default=None)
 
 
 class EntityAIReceiveLove(AIGoal):
@@ -3978,9 +3603,9 @@ class EntityAIRiseToLiquidLevel(AIGoal):
 
     identifier = "minecraft:behavior.rise_to_liquid_level"
 
-    liquid_y_offset: float | None = json_field(default=0, validators=[_number])
-    rise_delta: float | None = json_field(default=0, validators=[_number])
-    sink_delta: float | None = json_field(default=0, validators=[_number])
+    liquid_y_offset: float | None = json_field(default=0)
+    rise_delta: float | None = json_field(default=0)
+    sink_delta: float | None = json_field(default=0)
 
 
 class EntityAIRoar(AIGoal):
@@ -3996,7 +3621,7 @@ class EntityAIRoar(AIGoal):
 
     identifier = "minecraft:behavior.roar"
 
-    duration: float | None = json_field(default=None, validators=[_number])
+    duration: float | None = json_field(default=None)
 
 
 class EntityAIRoll(AIGoal):
@@ -4012,7 +3637,7 @@ class EntityAIRoll(AIGoal):
 
     identifier = "minecraft:behavior.roll"
 
-    probability: float | None = json_field(default=None, validators=[_number])
+    probability: float | None = json_field(default=None)
 
 
 class EntityAIRunAroundLikeCrazy(AIGoal):
@@ -4028,7 +3653,7 @@ class EntityAIRunAroundLikeCrazy(AIGoal):
 
     identifier = "minecraft:behavior.run_around_like_crazy"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIScared(AIGoal):
@@ -4045,8 +3670,8 @@ class EntityAIScared(AIGoal):
 
     identifier = "minecraft:behavior.scared"
 
-    sound_delay: int | None = json_field(default=None, validators=[_integer])
-    sound_interval: int | None = json_field(default=None, validators=[_integer])
+    sound_delay: int | None = json_field(default=None)
+    sound_interval: int | None = json_field(default=None)
 
 
 class EntityAISendEvent(AIGoal):
@@ -4065,18 +3690,12 @@ class EntityAISendEvent(AIGoal):
 
     identifier = "minecraft:behavior.send_event"
 
-    cast_duration: float | None = json_field(default=None, validators=[_number])
+    cast_duration: float | None = json_field(default=None)
     event_choices: list[SendEventChoice] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(SendEventChoice))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    look_at_target: bool | None = json_field(default=None, validators=[_boolean])
-    sequence: list[SendEventStep] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(SendEventStep))],
-        omit_default=True,
-    )
+    look_at_target: bool | None = json_field(default=None)
+    sequence: list[SendEventStep] = json_field(default_factory=list, omit_default=True)
 
     def add_event_choice(
         self,
@@ -4088,7 +3707,7 @@ class EntityAISendEvent(AIGoal):
         look_at_target: bool | None = None,
         max_activation_range: float | None = None,
         min_activation_range: float | None = None,
-        particle_color: str | RGBA255 | None = None,
+        particle_color: str | tuple[int, int, int, int] | None = None,
         sequence: list[SendEventStep] | None = None,
         start_sound_event: str | None = None,
         weight: float | None = None,
@@ -4141,9 +3760,9 @@ class EntityAIShareItems(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.share_items"
 
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    max_dist: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: float | None = json_field(default=None)
+    max_dist: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAISilverfishMergeWithStone(AIGoal):
@@ -4186,8 +3805,8 @@ class EntityAISkeletonHorseTrap(AIGoal):
 
     identifier = "minecraft:behavior.skeleton_horse_trap"
 
-    duration: float | None = json_field(default=None, validators=[_number])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    duration: float | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAISleep(AIGoal):
@@ -4209,15 +3828,13 @@ class EntityAISleep(AIGoal):
 
     identifier = "minecraft:behavior.sleep"
 
-    can_sleep_while_riding: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    sleep_collider_height: float | None = json_field(default=None, validators=[_number])
-    sleep_collider_width: float | None = json_field(default=None, validators=[_number])
-    sleep_y_offset: float | None = json_field(default=None, validators=[_number])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    timeout_cooldown: float | None = json_field(default=None, validators=[_number])
+    can_sleep_while_riding: bool | None = json_field(default=None)
+    cooldown_time: float | None = json_field(default=None)
+    sleep_collider_height: float | None = json_field(default=None)
+    sleep_collider_width: float | None = json_field(default=None)
+    sleep_y_offset: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    timeout_cooldown: float | None = json_field(default=None)
 
 
 class EntityAISlimeAttack(AIGoal):
@@ -4237,13 +3854,11 @@ class EntityAISlimeAttack(AIGoal):
 
     identifier = "minecraft:behavior.slime_attack"
 
-    grow_tired_cooldown_time: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    set_persistent: bool | None = json_field(default=None, validators=[_boolean])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    x_max_rotation: float | None = json_field(default=None, validators=[_number])
-    y_max_rotation: float | None = json_field(default=None, validators=[_number])
+    grow_tired_cooldown_time: float | None = json_field(default=None)
+    set_persistent: bool | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    x_max_rotation: float | None = json_field(default=None)
+    y_max_rotation: float | None = json_field(default=None)
 
 
 class EntityAISlimeFloat(AIGoal):
@@ -4260,10 +3875,8 @@ class EntityAISlimeFloat(AIGoal):
 
     identifier = "minecraft:behavior.slime_float"
 
-    jump_chance_percentage: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    jump_chance_percentage: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAISlimeKeepOnJumping(AIGoal):
@@ -4279,7 +3892,7 @@ class EntityAISlimeKeepOnJumping(AIGoal):
 
     identifier = "minecraft:behavior.slime_keep_on_jumping"
 
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAISlimeRandomDirection(AIGoal):
@@ -4297,11 +3910,9 @@ class EntityAISlimeRandomDirection(AIGoal):
 
     identifier = "minecraft:behavior.slime_random_direction"
 
-    add_random_time_range: int | None = json_field(default=None, validators=[_integer])
-    min_change_direction_time: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    turn_range: int | None = json_field(default=None, validators=[_integer])
+    add_random_time_range: int | None = json_field(default=None)
+    min_change_direction_time: float | None = json_field(default=None)
+    turn_range: int | None = json_field(default=None)
 
 
 class EntityAISnacking(AIGoal):
@@ -4310,7 +3921,7 @@ class EntityAISnacking(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        items (list[ItemReference], optional): Items that we are interested in snacking on.
+        items (list[str | MinecraftItemDescriptor], optional): Items that we are interested in snacking on.
         snacking_cooldown (float, optional): The cooldown time in seconds before the mob is able to snack again. Game default 7.5.
         snacking_cooldown_min (float, optional): The minimum time in seconds before the mob is able to snack again. Game default 0.5.
         snacking_stop_chance (float, optional): This is the chance that the mob will stop snacking, from 0 to 1. Game default 0.0017.
@@ -4320,10 +3931,10 @@ class EntityAISnacking(AIGoal):
 
     identifier = "minecraft:behavior.snacking"
 
-    items: list[ItemReference] | None = json_field(default=None, validators=[_items])
-    snacking_cooldown: float | None = json_field(default=None, validators=[_number])
-    snacking_cooldown_min: float | None = json_field(default=None, validators=[_number])
-    snacking_stop_chance: float | None = json_field(default=None, validators=[_number])
+    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    snacking_cooldown: float | None = json_field(default=None)
+    snacking_cooldown_min: float | None = json_field(default=None)
+    snacking_stop_chance: float | None = json_field(default=None)
 
 
 class EntityAISneeze(EntityTypesAIGoal):
@@ -4347,16 +3958,14 @@ class EntityAISneeze(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.sneeze"
 
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    drop_item_chance: float | None = json_field(default=None, validators=[_number])
-    loot_table: LootTable | str | None = json_field(
-        default=None, validators=[instance_of(LootTable, str)]
-    )
-    prepare_sound: str | None = json_field(default=None, validators=[_string])
-    prepare_time: float | None = json_field(default=None, validators=[_number])
-    probability: float | None = json_field(default=None, validators=[_number])
-    sound: str | None = json_field(default=None, validators=[_string])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    cooldown_time: float | None = json_field(default=None)
+    drop_item_chance: float | None = json_field(default=None)
+    loot_table: LootTable | str | None = json_field(default=None)
+    prepare_sound: str | None = json_field(default=None)
+    prepare_time: float | None = json_field(default=None)
+    probability: float | None = json_field(default=None)
+    sound: str | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAISniff(AIGoal):
@@ -4365,7 +3974,7 @@ class EntityAISniff(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        cooldown_range (float | NumberRange, optional): Cooldown range between sniffs in seconds.
+        cooldown_range (float | tuple[float, float], optional): Cooldown range between sniffs in seconds.
         duration (float, optional): Sniffing duration in seconds. Game default 1.
         sniffing_radius (float, optional): Mob detection radius. Game default 5.
         suspicion_radius_horizontal (float, optional): Mob suspicion horizontal radius. When a player is within this radius horizontally, the anger level towards that player is increased. Game default 3.
@@ -4376,16 +3985,14 @@ class EntityAISniff(AIGoal):
 
     identifier = "minecraft:behavior.sniff"
 
-    cooldown_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    cooldown_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    duration: float | None = json_field(default=None, validators=[_number])
-    sniffing_radius: float | None = json_field(default=None, validators=[_number])
-    suspicion_radius_horizontal: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    suspicion_radius_vertical: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=1)]
+    duration: float | None = json_field(default=None)
+    sniffing_radius: float | None = json_field(default=None)
+    suspicion_radius_horizontal: float | None = json_field(default=None)
+    suspicion_radius_vertical: Annotated[float, AtLeastOne] | None = json_field(
+        default=None
     )
 
 
@@ -4413,26 +4020,18 @@ class EntityAISonicBoom(AIGoal):
 
     identifier = "minecraft:behavior.sonic_boom"
 
-    attack_cooldown: float | None = json_field(default=None, validators=[_number])
-    attack_damage: float | None = json_field(default=None, validators=[_number])
-    attack_range_horizontal: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    attack_range_vertical: float | None = json_field(default=None, validators=[_number])
-    attack_sound: str | None = json_field(default=None, validators=[_string])
-    charge_sound: str | None = json_field(default=None, validators=[_string])
-    duration: float | None = json_field(default=None, validators=[_number])
-    duration_until_attack_sound: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    knockback_height_cap: float | None = json_field(default=None, validators=[_number])
-    knockback_horizontal_strength: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    knockback_vertical_strength: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    attack_cooldown: float | None = json_field(default=None)
+    attack_damage: float | None = json_field(default=None)
+    attack_range_horizontal: float | None = json_field(default=None)
+    attack_range_vertical: float | None = json_field(default=None)
+    attack_sound: str | None = json_field(default=None)
+    charge_sound: str | None = json_field(default=None)
+    duration: float | None = json_field(default=None)
+    duration_until_attack_sound: float | None = json_field(default=None)
+    knockback_height_cap: float | None = json_field(default=None)
+    knockback_horizontal_strength: float | None = json_field(default=None)
+    knockback_vertical_strength: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAISquidDive(AIGoal):
@@ -4523,17 +4122,17 @@ class EntityAIStalkAndPounceOnTarget(AIGoal):
 
     identifier = "minecraft:behavior.stalk_and_pounce_on_target"
 
-    interest_time: float | None = json_field(default=None, validators=[_number])
-    leap_dist: float | None = json_field(default=None, validators=[_number])
-    leap_distance: float | None = json_field(default=None, validators=[_number])
-    leap_height: float | None = json_field(default=None, validators=[_number])
-    max_stalk_dist: float | None = json_field(default=None, validators=[_number])
-    pounce_max_dist: float | None = json_field(default=None, validators=[_number])
-    set_persistent: bool | None = json_field(default=None, validators=[_boolean])
-    stalk_speed: float | None = json_field(default=None, validators=[_number])
-    strike_dist: float | None = json_field(default=None, validators=[_number])
-    stuck_blocks: Filter | None = json_field(default=None, validators=[_filter])
-    stuck_time: float | None = json_field(default=None, validators=[_number])
+    interest_time: float | None = json_field(default=None)
+    leap_dist: float | None = json_field(default=None)
+    leap_distance: float | None = json_field(default=None)
+    leap_height: float | None = json_field(default=None)
+    max_stalk_dist: float | None = json_field(default=None)
+    pounce_max_dist: float | None = json_field(default=None)
+    set_persistent: bool | None = json_field(default=None)
+    stalk_speed: float | None = json_field(default=None)
+    strike_dist: float | None = json_field(default=None)
+    stuck_blocks: Filter | None = json_field(default=None)
+    stuck_time: float | None = json_field(default=None)
 
 
 class EntityAIStayNearNoteblock(AIGoal):
@@ -4552,10 +4151,10 @@ class EntityAIStayNearNoteblock(AIGoal):
 
     identifier = "minecraft:behavior.stay_near_noteblock"
 
-    listen_time: int | None = json_field(default=None, validators=[_integer])
-    speed: float | None = json_field(default=None, validators=[_number])
-    start_distance: float | None = json_field(default=None, validators=[_number])
-    stop_distance: float | None = json_field(default=None, validators=[_number])
+    listen_time: int | None = json_field(default=None)
+    speed: float | None = json_field(default=None)
+    start_distance: float | None = json_field(default=None)
+    stop_distance: float | None = json_field(default=None)
 
 
 class EntityAIStayWhileSitting(AIGoal):
@@ -4605,42 +4204,30 @@ class EntityAIStompAttack(AIGoal):
 
     identifier = "minecraft:behavior.stomp_attack"
 
-    attack_once: bool | None = json_field(default=None, validators=[_boolean])
-    attack_types: str | None = json_field(default=None, validators=[_string])
-    can_spread_on_fire: bool | None = json_field(default=None, validators=[_boolean])
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    inner_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
+    attack_once: bool | None = json_field(default=None)
+    attack_types: str | None = json_field(default=None)
+    can_spread_on_fire: bool | None = json_field(default=None)
+    cooldown_time: float | None = json_field(default=None)
+    inner_boundary_time_increase: float | None = json_field(default=None)
+    max_path_time: float | None = json_field(default=None)
+    min_path_time: float | None = json_field(default=None)
+    no_damage_range_multiplier: Annotated[float, Positive] | None = json_field(
+        default=None
     )
-    max_path_time: float | None = json_field(default=None, validators=[_number])
-    min_path_time: float | None = json_field(default=None, validators=[_number])
-    no_damage_range_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    on_attack: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_kill: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    outer_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_fail_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_inner_boundary: float | None = json_field(default=None, validators=[_number])
-    path_outer_boundary: float | None = json_field(default=None, validators=[_number])
-    random_stop_interval: int | None = json_field(default=None, validators=[_integer])
-    reach_multiplier: float | None = json_field(default=None, validators=[_number])
-    require_complete_path: bool | None = json_field(default=None, validators=[_boolean])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    stomp_range_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    track_target: bool | None = json_field(default=None, validators=[_boolean])
-    x_max_rotation: float | None = json_field(default=None, validators=[_number])
-    y_max_head_rotation: float | None = json_field(default=None, validators=[_number])
+    on_attack: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_kill: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    outer_boundary_time_increase: float | None = json_field(default=None)
+    path_fail_time_increase: float | None = json_field(default=None)
+    path_inner_boundary: float | None = json_field(default=None)
+    path_outer_boundary: float | None = json_field(default=None)
+    random_stop_interval: int | None = json_field(default=None)
+    reach_multiplier: float | None = json_field(default=None)
+    require_complete_path: bool | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    stomp_range_multiplier: Annotated[float, Positive] | None = json_field(default=None)
+    track_target: bool | None = json_field(default=None)
+    x_max_rotation: float | None = json_field(default=None)
+    y_max_head_rotation: float | None = json_field(default=None)
 
 
 class EntityAIStompTurtleEgg(AIGoal):
@@ -4661,20 +4248,12 @@ class EntityAIStompTurtleEgg(AIGoal):
 
     identifier = "minecraft:behavior.stomp_turtle_egg"
 
-    goal_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    interval: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_count: int | None = json_field(default=None, validators=[_integer])
-    search_height: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    search_range: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0, min_exclusive=True)]
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    goal_radius: Annotated[float, Positive] | None = json_field(default=None)
+    interval: Annotated[int, Positive] | None = json_field(default=None)
+    search_count: int | None = json_field(default=None)
+    search_height: Annotated[int, Positive] | None = json_field(default=None)
+    search_range: Annotated[int, Positive] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAIStrollTowardsVillage(AIGoal):
@@ -4694,11 +4273,11 @@ class EntityAIStrollTowardsVillage(AIGoal):
 
     identifier = "minecraft:behavior.stroll_towards_village"
 
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    goal_radius: float | None = json_field(default=None, validators=[_number])
-    search_range: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    start_chance: float | None = json_field(default=None, validators=[_number])
+    cooldown_time: float | None = json_field(default=None)
+    goal_radius: float | None = json_field(default=None)
+    search_range: int | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    start_chance: float | None = json_field(default=None)
 
 
 class EntityAISummonEntity(AIGoal):
@@ -4715,9 +4294,7 @@ class EntityAISummonEntity(AIGoal):
     identifier = "minecraft:behavior.summon_entity"
 
     summon_choices: list[SummonChoice] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(SummonChoice))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def add_summon_choice(
@@ -4729,7 +4306,7 @@ class EntityAISummonEntity(AIGoal):
         filters: Filter | None = None,
         max_activation_range: float | None = None,
         min_activation_range: float | None = None,
-        particle_color: str | RGBA255 | None = None,
+        particle_color: str | tuple[int, int, int, int] | None = None,
         sequence: list[SummonStep] | None = None,
         start_sound_event: str | None = None,
         weight: float | None = None,
@@ -4766,8 +4343,8 @@ class EntityAISwell(AIGoal):
 
     identifier = "minecraft:behavior.swell"
 
-    start_distance: float | None = json_field(default=None, validators=[_number])
-    stop_distance: float | None = json_field(default=None, validators=[_number])
+    start_distance: float | None = json_field(default=None)
+    stop_distance: float | None = json_field(default=None)
 
 
 class EntityAISwimIdle(AIGoal):
@@ -4784,8 +4361,8 @@ class EntityAISwimIdle(AIGoal):
 
     identifier = "minecraft:behavior.swim_idle"
 
-    idle_time: float | None = json_field(default=None, validators=[_number])
-    success_rate: float | None = json_field(default=None, validators=[_number])
+    idle_time: float | None = json_field(default=None)
+    success_rate: float | None = json_field(default=None)
 
 
 class EntityAISwimUpForBreath(AIGoal):
@@ -4804,10 +4381,10 @@ class EntityAISwimUpForBreath(AIGoal):
 
     identifier = "minecraft:behavior.swim_up_for_breath"
 
-    material_type: str | None = json_field(default=None, validators=[_string])
-    search_height: int | None = json_field(default=None, validators=[_integer])
-    search_radius: int | None = json_field(default=None, validators=[_integer])
-    speed_mod: float | None = json_field(default=None, validators=[_number])
+    material_type: str | None = json_field(default=None)
+    search_height: int | None = json_field(default=None)
+    search_radius: int | None = json_field(default=None)
+    speed_mod: float | None = json_field(default=None)
 
 
 class EntityAISwimWander(AIGoal):
@@ -4826,10 +4403,10 @@ class EntityAISwimWander(AIGoal):
 
     identifier = "minecraft:behavior.swim_wander"
 
-    interval: float | None = json_field(default=None, validators=[_number])
-    look_ahead: float | None = json_field(default=None, validators=[_number])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    wander_time: float | None = json_field(default=None, validators=[_number])
+    interval: float | None = json_field(default=None)
+    look_ahead: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    wander_time: float | None = json_field(default=None)
 
 
 class EntityAISwimWithEntity(EntityTypesAIGoal):
@@ -4854,17 +4431,15 @@ class EntityAISwimWithEntity(EntityTypesAIGoal):
 
     identifier = "minecraft:behavior.swim_with_entity"
 
-    catch_up_multiplier: float | None = json_field(default=None, validators=[_number])
-    catch_up_threshold: float | None = json_field(default=None, validators=[_number])
-    chance_to_stop: float | None = json_field(default=None, validators=[_number])
-    match_direction_threshold: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    search_range: float | None = json_field(default=None, validators=[_number])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    state_check_interval: float | None = json_field(default=None, validators=[_number])
-    stop_distance: float | None = json_field(default=None, validators=[_number])
-    success_rate: float | None = json_field(default=None, validators=[_number])
+    catch_up_multiplier: float | None = json_field(default=None)
+    catch_up_threshold: float | None = json_field(default=None)
+    chance_to_stop: float | None = json_field(default=None)
+    match_direction_threshold: float | None = json_field(default=None)
+    search_range: float | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    state_check_interval: float | None = json_field(default=None)
+    stop_distance: float | None = json_field(default=None)
+    success_rate: float | None = json_field(default=None)
 
 
 class EntityAISwoopAttack(AIGoal):
@@ -4874,7 +4449,7 @@ class EntityAISwoopAttack(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         damage_reach (float, optional): Added to the base size of the entity, to determine the target's maximum allowable distance, when trying to deal attack damage. Game default 0.2.
-        delay_range (float | NumberRange, optional): Minimum and maximum cooldown time-range (in seconds) between each attempted swoop attack.
+        delay_range (float | tuple[float, float], optional): Minimum and maximum cooldown time-range (in seconds) between each attempted swoop attack.
         speed_multiplier (float, optional): During swoop attack behavior, this determines the multiplier the entity's speed is modified by when moving toward the target. Game default 1.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_swoop_attack)
@@ -4882,11 +4457,11 @@ class EntityAISwoopAttack(AIGoal):
 
     identifier = "minecraft:behavior.swoop_attack"
 
-    damage_reach: float | None = json_field(default=None, validators=[_number])
-    delay_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    damage_reach: float | None = json_field(default=None)
+    delay_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAITakeBlock(AIGoal):
@@ -4896,7 +4471,7 @@ class EntityAITakeBlock(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         affected_by_griefing_rule (bool, optional): If true, whether the goal is affected by the mob griefing game rule. Game default true.
-        blocks (list[BlockReference], optional): Block descriptors for which blocks are valid to be taken by the entity, if empty all blocks are valid.
+        blocks (list[str | MinecraftBlockDescriptor], optional): Block descriptors for which blocks are valid to be taken by the entity, if empty all blocks are valid.
         can_take (Filter, optional): Filters for if the entity should try to take a block. Self and Target are set.
         chance (float, optional): Chance each tick for the entity to try and take a block. Game default 1.
         on_take (EventTrigger | str, optional): Trigger ran if the entity does take a block. Self, Target, and Block are set.
@@ -4909,28 +4484,16 @@ class EntityAITakeBlock(AIGoal):
 
     identifier = "minecraft:behavior.take_block"
 
-    affected_by_griefing_rule: bool | None = json_field(
-        default=None, validators=[_boolean]
+    affected_by_griefing_rule: bool | None = json_field(default=None)
+    blocks: list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None = (
+        json_field(default=None)
     )
-    blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks], encoder=encoders.block_objects
-    )
-    can_take: Filter | None = json_field(default=None, validators=[_filter])
-    chance: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
-    )
-    on_take: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    requires_line_of_sight: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    xz_range: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair], encoder=encoders.min_max
-    )
-    y_range: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair], encoder=encoders.min_max
-    )
+    can_take: Filter | None = json_field(default=None)
+    chance: Annotated[float, InRange(maximum=1)] | None = json_field(default=None)
+    on_take: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    requires_line_of_sight: bool | None = json_field(default=None)
+    xz_range: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
+    y_range: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
 
 
 class EntityAITakeFlower(AIGoal):
@@ -4946,7 +4509,7 @@ class EntityAITakeFlower(AIGoal):
         min_distance_to_target (float, optional): Minimum distance (in blocks) for the entity to be considered having reached its target. Game default 2.
         min_wait_time (float, optional): The minimum amount of time (in seconds) for the mob to randomly wait for before taking the flower. Game default 4.
         on_take_flower (EventTrigger | str, optional): Event triggered when the entity takes a flower from another entity.
-        search_area (Vector3D, optional): The dimensions of the AABB used to search for a potential mob to take a flower from.
+        search_area (tuple[float, float, float], optional): The dimensions of the AABB used to search for a potential mob to take a flower from.
         speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Game default 0.5.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_take_flower)
@@ -4954,23 +4517,17 @@ class EntityAITakeFlower(AIGoal):
 
     identifier = "minecraft:behavior.take_flower"
 
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    max_head_rotation_y: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
+    filters: Filter | None = json_field(default=None)
+    max_head_rotation_y: Annotated[float, Positive] | None = json_field(default=None)
+    max_rotation_x: Annotated[float, Positive] | None = json_field(default=None)
+    max_wait_time: float | None = json_field(default=None)
+    min_distance_to_target: Annotated[float, Positive] | None = json_field(default=None)
+    min_wait_time: float | None = json_field(default=None)
+    on_take_flower: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    max_rotation_x: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    max_wait_time: float | None = json_field(default=None, validators=[_number])
-    min_distance_to_target: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    min_wait_time: float | None = json_field(default=None, validators=[_number])
-    on_take_flower: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    search_area: Vector3D | None = json_field(default=None, validators=[vector3])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
+    search_area: tuple[float, float, float] | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
 
 
 class EntityAITeleportToOwner(AIGoal):
@@ -4987,8 +4544,8 @@ class EntityAITeleportToOwner(AIGoal):
 
     identifier = "minecraft:behavior.teleport_to_owner"
 
-    cooldown: float | None = json_field(default=None, validators=[_number])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
+    cooldown: float | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
 
 
 class EntityAITempt(AIGoal):
@@ -5000,10 +4557,10 @@ class EntityAITempt(AIGoal):
         can_get_scared (bool, optional): If true, the mob can stop being tempted if the player moves too fast while close to this mob. Game default false.
         can_tempt_vertically (bool, optional): If true, vertical distance to the player will be considered when tempting. Game default false.
         can_tempt_while_ridden (bool, optional): If true, the mob can be tempted even if it has a passenger (i.e. if being ridden). Game default false.
-        items (list[ItemReference], optional): List of items that can tempt the mob.
+        items (list[str | MinecraftItemDescriptor], optional): List of items that can tempt the mob.
         on_tempt_end (EventTrigger | str, optional): Event to trigger when this mob stops being tempted.
         on_tempt_start (EventTrigger | str, optional): Event to trigger when this mob starts being tempted.
-        sound_interval (float | NumberRange, optional): Range of random ticks to wait between tempt sounds. Can be a number, an array [min, max], or an object with range_min/range_max or min/max.
+        sound_interval (float | tuple[float, float], optional): Range of random ticks to wait between tempt sounds. Can be a number, an array [min, max], or an object with range_min/range_max or min/max.
         speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Game default 1.
         stop_distance (float, optional): The distance at which the mob will stop following the player. Game default 1.5.
         tempt_sound (str, optional): Sound to play while the mob is being tempted.
@@ -5014,25 +4571,23 @@ class EntityAITempt(AIGoal):
 
     identifier = "minecraft:behavior.tempt"
 
-    can_get_scared: bool | None = json_field(default=None, validators=[_boolean])
-    can_tempt_vertically: bool | None = json_field(default=None, validators=[_boolean])
-    can_tempt_while_ridden: bool | None = json_field(
-        default=None, validators=[_boolean]
+    can_get_scared: bool | None = json_field(default=None)
+    can_tempt_vertically: bool | None = json_field(default=None)
+    can_tempt_while_ridden: bool | None = json_field(default=None)
+    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    on_tempt_end: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    items: list[ItemReference] | None = json_field(default=None, validators=[_items])
-    on_tempt_end: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_tempt_start: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_tempt_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    sound_interval: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    sound_interval: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    stop_distance: float | None = json_field(default=None, validators=[_number])
-    tempt_sound: str | None = json_field(default=None, validators=[_string])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    speed_multiplier: float | None = json_field(default=None)
+    stop_distance: float | None = json_field(default=None)
+    tempt_sound: str | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAITimerFlag1(AIGoal):
@@ -5041,8 +4596,8 @@ class EntityAITimerFlag1(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        cooldown_range (float | NumberRange, optional): Goal cooldown range in seconds. Can be a range object or a single number.
-        duration_range (float | NumberRange, optional): Goal duration range in seconds. Can be a range object or a single number.
+        cooldown_range (float | tuple[float, float], optional): Goal cooldown range in seconds. Can be a range object or a single number.
+        duration_range (float | tuple[float, float], optional): Goal duration range in seconds. Can be a range object or a single number.
         on_end (EventTrigger | str, optional): Event(s) to run when the goal ends.
         on_start (EventTrigger | str, optional): Event(s) to run when the goal starts.
 
@@ -5051,18 +4606,14 @@ class EntityAITimerFlag1(AIGoal):
 
     identifier = "minecraft:behavior.timer_flag_1"
 
-    cooldown_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    cooldown_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    duration_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    duration_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    on_end: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
+    on_end: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_start: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
 
 
 class EntityAITimerFlag2(AIGoal):
@@ -5071,8 +4622,8 @@ class EntityAITimerFlag2(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        cooldown_range (float | NumberRange, optional): Goal cooldown range in seconds. Can be a range object or a single number.
-        duration_range (float | NumberRange, optional): Goal duration range in seconds. Can be a range object or a single number.
+        cooldown_range (float | tuple[float, float], optional): Goal cooldown range in seconds. Can be a range object or a single number.
+        duration_range (float | tuple[float, float], optional): Goal duration range in seconds. Can be a range object or a single number.
         on_end (EventTrigger | str, optional): Event(s) to run when the goal ends.
         on_start (EventTrigger | str, optional): Event(s) to run when the goal starts.
 
@@ -5081,18 +4632,14 @@ class EntityAITimerFlag2(AIGoal):
 
     identifier = "minecraft:behavior.timer_flag_2"
 
-    cooldown_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    cooldown_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    duration_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    duration_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    on_end: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
+    on_end: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_start: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
 
 
 class EntityAITimerFlag3(AIGoal):
@@ -5101,8 +4648,8 @@ class EntityAITimerFlag3(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        cooldown_range (float | NumberRange, optional): Goal cooldown range in seconds. Can be a range object or a single number.
-        duration_range (float | NumberRange, optional): Goal duration range in seconds. Can be a range object or a single number.
+        cooldown_range (float | tuple[float, float], optional): Goal cooldown range in seconds. Can be a range object or a single number.
+        duration_range (float | tuple[float, float], optional): Goal duration range in seconds. Can be a range object or a single number.
         on_end (EventTrigger | str, optional): Event(s) to run when the goal ends.
         on_start (EventTrigger | str, optional): Event(s) to run when the goal starts.
 
@@ -5111,18 +4658,14 @@ class EntityAITimerFlag3(AIGoal):
 
     identifier = "minecraft:behavior.timer_flag_3"
 
-    cooldown_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    cooldown_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    duration_range: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    duration_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    on_end: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_start: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
+    on_end: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_start: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
 
 
 class EntityAITradeInterest(AIGoal):
@@ -5142,13 +4685,11 @@ class EntityAITradeInterest(AIGoal):
 
     identifier = "minecraft:behavior.trade_interest"
 
-    carried_item_switch_time: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    cooldown: float | None = json_field(default=None, validators=[_number])
-    interest_time: float | None = json_field(default=None, validators=[_number])
-    remove_item_time: float | None = json_field(default=None, validators=[_number])
-    within_radius: float | None = json_field(default=None, validators=[_number])
+    carried_item_switch_time: float | None = json_field(default=None)
+    cooldown: float | None = json_field(default=None)
+    interest_time: float | None = json_field(default=None)
+    remove_item_time: float | None = json_field(default=None)
+    within_radius: float | None = json_field(default=None)
 
 
 class EntityAITradeWithPlayer(AIGoal):
@@ -5165,10 +4706,8 @@ class EntityAITradeWithPlayer(AIGoal):
 
     identifier = "minecraft:behavior.trade_with_player"
 
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    max_distance_from_player: float | None = json_field(
-        default=None, validators=[_number]
-    )
+    filters: Filter | None = json_field(default=None)
+    max_distance_from_player: float | None = json_field(default=None)
 
 
 class EntityAITransportItems(AIGoal):
@@ -5178,9 +4717,9 @@ class EntityAITransportItems(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         allow_simultaneous_interaction (bool, optional): When true the mob will wait until a container is not used by other entities before starting to interact with it. Game default false.
-        allowed_items (list[ItemReference], optional): A list of item descriptors that are the only items the mob is allowed to transport.
-        destination_container_types (list[BlockReference], optional): A list of block descriptors that should be container types to put items in. Can be simple block identifier strings or objects with name, states, and tags.
-        disallowed_items (list[ItemReference], optional): A list of item descriptors that are the mob is not allowed to transport. If non-empty "allowed_items" must be empty.
+        allowed_items (list[str | MinecraftItemDescriptor], optional): A list of item descriptors that are the only items the mob is allowed to transport.
+        destination_container_types (list[str | MinecraftBlockDescriptor], optional): A list of block descriptors that should be container types to put items in. Can be simple block identifier strings or objects with name, states, and tags.
+        disallowed_items (list[str | MinecraftItemDescriptor], optional): A list of item descriptors that are the mob is not allowed to transport. If non-empty "allowed_items" must be empty.
         idle_cooldown (int, optional): When the mob cannot find a container in which to get or put items, the goal will stop being active for this amount of time in seconds. Game default 20.
         initial_cooldown (int, optional): How long the mob will wait after spawning or getting the goal added before the goal can start. Game default 0.
         interaction_time (float, optional): The amount of time in seconds spent interacting with the containers. Game default 3.
@@ -5189,47 +4728,36 @@ class EntityAITransportItems(AIGoal):
         place_strategy (Literal["any", "with_matching", "with_matching_or_empty"], optional): The strategy to use for placing the transported item. Game default any.
         search_distance (tuple[int, int], optional): The maximum search distance horizontally and vertically at which to find containers for taking or placing items.
         search_strategy (Literal["nearest", "random"], optional): The strategy to use for finding source or destination containers. The nearest valid container or a random valid container in range. Game default random.
-        source_container_types (list[BlockReference], optional): A list of block descriptors that should be container types to take items from. Can be simple block identifier strings or objects with name, states, and tags.
+        source_container_types (list[str | MinecraftBlockDescriptor], optional): A list of block descriptors that should be container types to take items from. Can be simple block identifier strings or objects with name, states, and tags.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_transport_items)
     """
 
     identifier = "minecraft:behavior.transport_items"
 
-    allow_simultaneous_interaction: bool | None = json_field(
-        default=None, validators=[_boolean]
+    allow_simultaneous_interaction: bool | None = json_field(default=None)
+    allowed_items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    destination_container_types: (
+        list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None
+    ) = json_field(default=None)
+    disallowed_items: list[str | MinecraftItemDescriptor] | None = json_field(
+        default=None
     )
-    allowed_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
+    idle_cooldown: int | None = json_field(default=None)
+    initial_cooldown: int | None = json_field(default=None)
+    interaction_time: float | None = json_field(default=None)
+    max_stack_size: Annotated[int, InRange(minimum=1, maximum=64)] | None = json_field(
+        default=None
     )
-    destination_container_types: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks], encoder=encoders.block_objects
-    )
-    disallowed_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
-    )
-    idle_cooldown: int | None = json_field(default=None, validators=[_integer])
-    initial_cooldown: int | None = json_field(default=None, validators=[_integer])
-    interaction_time: float | None = json_field(default=None, validators=[_number])
-    max_stack_size: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1, maximum=64)]
-    )
-    max_visited_containers: int | None = json_field(default=None, validators=[_integer])
+    max_visited_containers: int | None = json_field(default=None)
     place_strategy: Literal["any", "with_matching", "with_matching_or_empty"] | None = (
-        json_field(
-            default=None,
-            validators=[one_of("any", "with_matching", "with_matching_or_empty")],
-        )
+        json_field(default=None)
     )
-    search_distance: tuple[int, int] | None = json_field(
-        default=None, validators=[integer_pair]
-    )
-    search_strategy: Literal["nearest", "random"] | None = json_field(
-        default=None, validators=[one_of("nearest", "random")]
-    )
-    source_container_types: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks], encoder=encoders.block_objects
-    )
+    search_distance: tuple[int, int] | None = json_field(default=None)
+    search_strategy: Literal["nearest", "random"] | None = json_field(default=None)
+    source_container_types: (
+        list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None
+    ) = json_field(default=None)
 
     def __validate__(self) -> None:
         if self.allowed_items and self.disallowed_items:
@@ -5248,7 +4776,7 @@ class EntityAIUseKineticWeapon(AIGoal):
         attack_once (bool, optional): Allows the mob to perform this melee attack behavior only once during its lifetime. Game default false.
         attack_types (str, optional): Defines the entity types this entity will attack.
         can_spread_on_fire (bool, optional): Allows the mob, if on fire and empty handed, to ignite its target upon a successful attack. Game default false.
-        cooldown_distance (float | NumberRange, optional): The distance the mob retreats to after all of the item's "minecraft:kinetic_weapon" component's "max_duration" values have elapsed.
+        cooldown_distance (float | tuple[float, float], optional): The distance the mob retreats to after all of the item's "minecraft:kinetic_weapon" component's "max_duration" values have elapsed.
         cooldown_speed_multiplier (float, optional): Multiplier applied to the mob's movement speed while on cooldown. Game default 1.
         cooldown_time (float, optional): Cooldown time, in seconds, between consecutive attacks. Game default 1.
         hijack_mount_navigation (bool, optional): Allows the mob to override its mount's navigation behavior with the logic defined by this goal. Game default false.
@@ -5263,7 +4791,7 @@ class EntityAIUseKineticWeapon(AIGoal):
         path_inner_boundary (float, optional): Distance at which to increase attack path recalculation by "inner_boundary_time_increase". Game default 16.
         path_outer_boundary (float, optional): Distance at which to increase attack path recalculation by "outer_boundary_time_increase". Game default 32.
         random_stop_interval (int, optional): Defines a 1-in-N chance for the mob to stop its current attack, where N equals "random_stop_interval". Game default 0.
-        reposition_distance (float | NumberRange, optional): The distance the mob retreats to once the target is closer than the midpoint of the item's "minecraft:kinetic_weapon" component's minimum and maximum "reach".
+        reposition_distance (float | tuple[float, float], optional): The distance the mob retreats to once the target is closer than the midpoint of the item's "minecraft:kinetic_weapon" component's minimum and maximum "reach".
         reposition_speed_multiplier (float, optional): Multiplier applied to the mob's movement speed while repositioning. Game default 1.
         require_complete_path (bool, optional): Specifies whether a full navigation path from the mob to the target is required. Game default false.
         speed_multiplier (float, optional): Multiplier applied to the mob's movement speed when moving toward its target. Game default 1.
@@ -5278,58 +4806,38 @@ class EntityAIUseKineticWeapon(AIGoal):
 
     identifier = "minecraft:behavior.use_kinetic_weapon"
 
-    approach_distance: float | None = json_field(default=None, validators=[_number])
-    attack_once: bool | None = json_field(default=None, validators=[_boolean])
-    attack_types: str | None = json_field(default=None, validators=[_string])
-    can_spread_on_fire: bool | None = json_field(default=None, validators=[_boolean])
-    cooldown_distance: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
+    approach_distance: float | None = json_field(default=None)
+    attack_once: bool | None = json_field(default=None)
+    attack_types: str | None = json_field(default=None)
+    can_spread_on_fire: bool | None = json_field(default=None)
+    cooldown_distance: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
-    cooldown_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number]
+    cooldown_speed_multiplier: float | None = json_field(default=None)
+    cooldown_time: float | None = json_field(default=None)
+    hijack_mount_navigation: bool | None = json_field(default=None)
+    inner_boundary_time_increase: float | None = json_field(default=None)
+    max_path_time: float | None = json_field(default=None)
+    melee_fov: float | None = json_field(default=None)
+    min_path_time: float | None = json_field(default=None)
+    on_attack: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_kill: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    outer_boundary_time_increase: float | None = json_field(default=None)
+    path_fail_time_increase: float | None = json_field(default=None)
+    path_inner_boundary: float | None = json_field(default=None)
+    path_outer_boundary: float | None = json_field(default=None)
+    random_stop_interval: int | None = json_field(default=None)
+    reposition_distance: Annotated[float | tuple[float, float], MinMax] | None = (
+        json_field(default=None)
     )
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    hijack_mount_navigation: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    inner_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    max_path_time: float | None = json_field(default=None, validators=[_number])
-    melee_fov: float | None = json_field(default=None, validators=[_number])
-    min_path_time: float | None = json_field(default=None, validators=[_number])
-    on_attack: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_kill: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    outer_boundary_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_fail_time_increase: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    path_inner_boundary: float | None = json_field(default=None, validators=[_number])
-    path_outer_boundary: float | None = json_field(default=None, validators=[_number])
-    random_stop_interval: int | None = json_field(default=None, validators=[_integer])
-    reposition_distance: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    reposition_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    require_complete_path: bool | None = json_field(default=None, validators=[_boolean])
-    speed_multiplier: float | None = json_field(default=None, validators=[_number])
-    track_target: bool | None = json_field(default=None, validators=[_boolean])
-    weapon_min_speed_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    weapon_reach_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    x_max_rotation: float | None = json_field(default=None, validators=[_number])
-    y_max_head_rotation: float | None = json_field(default=None, validators=[_number])
+    reposition_speed_multiplier: float | None = json_field(default=None)
+    require_complete_path: bool | None = json_field(default=None)
+    speed_multiplier: float | None = json_field(default=None)
+    track_target: bool | None = json_field(default=None)
+    weapon_min_speed_multiplier: float | None = json_field(default=None)
+    weapon_reach_multiplier: float | None = json_field(default=None)
+    x_max_rotation: float | None = json_field(default=None)
+    y_max_head_rotation: float | None = json_field(default=None)
 
 
 class EntityAIVexCopyOwnerTarget(EntityTypesAIGoal):
@@ -5379,18 +4887,14 @@ class EntityAIWork(AIGoal):
 
     identifier = "minecraft:behavior.work"
 
-    active_time: int | None = json_field(default=None, validators=[_integer])
-    can_work_in_rain: bool | None = json_field(default=None, validators=[_boolean])
-    goal_cooldown: int | None = json_field(default=None, validators=[_integer])
-    on_arrival: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    sound_delay_max: int | None = json_field(default=None, validators=[_integer])
-    sound_delay_min: int | None = json_field(default=None, validators=[_integer])
-    speed_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    work_in_rain_tolerance: int | None = json_field(default=None, validators=[_integer])
+    active_time: int | None = json_field(default=None)
+    can_work_in_rain: bool | None = json_field(default=None)
+    goal_cooldown: int | None = json_field(default=None)
+    on_arrival: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    sound_delay_max: int | None = json_field(default=None)
+    sound_delay_min: int | None = json_field(default=None)
+    speed_multiplier: Annotated[float, Positive] | None = json_field(default=None)
+    work_in_rain_tolerance: int | None = json_field(default=None)
 
 
 class EntityAIWorkComposter(AIGoal):
@@ -5418,23 +4922,19 @@ class EntityAIWorkComposter(AIGoal):
 
     identifier = "minecraft:behavior.work_composter"
 
-    active_time: int | None = json_field(default=None, validators=[_integer])
-    block_interaction_max: int | None = json_field(default=None, validators=[_integer])
-    can_empty_composter: bool | None = json_field(default=None, validators=[_boolean])
-    can_fill_composter: bool | None = json_field(default=None, validators=[_boolean])
-    can_work_in_rain: bool | None = json_field(default=None, validators=[_boolean])
-    goal_cooldown: int | None = json_field(default=None, validators=[_integer])
-    items_per_use_max: int | None = json_field(default=None, validators=[_integer])
-    min_item_count: int | None = json_field(default=None, validators=[_integer])
-    on_arrival: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    speed_multiplier: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0, min_exclusive=True)]
-    )
-    use_block_max: int | None = json_field(default=None, validators=[_integer])
-    use_block_min: int | None = json_field(default=None, validators=[_integer])
-    work_in_rain_tolerance: int | None = json_field(default=None, validators=[_integer])
+    active_time: int | None = json_field(default=None)
+    block_interaction_max: int | None = json_field(default=None)
+    can_empty_composter: bool | None = json_field(default=None)
+    can_fill_composter: bool | None = json_field(default=None)
+    can_work_in_rain: bool | None = json_field(default=None)
+    goal_cooldown: int | None = json_field(default=None)
+    items_per_use_max: int | None = json_field(default=None)
+    min_item_count: int | None = json_field(default=None)
+    on_arrival: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    speed_multiplier: Annotated[float, Positive] | None = json_field(default=None)
+    use_block_max: int | None = json_field(default=None)
+    use_block_min: int | None = json_field(default=None)
+    work_in_rain_tolerance: int | None = json_field(default=None)
 
 
 # endregion

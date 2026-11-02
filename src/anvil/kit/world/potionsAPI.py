@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Union
+from typing import Annotated, Dict, Optional, Union
 
 from anvil.api.actors.entity import Entity
 from anvil.api.actors.components import (
@@ -16,7 +16,7 @@ from anvil.api.actors.components import (
 from anvil.api.blocks.blocks import Block
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import ItemCategory
-from anvil.api.core.types import RGBA, Vector3D
+from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA, Vector3D
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemCustomComponent,
@@ -35,9 +35,8 @@ from anvil.api.items.items import Item
 from anvil.api.logic.molang import Query
 from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.vanilla.items import MinecraftItemTypes
-from anvil.lib.jsonmodel import encoders, json_field
-from anvil.lib.jsonmodel.validators import in_range
-from anvil.lib.lib import Color, AnvilFormatter
+from anvil.lib.jsonmodel import InRange, RGBAColor, json_field
+from anvil.lib.lib import AnvilFormatter
 
 # ========================== Utility Functions ===============================
 
@@ -374,9 +373,11 @@ class PotionAPI:
         class DynamicPotionEffect(ItemCustomComponent):
             identifier = component_id
 
-            amplifier: float = json_field(validators=[in_range(0.0, 255.0)])
+            amplifier: Annotated[float, InRange(0.0, 255.0)] = json_field()
             duration: float = json_field()
-            potion_color: Color = json_field(encoder=encoders.to_rgba)
+            potion_color: Annotated[
+                HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, RGBAColor
+            ] = json_field()
 
         cls._component_cache[effect_key] = DynamicPotionEffect
         return DynamicPotionEffect

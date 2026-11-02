@@ -1,6 +1,6 @@
 import dataclasses
 from dataclasses import InitVar
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, get_args
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal, get_args
 
 from anvil.api.core.enums import (
     BlockFaceValues,
@@ -9,6 +9,10 @@ from anvil.api.core.enums import (
 )
 from anvil.api.core.textures import FlipBookTexturesObject, TerrainTexturesObject
 from anvil.api.core.types import (
+    RGB,
+    RGB255,
+    RGBA,
+    RGBA255,
     BlockChestObstructionRule,
     BlockConnectionSource,
     BlockCullingLayer,
@@ -16,14 +20,12 @@ from anvil.api.core.types import (
     BlockLavaFlammable,
     BlockMovementType,
     BlockPrecipitationBehavior,
-    BlockReference,
     BlockSticky,
     BlockSupportShape,
-    Color,
+    HexRGB,
+    HexRGBA,
     InstrumentSound,
-    ItemReference,
     TintMethod,
-    Vector3D,
 )
 from anvil.api.logic.molang import Molang
 from anvil.api.models.geometry import (
@@ -45,59 +47,31 @@ from anvil.lib.blockbench import (
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import (
     ComponentPlacement,
+    ExpandFaces,
+    Hex,
+    InRange,
     JsonComponent,
     JsonCustomComponent,
     JsonObject,
     JsonValue,
     JsonValueComponent,
-    encoders,
+    Keyed,
+    Length,
+    MinMax,
+    NonNegative,
+    Ordered,
+    RedstoneSignal,
+    ShortTag,
+    Unique,
     json_field,
 )
-from anvil.lib.jsonmodel.encoders import keyed
 from anvil.lib.jsonmodel.identifier import Identifier
-from anvil.lib.jsonmodel.validators import (
-    each,
-    in_range,
-    instance_of,
-    length,
-    literal_of,
-    max_characters,
-    non_negative_range,
-    one_of,
-    unique,
-)
 from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 if TYPE_CHECKING:
     from anvil.api.blocks.server import BlockServer
 
-# region Validators
-
-_boolean = instance_of(bool)
-_string = instance_of(str)
-_number = instance_of(int, float)
-_integer = instance_of(int)
-_signal = (_integer, in_range(0, 15))
-_vector = (length(3, 3), each(_number))
-_faces = each(one_of(*BlockFaceValues))
-_sides = each(
-    one_of(
-        BlockFaceValues.North,
-        BlockFaceValues.South,
-        BlockFaceValues.East,
-        BlockFaceValues.West,
-        BlockFaceValues.Side,
-    )
-)
-_tint_method = literal_of(TintMethod)
-_render_method = one_of(*BlockMaterial)
-
-
-_short_tag = max_characters(64)
-
-
-# endregion
 
 # region Parts: objects nested inside components
 
@@ -163,17 +137,15 @@ class MaterialParams(JsonObject):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_material_instances)
     """
 
-    render_method: BlockMaterial | None = json_field(
-        default=None, validators=[_render_method]
+    render_method: BlockMaterial | None = json_field(default=None)
+    ambient_occlusion: Annotated[float, InRange(0.0, 10.0)] | None = json_field(
+        default=None
     )
-    ambient_occlusion: float | None = json_field(
-        default=None, validators=[_number, in_range(0.0, 10.0)]
-    )
-    face_dimming: bool | None = json_field(default=None, validators=[_boolean])
-    isotropic: bool | None = json_field(default=None, validators=[_boolean])
-    tint_method: TintMethod | None = json_field(default=None, validators=[_tint_method])
-    alpha_masked_tint: bool | None = json_field(default=None, validators=[_boolean])
-    emissive: bool | None = json_field(default=None, validators=[_boolean])
+    face_dimming: bool | None = json_field(default=None)
+    isotropic: bool | None = json_field(default=None)
+    tint_method: TintMethod | None = json_field(default=None)
+    alpha_masked_tint: bool | None = json_field(default=None)
+    emissive: bool | None = json_field(default=None)
 
     def __validate__(self) -> None:
         if self.alpha_masked_tint:
@@ -196,10 +168,8 @@ class MaterialInstance(MaterialParams):
         texture (str): The texture's short name in `terrain_texture.json`.
     """
 
-    face: BlockFaceValues | str = json_field(
-        default=BlockFaceValues.All, validators=[_string], exclude=True
-    )
-    texture: str = json_field(validators=[_string])
+    face: BlockFaceValues | str = json_field(default=BlockFaceValues.All, exclude=True)
+    texture: str = json_field()
 
     @property
     def key(self) -> str:
@@ -262,12 +232,12 @@ class BlockBox(JsonObject):
     """A box inside the block, in pixels, measured from the bottom centre of the block.
 
     Args:
-        origin (Vector3D): The minimal corner, x and z from -8 to 8, y from 0.
-        size (Vector3D): The size along each axis.
+        origin (tuple[float, float, float]): The minimal corner, x and z from -8 to 8, y from 0.
+        size (tuple[float, float, float]): The size along each axis.
     """
 
-    origin: Vector3D = json_field(validators=_vector)
-    size: Vector3D = json_field(validators=_vector)
+    origin: tuple[float, float, float] = json_field()
+    size: tuple[float, float, float] = json_field()
 
 
 class ItemTagFilter(JsonObject):
@@ -277,21 +247,19 @@ class ItemTagFilter(JsonObject):
         tags (Molang | str): A tag query, for example `Query.AnyTag("minecraft:is_pickaxe")`.
     """
 
-    tags: Molang | str = json_field(validators=[_string])
+    tags: Molang | str = json_field()
 
 
 class ItemSpecificSpeed(JsonObject):
     """How long the block takes to mine with specific items.
 
     Args:
-        item (ItemReference | ItemTagFilter): The item, or the tags of the items.
+        item (str | MinecraftItemDescriptor | ItemTagFilter): The item, or the tags of the items.
         destroy_speed (float): The seconds to destroy the block with those items.
     """
 
-    item: ItemReference | ItemTagFilter = json_field(
-        validators=[instance_of(str, MinecraftItemDescriptor, ItemTagFilter)]
-    )
-    destroy_speed: float = json_field(validators=[_number])
+    item: str | MinecraftItemDescriptor | ItemTagFilter = json_field()
+    destroy_speed: float = json_field()
 
 
 class PlacementCondition(JsonObject):
@@ -299,19 +267,15 @@ class PlacementCondition(JsonObject):
 
     Args:
         allowed_faces (list[BlockFaceValues], optional): The faces of the block below or beside it the block can be placed on. Game default every face.
-        block_filter (list[BlockReference], optional): The blocks it can be placed on, at most 64. Game default any block.
+        block_filter (list[str | MinecraftBlockDescriptor], optional): The blocks it can be placed on, at most 64. Game default any block.
     """
 
-    allowed_faces: list[BlockFaceValues] | None = json_field(
-        default=None, validators=[_faces], encoder=encoders.expand_faces
+    allowed_faces: Annotated[list[BlockFaceValues], ExpandFaces] | None = json_field(
+        default=None
     )
-    block_filter: list[BlockReference] | None = json_field(
-        default=None,
-        validators=[
-            length(maximum=64),
-            each(instance_of(str, MinecraftBlockDescriptor)),
-        ],
-    )
+    block_filter: (
+        Annotated[list[str | MinecraftBlockDescriptor], Length(maximum=64)] | None
+    ) = json_field(default=None)
 
 
 class LiquidDetectionRule(JsonObject):
@@ -325,17 +289,13 @@ class LiquidDetectionRule(JsonObject):
         use_liquid_clipping (bool, optional): Whether the liquid is visually clipped by the block's collision. Game default false.
     """
 
-    liquid_type: Literal["water"] | None = json_field(
-        default=None, validators=[one_of("water")]
-    )
-    on_liquid_touches: BlockLiquidDetectionTouching | None = json_field(
-        default=None, validators=[one_of(*BlockLiquidDetectionTouching)]
-    )
-    can_contain_liquid: bool | None = json_field(default=None, validators=[_boolean])
-    stops_liquid_flowing_from_direction: list[BlockFaceValues] | None = json_field(
-        default=None, validators=[_faces], encoder=encoders.expand_faces
-    )
-    use_liquid_clipping: bool | None = json_field(default=None, validators=[_boolean])
+    liquid_type: Literal["water"] | None = json_field(default=None)
+    on_liquid_touches: BlockLiquidDetectionTouching | None = json_field(default=None)
+    can_contain_liquid: bool | None = json_field(default=None)
+    stops_liquid_flowing_from_direction: (
+        Annotated[list[BlockFaceValues], ExpandFaces] | None
+    ) = json_field(default=None)
+    use_liquid_clipping: bool | None = json_field(default=None)
 
 
 class NWayVisualRotation(JsonObject):
@@ -347,9 +307,9 @@ class NWayVisualRotation(JsonObject):
         z (str, optional): The state for the z axis.
     """
 
-    x: str | None = json_field(default=None, validators=[_string])
-    y: str | None = json_field(default=None, validators=[_string])
-    z: str | None = json_field(default=None, validators=[_string])
+    x: str | None = json_field(default=None)
+    y: str | None = json_field(default=None)
+    z: str | None = json_field(default=None)
 
 
 class BoneVisibility(JsonValue):
@@ -360,8 +320,8 @@ class BoneVisibility(JsonValue):
         visible (bool | Molang): True, False, or a Molang expression evaluated against the block states.
     """
 
-    bone: str = json_field(validators=[_string], exclude=True)
-    visible: bool | Molang | str = json_field(validators=[instance_of(bool, str)])
+    bone: str = json_field(exclude=True)
+    visible: bool | Molang | str = json_field()
 
 
 class VisualGeometry(JsonObject):
@@ -374,17 +334,11 @@ class VisualGeometry(JsonObject):
     Its `bone_visibility` is filled by the visual's `add_bone_visibility`.
     """
 
-    identifier: str = json_field(validators=[_string])
-    bone_visibility: list[BoneVisibility] = json_field(
-        default_factory=list,
-        init=False,
-        omit_default=True,
-        validators=[each(instance_of(BoneVisibility)), unique("bone")],
-        encoder=keyed("bone"),
+    identifier: str = json_field()
+    bone_visibility: Annotated[list[BoneVisibility], Unique("bone"), Keyed("bone")] = (
+        json_field(default_factory=list, init=False, omit_default=True)
     )
-    n_way_visual_rotation: NWayVisualRotation | None = json_field(
-        default=None, validators=[instance_of(NWayVisualRotation)]
-    )
+    n_way_visual_rotation: NWayVisualRotation | None = json_field(default=None)
 
 
 class BlockEntityContainer(JsonObject):
@@ -394,7 +348,7 @@ class BlockEntityContainer(JsonObject):
         slot_count (int): The number of slots, from 1 to 54.
     """
 
-    slot_count: int = json_field(validators=[_integer, in_range(1, 54)])
+    slot_count: Annotated[int, InRange(1, 54)] = json_field()
 
 
 class OffsetRange(JsonObject):
@@ -405,14 +359,8 @@ class OffsetRange(JsonObject):
         steps (int, optional): How many positions the range is split into. 0 allows any value between. Game default 0.
     """
 
-    range: tuple[float, float] | None = json_field(
-        default=None,
-        validators=[length(2, 2), each(_number)],
-        encoder=encoders.min_max,
-    )
-    steps: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
+    range: Annotated[tuple[float, float], MinMax] | None = json_field(default=None)
+    steps: Annotated[int, NonNegative] | None = json_field(default=None)
 
 
 def _geometry_source(
@@ -448,7 +396,7 @@ class _Switchable(JsonComponent, abstract=True):
     """A component that can be written as `false` to turn its behaviour off, and is written as
     `true` when none of its options are set."""
 
-    enabled: bool = json_field(default=True, validators=[_boolean], exclude=True)
+    enabled: bool = json_field(default=True, exclude=True)
 
     def __json__(self) -> Any:
         payload = JsonObject.__json__(self)
@@ -466,10 +414,12 @@ class _BlockBoxComponent(_Switchable, abstract=True):
 
     _max_height: ClassVar[int] = 16
 
-    origin: Vector3D | None = json_field(default=None, validators=_vector)
-    size: Vector3D | None = json_field(default=None, validators=_vector)
+    origin: tuple[float, float, float] | None = json_field(default=None)
+    size: tuple[float, float, float] | None = json_field(default=None)
 
-    def _check_box(self, origin: Vector3D, size: Vector3D) -> None:
+    def _check_box(
+        self, origin: tuple[float, float, float], size: tuple[float, float, float]
+    ) -> None:
         low = (-8, 0, -8)
         high = (8, self._max_height, 8)
         end = [o + s for o, s in zip(origin, size)]
@@ -495,12 +445,9 @@ class _BlockVisual(JsonComponent, abstract=True):
     collection: InitVar[str | None] = None
     n_way_visual_rotation: InitVar[NWayVisualRotation | None] = None
     geometry: VisualGeometry = json_field(default=None, init=False)
-    material_instances: list[MaterialInstance] = json_field(
-        default_factory=list,
-        omit_default=True,
-        validators=[each(instance_of(MaterialInstance)), unique("key")],
-        encoder=keyed("key"),
-    )
+    material_instances: Annotated[
+        list[MaterialInstance], Unique("key"), Keyed("key")
+    ] = json_field(default_factory=list, omit_default=True)
     _model: Any = json_field(default=None, init=False, exclude=True)
     _collection: str | None = json_field(default=None, init=False, exclude=True)
 
@@ -599,17 +546,15 @@ class BlockChestObstruction(JsonComponent):
 
     identifier = "minecraft:chest_obstruction"
 
-    obstruction_rule: BlockChestObstructionRule | None = json_field(
-        default=None, validators=[literal_of(BlockChestObstructionRule)]
-    )
+    obstruction_rule: BlockChestObstructionRule | None = json_field(default=None)
 
 
 class BlockCollisionBox(_BlockBoxComponent):
     """The area of the block that collides with entities. With no box, the full block collides.
 
     Args:
-        origin (Vector3D, optional): The minimal corner of the box, in pixels from the bottom centre of the block.
-        size (Vector3D, optional): The size of the box. The box must stay within (-8, 0, -8) and (8, 24, 8).
+        origin (tuple[float, float, float], optional): The minimal corner of the box, in pixels from the bottom centre of the block.
+        size (tuple[float, float, float], optional): The size of the box. The box must stay within (-8, 0, -8) and (8, 24, 8).
         enabled (bool, optional): False makes the block collide with nothing, written as `false`. Defaults to True.
 
     Add more boxes with `add_box`. Boxes are always written as a list, even when there is only one.
@@ -622,12 +567,14 @@ class BlockCollisionBox(_BlockBoxComponent):
 
     _boxes: list[BlockBox] = json_field(default_factory=list, init=False, exclude=True)
 
-    def add_box(self, *, origin: Vector3D, size: Vector3D) -> "BlockCollisionBox":
+    def add_box(
+        self, *, origin: tuple[float, float, float], size: tuple[float, float, float]
+    ) -> "BlockCollisionBox":
         """Adds another collision box, for more complex shapes.
 
         Args:
-            origin (Vector3D): The minimal corner of the box.
-            size (Vector3D): The size of the box.
+            origin (tuple[float, float, float]): The minimal corner of the box.
+            size (tuple[float, float, float]): The size of the box.
         """
         self._boxes.append(BlockBox(origin=origin, size=size))
         return self
@@ -659,12 +606,22 @@ class BlockConnectionRule(JsonComponent):
 
     identifier = "minecraft:connection_rule"
 
-    accepts_connections_from: BlockConnectionSource | None = json_field(
-        default=None, validators=[literal_of(BlockConnectionSource)]
-    )
-    enabled_directions: list[BlockFaceValues] | None = json_field(
-        default=None, validators=[_sides], encoder=encoders.expand_faces
-    )
+    accepts_connections_from: BlockConnectionSource | None = json_field(default=None)
+    enabled_directions: (
+        Annotated[
+            list[
+                Literal[
+                    BlockFaceValues.North,
+                    BlockFaceValues.South,
+                    BlockFaceValues.East,
+                    BlockFaceValues.West,
+                    BlockFaceValues.Side,
+                ]
+            ],
+            ExpandFaces,
+        ]
+        | None
+    ) = json_field(default=None)
 
 
 class BlockCraftingTable(JsonComponent):
@@ -679,10 +636,10 @@ class BlockCraftingTable(JsonComponent):
 
     identifier = "minecraft:crafting_table"
 
-    crafting_tags: list[str] = json_field(
-        validators=[length(maximum=64), each(_string, _short_tag)]
+    crafting_tags: Annotated[list[Annotated[str, ShortTag]], Length(maximum=64)] = (
+        json_field()
     )
-    table_name: str | None = json_field(default=None, validators=[_string])
+    table_name: str | None = json_field(default=None)
 
     def __prepare_export__(self, owner: "BlockServer", *, root: bool = True) -> None:
         """Adds the name to the language file under `tile.<identifier>.table_name` for the root,
@@ -713,8 +670,8 @@ class BlockDestructibleByExplosion(_Switchable):
 
     identifier = "minecraft:destructible_by_explosion"
 
-    explosion_resistance: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0)]
+    explosion_resistance: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
 
 
@@ -731,17 +688,16 @@ class BlockDestructibleByMining(_Switchable):
 
     identifier = "minecraft:destructible_by_mining"
 
-    seconds_to_destroy: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0)]
-    )
+    seconds_to_destroy: Annotated[float, NonNegative] | None = json_field(default=None)
     item_specific_speeds: list[ItemSpecificSpeed] = json_field(
-        default_factory=list,
-        omit_default=True,
-        validators=[each(instance_of(ItemSpecificSpeed))],
+        default_factory=list, omit_default=True
     )
 
     def add_item_specific_speed(
-        self, *, item: ItemReference | ItemTagFilter, destroy_speed: float
+        self,
+        *,
+        item: str | MinecraftItemDescriptor | ItemTagFilter,
+        destroy_speed: float,
     ) -> "BlockDestructibleByMining":
         """Adds the seconds to mine the block with an item, or items with tags.
 
@@ -770,11 +726,9 @@ class BlockDestructionParticles(JsonComponent):
 
     identifier = "minecraft:destruction_particles"
 
-    texture: str | None = json_field(default=None, validators=[_string])
-    particle_count: int | None = json_field(
-        default=None, validators=[_integer, in_range(0, 255)]
-    )
-    tint_method: TintMethod | None = json_field(default=None, validators=[_tint_method])
+    texture: str | None = json_field(default=None)
+    particle_count: Annotated[int, InRange(0, 255)] | None = json_field(default=None)
+    tint_method: TintMethod | None = json_field(default=None)
     blockbench: InitVar[str | None] = None
 
     def __post_init__(self, blockbench: str | None) -> None:
@@ -796,7 +750,7 @@ class BlockDisplayName(JsonValueComponent):
 
     identifier = "minecraft:display_name"
 
-    value: str = json_field(validators=[_string])
+    value: str = json_field()
 
     def __prepare_export__(self, owner: "BlockServer", *, root: bool = True) -> None:
         """Adds the name to the language file under `tile.<identifier>.name` for the root, and
@@ -843,10 +797,8 @@ class BlockEntity(JsonComponent):
 
     identifier = "minecraft:block_entity"
 
-    container: BlockEntityContainer | None = json_field(
-        default=None, validators=[instance_of(BlockEntityContainer)]
-    )
-    dynamic_properties: bool | None = json_field(default=None, validators=[_boolean])
+    container: BlockEntityContainer | None = json_field(default=None)
+    dynamic_properties: bool | None = json_field(default=None)
 
     def set_container(
         self,
@@ -871,8 +823,8 @@ class BlockEntityFallOn(JsonComponent):
 
     identifier = "minecraft:entity_fall_on"
 
-    minimum_fall_distance: float | None = json_field(
-        default=None, validators=[_number, in_range(minimum=0)]
+    minimum_fall_distance: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
 
 
@@ -890,15 +842,11 @@ class BlockFlammable(_Switchable):
 
     identifier = "minecraft:flammable"
 
-    catch_chance_modifier: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
+    catch_chance_modifier: Annotated[int, NonNegative] | None = json_field(default=None)
+    destroy_chance_modifier: Annotated[int, NonNegative] | None = json_field(
+        default=None
     )
-    destroy_chance_modifier: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    lava_flammable: BlockLavaFlammable | None = json_field(
-        default=None, validators=[literal_of(BlockLavaFlammable)]
-    )
+    lava_flammable: BlockLavaFlammable | None = json_field(default=None)
 
 
 class BlockFlowerPottable(JsonComponent):
@@ -922,7 +870,7 @@ class BlockFriction(JsonValueComponent):
 
     identifier = "minecraft:friction"
 
-    value: float = json_field(default=0.4, validators=[_number, in_range(0.0, 0.9)])
+    value: Annotated[float, InRange(0.0, 0.9)] = json_field(default=0.4)
 
 
 class BlockGeometry(JsonComponent):
@@ -948,27 +896,15 @@ class BlockGeometry(JsonComponent):
     blockbench: InitVar[str | Geometry] = "minecraft:geometry.full_block"
     collection: InitVar[str | None] = None
     # fields
-    culling_layer: BlockCullingLayer | None = json_field(
-        default=None, validators=[literal_of(BlockCullingLayer)]
-    )
-    n_way_visual_rotation: NWayVisualRotation | None = json_field(
-        default=None, validators=[instance_of(NWayVisualRotation)]
-    )
-    uv_lock: bool | list[str] | None = json_field(
-        default=None, validators=[instance_of(bool, list)]
-    )
+    culling_layer: BlockCullingLayer | None = json_field(default=None)
+    n_way_visual_rotation: NWayVisualRotation | None = json_field(default=None)
+    uv_lock: bool | list[str] | None = json_field(default=None)
     # private from init
     geometry: str = json_field(default=None, init=False, key="identifier")
-    bone_visibility: list[BoneVisibility] = json_field(
-        default_factory=list,
-        init=False,
-        omit_default=True,
-        validators=[each(instance_of(BoneVisibility)), unique("bone")],
-        encoder=keyed("bone"),
+    bone_visibility: Annotated[list[BoneVisibility], Unique("bone"), Keyed("bone")] = (
+        json_field(default_factory=list, init=False, omit_default=True)
     )
-    culling_shape: str | None = json_field(
-        default=None, validators=[_string], init=False
-    )
+    culling_shape: str | None = json_field(default=None, init=False)
     culling: str | None = json_field(default=None, init=False)
 
     _model: _Blockbench | None = json_field(default=None, init=False, exclude=True)
@@ -1060,12 +996,8 @@ class BlockInstrumentSound(JsonComponent):
 
     identifier = "minecraft:instrument_sound"
 
-    up: InstrumentSound | None = json_field(
-        default=None, validators=[literal_of(InstrumentSound)]
-    )
-    down: InstrumentSound | None = json_field(
-        default=None, validators=[literal_of(InstrumentSound)]
-    )
+    up: InstrumentSound | None = json_field(default=None)
+    down: InstrumentSound | None = json_field(default=None)
 
     def __validate__(self) -> None:
         if self.up is None and self.down is None:
@@ -1164,14 +1096,14 @@ class BlockLeashable(JsonComponent):
     """The block can be leashed to by a lead.
 
     Args:
-        offset (Vector3D, optional): Where the lead attaches, in pixels. Game default (0, 8, 0).
+        offset (tuple[float, float, float], optional): Where the lead attaches, in pixels. Game default (0, 8, 0).
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_leashable)
     """
 
     identifier = "minecraft:leashable"
 
-    offset: Vector3D | None = json_field(default=None, validators=_vector)
+    offset: tuple[float, float, float] | None = json_field(default=None)
 
 
 class BlockLightDampening(JsonValueComponent):
@@ -1185,7 +1117,7 @@ class BlockLightDampening(JsonValueComponent):
 
     identifier = "minecraft:light_dampening"
 
-    value: int = json_field(default=15, validators=_signal)
+    value: Annotated[int, RedstoneSignal] = json_field(default=15)
 
 
 class BlockLightEmission(JsonValueComponent):
@@ -1199,7 +1131,7 @@ class BlockLightEmission(JsonValueComponent):
 
     identifier = "minecraft:light_emission"
 
-    value: int = json_field(default=0, validators=_signal)
+    value: Annotated[int, RedstoneSignal] = json_field(default=0)
 
 
 class BlockLiquidDetection(JsonComponent):
@@ -1213,9 +1145,8 @@ class BlockLiquidDetection(JsonComponent):
 
     identifier = "minecraft:liquid_detection"
 
-    detection_rules: list[LiquidDetectionRule] = json_field(
-        default_factory=list,
-        validators=[length(minimum=1), each(instance_of(LiquidDetectionRule))],
+    detection_rules: Annotated[list[LiquidDetectionRule], Length(minimum=1)] = (
+        json_field(default_factory=list)
     )
 
     def add_detection_rule(
@@ -1251,7 +1182,7 @@ class BlockLootTable(JsonValueComponent):
 
     identifier = "minecraft:loot"
 
-    value: LootTable | str = json_field(validators=[instance_of(LootTable, str)])
+    value: LootTable | str = json_field()
 
     def __post_init__(self) -> None:
         if isinstance(self.value, LootTable):
@@ -1262,7 +1193,7 @@ class BlockMapColor(JsonComponent):
     """The color of the block on a map. Without it, the block doesn't show on maps.
 
     Args:
-        color (Color): The color, written as "#RRGGBB".
+        color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The color, written as "#RRGGBB".
         tint_method (TintMethod, optional): Tint multiplied to the color by the biome.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_map_color)
@@ -1270,8 +1201,10 @@ class BlockMapColor(JsonComponent):
 
     identifier = "minecraft:map_color"
 
-    color: Color = json_field(encoder=encoders.to_hex)
-    tint_method: TintMethod | None = json_field(default=None, validators=[_tint_method])
+    color: Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] = (
+        json_field()
+    )
+    tint_method: TintMethod | None = json_field(default=None)
 
 
 class BlockMaterialInstance(JsonValueComponent):
@@ -1286,10 +1219,8 @@ class BlockMaterialInstance(JsonValueComponent):
 
     identifier = "minecraft:material_instances"
 
-    instances: list[MaterialInstance] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(MaterialInstance)), unique("key")],
-        encoder=keyed("key"),
+    instances: Annotated[list[MaterialInstance], Unique("key"), Keyed("key")] = (
+        json_field(default_factory=list)
     )
 
     def add_instance(
@@ -1368,12 +1299,8 @@ class BlockMovable(JsonComponent):
 
     identifier = "minecraft:movable"
 
-    movement_type: BlockMovementType | None = json_field(
-        default=None, validators=[literal_of(BlockMovementType)]
-    )
-    sticky: BlockSticky | None = json_field(
-        default=None, validators=[literal_of(BlockSticky)]
-    )
+    movement_type: BlockMovementType | None = json_field(default=None)
+    sticky: BlockSticky | None = json_field(default=None)
 
 
 class BlockPlacementFilter(JsonComponent):
@@ -1387,16 +1314,15 @@ class BlockPlacementFilter(JsonComponent):
 
     identifier = "minecraft:placement_filter"
 
-    conditions: list[PlacementCondition] = json_field(
-        default_factory=list,
-        validators=[length(maximum=64), each(instance_of(PlacementCondition))],
+    conditions: Annotated[list[PlacementCondition], Length(maximum=64)] = json_field(
+        default_factory=list
     )
 
     def add_condition(
         self,
         *,
         allowed_faces: list[BlockFaceValues] | None = None,
-        block_filter: list[BlockReference] | None = None,
+        block_filter: list[str | MinecraftBlockDescriptor] | None = None,
     ) -> "BlockPlacementFilter":
         """Adds a condition. See `PlacementCondition` for the parameters."""
         self.conditions.append(
@@ -1416,9 +1342,7 @@ class BlockPrecipitationInteractions(JsonComponent):
 
     identifier = "minecraft:precipitation_interactions"
 
-    precipitation_behavior: BlockPrecipitationBehavior = json_field(
-        validators=[literal_of(BlockPrecipitationBehavior)]
-    )
+    precipitation_behavior: BlockPrecipitationBehavior = json_field()
 
 
 class BlockRandomOffset(JsonComponent):
@@ -1434,15 +1358,9 @@ class BlockRandomOffset(JsonComponent):
 
     identifier = "minecraft:random_offset"
 
-    x: OffsetRange | None = json_field(
-        default=None, validators=[instance_of(OffsetRange)]
-    )
-    y: OffsetRange | None = json_field(
-        default=None, validators=[instance_of(OffsetRange)]
-    )
-    z: OffsetRange | None = json_field(
-        default=None, validators=[instance_of(OffsetRange)]
-    )
+    x: OffsetRange | None = json_field(default=None)
+    y: OffsetRange | None = json_field(default=None)
+    z: OffsetRange | None = json_field(default=None)
 
     def set_z(
         self,
@@ -1496,10 +1414,8 @@ class BlockRedstoneConductivity(JsonComponent):
 
     identifier = "minecraft:redstone_conductivity"
 
-    allows_wire_to_step_down: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    redstone_conductor: bool | None = json_field(default=None, validators=[_boolean])
+    allows_wire_to_step_down: bool | None = json_field(default=None)
+    redstone_conductor: bool | None = json_field(default=None)
 
 
 class BlockRedstoneConsumer(JsonComponent):
@@ -1515,8 +1431,8 @@ class BlockRedstoneConsumer(JsonComponent):
     identifier = "minecraft:redstone_consumer"
     _placement = ComponentPlacement.ROOT
 
-    min_power: int | None = json_field(default=None, validators=_signal)
-    propagates_power: bool | None = json_field(default=None, validators=[_boolean])
+    min_power: Annotated[int, RedstoneSignal] | None = json_field(default=None)
+    propagates_power: bool | None = json_field(default=None)
 
 
 class BlockRedstoneProducer(JsonComponent):
@@ -1533,14 +1449,12 @@ class BlockRedstoneProducer(JsonComponent):
 
     identifier = "minecraft:redstone_producer"
 
-    power: int | None = json_field(default=None, validators=_signal)
-    connected_faces: list[BlockFaceValues] | None = json_field(
-        default=None, validators=[_faces], encoder=encoders.expand_faces
+    power: Annotated[int, RedstoneSignal] | None = json_field(default=None)
+    connected_faces: Annotated[list[BlockFaceValues], ExpandFaces] | None = (
+        json_field(default=None)
     )
-    strongly_powered_face: BlockFaceValues | None = json_field(
-        default=None, validators=[one_of(*BlockFaceValues)]
-    )
-    transform_relative: bool | None = json_field(default=None, validators=[_boolean])
+    strongly_powered_face: BlockFaceValues | None = json_field(default=None)
+    transform_relative: bool | None = json_field(default=None)
 
 
 class BlockReplaceable(JsonComponent):
@@ -1556,8 +1470,8 @@ class BlockSelectionBox(_BlockBoxComponent):
     """The area of the block the player's cursor selects. With no box, the full block is selected.
 
     Args:
-        origin (Vector3D, optional): The minimal corner of the box, in pixels from the bottom centre of the block.
-        size (Vector3D, optional): The size of the box. The box must stay within (-8, 0, -8) and (8, 16, 8).
+        origin (tuple[float, float, float], optional): The minimal corner of the box, in pixels from the bottom centre of the block.
+        size (tuple[float, float, float], optional): The size of the box. The box must stay within (-8, 0, -8) and (8, 16, 8).
         enabled (bool, optional): False makes the block unselectable, written as `false`. Defaults to True.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_selection_box)
@@ -1577,7 +1491,7 @@ class BlockSupport(JsonComponent):
 
     identifier = "minecraft:support"
 
-    shape: BlockSupportShape = json_field(validators=[literal_of(BlockSupportShape)])
+    shape: BlockSupportShape = json_field()
 
 
 class BlockTagComponent(JsonValueComponent):
@@ -1591,7 +1505,7 @@ class BlockTagComponent(JsonValueComponent):
 
     identifier = "minecraft:tags"
 
-    value: list[MinecraftBlockTags | str] = json_field(validators=[each(_string)])
+    value: list[MinecraftBlockTags | str] = json_field()
 
     def __validate__(self) -> None:
         for tag in self.value:
@@ -1612,30 +1526,30 @@ class BlockTick(JsonComponent):
 
     identifier = "minecraft:tick"
 
-    interval_range: tuple[int, int] = json_field(validators=[non_negative_range])
-    looping: bool | None = json_field(default=None, validators=[_boolean])
+    interval_range: Annotated[tuple[int, int], NonNegative, Ordered] = json_field()
+    looping: bool | None = json_field(default=None)
 
 
 class BlockTransformation(JsonComponent):
     """Translates, rotates and scales the block around its centre.
 
     Args:
-        translation (Vector3D, optional): The offset, in blocks.
-        rotation (Vector3D, optional): The rotation, in degrees, in steps of 90.
-        rotation_pivot (Vector3D, optional): The point the rotation turns around.
-        scale (Vector3D, optional): The scale. Game default (1, 1, 1).
-        scale_pivot (Vector3D, optional): The point the scale grows from.
+        translation (tuple[float, float, float], optional): The offset, in blocks.
+        rotation (tuple[float, float, float], optional): The rotation, in degrees, in steps of 90.
+        rotation_pivot (tuple[float, float, float], optional): The point the rotation turns around.
+        scale (tuple[float, float, float], optional): The scale. Game default (1, 1, 1).
+        scale_pivot (tuple[float, float, float], optional): The point the scale grows from.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blockcomponents/minecraftblock_transformation)
     """
 
     identifier = "minecraft:transformation"
 
-    translation: Vector3D | None = json_field(default=None, validators=_vector)
-    rotation: Vector3D | None = json_field(default=None, validators=_vector)
-    rotation_pivot: Vector3D | None = json_field(default=None, validators=_vector)
-    scale: Vector3D | None = json_field(default=None, validators=_vector)
-    scale_pivot: Vector3D | None = json_field(default=None, validators=_vector)
+    translation: tuple[float, float, float] | None = json_field(default=None)
+    rotation: tuple[float, float, float] | None = json_field(default=None)
+    rotation_pivot: tuple[float, float, float] | None = json_field(default=None)
+    scale: tuple[float, float, float] | None = json_field(default=None)
+    scale_pivot: tuple[float, float, float] | None = json_field(default=None)
 
 
 # endregion

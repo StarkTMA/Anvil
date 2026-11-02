@@ -1,11 +1,10 @@
 """The custom components the wood set blocks use, one per script in `typescript/`."""
 
 from enum import StrEnum
+from typing import Annotated
 
 from anvil.api.blocks.components import BlockCustomComponent
-from anvil.api.core.types import Vector3D
-from anvil.lib.jsonmodel.validators import each, in_range, instance_of, length
-from anvil.lib.jsonmodel import json_field
+from anvil.lib.jsonmodel import AtLeastOne, Chance, InRange, Positive, json_field
 
 __all__ = [
     "SupportedBy",
@@ -20,12 +19,6 @@ __all__ = [
     "BlockWoodSetLeaves",
     "BlockWoodSetSapling",
 ]
-
-
-_boolean = instance_of(bool)
-_string = instance_of(str)
-_chance = (instance_of(int, float), in_range(0, 1))
-_offset = (length(3, 3), each(instance_of(int, float), in_range(0, 16)))
 
 
 class _WoodSetComponent(BlockCustomComponent, abstract=True):
@@ -55,9 +48,7 @@ class BlockWoodSetSupport(_WoodSetComponent):
 
     identifier = "wood_set_support"
 
-    supported_by: SupportedBy = json_field(
-        default=SupportedBy.Below, validators=[instance_of(SupportedBy)]
-    )
+    supported_by: SupportedBy = json_field(default=SupportedBy.Below)
 
 
 class BlockWoodSetTogglable(_WoodSetComponent):
@@ -73,9 +64,9 @@ class BlockWoodSetTogglable(_WoodSetComponent):
 
     identifier = "wood_set_togglable"
 
-    on_interact: bool = json_field(default=True, validators=[_boolean])
-    on_sound: str | None = json_field(default=None, validators=[_string])
-    off_sound: str | None = json_field(default=None, validators=[_string])
+    on_interact: bool = json_field(default=True)
+    on_sound: str | None = json_field(default=None)
+    off_sound: str | None = json_field(default=None)
 
 
 class BlockWoodSetInteractable(_WoodSetComponent):
@@ -89,9 +80,9 @@ class BlockWoodSetInteractable(_WoodSetComponent):
 
     identifier = "wood_set_interactable"
 
-    multi_part: bool = json_field(default=False, validators=[_boolean])
-    open_sound: str | None = json_field(default=None, validators=[_string])
-    close_sound: str | None = json_field(default=None, validators=[_string])
+    multi_part: bool = json_field(default=False)
+    open_sound: str | None = json_field(default=None)
+    close_sound: str | None = json_field(default=None)
 
 
 class BlockWoodSetDoor(_WoodSetComponent):
@@ -116,9 +107,9 @@ class BlockWoodSetRedstoneConsumer(_WoodSetComponent):
 
     identifier = "wood_set_redstone_consumer"
 
-    multi_part: bool = json_field(default=False, validators=[_boolean])
-    open_sound: str | None = json_field(default=None, validators=[_string])
-    close_sound: str | None = json_field(default=None, validators=[_string])
+    multi_part: bool = json_field(default=False)
+    open_sound: str | None = json_field(default=None)
+    close_sound: str | None = json_field(default=None)
 
 
 class BlockWoodSetStrippable(_WoodSetComponent):
@@ -130,7 +121,7 @@ class BlockWoodSetStrippable(_WoodSetComponent):
 
     identifier = "wood_set_strippable"
 
-    stripped_block: str = json_field(validators=[_string])
+    stripped_block: str = json_field()
 
 
 class BlockWoodSetSlab(_WoodSetComponent):
@@ -143,14 +134,14 @@ class BlockWoodSetSign(_WoodSetComponent):
     """Asks for the text when placed or interacted with, and shows it on the sign.
 
     Args:
-        text_offset (Vector3D): Where the text sits in the block, in 1/16 block units
+        text_offset (tuple[float, float, float]): Where the text sits in the block, in 1/16 block units
             (0-16 on each axis), measured with the sign at rotation 0 from the block's
             north-west bottom corner (x east, y up, z south). It turns with the sign.
         text_scale (float): The size of the text; its outline grows with it.
         line_length (int): The most visible characters on a line.
         double_sided (bool): Also shows the text on the back, turned around the block's
             centre.
-        wall_text_offset (Vector3D, optional): Makes the sign two shapes in one block,
+        wall_text_offset (tuple[float, float, float], optional): Makes the sign two shapes in one block,
             told apart by its `standing` state: standing (on top of a block, turning in
             16 steps) and on a wall (on the side of a block, with its cardinal direction
             pointing at the wall). `text_offset` is where the text sits when standing and
@@ -161,21 +152,14 @@ class BlockWoodSetSign(_WoodSetComponent):
 
     identifier = "wood_set_sign"
 
-    text_offset: Vector3D = json_field(
-        default=(0, 0, 0), omit_default=True, validators=_offset, encoder=list
+    text_offset: Annotated[tuple[float, float, float], InRange(0, 16)] = json_field(
+        default=(0, 0, 0), omit_default=True
     )
-    text_scale: float = json_field(
-        default=0.46,
-        validators=[instance_of(int, float), in_range(0, min_exclusive=True)],
-    )
-    line_length: int = json_field(
-        default=15, omit_default=True, validators=[instance_of(int), in_range(1)]
-    )
-    double_sided: bool = json_field(
-        default=False, omit_default=True, validators=[_boolean]
-    )
-    wall_text_offset: Vector3D | None = json_field(
-        default=None, validators=_offset, encoder=list
+    text_scale: Annotated[float, Positive] = json_field(default=0.46)
+    line_length: Annotated[int, AtLeastOne] = json_field(default=15, omit_default=True)
+    double_sided: bool = json_field(default=False, omit_default=True)
+    wall_text_offset: Annotated[tuple[float, float, float], InRange(0, 16)] | None = (
+        json_field(default=None)
     )
 
 
@@ -200,17 +184,13 @@ class BlockWoodSetLeaves(_WoodSetComponent):
 
     identifier = "wood_set_leaves"
 
-    trunks: list[str] = json_field(validators=[each(_string)], encoder=list)
-    sapling: str | None = json_field(default=None, validators=[_string])
-    distance: int = json_field(
-        default=4, omit_default=True, validators=[instance_of(int), in_range(1)]
+    trunks: list[str] = json_field()
+    sapling: str | None = json_field(default=None)
+    distance: Annotated[int, AtLeastOne] = json_field(default=4, omit_default=True)
+    sapling_chance: Annotated[float, Chance] = json_field(
+        default=0.05, omit_default=True
     )
-    sapling_chance: float = json_field(
-        default=0.05, omit_default=True, validators=_chance
-    )
-    stick_chance: float = json_field(
-        default=0.02, omit_default=True, validators=_chance
-    )
+    stick_chance: Annotated[float, Chance] = json_field(default=0.02, omit_default=True)
 
 
 class BlockWoodSetSapling(_WoodSetComponent):
@@ -228,4 +208,4 @@ class BlockWoodSetSapling(_WoodSetComponent):
 
     identifier = "wood_set_sapling"
 
-    tree_feature: str = json_field(validators=[_string])
+    tree_feature: str = json_field()

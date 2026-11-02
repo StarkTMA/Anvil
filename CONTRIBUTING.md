@@ -29,7 +29,7 @@ If you want to suggest a new API or workflow:
 
 ## Development Setup
 
-Anvil is developed and tested on Windows with Python 3.10 or newer.
+Anvil is developed and tested on Windows with Python 3.15 or newer.
 
 ### Clone the repository
 

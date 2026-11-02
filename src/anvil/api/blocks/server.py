@@ -22,7 +22,7 @@ from anvil.api.core.enums import (
 )
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.jsonmodel import encoders, validate_components
+from anvil.lib.jsonmodel import validate_components
 from anvil.lib.schemas import (
     AddonObject,
     JsonSchemes,
@@ -332,9 +332,9 @@ class BlockServer(AddonObject):
         self._before_export()
 
         self._server_block["minecraft:block"].update(self.description.__export__())
-        self._server_block["minecraft:block"]["components"] = encoders.contents(
-            self._components
-        )
+        self._server_block["minecraft:block"][
+            "components"
+        ] = self._components.__payload__()
         self._server_block["minecraft:block"]["permutations"] = self._permutations
 
         self.content(self._server_block)

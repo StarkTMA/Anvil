@@ -5,13 +5,13 @@ against each one's placement, requirements and clashes.
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Self
+from typing import Annotated, Any, Iterator, Self
 
-from anvil.lib.jsonmodel.validators import each, instance_of, unique
+from anvil.api.core.types import JsonSchema
 
 from .component import ComponentPlacement, JsonComponent
-from .encoders import merged
 from .fields import json_field
+from .jsontypes import Merged
 from .object import JsonObject
 
 
@@ -82,15 +82,11 @@ class JsonContainer(JsonObject):
     """
 
     # private attr
-    _components: list[JsonComponent] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(JsonComponent)), unique("identifier")],
-        encoder=merged,
-        init=False,
-        key="components",
+    _components: Annotated[list[JsonComponent], Merged()] = json_field(
+        default_factory=list, init=False, key="components"
     )
 
-    name: str = json_field(exclude=True, validators=[instance_of(str)])
+    name: str = json_field(exclude=True)
 
     def add(self, *components: JsonComponent) -> Self:
         """Adds components. A component replaces the one with the same identifier, in its place.
@@ -128,6 +124,15 @@ class JsonContainer(JsonObject):
             self.name if key == "components" else key: value
             for key, value in payload.items()
         }
+
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+        """Any components, keyed by identifier, under the container name."""
+        return {"type": "object", "additionalProperties": {"type": "object"}}
+
+    def __payload__(self) -> dict[str, Any]:
+        """The components only, as one object keyed by identifier, without the container name."""
+        return Merged().encode(self._components)
 
     def __iter__(self) -> Iterator[JsonComponent]:
         return iter(self._components)

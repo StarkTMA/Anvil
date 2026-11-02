@@ -1,47 +1,43 @@
-from typing import TYPE_CHECKING
+from typing import Annotated, Literal
 from warnings import deprecated
 
 from anvil.api.core.enums import Dimension, MusicCategory
 from anvil.api.core.types import (
+    RGB,
+    RGB255,
+    RGBA,
+    RGBA255,
     BiomeClimateCategory,
     BiomeNoiseGradientBuilderType,
     BiomeNoiseType,
-    BiomeTransformation,
     BiomeVillageTypes,
-    Color,
     FoliageColorMap,
     GrassColorMap,
+    HexRGB,
+    HexRGBA,
 )
 from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
-from anvil.lib.jsonmodel import JsonComponent, JsonObject, encoders, json_field
-from anvil.lib.jsonmodel.validators import (
-    each,
-    in_range,
-    instance_of,
-    length,
-    literal_of,
-    one_of,
+from anvil.lib.jsonmodel import (
+    AsString,
+    Chance,
+    ColorMap,
+    Hex,
+    InRange,
+    JsonComponent,
+    JsonObject,
+    Length,
+    MinMax,
+    json_field,
 )
 from anvil.lib.schemas import MinecraftBlockDescriptor
 
-if TYPE_CHECKING:
-    from anvil.api.pbr.atmosphere import AtmosphericSettings
-    from anvil.api.pbr.color_grading import ColorGradingSettings
-    from anvil.api.pbr.cubemap import CubeMapSettings
-    from anvil.api.pbr.fog import FogSettings
-    from anvil.api.pbr.lighting import LightingSettings
-    from anvil.api.pbr.water import WaterSettings
+from anvil.api.pbr.atmosphere import AtmosphericSettings
+from anvil.api.pbr.color_grading import ColorGradingSettings
+from anvil.api.pbr.cubemap import CubeMapSettings
+from anvil.api.pbr.fog import FogSettings
+from anvil.api.pbr.lighting import LightingSettings
+from anvil.api.pbr.water import WaterSettings
 
-# region Validators
-
-_block = instance_of(MinecraftBlockDescriptor)
-_blocks = each(instance_of(MinecraftBlockDescriptor))
-_boolean = instance_of(bool)
-_sea_depth = (instance_of(int), in_range(maximum=127))
-_fraction = (instance_of(int, float), in_range(0, 1))
-
-
-# endregion
 
 # region Parts: objects nested inside components
 
@@ -55,11 +51,9 @@ class NoiseDescriptor(JsonObject):
         amplitudes (list[float]): The amplitude of each octave, at least 1.
     """
 
-    name: str = json_field(validators=[instance_of(str)])
-    first_octave: int = json_field(validators=[instance_of(int)])
-    amplitudes: list[float] = json_field(
-        validators=[length(minimum=1), each(instance_of(int, float))]
-    )
+    name: str = json_field()
+    first_octave: int = json_field()
+    amplitudes: Annotated[list[float], Length(minimum=1)] = json_field()
 
 
 class NoiseBlockSpecifier(JsonObject):
@@ -72,16 +66,12 @@ class NoiseBlockSpecifier(JsonObject):
         range (tuple[float, float], optional): The block is placed where the noise is inside this `(min, max)` range, each in [-1, 1]. Set this or `threshold`.
     """
 
-    noise: str | None = json_field(default=None, validators=[instance_of(str)])
-    threshold: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
+    noise: str | None = json_field(default=None)
+    threshold: float | None = json_field(default=None)
+    range: Annotated[tuple[float, float], InRange(-1.0, 1.0), MinMax] | None = (
+        json_field(default=None)
     )
-    range: tuple[float, float] | None = json_field(
-        default=None,
-        validators=[length(2, 2), each(in_range(-1.0, 1.0))],
-        encoder=lambda value: {"min": value[0], "max": value[1]},
-    )
-    block: MinecraftBlockDescriptor = json_field(validators=[_block])
+    block: MinecraftBlockDescriptor = json_field()
 
     def __validate__(self) -> None:
         if self.threshold is None and self.range is None:
@@ -107,12 +97,14 @@ class OverworldSurface(Surface):
     """
 
     type: str = json_field(default="minecraft:overworld", init=False)
-    foundation_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    mid_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    top_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    sea_floor_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    sea_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    sea_floor_depth: int | None = json_field(default=None, validators=_sea_depth)
+    foundation_material: MinecraftBlockDescriptor = json_field()
+    mid_material: MinecraftBlockDescriptor = json_field()
+    top_material: MinecraftBlockDescriptor = json_field()
+    sea_floor_material: MinecraftBlockDescriptor = json_field()
+    sea_material: MinecraftBlockDescriptor = json_field()
+    sea_floor_depth: Annotated[int, InRange(maximum=127)] | None = json_field(
+        default=None
+    )
 
 
 class FrozenOceanSurface(OverworldSurface):
@@ -132,10 +124,10 @@ class MesaSurface(OverworldSurface):
     """
 
     type: str = json_field(default="minecraft:mesa", init=False)
-    clay_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    hard_clay_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    bryce_pillars: bool | None = json_field(default=None, validators=[_boolean])
-    has_forest: bool | None = json_field(default=None, validators=[_boolean])
+    clay_material: MinecraftBlockDescriptor = json_field()
+    hard_clay_material: MinecraftBlockDescriptor = json_field()
+    bryce_pillars: bool | None = json_field(default=None)
+    has_forest: bool | None = json_field(default=None)
 
 
 class SwampSurface(OverworldSurface):
@@ -146,8 +138,8 @@ class SwampSurface(OverworldSurface):
     """
 
     type: str = json_field(default="minecraft:swamp", init=False)
-    max_puddle_depth_below_sea_level: int | None = json_field(
-        default=None, validators=_sea_depth
+    max_puddle_depth_below_sea_level: Annotated[int, InRange(maximum=127)] | None = (
+        json_field(default=None)
     )
 
 
@@ -163,14 +155,14 @@ class CappedSurface(Surface):
     """
 
     type: str = json_field(default="minecraft:capped", init=False)
-    foundation_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    sea_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    beach_material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    ceiling_materials: list[MinecraftBlockDescriptor] = json_field(
-        validators=[length(minimum=1), _blocks]
+    foundation_material: MinecraftBlockDescriptor = json_field()
+    sea_material: MinecraftBlockDescriptor = json_field()
+    beach_material: MinecraftBlockDescriptor = json_field()
+    ceiling_materials: Annotated[list[MinecraftBlockDescriptor], Length(minimum=1)] = (
+        json_field()
     )
-    floor_materials: list[MinecraftBlockDescriptor] = json_field(
-        validators=[length(minimum=1), _blocks]
+    floor_materials: Annotated[list[MinecraftBlockDescriptor], Length(minimum=1)] = (
+        json_field()
     )
 
 
@@ -190,14 +182,12 @@ class NoiseGradientSurface(Surface):
     """
 
     type: str = json_field(default="minecraft:noise_gradient", init=False)
-    noise_descriptor: NoiseDescriptor = json_field(
-        validators=[instance_of(NoiseDescriptor)]
-    )
-    noise_block_specifiers: list[NoiseBlockSpecifier] = json_field(
-        validators=[length(minimum=1), each(instance_of(NoiseBlockSpecifier))]
+    noise_descriptor: NoiseDescriptor = json_field()
+    noise_block_specifiers: Annotated[list[NoiseBlockSpecifier], Length(minimum=1)] = (
+        json_field()
     )
     non_replaceable_blocks: list[MinecraftBlockDescriptor] | None = json_field(
-        default=None, validators=[_blocks]
+        default=None
     )
 
 
@@ -212,11 +202,11 @@ class SteepMaterialAdjustment(JsonObject):
         west_slopes (bool, optional): Enable for west-facing slopes. Defaults to None.
     """
 
-    material: MinecraftBlockDescriptor = json_field(validators=[_block])
-    north_slopes: bool | None = json_field(default=None, validators=[_boolean])
-    south_slopes: bool | None = json_field(default=None, validators=[_boolean])
-    east_slopes: bool | None = json_field(default=None, validators=[_boolean])
-    west_slopes: bool | None = json_field(default=None, validators=[_boolean])
+    material: MinecraftBlockDescriptor = json_field()
+    north_slopes: bool | None = json_field(default=None)
+    south_slopes: bool | None = json_field(default=None)
+    east_slopes: bool | None = json_field(default=None)
+    west_slopes: bool | None = json_field(default=None)
 
 
 class TopSlide(JsonObject):
@@ -226,7 +216,7 @@ class TopSlide(JsonObject):
         enabled (bool): Whether top slide generation is enabled.
     """
 
-    enabled: bool = json_field(validators=[_boolean])
+    enabled: bool = json_field()
 
 
 class BiomeReplacement(JsonObject):
@@ -239,19 +229,15 @@ class BiomeReplacement(JsonObject):
         dimension (Dimension, optional): Dimension in which this replacement can happen: 'minecraft:overworld' or 'minecraft:nether'. Defaults to "minecraft:overworld".
     """
 
-    targets: list[MinecraftBiomeTypes | str] = json_field(
-        validators=[length(minimum=1), each(instance_of(MinecraftBiomeTypes, str))]
+    targets: Annotated[list[MinecraftBiomeTypes | str], Length(minimum=1)] = (
+        json_field()
     )
-    amount: float = json_field(validators=[in_range(0.0, 1.0, min_exclusive=True)])
-    noise_frequency_scale: float = json_field(
-        validators=[in_range(0.0, 100.0, min_exclusive=True)]
+    amount: Annotated[float, InRange(0.0, 1.0, min_exclusive=True)] = json_field()
+    noise_frequency_scale: Annotated[float, InRange(0.0, 100.0, min_exclusive=True)] = (
+        json_field()
     )
-    dimension: Dimension = json_field(
-        default=Dimension.Overworld,
-        validators=[
-            instance_of(Dimension),
-            one_of(Dimension.Overworld, Dimension.Nether),
-        ],
+    dimension: Literal[Dimension.Overworld, Dimension.Nether] = json_field(
+        default=Dimension.Overworld
     )
 
 
@@ -266,31 +252,23 @@ class SurfaceAdjustmentMaterials(JsonObject):
         top_material (MinecraftBlockDescriptor, optional): The block used for the surface.
     """
 
-    foundation_material: MinecraftBlockDescriptor | None = json_field(
-        default=None, validators=[_block]
-    )
-    mid_material: MinecraftBlockDescriptor | None = json_field(
-        default=None, validators=[_block]
-    )
-    sea_floor_material: MinecraftBlockDescriptor | None = json_field(
-        default=None, validators=[_block]
-    )
-    sea_material: MinecraftBlockDescriptor | None = json_field(
-        default=None, validators=[_block]
-    )
-    top_material: MinecraftBlockDescriptor | None = json_field(
-        default=None, validators=[_block]
-    )
+    foundation_material: MinecraftBlockDescriptor | None = json_field(default=None)
+    mid_material: MinecraftBlockDescriptor | None = json_field(default=None)
+    sea_floor_material: MinecraftBlockDescriptor | None = json_field(default=None)
+    sea_material: MinecraftBlockDescriptor | None = json_field(default=None)
+    top_material: MinecraftBlockDescriptor | None = json_field(default=None)
 
 
 class GrassTint(JsonObject):
     """The color grass is tinted by on the map, for `BiomeMapTints`.
 
     Args:
-        tint (Color): The tint color. Written as a hex color.
+        tint (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The tint color. Written as a hex color.
     """
 
-    tint: Color = json_field(encoder=encoders.to_hex)
+    tint: Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] = (
+        json_field()
+    )
 
 
 class SurfaceMaterialAdjustment(JsonObject):
@@ -303,18 +281,11 @@ class SurfaceMaterialAdjustment(JsonObject):
         materials (SurfaceAdjustmentMaterials): The blocks used while this adjustment is active.
     """
 
-    height_range: tuple[float | str, float | str] | None = json_field(
-        default=None, validators=[length(2, 2), each(instance_of(int, float, str))]
-    )
-    noise_frequency_scale: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
-    noise_range: tuple[float, float] | None = json_field(
-        default=None, validators=[length(2, 2), each(instance_of(int, float))]
-    )
+    height_range: tuple[float | str, float | str] | None = json_field(default=None)
+    noise_frequency_scale: float | None = json_field(default=None)
+    noise_range: tuple[float, float] | None = json_field(default=None)
     materials: SurfaceAdjustmentMaterials = json_field(
-        default_factory=SurfaceAdjustmentMaterials,
-        validators=[instance_of(SurfaceAdjustmentMaterials)],
+        default_factory=SurfaceAdjustmentMaterials
     )
 
 
@@ -331,9 +302,7 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
             with one of the `set_*_builder` methods.
     """
 
-    builder: Surface | None = json_field(
-        default=None, validators=[instance_of(Surface)]
-    )
+    builder: Surface | None = json_field(default=None)
 
     def set_overworld_builder(
         self,
@@ -490,12 +459,12 @@ class BiomeClimate(JsonComponent):
 
     identifier = "minecraft:climate"
 
-    temperature: float | None = json_field(
-        default=None, validators=[in_range(-50.0, 50.0)]
+    temperature: Annotated[float, InRange(-50.0, 50.0)] | None = json_field(
+        default=None
     )
-    downfall: float | None = json_field(default=None, validators=[in_range(0.0, 1.0)])
-    snow_accumulation: list[float] | None = json_field(
-        default=None, validators=[length(2, 2), each(in_range(0.0, 1.0))]
+    downfall: Annotated[float, Chance] | None = json_field(default=None)
+    snow_accumulation: Annotated[list[float], Length(2, 2), Chance] | None = json_field(
+        default=None
     )
 
 
@@ -510,9 +479,7 @@ class BiomeCreatureSpawnProbability(JsonComponent):
 
     identifier = "minecraft:creature_spawn_probability"
 
-    probability: float | None = json_field(
-        default=None, validators=[in_range(0.0, 0.75)]
-    )
+    probability: Annotated[float, InRange(0.0, 0.75)] | None = json_field(default=None)
 
 
 class BiomeHumidity(JsonComponent):
@@ -526,14 +493,14 @@ class BiomeHumidity(JsonComponent):
 
     identifier = "minecraft:humidity"
 
-    is_humid: bool | None = json_field(default=None, validators=[_boolean])
+    is_humid: bool | None = json_field(default=None)
 
 
 class BiomeMapTints(JsonComponent):
     """Sets the color grass and foliage will be tinted by in this biome on the map.
 
     Args:
-        foliage (Color, optional): Sets the color foliage will be tinted by in this biome on the map. Written as a hex color. Defaults to None.
+        foliage (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, optional): Sets the color foliage will be tinted by in this biome on the map. Written as a hex color. Defaults to None.
         grass (GrassTint, optional): The color grass is tinted by in this biome on the map. Defaults to None. Set it with `set_grass`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_map_tints)
@@ -541,15 +508,15 @@ class BiomeMapTints(JsonComponent):
 
     identifier = "minecraft:map_tints"
 
-    foliage: Color | None = json_field(default=None, encoder=encoders.to_hex)
-    grass: GrassTint | None = json_field(
-        default=None, validators=[instance_of(GrassTint)]
+    foliage: Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] | None = (
+        json_field(default=None)
     )
+    grass: GrassTint | None = json_field(default=None)
 
     def set_grass(
         self,
         *,
-        tint: Color,
+        tint: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255,
     ) -> "BiomeMapTints":
         """Sets the color grass is tinted by on the map. See `GrassTint` for the parameters."""
         self.grass = GrassTint(
@@ -570,12 +537,8 @@ class BiomeMountainParameters(JsonComponent):
 
     identifier = "minecraft:mountain_parameters"
 
-    steep_material_adjustment: SteepMaterialAdjustment | None = json_field(
-        default=None, validators=[instance_of(SteepMaterialAdjustment)]
-    )
-    top_slide: TopSlide | None = json_field(
-        default=None, validators=[instance_of(TopSlide)]
-    )
+    steep_material_adjustment: SteepMaterialAdjustment | None = json_field(default=None)
+    top_slide: TopSlide | None = json_field(default=None)
 
     def set_steep_material_adjustment(
         self,
@@ -618,21 +581,11 @@ class BiomeMultiNoiseGenerationRules(JsonComponent):
 
     identifier = "minecraft:multinoise_generation_rules"
 
-    target_altitude: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
-    target_humidity: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
-    target_temperature: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
-    target_weirdness: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
-    weight: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
+    target_altitude: float | None = json_field(default=None)
+    target_humidity: float | None = json_field(default=None)
+    target_temperature: float | None = json_field(default=None)
+    target_weirdness: float | None = json_field(default=None)
+    weight: float | None = json_field(default=None)
 
 
 class BiomeNoiseGradient(JsonComponent):
@@ -650,19 +603,13 @@ class BiomeNoiseGradient(JsonComponent):
 
     identifier = "minecraft:noise_gradient"
 
-    type: BiomeNoiseGradientBuilderType | None = json_field(
-        default=None, validators=[literal_of(BiomeNoiseGradientBuilderType)]
-    )
-    noise_descriptor: NoiseDescriptor | None = json_field(
-        default=None, validators=[instance_of(NoiseDescriptor)]
-    )
+    type: BiomeNoiseGradientBuilderType | None = json_field(default=None)
+    noise_descriptor: NoiseDescriptor | None = json_field(default=None)
     noise_block_specifiers: list[NoiseBlockSpecifier] = json_field(
-        default_factory=list,
-        omit_default=True,
-        validators=[each(instance_of(NoiseBlockSpecifier))],
+        default_factory=list, omit_default=True
     )
     non_replaceable_blocks: list[MinecraftBlockDescriptor] | None = json_field(
-        default=None, validators=[_blocks]
+        default=None
     )
 
     def set_type(self, *, builder_type: BiomeNoiseGradientBuilderType):
@@ -697,10 +644,10 @@ class BiomeOverworldGenerationRules(JsonComponent):
 
     Args:
         generate_for_climates (list[tuple[BiomeClimateCategory, int]], optional): The climate categories this biome can spawn for, as `[climate, weight]` pairs. Defaults to None.
-        hills_transformation (BiomeTransformation, optional): What biome to switch to when converting to a hilly biome. Defaults to None.
-        mutate_transformation (BiomeTransformation, optional): What biome to switch to when converting to a mutated biome. Defaults to None.
-        river_transformation (BiomeTransformation, optional): What biome to switch to when converting to a river biome (if not the Vanilla 'river' biome). Defaults to None.
-        shore_transformation (BiomeTransformation, optional): What biome to switch to when adjacent to an ocean biome. Defaults to None.
+        hills_transformation (str | list[tuple[str, int]], optional): What biome to switch to when converting to a hilly biome. Defaults to None.
+        mutate_transformation (str | list[tuple[str, int]], optional): What biome to switch to when converting to a mutated biome. Defaults to None.
+        river_transformation (str | list[tuple[str, int]], optional): What biome to switch to when converting to a river biome (if not the Vanilla 'river' biome). Defaults to None.
+        shore_transformation (str | list[tuple[str, int]], optional): What biome to switch to when adjacent to an ocean biome. Defaults to None.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_overworld_generation_rules)
     """
@@ -708,20 +655,12 @@ class BiomeOverworldGenerationRules(JsonComponent):
     identifier = "minecraft:overworld_generation_rules"
 
     generate_for_climates: list[tuple[BiomeClimateCategory, int]] | None = json_field(
-        default=None, validators=[each(length(2, 2))]
+        default=None
     )
-    hills_transformation: BiomeTransformation | None = json_field(
-        default=None, validators=[instance_of(str, list, tuple)]
-    )
-    mutate_transformation: BiomeTransformation | None = json_field(
-        default=None, validators=[instance_of(str, list, tuple)]
-    )
-    river_transformation: BiomeTransformation | None = json_field(
-        default=None, validators=[instance_of(str, list, tuple)]
-    )
-    shore_transformation: BiomeTransformation | None = json_field(
-        default=None, validators=[instance_of(str, list, tuple)]
-    )
+    hills_transformation: str | list[tuple[str, int]] | None = json_field(default=None)
+    mutate_transformation: str | list[tuple[str, int]] | None = json_field(default=None)
+    river_transformation: str | list[tuple[str, int]] | None = json_field(default=None)
+    shore_transformation: str | list[tuple[str, int]] | None = json_field(default=None)
 
 
 @deprecated(
@@ -739,12 +678,8 @@ class BiomeOverworldHeight(JsonComponent):
 
     identifier = "minecraft:overworld_height"
 
-    noise_params: tuple[float, float] | None = json_field(
-        default=None, validators=[length(2, 2), each(instance_of(int, float))]
-    )
-    noise_type: BiomeNoiseType | None = json_field(
-        default=None, validators=[literal_of(BiomeNoiseType)]
-    )
+    noise_params: tuple[float, float] | None = json_field(default=None)
+    noise_type: BiomeNoiseType | None = json_field(default=None)
 
     def __validate__(self) -> None:
         if self.noise_params is not None and self.noise_type is not None:
@@ -772,9 +707,7 @@ class BiomeReplaceBiomes(JsonComponent):
     identifier = "minecraft:replace_biomes"
 
     replacements: list[BiomeReplacement] = json_field(
-        default_factory=list,
-        omit_default=True,
-        validators=[each(instance_of(BiomeReplacement))],
+        default_factory=list, omit_default=True
     )
 
     def add_replacement(
@@ -831,9 +764,7 @@ class BiomeSurfaceMaterialAdjustments(JsonComponent):
     identifier = "minecraft:surface_material_adjustments"
 
     adjustments: list[SurfaceMaterialAdjustment] = json_field(
-        default_factory=list,
-        omit_default=True,
-        validators=[each(instance_of(SurfaceMaterialAdjustment))],
+        default_factory=list, omit_default=True
     )
 
     def add_adjustment(
@@ -877,9 +808,7 @@ class BiomeTags(JsonComponent):
 
     identifier = "minecraft:tags"
 
-    tags: list[str | MinecraftBiomeTags] | None = json_field(
-        default=None, validators=[each(instance_of(str, MinecraftBiomeTags))]
-    )
+    tags: list[str | MinecraftBiomeTags] | None = json_field(default=None)
 
 
 class BiomeVillageType(JsonComponent):
@@ -893,9 +822,7 @@ class BiomeVillageType(JsonComponent):
 
     identifier = "minecraft:village_type"
 
-    type: BiomeVillageTypes = json_field(
-        validators=[instance_of(str), literal_of(BiomeVillageTypes)],
-    )
+    type: BiomeVillageTypes = json_field()
 
 
 # endregion
@@ -924,9 +851,9 @@ class BiomeClientAmbientSounds(BiomeClientComponent):
 
     identifier = "minecraft:ambient_sounds"
 
-    addition: str | None = json_field(default=None, validators=[instance_of(str)])
-    loop: str | None = json_field(default=None, validators=[instance_of(str)])
-    mood: str | None = json_field(default=None, validators=[instance_of(str)])
+    addition: str | None = json_field(default=None)
+    loop: str | None = json_field(default=None)
+    mood: str | None = json_field(default=None)
 
 
 class BiomeClientAtmosphereIdentifier(BiomeClientComponent):
@@ -940,7 +867,9 @@ class BiomeClientAtmosphereIdentifier(BiomeClientComponent):
 
     identifier = "minecraft:atmosphere_identifier"
 
-    atmosphere_identifier: AtmosphericSettings | str = json_field(encoder=str)
+    atmosphere_identifier: Annotated[AtmosphericSettings | str, AsString] = (
+        json_field()
+    )
 
 
 class BiomeClientMusic(BiomeClientComponent):
@@ -958,13 +887,9 @@ class BiomeClientMusic(BiomeClientComponent):
 
     identifier = "minecraft:biome_music"
 
-    music_definition: MusicCategory | str | None = json_field(
-        default=None, validators=[instance_of(str)]
-    )
-    underwater_music: MusicCategory | str | None = json_field(
-        default=None, validators=[instance_of(str)]
-    )
-    volume_multiplier: float | None = json_field(default=None, validators=[*_fraction])
+    music_definition: MusicCategory | str | None = json_field(default=None)
+    underwater_music: MusicCategory | str | None = json_field(default=None)
+    volume_multiplier: Annotated[float, Chance] | None = json_field(default=None)
 
 
 class BiomeClientColorGradingIdentifier(BiomeClientComponent):
@@ -978,7 +903,9 @@ class BiomeClientColorGradingIdentifier(BiomeClientComponent):
 
     identifier = "minecraft:color_grading_identifier"
 
-    color_grading_identifier: ColorGradingSettings | str = json_field(encoder=str)
+    color_grading_identifier: Annotated[ColorGradingSettings | str, AsString] = (
+        json_field()
+    )
 
 
 class BiomeClientCubemapIdentifier(BiomeClientComponent):
@@ -992,21 +919,23 @@ class BiomeClientCubemapIdentifier(BiomeClientComponent):
 
     identifier = "minecraft:cubemap_identifier"
 
-    cubemap_identifier: CubeMapSettings | str = json_field(encoder=str)
+    cubemap_identifier: Annotated[CubeMapSettings | str, AsString] = json_field()
 
 
 class BiomeClientDryFoliageColor(BiomeClientComponent):
     """Sets the dry foliage color.
 
     Args:
-        color (Color): The dry foliage color. Written as a hex color.
+        color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The dry foliage color. Written as a hex color.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_dry_foliage_color)
     """
 
     identifier = "minecraft:dry_foliage_color"
 
-    color: Color = json_field(encoder=encoders.to_hex)
+    color: Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] = (
+        json_field()
+    )
 
 
 class BiomeClientFogAppearance(BiomeClientComponent):
@@ -1020,14 +949,14 @@ class BiomeClientFogAppearance(BiomeClientComponent):
 
     identifier = "minecraft:fog_appearance"
 
-    fog_identifier: FogSettings | str = json_field(encoder=str)
+    fog_identifier: Annotated[FogSettings | str, AsString] = json_field()
 
 
 class BiomeClientFoliageAppearance(BiomeClientComponent):
     """Sets the foliage color or color map.
 
     Args:
-        color (Color | FoliageColorMap): A color, written as hex, or a color map name, written
+        color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | FoliageColorMap): A color, written as hex, or a color map name, written
             as `{"color_map": name}`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_foliage_appearance)
@@ -1035,16 +964,17 @@ class BiomeClientFoliageAppearance(BiomeClientComponent):
 
     identifier = "minecraft:foliage_appearance"
 
-    color: Color | FoliageColorMap = json_field(
-        encoder=encoders.color_or_map(FoliageColorMap.__args__)
-    )
+    color: (
+        Annotated[FoliageColorMap, ColorMap]
+        | Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex]
+    ) = json_field()
 
 
 class BiomeClientGrassAppearance(BiomeClientComponent):
     """Sets the grass color or color map.
 
     Args:
-        color (Color | GrassColorMap): A color, written as hex, or a color map name, written
+        color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | GrassColorMap): A color, written as hex, or a color map name, written
             as `{"color_map": name}`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_grass_appearance)
@@ -1052,9 +982,10 @@ class BiomeClientGrassAppearance(BiomeClientComponent):
 
     identifier = "minecraft:grass_appearance"
 
-    color: Color | GrassColorMap = json_field(
-        encoder=encoders.color_or_map(GrassColorMap.__args__)
-    )
+    color: (
+        Annotated[GrassColorMap, ColorMap]
+        | Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex]
+    ) = json_field()
 
 
 class BiomeClientLightingIdentifier(BiomeClientComponent):
@@ -1068,7 +999,7 @@ class BiomeClientLightingIdentifier(BiomeClientComponent):
 
     identifier = "minecraft:lighting_identifier"
 
-    lighting_identifier: LightingSettings | str = json_field(encoder=str)
+    lighting_identifier: Annotated[LightingSettings | str, AsString] = json_field()
 
 
 class BiomeClientPrecipitation(BiomeClientComponent):
@@ -1085,16 +1016,10 @@ class BiomeClientPrecipitation(BiomeClientComponent):
 
     identifier = "minecraft:precipitation"
 
-    ash: float | None = json_field(default=None, validators=[instance_of(int, float)])
-    blue_spores: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
-    red_spores: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
-    white_ash: float | None = json_field(
-        default=None, validators=[instance_of(int, float)]
-    )
+    ash: float | None = json_field(default=None)
+    blue_spores: float | None = json_field(default=None)
+    red_spores: float | None = json_field(default=None)
+    white_ash: float | None = json_field(default=None)
 
     def __validate__(self) -> None:
         values = (self.ash, self.blue_spores, self.red_spores, self.white_ash)
@@ -1108,21 +1033,23 @@ class BiomeClientSkyColor(BiomeClientComponent):
     """Sets the sky color.
 
     Args:
-        sky_color (Color): The sky color. Written as a hex color.
+        sky_color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The sky color. Written as a hex color.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_sky_color)
     """
 
     identifier = "minecraft:sky_color"
 
-    sky_color: Color = json_field(encoder=encoders.to_hex)
+    sky_color: Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] = (
+        json_field()
+    )
 
 
 class BiomeClientWaterAppearance(BiomeClientComponent):
     """Sets the water surface color.
 
     Args:
-        surface_color (Color, optional): The water surface color. Written as a hex color.
+        surface_color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, optional): The water surface color. Written as a hex color.
         surface_opacity (float, optional): From 0, invisible, to 1, opaque.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/examples/components/minecraftclientbiomes_water_appearance)
@@ -1130,8 +1057,10 @@ class BiomeClientWaterAppearance(BiomeClientComponent):
 
     identifier = "minecraft:water_appearance"
 
-    surface_color: Color | None = json_field(default=None, encoder=encoders.to_hex)
-    surface_opacity: float | None = json_field(default=None, validators=[*_fraction])
+    surface_color: (
+        Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] | None
+    ) = json_field(default=None)
+    surface_opacity: Annotated[float, Chance] | None = json_field(default=None)
 
 
 class BiomeClientWaterIdentifier(BiomeClientComponent):
@@ -1145,7 +1074,7 @@ class BiomeClientWaterIdentifier(BiomeClientComponent):
 
     identifier = "minecraft:water_identifier"
 
-    water_identifier: WaterSettings | str = json_field(encoder=str)
+    water_identifier: Annotated[WaterSettings | str, AsString] = json_field()
 
 
 # endregion

@@ -95,11 +95,14 @@ def test_ai_goal_ranges_and_triggers():
     with pytest.raises(TypeError):
         payload(EntityAIRandomLookAround(look_time=(2.5, 4)))
     home = EntityAIGoHome(
-        on_home=[EventTrigger(event="home", target=FilterSubject.Self)],
+        on_home=[EventTrigger(event="home", target=FilterSubject.Self), "arrived"],
         on_failed="lost",
     )
     assert AnvilIO._normalize_json_like(payload(home)) == {
-        "on_home": [{"event": "home", "target": "self"}],
+        "on_home": [
+            {"event": "home", "target": "self"},
+            {"event": "arrived", "target": "self"},
+        ],
         "on_failed": {"event": "lost", "target": "self"},
     }
 

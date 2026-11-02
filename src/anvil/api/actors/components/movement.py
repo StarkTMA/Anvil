@@ -1,48 +1,29 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from anvil.api.actors.components._validators import (
-    _blocks,
-    _boolean,
-    _chance,
-    _entity,
-    _event,
-    _filter,
-    _integer,
-    _item,
-    _items,
-    _molang,
-    _number,
-    _positive,
-    _string,
-)
 from anvil.api.core.components import EventTrigger
 from anvil.api.core.enums import (
     LeashSpringType,
     RideableDismountMode,
 )
 from anvil.api.core.filters import Filter
-from anvil.api.core.types import (
-    BlockReference,
-    ItemReference,
-    NumberRange,
-    Vector3D,
-)
 from anvil.api.logic.molang import Molang
 from anvil.lib.jsonmodel import (
+    AtLeastOne,
+    Chance,
+    InRange,
     JsonComponent,
     JsonObject,
-    encoders,
+    MetersPerSecond,
+    NonNegative,
+    RangeMinMax,
+    Trigger,
     json_field,
 )
-from anvil.lib.jsonmodel.validators import (
-    each,
-    in_range,
-    instance_of,
-    number_or_range,
-    one_of,
-    vector3,
+from anvil.lib.schemas import (
+    MinecraftBlockDescriptor,
+    MinecraftEntityDescriptor,
+    MinecraftItemDescriptor,
 )
-from anvil.lib.schemas import MinecraftEntityDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 # region Parts: objects nested inside components
@@ -52,14 +33,14 @@ class BoostItem(JsonObject):
     """An item that boosts a ridden entity.
 
     Args:
-        item (ItemReference): The item that can be used to boost.
+        item (str | MinecraftItemDescriptor): The item that can be used to boost.
         damage (int, optional): The damage the item takes each time it is used.
-        replace_item (ItemReference, optional): The item the boost item becomes once it is used up.
+        replace_item (str | MinecraftItemDescriptor, optional): The item the boost item becomes once it is used up.
     """
 
-    item: ItemReference = json_field(validators=[_item])
-    damage: int | None = json_field(default=None, validators=[_integer])
-    replace_item: ItemReference | None = json_field(default=None, validators=[_item])
+    item: str | MinecraftItemDescriptor = json_field()
+    damage: int | None = json_field(default=None)
+    replace_item: str | MinecraftItemDescriptor | None = json_field(default=None)
 
 
 class JumpData(JsonObject):
@@ -72,10 +53,10 @@ class JumpData(JsonObject):
         jump_delay (int, optional): Ticks between sequential jumps. Game default 30.
     """
 
-    animation_duration: int | None = json_field(default=None, validators=[_integer])
-    distance_scale: float | None = json_field(default=None, validators=[_number])
-    height: float | None = json_field(default=None, validators=[_number])
-    jump_delay: int | None = json_field(default=None, validators=[_integer])
+    animation_duration: int | None = json_field(default=None)
+    distance_scale: float | None = json_field(default=None)
+    height: float | None = json_field(default=None)
+    jump_delay: int | None = json_field(default=None)
 
 
 class PreferredPathBlocks(JsonObject):
@@ -83,11 +64,11 @@ class PreferredPathBlocks(JsonObject):
 
     Args:
         cost (float): Cost of walking on these blocks.
-        blocks (list[BlockReference]): The blocks.
+        blocks (list[str | MinecraftBlockDescriptor]): The blocks.
     """
 
-    cost: float = json_field(validators=[_number])
-    blocks: list[BlockReference] = json_field(validators=[_blocks])
+    cost: float = json_field()
+    blocks: list[str | MinecraftBlockDescriptor] = json_field()
 
 
 class Rider(JsonObject):
@@ -98,8 +79,8 @@ class Rider(JsonObject):
         spawn_event (str, optional): The spawn event used when the rider is created.
     """
 
-    entity_type: MinecraftEntityDescriptor | str = json_field(validators=[_entity])
-    spawn_event: str | None = json_field(default=None, validators=[_string])
+    entity_type: MinecraftEntityDescriptor | str = json_field()
+    spawn_event: str | None = json_field(default=None)
 
 
 class EntityMovementControl(JsonComponent, abstract=True):
@@ -109,7 +90,7 @@ class EntityMovementControl(JsonComponent, abstract=True):
         max_turn (float, optional): Maximum degrees the mob can turn per tick. Game default 30.
     """
 
-    max_turn: float | None = json_field(default=None, validators=[_positive])
+    max_turn: Annotated[float, NonNegative] | None = json_field(default=None)
 
 
 class EntityNavigation(JsonComponent, abstract=True):
@@ -120,7 +101,7 @@ class EntityNavigation(JsonComponent, abstract=True):
         avoid_portals (bool, optional): Avoids portals. Game default false.
         avoid_sun (bool, optional): Avoids blocks exposed to the sun. Game default false.
         avoid_water (bool, optional): Avoids water. Game default false.
-        blocks_to_avoid (list[BlockReference], optional): Blocks the pathfinder avoids.
+        blocks_to_avoid (list[str | MinecraftBlockDescriptor], optional): Blocks the pathfinder avoids.
         can_breach (bool, optional): Can jump out of water, like a dolphin. Game default false.
         can_break_doors (bool, optional): Can path through a closed door, breaking it. Game default false.
         can_float (bool, optional): Can float in water.
@@ -138,28 +119,28 @@ class EntityNavigation(JsonComponent, abstract=True):
         is_amphibious (bool, optional): Can walk on the ground under water. Game default false.
     """
 
-    avoid_damage_blocks: bool | None = json_field(default=None, validators=[_boolean])
-    avoid_portals: bool | None = json_field(default=None, validators=[_boolean])
-    avoid_sun: bool | None = json_field(default=None, validators=[_boolean])
-    avoid_water: bool | None = json_field(default=None, validators=[_boolean])
-    blocks_to_avoid: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
+    avoid_damage_blocks: bool | None = json_field(default=None)
+    avoid_portals: bool | None = json_field(default=None)
+    avoid_sun: bool | None = json_field(default=None)
+    avoid_water: bool | None = json_field(default=None)
+    blocks_to_avoid: list[str | MinecraftBlockDescriptor] | None = json_field(
+        default=None
     )
-    can_breach: bool | None = json_field(default=None, validators=[_boolean])
-    can_break_doors: bool | None = json_field(default=None, validators=[_boolean])
-    can_float: bool | None = json_field(default=None, validators=[_boolean])
-    can_jump: bool | None = json_field(default=None, validators=[_boolean])
-    can_open_doors: bool | None = json_field(default=None, validators=[_boolean])
-    can_open_iron_doors: bool | None = json_field(default=None, validators=[_boolean])
-    can_pass_doors: bool | None = json_field(default=None, validators=[_boolean])
-    can_path_from_air: bool | None = json_field(default=None, validators=[_boolean])
-    can_path_over_lava: bool | None = json_field(default=None, validators=[_boolean])
-    can_path_over_water: bool | None = json_field(default=None, validators=[_boolean])
-    can_sink: bool | None = json_field(default=None, validators=[_boolean])
-    can_swim: bool | None = json_field(default=None, validators=[_boolean])
-    can_walk: bool | None = json_field(default=None, validators=[_boolean])
-    can_walk_in_lava: bool | None = json_field(default=None, validators=[_boolean])
-    is_amphibious: bool | None = json_field(default=None, validators=[_boolean])
+    can_breach: bool | None = json_field(default=None)
+    can_break_doors: bool | None = json_field(default=None)
+    can_float: bool | None = json_field(default=None)
+    can_jump: bool | None = json_field(default=None)
+    can_open_doors: bool | None = json_field(default=None)
+    can_open_iron_doors: bool | None = json_field(default=None)
+    can_pass_doors: bool | None = json_field(default=None)
+    can_path_from_air: bool | None = json_field(default=None)
+    can_path_over_lava: bool | None = json_field(default=None)
+    can_path_over_water: bool | None = json_field(default=None)
+    can_sink: bool | None = json_field(default=None)
+    can_swim: bool | None = json_field(default=None)
+    can_walk: bool | None = json_field(default=None)
+    can_walk_in_lava: bool | None = json_field(default=None)
+    is_amphibious: bool | None = json_field(default=None)
 
 
 class LeashPreset(JsonObject):
@@ -174,21 +155,19 @@ class LeashPreset(JsonObject):
         spring_type (LeashSpringType, optional): The spring force pulling the entity to its holder. Game default dampened.
     """
 
-    filter: Filter | None = json_field(default=None, validators=[_filter])
-    hard_distance: float | None = json_field(default=None, validators=[_positive])
-    max_distance: float | None = json_field(default=None, validators=[_positive])
-    rotation_adjustment: float | None = json_field(default=None, validators=[_number])
-    soft_distance: float | None = json_field(default=None, validators=[_positive])
-    spring_type: LeashSpringType | None = json_field(
-        default=None, validators=[one_of(*LeashSpringType)]
-    )
+    filter: Filter | None = json_field(default=None)
+    hard_distance: Annotated[float, NonNegative] | None = json_field(default=None)
+    max_distance: Annotated[float, NonNegative] | None = json_field(default=None)
+    rotation_adjustment: float | None = json_field(default=None)
+    soft_distance: Annotated[float, NonNegative] | None = json_field(default=None)
+    spring_type: LeashSpringType | None = json_field(default=None)
 
 
 class Seat(JsonObject):
     """A seat of `minecraft:rideable`.
 
     Args:
-        position (Vector3D): Position of the seat relative to the entity.
+        position (tuple[float, float, float]): Position of the seat relative to the entity.
         max_rider_count (int): The seat is used while the rider count is at most this.
         min_rider_count (int, optional): The seat is used once the rider count is at least this. Game default 0.
         lock_rider_rotation (float, optional): Angle in degrees a rider can turn. Without it, riders turn freely.
@@ -197,21 +176,15 @@ class Seat(JsonObject):
         camera_relax_distance_smoothing (float, optional): Smoothing of the camera returning to its full distance after an obstacle.
     """
 
-    position: Vector3D = json_field(validators=[vector3])
-    max_rider_count: int = json_field(validators=[_integer, in_range(minimum=0)])
-    min_rider_count: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
+    position: tuple[float, float, float] = json_field()
+    max_rider_count: Annotated[int, NonNegative] = json_field()
+    min_rider_count: Annotated[int, NonNegative] | None = json_field(default=None)
+    lock_rider_rotation: float | None = json_field(default=None)
+    rotate_rider_by: float | Molang | str | None = json_field(default=None)
+    third_person_camera_radius: Annotated[float, InRange(1, 64)] | None = json_field(
+        default=None
     )
-    lock_rider_rotation: float | None = json_field(default=None, validators=[_number])
-    rotate_rider_by: float | Molang | str | None = json_field(
-        default=None, validators=[_molang]
-    )
-    third_person_camera_radius: float | None = json_field(
-        default=None, validators=[_number, in_range(1, 64)]
-    )
-    camera_relax_distance_smoothing: float | None = json_field(
-        default=None, validators=[_number]
-    )
+    camera_relax_distance_smoothing: float | None = json_field(default=None)
 
 
 # endregion
@@ -230,9 +203,7 @@ class EntityAddRider(JsonComponent):
 
     identifier = "minecraft:addrider"
 
-    riders: list[Rider] = json_field(
-        default_factory=list, validators=[each(instance_of(Rider))], omit_default=True
-    )
+    riders: list[Rider] = json_field(default_factory=list, omit_default=True)
 
     def add_rider(
         self,
@@ -265,14 +236,12 @@ class EntityBalloonable(JsonComponent):
 
     identifier = "minecraft:balloonable"
 
-    mass: float | None = json_field(default=None, validators=[_positive])
-    max_distance: float | None = json_field(default=None, validators=[_positive])
-    soft_distance: float | None = json_field(default=None, validators=[_positive])
-    on_balloon: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_unballoon: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    mass: Annotated[float, NonNegative] | None = json_field(default=None)
+    max_distance: Annotated[float, NonNegative] | None = json_field(default=None)
+    soft_distance: Annotated[float, NonNegative] | None = json_field(default=None)
+    on_balloon: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_unballoon: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
 
 
@@ -316,20 +285,16 @@ class EntityBoostable(JsonComponent):
 
     identifier = "minecraft:boostable"
 
-    boost_items: list[BoostItem] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(BoostItem))],
-        omit_default=True,
-    )
-    duration: float | None = json_field(default=None, validators=[_positive])
-    speed_multiplier: float | None = json_field(default=None, validators=[_positive])
+    boost_items: list[BoostItem] = json_field(default_factory=list, omit_default=True)
+    duration: Annotated[float, NonNegative] | None = json_field(default=None)
+    speed_multiplier: Annotated[float, NonNegative] | None = json_field(default=None)
 
     def add_boost_item(
         self,
         *,
-        item: ItemReference,
+        item: str | MinecraftItemDescriptor,
         damage: int | None = None,
-        replace_item: ItemReference | None = None,
+        replace_item: str | MinecraftItemDescriptor | None = None,
     ) -> "EntityBoostable":
         """Adds an item that boosts the entity. See `BoostItem` for the parameters."""
         self.boost_items.append(
@@ -342,7 +307,7 @@ class EntityBuoyant(JsonComponent):
     """Enables an entity to float on the given liquid blocks.
 
     Args:
-        liquid_blocks (list[BlockReference]): Blocks this entity can float on. Must be liquid blocks.
+        liquid_blocks (list[str | MinecraftBlockDescriptor]): Blocks this entity can float on. Must be liquid blocks.
         apply_gravity (bool, optional): Applies gravity each tick. Game default true.
         base_buoyancy (float, optional): Base buoyancy used to calculate how much the entity floats. Game default 1.
         big_wave_probability (float, optional): Probability of a big wave hitting the entity, with `movement_type` waves. Game default 0.03.
@@ -356,20 +321,14 @@ class EntityBuoyant(JsonComponent):
 
     identifier = "minecraft:buoyant"
 
-    liquid_blocks: list[BlockReference] = json_field(validators=[_blocks])
-    apply_gravity: bool | None = json_field(default=None, validators=[_boolean])
-    base_buoyancy: float | None = json_field(default=None, validators=[_number])
-    big_wave_probability: float | None = json_field(default=None, validators=[_chance])
-    big_wave_speed: float | None = json_field(default=None, validators=[_number])
-    can_auto_step_from_liquid: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    drag_down_on_buoyancy_removed: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    movement_type: Literal["waves", "bobbing", "none"] | None = json_field(
-        default=None, validators=[one_of("waves", "bobbing", "none")]
-    )
+    liquid_blocks: list[str | MinecraftBlockDescriptor] = json_field()
+    apply_gravity: bool | None = json_field(default=None)
+    base_buoyancy: float | None = json_field(default=None)
+    big_wave_probability: Annotated[float, Chance] | None = json_field(default=None)
+    big_wave_speed: float | None = json_field(default=None)
+    can_auto_step_from_liquid: bool | None = json_field(default=None)
+    drag_down_on_buoyancy_removed: float | None = json_field(default=None)
+    movement_type: Literal["waves", "bobbing", "none"] | None = json_field(default=None)
 
 
 class EntityCanClimb(JsonComponent):
@@ -418,9 +377,9 @@ class EntityDash(JsonComponent):
 
     identifier = "minecraft:dash"
 
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    horizontal_momentum: float | None = json_field(default=None, validators=[_number])
-    vertical_momentum: float | None = json_field(default=None, validators=[_number])
+    cooldown_time: float | None = json_field(default=None)
+    horizontal_momentum: float | None = json_field(default=None)
+    vertical_momentum: float | None = json_field(default=None)
 
 
 class EntityDashAction(JsonComponent):
@@ -438,13 +397,11 @@ class EntityDashAction(JsonComponent):
 
     identifier = "minecraft:dash_action"
 
-    can_dash_underwater: bool | None = json_field(default=None, validators=[_boolean])
-    cooldown_time: float | None = json_field(default=None, validators=[_number])
-    direction: Literal["entity", "passenger"] | None = json_field(
-        default=None, validators=[one_of("entity", "passenger")]
-    )
-    horizontal_momentum: float | None = json_field(default=None, validators=[_number])
-    vertical_momentum: float | None = json_field(default=None, validators=[_number])
+    can_dash_underwater: bool | None = json_field(default=None)
+    cooldown_time: float | None = json_field(default=None)
+    direction: Literal["entity", "passenger"] | None = json_field(default=None)
+    horizontal_momentum: float | None = json_field(default=None)
+    vertical_momentum: float | None = json_field(default=None)
 
 
 class EntityDefaultLookAngle(JsonComponent):
@@ -458,7 +415,7 @@ class EntityDefaultLookAngle(JsonComponent):
 
     identifier = "minecraft:default_look_angle"
 
-    value: float | None = json_field(default=None, validators=[_number])
+    value: float | None = json_field(default=None)
 
 
 class EntityFloatsInLiquid(JsonComponent):
@@ -498,26 +455,24 @@ class EntityFlocking(JsonComponent):
 
     identifier = "minecraft:flocking"
 
-    block_distance: float | None = json_field(default=None, validators=[_number])
-    block_weight: float | None = json_field(default=None, validators=[_number])
-    breach_influence: float | None = json_field(default=None, validators=[_number])
-    cohesion_threshold: float | None = json_field(default=None, validators=[_number])
-    cohesion_weight: float | None = json_field(default=None, validators=[_number])
-    goal_weight: float | None = json_field(default=None, validators=[_number])
-    high_flock_limit: int | None = json_field(default=None, validators=[_integer])
-    in_water: bool | None = json_field(default=None, validators=[_boolean])
-    influence_radius: float | None = json_field(default=None, validators=[_number])
-    innner_cohesion_threshold: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    loner_chance: float | None = json_field(default=None, validators=[_number])
-    low_flock_limit: int | None = json_field(default=None, validators=[_integer])
-    match_variants: bool | None = json_field(default=None, validators=[_boolean])
-    max_height: float | None = json_field(default=None, validators=[_number])
-    min_height: float | None = json_field(default=None, validators=[_number])
-    separation_threshold: float | None = json_field(default=None, validators=[_number])
-    separation_weight: float | None = json_field(default=None, validators=[_number])
-    use_center_of_mass: bool | None = json_field(default=None, validators=[_boolean])
+    block_distance: float | None = json_field(default=None)
+    block_weight: float | None = json_field(default=None)
+    breach_influence: float | None = json_field(default=None)
+    cohesion_threshold: float | None = json_field(default=None)
+    cohesion_weight: float | None = json_field(default=None)
+    goal_weight: float | None = json_field(default=None)
+    high_flock_limit: int | None = json_field(default=None)
+    in_water: bool | None = json_field(default=None)
+    influence_radius: float | None = json_field(default=None)
+    innner_cohesion_threshold: float | None = json_field(default=None)
+    loner_chance: float | None = json_field(default=None)
+    low_flock_limit: int | None = json_field(default=None)
+    match_variants: bool | None = json_field(default=None)
+    max_height: float | None = json_field(default=None)
+    min_height: float | None = json_field(default=None)
+    separation_threshold: float | None = json_field(default=None)
+    separation_weight: float | None = json_field(default=None)
+    use_center_of_mass: bool | None = json_field(default=None)
 
 
 class EntityFlyingSpeed(JsonComponent):
@@ -531,7 +486,7 @@ class EntityFlyingSpeed(JsonComponent):
 
     identifier = "minecraft:flying_speed"
 
-    value: float = json_field(validators=[_number])
+    value: float = json_field()
 
 
 class EntityFlyingSpeedMeters(EntityFlyingSpeed):
@@ -543,9 +498,7 @@ class EntityFlyingSpeedMeters(EntityFlyingSpeed):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_flying_speed)
     """
 
-    value: float = json_field(
-        validators=[_number], encoder=encoders.speed_from_meters(2)
-    )
+    value: Annotated[float, MetersPerSecond(2)] = json_field()
 
 
 class EntityFreeCameraControlled(JsonComponent):
@@ -560,10 +513,8 @@ class EntityFreeCameraControlled(JsonComponent):
 
     identifier = "minecraft:free_camera_controlled"
 
-    backwards_movement_modifier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    strafe_speed_modifier: float | None = json_field(default=None, validators=[_number])
+    backwards_movement_modifier: float | None = json_field(default=None)
+    strafe_speed_modifier: float | None = json_field(default=None)
 
 
 class EntityGroundOffset(JsonComponent):
@@ -577,7 +528,7 @@ class EntityGroundOffset(JsonComponent):
 
     identifier = "minecraft:ground_offset"
 
-    value: float | None = json_field(default=None, validators=[_number])
+    value: float | None = json_field(default=None)
 
 
 class EntityHide(JsonComponent):
@@ -593,7 +544,7 @@ class EntityHome(JsonComponent):
     """Saves a home position for when the entity is spawned.
 
     Args:
-        home_block_list (list[BlockReference], optional): Blocks that can be a valid home.
+        home_block_list (list[str | MinecraftBlockDescriptor], optional): Blocks that can be a valid home.
         restriction_radius (int, optional): Radius the entity is restricted to around its home. Game default 0.
         restriction_type (Literal["none", "random_movement", "all_movement"], optional): How the entity is restricted to its home. Game default none.
 
@@ -602,16 +553,12 @@ class EntityHome(JsonComponent):
 
     identifier = "minecraft:home"
 
-    home_block_list: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
+    home_block_list: list[str | MinecraftBlockDescriptor] | None = json_field(
+        default=None
     )
-    restriction_radius: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
+    restriction_radius: Annotated[int, NonNegative] | None = json_field(default=None)
     restriction_type: Literal["none", "random_movement", "all_movement"] | None = (
-        json_field(
-            default=None, validators=[one_of("none", "random_movement", "all_movement")]
-        )
+        json_field(default=None)
     )
 
 
@@ -619,16 +566,14 @@ class EntityHorseJumpStrength(JsonComponent):
     """Determines the jump height for a horse or similar entity, like a donkey.
 
     Args:
-        value (float | NumberRange): Jump strength the entity has when spawned, or a `(min, max)` range to pick it from.
+        value (float | tuple[float, float]): Jump strength the entity has when spawned, or a `(min, max)` range to pick it from.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_horse.jump_strength)
     """
 
     identifier = "minecraft:horse.jump_strength"
 
-    value: float | NumberRange = json_field(
-        validators=[number_or_range], encoder=encoders.range_min_max
-    )
+    value: Annotated[float | tuple[float, float], RangeMinMax] = json_field()
 
 
 class EntityInputAirControlled(JsonComponent):
@@ -643,10 +588,8 @@ class EntityInputAirControlled(JsonComponent):
 
     identifier = "minecraft:input_air_controlled"
 
-    backwards_movement_modifier: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    strafe_speed_modifier: float | None = json_field(default=None, validators=[_number])
+    backwards_movement_modifier: float | None = json_field(default=None)
+    strafe_speed_modifier: float | None = json_field(default=None)
 
 
 class EntityInputGroundControlled(JsonComponent):
@@ -662,18 +605,20 @@ class EntityItemControllable(JsonComponent):
     """Defines what items can be used to control this entity while ridden.
 
     Args:
-        control_items (list[ItemReference], optional): The items that can be used to control this entity while ridden. Add more with `add_control_items`.
+        control_items (list[str | MinecraftItemDescriptor], optional): The items that can be used to control this entity while ridden. Add more with `add_control_items`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_controllable)
     """
 
     identifier = "minecraft:item_controllable"
 
-    control_items: list[ItemReference] = json_field(
-        default_factory=list, validators=[_items], omit_default=True
+    control_items: list[str | MinecraftItemDescriptor] = json_field(
+        default_factory=list, omit_default=True
     )
 
-    def add_control_items(self, *items: ItemReference) -> "EntityItemControllable":
+    def add_control_items(
+        self, *items: str | MinecraftItemDescriptor
+    ) -> "EntityItemControllable":
         """Adds items that control the entity."""
         self.control_items.extend(items)
         return self
@@ -691,12 +636,8 @@ class EntityJumpDynamic(JsonComponent):
 
     identifier = "minecraft:jump.dynamic"
 
-    regular_skip_data: JumpData | None = json_field(
-        default=None, validators=[instance_of(JumpData)]
-    )
-    fast_skip_data: JumpData | None = json_field(
-        default=None, validators=[instance_of(JumpData)]
-    )
+    regular_skip_data: JumpData | None = json_field(default=None)
+    fast_skip_data: JumpData | None = json_field(default=None)
 
     def set_fast_skip_data(
         self,
@@ -744,7 +685,7 @@ class EntityJumpStatic(JsonComponent):
 
     identifier = "minecraft:jump.static"
 
-    jump_power: float | None = json_field(default=None, validators=[_number])
+    jump_power: float | None = json_field(default=None)
 
 
 class EntityLavaMovement(JsonComponent):
@@ -758,7 +699,7 @@ class EntityLavaMovement(JsonComponent):
 
     identifier = "minecraft:lava_movement"
 
-    value: float = json_field(validators=[_number])
+    value: float = json_field()
 
 
 class EntityLeashable(JsonComponent):
@@ -781,26 +722,16 @@ class EntityLeashable(JsonComponent):
 
     identifier = "minecraft:leashable"
 
-    can_be_cut: bool | None = json_field(default=None, validators=[_boolean])
-    can_be_stolen: bool | None = json_field(default=None, validators=[_boolean])
-    hard_distance: int | None = json_field(default=None, validators=[_positive])
-    max_distance: int | None = json_field(default=None, validators=[_positive])
-    on_leash: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_unleash: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_unleash_interact_only: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    presets: list[LeashPreset] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(LeashPreset))],
-        omit_default=True,
-    )
-    soft_distance: int | None = json_field(default=None, validators=[_positive])
-    unleash_on_removal: bool | None = json_field(default=None, validators=[_boolean])
+    can_be_cut: bool | None = json_field(default=None)
+    can_be_stolen: bool | None = json_field(default=None)
+    hard_distance: Annotated[int, NonNegative] | None = json_field(default=None)
+    max_distance: Annotated[int, NonNegative] | None = json_field(default=None)
+    on_leash: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_unleash: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_unleash_interact_only: bool | None = json_field(default=None)
+    presets: list[LeashPreset] = json_field(default_factory=list, omit_default=True)
+    soft_distance: Annotated[int, NonNegative] | None = json_field(default=None)
+    unleash_on_removal: bool | None = json_field(default=None)
 
     def add_preset(
         self,
@@ -838,15 +769,15 @@ class EntityLeashableTo(JsonComponent):
 
     identifier = "minecraft:leashable_to"
 
-    can_retrieve_from: bool | None = json_field(default=None, validators=[_boolean])
-    unleash_on_removal: bool | None = json_field(default=None, validators=[_boolean])
+    can_retrieve_from: bool | None = json_field(default=None)
+    unleash_on_removal: bool | None = json_field(default=None)
 
 
 class EntityMovement(JsonComponent):
     """Defines the base movement speed of an entity. Typical values: creeper (0.2), cow (0.25), zombie baby (0.35).
 
     Args:
-        value (float | NumberRange): The base movement speed, or a `(min, max)` range to pick it from. Higher values result in faster movement.
+        value (float | tuple[float, float]): The base movement speed, or a `(min, max)` range to pick it from. Higher values result in faster movement.
         max (float, optional): Maximum movement speed this entity can have.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement)
@@ -854,10 +785,8 @@ class EntityMovement(JsonComponent):
 
     identifier = "minecraft:movement"
 
-    value: float | NumberRange = json_field(
-        validators=[number_or_range], encoder=encoders.range_min_max
-    )
-    max: float | None = json_field(default=None, validators=[_number])
+    value: Annotated[float | tuple[float, float], RangeMinMax] = json_field()
+    max: float | None = json_field(default=None)
 
 
 class EntityMovementAmphibious(EntityMovementControl):
@@ -906,8 +835,8 @@ class EntityMovementFly(EntityMovementControl):
 
     identifier = "minecraft:movement.fly"
 
-    speed_when_turning: float | None = json_field(default=None, validators=[_number])
-    start_speed: float | None = json_field(default=None, validators=[_number])
+    speed_when_turning: float | None = json_field(default=None)
+    start_speed: float | None = json_field(default=None)
 
 
 class EntityMovementGeneric(EntityMovementControl):
@@ -935,8 +864,8 @@ class EntityMovementGlide(EntityMovementControl):
 
     identifier = "minecraft:movement.glide"
 
-    speed_when_turning: float | None = json_field(default=None, validators=[_number])
-    start_speed: float | None = json_field(default=None, validators=[_number])
+    speed_when_turning: float | None = json_field(default=None)
+    start_speed: float | None = json_field(default=None)
 
 
 class EntityMovementHover(EntityMovementControl):
@@ -957,7 +886,7 @@ class EntityMovementJump(EntityMovementControl):
     To follow targets, the entity also needs `minecraft:behavior.slime_attack`.
 
     Args:
-        jump_delay (float | NumberRange, optional): Seconds after landing before the next jump, or a `(min, max)` range. Game default 0.
+        jump_delay (float | tuple[float, float], optional): Seconds after landing before the next jump, or a `(min, max)` range. Game default 0.
         max_turn (float, optional): Maximum degrees the mob can turn per tick. Game default 30.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement.jump)
@@ -965,8 +894,8 @@ class EntityMovementJump(EntityMovementControl):
 
     identifier = "minecraft:movement.jump"
 
-    jump_delay: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.range_min_max
+    jump_delay: Annotated[float | tuple[float, float], RangeMinMax] | None = json_field(
+        default=None
     )
 
 
@@ -974,17 +903,17 @@ class EntityMovementMeters(EntityMovement):
     """`minecraft:movement` with the speed given in blocks per second, converted to the game's movement value.
 
     Args:
-        value (float | NumberRange): The base movement speed in blocks per second, or a `(min, max)` range to pick it from.
+        value (float | tuple[float, float]): The base movement speed in blocks per second, or a `(min, max)` range to pick it from.
         max (float, optional): Maximum movement speed in blocks per second.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_movement)
     """
 
-    value: float | NumberRange = json_field(
-        validators=[number_or_range], encoder=encoders.speed_from_meters(4)
+    value: Annotated[float | tuple[float, float], MetersPerSecond(4), RangeMinMax] = (
+        json_field()
     )
-    max: float | None = json_field(
-        default=None, validators=[_number], encoder=encoders.speed_from_meters(4)
+    max: Annotated[float, MetersPerSecond(4), RangeMinMax] | None = json_field(
+        default=None
     )
 
 
@@ -1011,7 +940,7 @@ class EntityMovementSoundDistanceOffset(JsonComponent):
 
     identifier = "minecraft:movement_sound_distance_offset"
 
-    value: float = json_field(validators=[_number])
+    value: float = json_field()
 
 
 class EntityMovementSway(EntityMovementControl):
@@ -1027,8 +956,8 @@ class EntityMovementSway(EntityMovementControl):
 
     identifier = "minecraft:movement.sway"
 
-    sway_amplitude: float | None = json_field(default=None, validators=[_number])
-    sway_frequency: float | None = json_field(default=None, validators=[_number])
+    sway_amplitude: float | None = json_field(default=None)
+    sway_frequency: float | None = json_field(default=None)
 
 
 class EntityNavigationClimb(EntityNavigation):
@@ -1129,17 +1058,15 @@ class EntityPreferredPath(JsonComponent):
 
     identifier = "minecraft:preferred_path"
 
-    default_block_cost: float | None = json_field(default=None, validators=[_number])
-    jump_cost: float | None = json_field(default=None, validators=[_number])
-    max_fall_blocks: int | None = json_field(default=None, validators=[_integer])
+    default_block_cost: float | None = json_field(default=None)
+    jump_cost: float | None = json_field(default=None)
+    max_fall_blocks: int | None = json_field(default=None)
     preferred_path_blocks: list[PreferredPathBlocks] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(PreferredPathBlocks))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def add_preferred_path_blocks(
-        self, *, cost: float, blocks: list[BlockReference]
+        self, *, cost: float, blocks: list[str | MinecraftBlockDescriptor]
     ) -> "EntityPreferredPath":
         """Adds blocks and their cost. See `PreferredPathBlocks`."""
         self.preferred_path_blocks.append(PreferredPathBlocks(cost=cost, blocks=blocks))
@@ -1157,7 +1084,7 @@ class EntityRailMovement(JsonComponent):
 
     identifier = "minecraft:rail_movement"
 
-    max_speed: float | None = json_field(default=None, validators=[_number])
+    max_speed: float | None = json_field(default=None)
 
 
 class EntityRideable(JsonComponent):
@@ -1182,30 +1109,18 @@ class EntityRideable(JsonComponent):
 
     identifier = "minecraft:rideable"
 
-    controlling_seat: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    crouching_skip_interact: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    dismount_mode: RideableDismountMode | None = json_field(
-        default=None, validators=[one_of(*RideableDismountMode)]
-    )
-    family_types: list[str] | None = json_field(
-        default=None, validators=[each(_string)]
-    )
-    interact_text: str | None = json_field(default=None, validators=[_string])
-    on_rider_enter_event: str | None = json_field(default=None, validators=[_string])
-    on_rider_exit_event: str | None = json_field(default=None, validators=[_string])
-    passenger_max_width: float | None = json_field(default=None, validators=[_positive])
-    pull_in_entities: bool | None = json_field(default=None, validators=[_boolean])
-    rider_can_interact: bool | None = json_field(default=False, validators=[_boolean])
-    seat_count: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    seats: list[Seat] = json_field(
-        default_factory=list, validators=[each(instance_of(Seat))], omit_default=True
-    )
+    controlling_seat: Annotated[int, NonNegative] | None = json_field(default=None)
+    crouching_skip_interact: bool | None = json_field(default=None)
+    dismount_mode: RideableDismountMode | None = json_field(default=None)
+    family_types: list[str] | None = json_field(default=None)
+    interact_text: str | None = json_field(default=None)
+    on_rider_enter_event: str | None = json_field(default=None)
+    on_rider_exit_event: str | None = json_field(default=None)
+    passenger_max_width: Annotated[float, NonNegative] | None = json_field(default=None)
+    pull_in_entities: bool | None = json_field(default=None)
+    rider_can_interact: bool | None = json_field(default=False)
+    seat_count: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    seats: list[Seat] = json_field(default_factory=list, omit_default=True)
 
     def __post_init__(self) -> None:
         if self.interact_text is not None:
@@ -1216,7 +1131,7 @@ class EntityRideable(JsonComponent):
     def add_seat(
         self,
         *,
-        position: Vector3D,
+        position: tuple[float, float, float],
         max_rider_count: int,
         min_rider_count: int | None = None,
         lock_rider_rotation: float | None = None,
@@ -1268,7 +1183,7 @@ class EntityUnderwaterMovement(JsonComponent):
 
     identifier = "minecraft:underwater_movement"
 
-    value: float = json_field(validators=[_number])
+    value: float = json_field()
 
 
 class EntityVariableMaxAutoStep(JsonComponent):
@@ -1284,9 +1199,9 @@ class EntityVariableMaxAutoStep(JsonComponent):
 
     identifier = "minecraft:variable_max_auto_step"
 
-    base_value: float | None = json_field(default=None, validators=[_number])
-    controlled_value: float | None = json_field(default=None, validators=[_number])
-    jump_prevented_value: float | None = json_field(default=None, validators=[_number])
+    base_value: float | None = json_field(default=None)
+    controlled_value: float | None = json_field(default=None)
+    jump_prevented_value: float | None = json_field(default=None)
 
 
 class EntityVerticalMovementAction(JsonComponent):
@@ -1300,7 +1215,7 @@ class EntityVerticalMovementAction(JsonComponent):
 
     identifier = "minecraft:vertical_movement_action"
 
-    vertical_velocity: float | None = json_field(default=None, validators=[_number])
+    vertical_velocity: float | None = json_field(default=None)
 
 
 class EntityWalkAnimationSpeed(JsonComponent):
@@ -1314,7 +1229,7 @@ class EntityWalkAnimationSpeed(JsonComponent):
 
     identifier = "minecraft:walk_animation_speed"
 
-    value: float | None = json_field(default=None, validators=[_number])
+    value: float | None = json_field(default=None)
 
 
 class EntityWaterMovement(JsonComponent):
@@ -1327,7 +1242,7 @@ class EntityWaterMovement(JsonComponent):
     """
 
     identifier = "minecraft:water_movement"
-    drag_factor: float | None = json_field(default=None, validators=[_number])
+    drag_factor: float | None = json_field(default=None)
 
 
 # endregion

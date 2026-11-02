@@ -1,21 +1,21 @@
 from dataclasses import InitVar
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Annotated
 
 from anvil.api.core.enums import DamageCause, EnchantsSlots
 from anvil.api.core.textures import ItemTexturesObject
 from anvil.api.core.types import (
-    BlockReference,
-    Color,
+    RGB,
+    RGB255,
+    RGBA,
+    RGBA255,
+    HexRGB,
+    HexRGBA,
     ItemCooldownType,
     ItemPlantAtFace,
-    ItemReference,
     ItemStartUsing,
     ItemUseAnimations,
     ItemWearableSlots,
-    NumberRange,
     Rarity,
-    Seconds,
-    Tick,
 )
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
@@ -23,21 +23,17 @@ from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.lib.blockbench import _BlockBenchSource
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import (
-    Identifier,
+    Hex,
+    IconTexture,
+    InRange,
     JsonComponent,
     JsonCustomComponent,
     JsonObject,
     JsonValueComponent,
-    encoders,
+    Length,
+    MinMax,
+    NonNegative,
     json_field,
-)
-from anvil.lib.jsonmodel.validators import (
-    each,
-    in_range,
-    instance_of,
-    length,
-    literal_of,
-    one_of,
 )
 from anvil.lib.schemas import (
     MinecraftBlockDescriptor,
@@ -49,22 +45,6 @@ from anvil.lib.translator import AnvilTranslator
 if TYPE_CHECKING:
     from anvil.api.items.items import Item
 
-# region Validators
-
-_boolean = instance_of(bool)
-_string = instance_of(str)
-_number = instance_of(int, float)
-_integer = instance_of(int)
-_positive = (_number, in_range(minimum=0))
-_block = instance_of(str, MinecraftBlockDescriptor)
-_blocks = each(_block)
-_item = instance_of(str, MinecraftItemDescriptor)
-_items = each(_item)
-_entity = instance_of(str, MinecraftEntityDescriptor)
-_range = (length(2, 2), each(_number))
-
-
-# endregion
 
 # region Parts: objects nested inside components
 
@@ -73,16 +53,16 @@ class KineticEffectConditions(JsonObject):
     """Conditions that need to be satisfied for an effect of a kinetic weapon to be applied.
 
     Args:
-        max_duration (Tick, optional): Time, in ticks, during which the effect can be applied after `delay` elapses. If negative, the effect is applied indefinitely. Game default -1.
+        max_duration (int, optional): Time, in ticks, during which the effect can be applied after `delay` elapses. If negative, the effect is applied indefinitely. Game default -1.
         min_relative_speed (float, optional): Minimum relative speed of the user with respect to the target, projected onto the view vector. Game default 0.
         min_speed (float, optional): Minimum speed of the user, projected onto the view vector. Game default 0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_kinetic_weapon_kinetic_effect_conditions)
     """
 
-    max_duration: Tick | None = json_field(default=None, validators=[_integer])
-    min_relative_speed: float | None = json_field(default=None, validators=[_number])
-    min_speed: float | None = json_field(default=None, validators=[_number])
+    max_duration: int | None = json_field(default=None)
+    min_relative_speed: float | None = json_field(default=None)
+    min_speed: float | None = json_field(default=None)
 
 
 class DurabilityThreshold(JsonObject):
@@ -96,32 +76,32 @@ class DurabilityThreshold(JsonObject):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability_sensor_durability_threshold)
     """
 
-    durability: int = json_field(validators=[_integer, in_range(minimum=0)])
-    particle_type: str | None = json_field(default=None, validators=[_string])
-    sound_event: str | None = json_field(default=None, validators=[_string])
+    durability: Annotated[int, NonNegative] = json_field()
+    particle_type: str | None = json_field(default=None)
+    sound_event: str | None = json_field(default=None)
 
 
 class DestroySpeed(JsonObject):
     """How fast a digger item breaks a block.
 
     Args:
-        block (BlockReference): The block, by descriptor, identifier or tag query.
+        block (str | MinecraftBlockDescriptor): The block, by descriptor, identifier or tag query.
         speed (int): Digging speed for the block.
     """
 
-    block: BlockReference = json_field(validators=[_block])
-    speed: int = json_field(validators=[_integer])
+    block: str | MinecraftBlockDescriptor = json_field()
+    speed: int = json_field()
 
 
 class RepairItem(JsonObject):
     """Items that repair an item, and how much durability they restore.
 
     Args:
-        items (list[ItemReference]): Items that may be used to repair the item.
+        items (list[str | MinecraftItemDescriptor]): Items that may be used to repair the item.
         repair_amount (Molang | float, optional): How much the item is repaired.
     """
 
-    items: list[ItemReference] = json_field(validators=[_items])
+    items: list[str | MinecraftItemDescriptor] = json_field()
     repair_amount: Molang | str | float | None = json_field(default=None)
 
 
@@ -129,16 +109,16 @@ class Ammunition(JsonObject):
     """An item a shooter can fire.
 
     Args:
-        item (ItemReference): The ammunition item. It needs a `minecraft:projectile` component.
+        item (str | MinecraftItemDescriptor): The ammunition item. It needs a `minecraft:projectile` component.
         search_inventory (bool, optional): Whether the inventory is searched for the ammunition. Game default false.
         use_in_creative (bool, optional): Whether the ammunition can be used in creative mode. Game default false.
         use_offhand (bool, optional): Whether the ammunition can be used from the off hand. Game default false.
     """
 
-    item: ItemReference = json_field(validators=[_item])
-    search_inventory: bool | None = json_field(default=None, validators=[_boolean])
-    use_in_creative: bool | None = json_field(default=None, validators=[_boolean])
-    use_offhand: bool | None = json_field(default=None, validators=[_boolean])
+    item: str | MinecraftItemDescriptor = json_field()
+    search_inventory: bool | None = json_field(default=None)
+    use_in_creative: bool | None = json_field(default=None)
+    use_offhand: bool | None = json_field(default=None)
 
 
 # endregion
@@ -151,18 +131,16 @@ class ItemDurability(JsonComponent):
 
     Args:
         max_durability (int): The amount of damage this item can take before breaking. Minimum 0.
-        damage_chance (NumberRange, optional): The `(min, max)` percentage chance of this item losing durability, each between 0 and 100. Game default (100, 100).
+        damage_chance (tuple[float, float], optional): The `(min, max)` percentage chance of this item losing durability, each between 0 and 100. Game default (100, 100).
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_durability)
     """
 
     identifier = "minecraft:durability"
 
-    max_durability: int = json_field(validators=[_integer, in_range(minimum=0)])
-    damage_chance: tuple[int, int] | None = json_field(
-        default=None,
-        validators=[length(2, 2), each(_integer, in_range(0, 100))],
-        encoder=encoders.min_max,
+    max_durability: Annotated[int, NonNegative] = json_field()
+    damage_chance: Annotated[tuple[int, int], InRange(0, 100), MinMax] | None = (
+        json_field(default=None)
     )
 
 
@@ -177,7 +155,7 @@ class ItemMaxStackSize(JsonValueComponent):
 
     identifier = "minecraft:max_stack_size"
 
-    value: int = json_field(validators=[_integer, in_range(1, 64)])
+    value: Annotated[int, InRange(1, 64)] = json_field()
 
 
 class ItemStorageItem(JsonComponent):
@@ -185,8 +163,8 @@ class ItemStorageItem(JsonComponent):
 
     Args:
         allow_nested_storage_items (bool, optional): Whether another storage item is allowed inside this item. Game default true.
-        allowed_items (list[ItemReference], optional): Items that are exclusively allowed in this storage item. If empty, all items are allowed.
-        banned_items (list[ItemReference], optional): Items that are not allowed in this storage item.
+        allowed_items (list[str | MinecraftItemDescriptor], optional): Items that are exclusively allowed in this storage item. If empty, all items are allowed.
+        banned_items (list[str | MinecraftItemDescriptor], optional): Items that are not allowed in this storage item.
         max_slots (int, optional): The maximum number of slots, from 1 to 64. Game default 64.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_item)
@@ -194,18 +172,10 @@ class ItemStorageItem(JsonComponent):
 
     identifier = "minecraft:storage_item"
 
-    allow_nested_storage_items: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    allowed_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
-    )
-    banned_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
-    )
-    max_slots: int | None = json_field(
-        default=None, validators=[_integer, in_range(1, 64)]
-    )
+    allow_nested_storage_items: bool | None = json_field(default=None)
+    allowed_items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    banned_items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    max_slots: Annotated[int, InRange(1, 64)] | None = json_field(default=None)
 
 
 class ItemUseModifiers(JsonComponent):
@@ -223,15 +193,13 @@ class ItemUseModifiers(JsonComponent):
 
     identifier = "minecraft:use_modifiers"
 
-    use_duration: float = json_field(validators=_positive)
-    movement_modifier: float | None = json_field(
-        default=None, validators=[in_range(maximum=1)]
+    use_duration: Annotated[float, NonNegative] = json_field()
+    movement_modifier: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
-    emit_vibrations: bool | None = json_field(default=None, validators=[_boolean])
-    start_sound: str | None = json_field(default=None, validators=[_string])
-    start_using: ItemStartUsing | None = json_field(
-        default=None, validators=[literal_of(ItemStartUsing)]
-    )
+    emit_vibrations: bool | None = json_field(default=None)
+    start_sound: str | None = json_field(default=None)
+    start_using: ItemStartUsing | None = json_field(default=None)
 
 
 # endregion
@@ -265,29 +233,29 @@ class ItemAllowOffHand(JsonValueComponent):
 
     identifier = "minecraft:allow_off_hand"
 
-    value: bool = json_field(default=True, validators=[_boolean])
+    value: bool = json_field(default=True)
 
 
 class ItemBlockPlacer(JsonComponent):
     """Sets the item as a placer item component for blocks. Items with this component will place a block when used.
 
     Args:
-        block (BlockReference): The block that will be placed.
+        block (str | MinecraftBlockDescriptor): The block that will be placed.
         replace_block_item (bool, optional): If true, the item is registered as the item for this block, and is returned when the block is broken or picked. The item identifier must match the block identifier. Game default false.
         aligned_placement (bool, optional): Whether block placement is aligned while the interaction button is held down. Requires format version 1.26.10.
-        use_on (list[BlockReference], optional): Blocks this item can be used on, at most 256. If empty, all blocks are allowed.
+        use_on (list[str | MinecraftBlockDescriptor], optional): Blocks this item can be used on, at most 256. If empty, all blocks are allowed.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer)
     """
 
     identifier = "minecraft:block_placer"
 
-    block: BlockReference = json_field(validators=[_block])
-    replace_block_item: bool | None = json_field(default=None, validators=[_boolean])
-    aligned_placement: bool | None = json_field(default=None, validators=[_boolean])
-    use_on: list[BlockReference] | None = json_field(
-        default=None, validators=[length(maximum=256), _blocks]
-    )
+    block: str | MinecraftBlockDescriptor = json_field()
+    replace_block_item: bool | None = json_field(default=None)
+    aligned_placement: bool | None = json_field(default=None)
+    use_on: (
+        Annotated[list[str | MinecraftBlockDescriptor], Length(maximum=256)] | None
+    ) = json_field(default=None)
 
 
 class ItemBundleInteraction(JsonComponent):
@@ -302,9 +270,7 @@ class ItemBundleInteraction(JsonComponent):
     identifier = "minecraft:bundle_interaction"
     _requires = (ItemStorageItem, ItemMaxStackSize)
 
-    num_viewable_slots: int | None = json_field(
-        default=None, validators=[_integer, in_range(1, 64)]
-    )
+    num_viewable_slots: Annotated[int, InRange(1, 64)] | None = json_field(default=None)
 
 
 class ItemCanDestroyInCreative(JsonValueComponent):
@@ -318,7 +284,7 @@ class ItemCanDestroyInCreative(JsonValueComponent):
 
     identifier = "minecraft:can_destroy_in_creative"
 
-    value: bool = json_field(default=True, validators=[_boolean])
+    value: bool = json_field(default=True)
 
 
 class ItemCompostable(JsonComponent):
@@ -332,7 +298,7 @@ class ItemCompostable(JsonComponent):
 
     identifier = "minecraft:compostable"
 
-    composting_chance: int = json_field(validators=[_integer, in_range(1, 100)])
+    composting_chance: Annotated[int, InRange(1, 100)] = json_field()
 
 
 class ItemCooldown(JsonComponent):
@@ -340,7 +306,7 @@ class ItemCooldown(JsonComponent):
 
     Args:
         category (str): Groups items together. When an item is used, all items of its category enter cooldown.
-        duration (Seconds): How long, in seconds, the items of the category spend cooling down.
+        duration (int): How long, in seconds, the items of the category spend cooling down.
         type (ItemCooldownType, optional): The action that triggers the cooldown, "use" or "attack". Game default "use".
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_cooldown)
@@ -348,11 +314,9 @@ class ItemCooldown(JsonComponent):
 
     identifier = "minecraft:cooldown"
 
-    category: str = json_field(validators=[_string])
-    duration: Seconds | float = json_field(validators=_positive)
-    type: ItemCooldownType | None = json_field(
-        default=None, validators=[literal_of(ItemCooldownType)]
-    )
+    category: str = json_field()
+    duration: Annotated[int | float, NonNegative] = json_field()
+    type: ItemCooldownType | None = json_field(default=None)
 
 
 class ItemDamage(JsonValueComponent):
@@ -366,7 +330,7 @@ class ItemDamage(JsonValueComponent):
 
     identifier = "minecraft:damage"
 
-    value: int = json_field(validators=[_integer, in_range(0, 32767)])
+    value: Annotated[int, InRange(0, 32767)] = json_field()
 
 
 class ItemDamageAbsorption(JsonComponent):
@@ -381,9 +345,7 @@ class ItemDamageAbsorption(JsonComponent):
     identifier = "minecraft:damage_absorption"
     _requires = (ItemDurability,)
 
-    absorbable_causes: list[DamageCause] = json_field(
-        validators=[length(minimum=1), each(one_of(*DamageCause))]
-    )
+    absorbable_causes: Annotated[list[DamageCause], Length(minimum=1)] = json_field()
 
 
 class ItemDigger(JsonComponent):
@@ -399,13 +361,11 @@ class ItemDigger(JsonComponent):
     identifier = "minecraft:digger"
 
     destroy_speeds: list[DestroySpeed] = json_field(
-        default_factory=list,
-        omit_default=True,
-        validators=[each(instance_of(DestroySpeed))],
+        default_factory=list, omit_default=True
     )
-    use_efficiency: bool | None = json_field(default=None, validators=[_boolean])
+    use_efficiency: bool | None = json_field(default=None)
 
-    def add_destroy_speed(self, *, block: BlockReference, speed: int):
+    def add_destroy_speed(self, *, block: str | MinecraftBlockDescriptor, speed: int):
         """Adds a block and its digging speed. See `DestroySpeed` for the parameters.
 
         Returns:
@@ -426,7 +386,7 @@ class ItemDisplayName(JsonComponent):
 
     identifier = "minecraft:display_name"
 
-    value: str = json_field(validators=[_string])
+    value: str = json_field()
 
     def __prepare_export__(self, owner: "Item", *, root: bool = True) -> None:
         """Adds the name to the language file under `item.<identifier>.name`, then writes that key."""
@@ -449,9 +409,8 @@ class ItemDurabilitySensor(JsonComponent):
     identifier = "minecraft:durability_sensor"
     _requires = (ItemDurability,)
 
-    durability_thresholds: list[DurabilityThreshold] = json_field(
-        default_factory=list,
-        validators=[length(minimum=1), each(instance_of(DurabilityThreshold))],
+    durability_thresholds: Annotated[list[DurabilityThreshold], Length(minimum=1)] = (
+        json_field(default_factory=list)
     )
 
     def add_durability_threshold(
@@ -480,14 +439,16 @@ class ItemDyeable(JsonComponent):
     """Enables players to dye this item, like leather armor.
 
     Args:
-        default_color (Color, optional): The color of the item when undyed. Written as a hex color. Game default white.
+        default_color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, optional): The color of the item when undyed. Written as a hex color. Game default white.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_dyeable)
     """
 
     identifier = "minecraft:dyeable"
 
-    default_color: Color | None = json_field(default=None, encoder=encoders.to_hex)
+    default_color: (
+        Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] | None
+    ) = json_field(default=None)
 
 
 class ItemEnchantable(JsonComponent):
@@ -502,28 +463,26 @@ class ItemEnchantable(JsonComponent):
 
     identifier = "minecraft:enchantable"
 
-    slot: EnchantsSlots = json_field(validators=[_string])
-    value: int = json_field(validators=[_integer, in_range(minimum=0)])
+    slot: EnchantsSlots = json_field()
+    value: Annotated[int, NonNegative] = json_field()
 
 
 class ItemEntityPlacer(JsonComponent):
     """Allows an item to place entities into the world, and to set the spawn type of a monster spawner.
 
     Args:
-        entity (MinecraftEntityDescriptor | Identifier): The entity to be placed in the world.
-        dispense_on (list[BlockReference], optional): Blocks this item can be dispensed on. If empty, all blocks are allowed.
-        use_on (list[BlockReference], optional): Blocks this item can be used on. If empty, all blocks are allowed.
+        entity (MinecraftEntityDescriptor | str): The entity to be placed in the world.
+        dispense_on (list[str | MinecraftBlockDescriptor], optional): Blocks this item can be dispensed on. If empty, all blocks are allowed.
+        use_on (list[str | MinecraftBlockDescriptor], optional): Blocks this item can be used on. If empty, all blocks are allowed.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_entity_placer)
     """
 
     identifier = "minecraft:entity_placer"
 
-    entity: MinecraftEntityDescriptor | Identifier = json_field(validators=[_entity])
-    dispense_on: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
-    )
-    use_on: list[BlockReference] | None = json_field(default=None, validators=[_blocks])
+    entity: MinecraftEntityDescriptor | str = json_field()
+    dispense_on: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
+    use_on: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
 
 
 class ItemFireResistant(JsonComponent):
@@ -537,7 +496,7 @@ class ItemFireResistant(JsonComponent):
 
     identifier = "minecraft:fire_resistant"
 
-    value: bool = json_field(default=True, validators=[_boolean])
+    value: bool = json_field(default=True)
 
 
 class ItemFood(JsonComponent):
@@ -547,7 +506,7 @@ class ItemFood(JsonComponent):
         can_always_eat (bool, optional): Whether the item can be eaten even when not hungry. Game default false.
         nutrition (int, optional): The value added to the entity's nutrition when the item is used. Game default 0.
         saturation_modifier (float, optional): Used in `nutrition * saturation_modifier * 2` to compute the saturation buff. Game default 0.6.
-        using_converts_to (ItemReference, optional): The item this one converts to when used.
+        using_converts_to (str | MinecraftItemDescriptor, optional): The item this one converts to when used.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_food)
     """
@@ -555,28 +514,24 @@ class ItemFood(JsonComponent):
     identifier = "minecraft:food"
     _requires = (ItemUseModifiers,)
 
-    can_always_eat: bool | None = json_field(default=None, validators=[_boolean])
-    nutrition: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    saturation_modifier: float | None = json_field(default=None, validators=_positive)
-    using_converts_to: ItemReference | None = json_field(
-        default=None, validators=[_item]
-    )
+    can_always_eat: bool | None = json_field(default=None)
+    nutrition: Annotated[int, NonNegative] | None = json_field(default=None)
+    saturation_modifier: Annotated[float, NonNegative] | None = json_field(default=None)
+    using_converts_to: str | MinecraftItemDescriptor | None = json_field(default=None)
 
 
 class ItemFuel(JsonComponent):
     """Allows this item to be used as fuel in a furnace to 'cook' other items.
 
     Args:
-        duration (Seconds): How long, in seconds, this fuel cooks items for. Minimum 0.05.
+        duration (int): How long, in seconds, this fuel cooks items for. Minimum 0.05.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_fuel)
     """
 
     identifier = "minecraft:fuel"
 
-    duration: Seconds | float = json_field(validators=[in_range(minimum=0.05)])
+    duration: Annotated[int | float, InRange(minimum=0.05)] = json_field()
 
 
 class ItemGlint(JsonValueComponent):
@@ -590,7 +545,7 @@ class ItemGlint(JsonValueComponent):
 
     identifier = "minecraft:glint"
 
-    value: bool = json_field(default=True, validators=[_boolean])
+    value: bool = json_field(default=True)
 
 
 class ItemHandEquipped(JsonValueComponent):
@@ -604,21 +559,23 @@ class ItemHandEquipped(JsonValueComponent):
 
     identifier = "minecraft:hand_equipped"
 
-    value: bool = json_field(default=True, validators=[_boolean])
+    value: bool = json_field(default=True)
 
 
 class ItemHoverTextColor(JsonValueComponent):
     """Determines the color of the item name when hovering over it.
 
     Args:
-        value (Color): The color of the item hover text. Written as a hex color.
+        value (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The color of the item hover text. Written as a hex color.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_hover_text_color)
     """
 
     identifier = "minecraft:hover_text_color"
 
-    value: Color = json_field(encoder=encoders.to_hex)
+    value: Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, Hex] = (
+        json_field()
+    )
 
 
 class ItemIcon(JsonComponent):
@@ -633,10 +590,7 @@ class ItemIcon(JsonComponent):
 
     identifier = "minecraft:icon"
 
-    textures: TextureComponents = json_field(
-        validators=[instance_of(TextureComponents)],
-        encoder=lambda textures: {"default": f"{CONFIG.NAMESPACE}:{textures.color}"},
-    )
+    textures: Annotated[TextureComponents, IconTexture] = json_field()
     blockbench: InitVar[str | None] = None
 
     def __post_init__(self, blockbench: str | None) -> None:
@@ -663,7 +617,7 @@ class ItemInteractButton(JsonValueComponent):
 
     identifier = "minecraft:interact_button"
 
-    value: bool | str = json_field(default=True, validators=[instance_of(bool, str)])
+    value: bool | str = json_field(default=True)
 
     def __post_init__(self) -> None:
         if isinstance(self.value, str):
@@ -676,11 +630,11 @@ class ItemKineticWeapon(JsonComponent):
     """Allows an item to deal kinetic damage and its effects every tick while in use, along the user's view vector. Damage depends on the user's and the target's velocity.
 
     Args:
-        reach (NumberRange, optional): The `(min, max)` range, in blocks, along the view vector where entities can be hit. Game default (0, 3).
-        creative_reach (NumberRange, optional): The reach in Creative mode. Defaults to `reach`.
+        reach (tuple[float, float], optional): The `(min, max)` range, in blocks, along the view vector where entities can be hit. Game default (0, 3).
+        creative_reach (tuple[float, float], optional): The reach in Creative mode. Defaults to `reach`.
         damage_modifier (float, optional): Value added to the scaled dot product, after `damage_multiplier`. Game default 0.
         damage_multiplier (float, optional): Value the sum of the projected velocities is multiplied by. Game default 1.
-        delay (Tick, optional): Time, in ticks, after which kinetic damage and its effects start being applied. Game default 0.
+        delay (int, optional): Time, in ticks, after which kinetic damage and its effects start being applied. Game default 0.
         hitbox_margin (float, optional): Added tolerance to the view vector raycast. Game default 0.
         damage_conditions (KineticEffectConditions, optional): Conditions for damage to be applied. If not set, damage is not applied.
         knockback_conditions (KineticEffectConditions, optional): Conditions for knockback to be applied. If not set, knockback is not applied.
@@ -692,32 +646,22 @@ class ItemKineticWeapon(JsonComponent):
     identifier = "minecraft:kinetic_weapon"
     _requires = (ItemUseModifiers,)
 
-    reach: NumberRange | None = json_field(
-        default=None, validators=_range, encoder=encoders.min_max
+    reach: Annotated[tuple[float, float], MinMax] | None = json_field(default=None)
+    creative_reach: Annotated[tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    creative_reach: NumberRange | None = json_field(
-        default=None, validators=_range, encoder=encoders.min_max
-    )
-    damage_modifier: float | None = json_field(default=None, validators=[_number])
-    damage_multiplier: float | None = json_field(default=None, validators=[_number])
-    delay: Tick | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    hitbox_margin: float | None = json_field(default=None, validators=[_number])
-    damage_conditions: KineticEffectConditions | None = json_field(
-        default=None, validators=[instance_of(KineticEffectConditions)]
-    )
-    knockback_conditions: KineticEffectConditions | None = json_field(
-        default=None, validators=[instance_of(KineticEffectConditions)]
-    )
-    dismount_conditions: KineticEffectConditions | None = json_field(
-        default=None, validators=[instance_of(KineticEffectConditions)]
-    )
+    damage_modifier: float | None = json_field(default=None)
+    damage_multiplier: float | None = json_field(default=None)
+    delay: Annotated[int, NonNegative] | None = json_field(default=None)
+    hitbox_margin: float | None = json_field(default=None)
+    damage_conditions: KineticEffectConditions | None = json_field(default=None)
+    knockback_conditions: KineticEffectConditions | None = json_field(default=None)
+    dismount_conditions: KineticEffectConditions | None = json_field(default=None)
 
     def set_damage_conditions(
         self,
         *,
-        max_duration: Tick | None = None,
+        max_duration: int | None = None,
         min_relative_speed: float | None = None,
         min_speed: float | None = None,
     ):
@@ -736,7 +680,7 @@ class ItemKineticWeapon(JsonComponent):
     def set_knockback_conditions(
         self,
         *,
-        max_duration: Tick | None = None,
+        max_duration: int | None = None,
         min_relative_speed: float | None = None,
         min_speed: float | None = None,
     ):
@@ -755,7 +699,7 @@ class ItemKineticWeapon(JsonComponent):
     def set_dismount_conditions(
         self,
         *,
-        max_duration: Tick | None = None,
+        max_duration: int | None = None,
         min_relative_speed: float | None = None,
         min_speed: float | None = None,
     ):
@@ -783,15 +727,15 @@ class ItemLiquidClipped(JsonValueComponent):
 
     identifier = "minecraft:liquid_clipped"
 
-    value: bool = json_field(default=True, validators=[_boolean])
+    value: bool = json_field(default=True)
 
 
 class ItemPiercingWeapon(JsonComponent):
     """Allows an item to deal damage to all entities detected in a straight line along the user's view vector. Items with this component cannot destroy blocks.
 
     Args:
-        reach (NumberRange, optional): The `(min, max)` range, in blocks, along the view vector where entities can be hit. Game default (0, 3).
-        creative_reach (NumberRange, optional): The reach in Creative mode. Defaults to `reach`.
+        reach (tuple[float, float], optional): The `(min, max)` range, in blocks, along the view vector where entities can be hit. Game default (0, 3).
+        creative_reach (tuple[float, float], optional): The reach in Creative mode. Defaults to `reach`.
         hitbox_margin (float, optional): Added tolerance to the view vector raycast. Game default 0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_piercing_weapon)
@@ -799,20 +743,18 @@ class ItemPiercingWeapon(JsonComponent):
 
     identifier = "minecraft:piercing_weapon"
 
-    reach: NumberRange | None = json_field(
-        default=None, validators=_range, encoder=encoders.min_max
+    reach: Annotated[tuple[float, float], MinMax] | None = json_field(default=None)
+    creative_reach: Annotated[tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    creative_reach: NumberRange | None = json_field(
-        default=None, validators=_range, encoder=encoders.min_max
-    )
-    hitbox_margin: float | None = json_field(default=None, validators=[_number])
+    hitbox_margin: float | None = json_field(default=None)
 
 
 class ItemProjectile(JsonComponent):
     """Defines an item as a projectile that can be shot from dispensers or used as ammunition by `minecraft:shooter`. With `minecraft:throwable`, sets the entity spawned when the item is thrown.
 
     Args:
-        projectile_entity (MinecraftEntityDescriptor | Identifier): The entity fired as a projectile. A spawn event can be added as `"entity<event>"`.
+        projectile_entity (MinecraftEntityDescriptor | str): The entity fired as a projectile. A spawn event can be added as `"entity<event>"`.
         minimum_critical_power (float, optional): How long the projectile must be charged to critically hit. Game default 0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_projectile)
@@ -820,12 +762,8 @@ class ItemProjectile(JsonComponent):
 
     identifier = "minecraft:projectile"
 
-    projectile_entity: MinecraftEntityDescriptor | Identifier = json_field(
-        validators=[_entity]
-    )
-    minimum_critical_power: float | None = json_field(
-        default=None, validators=[_number]
-    )
+    projectile_entity: MinecraftEntityDescriptor | str = json_field()
+    minimum_critical_power: float | None = json_field(default=None)
 
 
 class ItemRarity(JsonValueComponent):
@@ -839,7 +777,7 @@ class ItemRarity(JsonValueComponent):
 
     identifier = "minecraft:rarity"
 
-    value: Rarity = json_field(validators=[literal_of(Rarity)])
+    value: Rarity = json_field()
 
 
 class ItemRecord(JsonComponent):
@@ -847,7 +785,7 @@ class ItemRecord(JsonComponent):
 
     Args:
         sound_event (str): The sound event played.
-        duration (Seconds, optional): Duration of the sound event, in seconds. Game default 0.
+        duration (int, optional): Duration of the sound event, in seconds. Game default 0.
         comparator_signal (int, optional): Signal strength for comparator blocks, from 1 to 13. Game default 1.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_record)
@@ -855,11 +793,9 @@ class ItemRecord(JsonComponent):
 
     identifier = "minecraft:record"
 
-    sound_event: str = json_field(validators=[_string])
-    duration: Seconds | float | None = json_field(default=None, validators=_positive)
-    comparator_signal: int | None = json_field(
-        default=None, validators=[_integer, in_range(1, 13)]
-    )
+    sound_event: str = json_field()
+    duration: Annotated[int | float, NonNegative] | None = json_field(default=None)
+    comparator_signal: Annotated[int, InRange(1, 13)] | None = json_field(default=None)
 
 
 class ItemRepairable(JsonComponent):
@@ -874,17 +810,13 @@ class ItemRepairable(JsonComponent):
 
     identifier = "minecraft:repairable"
 
-    repair_items: list[RepairItem] = json_field(
-        default_factory=list,
-        omit_default=True,
-        validators=[each(instance_of(RepairItem))],
-    )
-    on_repaired: str | None = json_field(default=None, validators=[_string])
+    repair_items: list[RepairItem] = json_field(default_factory=list, omit_default=True)
+    on_repaired: str | None = json_field(default=None)
 
     def add_repair_item(
         self,
         *,
-        items: list[ItemReference],
+        items: list[str | MinecraftItemDescriptor],
         repair_amount: Molang | str | float | None = None,
     ):
         """Adds a repair entry. See `RepairItem` for the parameters.
@@ -900,8 +832,8 @@ class ItemSeed(JsonComponent):
     """Sets the item as a seed that can be planted to grow crops.
 
     Args:
-        crop_result (BlockReference): The block placed when the seed is planted.
-        plant_at (list[BlockReference], optional): Blocks this seed can be planted on or attached to. If not set, standard farmland rules apply.
+        crop_result (str | MinecraftBlockDescriptor): The block placed when the seed is planted.
+        plant_at (list[str | MinecraftBlockDescriptor], optional): Blocks this seed can be planted on or attached to. If not set, standard farmland rules apply.
         plant_at_any_solid_surface (bool, optional): Deprecated. Has no effect from format version 1.19.0.
         plant_at_face (ItemPlantAtFace, optional): Deprecated. Has no effect from format version 1.19.0.
 
@@ -910,16 +842,10 @@ class ItemSeed(JsonComponent):
 
     identifier = "minecraft:seed"
 
-    crop_result: BlockReference = json_field(validators=[_block])
-    plant_at: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
-    )
-    plant_at_any_solid_surface: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    plant_at_face: ItemPlantAtFace | None = json_field(
-        default=None, validators=[literal_of(ItemPlantAtFace)]
-    )
+    crop_result: str | MinecraftBlockDescriptor = json_field()
+    plant_at: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
+    plant_at_any_solid_surface: bool | None = json_field(default=None)
+    plant_at_face: ItemPlantAtFace | None = json_field(default=None)
 
 
 class ItemShooter(JsonComponent):
@@ -928,7 +854,7 @@ class ItemShooter(JsonComponent):
     Args:
         ammunition (list[Ammunition], optional): The items that can be fired. Set them directly or add them with `add_ammunition`.
         charge_on_draw (bool, optional): Whether the shooter charges when the player starts drawing, like a crossbow. Game default false.
-        max_draw_duration (Seconds, optional): How long, in seconds, the shooter can be drawn before it fires or reaches full power. Game default 0.
+        max_draw_duration (int, optional): How long, in seconds, the shooter can be drawn before it fires or reaches full power. Game default 0.
         scale_power_by_draw_duration (bool, optional): Whether launch power grows with draw time. Game default false.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_shooter)
@@ -937,23 +863,17 @@ class ItemShooter(JsonComponent):
     identifier = "minecraft:shooter"
     _requires = (ItemUseModifiers,)
 
-    ammunition: list[Ammunition] = json_field(
-        default_factory=list,
-        omit_default=True,
-        validators=[each(instance_of(Ammunition))],
+    ammunition: list[Ammunition] = json_field(default_factory=list, omit_default=True)
+    charge_on_draw: bool | None = json_field(default=None)
+    max_draw_duration: Annotated[int | float, NonNegative] | None = json_field(
+        default=None
     )
-    charge_on_draw: bool | None = json_field(default=None, validators=[_boolean])
-    max_draw_duration: Seconds | float | None = json_field(
-        default=None, validators=_positive
-    )
-    scale_power_by_draw_duration: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    scale_power_by_draw_duration: bool | None = json_field(default=None)
 
     def add_ammunition(
         self,
         *,
-        item: ItemReference,
+        item: str | MinecraftItemDescriptor,
         search_inventory: bool | None = None,
         use_in_creative: bool | None = None,
         use_offhand: bool | None = None,
@@ -985,7 +905,7 @@ class ItemShouldDespawn(JsonValueComponent):
 
     identifier = "minecraft:should_despawn"
 
-    value: bool = json_field(default=True, validators=[_boolean])
+    value: bool = json_field(default=True)
 
 
 class ItemStackedByData(JsonValueComponent):
@@ -999,7 +919,7 @@ class ItemStackedByData(JsonValueComponent):
 
     identifier = "minecraft:stacked_by_data"
 
-    value: bool = json_field(default=True, validators=[_boolean])
+    value: bool = json_field(default=True)
 
 
 class ItemStorageWeightLimit(JsonComponent):
@@ -1013,9 +933,7 @@ class ItemStorageWeightLimit(JsonComponent):
 
     identifier = "minecraft:storage_weight_limit"
 
-    max_weight_limit: int | None = json_field(
-        default=None, validators=[_integer, in_range(0, 64)]
-    )
+    max_weight_limit: Annotated[int, InRange(0, 64)] | None = json_field(default=None)
 
 
 class ItemStorageWeightModifier(JsonComponent):
@@ -1029,8 +947,8 @@ class ItemStorageWeightModifier(JsonComponent):
 
     identifier = "minecraft:storage_weight_modifier"
 
-    weight_in_storage_item: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
+    weight_in_storage_item: Annotated[int, NonNegative] | None = json_field(
+        default=None
     )
 
 
@@ -1038,14 +956,14 @@ class ItemSwingDuration(JsonComponent):
     """Duration, in seconds, of the item's swing animation when mining or attacking. Affects visuals only.
 
     Args:
-        value (Seconds, optional): The swing duration in seconds. Game default 0.3.
+        value (int, optional): The swing duration in seconds. Game default 0.3.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_swing_duration)
     """
 
     identifier = "minecraft:swing_duration"
 
-    value: Seconds | float | None = json_field(default=None, validators=_positive)
+    value: Annotated[int | float, NonNegative] | None = json_field(default=None)
 
 
 class ItemSwingSounds(JsonComponent):
@@ -1061,9 +979,9 @@ class ItemSwingSounds(JsonComponent):
 
     identifier = "minecraft:swing_sounds"
 
-    attack_critical_hit: str | None = json_field(default=None, validators=[_string])
-    attack_hit: str | None = json_field(default=None, validators=[_string])
-    attack_miss: str | None = json_field(default=None, validators=[_string])
+    attack_critical_hit: str | None = json_field(default=None)
+    attack_hit: str | None = json_field(default=None)
+    attack_miss: str | None = json_field(default=None)
 
 
 class ItemTags(JsonComponent):
@@ -1077,7 +995,7 @@ class ItemTags(JsonComponent):
 
     identifier = "minecraft:tags"
 
-    tags: list[MinecraftItemTags | str] = json_field(validators=[each(_string)])
+    tags: list[MinecraftItemTags | str] = json_field()
 
 
 class ItemThrowable(JsonComponent):
@@ -1086,9 +1004,9 @@ class ItemThrowable(JsonComponent):
     Args:
         do_swing_animation (bool, optional): Whether the item uses the swing animation when thrown. Game default false.
         launch_power_scale (float, optional): The scale at which the power of the throw increases. Game default 1.0.
-        max_draw_duration (Seconds, optional): The maximum duration to draw the item. Game default 0.
+        max_draw_duration (int, optional): The maximum duration to draw the item. Game default 0.
         max_launch_power (float, optional): The maximum launch power. Game default 1.0.
-        min_draw_duration (Seconds, optional): The minimum duration to draw the item. Game default 0.
+        min_draw_duration (int, optional): The minimum duration to draw the item. Game default 0.
         scale_power_by_draw_duration (bool, optional): Whether the power of the throw grows with draw time. Game default false.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_throwable)
@@ -1096,18 +1014,16 @@ class ItemThrowable(JsonComponent):
 
     identifier = "minecraft:throwable"
 
-    do_swing_animation: bool | None = json_field(default=None, validators=[_boolean])
-    launch_power_scale: float | None = json_field(default=None, validators=[_number])
-    max_draw_duration: Seconds | float | None = json_field(
-        default=None, validators=_positive
+    do_swing_animation: bool | None = json_field(default=None)
+    launch_power_scale: float | None = json_field(default=None)
+    max_draw_duration: Annotated[int | float, NonNegative] | None = json_field(
+        default=None
     )
-    max_launch_power: float | None = json_field(default=None, validators=[_number])
-    min_draw_duration: Seconds | float | None = json_field(
-        default=None, validators=_positive
+    max_launch_power: float | None = json_field(default=None)
+    min_draw_duration: Annotated[int | float, NonNegative] | None = json_field(
+        default=None
     )
-    scale_power_by_draw_duration: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    scale_power_by_draw_duration: bool | None = json_field(default=None)
 
 
 class ItemUseAnimation(JsonValueComponent):
@@ -1121,7 +1037,7 @@ class ItemUseAnimation(JsonValueComponent):
 
     identifier = "minecraft:use_animation"
 
-    value: ItemUseAnimations = json_field(validators=[literal_of(ItemUseAnimations)])
+    value: ItemUseAnimations = json_field()
 
 
 class ItemWearable(JsonComponent):
@@ -1138,12 +1054,10 @@ class ItemWearable(JsonComponent):
 
     identifier = "minecraft:wearable"
 
-    slot: ItemWearableSlots = json_field(validators=[literal_of(ItemWearableSlots)])
-    protection: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    hides_player_location: bool | None = json_field(default=None, validators=[_boolean])
-    dispensable: bool | None = json_field(default=None, validators=[_boolean])
+    slot: ItemWearableSlots = json_field()
+    protection: Annotated[int, NonNegative] | None = json_field(default=None)
+    hides_player_location: bool | None = json_field(default=None)
+    dispensable: bool | None = json_field(default=None)
 
 
 # endregion

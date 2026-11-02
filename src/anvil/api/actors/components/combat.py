@@ -1,21 +1,5 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from anvil.api.actors.components._validators import (
-    _block,
-    _blocks,
-    _boolean,
-    _chance,
-    _damage_cause,
-    _entity,
-    _event,
-    _filter,
-    _integer,
-    _item,
-    _molang,
-    _number,
-    _positive,
-    _string,
-)
 from anvil.api.core.components import EventTrigger
 from anvil.api.core.enums import (
     DamageCause,
@@ -29,36 +13,33 @@ from anvil.api.core.enums import (
     Slots,
 )
 from anvil.api.core.filters import Filter
-from anvil.api.core.types import (
-    BlockReference,
-    ItemReference,
-    NumberRange,
-    Vector2D,
-    Vector3D,
-)
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.lib.jsonmodel import (
+    AtLeastOne,
+    BlockObject,
+    Chance,
+    EffectName,
+    IndexInto,
+    InRange,
     JsonComponent,
     JsonObject,
-    encoders,
+    Kept,
+    MinMax,
+    NonNegative,
+    RangeMinMax,
+    Trigger,
+    Unique,
+    Wrapped,
+    XpRange,
+    YesNo,
     json_field,
 )
-from anvil.lib.jsonmodel.encoders import kept
-from anvil.lib.jsonmodel.validators import (
-    damage_sensor_value,
-    duration_or_infinite,
-    each,
-    in_range,
-    instance_of,
-    integer_or_range,
-    length,
-    number_or_range,
-    one_of,
-    unique,
-    vector3,
+from anvil.lib.schemas import (
+    MinecraftBlockDescriptor,
+    MinecraftEntityDescriptor,
+    MinecraftItemDescriptor,
 )
-from anvil.lib.schemas import MinecraftEntityDescriptor
 
 # region Parts: objects nested inside components
 
@@ -78,22 +59,20 @@ class EquipmentChangeSlot(JsonObject):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitytriggers/minecrafttrigger_on_equipment_changed)
     """
 
-    slot: Slots | None = json_field(
-        default=None,
-        validators=[
-            one_of(
-                Slots.Body,
-                Slots.Chest,
-                Slots.Feet,
-                Slots.Head,
-                Slots.Legs,
-                Slots.Mainhand,
-                Slots.Offhand,
-            )
-        ],
-    )
-    on_equip: str | None = json_field(default=None, validators=[_string])
-    on_unequip: str | None = json_field(default=None, validators=[_string])
+    slot: (
+        Literal[
+            Slots.Body,
+            Slots.Chest,
+            Slots.Feet,
+            Slots.Head,
+            Slots.Legs,
+            Slots.Mainhand,
+            Slots.Offhand,
+        ]
+        | None
+    ) = json_field(default=None)
+    on_equip: str | None = json_field(default=None)
+    on_unequip: str | None = json_field(default=None)
 
 
 class AmbientSoundEvent(JsonObject):
@@ -104,20 +83,20 @@ class AmbientSoundEvent(JsonObject):
         condition (Molang | str): The condition that must be satisfied to select this sound.
     """
 
-    event_name: str = json_field(validators=[_string])
-    condition: Molang | str = json_field(validators=[_string])
+    event_name: str = json_field()
+    condition: Molang | str = json_field()
 
 
 class BlockBreakWatch(JsonObject):
     """Blocks `minecraft:block_sensor` watches, and the event it runs when one breaks.
 
     Args:
-        block_list (list[BlockReference]): Blocks that trigger the event.
+        block_list (list[str | MinecraftBlockDescriptor]): Blocks that trigger the event.
         on_block_broken (str): Event to call when a block in `block_list` is broken.
     """
 
-    block_list: list[BlockReference] = json_field(validators=[_blocks])
-    on_block_broken: str = json_field(validators=[_string])
+    block_list: list[str | MinecraftBlockDescriptor] = json_field()
+    on_block_broken: str = json_field()
 
 
 class DamageCondition(JsonObject):
@@ -129,9 +108,9 @@ class DamageCondition(JsonObject):
         filters (Filter, optional): The conditions that must be satisfied.
     """
 
-    cause: DamageCause | None = json_field(default=None, validators=[_damage_cause])
-    damage_per_tick: int | None = json_field(default=None, validators=[_integer])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
+    cause: DamageCause | None = json_field(default=None)
+    damage_per_tick: int | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
 
 
 class DamageSensorTrigger(JsonObject):
@@ -146,35 +125,31 @@ class DamageSensorTrigger(JsonObject):
         damage_multiplier (float, optional): Multiplies the base damage received. Game default 1.
     """
 
-    cause: DamageCause | None = json_field(default=None, validators=[_damage_cause])
-    deals_damage: DamageSensor | bool | None = json_field(
-        default=None, validators=[damage_sensor_value], encoder=encoders.damage_sensor
+    cause: DamageCause | None = json_field(default=None)
+    deals_damage: Annotated[bool, YesNo] | DamageSensor | None = json_field(
+        default=None
     )
-    on_damage: EventTrigger | None = json_field(
-        default=None, validators=[instance_of(EventTrigger)]
-    )
-    on_damage_sound_event: str | None = json_field(default=None, validators=[_string])
-    damage_modifier: float | None = json_field(default=None, validators=[_number])
-    damage_multiplier: float | None = json_field(default=None, validators=[_number])
+    on_damage: EventTrigger | None = json_field(default=None)
+    on_damage_sound_event: str | None = json_field(default=None)
+    damage_modifier: float | None = json_field(default=None)
+    damage_multiplier: float | None = json_field(default=None)
 
 
 class InsideBlockWatch(JsonObject):
     """A block `minecraft:inside_block_notifier` watches, and the events it runs.
 
     Args:
-        block (BlockReference): The block to watch. A descriptor's states are matched too.
+        block (str | MinecraftBlockDescriptor): The block to watch. A descriptor's states are matched too.
         entered_block_event (EventTrigger | str, optional): Event to run when the entity enters the block.
         exited_block_event (EventTrigger | str, optional): Event to run when the entity exits the block.
     """
 
-    block: BlockReference = json_field(
-        validators=[_block], encoder=encoders.block_object
+    block: Annotated[str | MinecraftBlockDescriptor, BlockObject] = json_field()
+    entered_block_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    entered_block_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    exited_block_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    exited_block_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
 
 
@@ -193,26 +168,21 @@ class KnockbackPreset(JsonObject):
         check_if_target_is_immersed_in_water (bool, optional): Applies only when the target is fully in water. Game default false.
     """
 
-    filter: Filter | None = json_field(default=None, validators=[_filter])
-    horizontal_power: float | None = json_field(default=None, validators=[_number])
-    vertical_power: float | None = json_field(default=None, validators=[_number])
-    vertical_velocity_cap: float | None = json_field(default=None, validators=[_number])
-    slowdown_scale: float | None = json_field(
-        default=None, validators=[_number, in_range(maximum=1)]
+    filter: Filter | None = json_field(default=None)
+    horizontal_power: float | None = json_field(default=None)
+    vertical_power: float | None = json_field(default=None)
+    vertical_velocity_cap: float | None = json_field(default=None)
+    slowdown_scale: Annotated[float, InRange(maximum=1)] | None = json_field(
+        default=None
     )
     knockback_mode: Literal["relative_horizontal", "hit_direction"] | None = json_field(
-        default=None, validators=[one_of("relative_horizontal", "hit_direction")]
+        default=None
     )
-    scale_with_damage: bool | None = json_field(default=None, validators=[_boolean])
+    scale_with_damage: bool | None = json_field(default=None)
     extra_knockback_approach: (
         Literal["reapply_default", "multiply", "multiply_reduced"] | None
-    ) = json_field(
-        default=None,
-        validators=[one_of("reapply_default", "multiply", "multiply_reduced")],
-    )
-    check_if_target_is_immersed_in_water: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    ) = json_field(default=None)
+    check_if_target_is_immersed_in_water: bool | None = json_field(default=None)
 
 
 class RavagerReaction(JsonObject):
@@ -223,10 +193,8 @@ class RavagerReaction(JsonObject):
         value (EventTrigger | str, optional): The event to run. Without it, nothing happens.
     """
 
-    weight: int = json_field(validators=[_integer, in_range(minimum=0)])
-    value: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
+    weight: Annotated[int, NonNegative] = json_field()
+    value: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
 
 
 class ShooterProjectile(JsonObject):
@@ -239,10 +207,10 @@ class ShooterProjectile(JsonObject):
         lose_target (bool, optional): Whether the shooter loses its target after shooting.
     """
 
-    def_: MinecraftEntityDescriptor | str = json_field(key="def", validators=[_entity])
-    aux_val: int | None = json_field(default=None, validators=[_integer])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    lose_target: bool | None = json_field(default=None, validators=[_boolean])
+    def_: MinecraftEntityDescriptor | str = json_field(key="def")
+    aux_val: int | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    lose_target: bool | None = json_field(default=None)
 
 
 class SpellEffect(JsonObject):
@@ -257,18 +225,12 @@ class SpellEffect(JsonObject):
         display_on_screen_animation (bool, optional): Whether the effect plays an on-screen animation. Game default false.
     """
 
-    effect: MinecraftEffects | str = json_field(
-        validators=[_string], encoder=encoders.effect_name
-    )
-    duration: int | Literal["infinite"] | None = json_field(
-        default=None, validators=[duration_or_infinite]
-    )
-    amplifier: int | None = json_field(default=None, validators=[_integer])
-    ambient: bool | None = json_field(default=None, validators=[_boolean])
-    visible: bool | None = json_field(default=None, validators=[_boolean])
-    display_on_screen_animation: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    effect: Annotated[MinecraftEffects | str, EffectName] = json_field()
+    duration: int | Literal["infinite"] | None = json_field(default=None)
+    amplifier: int | None = json_field(default=None)
+    ambient: bool | None = json_field(default=None)
+    visible: bool | None = json_field(default=None)
+    display_on_screen_animation: bool | None = json_field(default=None)
 
 
 class Subsensor(JsonObject):
@@ -280,21 +242,19 @@ class Subsensor(JsonObject):
         cooldown (float, optional): Seconds before the subsensor senses again. Game default -1.
         maximum_count (int, optional): The maximum number of entities that must pass the filters. Game default -1.
         minimum_count (int, optional): The minimum number of entities that must pass the filters. Game default 1.
-        range (Vector2D, optional): The maximum horizontal and vertical distance of other entities. Game default (10, 10).
+        range (tuple[float, float], optional): The maximum horizontal and vertical distance of other entities. Game default (10, 10).
         require_all (bool, optional): Requires every nearby entity to pass the filters. Game default false.
         y_offset (float, optional): Vertical offset applied to the entity's position. Game default 0.
     """
 
-    event: str = json_field(validators=[_string])
-    event_filters: Filter | None = json_field(default=None, validators=[_filter])
-    cooldown: float | None = json_field(default=None, validators=[_number])
-    maximum_count: int | None = json_field(default=None, validators=[_integer])
-    minimum_count: int | None = json_field(default=None, validators=[_integer])
-    range: Vector2D | None = json_field(
-        default=None, validators=[length(2, 2), each(_number)]
-    )
-    require_all: bool | None = json_field(default=None, validators=[_boolean])
-    y_offset: float | None = json_field(default=None, validators=[_number])
+    event: str = json_field()
+    event_filters: Filter | None = json_field(default=None)
+    cooldown: float | None = json_field(default=None)
+    maximum_count: int | None = json_field(default=None)
+    minimum_count: int | None = json_field(default=None)
+    range: tuple[float, float] | None = json_field(default=None)
+    require_all: bool | None = json_field(default=None)
+    y_offset: float | None = json_field(default=None)
 
 
 class TimeChoice(JsonObject):
@@ -305,8 +265,8 @@ class TimeChoice(JsonObject):
         weight (int, optional): The weight of this choice.
     """
 
-    value: float = json_field(validators=[_positive])
-    weight: int | None = json_field(default=None, validators=[_integer])
+    value: Annotated[float, NonNegative] = json_field()
+    weight: int | None = json_field(default=None)
 
 
 class AngerSound(JsonObject):
@@ -317,8 +277,8 @@ class AngerSound(JsonObject):
         condition (Molang | str, optional): The condition under which the sound plays.
     """
 
-    sound: str = json_field(validators=[_string])
-    condition: Molang | str | None = json_field(default=None, validators=[_molang])
+    sound: str = json_field()
+    condition: Molang | str | None = json_field(default=None)
 
 
 class ProjectileArrowEffect(JsonObject):
@@ -328,9 +288,7 @@ class ProjectileArrowEffect(JsonObject):
         apply_effect_to_blocking_targets (bool, optional): Applies the effects to targets that blocked. Game default true.
     """
 
-    apply_effect_to_blocking_targets: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    apply_effect_to_blocking_targets: bool | None = json_field(default=None)
 
 
 class ProjectileCatchFire(JsonObject):
@@ -341,10 +299,8 @@ class ProjectileCatchFire(JsonObject):
         on_fire_time (float, optional): Seconds the entity hit burns. Game default 0.
     """
 
-    fire_affected_by_griefing: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    on_fire_time: float | None = json_field(default=None, validators=[_positive])
+    fire_affected_by_griefing: bool | None = json_field(default=None)
+    on_fire_time: Annotated[float, NonNegative] | None = json_field(default=None)
 
 
 class ProjectileDefinitionEvent(JsonObject):
@@ -359,12 +315,12 @@ class ProjectileDefinitionEvent(JsonObject):
         splash_area (float, optional): Radius in blocks used by `affect_splash_area`. Game default 0.
     """
 
-    event_trigger: EventTrigger = json_field(validators=[instance_of(EventTrigger)])
-    affect_projectile: bool | None = json_field(default=None, validators=[_boolean])
-    affect_shooter: bool | None = json_field(default=None, validators=[_boolean])
-    affect_splash_area: bool | None = json_field(default=None, validators=[_boolean])
-    affect_target: bool | None = json_field(default=None, validators=[_boolean])
-    splash_area: float | None = json_field(default=None, validators=[_positive])
+    event_trigger: EventTrigger = json_field()
+    affect_projectile: bool | None = json_field(default=None)
+    affect_shooter: bool | None = json_field(default=None)
+    affect_splash_area: bool | None = json_field(default=None)
+    affect_target: bool | None = json_field(default=None)
+    splash_area: Annotated[float, NonNegative] | None = json_field(default=None)
 
 
 class ProjectileFreezeOnHit(JsonObject):
@@ -376,11 +332,9 @@ class ProjectileFreezeOnHit(JsonObject):
         snap_to_block (bool, optional): Centers the volume on the hit block. Game default false.
     """
 
-    shape: Literal["cube", "sphere"] | None = json_field(
-        default=None, validators=[one_of("cube", "sphere")]
-    )
-    size: float | None = json_field(default=None, validators=[_positive])
-    snap_to_block: bool | None = json_field(default=None, validators=[_boolean])
+    shape: Literal["cube", "sphere"] | None = json_field(default=None)
+    size: Annotated[float, NonNegative] | None = json_field(default=None)
+    snap_to_block: bool | None = json_field(default=None)
 
 
 class ProjectileHurtOwner(JsonObject):
@@ -392,9 +346,9 @@ class ProjectileHurtOwner(JsonObject):
         owner_damage (float, optional): Damage dealt to the owner. Game default 0.
     """
 
-    ignite: bool | None = json_field(default=None, validators=[_boolean])
-    knockback: bool | None = json_field(default=None, validators=[_boolean])
-    owner_damage: float | None = json_field(default=None, validators=[_number])
+    ignite: bool | None = json_field(default=None)
+    knockback: bool | None = json_field(default=None)
+    owner_damage: float | None = json_field(default=None)
 
 
 class ProjectileImpactDamage(JsonObject):
@@ -405,7 +359,7 @@ class ProjectileImpactDamage(JsonObject):
         catch_fire (bool, optional): Sets the entity hit on fire for the projectile's `on_fire_time`. Game default false.
         ceil_pre_critical_damage (bool, optional): Rounds the damage up before the critical multiplier. Game default false.
         channeling (bool, optional): Calls down lightning on the entity hit during a thunderstorm. Game default false.
-        damage (float | NumberRange, optional): Damage dealt, or a `(min, max)` range rolled per hit. Written as `{"min", "max"}`. Game default 0.
+        damage (float | tuple[float, float], optional): Damage dealt, or a `(min, max)` range rolled per hit. Written as `{"min", "max"}`. Game default 0.
         destroy_on_hit (bool, optional): Removes the projectile when it deals damage. Game default false.
         destroy_on_hit_requires_damage (bool, optional): `destroy_on_hit` needs at least one point of damage dealt. Game default true.
         difficulty_randomization (Literal["none", "additive", "multiplicative"], optional): How the world difficulty changes the damage. Game default none.
@@ -417,34 +371,24 @@ class ProjectileImpactDamage(JsonObject):
         set_last_hurt_requires_damage (bool, optional): The projectile counts as the last attacker only when it deals damage. Game default true.
     """
 
-    apply_knockback_to_blocking_targets: bool | None = json_field(
-        default=None, validators=[_boolean]
+    apply_knockback_to_blocking_targets: bool | None = json_field(default=None)
+    catch_fire: bool | None = json_field(default=None)
+    ceil_pre_critical_damage: bool | None = json_field(default=None)
+    channeling: bool | None = json_field(default=None)
+    damage: Annotated[float | tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    catch_fire: bool | None = json_field(default=None, validators=[_boolean])
-    ceil_pre_critical_damage: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    channeling: bool | None = json_field(default=None, validators=[_boolean])
-    damage: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.min_max
-    )
-    destroy_on_hit: bool | None = json_field(default=None, validators=[_boolean])
-    destroy_on_hit_requires_damage: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    destroy_on_hit: bool | None = json_field(default=None)
+    destroy_on_hit_requires_damage: bool | None = json_field(default=None)
     difficulty_randomization: Literal["none", "additive", "multiplicative"] | None = (
-        json_field(
-            default=None, validators=[one_of("none", "additive", "multiplicative")]
-        )
+        json_field(default=None)
     )
-    filter: str | None = json_field(default=None, validators=[_string])
-    knockback: bool | None = json_field(default=None, validators=[_boolean])
-    max_critical_damage: int | None = json_field(default=None, validators=[_integer])
-    min_critical_damage: int | None = json_field(default=None, validators=[_integer])
-    power_multiplier: float | None = json_field(default=None, validators=[_number])
-    set_last_hurt_requires_damage: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    filter: str | None = json_field(default=None)
+    knockback: bool | None = json_field(default=None)
+    max_critical_damage: int | None = json_field(default=None)
+    min_critical_damage: int | None = json_field(default=None)
+    power_multiplier: float | None = json_field(default=None)
+    set_last_hurt_requires_damage: bool | None = json_field(default=None)
 
 
 class ProjectileMobEffect(JsonObject):
@@ -458,19 +402,11 @@ class ProjectileMobEffect(JsonObject):
         durationhard (int | Literal["infinite"], optional): Duration in ticks on hard.
     """
 
-    effect: MinecraftEffects | str = json_field(
-        validators=[_string], encoder=encoders.effect_name
-    )
-    amplifier: int | None = json_field(default=None, validators=[_integer])
-    durationeasy: int | Literal["infinite"] | None = json_field(
-        default=None, validators=[duration_or_infinite]
-    )
-    durationnormal: int | Literal["infinite"] | None = json_field(
-        default=None, validators=[duration_or_infinite]
-    )
-    durationhard: int | Literal["infinite"] | None = json_field(
-        default=None, validators=[duration_or_infinite]
-    )
+    effect: Annotated[MinecraftEffects | str, EffectName] = json_field()
+    amplifier: int | None = json_field(default=None)
+    durationeasy: int | Literal["infinite"] | None = json_field(default=None)
+    durationnormal: int | Literal["infinite"] | None = json_field(default=None)
+    durationhard: int | Literal["infinite"] | None = json_field(default=None)
 
 
 class ProjectileParticleOnHit(JsonObject):
@@ -483,10 +419,10 @@ class ProjectileParticleOnHit(JsonObject):
         on_other_hit (bool, optional): Spawns particles when something else is hit. Game default false.
     """
 
-    particle_type: str = json_field(validators=[_string])
-    num_particles: int | None = json_field(default=None, validators=[_integer])
-    on_entity_hit: bool | None = json_field(default=None, validators=[_boolean])
-    on_other_hit: bool | None = json_field(default=None, validators=[_boolean])
+    particle_type: str = json_field()
+    num_particles: int | None = json_field(default=None)
+    on_entity_hit: bool | None = json_field(default=None)
+    on_other_hit: bool | None = json_field(default=None)
 
 
 class ProjectileSpawnAoeCloud(JsonObject):
@@ -502,13 +438,13 @@ class ProjectileSpawnAoeCloud(JsonObject):
         reapplication_delay (int, optional): Ticks before the cloud affects the same entity again. Game default 0.
     """
 
-    affect_owner: bool | None = json_field(default=None, validators=[_boolean])
-    duration: int | None = json_field(default=None, validators=[_integer])
-    particle: str | None = json_field(default=None, validators=[_string])
-    potion: int | None = json_field(default=None, validators=[_integer])
-    radius: float | None = json_field(default=None, validators=[_number])
-    radius_on_use: float | None = json_field(default=None, validators=[_number])
-    reapplication_delay: int | None = json_field(default=None, validators=[_integer])
+    affect_owner: bool | None = json_field(default=None)
+    duration: int | None = json_field(default=None)
+    particle: str | None = json_field(default=None)
+    potion: int | None = json_field(default=None)
+    radius: float | None = json_field(default=None)
+    radius_on_use: float | None = json_field(default=None)
+    reapplication_delay: int | None = json_field(default=None)
 
 
 class ProjectileSpawnChance(JsonObject):
@@ -524,15 +460,13 @@ class ProjectileSpawnChance(JsonObject):
         spawn_baby (bool, optional): Spawned entities start as babies. Game default false.
     """
 
-    spawn_definition: MinecraftEntityDescriptor | str = json_field(validators=[_entity])
-    first_spawn_chance: float | None = json_field(default=None, validators=[_chance])
-    first_spawn_count: int | None = json_field(default=None, validators=[_integer])
-    on_spawn: list[EventTrigger] | None = json_field(
-        default=None, validators=[each(instance_of(EventTrigger))]
-    )
-    second_spawn_chance: float | None = json_field(default=None, validators=[_chance])
-    second_spawn_count: int | None = json_field(default=None, validators=[_integer])
-    spawn_baby: bool | None = json_field(default=None, validators=[_boolean])
+    spawn_definition: MinecraftEntityDescriptor | str = json_field()
+    first_spawn_chance: Annotated[float, Chance] | None = json_field(default=None)
+    first_spawn_count: int | None = json_field(default=None)
+    on_spawn: list[EventTrigger] | None = json_field(default=None)
+    second_spawn_chance: Annotated[float, Chance] | None = json_field(default=None)
+    second_spawn_count: int | None = json_field(default=None)
+    spawn_baby: bool | None = json_field(default=None)
 
 
 class ProjectileStickInGround(JsonObject):
@@ -542,7 +476,7 @@ class ProjectileStickInGround(JsonObject):
         shake_time (float, optional): Seconds the projectile shakes after sticking. Game default 0.
     """
 
-    shake_time: float | None = json_field(default=None, validators=[_positive])
+    shake_time: Annotated[float, NonNegative] | None = json_field(default=None)
 
 
 class ProjectileThrownPotionEffect(JsonObject):
@@ -552,7 +486,7 @@ class ProjectileThrownPotionEffect(JsonObject):
         effect (int, optional): Aux value of the potion. Game default -1.
     """
 
-    effect: int | None = json_field(default=None, validators=[_integer])
+    effect: int | None = json_field(default=None)
 
 
 class ProjectileOnHit(JsonObject):
@@ -567,7 +501,7 @@ class ProjectileOnHit(JsonObject):
         definition_event (ProjectileDefinitionEvent, optional): Runs an event.
         douse_fire (bool, optional): A water potion puts out fires around the hit block.
         freeze_on_hit (ProjectileFreezeOnHit, optional): Freezes nearby water.
-        grant_xp (int | NumberRange, optional): Experience dropped, or a `(min, max)` range. Written as `{"minXP", "maxXP"}`.
+        grant_xp (int | tuple[float, float], optional): Experience dropped, or a `(min, max)` range. Written as `{"minXP", "maxXP"}`.
         hurt_owner (ProjectileHurtOwner, optional): Damages the owner.
         ignite (bool, optional): Runs the entity's `on_ignite` trigger.
         impact_damage (ProjectileImpactDamage, optional): Damages the entity hit.
@@ -582,62 +516,40 @@ class ProjectileOnHit(JsonObject):
         wind_burst_on_hit (bool, optional): Releases a wind burst that pushes entities away.
     """
 
-    arrow_effect: ProjectileArrowEffect | None = json_field(
-        default=None, validators=[instance_of(ProjectileArrowEffect)], encoder=kept
+    arrow_effect: Annotated[ProjectileArrowEffect, Kept] | None = json_field(
+        default=None
     )
-    catch_fire: ProjectileCatchFire | None = json_field(
-        default=None, validators=[instance_of(ProjectileCatchFire)], encoder=kept
+    catch_fire: Annotated[ProjectileCatchFire, Kept] | None = json_field(default=None)
+    definition_event: ProjectileDefinitionEvent | None = json_field(default=None)
+    douse_fire: Annotated[bool, Kept] | None = json_field(default=None)
+    freeze_on_hit: Annotated[ProjectileFreezeOnHit, Kept] | None = json_field(
+        default=None
     )
-    definition_event: ProjectileDefinitionEvent | None = json_field(
-        default=None, validators=[instance_of(ProjectileDefinitionEvent)]
+    grant_xp: Annotated[int | tuple[int, int], XpRange] | None = json_field(
+        default=None
     )
-    douse_fire: bool | None = json_field(
-        default=None, validators=[_boolean], encoder=kept
+    hurt_owner: Annotated[ProjectileHurtOwner, Kept] | None = json_field(default=None)
+    ignite: Annotated[bool, Kept] | None = json_field(default=None)
+    impact_damage: Annotated[ProjectileImpactDamage, Kept] | None = json_field(
+        default=None
     )
-    freeze_on_hit: ProjectileFreezeOnHit | None = json_field(
-        default=None, validators=[instance_of(ProjectileFreezeOnHit)], encoder=kept
+    mob_effect: Annotated[list[ProjectileMobEffect], Wrapped("effects")] | None = (
+        json_field(default=None)
     )
-    grant_xp: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.xp_range
+    particle_on_hit: ProjectileParticleOnHit | None = json_field(default=None)
+    remove_on_hit: Annotated[bool, Kept] | None = json_field(default=None)
+    spawn_aoe_cloud: Annotated[ProjectileSpawnAoeCloud, Kept] | None = json_field(
+        default=None
     )
-    hurt_owner: ProjectileHurtOwner | None = json_field(
-        default=None, validators=[instance_of(ProjectileHurtOwner)], encoder=kept
+    spawn_chance: ProjectileSpawnChance | None = json_field(default=None)
+    stick_in_ground: Annotated[ProjectileStickInGround, Kept] | None = json_field(
+        default=None
     )
-    ignite: bool | None = json_field(default=None, validators=[_boolean], encoder=kept)
-    impact_damage: ProjectileImpactDamage | None = json_field(
-        default=None, validators=[instance_of(ProjectileImpactDamage)], encoder=kept
+    teleport_owner: Annotated[bool, Kept] | None = json_field(default=None)
+    thrown_potion_effect: Annotated[ProjectileThrownPotionEffect, Kept] | None = (
+        json_field(default=None)
     )
-    mob_effect: list[ProjectileMobEffect] | None = json_field(
-        default=None,
-        validators=[each(instance_of(ProjectileMobEffect))],
-        encoder=encoders.effects_object,
-    )
-    particle_on_hit: ProjectileParticleOnHit | None = json_field(
-        default=None, validators=[instance_of(ProjectileParticleOnHit)]
-    )
-    remove_on_hit: bool | None = json_field(
-        default=None, validators=[_boolean], encoder=kept
-    )
-    spawn_aoe_cloud: ProjectileSpawnAoeCloud | None = json_field(
-        default=None, validators=[instance_of(ProjectileSpawnAoeCloud)], encoder=kept
-    )
-    spawn_chance: ProjectileSpawnChance | None = json_field(
-        default=None, validators=[instance_of(ProjectileSpawnChance)]
-    )
-    stick_in_ground: ProjectileStickInGround | None = json_field(
-        default=None, validators=[instance_of(ProjectileStickInGround)], encoder=kept
-    )
-    teleport_owner: bool | None = json_field(
-        default=None, validators=[_boolean], encoder=kept
-    )
-    thrown_potion_effect: ProjectileThrownPotionEffect | None = json_field(
-        default=None,
-        validators=[instance_of(ProjectileThrownPotionEffect)],
-        encoder=kept,
-    )
-    wind_burst_on_hit: bool | None = json_field(
-        default=None, validators=[_boolean], encoder=kept
-    )
+    wind_burst_on_hit: Annotated[bool, Kept] | None = json_field(default=None)
 
 
 class SpawnedEntity(JsonObject):
@@ -647,7 +559,7 @@ class SpawnedEntity(JsonObject):
 
     Args:
         spawn_entity (MinecraftEntityDescriptor | str, optional): The entity to spawn.
-        spawn_item (ItemReference, optional): The item to spawn when no entity is set. Game default egg.
+        spawn_item (str | MinecraftItemDescriptor, optional): The item to spawn when no entity is set. Game default egg.
         spawn_event (EventTrigger | str, optional): Event run on the spawned entity. Game default minecraft:entity_born.
         spawn_item_event (EventTrigger | str, optional): Event run on this entity when the item spawns.
         spawn_method (str, optional): How the entity is spawned. Game default born.
@@ -660,24 +572,20 @@ class SpawnedEntity(JsonObject):
         single_use (bool, optional): Spawns only once. Game default false.
     """
 
-    spawn_entity: MinecraftEntityDescriptor | str | None = json_field(
-        default=None, validators=[_entity]
+    spawn_entity: MinecraftEntityDescriptor | str | None = json_field(default=None)
+    spawn_item: str | MinecraftItemDescriptor | None = json_field(default=None)
+    spawn_event: EventTrigger | str | None = json_field(default=None)
+    spawn_item_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    spawn_item: ItemReference | None = json_field(default=None, validators=[_item])
-    spawn_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event]
-    )
-    spawn_item_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    spawn_method: str | None = json_field(default=None, validators=[_string])
-    spawn_sound: str | None = json_field(default=None, validators=[_string])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    max_wait_time: int | None = json_field(default=None, validators=[_integer])
-    min_wait_time: int | None = json_field(default=None, validators=[_integer])
-    num_to_spawn: int | None = json_field(default=None, validators=[_integer])
-    should_leash: bool | None = json_field(default=None, validators=[_boolean])
-    single_use: bool | None = json_field(default=None, validators=[_boolean])
+    spawn_method: str | None = json_field(default=None)
+    spawn_sound: str | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    max_wait_time: int | None = json_field(default=None)
+    min_wait_time: int | None = json_field(default=None)
+    num_to_spawn: int | None = json_field(default=None)
+    should_leash: bool | None = json_field(default=None)
+    single_use: bool | None = json_field(default=None)
 
 
 class TransformationDelay(JsonObject):
@@ -691,19 +599,17 @@ class TransformationDelay(JsonObject):
         block_chance (float, optional): Chance a found block speeds up the transformation, from 0 to 1. Game default 0.
         block_max (int, optional): Maximum number of helping blocks. 0 uses the block radius. Game default 0.
         block_radius (int, optional): Distance in blocks searched for helping blocks. Game default 0.
-        block_types (list[BlockReference], optional): Blocks that help the transformation.
+        block_types (list[str | MinecraftBlockDescriptor], optional): Blocks that help the transformation.
     """
 
-    value: float | None = json_field(default=None, validators=[_positive])
-    range_min: float | None = json_field(default=None, validators=[_positive])
-    range_max: float | None = json_field(default=None, validators=[_positive])
-    block_assist_chance: float | None = json_field(default=None, validators=[_chance])
-    block_chance: float | None = json_field(default=None, validators=[_chance])
-    block_max: int | None = json_field(default=None, validators=[_integer])
-    block_radius: int | None = json_field(default=None, validators=[_integer])
-    block_types: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
-    )
+    value: Annotated[float, NonNegative] | None = json_field(default=None)
+    range_min: Annotated[float, NonNegative] | None = json_field(default=None)
+    range_max: Annotated[float, NonNegative] | None = json_field(default=None)
+    block_assist_chance: Annotated[float, Chance] | None = json_field(default=None)
+    block_chance: Annotated[float, Chance] | None = json_field(default=None)
+    block_max: int | None = json_field(default=None)
+    block_radius: int | None = json_field(default=None)
+    block_types: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
 
 
 # endregion
@@ -725,14 +631,12 @@ class EntityAmbientSoundInterval(JsonComponent):
 
     identifier = "minecraft:ambient_sound_interval"
 
-    event_name: str | None = json_field(default=None, validators=[_string])
+    event_name: str | None = json_field(default=None)
     event_names: list[AmbientSoundEvent] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(AmbientSoundEvent))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    range: float | None = json_field(default=None, validators=[_positive])
-    value: float | None = json_field(default=None, validators=[_positive])
+    range: Annotated[float, NonNegative] | None = json_field(default=None)
+    value: Annotated[float, NonNegative] | None = json_field(default=None)
 
     def add_event_name(
         self, *, event_name: str, condition: Molang | str
@@ -771,55 +675,37 @@ class EntityAngerLevel(JsonComponent):
         nuisance_filter (Filter, optional): Conditions for a mob to be a nuisance.
         on_increase_sounds (list[AngerSound], optional): Sounds played when provoked, the first matching one plays. Add more with `add_on_increase_sound`.
         remove_targets_below_angry_threshold (bool, optional): The mob drops its target when anger falls below the threshold. Game default true.
-        sound_interval (int | NumberRange, optional): Seconds between sounds, or a `(min, max)` range.
+        sound_interval (int | tuple[float, float], optional): Seconds between sounds, or a `(min, max)` range.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_anger_level)
     """
 
     identifier = "minecraft:anger_level"
 
-    anger_decrement_interval: float | None = json_field(
-        default=None, validators=[_positive]
+    anger_decrement_interval: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    angry_boost: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    angry_threshold: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    broadcast_anger: bool | None = json_field(default=None, validators=[_boolean])
-    broadcast_anger_on_attack: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    broadcast_filters: Filter | None = json_field(default=None, validators=[_filter])
-    broadcast_range: int | None = json_field(default=None, validators=[_integer])
-    broadcast_targets: list[str] | None = json_field(
-        default=None, validators=[each(_string)]
-    )
-    calm_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    default_annoyingness: int | None = json_field(default=None, validators=[_integer])
-    default_projectile_annoyingness: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    duration: int | None = json_field(default=None, validators=[_integer])
-    duration_delta: int | None = json_field(default=None, validators=[_integer])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    max_anger: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    nuisance_filter: Filter | None = json_field(default=None, validators=[_filter])
+    angry_boost: Annotated[int, NonNegative] | None = json_field(default=None)
+    angry_threshold: Annotated[int, NonNegative] | None = json_field(default=None)
+    broadcast_anger: bool | None = json_field(default=None)
+    broadcast_anger_on_attack: bool | None = json_field(default=None)
+    broadcast_filters: Filter | None = json_field(default=None)
+    broadcast_range: int | None = json_field(default=None)
+    broadcast_targets: list[str] | None = json_field(default=None)
+    calm_event: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    default_annoyingness: int | None = json_field(default=None)
+    default_projectile_annoyingness: int | None = json_field(default=None)
+    duration: int | None = json_field(default=None)
+    duration_delta: int | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    max_anger: Annotated[int, NonNegative] | None = json_field(default=None)
+    nuisance_filter: Filter | None = json_field(default=None)
     on_increase_sounds: list[AngerSound] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(AngerSound))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    remove_targets_below_angry_threshold: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    sound_interval: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.range_min_max
+    remove_targets_below_angry_threshold: bool | None = json_field(default=None)
+    sound_interval: Annotated[int | tuple[int, int], RangeMinMax] | None = json_field(
+        default=None
     )
 
     def add_on_increase_sound(
@@ -851,37 +737,27 @@ class EntityAngry(JsonComponent):
         duration (int, optional): Seconds the entity stays angry. Game default 25.
         duration_delta (int, optional): Variance in seconds added to the duration. Game default 0.
         filters (Filter, optional): Mob types it should not attack while angry.
-        sound_interval (int | NumberRange, optional): Seconds to wait before playing the sound again, or a `(min, max)` range. Game default 0.
+        sound_interval (int | tuple[float, float], optional): Seconds to wait before playing the sound again, or a `(min, max)` range. Game default 0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_angry)
     """
 
     identifier = "minecraft:angry"
 
-    angry_sound: str | None = json_field(default=None, validators=[_string])
-    broadcast_anger: bool | None = json_field(default=None, validators=[_boolean])
-    broadcast_anger_on_attack: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    broadcast_anger_on_being_attacked: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    broadcast_anger_when_dying: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    broadcast_filters: Filter | None = json_field(default=None, validators=[_filter])
-    broadcast_range: int | None = json_field(default=None, validators=[_integer])
-    broadcast_targets: list[str] | None = json_field(
-        default=None, validators=[each(_string)]
-    )
-    calm_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    duration: int | None = json_field(default=None, validators=[_integer])
-    duration_delta: int | None = json_field(default=None, validators=[_integer])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    sound_interval: int | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.range_min_max
+    angry_sound: str | None = json_field(default=None)
+    broadcast_anger: bool | None = json_field(default=None)
+    broadcast_anger_on_attack: bool | None = json_field(default=None)
+    broadcast_anger_on_being_attacked: bool | None = json_field(default=None)
+    broadcast_anger_when_dying: bool | None = json_field(default=None)
+    broadcast_filters: Filter | None = json_field(default=None)
+    broadcast_range: int | None = json_field(default=None)
+    broadcast_targets: list[str] | None = json_field(default=None)
+    calm_event: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    duration: int | None = json_field(default=None)
+    duration_delta: int | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    sound_interval: Annotated[int | tuple[float, float], RangeMinMax] | None = (
+        json_field(default=None)
     )
 
 
@@ -897,12 +773,8 @@ class EntityAnnotationBreakDoor(JsonComponent):
 
     identifier = "minecraft:annotation.break_door"
 
-    break_time: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    min_difficulty: Difficulty | None = json_field(
-        default=None, validators=[one_of(*Difficulty)]
-    )
+    break_time: Annotated[int, NonNegative] | None = json_field(default=None)
+    min_difficulty: Difficulty | None = json_field(default=None)
 
 
 class EntityAnnotationOpenDoor(JsonComponent):
@@ -925,11 +797,7 @@ class EntityApplyKnockbackRules(JsonComponent):
 
     identifier = "minecraft:apply_knockback_rules"
 
-    presets: list[KnockbackPreset] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(KnockbackPreset))],
-        omit_default=True,
-    )
+    presets: list[KnockbackPreset] = json_field(default_factory=list, omit_default=True)
 
     def add_preset(
         self,
@@ -977,20 +845,18 @@ class EntityBlockSensor(JsonComponent):
     identifier = "minecraft:block_sensor"
 
     on_break: list[BlockBreakWatch] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(BlockBreakWatch))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    sensor_radius: float | None = json_field(default=None, validators=[in_range(0, 32)])
-    sources: Filter | None = json_field(default=None, validators=[_filter])
+    sensor_radius: Annotated[float, InRange(0, 32)] | None = json_field(default=None)
+    sources: Filter | None = json_field(default=None)
 
     def add_on_break(
-        self, *, block_list: list[BlockReference], on_block_broken: str
+        self, *, block_list: list[str | MinecraftBlockDescriptor], on_block_broken: str
     ) -> "EntityBlockSensor":
         """Adds blocks to watch.
 
         Args:
-            block_list (list[BlockReference]): Blocks that trigger the event.
+            block_list (list[str | MinecraftBlockDescriptor]): Blocks that trigger the event.
             on_block_broken (str): Event to run when one of them is broken.
         """
         self.on_break.append(
@@ -1003,18 +869,20 @@ class EntityBreakBlocks(JsonComponent):
     """Specifies the blocks that the entity can break as it moves around.
 
     Args:
-        breakable_blocks (list[BlockReference], optional): The blocks that can be broken as this entity moves around. Add more with `add_breakable_blocks`.
+        breakable_blocks (list[str | MinecraftBlockDescriptor], optional): The blocks that can be broken as this entity moves around. Add more with `add_breakable_blocks`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_break_blocks)
     """
 
     identifier = "minecraft:break_blocks"
 
-    breakable_blocks: list[BlockReference] = json_field(
-        default_factory=list, validators=[_blocks], omit_default=True
+    breakable_blocks: list[str | MinecraftBlockDescriptor] = json_field(
+        default_factory=list, omit_default=True
     )
 
-    def add_breakable_blocks(self, *blocks: BlockReference) -> "EntityBreakBlocks":
+    def add_breakable_blocks(
+        self, *blocks: str | MinecraftBlockDescriptor
+    ) -> "EntityBreakBlocks":
         """Adds blocks the entity can break."""
         self.breakable_blocks.extend(blocks)
         return self
@@ -1047,22 +915,20 @@ class EntityCelebrateHunt(JsonComponent):
         celebrate_sound (str, optional): The sound event to play when the mob is celebrating.
         duration (int, optional): Seconds the celebration lasts. Game default 4.
         radius (float, optional): Radius in which other entities are notified. Game default 16.
-        sound_interval (int | NumberRange, optional): Seconds to wait before playing the sound again, or a `(min, max)` range. Game default 0.
+        sound_interval (int | tuple[float, float], optional): Seconds to wait before playing the sound again, or a `(min, max)` range. Game default 0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_celebrate_hunt)
     """
 
     identifier = "minecraft:celebrate_hunt"
 
-    broadcast: bool | None = json_field(default=None, validators=[_boolean])
-    celeberation_targets: Filter | None = json_field(default=None, validators=[_filter])
-    celebrate_sound: str | None = json_field(default=None, validators=[_string])
-    duration: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    radius: float | None = json_field(default=None, validators=[_positive])
-    sound_interval: int | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.range_min_max
+    broadcast: bool | None = json_field(default=None)
+    celeberation_targets: Filter | None = json_field(default=None)
+    celebrate_sound: str | None = json_field(default=None)
+    duration: Annotated[int, NonNegative] | None = json_field(default=None)
+    radius: Annotated[float, NonNegative] | None = json_field(default=None)
+    sound_interval: Annotated[int | tuple[float, float], RangeMinMax] | None = (
+        json_field(default=None)
     )
 
 
@@ -1078,9 +944,7 @@ class EntityDamageSensor(JsonComponent):
     identifier = "minecraft:damage_sensor"
 
     triggers: list[DamageSensorTrigger] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(DamageSensorTrigger))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def add_trigger(
@@ -1118,11 +982,7 @@ class EntityEnvironmentSensor(JsonComponent):
 
     identifier = "minecraft:environment_sensor"
 
-    triggers: list[EventTrigger] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(EventTrigger))],
-        omit_default=True,
-    )
+    triggers: list[EventTrigger] = json_field(default_factory=list, omit_default=True)
 
     def add_trigger(
         self,
@@ -1152,7 +1012,7 @@ class EntityExplode(JsonComponent):
         damage_scaling (float, optional): Scale of the explosion's damage to entities. Game default 1.
         destroy_affected_by_griefing (bool, optional): The mob griefing game rule decides whether blocks break. Game default false.
         fire_affected_by_griefing (bool, optional): The mob griefing game rule decides whether fire is caused. Game default false.
-        fuse_length (float | NumberRange, optional): Seconds the fuse burns, or a `(min, max)` range written as `[min, max]`. Negative explodes at once.
+        fuse_length (float | tuple[float, float], optional): Seconds the fuse burns, or a `(min, max)` range written as `[min, max]`. Negative explodes at once.
         fuse_lit (bool, optional): The fuse is lit when the component is added. Game default false.
         knockback_scaling (float, optional): Scale of the explosion's knockback. Game default 1.
         max_resistance (float, optional): Caps the explosion resistance of blocks. Game default 3.40282e+38.
@@ -1167,29 +1027,21 @@ class EntityExplode(JsonComponent):
 
     identifier = "minecraft:explode"
 
-    allow_underwater: bool | None = json_field(default=None, validators=[_boolean])
-    breaks_blocks: bool | None = json_field(default=None, validators=[_boolean])
-    causes_fire: bool | None = json_field(default=None, validators=[_boolean])
-    damage_scaling: float | None = json_field(default=None, validators=[_number])
-    destroy_affected_by_griefing: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    fire_affected_by_griefing: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    fuse_length: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range]
-    )
-    fuse_lit: bool | None = json_field(default=None, validators=[_boolean])
-    knockback_scaling: float | None = json_field(default=None, validators=[_number])
-    max_resistance: float | None = json_field(default=None, validators=[_number])
-    negates_fall_damage: bool | None = json_field(default=None, validators=[_boolean])
-    particle_effect: ExplosionParticleEffect | None = json_field(
-        default=None, validators=[one_of(*ExplosionParticleEffect)]
-    )
-    power: float | None = json_field(default=None, validators=[_positive])
-    sound_effect: str | None = json_field(default=None, validators=[_string])
-    toggles_blocks: bool | None = json_field(default=None, validators=[_boolean])
+    allow_underwater: bool | None = json_field(default=None)
+    breaks_blocks: bool | None = json_field(default=None)
+    causes_fire: bool | None = json_field(default=None)
+    damage_scaling: float | None = json_field(default=None)
+    destroy_affected_by_griefing: bool | None = json_field(default=None)
+    fire_affected_by_griefing: bool | None = json_field(default=None)
+    fuse_length: float | tuple[float, float] | None = json_field(default=None)
+    fuse_lit: bool | None = json_field(default=None)
+    knockback_scaling: float | None = json_field(default=None)
+    max_resistance: float | None = json_field(default=None)
+    negates_fall_damage: bool | None = json_field(default=None)
+    particle_effect: ExplosionParticleEffect | None = json_field(default=None)
+    power: Annotated[float, NonNegative] | None = json_field(default=None)
+    sound_effect: str | None = json_field(default=None)
+    toggles_blocks: bool | None = json_field(default=None)
 
 
 class EntityGameEventMovementTracking(JsonComponent):
@@ -1205,9 +1057,9 @@ class EntityGameEventMovementTracking(JsonComponent):
 
     identifier = "minecraft:game_event_movement_tracking"
 
-    emit_flap: bool | None = json_field(default=None, validators=[_boolean])
-    emit_move: bool | None = json_field(default=None, validators=[_boolean])
-    emit_swim: bool | None = json_field(default=None, validators=[_boolean])
+    emit_flap: bool | None = json_field(default=None)
+    emit_move: bool | None = json_field(default=None)
+    emit_swim: bool | None = json_field(default=None)
 
 
 class EntityHurtOnCondition(JsonComponent):
@@ -1222,9 +1074,7 @@ class EntityHurtOnCondition(JsonComponent):
     identifier = "minecraft:hurt_on_condition"
 
     damage_conditions: list[DamageCondition] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(DamageCondition))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def add_damage_condition(
@@ -1254,7 +1104,7 @@ class EntityIgnoreCannotBeAttacked(JsonComponent):
 
     identifier = "minecraft:ignore_cannot_be_attacked"
 
-    filters: Filter | None = json_field(default=None, validators=[_filter])
+    filters: Filter | None = json_field(default=None)
 
 
 class EntityInsideBlockNotifier(JsonComponent):
@@ -1269,15 +1119,13 @@ class EntityInsideBlockNotifier(JsonComponent):
     identifier = "minecraft:inside_block_notifier"
 
     block_list: list[InsideBlockWatch] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(InsideBlockWatch))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def add_block(
         self,
         *,
-        block: BlockReference,
+        block: str | MinecraftBlockDescriptor,
         entered_block_event: EventTrigger | str | None = None,
         exited_block_event: EventTrigger | str | None = None,
     ) -> "EntityInsideBlockNotifier":
@@ -1301,7 +1149,7 @@ class EntityLookedAt(JsonComponent):
         find_players_only (bool, optional): Searches only the nearest player that meets `filters`. Game default false.
         line_of_sight_obstruction_type (LineOfSightObstructionType, optional): Block shape used for line of sight checks. Game default collision.
         look_at_locations (list[LookAtLocation], optional): Locations on the owner towards which line of sight is checked.
-        looked_at_cooldown (int | NumberRange, optional): Seconds before checking again after being looked at, or a `(min, max)` range.
+        looked_at_cooldown (int | tuple[float, float], optional): Seconds before checking again after being looked at, or a `(min, max)` range.
         looked_at_event (EventTrigger | str, optional): Event to run when an entity looking at the owner is detected.
         min_looked_at_duration (float, optional): Seconds the owner must be looked at continuously. Game default 0.
         not_looked_at_event (EventTrigger | str, optional): Event to run when no entity is looking at the owner.
@@ -1314,32 +1162,28 @@ class EntityLookedAt(JsonComponent):
 
     identifier = "minecraft:looked_at"
 
-    field_of_view: float | None = json_field(default=None, validators=[_number])
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    find_players_only: bool | None = json_field(default=None, validators=[_boolean])
+    field_of_view: float | None = json_field(default=None)
+    filters: Filter | None = json_field(default=None)
+    find_players_only: bool | None = json_field(default=None)
     line_of_sight_obstruction_type: LineOfSightObstructionType | None = json_field(
-        default=None, validators=[one_of(*LineOfSightObstructionType)]
+        default=None
     )
-    look_at_locations: list[LookAtLocation] | None = json_field(
-        default=None, validators=[each(one_of(*LookAtLocation))]
+    look_at_locations: list[LookAtLocation] | None = json_field(default=None)
+    looked_at_cooldown: Annotated[int | tuple[float, float], RangeMinMax] | None = (
+        json_field(default=None)
     )
-    looked_at_cooldown: int | NumberRange | None = json_field(
-        default=None, validators=[number_or_range], encoder=encoders.range_min_max
+    looked_at_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    looked_at_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    min_looked_at_duration: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    min_looked_at_duration: float | None = json_field(
-        default=None, validators=[_positive]
+    not_looked_at_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    not_looked_at_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    scale_fov_by_distance: bool | None = json_field(default=None, validators=[_boolean])
-    search_radius: float | None = json_field(default=None, validators=[_positive])
-    set_target: LootedAtSetTarget | None = json_field(
-        default=None, validators=[one_of(*LootedAtSetTarget)]
-    )
+    scale_fov_by_distance: bool | None = json_field(default=None)
+    search_radius: Annotated[float, NonNegative] | None = json_field(default=None)
+    set_target: LootedAtSetTarget | None = json_field(default=None)
 
 
 class EntityMobEffect(JsonComponent):
@@ -1358,16 +1202,12 @@ class EntityMobEffect(JsonComponent):
 
     identifier = "minecraft:mob_effect"
 
-    mob_effect: MinecraftEffects | str = json_field(validators=[_string])
-    entity_filter: Filter | None = json_field(default=None, validators=[_filter])
-    ambient: bool | None = json_field(default=None, validators=[_boolean])
-    cooldown_time: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    effect_range: float | None = json_field(default=None, validators=[_positive])
-    effect_time: int | Literal["infinite"] | None = json_field(
-        default=None, validators=[duration_or_infinite]
-    )
+    mob_effect: MinecraftEffects | str = json_field()
+    entity_filter: Filter | None = json_field(default=None)
+    ambient: bool | None = json_field(default=None)
+    cooldown_time: Annotated[int, NonNegative] | None = json_field(default=None)
+    effect_range: Annotated[float, NonNegative] | None = json_field(default=None)
+    effect_time: int | Literal["infinite"] | None = json_field(default=None)
 
 
 class EntityMobEffectImmunity(JsonComponent):
@@ -1382,7 +1222,7 @@ class EntityMobEffectImmunity(JsonComponent):
     identifier = "minecraft:mob_effect_immunity"
 
     mob_effects: list[MinecraftEffects | str] = json_field(
-        default_factory=list, validators=[each(_string)], omit_default=True
+        default_factory=list, omit_default=True
     )
 
     def add_mob_effects(
@@ -1418,10 +1258,8 @@ class EntityOnEquipmentChanged(JsonComponent):
 
     identifier = "minecraft:on_equipment_changed"
 
-    slots: list[EquipmentChangeSlot] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(EquipmentChangeSlot)), unique("slot")],
-        omit_default=True,
+    slots: Annotated[list[EquipmentChangeSlot], Unique("slot")] = json_field(
+        default_factory=list, omit_default=True
     )
 
     def add_slot(
@@ -1592,7 +1430,7 @@ class EntityProjectile(JsonComponent):
         lightning (bool, optional): Channels lightning on the entity hit during a thunderstorm. Game default false.
         liquid_inertia (float, optional): Fraction of velocity kept each tick in fluid. Game default 0.6.
         multiple_targets (bool, optional): The projectile can hit more than one entity. Game default false.
-        offset (Vector3D, optional): Spawn offset from the anchor. Game default (0, 0, 0).
+        offset (tuple[float, float, float], optional): Spawn offset from the anchor. Game default (0, 0, 0).
         on_fire_time (float, optional): Seconds an entity set on fire burns. Game default 5.
         on_hit (ProjectileOnHit, optional): What happens when the projectile hits. Set it with `set_on_hit`.
         owner_launch_immunity_ticks (int, optional): Ticks after launch during which the projectile cannot hit its shooter. Game default 5.
@@ -1615,58 +1453,49 @@ class EntityProjectile(JsonComponent):
 
     identifier = "minecraft:projectile"
 
-    anchor: int | Literal["origin", "eye_height", "middle"] | None = json_field(
-        default=None,
-        validators=[one_of(0, 1, 2, "origin", "eye_height", "middle")],
-        encoder=encoders.projectile_anchor,
-    )
-    angle_offset: float | None = json_field(default=None, validators=[_number])
-    catch_fire: bool | None = json_field(default=None, validators=[_boolean])
-    crit_particle_on_hurt: bool | None = json_field(default=None, validators=[_boolean])
-    destroy_on_hurt: bool | None = json_field(default=None, validators=[_boolean])
-    gravity: float | None = json_field(default=None, validators=[_number])
-    hit_ground_sound: str | None = json_field(default=None, validators=[_string])
-    hit_nearest_passenger: bool | None = json_field(default=None, validators=[_boolean])
-    hit_sound: str | None = json_field(default=None, validators=[_string])
-    hit_water: bool | None = json_field(default=None, validators=[_boolean])
-    homing: bool | None = json_field(default=None, validators=[_boolean])
+    anchor: (
+        Annotated[Literal[0, 1, 2], IndexInto(("origin", "eye_height", "middle"))]
+        | Literal["origin", "eye_height", "middle"]
+        | None
+    ) = json_field(default=None)
+    angle_offset: float | None = json_field(default=None)
+    catch_fire: bool | None = json_field(default=None)
+    crit_particle_on_hurt: bool | None = json_field(default=None)
+    destroy_on_hurt: bool | None = json_field(default=None)
+    gravity: float | None = json_field(default=None)
+    hit_ground_sound: str | None = json_field(default=None)
+    hit_nearest_passenger: bool | None = json_field(default=None)
+    hit_sound: str | None = json_field(default=None)
+    hit_water: bool | None = json_field(default=None)
+    homing: bool | None = json_field(default=None)
     ignored_entities: list[MinecraftEntityDescriptor | str] | None = json_field(
-        default=None, validators=[each(_entity)]
+        default=None
     )
-    inertia: float | None = json_field(default=None, validators=[_number])
-    is_dangerous: bool | None = json_field(default=None, validators=[_boolean])
-    isolated_physics: bool | None = json_field(default=None, validators=[_boolean])
-    lightning: bool | None = json_field(default=None, validators=[_boolean])
-    liquid_inertia: float | None = json_field(default=None, validators=[_number])
-    multiple_targets: bool | None = json_field(default=None, validators=[_boolean])
-    offset: Vector3D | None = json_field(default=None, validators=[vector3])
-    on_fire_time: float | None = json_field(default=None, validators=[_positive])
-    on_hit: ProjectileOnHit | None = json_field(
-        default=None, validators=[instance_of(ProjectileOnHit)]
-    )
-    owner_launch_immunity_ticks: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    particle: str | None = json_field(default=None, validators=[_string])
-    potion_effect: int | None = json_field(default=None, validators=[_integer])
-    power: float | None = json_field(default=None, validators=[_number])
-    reflect_immunity: float | None = json_field(default=None, validators=[_positive])
-    reflect_on_hurt: bool | None = json_field(default=None, validators=[_boolean])
-    shoot_sound: str | None = json_field(default=None, validators=[_string])
-    shoot_target: bool | None = json_field(default=None, validators=[_boolean])
+    inertia: float | None = json_field(default=None)
+    is_dangerous: bool | None = json_field(default=None)
+    isolated_physics: bool | None = json_field(default=None)
+    lightning: bool | None = json_field(default=None)
+    liquid_inertia: float | None = json_field(default=None)
+    multiple_targets: bool | None = json_field(default=None)
+    offset: tuple[float, float, float] | None = json_field(default=None)
+    on_fire_time: Annotated[float, NonNegative] | None = json_field(default=None)
+    on_hit: ProjectileOnHit | None = json_field(default=None)
+    owner_launch_immunity_ticks: int | None = json_field(default=None)
+    particle: str | None = json_field(default=None)
+    potion_effect: int | None = json_field(default=None)
+    power: float | None = json_field(default=None)
+    reflect_immunity: Annotated[float, NonNegative] | None = json_field(default=None)
+    reflect_on_hurt: bool | None = json_field(default=None)
+    shoot_sound: str | None = json_field(default=None)
+    shoot_target: bool | None = json_field(default=None)
     should_bounce: Literal["no", "if_invulnerable", "if_no_damage_dealt"] | None = (
-        json_field(
-            default=None,
-            validators=[one_of("no", "if_invulnerable", "if_no_damage_dealt")],
-        )
+        json_field(default=None)
     )
-    splash_range: float | None = json_field(default=None, validators=[_positive])
-    spread_fire: bool | None = json_field(default=None, validators=[_boolean])
-    stop_on_hurt: bool | None = json_field(default=None, validators=[_boolean])
-    uncertainty_base: float | None = json_field(default=None, validators=[_number])
-    uncertainty_multiplier: float | None = json_field(
-        default=None, validators=[_number]
-    )
+    splash_range: Annotated[float, NonNegative] | None = json_field(default=None)
+    spread_fire: bool | None = json_field(default=None)
+    stop_on_hurt: bool | None = json_field(default=None)
+    uncertainty_base: float | None = json_field(default=None)
+    uncertainty_multiplier: float | None = json_field(default=None)
 
     def set_on_hit(
         self,
@@ -1676,7 +1505,7 @@ class EntityProjectile(JsonComponent):
         definition_event: ProjectileDefinitionEvent | None = None,
         douse_fire: bool | None = None,
         freeze_on_hit: ProjectileFreezeOnHit | None = None,
-        grant_xp: int | NumberRange | None = None,
+        grant_xp: int | tuple[float, float] | None = None,
         hurt_owner: ProjectileHurtOwner | None = None,
         ignite: bool | None = None,
         impact_damage: ProjectileImpactDamage | None = None,
@@ -1725,9 +1554,7 @@ class EntityRaidTrigger(JsonComponent):
 
     identifier = "minecraft:raid_trigger"
 
-    triggered_event: EventTrigger | None = json_field(
-        default=None, validators=[instance_of(EventTrigger)]
-    )
+    triggered_event: EventTrigger | None = json_field(default=None)
 
 
 class EntityRailSensor(JsonComponent):
@@ -1747,21 +1574,17 @@ class EntityRailSensor(JsonComponent):
 
     identifier = "minecraft:rail_sensor"
 
-    check_block_types: bool | None = json_field(default=None, validators=[_boolean])
-    eject_on_activate: bool | None = json_field(default=None, validators=[_boolean])
-    eject_on_deactivate: bool | None = json_field(default=None, validators=[_boolean])
-    on_activate: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    check_block_types: bool | None = json_field(default=None)
+    eject_on_activate: bool | None = json_field(default=None)
+    eject_on_deactivate: bool | None = json_field(default=None)
+    on_activate: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_deactivate: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_deactivate: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    tick_command_block_on_activate: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    tick_command_block_on_deactivate: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    tick_command_block_on_activate: bool | None = json_field(default=None)
+    tick_command_block_on_deactivate: bool | None = json_field(default=None)
 
 
 class EntityRavagerBlocked(JsonComponent):
@@ -1776,11 +1599,9 @@ class EntityRavagerBlocked(JsonComponent):
 
     identifier = "minecraft:ravager_blocked"
 
-    knockback_strength: float | None = json_field(default=None, validators=[_positive])
+    knockback_strength: Annotated[float, NonNegative] | None = json_field(default=None)
     reaction_choices: list[RavagerReaction] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(RavagerReaction))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def add_reaction_choice(
@@ -1814,12 +1635,10 @@ class EntityScheduler(JsonComponent):
     identifier = "minecraft:scheduler"
 
     scheduled_events: list[EventTrigger] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(EventTrigger))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    max_delay_secs: float | None = json_field(default=None, validators=[_positive])
-    min_delay_secs: float | None = json_field(default=None, validators=[_positive])
+    max_delay_secs: Annotated[float, NonNegative] | None = json_field(default=None)
+    min_delay_secs: Annotated[float, NonNegative] | None = json_field(default=None)
 
     def add_scheduled_event(
         self,
@@ -1848,13 +1667,9 @@ class EntitySensor(JsonComponent):
 
     identifier = "minecraft:entity_sensor"
 
-    find_players_only: bool | None = json_field(default=None, validators=[_boolean])
-    relative_range: bool | None = json_field(default=None, validators=[_boolean])
-    subsensors: list[Subsensor] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(Subsensor))],
-        omit_default=True,
-    )
+    find_players_only: bool | None = json_field(default=None)
+    relative_range: bool | None = json_field(default=None)
+    subsensors: list[Subsensor] = json_field(default_factory=list, omit_default=True)
 
     def add_subsensor(
         self,
@@ -1864,7 +1679,7 @@ class EntitySensor(JsonComponent):
         cooldown: float | None = None,
         maximum_count: int | None = None,
         minimum_count: int | None = None,
-        range: Vector2D | None = None,
+        range: tuple[float, float] | None = None,
         require_all: bool | None = None,
         y_offset: float | None = None,
     ) -> "EntitySensor":
@@ -1900,18 +1715,14 @@ class EntityShooter(JsonComponent):
 
     identifier = "minecraft:shooter"
 
-    def_: MinecraftEntityDescriptor | str | None = json_field(
-        default=None, key="def", validators=[_entity]
-    )
-    aux_val: int | None = json_field(default=None, validators=[_integer])
-    magic: bool | None = json_field(default=None, validators=[_boolean])
-    power: float | None = json_field(default=None, validators=[_positive])
+    def_: MinecraftEntityDescriptor | str | None = json_field(default=None, key="def")
+    aux_val: int | None = json_field(default=None)
+    magic: bool | None = json_field(default=None)
+    power: Annotated[float, NonNegative] | None = json_field(default=None)
     projectiles: list[ShooterProjectile] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(ShooterProjectile))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    sound: str | None = json_field(default=None, validators=[_string])
+    sound: str | None = json_field(default=None)
 
     def add_projectile(
         self,
@@ -1941,17 +1752,13 @@ class EntitySpawnEntity(JsonComponent):
 
     identifier = "minecraft:spawn_entity"
 
-    entities: list[SpawnedEntity] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(SpawnedEntity))],
-        omit_default=True,
-    )
+    entities: list[SpawnedEntity] = json_field(default_factory=list, omit_default=True)
 
     def add_entity(
         self,
         *,
         spawn_entity: MinecraftEntityDescriptor | str | None = None,
-        spawn_item: ItemReference | None = None,
+        spawn_item: str | MinecraftItemDescriptor | None = None,
         spawn_event: EventTrigger | str | None = None,
         spawn_item_event: EventTrigger | str | None = None,
         spawn_method: str | None = None,
@@ -1988,7 +1795,7 @@ class EntitySpawnOnDeath(JsonComponent):
 
     Args:
         entity_to_spawn (MinecraftEntityDescriptor | str, optional): The entity to spawn. Game default the entity itself.
-        additional_spawn_range (NumberRange, optional): A `(min, max)` range of extra entities to spawn. Game default (0, 0).
+        additional_spawn_range (tuple[float, float], optional): A `(min, max)` range of extra entities to spawn. Game default (0, 0).
         filters (Filter, optional): Conditions for the entities to spawn.
         inherit_parent_name (bool, optional): Whether spawned entities take the name of the parent. Game default true.
         spawn_amount (int, optional): How many entities to spawn. Game default 1.
@@ -1999,21 +1806,15 @@ class EntitySpawnOnDeath(JsonComponent):
 
     identifier = "minecraft:spawn_on_death"
 
-    entity_to_spawn: MinecraftEntityDescriptor | str | None = json_field(
-        default=None, validators=[_entity]
+    entity_to_spawn: MinecraftEntityDescriptor | str | None = json_field(default=None)
+    additional_spawn_range: Annotated[tuple[float, float], MinMax] | None = json_field(
+        default=None
     )
-    additional_spawn_range: NumberRange | None = json_field(
-        default=None,
-        validators=[length(2, 2), each(_integer)],
-        encoder=encoders.min_max,
-    )
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    inherit_parent_name: bool | None = json_field(default=None, validators=[_boolean])
-    spawn_amount: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
+    filters: Filter | None = json_field(default=None)
+    inherit_parent_name: bool | None = json_field(default=None)
+    spawn_amount: Annotated[int, AtLeastOne] | None = json_field(default=None)
     spawn_method: Literal["born", "spawned", "summoned"] | None = json_field(
-        default=None, validators=[one_of("born", "spawned", "summoned")]
+        default=None
     )
 
 
@@ -2029,13 +1830,9 @@ class EntitySpellEffects(JsonComponent):
 
     identifier = "minecraft:spell_effects"
 
-    add_effects: list[SpellEffect] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(SpellEffect))],
-        omit_default=True,
-    )
-    remove_effects: list[MinecraftEffects | str] | None = json_field(
-        default=None, validators=[each(_string)], encoder=encoders.effect_names
+    add_effects: list[SpellEffect] = json_field(default_factory=list, omit_default=True)
+    remove_effects: list[Annotated[MinecraftEffects | str, EffectName]] | None = (
+        json_field(default=None)
     )
 
     def add_effect(
@@ -2087,17 +1884,17 @@ class EntityTargetNearbySensor(JsonComponent):
 
     identifier = "minecraft:target_nearby_sensor"
 
-    inside_range: float | None = json_field(default=None, validators=[_positive])
-    outside_range: float | None = json_field(default=None, validators=[_positive])
-    must_see: bool | None = json_field(default=None, validators=[_boolean])
-    on_inside_range: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    inside_range: Annotated[float, NonNegative] | None = json_field(default=None)
+    outside_range: Annotated[float, NonNegative] | None = json_field(default=None)
+    must_see: bool | None = json_field(default=None)
+    on_inside_range: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_outside_range: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_outside_range: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    on_vision_lost_inside_range: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    on_vision_lost_inside_range: Annotated[EventTrigger | str, Trigger] | None = (
+        json_field(default=None)
     )
 
 
@@ -2110,7 +1907,7 @@ class EntityTeleport(JsonComponent):
         max_random_teleport_time (float, optional): Maximum seconds between random teleports. Game default 20.
         min_random_teleport_time (float, optional): Minimum seconds between random teleports. Game default 0.
         projectile_filter (Filter, optional): Projectiles that make the entity try to teleport. Without it, every projectile.
-        random_teleport_cube (Vector3D, optional): The area of random teleports. Game default (32, 16, 32).
+        random_teleport_cube (tuple[float, float, float], optional): The area of random teleports. Game default (32, 16, 32).
         random_teleports (bool, optional): Whether the entity teleports randomly. Game default true.
         target_distance (float, optional): Maximum teleport distance when chasing a target. Game default 16.
         target_teleport_chance (float, optional): Chance to teleport, from 0 to 1. Game default 1.
@@ -2121,26 +1918,20 @@ class EntityTeleport(JsonComponent):
 
     identifier = "minecraft:teleport"
 
-    dark_teleport_chance: float | None = json_field(default=None, validators=[_chance])
-    light_teleport_chance: float | None = json_field(default=None, validators=[_chance])
-    max_random_teleport_time: float | None = json_field(
-        default=None, validators=[_positive]
+    dark_teleport_chance: Annotated[float, Chance] | None = json_field(default=None)
+    light_teleport_chance: Annotated[float, Chance] | None = json_field(default=None)
+    max_random_teleport_time: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    min_random_teleport_time: float | None = json_field(
-        default=None, validators=[_positive]
+    min_random_teleport_time: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    projectile_filter: Filter | None = json_field(default=None, validators=[_filter])
-    random_teleport_cube: Vector3D | None = json_field(
-        default=None, validators=[vector3]
-    )
-    random_teleports: bool | None = json_field(default=None, validators=[_boolean])
-    target_distance: float | None = json_field(default=None, validators=[_positive])
-    target_teleport_chance: float | None = json_field(
-        default=None, validators=[_chance]
-    )
-    teleports_on_projectile_hit: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    projectile_filter: Filter | None = json_field(default=None)
+    random_teleport_cube: tuple[float, float, float] | None = json_field(default=None)
+    random_teleports: bool | None = json_field(default=None)
+    target_distance: Annotated[float, NonNegative] | None = json_field(default=None)
+    target_teleport_chance: Annotated[float, Chance] | None = json_field(default=None)
+    teleports_on_projectile_hit: bool | None = json_field(default=None)
 
 
 class EntityTickWorld(JsonComponent):
@@ -2156,13 +1947,11 @@ class EntityTickWorld(JsonComponent):
 
     identifier = "minecraft:tick_world"
 
-    distance_to_players: float | None = json_field(
-        default=None, validators=[_number, in_range(128.0, None)]
+    distance_to_players: Annotated[float, InRange(128.0, None)] | None = json_field(
+        default=None
     )
-    never_despawn: bool | None = json_field(default=None, validators=[_boolean])
-    radius: int | None = json_field(
-        default=None, validators=[_integer, in_range(2.0, 6.0)]
-    )
+    never_despawn: bool | None = json_field(default=None)
+    radius: Annotated[int, InRange(2.0, 6.0)] | None = json_field(default=None)
 
 
 class EntityTimer(JsonComponent):
@@ -2172,7 +1961,7 @@ class EntityTimer(JsonComponent):
         time_down_event (EventTrigger | str): Event to run when the time runs out.
         looping (bool, optional): Whether the timer restarts after it fires. Game default true.
         randomInterval (bool, optional): Whether the time is random between the `time` range. Game default true.
-        time (float | NumberRange, optional): Seconds of the timer, or a `(min, max)` range. Incompatible with `random_time_choices`.
+        time (float | tuple[float, float], optional): Seconds of the timer, or a `(min, max)` range. Incompatible with `random_time_choices`.
         random_time_choices (list[TimeChoice], optional): Weighted times to pick from. Incompatible with `time`. Add more with `add_random_time_choice`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_timer)
@@ -2180,17 +1969,11 @@ class EntityTimer(JsonComponent):
 
     identifier = "minecraft:timer"
 
-    time_down_event: EventTrigger | str = json_field(
-        validators=[_event], encoder=encoders.trigger
-    )
-    looping: bool | None = json_field(default=None, validators=[_boolean])
-    randomInterval: bool | None = json_field(default=None, validators=[_boolean])
-    time: float | NumberRange | None = json_field(
-        default=None, validators=[number_or_range]
-    )
-    random_time_choices: list[TimeChoice] | None = json_field(
-        default=None, validators=[each(instance_of(TimeChoice))]
-    )
+    time_down_event: Annotated[EventTrigger | str, Trigger] = json_field()
+    looping: bool | None = json_field(default=None)
+    randomInterval: bool | None = json_field(default=None)
+    time: float | tuple[float, float] | None = json_field(default=None)
+    random_time_choices: list[TimeChoice] | None = json_field(default=None)
 
     def __validate__(self) -> None:
         if self.time is not None and self.random_time_choices is not None:
@@ -2220,28 +2003,26 @@ class EntityTrail(JsonComponent):
     """Makes the entity leave a trail of blocks as it moves. Obeys Mob Griefing rules.
 
     Args:
-        block_type (BlockReference, optional): The block spawned behind the entity. Game default air.
+        block_type (str | MinecraftBlockDescriptor, optional): The block spawned behind the entity. Game default air.
         force_replace_matched_blocks (bool, optional): Replaces matching blocks even where placement rules prevent it. Game default false.
         radius (int, optional): Spawns blocks over a (2 * radius + 1) square around the offset. Game default -1.
-        replaceable_blocks (list[BlockReference], optional): Blocks the trail may replace. Game default air only.
+        replaceable_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks the trail may replace. Game default air only.
         spawn_filter (Filter, optional): Conditions for the block to spawn.
-        spawn_offset (Vector3D, optional): Offset from the entity where the block spawns, at most 16 blocks. Game default (0, 0, 0).
+        spawn_offset (tuple[float, float, float], optional): Offset from the entity where the block spawns, at most 16 blocks. Game default (0, 0, 0).
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_trail)
     """
 
     identifier = "minecraft:trail"
 
-    block_type: BlockReference | None = json_field(default=None, validators=[_block])
-    force_replace_matched_blocks: bool | None = json_field(
-        default=None, validators=[_boolean]
+    block_type: str | MinecraftBlockDescriptor | None = json_field(default=None)
+    force_replace_matched_blocks: bool | None = json_field(default=None)
+    radius: int | None = json_field(default=None)
+    replaceable_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
+        default=None
     )
-    radius: int | None = json_field(default=None, validators=[_integer])
-    replaceable_blocks: list[BlockReference] | None = json_field(
-        default=None, validators=[_blocks]
-    )
-    spawn_filter: Filter | None = json_field(default=None, validators=[_filter])
-    spawn_offset: Vector3D | None = json_field(default=None, validators=[vector3])
+    spawn_filter: Filter | None = json_field(default=None)
+    spawn_offset: tuple[float, float, float] | None = json_field(default=None)
 
 
 class EntityTransformation(JsonComponent):
@@ -2264,23 +2045,18 @@ class EntityTransformation(JsonComponent):
 
     identifier = "minecraft:transformation"
 
-    into: MinecraftEntityDescriptor | str = json_field(validators=[_entity])
-    add: list[str] = json_field(
-        default_factory=list,
-        validators=[each(_string)],
-        omit_default=True,
-        encoder=encoders.component_groups,
+    into: MinecraftEntityDescriptor | str = json_field()
+    add: Annotated[list[str], Wrapped("component_groups")] = json_field(
+        default_factory=list, omit_default=True
     )
-    begin_transform_sound: str | None = json_field(default=None, validators=[_string])
-    delay: float | TransformationDelay | None = json_field(
-        default=None, validators=[instance_of(int, float, TransformationDelay)]
-    )
-    drop_equipment: bool | None = json_field(default=None, validators=[_boolean])
-    drop_inventory: bool | None = json_field(default=None, validators=[_boolean])
-    keep_level: bool | None = json_field(default=None, validators=[_boolean])
-    keep_owner: bool | None = json_field(default=None, validators=[_boolean])
-    preserve_equipment: bool | None = json_field(default=None, validators=[_boolean])
-    transformation_sound: str | None = json_field(default=None, validators=[_string])
+    begin_transform_sound: str | None = json_field(default=None)
+    delay: float | TransformationDelay | None = json_field(default=None)
+    drop_equipment: bool | None = json_field(default=None)
+    drop_inventory: bool | None = json_field(default=None)
+    keep_level: bool | None = json_field(default=None)
+    keep_owner: bool | None = json_field(default=None)
+    preserve_equipment: bool | None = json_field(default=None)
+    transformation_sound: str | None = json_field(default=None)
 
     def add_component_groups(self, *component_groups: str) -> "EntityTransformation":
         """Adds component groups added after the transformation."""
@@ -2297,7 +2073,7 @@ class EntityTransformation(JsonComponent):
         block_chance: float | None = None,
         block_max: int | None = None,
         block_radius: int | None = None,
-        block_types: list[BlockReference] | None = None,
+        block_types: list[str | MinecraftBlockDescriptor] | None = None,
     ) -> "EntityTransformation":
         """Sets the full delay options before the entity transforms. See `TransformationDelay` for the parameters."""
         self.delay = TransformationDelay(

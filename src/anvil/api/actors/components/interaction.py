@@ -1,21 +1,5 @@
-from typing import Literal
+from typing import Annotated, Any, Literal
 
-from anvil.api.actors.components._validators import (
-    _blocks,
-    _boolean,
-    _chance,
-    _component_class,
-    _entity,
-    _entity_pair,
-    _event,
-    _filter,
-    _integer,
-    _item,
-    _items,
-    _number,
-    _positive,
-    _string,
-)
 from anvil.api.core.components import EventTrigger
 from anvil.api.core.enums import (
     ContainerType,
@@ -23,34 +7,30 @@ from anvil.api.core.enums import (
     Vibrations,
 )
 from anvil.api.core.filters import Filter
-from anvil.api.core.types import (
-    BlockReference,
-    ItemReference,
-    NumberRange,
-    Vector3D,
-)
 from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.api.world.loot_tables import LootTable
 from anvil.api.world.trade_tables import TradeTable
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import (
+    AsObject,
+    AtLeastOne,
+    Chance,
+    InRange,
+    ItemObject,
     JsonComponent,
     JsonObject,
-    encoders,
+    JsonValue,
+    Keyed,
+    NonNegative,
+    PropertyName,
+    RangeMinMax,
+    Trigger,
+    Unique,
+    Wrapped,
     json_field,
 )
-from anvil.lib.jsonmodel.validators import (
-    duration_or_infinite,
-    each,
-    in_range,
-    instance_of,
-    integer_or_range,
-    length,
-    one_of,
-    unique,
-    vector3,
-)
 from anvil.lib.schemas import (
+    MinecraftBlockDescriptor,
     MinecraftEntityDescriptor,
     MinecraftItemDescriptor,
 )
@@ -64,25 +44,21 @@ class EquippableSlot(JsonObject):
 
     Args:
         slot (int): The slot number.
-        item (ItemReference, optional): The item that can be equipped in this slot.
-        accepted_items (list[ItemReference], optional): The items that can go in this slot.
+        item (str | MinecraftItemDescriptor, optional): The item that can be equipped in this slot.
+        accepted_items (list[str | MinecraftItemDescriptor], optional): The items that can go in this slot.
         interact_text (str, optional): Text shown on the interact button with touch controls. It is added to the language file.
         on_equip (EventTrigger | str, optional): Event to run when an item is equipped in this slot.
         on_unequip (EventTrigger | str, optional): Event to run when the item is removed from this slot.
     """
 
-    slot: int = json_field(validators=[_integer, in_range(minimum=0)])
-    item: ItemReference | None = json_field(default=None, validators=[_item])
-    accepted_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
+    slot: Annotated[int, NonNegative] = json_field()
+    item: str | MinecraftItemDescriptor | None = json_field(default=None)
+    accepted_items: list[str | MinecraftItemDescriptor] | None = json_field(
+        default=None
     )
-    interact_text: str | None = json_field(default=None, validators=[_string])
-    on_equip: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    on_unequip: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
+    interact_text: str | None = json_field(default=None)
+    on_equip: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    on_unequip: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
 
     def __post_init__(self) -> None:
         if self.interact_text is not None:
@@ -95,12 +71,12 @@ class FeedItem(JsonObject):
     """An item that raises the temper of an entity being tamed by riding.
 
     Args:
-        item (ItemReference): The item.
+        item (str | MinecraftItemDescriptor): The item.
         temper_mod (int, optional): The temper the entity gains when fed this item. Game default 0.
     """
 
-    item: ItemReference = json_field(validators=[_item])
-    temper_mod: int | None = json_field(default=None, validators=[_integer])
+    item: str | MinecraftItemDescriptor = json_field()
+    temper_mod: int | None = json_field(default=None)
 
 
 class HealEffect(JsonObject):
@@ -113,30 +89,26 @@ class HealEffect(JsonObject):
         duration (int | Literal["infinite"], optional): The duration of the effect in seconds. Game default 0.
     """
 
-    name: MinecraftEffects | str = json_field(validators=[_string])
-    amplifier: int | None = json_field(default=None, validators=[_integer])
-    chance: float | None = json_field(default=None, validators=[_chance])
-    duration: int | Literal["infinite"] | None = json_field(
-        default=None, validators=[duration_or_infinite]
-    )
+    name: MinecraftEffects | str = json_field()
+    amplifier: int | None = json_field(default=None)
+    chance: Annotated[float, Chance] | None = json_field(default=None)
+    duration: int | Literal["infinite"] | None = json_field(default=None)
 
 
 class HealItem(JsonObject):
     """An item that heals the entity.
 
     Args:
-        item (ItemReference): The item.
+        item (str | MinecraftItemDescriptor): The item.
         heal_amount (int, optional): The health the entity gains when fed this item. Game default 1.
-        result_item (ItemReference, optional): The item the fed item becomes after a successful heal.
+        result_item (str | MinecraftItemDescriptor, optional): The item the fed item becomes after a successful heal.
         effects (list[HealEffect], optional): Effects applied when this item heals the entity.
     """
 
-    item: ItemReference = json_field(validators=[_item])
-    heal_amount: int | None = json_field(default=None, validators=[_integer])
-    result_item: ItemReference | None = json_field(default=None, validators=[_item])
-    effects: list[HealEffect] | None = json_field(
-        default=None, validators=[each(instance_of(HealEffect))]
-    )
+    item: str | MinecraftItemDescriptor = json_field()
+    heal_amount: int | None = json_field(default=None)
+    result_item: str | MinecraftItemDescriptor | None = json_field(default=None)
+    effects: list[HealEffect] | None = json_field(default=None)
 
 
 class NameAction(JsonObject):
@@ -147,22 +119,20 @@ class NameAction(JsonObject):
         on_named (EventTrigger | str, optional): Event to run when the entity gets one of these names.
     """
 
-    name_filter: str | list[str] = json_field(validators=[instance_of(str, list)])
-    on_named: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
+    name_filter: str | list[str] = json_field()
+    on_named: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
 
 
 class NPCOffsets(JsonObject):
     """Where an NPC is drawn in its dialogue portrait or skin picker.
 
     Args:
-        translate (Vector3D): The offset.
-        scale (Vector3D): The scale.
+        translate (tuple[float, float, float]): The offset.
+        scale (tuple[float, float, float]): The scale.
     """
 
-    translate: Vector3D = json_field(validators=[vector3])
-    scale: Vector3D = json_field(validators=[vector3])
+    translate: tuple[float, float, float] = json_field()
+    scale: tuple[float, float, float] = json_field()
 
 
 class NPCData(JsonObject):
@@ -174,15 +144,9 @@ class NPCData(JsonObject):
         picker_offsets (NPCOffsets, optional): Where the NPC is drawn in the skin picker.
     """
 
-    skin_list: list[int] = json_field(
-        validators=[each(_integer)], encoder=encoders.skin_variants
-    )
-    portrait_offsets: NPCOffsets | None = json_field(
-        default=None, validators=[instance_of(NPCOffsets)]
-    )
-    picker_offsets: NPCOffsets | None = json_field(
-        default=None, validators=[instance_of(NPCOffsets)]
-    )
+    skin_list: list[Annotated[int, Wrapped("variant")]] = json_field()
+    portrait_offsets: NPCOffsets | None = json_field(default=None)
+    picker_offsets: NPCOffsets | None = json_field(default=None)
 
 
 class SlotDropChance(JsonObject):
@@ -193,60 +157,64 @@ class SlotDropChance(JsonObject):
         drop_chance (float): The chance to drop the equipped item, from 0 to 1.
     """
 
-    slot: Slots = json_field(validators=[one_of(*Slots)])
-    drop_chance: float = json_field(validators=[_chance])
+    slot: Slots = json_field()
+    drop_chance: Annotated[float, Chance] = json_field()
 
 
 class TameItem(JsonObject):
     """A tame item that becomes another item after a successful tame.
 
     Args:
-        item (ItemReference): The tame item.
-        result_item (ItemReference): The item it becomes.
+        item (str | MinecraftItemDescriptor): The tame item.
+        result_item (str | MinecraftItemDescriptor): The item it becomes.
     """
 
-    item: ItemReference = json_field(validators=[_item])
-    result_item: ItemReference = json_field(validators=[_item])
+    item: str | MinecraftItemDescriptor = json_field()
+    result_item: str | MinecraftItemDescriptor = json_field()
 
 
 class AgeableFeedItem(JsonObject):
     """An item that ages a baby entity up when fed.
 
     Args:
-        item (ItemReference): The item.
+        item (str | MinecraftItemDescriptor): The item.
         growth (float, optional): How much the entity ages when fed this item, from 0 to 1.
-        result_item (ItemReference, optional): The item the fed item becomes.
+        result_item (str | MinecraftItemDescriptor, optional): The item the fed item becomes.
     """
 
-    item: ItemReference = json_field(validators=[_item])
-    growth: float | None = json_field(default=None, validators=[_chance])
-    result_item: ItemReference | None = json_field(default=None, validators=[_item])
+    item: str | MinecraftItemDescriptor = json_field()
+    growth: Annotated[float, Chance] | None = json_field(default=None)
+    result_item: str | MinecraftItemDescriptor | None = json_field(default=None)
 
 
 class BreedItem(JsonObject):
     """An item that gets an entity into the love state, and the item it becomes.
 
     Args:
-        item (ItemReference): The item.
-        result_item (ItemReference, optional): The item the used item becomes.
+        item (str | MinecraftItemDescriptor): The item.
+        result_item (str | MinecraftItemDescriptor, optional): The item the used item becomes.
     """
 
-    item: ItemReference = json_field(validators=[_item])
-    result_item: ItemReference | None = json_field(default=None, validators=[_item])
+    item: str | MinecraftItemDescriptor = json_field()
+    result_item: str | MinecraftItemDescriptor | None = json_field(default=None)
 
 
-class BreedPartner(JsonObject):
-    """An entity `minecraft:breedable` can breed with.
+class BreedPartner(JsonValue):
+    """An entity `minecraft:breedable` can breed with. Written as `{mate_type: breed_event}`,
+    with an empty object when it has no breed event.
 
     Args:
         mate_type (MinecraftEntityDescriptor | str): The entity this entity can mate with.
         breed_event (EventTrigger | str, optional): Event to run when this entity breeds.
     """
 
-    mate_type: MinecraftEntityDescriptor | str = json_field(validators=[_entity])
-    breed_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    mate_type: MinecraftEntityDescriptor | str = json_field(exclude=True)
+    breed_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
+
+    def __json__(self) -> Any:
+        return JsonValue.__json__(self) or {}
 
 
 class DenyParentsVariant(JsonObject):
@@ -258,23 +226,23 @@ class DenyParentsVariant(JsonObject):
         max_variant (int): The inclusive maximum of the variant range.
     """
 
-    chance: float = json_field(validators=[_chance])
-    min_variant: int = json_field(validators=[_integer])
-    max_variant: int = json_field(validators=[_integer])
+    chance: Annotated[float, Chance] = json_field()
+    min_variant: int = json_field()
+    max_variant: int = json_field()
 
 
 class EnvironmentRequirement(JsonObject):
     """Blocks that must be nearby for an entity to get into the love state.
 
     Args:
-        block_types (list[BlockReference]): The blocks required nearby.
+        block_types (list[str | MinecraftBlockDescriptor]): The blocks required nearby.
         count (int): How many of these blocks are required.
         radius (float): The search radius in blocks, from 0 to 16.
     """
 
-    block_types: list[BlockReference] = json_field(validators=[_blocks])
-    count: int = json_field(validators=[_integer, in_range(minimum=0)])
-    radius: float = json_field(validators=[_number, in_range(0, 16)])
+    block_types: list[str | MinecraftBlockDescriptor] = json_field()
+    count: Annotated[int, NonNegative] = json_field()
+    radius: Annotated[float, InRange(0, 16)] = json_field()
 
 
 class GeneticVariant(JsonObject):
@@ -284,26 +252,24 @@ class GeneticVariant(JsonObject):
 
     Args:
         birth_event (EventTrigger | str): Event to run when the mob is born with matching alleles.
-        both_allele (int | NumberRange, optional): Matches when both the main and hidden allele match.
-        either_allele (int | NumberRange, optional): Matches when the main or the hidden allele matches.
-        hidden_allele (int | NumberRange, optional): Matches the hidden allele.
-        main_allele (int | NumberRange, optional): Matches the main allele.
+        both_allele (int | tuple[float, float], optional): Matches when both the main and hidden allele match.
+        either_allele (int | tuple[float, float], optional): Matches when the main or the hidden allele matches.
+        hidden_allele (int | tuple[float, float], optional): Matches the hidden allele.
+        main_allele (int | tuple[float, float], optional): Matches the main allele.
     """
 
-    birth_event: EventTrigger | str = json_field(
-        validators=[_event], encoder=encoders.trigger
+    birth_event: Annotated[EventTrigger | str, Trigger] = json_field()
+    both_allele: Annotated[int | tuple[int, int], RangeMinMax] | None = json_field(
+        default=None
     )
-    both_allele: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.range_min_max
+    either_allele: Annotated[int | tuple[int, int], RangeMinMax] | None = json_field(
+        default=None
     )
-    either_allele: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.range_min_max
+    hidden_allele: Annotated[int | tuple[int, int], RangeMinMax] | None = json_field(
+        default=None
     )
-    hidden_allele: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.range_min_max
-    )
-    main_allele: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.range_min_max
+    main_allele: Annotated[int | tuple[int, int], RangeMinMax] | None = json_field(
+        default=None
     )
 
     def __validate__(self) -> None:
@@ -324,34 +290,28 @@ class Gene(JsonObject):
 
     Args:
         name (str): The name of the gene.
-        allele_range (int | NumberRange): The allele values of this gene, a number or a `(min, max)` range.
+        allele_range (int | tuple[float, float]): The allele values of this gene, a number or a `(min, max)` range.
         genetic_variants (list[GeneticVariant], optional): Allele combinations and the events they run. Add more with `add_genetic_variant`.
         mutation_rate (float, optional): Overrides the component's mutation rate for this gene, from 0 to 1. Game default -1 (not overridden).
         use_simplified_breeding (bool, optional): Babies inherit main alleles from the parents' main alleles and hidden alleles from the hidden ones.
     """
 
-    name: str = json_field(validators=[_string])
-    allele_range: int | NumberRange = json_field(
-        validators=[integer_or_range], encoder=encoders.range_min_max
-    )
+    name: str = json_field()
+    allele_range: Annotated[int | tuple[int, int], RangeMinMax] = json_field()
     genetic_variants: list[GeneticVariant] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(GeneticVariant))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    mutation_rate: float | None = json_field(default=None, validators=[_chance])
-    use_simplified_breeding: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    mutation_rate: Annotated[float, Chance] | None = json_field(default=None)
+    use_simplified_breeding: bool | None = json_field(default=None)
 
     def add_genetic_variant(
         self,
         *,
         birth_event: EventTrigger | str,
-        both_allele: int | NumberRange | None = None,
-        either_allele: int | NumberRange | None = None,
-        hidden_allele: int | NumberRange | None = None,
-        main_allele: int | NumberRange | None = None,
+        both_allele: int | tuple[float, float] | None = None,
+        either_allele: int | tuple[float, float] | None = None,
+        hidden_allele: int | tuple[float, float] | None = None,
+        main_allele: int | tuple[float, float] | None = None,
     ) -> "Gene":
         """Adds a genetic variant. See `GeneticVariant` for the parameters."""
         self.genetic_variants.append(
@@ -376,14 +336,12 @@ class InteractParticle(JsonObject):
         particle_y_offset (float, optional): Offsets the particle in the y direction. Game default 0.
     """
 
-    particle_type: str = json_field(validators=[_string])
+    particle_type: str = json_field()
     copper_event: Literal["none", "scrape", "wax_off", "wax_on"] | None = json_field(
-        default=None, validators=[one_of("none", "scrape", "wax_off", "wax_on")]
+        default=None
     )
-    particle_offset_towards_interactor: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    particle_y_offset: float | None = json_field(default=None, validators=[_number])
+    particle_offset_towards_interactor: bool | None = json_field(default=None)
+    particle_y_offset: float | None = json_field(default=None)
 
 
 class InteractSpawnItems(JsonObject):
@@ -394,8 +352,8 @@ class InteractSpawnItems(JsonObject):
         y_offset (float, optional): Offsets the spawn position in the y direction. Game default 1.
     """
 
-    table: LootTable | str = json_field(validators=[instance_of(LootTable, str)])
-    y_offset: float | None = json_field(default=None, validators=[_number])
+    table: LootTable | str = json_field()
+    y_offset: float | None = json_field(default=None)
 
 
 class RepairEntityItem(JsonObject):
@@ -406,10 +364,8 @@ class RepairEntityItem(JsonObject):
         amount (int, optional): Durability restored, more than 0. Game default 1.
     """
 
-    slot: Slots | str = json_field(validators=[_string])
-    amount: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
+    slot: Slots | str = json_field()
+    amount: Annotated[int, AtLeastOne] | None = json_field(default=None)
 
 
 class Interaction(JsonObject):
@@ -441,49 +397,37 @@ class Interaction(JsonObject):
         vibration (Vibrations, optional): The vibration emitted. Game default entity_interact.
     """
 
-    add_items: LootTable | str | None = json_field(
-        default=None,
-        validators=[instance_of(LootTable, str)],
-        encoder=encoders.loot_table,
+    add_items: Annotated[LootTable | str, Wrapped("table")] | None = json_field(
+        default=None
     )
-    admire: bool | None = json_field(default=None, validators=[_boolean])
-    barter: bool | None = json_field(default=None, validators=[_boolean])
-    cooldown: float | None = json_field(default=None, validators=[_positive])
-    cooldown_after_being_attacked: float | None = json_field(
-        default=None, validators=[_positive]
+    admire: bool | None = json_field(default=None)
+    barter: bool | None = json_field(default=None)
+    cooldown: Annotated[float, NonNegative] | None = json_field(default=None)
+    cooldown_after_being_attacked: Annotated[float, NonNegative] | None = json_field(
+        default=None
     )
-    drop_item_slot: Slots | str | None = json_field(default=None, validators=[_string])
-    drop_item_y_offset: float | None = json_field(default=None, validators=[_number])
-    equip_item_slot: Slots | str | None = json_field(default=None, validators=[_string])
-    give_item: bool | None = json_field(default=None, validators=[_boolean])
-    health_amount: int | None = json_field(default=None, validators=[_integer])
-    hurt_item: int | None = json_field(default=None, validators=[_integer])
-    interact_text: str | None = json_field(default=None, validators=[_string])
-    on_interact: EventTrigger | None = json_field(
-        default=None, validators=[instance_of(EventTrigger)]
-    )
-    particle_on_start: InteractParticle | None = json_field(
-        default=None, validators=[instance_of(InteractParticle)]
-    )
-    play_sounds: list[str] | None = json_field(default=None, validators=[each(_string)])
-    repair_entity_item: RepairEntityItem | None = json_field(
-        default=None, validators=[instance_of(RepairEntityItem)]
-    )
+    drop_item_slot: Slots | str | None = json_field(default=None)
+    drop_item_y_offset: float | None = json_field(default=None)
+    equip_item_slot: Slots | str | None = json_field(default=None)
+    give_item: bool | None = json_field(default=None)
+    health_amount: int | None = json_field(default=None)
+    hurt_item: int | None = json_field(default=None)
+    interact_text: str | None = json_field(default=None)
+    on_interact: EventTrigger | None = json_field(default=None)
+    particle_on_start: InteractParticle | None = json_field(default=None)
+    play_sounds: list[str] | None = json_field(default=None)
+    repair_entity_item: RepairEntityItem | None = json_field(default=None)
     spawn_entities: list[MinecraftEntityDescriptor | str] | None = json_field(
-        default=None, validators=[each(_entity)]
+        default=None
     )
-    spawn_items: LootTable | str | InteractSpawnItems | None = json_field(
-        default=None,
-        validators=[instance_of(LootTable, str, InteractSpawnItems)],
-        encoder=encoders.loot_table,
-    )
-    swing: bool | None = json_field(default=None, validators=[_boolean])
-    take_item: bool | None = json_field(default=None, validators=[_boolean])
-    transform_to_item: str | None = json_field(default=None, validators=[_string])
-    use_item: bool | None = json_field(default=None, validators=[_boolean])
-    vibration: Vibrations | None = json_field(
-        default=None, validators=[one_of(*Vibrations)]
-    )
+    spawn_items: (
+        Annotated[LootTable | str, Wrapped("table")] | InteractSpawnItems | None
+    ) = json_field(default=None)
+    swing: bool | None = json_field(default=None)
+    take_item: bool | None = json_field(default=None)
+    transform_to_item: str | None = json_field(default=None)
+    use_item: bool | None = json_field(default=None)
+    vibration: Vibrations | None = json_field(default=None)
 
     def __post_init__(self) -> None:
         if self.interact_text is not None:
@@ -501,20 +445,20 @@ class MutationFactor(JsonObject):
         variant (float, optional): Chance of a mutation of the variant.
     """
 
-    color: float | None = json_field(default=None, validators=[_chance])
-    extra_variant: float | None = json_field(default=None, validators=[_chance])
-    variant: float | None = json_field(default=None, validators=[_chance])
+    color: Annotated[float, Chance] | None = json_field(default=None)
+    extra_variant: Annotated[float, Chance] | None = json_field(default=None)
+    variant: Annotated[float, Chance] | None = json_field(default=None)
 
 
 class ShareableItem(JsonObject):
     """An item `minecraft:shareables` wants to share or pick up.
 
     Args:
-        item (ItemReference): The item, or an item tag.
+        item (str | MinecraftItemDescriptor): The item, or an item tag.
         admire (bool, optional): The mob admires the item after picking it up. Game default false.
         barter (bool, optional): The mob barters for the item after picking it up. Game default false.
         consume_item (bool, optional): The mob consumes the item. Game default false.
-        craft_into (ItemReference, optional): The item the mob crafts with this item.
+        craft_into (str | MinecraftItemDescriptor, optional): The item the mob crafts with this item.
         max_amount (int, optional): Maximum number of this item the mob holds. Game default -1.
         pickup_limit (int, optional): Maximum number of this item picked up per goal tick. Game default -1.
         pickup_only (bool, optional): The mob only picks the item up and never drops it. Game default false.
@@ -524,18 +468,18 @@ class ShareableItem(JsonObject):
         want_amount (int, optional): Number of this item the mob wants. Game default -1.
     """
 
-    item: ItemReference = json_field(validators=[_item])
-    admire: bool | None = json_field(default=None, validators=[_boolean])
-    barter: bool | None = json_field(default=None, validators=[_boolean])
-    consume_item: bool | None = json_field(default=None, validators=[_boolean])
-    craft_into: ItemReference | None = json_field(default=None, validators=[_item])
-    max_amount: int | None = json_field(default=None, validators=[_integer])
-    pickup_limit: int | None = json_field(default=None, validators=[_integer])
-    pickup_only: bool | None = json_field(default=None, validators=[_boolean])
-    priority: int | None = json_field(default=None, validators=[_integer])
-    stored_in_inventory: bool | None = json_field(default=None, validators=[_boolean])
-    surplus_amount: int | None = json_field(default=None, validators=[_integer])
-    want_amount: int | None = json_field(default=None, validators=[_integer])
+    item: str | MinecraftItemDescriptor = json_field()
+    admire: bool | None = json_field(default=None)
+    barter: bool | None = json_field(default=None)
+    consume_item: bool | None = json_field(default=None)
+    craft_into: str | MinecraftItemDescriptor | None = json_field(default=None)
+    max_amount: int | None = json_field(default=None)
+    pickup_limit: int | None = json_field(default=None)
+    pickup_only: bool | None = json_field(default=None)
+    priority: int | None = json_field(default=None)
+    stored_in_inventory: bool | None = json_field(default=None)
+    surplus_amount: int | None = json_field(default=None)
+    want_amount: int | None = json_field(default=None)
 
 
 # endregion
@@ -555,70 +499,62 @@ class EntityAdmireItem(JsonComponent):
 
     identifier = "minecraft:admire_item"
 
-    cooldown_after_being_attacked: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    duration: int | None = json_field(default=None, validators=[_integer])
+    cooldown_after_being_attacked: int | None = json_field(default=None)
+    duration: int | None = json_field(default=None)
 
 
 class EntityAgeable(JsonComponent):
     """Adds a timer for the entity to grow up. Feeding it `feed_items` speeds it up.
 
     Args:
-        drop_items (list[ItemReference], optional): Items dropped when the entity grows up.
+        drop_items (list[str | MinecraftItemDescriptor], optional): Items dropped when the entity grows up.
         duration (float, optional): Seconds before the entity grows up; -1 stays a baby forever. Game default 1200.
-        feed_items (list[ItemReference | AgeableFeedItem], optional): Items that age the entity up when fed. Add more with `add_feed_item`.
+        feed_items (list[str | MinecraftItemDescriptor | AgeableFeedItem], optional): Items that age the entity up when fed. Add more with `add_feed_item`.
         grow_up (EventTrigger | str, optional): Event to run when the entity grows up.
         interact_filters (Filter, optional): Conditions for the entity to be fed.
         pause_growth (EventTrigger | str, optional): Event to run when growth is paused by a `pause_growth_items` feed.
-        pause_growth_items (list[ItemReference], optional): Items that pause the growth of a baby.
+        pause_growth_items (list[str | MinecraftItemDescriptor], optional): Items that pause the growth of a baby.
         reset_growth (EventTrigger | str, optional): Event to run when growth is reset by a `reset_growth_items` feed.
-        reset_growth_items (list[ItemReference], optional): Items that reset the growth timer of a baby.
+        reset_growth_items (list[str | MinecraftItemDescriptor], optional): Items that reset the growth timer of a baby.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_ageable)
     """
 
     identifier = "minecraft:ageable"
 
-    drop_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
+    drop_items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    duration: float | None = json_field(default=None)
+    feed_items: list[str | MinecraftItemDescriptor | AgeableFeedItem] = json_field(
+        default_factory=list, omit_default=True
     )
-    duration: float | None = json_field(default=None, validators=[_number])
-    feed_items: list[ItemReference | AgeableFeedItem] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(str, MinecraftItemDescriptor, AgeableFeedItem))],
-        omit_default=True,
+    grow_up: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    interact_filters: Filter | None = json_field(default=None)
+    pause_growth: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    grow_up: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    pause_growth_items: list[str | MinecraftItemDescriptor] | None = json_field(
+        default=None
     )
-    interact_filters: Filter | None = json_field(default=None, validators=[_filter])
-    pause_growth: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    reset_growth: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    pause_growth_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
-    )
-    reset_growth: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    reset_growth_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items]
+    reset_growth_items: list[str | MinecraftItemDescriptor] | None = json_field(
+        default=None
     )
 
     def add_feed_item(
         self,
         *,
-        item: ItemReference,
+        item: str | MinecraftItemDescriptor,
         growth: float | None = None,
-        result_item: ItemReference | None = None,
+        result_item: str | MinecraftItemDescriptor | None = None,
     ) -> "EntityAgeable":
         """Adds an item that ages the entity up. Without options it is written as the item name.
 
         Args:
-            item (ItemReference): The item.
+            item (str | MinecraftItemDescriptor): The item.
             growth (float, optional): How much the entity ages when fed this item, from 0 to 1.
-            result_item (ItemReference, optional): The item the fed item becomes.
+            result_item (str | MinecraftItemDescriptor, optional): The item the fed item becomes.
         """
         if growth is None and result_item is None:
             self.feed_items.append(item)
@@ -640,7 +576,7 @@ class EntityArmorEquipmentSlotMapping(JsonComponent):
 
     identifier = "minecraft:entity_armor_equipment_slot_mapping"
 
-    armor_slot: Slots = json_field(validators=[one_of(Slots.Chest, Slots.Body)])
+    armor_slot: Literal[Slots.Chest, Slots.Body] = json_field()
 
 
 class EntityBarter(JsonComponent):
@@ -648,17 +584,17 @@ class EntityBarter(JsonComponent):
 
     Args:
         barter_table (LootTable | str): The loot table used to drop a random item, or its path.
-        cooldown_after_being_attacked (int | NumberRange, optional): Seconds the mob won't barter after being hurt, or a `(min, max)` range. Game default 10.
+        cooldown_after_being_attacked (int | tuple[float, float], optional): Seconds the mob won't barter after being hurt, or a `(min, max)` range. Game default 10.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_barter)
     """
 
     identifier = "minecraft:barter"
 
-    barter_table: LootTable | str = json_field(validators=[_string])
-    cooldown_after_being_attacked: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.range_min_max
-    )
+    barter_table: LootTable | str = json_field()
+    cooldown_after_being_attacked: (
+        Annotated[int | tuple[int, int], RangeMinMax] | None
+    ) = json_field(default=None)
 
     def __post_init__(self) -> None:
         if isinstance(self.barter_table, LootTable):
@@ -672,7 +608,7 @@ class EntityBreedable(JsonComponent):
         allow_sitting (bool, optional): The entity can breed while sitting. Game default false.
         blend_attributes (bool, optional): The parents' attributes are blended in the baby. Game default true.
         breed_cooldown (float, optional): Seconds before the entity can breed again. Game default 60.
-        breed_items (list[ItemReference | BreedItem], optional): Items that get the entity into the love state. Add more with `add_breed_item`.
+        breed_items (list[str | MinecraftItemDescriptor | BreedItem], optional): Items that get the entity into the love state. Add more with `add_breed_item`.
         breeds_with (list[BreedPartner], optional): The entities this entity can breed with. Add more with `add_breeds_with`.
         causes_pregnancy (bool, optional): The entity becomes pregnant instead of spawning a baby. Game default false.
         combine_parent_colors (bool, optional): Without a color mutation, the baby's color blends the parents' colors. Game default false.
@@ -690,47 +626,39 @@ class EntityBreedable(JsonComponent):
 
     identifier = "minecraft:breedable"
 
-    allow_sitting: bool | None = json_field(default=None, validators=[_boolean])
-    blend_attributes: bool | None = json_field(default=None, validators=[_boolean])
-    breed_cooldown: float | None = json_field(default=None, validators=[_positive])
-    breed_items: list[ItemReference | BreedItem] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(str, MinecraftItemDescriptor, BreedItem))],
-        omit_default=True,
+    allow_sitting: bool | None = json_field(default=None)
+    blend_attributes: bool | None = json_field(default=None)
+    breed_cooldown: Annotated[float, NonNegative] | None = json_field(default=None)
+    breed_items: list[str | MinecraftItemDescriptor | BreedItem] = json_field(
+        default_factory=list, omit_default=True
     )
-    breeds_with: list[BreedPartner] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(BreedPartner))],
-        encoder=encoders.breeds_with,
-        omit_default=True,
+    breeds_with: Annotated[list[BreedPartner], Keyed("mate_type")] = json_field(
+        default_factory=list, omit_default=True
     )
-    causes_pregnancy: bool | None = json_field(default=None, validators=[_boolean])
-    combine_parent_colors: bool | None = json_field(default=None, validators=[_boolean])
-    deny_parents_variant: DenyParentsVariant | None = json_field(
-        default=None, validators=[instance_of(DenyParentsVariant)]
-    )
+    causes_pregnancy: bool | None = json_field(default=None)
+    combine_parent_colors: bool | None = json_field(default=None)
+    deny_parents_variant: DenyParentsVariant | None = json_field(default=None)
     environment_requirements: list[EnvironmentRequirement] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(EnvironmentRequirement))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    extra_baby_chance: float | None = json_field(default=None, validators=[_chance])
-    inherit_tamed: bool | None = json_field(default=None, validators=[_boolean])
-    love_filters: Filter | None = json_field(default=None, validators=[_filter])
-    mutation_factor: MutationFactor | None = json_field(
-        default=None, validators=[instance_of(MutationFactor)]
-    )
-    require_full_health: bool | None = json_field(default=None, validators=[_boolean])
-    require_tame: bool | None = json_field(default=None, validators=[_boolean])
+    extra_baby_chance: Annotated[float, Chance] | None = json_field(default=None)
+    inherit_tamed: bool | None = json_field(default=None)
+    love_filters: Filter | None = json_field(default=None)
+    mutation_factor: MutationFactor | None = json_field(default=None)
+    require_full_health: bool | None = json_field(default=None)
+    require_tame: bool | None = json_field(default=None)
 
     def add_breed_item(
-        self, *, item: ItemReference, result_item: ItemReference | None = None
+        self,
+        *,
+        item: str | MinecraftItemDescriptor,
+        result_item: str | MinecraftItemDescriptor | None = None,
     ) -> "EntityBreedable":
         """Adds an item that gets the entity into the love state.
 
         Args:
-            item (ItemReference): The item.
-            result_item (ItemReference, optional): The item the used item becomes.
+            item (str | MinecraftItemDescriptor): The item.
+            result_item (str | MinecraftItemDescriptor, optional): The item the used item becomes.
         """
         if result_item is None:
             self.breed_items.append(item)
@@ -751,7 +679,11 @@ class EntityBreedable(JsonComponent):
         return self
 
     def add_environment_requirement(
-        self, *, block_types: list[BlockReference], count: int, radius: float
+        self,
+        *,
+        block_types: list[str | MinecraftBlockDescriptor],
+        count: int,
+        radius: float,
     ) -> "EntityBreedable":
         """Adds blocks required nearby. See `EnvironmentRequirement` for the parameters."""
         self.environment_requirements.append(
@@ -794,7 +726,7 @@ class EntityBribeable(JsonComponent):
     """Defines the way an entity can get into the 'bribed' state.
 
     Args:
-        bribe_items (list[ItemReference], optional): The items that can be used to bribe the entity. Add more with `add_bribe_items`.
+        bribe_items (list[str | MinecraftItemDescriptor], optional): The items that can be used to bribe the entity. Add more with `add_bribe_items`.
         bribe_cooldown (float, optional): Time in seconds before the Entity can be bribed again. Game default 2.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_bribeable)
@@ -802,12 +734,14 @@ class EntityBribeable(JsonComponent):
 
     identifier = "minecraft:bribeable"
 
-    bribe_items: list[ItemReference] = json_field(
-        default_factory=list, validators=[_items], omit_default=True
+    bribe_items: list[str | MinecraftItemDescriptor] = json_field(
+        default_factory=list, omit_default=True
     )
-    bribe_cooldown: float | None = json_field(default=None, validators=[_positive])
+    bribe_cooldown: Annotated[float, NonNegative] | None = json_field(default=None)
 
-    def add_bribe_items(self, *items: ItemReference) -> "EntityBribeable":
+    def add_bribe_items(
+        self, *items: str | MinecraftItemDescriptor
+    ) -> "EntityBribeable":
         """Adds items that bribe the entity."""
         self.bribe_items.extend(items)
         return self
@@ -833,20 +767,16 @@ class EntityDweller(JsonComponent):
 
     identifier = "minecraft:dweller"
 
-    can_find_poi: bool | None = json_field(default=None, validators=[_boolean])
-    can_migrate: bool | None = json_field(default=None, validators=[_boolean])
-    dweller_role: str | None = json_field(default=None, validators=[_string])
-    dwelling_bounds_tolerance: float | None = json_field(
-        default=None, validators=[_number]
-    )
-    dwelling_role: str | None = json_field(default=None, validators=[_string])
-    dwelling_type: str | None = json_field(default=None, validators=[_string])
-    first_founding_reward: int | None = json_field(default=None, validators=[_integer])
-    preferred_profession: str | None = json_field(default=None, validators=[_string])
-    update_interval_base: float | None = json_field(default=None, validators=[_number])
-    update_interval_variant: float | None = json_field(
-        default=None, validators=[_number]
-    )
+    can_find_poi: bool | None = json_field(default=None)
+    can_migrate: bool | None = json_field(default=None)
+    dweller_role: str | None = json_field(default=None)
+    dwelling_bounds_tolerance: float | None = json_field(default=None)
+    dwelling_role: str | None = json_field(default=None)
+    dwelling_type: str | None = json_field(default=None)
+    first_founding_reward: int | None = json_field(default=None)
+    preferred_profession: str | None = json_field(default=None)
+    update_interval_base: float | None = json_field(default=None)
+    update_interval_variant: float | None = json_field(default=None)
 
 
 class EntityEconomyTradeTable(JsonComponent):
@@ -871,28 +801,18 @@ class EntityEconomyTradeTable(JsonComponent):
 
     identifier = "minecraft:economy_trade_table"
 
-    table: TradeTable | str = json_field(validators=[_string])
-    convert_trades_economy: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    cured_discount: tuple[int, int] | None = json_field(
-        default=None, validators=[length(2, 2), each(_integer)]
-    )
-    display_name: str | None = json_field(default=None, validators=[_string])
-    hero_demand_discount: int | None = json_field(default=None, validators=[_integer])
-    max_cured_discount: tuple[int, int] | None = json_field(
-        default=None, validators=[length(2, 2), each(_integer)]
-    )
-    max_nearby_cured_discount: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    nearby_cured_discount: int | None = json_field(default=None, validators=[_integer])
-    new_screen: bool | None = json_field(default=None, validators=[_boolean])
-    persist_trades: bool | None = json_field(default=None, validators=[_boolean])
-    show_trade_screen: bool | None = json_field(default=None, validators=[_boolean])
-    use_legacy_price_formula: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
+    table: TradeTable | str = json_field()
+    convert_trades_economy: bool | None = json_field(default=None)
+    cured_discount: tuple[int, int] | None = json_field(default=None)
+    display_name: str | None = json_field(default=None)
+    hero_demand_discount: int | None = json_field(default=None)
+    max_cured_discount: tuple[int, int] | None = json_field(default=None)
+    max_nearby_cured_discount: int | None = json_field(default=None)
+    nearby_cured_discount: int | None = json_field(default=None)
+    new_screen: bool | None = json_field(default=None)
+    persist_trades: bool | None = json_field(default=None)
+    show_trade_screen: bool | None = json_field(default=None)
+    use_legacy_price_formula: bool | None = json_field(default=None)
 
     def __post_init__(self) -> None:
         if isinstance(self.table, TradeTable):
@@ -910,17 +830,17 @@ class EntityEquipItem(JsonComponent):
 
     Args:
         can_wear_armor (bool, optional): Whether the entity can pick up and wear armor from the ground. Game default false.
-        excluded_items (list[ItemReference], optional): Items the entity should not equip.
+        excluded_items (list[str | MinecraftItemDescriptor], optional): Items the entity should not equip.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_equip_item)
     """
 
     identifier = "minecraft:equip_item"
 
-    can_wear_armor: bool | None = json_field(default=None, validators=[_boolean])
-    excluded_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items], encoder=encoders.item_objects
-    )
+    can_wear_armor: bool | None = json_field(default=None)
+    excluded_items: (
+        list[Annotated[str | MinecraftItemDescriptor, ItemObject]] | None
+    ) = json_field(default=None)
 
 
 class EntityEquipment(JsonComponent):
@@ -935,11 +855,9 @@ class EntityEquipment(JsonComponent):
 
     identifier = "minecraft:equipment"
 
-    table: LootTable | str | None = json_field(default=None, validators=[_string])
+    table: LootTable | str | None = json_field(default=None)
     slot_drop_chance: list[SlotDropChance] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(SlotDropChance))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def __post_init__(self) -> None:
@@ -965,18 +883,16 @@ class EntityEquippable(JsonComponent):
 
     identifier = "minecraft:equippable"
 
-    slots: list[EquippableSlot] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(EquippableSlot)), unique("slot")],
-        omit_default=True,
+    slots: Annotated[list[EquippableSlot], Unique("slot")] = json_field(
+        default_factory=list, omit_default=True
     )
 
     def add_slot(
         self,
         *,
         slot: int,
-        item: ItemReference | None = None,
-        accepted_items: list[ItemReference] | None = None,
+        item: str | MinecraftItemDescriptor | None = None,
+        accepted_items: list[str | MinecraftItemDescriptor] | None = None,
         interact_text: str | None = None,
         on_equip: EventTrigger | str | None = None,
         on_unequip: EventTrigger | str | None = None,
@@ -1007,16 +923,14 @@ class EntityGenetics(JsonComponent):
 
     identifier = "minecraft:genetics"
 
-    genes: list[Gene] = json_field(
-        default_factory=list, validators=[each(instance_of(Gene))], omit_default=True
-    )
-    mutation_rate: float | None = json_field(default=None, validators=[_chance])
+    genes: list[Gene] = json_field(default_factory=list, omit_default=True)
+    mutation_rate: Annotated[float, Chance] | None = json_field(default=None)
 
     def add_gene(
         self,
         *,
         name: str,
-        allele_range: int | NumberRange,
+        allele_range: int | tuple[float, float],
         genetic_variants: list[GeneticVariant] | None = None,
         mutation_rate: float | None = None,
         use_simplified_breeding: bool | None = None,
@@ -1038,7 +952,7 @@ class EntityGiveable(JsonComponent):
     """Defines sets of items that can be used to trigger events when used on this entity. The item will also be taken and placed in the entity's inventory.
 
     Args:
-        items (list[ItemReference], optional): The items that can be given to the entity to place in their inventory. Add more with `add_items`.
+        items (list[str | MinecraftItemDescriptor], optional): The items that can be given to the entity to place in their inventory. Add more with `add_items`.
         on_give (EventTrigger | str, optional): Event to fire when the correct item is given.
         cooldown (float, optional): An optional cool down in seconds to prevent spamming interactions. Game default 0.
 
@@ -1047,15 +961,13 @@ class EntityGiveable(JsonComponent):
 
     identifier = "minecraft:giveable"
 
-    items: list[ItemReference] = json_field(
-        default_factory=list, validators=[_items], omit_default=True
+    items: list[str | MinecraftItemDescriptor] = json_field(
+        default_factory=list, omit_default=True
     )
-    on_give: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    cooldown: float | None = json_field(default=None, validators=[_positive])
+    on_give: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    cooldown: Annotated[float, NonNegative] | None = json_field(default=None)
 
-    def add_items(self, *items: ItemReference) -> "EntityGiveable":
+    def add_items(self, *items: str | MinecraftItemDescriptor) -> "EntityGiveable":
         """Adds items that can be given to the entity."""
         self.items.extend(items)
         return self
@@ -1073,10 +985,8 @@ class EntityGrowsCrop(JsonComponent):
 
     identifier = "minecraft:grows_crop"
 
-    chance: float | None = json_field(default=None, validators=[_chance])
-    charges: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
+    chance: Annotated[float, Chance] | None = json_field(default=None)
+    charges: Annotated[int, NonNegative] | None = json_field(default=None)
 
 
 class EntityHealable(JsonComponent):
@@ -1092,20 +1002,16 @@ class EntityHealable(JsonComponent):
 
     identifier = "minecraft:healable"
 
-    items: list[HealItem] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(HealItem))],
-        omit_default=True,
-    )
-    filters: Filter | None = json_field(default=None, validators=[_filter])
-    force_use: bool | None = json_field(default=None, validators=[_boolean])
+    items: list[HealItem] = json_field(default_factory=list, omit_default=True)
+    filters: Filter | None = json_field(default=None)
+    force_use: bool | None = json_field(default=None)
 
     def add_item(
         self,
         *,
-        item: ItemReference,
+        item: str | MinecraftItemDescriptor,
         heal_amount: int | None = None,
-        result_item: ItemReference | None = None,
+        result_item: str | MinecraftItemDescriptor | None = None,
         effects: list[HealEffect] | None = None,
     ) -> "EntityHealable":
         """Adds an item that heals the entity. See `HealItem` for the parameters."""
@@ -1132,9 +1038,7 @@ class EntityInteract(JsonComponent):
     identifier = "minecraft:interact"
 
     interactions: list[Interaction] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(Interaction))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
 
     def add_interaction(
@@ -1211,18 +1115,12 @@ class EntityInventory(JsonComponent):
 
     identifier = "minecraft:inventory"
 
-    additional_slots_per_strength: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    can_be_siphoned_from: bool | None = json_field(default=None, validators=[_boolean])
-    container_type: ContainerType | None = json_field(
-        default=None, validators=[one_of(*ContainerType)]
-    )
-    inventory_size: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=1)]
-    )
-    private: bool | None = json_field(default=None, validators=[_boolean])
-    restrict_to_owner: bool | None = json_field(default=None, validators=[_boolean])
+    additional_slots_per_strength: int | None = json_field(default=None)
+    can_be_siphoned_from: bool | None = json_field(default=None)
+    container_type: ContainerType | None = json_field(default=None)
+    inventory_size: Annotated[int, AtLeastOne] | None = json_field(default=None)
+    private: bool | None = json_field(default=None)
+    restrict_to_owner: bool | None = json_field(default=None)
 
 
 class EntityLoot(JsonComponent):
@@ -1236,7 +1134,7 @@ class EntityLoot(JsonComponent):
 
     identifier = "minecraft:loot"
 
-    table: LootTable | str = json_field(validators=[_string])
+    table: LootTable | str = json_field()
 
     def __post_init__(self) -> None:
         if isinstance(self.table, LootTable):
@@ -1260,10 +1158,9 @@ class EntityNPC(JsonComponent):
     """
 
     identifier = "minecraft:npc"
+    __required__ = ("npc_data",)
 
-    npc_data: NPCData | None = json_field(
-        default=None, validators=[instance_of(NPCData)]
-    )
+    npc_data: NPCData | None = json_field(default=None)
 
     def set_npc_data(
         self,
@@ -1301,18 +1198,12 @@ class EntityNameable(JsonComponent):
 
     identifier = "minecraft:nameable"
 
-    allow_name_tag_renaming: bool | None = json_field(
-        default=None, validators=[_boolean]
+    allow_name_tag_renaming: bool | None = json_field(default=None)
+    always_show: bool | None = json_field(default=None)
+    default_trigger: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    always_show: bool | None = json_field(default=None, validators=[_boolean])
-    default_trigger: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    name_actions: list[NameAction] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(NameAction))],
-        omit_default=True,
-    )
+    name_actions: list[NameAction] = json_field(default_factory=list, omit_default=True)
 
     def add_name_action(
         self,
@@ -1336,44 +1227,43 @@ class EntityOffspring(JsonComponent):
         offspring_pairs (list[tuple[MinecraftEntityDescriptor | str, MinecraftEntityDescriptor | str]], optional): `(mate, offspring)` pairs: the offspring this entity makes with each mate. Written as `{mate: offspring}`.
         parent_centric_attribute_blending (list[type[JsonComponent]], optional): Attribute components blended from the parents, such as `EntityHealth`.
         property_inheritance (list[str], optional): Entity properties inherited from the parents. A name without a namespace gets the project namespace.
-        random_extra_variant_mutation_interval (int | NumberRange, optional): Range of the random extra variant.
-        random_variant_mutation_interval (int | NumberRange, optional): Range of the random variant.
+        random_extra_variant_mutation_interval (int | tuple[float, float], optional): Range of the random extra variant.
+        random_variant_mutation_interval (int | tuple[float, float], optional): Range of the random variant.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_offspring)
     """
 
     identifier = "minecraft:offspring"
 
-    blend_attributes: bool | None = json_field(default=None, validators=[_boolean])
+    blend_attributes: bool | None = json_field(default=None)
     deny_parents_variant: list[DenyParentsVariant] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(DenyParentsVariant))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
-    inherit_tamed: bool | None = json_field(default=None, validators=[_boolean])
+    inherit_tamed: bool | None = json_field(default=None)
     mutation_factor: list[MutationFactor] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(MutationFactor))],
-        omit_default=True,
+        default_factory=list, omit_default=True
     )
     offspring_pairs: (
-        list[tuple[MinecraftEntityDescriptor | str, MinecraftEntityDescriptor | str]]
+        Annotated[
+            list[
+                tuple[MinecraftEntityDescriptor | str, MinecraftEntityDescriptor | str]
+            ],
+            AsObject,
+        ]
         | None
-    ) = json_field(
-        default=None, validators=[each(_entity_pair)], encoder=encoders.pairs
-    )
+    ) = json_field(default=None)
     parent_centric_attribute_blending: list[type[JsonComponent]] | None = json_field(
-        default=None, validators=[each(_component_class)]
+        default=None
     )
-    property_inheritance: list[str] | None = json_field(
-        default=None, validators=[each(_string)], encoder=encoders.property_names
+    property_inheritance: list[Annotated[str, PropertyName]] | None = json_field(
+        default=None
     )
-    random_extra_variant_mutation_interval: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.range_min_max
-    )
-    random_variant_mutation_interval: int | NumberRange | None = json_field(
-        default=None, validators=[integer_or_range], encoder=encoders.range_min_max
-    )
+    random_extra_variant_mutation_interval: (
+        Annotated[int | tuple[int, int], RangeMinMax] | None
+    ) = json_field(default=None)
+    random_variant_mutation_interval: (
+        Annotated[int | tuple[int, int], RangeMinMax] | None
+    ) = json_field(default=None)
 
     def add_deny_parents_variant(
         self, *, chance: float, min_variant: int, max_variant: int
@@ -1416,27 +1306,21 @@ class EntityShareables(JsonComponent):
 
     identifier = "minecraft:shareables"
 
-    all_items: bool | None = json_field(default=None, validators=[_boolean])
-    all_items_max_amount: int | None = json_field(default=None, validators=[_integer])
-    all_items_surplus_amount: int | None = json_field(
-        default=None, validators=[_integer]
-    )
-    all_items_want_amount: int | None = json_field(default=None, validators=[_integer])
-    items: list[ShareableItem] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(ShareableItem))],
-        omit_default=True,
-    )
-    singular_pickup: bool | None = json_field(default=None, validators=[_boolean])
+    all_items: bool | None = json_field(default=None)
+    all_items_max_amount: int | None = json_field(default=None)
+    all_items_surplus_amount: int | None = json_field(default=None)
+    all_items_want_amount: int | None = json_field(default=None)
+    items: list[ShareableItem] = json_field(default_factory=list, omit_default=True)
+    singular_pickup: bool | None = json_field(default=None)
 
     def add_item(
         self,
         *,
-        item: ItemReference,
+        item: str | MinecraftItemDescriptor,
         admire: bool | None = None,
         barter: bool | None = None,
         consume_item: bool | None = None,
-        craft_into: ItemReference | None = None,
+        craft_into: str | MinecraftItemDescriptor | None = None,
         max_amount: int | None = None,
         pickup_limit: int | None = None,
         pickup_only: bool | None = None,
@@ -1478,7 +1362,7 @@ class EntityTameable(JsonComponent):
     """Defines the rules for an entity to be tamed.
 
     Args:
-        tame_items (list[ItemReference | TameItem], optional): Items that tame the entity. A `TameItem` also names the item it becomes. Add more with `add_tame_items`.
+        tame_items (list[str | MinecraftItemDescriptor | TameItem], optional): Items that tame the entity. A `TameItem` also names the item it becomes. Add more with `add_tame_items`.
         tame_event (EventTrigger | str, optional): Event to run when the entity is tamed.
         probability (float, optional): The chance of taming with each item use, from 0 to 1. Game default 1.
 
@@ -1487,17 +1371,15 @@ class EntityTameable(JsonComponent):
 
     identifier = "minecraft:tameable"
 
-    tame_items: list[ItemReference | TameItem] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(str, MinecraftItemDescriptor, TameItem))],
-        omit_default=True,
+    tame_items: list[str | MinecraftItemDescriptor | TameItem] = json_field(
+        default_factory=list, omit_default=True
     )
-    tame_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
-    probability: float | None = json_field(default=None, validators=[_chance])
+    tame_event: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
+    probability: Annotated[float, Chance] | None = json_field(default=None)
 
-    def add_tame_items(self, *items: ItemReference | TameItem) -> "EntityTameable":
+    def add_tame_items(
+        self, *items: str | MinecraftItemDescriptor | TameItem
+    ) -> "EntityTameable":
         """Adds items that tame the entity."""
         self.tame_items.extend(items)
         return self
@@ -1508,7 +1390,7 @@ class EntityTamemount(JsonComponent):
 
     Args:
         attempt_temper_mod (int, optional): Temper gained when mounted. Game default 5.
-        auto_reject_items (list[ItemReference], optional): Items that anger the entity when carried while interacting.
+        auto_reject_items (list[str | MinecraftItemDescriptor], optional): Items that anger the entity when carried while interacting.
         feed_items (list[FeedItem], optional): Items that raise the entity's temper. Add more with `add_feed_item`.
         feed_text (str, optional): Text of the feeding interact button.
         max_temper (int, optional): Maximum random starting temper. Game default 100.
@@ -1521,26 +1403,16 @@ class EntityTamemount(JsonComponent):
 
     identifier = "minecraft:tamemount"
 
-    attempt_temper_mod: int | None = json_field(default=None, validators=[_integer])
-    auto_reject_items: list[ItemReference] | None = json_field(
-        default=None, validators=[_items], encoder=encoders.item_objects
-    )
-    feed_items: list[FeedItem] = json_field(
-        default_factory=list,
-        validators=[each(instance_of(FeedItem))],
-        omit_default=True,
-    )
-    feed_text: str | None = json_field(default=None, validators=[_string])
-    max_temper: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    min_temper: int | None = json_field(
-        default=None, validators=[_integer, in_range(minimum=0)]
-    )
-    ride_text: str | None = json_field(default=None, validators=[_string])
-    tame_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
-    )
+    attempt_temper_mod: int | None = json_field(default=None)
+    auto_reject_items: (
+        list[Annotated[str | MinecraftItemDescriptor, ItemObject]] | None
+    ) = json_field(default=None)
+    feed_items: list[FeedItem] = json_field(default_factory=list, omit_default=True)
+    feed_text: str | None = json_field(default=None)
+    max_temper: Annotated[int, NonNegative] | None = json_field(default=None)
+    min_temper: Annotated[int, NonNegative] | None = json_field(default=None)
+    ride_text: str | None = json_field(default=None)
+    tame_event: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
 
     def __post_init__(self) -> None:
         if self.ride_text is not None:
@@ -1550,7 +1422,7 @@ class EntityTamemount(JsonComponent):
             )
 
     def add_feed_item(
-        self, *, item: ItemReference, temper_mod: int | None = None
+        self, *, item: str | MinecraftItemDescriptor, temper_mod: int | None = None
     ) -> "EntityTamemount":
         """Adds an item that raises the temper. See `FeedItem`."""
         self.feed_items.append(FeedItem(item=item, temper_mod=temper_mod))
@@ -1578,13 +1450,11 @@ class EntityTradeTable(JsonComponent):
 
     identifier = "minecraft:trade_table"
 
-    table: TradeTable | str = json_field(validators=[_string])
-    convert_trades_economy: bool | None = json_field(
-        default=None, validators=[_boolean]
-    )
-    display_name: str | None = json_field(default=None, validators=[_string])
-    new_screen: bool | None = json_field(default=None, validators=[_boolean])
-    persist_trades: bool | None = json_field(default=None, validators=[_boolean])
+    table: TradeTable | str = json_field()
+    convert_trades_economy: bool | None = json_field(default=None)
+    display_name: str | None = json_field(default=None)
+    new_screen: bool | None = json_field(default=None)
+    persist_trades: bool | None = json_field(default=None)
 
     def __post_init__(self) -> None:
         if isinstance(self.table, TradeTable):
@@ -1607,7 +1477,7 @@ class EntityTrusting(JsonComponent):
     """Defines the rules for a mob to trust players.
 
     Args:
-        trust_items (list[ItemReference], optional): The items that can be used to get the entity to trust players. Add more with `add_trust_items`.
+        trust_items (list[str | MinecraftItemDescriptor], optional): The items that can be used to get the entity to trust players. Add more with `add_trust_items`.
         trust_event (EventTrigger | str, optional): Event to run when this entity becomes trusting.
         probability (float, optional): The chance of the entity trusting with each item use between 0.0 and 1.0, where 1.0 is 100%. Game default 1.
 
@@ -1616,15 +1486,17 @@ class EntityTrusting(JsonComponent):
 
     identifier = "minecraft:trusting"
 
-    trust_items: list[ItemReference] = json_field(
-        default_factory=list, validators=[_items], omit_default=True
+    trust_items: list[str | MinecraftItemDescriptor] = json_field(
+        default_factory=list, omit_default=True
     )
-    trust_event: EventTrigger | str | None = json_field(
-        default=None, validators=[_event], encoder=encoders.trigger
+    trust_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
+        default=None
     )
-    probability: float | None = json_field(default=None, validators=[_chance])
+    probability: Annotated[float, Chance] | None = json_field(default=None)
 
-    def add_trust_items(self, *items: ItemReference) -> "EntityTrusting":
+    def add_trust_items(
+        self, *items: str | MinecraftItemDescriptor
+    ) -> "EntityTrusting":
         """Adds items that get the entity to trust players."""
         self.trust_items.extend(items)
         return self

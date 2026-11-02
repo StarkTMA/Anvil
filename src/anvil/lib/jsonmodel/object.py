@@ -6,7 +6,9 @@ A `JsonObject` subclass is declared with fields only. The base class:
 - turns every subclass into `@dataclass(kw_only=True, slots=True, eq=False)`;
 - refuses a subclass that defines `__init__` (use `__post_init__` for side effects);
 - lets only the object's own methods change its fields;
-- builds the JSON from the fields in `__json__()`, validating them first.
+- builds the JSON from the fields in `__json__()`, checking them against their annotations
+  first;
+- describes that JSON in `__schema__()`.
 
 A class declared with `abstract=True` is a shared base that cannot be instantiated.
 """
@@ -17,27 +19,12 @@ import dataclasses
 import sys
 from typing import Any, ClassVar, Self, dataclass_transform
 
-from anvil.api.core.types import JsonPayload
+from anvil.api.core.types import JsonPayload, JsonSchema
 
-from .fields import default_of, json_field
+from .fields import json_field
+from .walker import DRAFT_2020_12, FieldSpec, compile_fields
 
-
-def _encode(value: Any) -> Any:
-    """Turns nested objects, lists and dicts into their JSON form."""
-    if isinstance(value, JsonObject):
-        return value.__json__()
-    if isinstance(value, (list, tuple)):
-        return [_encode(item) for item in value]
-    if isinstance(value, dict):
-        return type(value)((key, _encode(item)) for key, item in value.items())
-    return value
-
-
-def _encode_field(field: dataclasses.Field, value: Any) -> Any:
-    """The JSON form of a field's value, through the field's encoder when it has one."""
-    if value is not None and field.metadata.get("encoder") is not None:
-        value = field.metadata["encoder"](value)
-    return _encode(value)
+_FIELDS: dict[type, tuple[FieldSpec, ...]] = {}
 
 
 @dataclass_transform(
@@ -66,6 +53,9 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
     """
 
     _abstract: ClassVar[bool]
+    __required__: ClassVar[tuple[str, ...]] = ()
+    """JSON keys the schema marks required although their field is optional, because
+    `__validate__` requires them."""
 
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         if cls._abstract:
@@ -83,7 +73,7 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
         """
 
     def __validate__(self) -> None:
-        """Cross-field checks, run on export after the field validators."""
+        """Cross-field checks, run on export after the fields are checked."""
 
     def __setattr__(self, name: str, value: Any) -> None:
         caller = sys._getframe(1)
@@ -99,29 +89,67 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
     def __delattr__(self, name: str) -> None:
         raise AttributeError(f"{type(self).__name__}.{name} is read-only.")
 
-    def __json__(self) -> JsonPayload:
-        """The JSON payload of this object, built from its fields after validating them."""
-        cls = type(self)
-        fields = dataclasses.fields(self)
+    @classmethod
+    def __json_fields__(cls) -> tuple[FieldSpec, ...]:
+        """The compiled fields of this class, compiled on first use."""
+        specs = _FIELDS.get(cls)
+        if specs is None:
+            specs = _FIELDS[cls] = compile_fields(cls)
+        return specs
 
-        for field in fields:
-            value = getattr(self, field.name)
-            if value is not None:
-                for validator in field.metadata.get("validators", ()):
-                    validator(f"{cls.__name__}.{field.name}", value)
+    def __json__(self) -> JsonPayload:
+        """The JSON payload of this object, built from its fields after checking them."""
+        cls = type(self)
+        specs = cls.__json_fields__()
+
+        for spec in specs:
+            value = getattr(self, spec.name)
+            if value is not None and not spec.internal:
+                spec.node.check(f"{cls.__name__}.{spec.name}", value)
         self.__validate__()
 
         payload: JsonPayload = {}
-        for field in fields:
-            value = getattr(self, field.name)
-            if value is None or field.metadata.get("exclude"):
+        for spec in specs:
+            value = getattr(self, spec.name)
+            if value is None or spec.exclude:
                 continue
-            if field.metadata.get("omit_default") and value == default_of(field):
+            if spec.omit_default and value == spec.default():
                 continue
-            payload[field.metadata.get("key") or field.name] = _encode_field(
-                field, value
-            )
+            payload[spec.key] = spec.node.encode(value)
         return payload
+
+    @classmethod
+    def __schema__(cls) -> JsonSchema:
+        """The JSON Schema (draft 2020-12) of this object's JSON, its parts under `$defs`."""
+        definitions: dict[str, JsonSchema] = {}
+        body = cls.__schema_body__(definitions)
+        schema = {"$schema": DRAFT_2020_12, **body}
+        if definitions:
+            schema["$defs"] = definitions
+        return schema
+
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+        """The schema of this object's JSON, adding the parts it uses to `definitions`.
+
+        Args:
+            definitions (dict[str, JsonSchema]): The `$defs` of the schema being built.
+        """
+        properties: JsonSchema = {}
+        required: list[str] = []
+        for spec in cls.__json_fields__():
+            if spec.exclude:
+                continue
+            properties[spec.key] = spec.node.describe(definitions)
+            if (
+                spec.required and not spec.omit_default
+            ) or spec.key in cls.__required__:
+                required.append(spec.key)
+        schema: JsonSchema = {"type": "object", "properties": properties}
+        if required:
+            schema["required"] = required
+        schema["additionalProperties"] = False
+        return schema
 
 
 def only_value(obj: JsonObject, payload: JsonPayload) -> Any:
@@ -141,3 +169,20 @@ class JsonValue(JsonObject, abstract=True):
 
     def __json__(self) -> Any:
         return only_value(self, JsonObject.__json__(self))
+
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+        return only_schema(cls, definitions)
+
+
+def only_schema(
+    cls: type[JsonObject], definitions: dict[str, JsonSchema]
+) -> JsonSchema:
+    """The schema of the only field a class writes."""
+    specs = [spec for spec in cls.__json_fields__() if not spec.exclude]
+    if len(specs) != 1:
+        raise TypeError(
+            f"{cls.__name__} is written as the value of one field, but has "
+            f"{', '.join(spec.key for spec in specs)}."
+        )
+    return specs[0].node.describe(definitions)

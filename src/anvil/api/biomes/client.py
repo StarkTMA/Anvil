@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from anvil.api.biomes.components import (
     BiomeClientAmbientSounds,
@@ -23,16 +23,15 @@ from anvil.api.core.enums import MusicCategory, SoundCategory
 from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
 from anvil.api.core.types import Color, FoliageColorMap, GrassColorMap
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import encoders, validate_components
+from anvil.lib.jsonmodel import validate_components
 from anvil.lib.schemas import AddonObject, JsonSchemes
 
-if TYPE_CHECKING:
-    from anvil.api.pbr.atmosphere import AtmosphericSettings
-    from anvil.api.pbr.color_grading import ColorGradingSettings
-    from anvil.api.pbr.cubemap import CubeMapSettings
-    from anvil.api.pbr.fog import FogSettings
-    from anvil.api.pbr.lighting import LightingSettings
-    from anvil.api.pbr.water import WaterSettings
+from anvil.api.pbr.atmosphere import AtmosphericSettings
+from anvil.api.pbr.color_grading import ColorGradingSettings
+from anvil.api.pbr.cubemap import CubeMapSettings
+from anvil.api.pbr.fog import FogSettings
+from anvil.api.pbr.lighting import LightingSettings
+from anvil.api.pbr.water import WaterSettings
 
 __all__ = ["BiomeClient"]
 
@@ -315,7 +314,7 @@ class BiomeClient(AddonObject):
                 )
         validate_components(self, self._components, [])
         self._content["minecraft:client_biome"].update(self._description.__export__())
-        self._content["minecraft:client_biome"]["components"] = encoders.contents(
-            self._components
-        )
+        self._content["minecraft:client_biome"][
+            "components"
+        ] = self._components.__payload__()
         return super().queue()

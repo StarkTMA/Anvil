@@ -19,7 +19,7 @@ from anvil.api.core.components import ComponentGroup
 from anvil.api.core.enums import DamageSensor
 from anvil.api.logic.molang import Molang, Variable
 from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
-from anvil.lib.jsonmodel import encoders, validate_components
+from anvil.lib.jsonmodel import validate_components
 from anvil.lib.schemas import (
     AddonObject,
     JsonSchemes,
@@ -468,15 +468,16 @@ class EntityServer(AddonObject):
 
         self._server_entity["minecraft:entity"].update(self.description.__export__())
         self._server_entity["minecraft:entity"]["components"].update(
-            encoders.contents(self._components)
+            self._components.__payload__()
         )
 
         for event in self._events.values():
             self._server_entity["minecraft:entity"]["events"].update(event.__export__())
 
-        self._server_entity["minecraft:entity"]["component_groups"].update(
-            encoders.merged(self._component_groups)
-        )
+        for group in self._component_groups:
+            self._server_entity["minecraft:entity"]["component_groups"].update(
+                group.__json__()
+            )
 
         self.content(self._server_entity)
 
