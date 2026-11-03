@@ -1,9 +1,9 @@
 from enum import StrEnum
 
-from anvil import CONFIG
-
 
 class MinecraftBiomeTypes(StrEnum):
+    """Vanilla biome identifiers."""
+
     BambooJungle = "minecraft:bamboo_jungle"
     BambooJungleHills = "minecraft:bamboo_jungle_hills"
     BasaltDeltas = "minecraft:basalt_deltas"
@@ -83,8 +83,8 @@ class MinecraftBiomeTypes(StrEnum):
     SoulsandValley = "minecraft:soulsand_valley"
     StoneBeach = "minecraft:stone_beach"
     StonyPeaks = "minecraft:stony_peaks"
-    SunflowerPlains = "minecraft:sunflower_plains"
     SulfurCaves = "minecraft:sulfur_caves"
+    SunflowerPlains = "minecraft:sunflower_plains"
     Swampland = "minecraft:swampland"
     SwamplandMutated = "minecraft:swampland_mutated"
     Taiga = "minecraft:taiga"
@@ -96,6 +96,8 @@ class MinecraftBiomeTypes(StrEnum):
 
 
 class MinecraftBiomeTags(StrEnum):
+    """Vanilla biome tags."""
+
     Animal = "animal"
     BasaltDeltas = "basalt_deltas"
     Beach = "beach"

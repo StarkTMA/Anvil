@@ -2,6 +2,8 @@ from enum import StrEnum
 
 
 class MinecraftStructureTypes(StrEnum):
+    """Vanilla structure identifiers."""
+
     AbandonedCampBambooJungle = "minecraft:abandoned_camp_bamboo_jungle"
     AbandonedCampBirchForest = "minecraft:abandoned_camp_birch_forest"
     AbandonedCampCherryGrove = "minecraft:abandoned_camp_cherry_grove"
@@ -29,6 +31,3 @@ class MinecraftStructureTypes(StrEnum):
     TrailRuins = "minecraft:trail_ruins"
     TrialChambers = "minecraft:trial_chambers"
     Village = "minecraft:village"
-
-
-MinecraftFeatureTypes = MinecraftStructureTypes

@@ -1,13 +1,11 @@
 import re
-from typing import Any, Mapping
+from typing import Any
 
 from anvil.lib.schemas import MinecraftBlockDescriptor
 
-_PARAM_KEY_MAP: dict[str, str] = {
-    "minecraft_vertical_half": "minecraft:vertical_half",
-    "minecraft_cardinal_direction": "minecraft:cardinal_direction",
-    "cardinal_direction": "minecraft:cardinal_direction",
+_STATE_KEYS: dict[str, str] = {
     "minecraft_block_face": "minecraft:block_face",
+    "minecraft_cardinal_direction": "minecraft:cardinal_direction",
     "minecraft_connection_down": "minecraft:connection_down",
     "minecraft_connection_east": "minecraft:connection_east",
     "minecraft_connection_north": "minecraft:connection_north",
@@ -15,30 +13,11 @@ _PARAM_KEY_MAP: dict[str, str] = {
     "minecraft_connection_up": "minecraft:connection_up",
     "minecraft_connection_west": "minecraft:connection_west",
     "minecraft_corner": "minecraft:corner",
-    "corner": "minecraft:corner",
+    "minecraft_facing_direction": "minecraft:facing_direction",
     "minecraft_multi_block_part": "minecraft:multi_block_part",
     "minecraft_sixteen_way_rotation": "minecraft:sixteen_way_rotation",
-    "sixteen_way_rotation": "minecraft:sixteen_way_rotation",
+    "minecraft_vertical_half": "minecraft:vertical_half",
 }
-
-
-def _create_block(
-    identifier: str, states: Mapping[str, Any] | None = None
-) -> MinecraftBlockDescriptor:
-    if not states:
-        return MinecraftBlockDescriptor(identifier, True)
-
-    clean_states = {}
-    for k, v in states.items():
-        if v is not None:
-            if identifier == "minecraft:observer" and k == "facing_direction":
-                clean_states["minecraft:facing_direction"] = v
-            else:
-                clean_states[_PARAM_KEY_MAP.get(k, k)] = v
-
-    return MinecraftBlockDescriptor(
-        identifier, True, clean_states if clean_states else None
-    )
 
 
 def _to_snake(s: str) -> str:
@@ -48,13 +27,16 @@ def _to_snake(s: str) -> str:
     return s.lower()
 
 
-def _make_block_factory(name: str, identifier: str):
+def _make_factory(name: str):
+    identifier = f"minecraft:{_to_snake(name)}"
+
     def factory(**states: Any) -> MinecraftBlockDescriptor:
-        return _create_block(identifier, states)
+        states = {_STATE_KEYS.get(k, k): v for k, v in states.items() if v is not None}
+        return MinecraftBlockDescriptor(identifier, True, states or None)
 
     factory.__name__ = name
     factory.__qualname__ = name
-    factory.__doc__ = f"Factory for {name}"
+    factory.__doc__ = f"Factory for {identifier}"
     return factory
 
 
@@ -63,6 +45,6 @@ def __getattr__(name: str):
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     if name.endswith("States"):
         return Any
-    func = _make_block_factory(name, f"minecraft:{_to_snake(name)}")
+    func = _make_factory(name)
     globals()[name] = func
     return func

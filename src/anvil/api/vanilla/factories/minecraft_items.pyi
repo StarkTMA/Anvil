@@ -2,56 +2,6 @@ from typing import Literal
 
 from anvil.lib.schemas import MinecraftItemDescriptor
 
-def Potion(
-    potion_addition: (
-        Literal[
-            "water",
-            "awkward",
-            "mundane",
-            "thick",
-            "healing",
-            "regeneration",
-            "swiftness",
-            "strength",
-            "harming",
-            "poison",
-            "slowness",
-            "weakness",
-            "water_breathing",
-            "fire_resistance",
-            "nightvision",
-            "invisibility",
-            "leaping",
-            "slow_falling",
-            "turtle_master",
-            "wither",
-            "strong_healing",
-            "strong_harming",
-            "long_leaping",
-            "strong_leaping",
-            "long_nightvision",
-            "long_poison",
-            "strong_poison",
-            "long_regeneration",
-            "strong_regeneration",
-            "long_slowness",
-            "strong_slowness",
-            "long_strength",
-            "strong_strength",
-            "long_swiftness",
-            "strong_swiftness",
-            "long_turtle_master",
-            "strong_turtle_master",
-            "long_water_breathing",
-            "long_fire_resistance",
-            "long_invisibility",
-            "long_slow_falling",
-            "long_weakness",
-            "strong_wither",
-        ]
-        | None
-    ) = None,
-) -> MinecraftItemDescriptor: ...
 def AcaciaBoat() -> MinecraftItemDescriptor: ...
 def AcaciaButton() -> MinecraftItemDescriptor: ...
 def AcaciaChestBoat() -> MinecraftItemDescriptor: ...
@@ -1181,6 +1131,56 @@ def Poppy() -> MinecraftItemDescriptor: ...
 def Porkchop() -> MinecraftItemDescriptor: ...
 def Potato() -> MinecraftItemDescriptor: ...
 def PotentSulfur() -> MinecraftItemDescriptor: ...
+def Potion(
+    potion_addition: (
+        Literal[
+            "water",
+            "awkward",
+            "mundane",
+            "thick",
+            "healing",
+            "regeneration",
+            "swiftness",
+            "strength",
+            "harming",
+            "poison",
+            "slowness",
+            "weakness",
+            "water_breathing",
+            "fire_resistance",
+            "nightvision",
+            "invisibility",
+            "leaping",
+            "slow_falling",
+            "turtle_master",
+            "wither",
+            "strong_healing",
+            "strong_harming",
+            "long_leaping",
+            "strong_leaping",
+            "long_nightvision",
+            "long_poison",
+            "strong_poison",
+            "long_regeneration",
+            "strong_regeneration",
+            "long_slowness",
+            "strong_slowness",
+            "long_strength",
+            "strong_strength",
+            "long_swiftness",
+            "strong_swiftness",
+            "long_turtle_master",
+            "strong_turtle_master",
+            "long_water_breathing",
+            "long_fire_resistance",
+            "long_invisibility",
+            "long_slow_falling",
+            "long_weakness",
+            "strong_wither",
+        ]
+        | None
+    ) = None,
+) -> MinecraftItemDescriptor: ...
 def PowderSnowBucket() -> MinecraftItemDescriptor: ...
 def Prismarine() -> MinecraftItemDescriptor: ...
 def PrismarineBrickSlab() -> MinecraftItemDescriptor: ...

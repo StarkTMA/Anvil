@@ -4,6 +4,8 @@ from .factories import minecraft_blocks as MinecraftBlockTypes
 
 
 class MinecraftBlockTags(StrEnum):
+    """Vanilla block tags."""
+
     Wood = "wood"
     Log = "log"
     Oak = "oak"
@@ -38,7 +40,6 @@ class MinecraftBlockTags(StrEnum):
     Crop = "minecraft:crop"
     FertilizeArea = "fertilize_area"
     Leaves = "minecraft:leaves"
-
     CornerableStairs = "minecraft:cornerable_stairs"
     HasFenceConnections = "minecraft:has_fence_connections"
     DiamondTierDestructible = "minecraft:diamond_tier_destructible"

@@ -61,6 +61,9 @@ def Potion(
     return MinecraftItemDescriptor("minecraft:potion")
 
 
+_NAMES: dict[str, str] = {}
+
+
 def _to_snake(s: str) -> str:
     s = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", s)
     s = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", s)
@@ -68,21 +71,21 @@ def _to_snake(s: str) -> str:
     return s.lower()
 
 
-def _make_item_factory(name: str):
-    ident = f"minecraft:{_to_snake(name)}"
+def _make_factory(name: str):
+    identifier = _NAMES.get(name, f"minecraft:{_to_snake(name)}")
 
     def factory() -> MinecraftItemDescriptor:
-        return MinecraftItemDescriptor(ident)
+        return MinecraftItemDescriptor(identifier)
 
     factory.__name__ = name
     factory.__qualname__ = name
-    factory.__doc__ = f"Factory for {name}"
+    factory.__doc__ = f"Factory for {identifier}"
     return factory
 
 
 def __getattr__(name: str):
     if name.startswith("_"):
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    func = _make_item_factory(name)
+    func = _make_factory(name)
     globals()[name] = func
     return func

@@ -2,7 +2,7 @@ import re
 
 from anvil.lib.schemas import MinecraftEntityDescriptor
 
-_PARAM_KEY_MAP: dict[str, str] = {
+_NAMES: dict[str, str] = {
     "VillagerV2": "minecraft:villager_v2",
     "ZombieVillagerV2": "minecraft:zombie_villager_v2",
 }
@@ -15,21 +15,21 @@ def _to_snake(s: str) -> str:
     return s.lower()
 
 
-def _make_entity_factory(name: str):
-    ident = _PARAM_KEY_MAP.get(name, f"minecraft:{_to_snake(name)}")
+def _make_factory(name: str):
+    identifier = _NAMES.get(name, f"minecraft:{_to_snake(name)}")
 
     def factory() -> MinecraftEntityDescriptor:
-        return MinecraftEntityDescriptor(ident, True)
+        return MinecraftEntityDescriptor(identifier, True)
 
     factory.__name__ = name
     factory.__qualname__ = name
-    factory.__doc__ = f"Factory for {name}"
+    factory.__doc__ = f"Factory for {identifier}"
     return factory
 
 
 def __getattr__(name: str):
     if name.startswith("_"):
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    func = _make_entity_factory(name)
+    func = _make_factory(name)
     globals()[name] = func
     return func

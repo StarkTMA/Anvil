@@ -1,13 +1,13 @@
 from enum import StrEnum
 
-from anvil.lib.config import CONFIG
-
 from .factories import minecraft_items as MinecraftItemTypes
 
 __all__ = ["MinecraftItemTypes", "MinecraftItemTags"]
 
 
 class MinecraftItemTags(StrEnum):
+    """Vanilla item tags."""
+
     Arrow = "minecraft:arrow"
     Banner = "minecraft:banner"
     Boat = "minecraft:boat"
