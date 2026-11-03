@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import orjson
 import os
 import traceback
 import uuid
 from typing import Dict, Mapping
+
+import orjson
 
 from anvil.__version__ import __version__
 from anvil.api.core.types import Identifier, Vector2D
@@ -351,32 +352,6 @@ class JsonSchemes:
         return load_file(
             "font.jsont", {"font_name": font_name, "font_file": font_file}, is_json=True
         )
-
-    @staticmethod
-    def dialogues():
-        return load_file(
-            "dialogues_json.jsont", {"format_version": DIALOGUE_VERSION}, is_json=True
-        )
-
-    @staticmethod
-    def dialogue_scene(
-        scene, npc_name, text, on_open_commands, on_close_commands, buttons
-    ):
-        return {
-            "scene_tag": scene,
-            "npc_name": {"rawtext": [{"translate": npc_name}]},
-            "text": {"rawtext": [{"translate": text}]},
-            "on_open_commands": on_open_commands,
-            "on_close_commands": on_close_commands,
-            "buttons": buttons,
-        }
-
-    @staticmethod
-    def dialogue_button(name, commands):
-        return {
-            "name": {"rawtext": [{"translate": name}]},
-            "commands": commands,
-        }
 
     @staticmethod
     def server_item():

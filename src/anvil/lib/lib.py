@@ -16,6 +16,7 @@ from typing import Any, Dict, List
 import click
 import orjson
 import requests
+
 from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 from anvil.lib.format_versions import MANIFEST_BUILD
 
@@ -201,9 +202,6 @@ class AnvilIO:
 
         if class_name == "LootTable":
             return cls._normalize_json_like(value.table_path)
-
-        if class_name == "_UIElement":
-            return cls._normalize_json_like(value.queue())
 
         return value
 
