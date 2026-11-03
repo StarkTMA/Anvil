@@ -130,7 +130,7 @@ def test_capped_processor_takes_one_delegate():
 
 
 def test_template_pool_elements(structures):
-    from anvil.api.features.features import AggregateFeature
+    from anvil.api.features import AggregateFeature
     from anvil.api.world.structures import JigsawStructureTemplatePool
 
     pool = JigsawStructureTemplatePool("village", fallback="test_t:empty")

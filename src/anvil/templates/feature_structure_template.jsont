@@ -1,8 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:structure_template_feature": {
-        "description": {
-            "identifier": "{{ identifier }}"
-        }
-    }
-}

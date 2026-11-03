@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
 
 from anvil.api.core.core import ANVIL
 from anvil.api.core.filters import Filter
-from anvil.api.features.features import Feature
+from anvil.api.features.feature import Feature
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import JIGSAW_VERSION
 from anvil.lib.jsonmodel import (
