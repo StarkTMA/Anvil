@@ -43,7 +43,6 @@ Example:
 """
 
 import click
-
 from anvil.api.ui.animations import _AnvilAnimations
 from anvil.api.ui.enums import (
     UIAnchor,
