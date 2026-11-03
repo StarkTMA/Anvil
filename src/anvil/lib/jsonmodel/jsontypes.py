@@ -433,6 +433,14 @@ def _block_object(value: Any) -> dict[str, Any]:
     return {"name": getattr(value, "identifier", value)}
 
 
+def _block_specifier(value: Any) -> Any:
+    from anvil.lib.schemas import MinecraftBlockDescriptor
+
+    if isinstance(value, MinecraftBlockDescriptor) and value.states:
+        return {"name": value.identifier, "states": dict(value.states)}
+    return getattr(value, "identifier", value)
+
+
 def _in_project(value: str) -> str:
     from anvil.lib.config import CONFIG
 
@@ -550,6 +558,19 @@ BlockObject = Encoded(
     ),
 )
 """A block as `{"name": ..., "states": ...}`, `states` only when it has any."""
+
+BlockSpecifier = Encoded(
+    _block_specifier,
+    {
+        "anyOf": [
+            STRING,
+            _object_schema(
+                {"name": STRING, "states": {"type": "object"}}, optional=("states",)
+            ),
+        ]
+    },
+)
+"""A block as its identifier, or as `{"name": ..., "states": ...}` when it has states."""
 
 AsString = Encoded(str, STRING)
 """The value as its text, for objects written as their identifier."""

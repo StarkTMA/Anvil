@@ -1,9 +1,11 @@
-import pytest
 from types import SimpleNamespace
+
+import pytest
+
 from anvil.api.blocks import components as block_components
-from anvil.kit.blocks.wood_set.components import BlockWoodSetSapling
 from anvil.kit.blocks.wood_set.blocks import leaves
-from anvil.kit.blocks.wood_set.components import BlockWoodSetLeaves
+from anvil.kit.blocks.wood_set.components import BlockWoodSetLeaves, BlockWoodSetSapling
+from anvil.lib.lib import AnvilIO
 
 
 @pytest.fixture
@@ -75,7 +77,7 @@ def test_leaves_loot_table_conditions(make_leaves):
         if getattr(obj, "_object_type", None) == "Loot Table"
     ]
     table = [t for t in queued_tables if t.name == "rotten_leaves"][-1]
-    exported = [pool.__export__() for pool in table._pools]
+    exported = AnvilIO._normalize_json_like(table._content)["pools"]
 
     # Pool 0: Shears
     assert exported[0]["conditions"] == [
@@ -116,5 +118,5 @@ def test_leaves_loot_table_without_sapling(make_leaves):
         if getattr(obj, "_object_type", None) == "Loot Table"
     ]
     (table,) = [t for t in queued_tables if t.name == "rotten_leaves"]
-    exported = [pool.__export__() for pool in table._pools]
+    exported = AnvilIO._normalize_json_like(table._content)["pools"]
     assert len(exported) == 3  # shears, silk touch, sticks (no sapling)

@@ -23,18 +23,18 @@ group_1 = tier_1.group(num_to_select=1)
 
 # 4. Add a specific Trade
 # Wants 1 Emerald -> Gives 5 Apples
-group_1.trade(max_uses=7, reward_exp=True).wants(
+group_1.trade(max_uses=7, reward_exp=True).add_wants(
     MinecraftItemTypes.Emerald(), quantity=1
-).gives(
+).add_gives(
     MinecraftItemTypes.Apple(), quantity=5
 )
 
 # You can also chain everything in one go:
 table.tier(total_exp_required=10).group(num_to_select=2).trade(
     max_uses=5
-).wants(
+).add_wants(
     MinecraftItemTypes.Diamond(), 1
-).gives(
+).add_gives(
     "my_custom:sword", 1
 )
 
@@ -117,7 +117,7 @@ def create_trades():
 
                 # Add 'wants' (Cost)
                 for want in trade_def["wants"]:
-                    trade.wants(
+                    trade.add_wants(
                         item=want["item"],
                         quantity=want["count"],
                         price_multiplier=0.05
@@ -125,7 +125,7 @@ def create_trades():
 
                 # Add 'gives' (Reward)
                 for give in trade_def["gives"]:
-                    trade.gives(
+                    trade.add_gives(
                         item=give["item"],
                         quantity=give["count"]
                     )
@@ -142,11 +142,11 @@ def create_trades():
 
 ## Modifying Trades
 
-The `.gives()` method returns a `_TradeItemGives` object which inherits from loot pool functions. This allows you to add modifiers like enchantments to the traded item.
+The `.add_gives()` method returns the given item, which has the loot table function builders. This allows you to add modifiers like enchantments to the traded item.
 
 ```python
 # Trade that gives an enchanted sword
-trade.gives(MinecraftItemTypes.IronSword(), 1).enchant_with_levels(
+trade.add_gives(MinecraftItemTypes.IronSword(), 1).enchant_with_levels(
     levels=30,
     treasure=True
 )

@@ -10,7 +10,7 @@ from anvil.__version__ import __version__
 from anvil.api.core.types import Identifier, Vector2D
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.format_versions import *
-from anvil.lib.lib import APPDATA, salt_from_str
+from anvil.lib.lib import APPDATA
 from anvil.lib.templater import load_file
 
 
@@ -444,10 +444,6 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def loot_table():
-        return load_file("loot_table.jsont", is_json=True)
-
-    @staticmethod
     def recipe_smelting(identifier: str, tags: list[str]):
         return load_file(
             "recipe_smelting.jsont",
@@ -551,68 +547,6 @@ class JsonSchemes:
         return load_file("aim_assist_categories.jsont", is_json=True)
 
     @staticmethod
-    def jigsaw_structure_process(identifier: str):
-        return load_file(
-            "jigsaw_structure_process.jsont",
-            {"format_version": JIGSAW_VERSION, "identifier": identifier},
-            is_json=True,
-        )
-
-    @staticmethod
-    def jigsaw_structures(
-        identifier: str,
-        placement_step: str,
-        start_pool_identifier: str,
-        start_jigsaw_name: str | None,
-        max_depth: int,
-        start_height,
-        liquid_settings,
-    ):
-        return load_file(
-            "jigsaw_structures.jsont",
-            {
-                "format_version": JIGSAW_VERSION,
-                "identifier": identifier,
-                "placement_step": placement_step,
-                "start_pool_identifier": start_pool_identifier,
-                "start_jigsaw_name": start_jigsaw_name,
-                "max_depth": max_depth,
-                "start_height": start_height,
-                "liquid_settings": liquid_settings,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def jigsaw_template_pools(identifier: str, fallback_identifier: str | None):
-        return load_file(
-            "jigsaw_template_pools.jsont",
-            {
-                "format_version": JIGSAW_VERSION,
-                "identifier": identifier,
-                "fallback_identifier": fallback_identifier,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def jigsaw_structure_set(
-        identifier: str, separation: int, spacing: int, spread_type, placement_type
-    ):
-        return load_file(
-            "jigsaw_structure_set.jsont",
-            {
-                "format_version": JIGSAW_VERSION,
-                "identifier": identifier,
-                "salt": salt_from_str(identifier),
-                "separation": separation,
-                "spacing": spacing,
-                "spread_type": spread_type,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
     def python():
         return load_file("python.jsont")
 
@@ -701,14 +635,6 @@ class JsonSchemes:
                 "identifier": identifier,
                 "feature_identifier": feature_identifier,
             },
-            is_json=True,
-        )
-
-    @staticmethod
-    def dimension_configuration(identifier: Identifier):
-        return load_file(
-            "dimension_configuration.jsont",
-            {"format_version": MANIFEST_BUILD, "identifier": identifier},
             is_json=True,
         )
 

@@ -1,13 +1,114 @@
 import warnings
-from typing import Literal
+from typing import Annotated, ClassVar, Literal
 
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import Dimension
 from anvil.lib.config import ConfigPackageTarget, Pack
-from anvil.lib.jsonmodel import JsonFile
-from anvil.lib.schemas import JsonSchemes
+from anvil.lib.jsonmodel import (
+    Identifier,
+    InRange,
+    JsonFile,
+    JsonObject,
+    Wrapped,
+    json_field,
+)
 
 DIMENSION_FORMAT_VERSION = "1.18.0"
+
+__all__ = ["DimensionConfiguration"]
+
+
+class _DimensionBounds(JsonObject):
+    """The `minecraft:dimension_bounds` component: the lowest and highest block heights.
+    Both must be multiples of 16 from -512 to 512, the minimum lower than the maximum.
+    """
+
+    __required__: ClassVar[tuple[str, ...]] = ("min", "max")
+
+    min: Annotated[int, InRange(-512, 512)] | None = None
+    max: Annotated[int, InRange(-512, 512)] | None = None
+
+    def set_min(self, min: int) -> None:
+        """Sets the lowest block height, a multiple of 16 from -512 to 512."""
+        self.min = min
+
+    def set_max(self, max: int) -> None:
+        """Sets the highest block height, a multiple of 16 from -512 to 512."""
+        self.max = max
+
+    def __validate__(self) -> None:
+        if self.min is None or self.max is None:
+            raise ValueError("Height bounds need both a minimum and a maximum.")
+        if self.min % 16 != 0 or self.max % 16 != 0:
+            raise ValueError("Height bounds must be multiples of 16.")
+        if self.min >= self.max:
+            raise ValueError("Minimum height must be less than maximum height.")
+
+
+class _DimensionGeneration(JsonObject):
+    """The `minecraft:generation` component."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("generator_type",)
+
+    generator_type: Literal["void"] | None = None
+
+    def set_generator_type(self, generator_type: Literal["void"]) -> None:
+        """Sets how the dimension is generated."""
+        self.generator_type = generator_type
+
+
+class _DimensionComponents(JsonObject):
+    """The `components` of a dimension. Unset components are left out."""
+
+    dimension_bounds: _DimensionBounds | None = json_field(
+        key="minecraft:dimension_bounds", default=None
+    )
+    generation: _DimensionGeneration | None = json_field(
+        key="minecraft:generation", default=None
+    )
+
+    def set_dimension_bounds(self, min: int, max: int) -> None:
+        """Sets the lowest and highest block heights."""
+        self.dimension_bounds = _DimensionBounds()
+        self.dimension_bounds.set_min(min)
+        self.dimension_bounds.set_max(max)
+
+    def set_generation(self, generator_type: Literal["void"]) -> None:
+        """Sets how the dimension is generated."""
+        self.generation = _DimensionGeneration()
+        self.generation.set_generator_type(generator_type)
+
+
+class _Dimension(JsonObject):
+    """The `minecraft:dimension` object."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("description", "components")
+
+    description: Annotated[Identifier, Wrapped("identifier")] | None = None
+    components: _DimensionComponents = json_field(default_factory=_DimensionComponents)
+
+    def set_description(self, identifier: Identifier) -> None:
+        """Sets the identifier written as `description.identifier`.
+
+        Args:
+            identifier (Identifier): The file's identifier, already parsed by the file.
+        """
+        self.description = identifier
+
+    def __validate__(self) -> None:
+        if self.description is None:
+            raise ValueError("The dimension has no identifier.")
+
+
+class _DimensionFile(JsonObject):
+    """The content of `dimensions/<dimension>.json`."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("format_version", "minecraft:dimension")
+
+    format_version: str = json_field(default=DIMENSION_FORMAT_VERSION, init=False)
+    dimension: _Dimension = json_field(
+        key="minecraft:dimension", default_factory=_Dimension
+    )
 
 
 class DimensionConfiguration(JsonFile):
@@ -22,6 +123,7 @@ class DimensionConfiguration(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/datadrivenoverworldheight)
     """
 
+    _document = _DimensionFile
     _extension = ".json"
     _pack = Pack.BP
     _folder = "dimensions"
@@ -42,17 +144,12 @@ class DimensionConfiguration(JsonFile):
         if dimension not in (Dimension.Overworld, Dimension.Nether, Dimension.TheEnd):
             raise ValueError(f"Invalid dimension: {dimension}")
 
-        super().__init__(str(dimension).removeprefix("minecraft:"))
+        super().__init__(dimension, is_vanilla=True)
         self._dimension = dimension
-        self.content(JsonSchemes.dimension_configuration(str(dimension)))
-        self._content["format_version"] = DIMENSION_FORMAT_VERSION
+        self._content.dimension.set_description(self.identifier)
 
         if void or dimension != Dimension.Overworld:
             self.generator_type("void")
-
-    @property
-    def _components(self) -> dict:
-        return self._content["minecraft:dimension"]["components"]
 
     def height_bounds(self, range: tuple[int, int]) -> "DimensionConfiguration":
         """Sets the height bounds of the Overworld.
@@ -66,24 +163,8 @@ class DimensionConfiguration(JsonFile):
         """
         if self._dimension != Dimension.Overworld:
             raise ValueError("Only the Overworld supports custom height bounds.")
-
-        if len(range) != 2:
-            raise ValueError("Range must be a tuple of two integers (min, max).")
-
         minimum, maximum = range
-        if minimum >= maximum:
-            raise ValueError("Minimum height must be less than maximum height.")
-
-        if minimum % 16 != 0 or maximum % 16 != 0:
-            raise ValueError("Height bounds must be multiples of 16.")
-
-        if minimum < -512 or maximum > 512:
-            raise ValueError("Height bounds must be within -512 to 512.")
-
-        self._components["minecraft:dimension_bounds"] = {
-            "min": minimum,
-            "max": maximum,
-        }
+        self._content.dimension.components.set_dimension_bounds(minimum, maximum)
         return self
 
     def generator_type(
@@ -96,10 +177,7 @@ class DimensionConfiguration(JsonFile):
         Returns:
             DimensionConfiguration: The current DimensionConfiguration instance.
         """
-        if generator != "void":
-            raise ValueError("Currently, only 'void' generator is supported.")
-
-        self._components["minecraft:generation"] = {"generator_type": "void"}
+        self._content.dimension.components.set_generation(generator)
         return self
 
     def queue(self) -> "DimensionConfiguration":
