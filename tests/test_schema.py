@@ -12,6 +12,10 @@ from anvil.api.biomes.components import BiomeClientFoliageAppearance, BiomeClima
 from anvil.api.blocks.components import BlockGeometry, BlockPlacementFilter
 from anvil.api.core.enums import BlockFaceValues
 from anvil.api.items.components import ItemDurability
+from anvil.api.pbr.fallback import PBRFallback
+from anvil.api.pbr.shadow import ShadowSettings
+from anvil.api.pbr.lighting import LocalLighting
+from anvil.lib import config
 from anvil.lib.lib import AnvilIO
 
 jsonschema = pytest.importorskip("jsonschema")
@@ -99,3 +103,95 @@ def test_schema_refuses_what_export_refuses():
         jsonschema.validate({"minecraft:climate": {"downfall": 1.5}}, schema)
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate({"minecraft:climate": {"rainfall": 1}}, schema)
+
+
+def test_shadow_settings_file_schema():
+    with config.override(PBR=True):
+        settings = ShadowSettings().shadow_style("blocky_shadows", 16)
+    schema = _check(settings._content, ShadowSettings.__schema__())
+    assert schema["title"] == "Shadow Settings"
+    assert schema["x-anvil-file"] == {
+        "pack": "resource_pack",
+        "folder": "shadows",
+        "name": "global",
+        "extension": ".json",
+    }
+    assert schema["required"] == ["format_version", "minecraft:shadow_settings"]
+    body = schema["$defs"]["_ShadowSettings"]
+    assert body["properties"]["shadow_style"]["enum"] == [
+        "blocky_shadows",
+        "soft_shadows",
+    ]
+
+
+def test_pbr_fallback_file_schema():
+    with config.override(PBR=True):
+        fallback = PBRFallback().block_fallback("#0000cc00")
+    schema = _check(fallback._content, PBRFallback.__schema__())
+    assert schema["title"] == "PBR Fallback Settings"
+    assert schema["x-anvil-file"]["folder"] == "pbr"
+    body = schema["$defs"]["_PBRFallback"]["properties"]
+    assert body["global_metalness_emissive_roughness_subsurface"]["maxItems"] == 4
+
+
+def _filled_pbr_files():
+    from anvil.api.pbr.atmosphere import AtmosphericSettings
+    from anvil.api.core.enums import FogCameraLocation, RenderDistanceType
+    from anvil.api.pbr.color_grading import ColorGradingSettings
+    from anvil.api.pbr.cubemap import CubeMapSettings
+    from anvil.api.pbr.fog import FogSettings
+    from anvil.api.pbr.lighting import LightingSettings
+    from anvil.lib.jsonmodel import KeyFrame
+    from anvil.api.pbr.texture_set import TextureSet
+    from anvil.api.pbr.water import WaterSettings
+
+    frames = [KeyFrame(0.0, 1.0), KeyFrame(1.0, 2.0)]
+    colors = [KeyFrame(0.0, "#ff8800"), KeyFrame(0.5, (0.2, 0.4, 0.6))]
+    lighting = LightingSettings()
+    lighting.orbital_lights(frames, "#ffffff", 0.4, colors, 10)
+    lighting.flash_light(3, (255, 0, 0))
+    lighting.emissive(0.5)
+    lighting.ambient(frames, "#123")
+    lighting.sky(0.5)
+    fog = FogSettings("thick")
+    fog.add_distance_location("#abd2ff", 0, 10)
+    fog.add_distance_location(
+        "#000000", 1, 5, RenderDistanceType.Fixed, FogCameraLocation.Water
+    ).set_transition_fog("#111111", 0, 0.01, RenderDistanceType.Fixed, 0.25, 5, 0.6, 30)
+    fog.water_density(0.8, False, 10, 5)
+    fog.media_coefficients(water_scattering="#ff0000")
+    fog.henyey_greenstein_g(0.75, 0.6)
+    return [
+        AtmosphericSettings()
+        .horizon_blend_stops(0.1, frames, 0.3, 0.9)
+        .rayleigh_strength(frames)
+        .sky_zenith_color("#00f")
+        .sky_horizon_color(colors),
+        ColorGradingSettings()
+        .midtones(contrast=(1, 1, 1), offset=(0, 0, 0))
+        .highlights(highlightsMin=2, gain=[2, 2, 2])
+        .shadows(shadowsMax=0.5)
+        .temperature_grade(6500, "white_balance")
+        .tone_mapping("aces"),
+        WaterSettings()
+        .particle_concentrations(1, 2, 3)
+        .waves(True, octaves=4)
+        .caustics(True, power=2, texture="textures/c"),
+        lighting,
+        fog,
+        CubeMapSettings("test:sky").set_lighting(frames, 0.5, 0.0, True, False),
+        TextureSet("sword", "items"),
+    ]
+
+
+def test_pbr_file_schemas():
+    with config.override(PBR=True):
+        files = _filled_pbr_files()
+    for file in files:
+        schema = _check(file._content, type(file).__schema__())
+        assert schema["x-anvil-file"]["pack"] == "resource_pack"
+
+
+def test_untyped_file_has_no_schema():
+    with pytest.raises(TypeError, match="not typed yet"):
+        LocalLighting.__schema__()

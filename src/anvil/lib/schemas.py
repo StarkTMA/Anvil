@@ -353,10 +353,6 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def fog():
-        return load_file("fog.jsont", {"format_version": FOG_VERSION}, is_json=True)
-
-    @staticmethod
     def dialogues():
         return load_file(
             "dialogues_json.jsont", {"format_version": DIALOGUE_VERSION}, is_json=True
@@ -440,61 +436,10 @@ class JsonSchemes:
         return load_file("sounds_json.jsont", is_json=True)
 
     @staticmethod
-    def atmosphere_settings(identifier: str):
-        return load_file(
-            "vv_atmosphere_settings.jsont",
-            {"format_version": ATMOSPHERE_SETTINGS_VERSION, "identifier": identifier},
-            is_json=True,
-        )
-
-    @staticmethod
-    def fog_settings(identifier: str):
-        return load_file(
-            "vv_fog_settings.jsont",
-            {"format_version": FOG_VERSION, "identifier": identifier},
-            is_json=True,
-        )
-
-    @staticmethod
-    def water_settings(identifier: str):
-        return load_file(
-            "vv_water_settings.jsont",
-            {"format_version": WATER_SETTINGS_VERSION, "identifier": identifier},
-            is_json=True,
-        )
-
-    @staticmethod
-    def color_grading_settings(identifier: str):
-        return load_file(
-            "vv_color_grading_settings.jsont",
-            {
-                "format_version": COLOR_GRADING_SETTINGS_VERSION,
-                "identifier": identifier,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def lighting_settings(identifier: str):
-        return load_file(
-            "vv_lighting_settings.jsont",
-            {"format_version": LIGHTING_SETTINGS_VERSION, "identifier": identifier},
-            is_json=True,
-        )
-
-    @staticmethod
     def local_lighting():
         return load_file(
             "vv_local_lighting.jsont",
             {"format_version": LOCAL_LIGHTING_SETTINGS_VERSION},
-            is_json=True,
-        )
-
-    @staticmethod
-    def pbr_fallback_settings():
-        return load_file(
-            "vv_pbr_fallback_settings.jsont",
-            {"format_version": PBR_FALLBACK_SETTINGS_VERSION},
             is_json=True,
         )
 
@@ -668,16 +613,6 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def texture_set():
-        return load_file(
-            "texture_set.jsont",
-            {
-                "format_version": TEXTURE_SET_VERSION,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
     def python():
         return load_file("python.jsont")
 
@@ -773,14 +708,6 @@ class JsonSchemes:
     def dimension_configuration(identifier: Identifier):
         return load_file(
             "dimension_configuration.jsont",
-            {"format_version": MANIFEST_BUILD, "identifier": identifier},
-            is_json=True,
-        )
-
-    @staticmethod
-    def cubemap_settings(identifier: Identifier):
-        return load_file(
-            "vv_cubemap.jsont",
             {"format_version": MANIFEST_BUILD, "identifier": identifier},
             is_json=True,
         )
