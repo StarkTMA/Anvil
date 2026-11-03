@@ -4,10 +4,11 @@ from typing import Any, overload
 from anvil.lib.blockbench import _BlockBenchSource, _Blockbench
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import Directory
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
-class ItemTexturesObject(AddonObject):
+class ItemTexturesObject(JsonFile):
     """Handles item textures for the addon (singleton)."""
 
     _extension = ".json"
@@ -155,7 +156,7 @@ class ItemTexturesObject(AddonObject):
             return super().__export__()
 
 
-class TerrainTexturesObject(AddonObject):
+class TerrainTexturesObject(JsonFile):
     """Handles terrain textures for the addon."""
 
     _extension = ".json"
@@ -271,7 +272,7 @@ class TerrainTexturesObject(AddonObject):
         return None
 
 
-class FlipBookTexturesObject(AddonObject):
+class FlipBookTexturesObject(JsonFile):
     """Handles flip book textures for the addon."""
 
     _extension = ".json"

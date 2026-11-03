@@ -20,7 +20,8 @@ Example:
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
 def _vec3(value: Sequence[float]) -> List[float]:
@@ -126,7 +127,7 @@ class _VoxelGroup:
                 yield item
 
 
-class VoxelShape(AddonObject):
+class VoxelShape(JsonFile):
     """A voxel shape file (``<name>.shape.json``) built from a tree of groups.
 
     The file is named after `name`. The shape identifier is

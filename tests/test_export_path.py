@@ -3,6 +3,7 @@
 import orjson
 import os
 import sys
+from pathlib import Path
 import pytest
 from unittest.mock import patch
 
@@ -91,12 +92,8 @@ def test_windows_local_export_false_defaults_to_mojang(make_project, monkeypatch
 
     with patch("anvil.lib.config.validate_namespace_project_name"):
         cfg = load_project()
-        expected_rp = os.path.join(
-            RELEASE_COM_MOJANG, "development_resource_packs", "RP_test_proj"
-        )
-        expected_bp = os.path.join(
-            RELEASE_COM_MOJANG, "development_behavior_packs", "BP_test_proj"
-        )
+        expected_rp = RELEASE_COM_MOJANG / "development_resource_packs" / "RP_test_proj"
+        expected_bp = RELEASE_COM_MOJANG / "development_behavior_packs" / "BP_test_proj"
         assert cfg.RP_PATH == expected_rp
         assert cfg.BP_PATH == expected_bp
         assert cfg._LOCAL_EXPORT is False
@@ -109,12 +106,8 @@ def test_windows_preview_effective_only_with_default_paths(make_project, monkeyp
 
     with patch("anvil.lib.config.validate_namespace_project_name"):
         cfg = load_project()
-        expected_rp = os.path.join(
-            PREVIEW_COM_MOJANG, "development_resource_packs", "RP_test_proj"
-        )
-        expected_bp = os.path.join(
-            PREVIEW_COM_MOJANG, "development_behavior_packs", "BP_test_proj"
-        )
+        expected_rp = PREVIEW_COM_MOJANG / "development_resource_packs" / "RP_test_proj"
+        expected_bp = PREVIEW_COM_MOJANG / "development_behavior_packs" / "BP_test_proj"
         assert cfg.RP_PATH == expected_rp
         assert cfg.BP_PATH == expected_bp
 
@@ -126,16 +119,16 @@ def test_windows_local_export_true_exports_to_output(make_project, monkeypatch):
 
     with patch("anvil.lib.config.validate_namespace_project_name"):
         cfg = load_project()
-        expected_mojang = os.path.join(os.path.abspath("output"), "com.mojang")
-        assert cfg.RP_PATH == os.path.join(
-            expected_mojang, "development_resource_packs", "RP_test_proj"
+        expected_mojang = Path.cwd() / "output" / "com.mojang"
+        assert (
+            cfg.RP_PATH
+            == expected_mojang / "development_resource_packs" / "RP_test_proj"
         )
-        assert cfg.BP_PATH == os.path.join(
-            expected_mojang, "development_behavior_packs", "BP_test_proj"
+        assert (
+            cfg.BP_PATH
+            == expected_mojang / "development_behavior_packs" / "BP_test_proj"
         )
-        assert cfg._WORLD_PATH == os.path.join(
-            expected_mojang, "minecraftWorlds", "test_proj"
-        )
+        assert cfg._WORLD_PATH == expected_mojang / "minecraftWorlds" / "test_proj"
         assert cfg._LOCAL_EXPORT is True
 
 
@@ -147,16 +140,16 @@ def test_non_windows_always_exports_to_output(make_project, monkeypatch):
 
     with patch("anvil.lib.config.validate_namespace_project_name"):
         cfg = load_project()
-        expected_mojang = os.path.join(os.path.abspath("output"), "com.mojang")
-        assert cfg.RP_PATH == os.path.join(
-            expected_mojang, "development_resource_packs", "RP_test_proj"
+        expected_mojang = Path.cwd() / "output" / "com.mojang"
+        assert (
+            cfg.RP_PATH
+            == expected_mojang / "development_resource_packs" / "RP_test_proj"
         )
-        assert cfg.BP_PATH == os.path.join(
-            expected_mojang, "development_behavior_packs", "BP_test_proj"
+        assert (
+            cfg.BP_PATH
+            == expected_mojang / "development_behavior_packs" / "BP_test_proj"
         )
-        assert cfg._WORLD_PATH == os.path.join(
-            expected_mojang, "minecraftWorlds", "test_proj"
-        )
+        assert cfg._WORLD_PATH == expected_mojang / "minecraftWorlds" / "test_proj"
         assert cfg._LOCAL_EXPORT is True
 
     # Test with local_export=True on macOS
@@ -165,15 +158,15 @@ def test_non_windows_always_exports_to_output(make_project, monkeypatch):
 
     with patch("anvil.lib.config.validate_namespace_project_name"):
         cfg2 = load_project()
-        assert cfg2.RP_PATH == os.path.join(
-            expected_mojang, "development_resource_packs", "RP_test_proj"
+        assert (
+            cfg2.RP_PATH
+            == expected_mojang / "development_resource_packs" / "RP_test_proj"
         )
-        assert cfg2.BP_PATH == os.path.join(
-            expected_mojang, "development_behavior_packs", "BP_test_proj"
+        assert (
+            cfg2.BP_PATH
+            == expected_mojang / "development_behavior_packs" / "BP_test_proj"
         )
-        assert cfg2._WORLD_PATH == os.path.join(
-            expected_mojang, "minecraftWorlds", "test_proj"
-        )
+        assert cfg2._WORLD_PATH == expected_mojang / "minecraftWorlds" / "test_proj"
         assert cfg2._LOCAL_EXPORT is True
 
 
@@ -200,25 +193,25 @@ def test_clear_cmd_get_project_dev_pack_paths(make_project, monkeypatch):
     cfg = Config()
     paths = get_project_dev_pack_paths(cfg)
     assert paths == [
-        os.path.join(RELEASE_COM_MOJANG, "development_resource_packs", "RP_test_proj"),
-        os.path.join(RELEASE_COM_MOJANG, "development_behavior_packs", "BP_test_proj"),
+        RELEASE_COM_MOJANG / "development_resource_packs" / "RP_test_proj",
+        RELEASE_COM_MOJANG / "development_behavior_packs" / "BP_test_proj",
     ]
 
     # Windows with local_export=True -> output/com.mojang
     cfg.add_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT, True)
     paths_local = get_project_dev_pack_paths(cfg)
-    expected_mojang = os.path.join(os.path.abspath("output"), "com.mojang")
+    expected_mojang = Path.cwd() / "output" / "com.mojang"
     assert paths_local == [
-        os.path.join(expected_mojang, "development_resource_packs", "RP_test_proj"),
-        os.path.join(expected_mojang, "development_behavior_packs", "BP_test_proj"),
+        expected_mojang / "development_resource_packs" / "RP_test_proj",
+        expected_mojang / "development_behavior_packs" / "BP_test_proj",
     ]
 
     # Non-Windows -> output/com.mojang
     monkeypatch.setattr(sys, "platform", "darwin")
     paths_mac = get_project_dev_pack_paths(cfg)
     assert paths_mac == [
-        os.path.join(expected_mojang, "development_resource_packs", "RP_test_proj"),
-        os.path.join(expected_mojang, "development_behavior_packs", "BP_test_proj"),
+        expected_mojang / "development_resource_packs" / "RP_test_proj",
+        expected_mojang / "development_behavior_packs" / "BP_test_proj",
     ]
 
 

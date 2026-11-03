@@ -7,8 +7,8 @@ from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
 from anvil.api.world.structures import JigsawStructureSet
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import clamp
+from anvil.lib.jsonmodel import JsonFile
 from anvil.lib.schemas import (
-    AddonObject,
     JsonSchemes,
     MinecraftBlockDescriptor,
     MinecraftEntityDescriptor,
@@ -1169,7 +1169,7 @@ class _LootPool:
         return self._pool
 
 
-class LootTable(AddonObject):
+class LootTable(JsonFile):
     """A Minecraft Bedrock loot table for defining random item/block drops and rewards.
 
     Loot tables are used throughout Minecraft to define what items drop when:

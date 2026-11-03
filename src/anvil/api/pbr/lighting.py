@@ -7,10 +7,11 @@ from anvil.api.core.types import (
 from anvil.api.pbr.texture_set import KeyFrame
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import AnvilFormatter, clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes, MinecraftBlockDescriptor
 
 
-class LightingSettings(AddonObject):
+class LightingSettings(JsonFile):
     """Global lighting settings for Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"
@@ -182,7 +183,7 @@ class LightingSettings(AddonObject):
         return super().queue()
 
 
-class LocalLighting(AddonObject):
+class LocalLighting(JsonFile):
     """Local lighting configurations (point lights and static lights) for Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"

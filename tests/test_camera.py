@@ -19,7 +19,7 @@ def project_namespace():
 
 def test_aim_assist_preset():
     preset = AimAssistPreset("test_preset")
-    assert preset._path == os.path.join(config.CONFIG.BP_PATH, "cameras", "presets")
+    assert preset._path == config.CONFIG.BP_PATH / "cameras" / "presets"
     assert preset.identifier == "testns:test_preset"
 
     preset.item_settings({"minecraft:stone_axe": "axe_category"})
@@ -47,7 +47,7 @@ def test_aim_assist_preset():
 
 def test_aim_assist_category_and_categories():
     categories = AimAssistCategories()
-    assert categories._path == os.path.join(config.CONFIG.BP_PATH, "cameras", "presets")
+    assert categories._path == config.CONFIG.BP_PATH / "cameras" / "presets"
     assert categories._name == "categories"
 
     cat = categories.add_category("test_cat")

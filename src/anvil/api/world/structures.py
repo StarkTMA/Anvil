@@ -9,7 +9,8 @@ from anvil.api.core.types import Identifier
 from anvil.api.features.features import Feature
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import Directory, clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes, MinecraftBlockDescriptor
 
 if TYPE_CHECKING:
     from anvil.api.world.loot_tables import LootTable
@@ -314,7 +315,7 @@ class Structure:
         )
 
 
-class _JigsawStructureProcess(AddonObject, _processor_builder):
+class _JigsawStructureProcess(JsonFile, _processor_builder):
     """A class representing a Structure Process in Minecraft."""
 
     _extension = ".json"
@@ -332,7 +333,7 @@ class _JigsawStructureProcess(AddonObject, _processor_builder):
         super().__export__()
 
 
-class _JigsawStructure(AddonObject):
+class _JigsawStructure(JsonFile):
     """A class representing a Jigsaw structure in Minecraft."""
 
     _extension = ".json"
@@ -613,7 +614,7 @@ class _JigsawStructure(AddonObject):
         return super().__export__()
 
 
-class JigsawStructureTemplatePool(AddonObject):
+class JigsawStructureTemplatePool(JsonFile):
     """A class representing a Structure Template Pool in Minecraft."""
 
     _extension = ".json"
@@ -711,7 +712,7 @@ class JigsawStructureTemplatePool(AddonObject):
         super().queue()
 
 
-class JigsawStructureSet(AddonObject):
+class JigsawStructureSet(JsonFile):
     """A class representing a Structure Set in Minecraft.
     A Structure Set contains a set of Jigsaw Structures and rules for how those
     structures should be placed in the world relative to other instances of structures

@@ -22,9 +22,8 @@ from anvil.api.core.enums import (
 )
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.jsonmodel import validate_components
+from anvil.lib.jsonmodel import JsonFile, validate_components
 from anvil.lib.schemas import (
-    AddonObject,
     JsonSchemes,
     MinecraftBlockDescriptor,
     MinecraftDescription,
@@ -264,7 +263,7 @@ class _BlockServerDescription(MinecraftDescription):
         return super().__export__()
 
 
-class BlockServer(AddonObject):
+class BlockServer(JsonFile):
     """The block server object."""
 
     _extension = ".block.json"

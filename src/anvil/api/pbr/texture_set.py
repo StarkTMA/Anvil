@@ -10,7 +10,8 @@ from anvil.api.core.types import (
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import AnvilFormatter, AnvilValidator, Directory, clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
 @dataclass
@@ -81,7 +82,7 @@ class TextureComponents:
         return bool(self.normal or self.height or self.mer or self.mers)
 
 
-class TextureSet(AddonObject):
+class TextureSet(JsonFile):
     """Represents a PBR Texture Set configuration for Minecraft Bedrock Edition.
 
     Allows linking base color textures with physical property maps (normal, height, MER, MERS)

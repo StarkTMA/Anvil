@@ -1,12 +1,11 @@
 import base64
 import io
 import math
-import os
 import shutil
 import sys
 import traceback as tb
 import zipfile
-from os import path
+from pathlib import Path
 from typing import Optional
 
 import click
@@ -40,12 +39,14 @@ from anvil.lib.format_versions import (
 )
 from anvil.lib.lib import (
     AnvilArchive,
+    OUTPUT,
     AnvilIO,
     Directory,
     process_subcommand,
 )
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 from anvil.lib.translator import AnvilTranslator
 from PIL import Image
 
@@ -69,23 +70,24 @@ def resize(
 
     Directory.create(output)
     resized.convert("RGB").save(
-        os.path.join(output, name),
+        Path(output) / name,
         dpi=(dpi, dpi),
         quality=quality,
     )
 
 
-def development_pack_size(path: str) -> int:
+def development_pack_size(path: str | Path) -> int:
     """Returns the total uncompressed size of a development pack directory."""
     total_size = 0
+    pack = Path(path)
 
-    if not os.path.isdir(path):
+    if not pack.is_dir():
         return total_size
 
-    for root, _, files in os.walk(path):
+    for root, _, files in pack.walk():
         for filename in files:
             try:
-                total_size += os.path.getsize(os.path.join(root, filename))
+                total_size += (root / filename).stat().st_size
             except OSError:
                 continue
 
@@ -113,8 +115,8 @@ def output_development_pack_sizes(config: AnvilConfig) -> None:
     resource_pack_size = development_pack_size(config.RP_PATH)
     total_pack_size = behavior_pack_size + resource_pack_size
 
-    behavior_pack_name = os.path.basename(os.path.normpath(config.BP_PATH))
-    resource_pack_name = os.path.basename(os.path.normpath(config.RP_PATH))
+    behavior_pack_name = config.BP_PATH.name
+    resource_pack_name = config.RP_PATH.name
 
     click.echo(
         click.style("\r[INFO]: Development pack sizes (uncompressed)", fg="yellow")
@@ -140,16 +142,15 @@ def extract_world_pack(extract_world: str | None = None):
     if not isinstance(extract_world, str):
         return
 
-    if not path.exists(os.path.join("world", f"{extract_world}.mcworld")):
+    world_file = Path("world") / f"{extract_world}.mcworld"
+    if not world_file.exists():
         raise FileNotFoundError(
             f"'{extract_world}.mcworld' not found. Please ensure the mcworld exists in the world directory."
         )
 
     shutil.rmtree(CONFIG._WORLD_PATH, ignore_errors=True)
     Directory.create(CONFIG._WORLD_PATH)
-    with zipfile.ZipFile(
-        os.path.join("world", f"{extract_world}.mcworld"), "r"
-    ) as zip_ref:
+    with zipfile.ZipFile(world_file, "r") as zip_ref:
         zip_ref.extractall(CONFIG._WORLD_PATH)
 
 
@@ -177,7 +178,7 @@ def manifests():
 
 def scriptapi():
     if any([CONFIG._SCRIPT_API, CONFIG._SCRIPT_UI]):
-        if not os.path.exists("tsconfig.json"):
+        if not Path("tsconfig.json").exists():
             AnvilIO.file(
                 "tsconfig.json",
                 JsonSchemes.tsconfig(CONFIG.BP_PATH),
@@ -185,7 +186,7 @@ def scriptapi():
                 "w",
             )
         if (
-            not os.path.exists("esbuild.js")
+            not Path("esbuild.js").exists()
             and "esbuild" in CONFIG._SCRIPT_BUNDLE_SCRIPT
         ):
             AnvilIO.file(
@@ -194,7 +195,7 @@ def scriptapi():
                 "",
                 "w",
             )
-        if not os.path.exists("package.json"):
+        if not Path("package.json").exists():
             AnvilIO.file(
                 "package.json",
                 JsonSchemes.package_json(
@@ -208,7 +209,7 @@ def scriptapi():
             )
 
 
-def addon_object_exception(object: AddonObject, e: Exception):
+def addon_object_exception(object: JsonFile, e: Exception):
     full_traceback = tb.format_exc()
     creation_info = f"<{object.__class__.__name__} created from:\n{''.join(getattr(object, "_created_from", None))}>"
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
@@ -247,10 +248,10 @@ def addon_object_exception(object: AddonObject, e: Exception):
 
 
 def pack_art(apply_overlay: bool = False):
-    source = os.path.join("marketing")
+    source = Path("marketing")
     pack_icon_size = (256, 256)
-    if os.path.exists(os.path.join(source, "pack_icon.png")):
-        original = Image.open(os.path.join(source, "pack_icon.png"))
+    if (source / "pack_icon.png").exists():
+        original = Image.open(source / "pack_icon.png")
         resize(original, "pack_icon.png", CONFIG.BP_PATH, pack_icon_size)
         resize(original, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
 
@@ -269,14 +270,12 @@ def pack_art(apply_overlay: bool = False):
         resize(placeholder_image, "pack_icon.png", CONFIG.RP_PATH, pack_icon_size)
 
     if CONFIG._TARGET == ConfigPackageTarget.WORLD:
-        if os.path.exists(os.path.join(source, "keyart.png")):
-            original = Image.open(os.path.join(source, "keyart.png")).convert("RGB")
+        if (source / "keyart.png").exists():
+            original = Image.open(source / "keyart.png").convert("RGB")
             overlay = None
 
-            if apply_overlay and os.path.exists(
-                os.path.join(source, "keyart_overlay.png")
-            ):
-                overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
+            if apply_overlay and (source / "keyart_overlay.png").exists():
+                overlay = Image.open(source / "keyart_overlay.png")
 
             store_screenshot_size = (800, 450)
             resize(
@@ -311,20 +310,20 @@ def process_art(
     store_screenshot_size = (800, 450)
     marketing_screenshot_size = (1920, 1080)
 
-    source = os.path.join("marketing")
-    output_store = os.path.join("output", "Store Art")
-    output_marketing = os.path.join("output", "Marketing Art")
+    source = Path("marketing")
+    output_store = OUTPUT / "Store Art"
+    output_marketing = OUTPUT / "Marketing Art"
 
     if zip:
         Directory.create(output_store)
         Directory.create(output_marketing)
 
-        if os.path.exists(os.path.join(source, "keyart.png")):
-            original = Image.open(os.path.join(source, "keyart.png")).convert("RGB")
+        if (source / "keyart.png").exists():
+            original = Image.open(source / "keyart.png").convert("RGB")
             overlay = None
 
             if apply_overlay:
-                overlay = Image.open(os.path.join(source, "keyart_overlay.png"))
+                overlay = Image.open(source / "keyart_overlay.png")
 
             if config._TARGET == ConfigPackageTarget.WORLD:
                 resize(
@@ -360,8 +359,8 @@ def process_art(
                 "keyart.png not found in marketing directory. Please ensure the file exists."
             )
 
-        if os.path.exists(os.path.join(source, "panorama.png")):
-            original = Image.open(os.path.join(source, "panorama.png"))
+        if (source / "panorama.png").exists():
+            original = Image.open(source / "panorama.png")
             scale_factor = 450 / original.size[1]
             if (round(original.size[0] * scale_factor)) > 4000:
                 raise RuntimeError(
@@ -386,14 +385,14 @@ def process_art(
             )
 
         for i in range(999):
-            if not os.path.exists(os.path.join(source, f"{i}.png")):
+            if not (source / f"{i}.png").exists():
                 if i < 5:
                     raise FileNotFoundError(
                         f"{i}.png not found in marketing directory. Please ensure the file exists."
                     )
                 break
             else:
-                original = Image.open(os.path.join(source, f"{i}.png"))
+                original = Image.open(source / f"{i}.png")
                 resize(
                     original,
                     f"{config.PROJECT_NAME}_screenshot_{i}.jpg",
@@ -411,8 +410,8 @@ def process_art(
                     300,
                 )
 
-        if os.path.exists(os.path.join(source, "partner_art.png")):
-            original = Image.open(os.path.join(source, "partner_art.png"))
+        if (source / "partner_art.png").exists():
+            original = Image.open(source / "partner_art.png")
 
             resize(
                 original,
@@ -428,8 +427,8 @@ def process_art(
                 "partner_art.png not found in marketing directory. Please ensure the file exists."
             )
 
-        if os.path.exists(os.path.join(source, "pack_icon.png")):
-            original = Image.open(os.path.join(source, "pack_icon.png"))
+        if (source / "pack_icon.png").exists():
+            original = Image.open(source / "pack_icon.png")
             resize(
                 original,
                 f"{config.PROJECT_NAME}_packicon_0.jpg",
@@ -455,8 +454,8 @@ def package_zip_core(
 
     AnvilArchive.marketplace_zip()
 
-    shutil.rmtree(os.path.join("output", "Store Art"))
-    shutil.rmtree(os.path.join("output", "Marketing Art"))
+    shutil.rmtree(OUTPUT / "Store Art")
+    shutil.rmtree(OUTPUT / "Marketing Art")
 
 
 def mcaddon_core(config):
@@ -503,7 +502,7 @@ def compile_objects(
     if CONFIG._SCRIPT_API:
         args = [
             CONFIG._SCRIPT_BUNDLE_SCRIPT,
-            f'--outdir="{os.path.join(CONFIG.BP_PATH, "scripts")}"',
+            f'--outdir="{(CONFIG.BP_PATH / "scripts").as_posix()}"',
         ]
         if "--minify" in sys.argv:
             args.append("--minify")
@@ -544,7 +543,7 @@ def compile_objects(
             JsonSchemes.github_release_workflow(
                 CONFIG.PROJECT_NAME, CONFIG.DISPLAY_NAME
             ),
-            os.path.join(".github", "workflows"),
+            Path(".github", "workflows"),
             "w",
         )
 
@@ -608,7 +607,7 @@ def clean_old_dev(config: AnvilConfig):
     ]
 
     for pack_path in pack_paths:
-        if os.path.exists(pack_path):
+        if pack_path.exists():
             shutil.rmtree(pack_path)
     click.echo(
         click.style(
@@ -618,7 +617,7 @@ def clean_old_dev(config: AnvilConfig):
     )
 
 
-class ManifestRP(AddonObject):
+class ManifestRP(JsonFile):
     _instance = None
     _extension = ".json"
     _pack = Pack.RP
@@ -654,7 +653,7 @@ class ManifestRP(AddonObject):
         return super().queue()
 
 
-class ManifestBP(AddonObject):
+class ManifestBP(JsonFile):
     _instance = None
     _extension = ".json"
     _pack = Pack.BP
@@ -864,7 +863,7 @@ class _Anvil:
     """A class representing an Anvil instance."""
 
     _instance = None
-    _objects_list: list[AddonObject | object] = []
+    _objects_list: list[JsonFile | object] = []
 
     def __init__(self):
         """Initializes an Anvil instance.

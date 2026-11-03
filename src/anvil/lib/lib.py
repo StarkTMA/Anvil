@@ -10,6 +10,7 @@ import zipfile
 from datetime import datetime
 from enum import StrEnum
 from functools import wraps
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List
 
 import click
@@ -35,85 +36,81 @@ def validate_platform() -> None:
 validate_platform()
 
 
-USERPROFILE: str = os.getenv("USERPROFILE", os.path.expanduser("~"))
-APPDATA: str = os.getenv("APPDATA", os.path.join(USERPROFILE, "AppData", "Roaming"))
+USERPROFILE: Path = Path(os.getenv("USERPROFILE", Path.home()))
+APPDATA: Path = Path(os.getenv("APPDATA", USERPROFILE / "AppData" / "Roaming"))
 
-RELEASE_COM_MOJANG = os.path.join(
-    APPDATA, "Minecraft Bedrock", "Users", "Shared", "games", "com.mojang"
+RELEASE_COM_MOJANG: Path = (
+    APPDATA / "Minecraft Bedrock" / "Users" / "Shared" / "games" / "com.mojang"
 )
-PREVIEW_COM_MOJANG = os.path.join(
-    APPDATA, "Minecraft Bedrock Preview", "Users", "Shared", "games", "com.mojang"
+PREVIEW_COM_MOJANG: Path = (
+    APPDATA / "Minecraft Bedrock Preview" / "Users" / "Shared" / "games" / "com.mojang"
 )
 
-DESKTOP: str = os.path.join(USERPROFILE, "Desktop")
+DESKTOP: Path = USERPROFILE / "Desktop"
+OUTPUT = Path("output")
+"""The project's output folder, for packages and local exports."""
 IMAGE_EXTENSIONS_PRIORITY = [".tga", ".png", ".jpg", ".jpeg"]
 
 
 class Directory:
     @classmethod
-    def create(cls, path: str):
+    def create(cls, path: str | Path):
         """
-        Creates a new directory.
+        Creates a new directory, with its missing parents.
 
         Args:
-            path (str): The path to the new directory.
+            path (str | Path): The path to the new directory. A relative path is relative to
+                the current folder.
         """
-        if not path:
-            return
-        if os.path.isabs(path):
-            os.makedirs(path, exist_ok=True)
-        else:
-            this_path = os.path.join("./", path.lstrip("/"))
-            os.makedirs(this_path, exist_ok=True)
+        Path(path).mkdir(parents=True, exist_ok=True)
 
     @classmethod
     def copy_files(
-        cls, old_dir: str, new_dir: str, target_file: str, rename: str | None = None
+        cls,
+        old_dir: str | Path,
+        new_dir: str | Path,
+        target_file: str,
+        rename: str | None = None,
     ):
         """
         Copies a file from one directory to another.
 
         Args:
-            old_dir (str): The path to the source directory.
-            new_dir (str): The path to the destination directory.
+            old_dir (str | Path): The path to the source directory.
+            new_dir (str | Path): The path to the destination directory.
             target_file (str): The name of the file to be copied.
             rename (str | None, optional): The new name for the copied file. Defaults to None.
         """
         cls.create(new_dir)
-        if rename is None:
-            shutil.copyfile(
-                os.path.join(old_dir, target_file), os.path.join(new_dir, target_file)
-            )
-        else:
-            shutil.copyfile(
-                os.path.join(old_dir, target_file), os.path.join(new_dir, rename)
-            )
+        shutil.copyfile(
+            Path(old_dir) / target_file, Path(new_dir) / (rename or target_file)
+        )
 
     @classmethod
-    def copy_folder(cls, old_dir: str, new_dir: str):
+    def copy_folder(cls, old_dir: str | Path, new_dir: str | Path):
         """
         Copies a folder and all its contents to a new location.
 
         Args:
-            old_dir (str): The path to the source directory.
-            new_dir (str): The path to the destination directory.
+            old_dir (str | Path): The path to the source directory.
+            new_dir (str | Path): The path to the destination directory.
         """
         cls.create(new_dir)
         shutil.copytree(
-            os.path.realpath(old_dir), os.path.realpath(new_dir), dirs_exist_ok=True
+            Path(old_dir).resolve(), Path(new_dir).resolve(), dirs_exist_ok=True
         )
 
     @classmethod
-    def move_folder(cls, old_dir: str, new_dir: str) -> None:
+    def move_folder(cls, old_dir: str | Path, new_dir: str | Path) -> None:
         """
         Moves a folder and all its contents to a new location.
 
         Args:
-            old_dir (str): The path to the source directory.
-            new_dir (str): The path to the destination directory.
+            old_dir (str | Path): The path to the source directory.
+            new_dir (str | Path): The path to the destination directory.
         """
         cls.create(new_dir)
-        shutil.move(os.path.realpath(old_dir), os.path.realpath(new_dir))
+        shutil.move(Path(old_dir).resolve(), Path(new_dir).resolve())
 
 
 class AnvilIO:
@@ -246,7 +243,7 @@ class AnvilIO:
         cls,
         name: str,
         content: str | bytes | Dict | List,
-        directory: str,
+        directory: str | Path,
         mode: str,
         **parameters,
     ):
@@ -256,7 +253,7 @@ class AnvilIO:
         Args:
             name (str): The name of the file.
             content (Any): The content of the file.
-            directory (str): The directory path where the file should be created or modified.
+            directory (str | Path): The folder where the file is created or modified.
             mode (str): The file mode, either "w" (write) or "a" (append).
             **parameters (Any): Additional keyword arguments.
 
@@ -267,7 +264,7 @@ class AnvilIO:
         from anvil.lib.config import CONFIG
 
         Directory.create(directory)
-        path = os.path.normpath(os.path.join(directory, name))
+        path = Path(directory) / name
         type = name.split(".")[-1]
 
         if type in ["json", "material", "code-workspace"]:
@@ -290,11 +287,11 @@ class AnvilIO:
 
         if isinstance(content, bytes):
             binary_mode = mode if "b" in mode else f"{mode}b"
-            with open(path, binary_mode) as file:
+            with path.open(binary_mode) as file:
                 file.write(content)
             return
 
-        with open(path, mode, encoding="utf-8") as file:
+        with path.open(mode, encoding="utf-8") as file:
             file.write(content)
 
 
@@ -305,32 +302,34 @@ class AnvilArchive:
 
     @classmethod
     def write_entry(
-        cls, ziph: zipfile.ZipFile, file_path: str, archive_path: str
+        cls, ziph: zipfile.ZipFile, file_path: Path, archive_path: PurePosixPath
     ) -> None:
-        file_path_lower = file_path.lower()
-        if any(file_path_lower.endswith(ext) for ext in cls._EXCLUDED_EXTENSIONS):
+        file_name = file_path.name.lower()
+        if any(file_name.endswith(ext) for ext in cls._EXCLUDED_EXTENSIONS):
             return
 
-        extension = os.path.splitext(file_path)[1].lower()
-        if extension in cls._STORED_EXTENSIONS:
-            ziph.write(file_path, archive_path, compress_type=zipfile.ZIP_STORED)
+        if file_path.suffix.lower() in cls._STORED_EXTENSIONS:
+            ziph.write(
+                file_path, archive_path.as_posix(), compress_type=zipfile.ZIP_STORED
+            )
             return
 
         ziph.write(
             file_path,
-            archive_path,
+            archive_path.as_posix(),
             compress_type=zipfile.ZIP_DEFLATED,
             compresslevel=cls._FAST_COMPRESS_LEVEL,
         )
 
     @classmethod
-    def from_mapping(cls, zip_name: str, dir_list: dict) -> None:
+    def from_mapping(cls, zip_name: Path, dir_list: dict[Path, PurePosixPath]) -> None:
         """
         Create a ZIP archive containing multiple directories and files.
 
         Args:
-            zip_name (str): The name of the ZIP archive.
-            dir_list (dict): A dictionary where the keys are source directories and the values are target directories.
+            zip_name (Path): The ZIP archive to write.
+            dir_list (dict[Path, PurePosixPath]): The folders and files to add, each mapped to
+                the folder it goes in inside the archive.
 
         Note:
             The target directories represent the structure inside the ZIP archive.
@@ -343,39 +342,34 @@ class AnvilArchive:
             compresslevel=cls._FAST_COMPRESS_LEVEL,
         ) as zipf:
             for source, target in dir_list.items():
-                if os.path.isdir(source):
-                    source_root = os.path.realpath(source)
-                    for root, _, files in os.walk(source_root):
+                if source.is_dir():
+                    source_root = source.resolve()
+                    for root, _, files in source_root.walk():
                         for file_name in files:
-                            file_path = os.path.join(root, file_name)
-                            relative_path = os.path.relpath(file_path, source_root)
-                            archive_path = os.path.join(target, relative_path)
+                            file_path = root / file_name
+                            relative_path = file_path.relative_to(source_root)
+                            archive_path = target / relative_path.as_posix()
                             cls.write_entry(zipf, file_path, archive_path)
                 else:
-                    archive_path = os.path.join(target, os.path.basename(source))
-                    cls.write_entry(zipf, source, archive_path)
+                    cls.write_entry(zipf, source, target / source.name)
 
     @classmethod
     def marketplace_zip(cls):
         from anvil.lib.config import CONFIG, ConfigPackageTarget
 
-        Directory.create("output")
+        Directory.create(OUTPUT)
 
         content_structure = {
-            os.path.join("output", "Store Art"): os.path.join("Store Art"),
-            os.path.join("output", "Marketing Art"): os.path.join("Marketing Art"),
+            OUTPUT / "Store Art": PurePosixPath("Store Art"),
+            OUTPUT / "Marketing Art": PurePosixPath("Marketing Art"),
         }
 
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
-            ZIP_RP_PATH = os.path.join(
-                "Content",
-                "resource_packs",
-                f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
+            ZIP_RP_PATH = PurePosixPath(
+                "Content", "resource_packs", f"RP_{CONFIG._PASCAL_PROJECT_NAME}"
             )
-            ZIP_BP_PATH = os.path.join(
-                "Content",
-                "behavior_packs",
-                f"BP_{CONFIG._PASCAL_PROJECT_NAME}",
+            ZIP_BP_PATH = PurePosixPath(
+                "Content", "behavior_packs", f"BP_{CONFIG._PASCAL_PROJECT_NAME}"
             )
             content_structure.update(
                 {
@@ -387,52 +381,48 @@ class AnvilArchive:
         else:
             content_structure.update(
                 {
-                    CONFIG.RP_PATH: os.path.join(
+                    CONFIG.RP_PATH: PurePosixPath(
                         "Content",
                         "world_template",
                         "resource_packs",
                         f"RP_{CONFIG._PASCAL_PROJECT_NAME}",
                     ),
-                    CONFIG.BP_PATH: os.path.join(
+                    CONFIG.BP_PATH: PurePosixPath(
                         "Content",
                         "world_template",
                         "behavior_packs",
                         f"BP_{CONFIG._PASCAL_PROJECT_NAME}",
                     ),
-                    os.path.join(CONFIG._WORLD_PATH, "texts"): os.path.join(
-                        "Content", "world_template", "texts"
-                    ),
-                    os.path.join(CONFIG._WORLD_PATH, "level.dat"): os.path.join(
+                    CONFIG._WORLD_PATH
+                    / "texts": PurePosixPath("Content", "world_template", "texts"),
+                    CONFIG._WORLD_PATH
+                    / "level.dat": PurePosixPath("Content", "world_template"),
+                    CONFIG._WORLD_PATH
+                    / "levelname.txt": PurePosixPath("Content", "world_template"),
+                    CONFIG._WORLD_PATH
+                    / "manifest.json": PurePosixPath("Content", "world_template"),
+                    CONFIG._WORLD_PATH
+                    / "world_icon.jpeg": PurePosixPath("Content", "world_template"),
+                    CONFIG._WORLD_PATH
+                    / "world_behavior_packs.json": PurePosixPath(
                         "Content", "world_template"
                     ),
-                    os.path.join(CONFIG._WORLD_PATH, "levelname.txt"): os.path.join(
+                    CONFIG._WORLD_PATH
+                    / "world_resource_packs.json": PurePosixPath(
                         "Content", "world_template"
                     ),
-                    os.path.join(CONFIG._WORLD_PATH, "manifest.json"): os.path.join(
-                        "Content", "world_template"
-                    ),
-                    os.path.join(CONFIG._WORLD_PATH, "world_icon.jpeg"): os.path.join(
-                        "Content", "world_template"
-                    ),
-                    os.path.join(
-                        CONFIG._WORLD_PATH, "world_behavior_packs.json"
-                    ): os.path.join("Content", "world_template"),
-                    os.path.join(
-                        CONFIG._WORLD_PATH, "world_resource_packs.json"
-                    ): os.path.join("Content", "world_template"),
                 }
             )
             if not CONFIG._RANDOM_SEED:
                 content_structure.update(
                     {
-                        os.path.join(CONFIG._WORLD_PATH, "db"): os.path.join(
-                            "Content", "world_template", "db"
-                        ),
+                        CONFIG._WORLD_PATH
+                        / "db": PurePosixPath("Content", "world_template", "db"),
                     }
                 )
 
         AnvilArchive.from_mapping(
-            os.path.join("output", f"{CONFIG.PROJECT_NAME}.zip"),
+            OUTPUT / f"{CONFIG.PROJECT_NAME}.zip",
             content_structure,
         )
 
@@ -440,23 +430,27 @@ class AnvilArchive:
     def mcworld(cls):
         from anvil.api.core.core import CONFIG
 
-        Directory.create("output")
+        Directory.create(OUTPUT)
 
         content_structure = {
-            CONFIG.RP_PATH: os.path.join("resource_packs", f"RP_{CONFIG.PROJECT_NAME}"),
-            CONFIG.BP_PATH: os.path.join("behavior_packs", f"BP_{CONFIG.PROJECT_NAME}"),
-            os.path.join(CONFIG._WORLD_PATH, "texts"): "texts",
-            os.path.join(CONFIG._WORLD_PATH, "db"): "db",
-            os.path.join(CONFIG._WORLD_PATH, "level.dat"): "",
-            os.path.join(CONFIG._WORLD_PATH, "levelname.txt"): "",
-            os.path.join(CONFIG._WORLD_PATH, "manifest.json"): "",
-            os.path.join(CONFIG._WORLD_PATH, "world_icon.jpeg"): "",
-            os.path.join(CONFIG._WORLD_PATH, "world_behavior_packs.json"): "",
-            os.path.join(CONFIG._WORLD_PATH, "world_resource_packs.json"): "",
+            CONFIG.RP_PATH: PurePosixPath(
+                "resource_packs", f"RP_{CONFIG.PROJECT_NAME}"
+            ),
+            CONFIG.BP_PATH: PurePosixPath(
+                "behavior_packs", f"BP_{CONFIG.PROJECT_NAME}"
+            ),
+            CONFIG._WORLD_PATH / "texts": PurePosixPath("texts"),
+            CONFIG._WORLD_PATH / "db": PurePosixPath("db"),
+            CONFIG._WORLD_PATH / "level.dat": PurePosixPath(),
+            CONFIG._WORLD_PATH / "levelname.txt": PurePosixPath(),
+            CONFIG._WORLD_PATH / "manifest.json": PurePosixPath(),
+            CONFIG._WORLD_PATH / "world_icon.jpeg": PurePosixPath(),
+            CONFIG._WORLD_PATH / "world_behavior_packs.json": PurePosixPath(),
+            CONFIG._WORLD_PATH / "world_resource_packs.json": PurePosixPath(),
         }
 
         AnvilArchive.from_mapping(
-            os.path.join("output", f"{CONFIG.PROJECT_NAME}.mcworld"),
+            OUTPUT / f"{CONFIG.PROJECT_NAME}.mcworld",
             content_structure,
         )
 
@@ -464,15 +458,15 @@ class AnvilArchive:
     def mcaddon(cls) -> None:
         from anvil.api.core.core import CONFIG
 
-        Directory.create("output")
+        Directory.create(OUTPUT)
 
         content_structure = {
-            CONFIG.RP_PATH: f"RP_{CONFIG.PROJECT_NAME}",
-            CONFIG.BP_PATH: f"BP_{CONFIG.PROJECT_NAME}",
+            CONFIG.RP_PATH: PurePosixPath(f"RP_{CONFIG.PROJECT_NAME}"),
+            CONFIG.BP_PATH: PurePosixPath(f"BP_{CONFIG.PROJECT_NAME}"),
         }
 
         AnvilArchive.from_mapping(
-            os.path.join("output", f"{CONFIG.PROJECT_NAME}.mcaddon"),
+            OUTPUT / f"{CONFIG.PROJECT_NAME}.mcaddon",
             content_structure,
         )
 

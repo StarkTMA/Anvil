@@ -4,12 +4,13 @@ from typing import Literal
 from anvil.api.core.core import CONFIG
 from anvil.api.core.enums import Dimension
 from anvil.lib.config import ConfigPackageTarget, Pack
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 DIMENSION_FORMAT_VERSION = "1.18.0"
 
 
-class DimensionConfiguration(AddonObject):
+class DimensionConfiguration(JsonFile):
     """Overrides a vanilla dimension's height bounds or generator.
 
     - The Overworld supports custom height bounds (``minecraft:dimension_bounds``) and void generation.

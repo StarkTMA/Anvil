@@ -1,8 +1,8 @@
 from anvil.api.biomes.components import BiomeClientComponent
 from anvil.api.core.components import ComponentGroup
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import validate_components
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+from anvil.lib.jsonmodel import JsonFile, validate_components
+from anvil.lib.schemas import JsonSchemes, MinecraftDescription
 
 __all__ = ["BiomeDescription", "BiomeServer"]
 
@@ -18,7 +18,7 @@ class BiomeDescription(MinecraftDescription):
         super().__init__(name, is_vanilla)
 
 
-class BiomeServer(AddonObject):
+class BiomeServer(JsonFile):
     """The biome server object."""
 
     _extension = ".biome.json"

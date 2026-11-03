@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 import re
+from pathlib import Path
 from typing import Any, Callable, Dict
 
 import orjson
@@ -15,9 +15,7 @@ _DEFAULT_FILTERS: Dict[str, Callable[[object], str]] = {
     "path": lambda v: str(v).replace("\\", "/"),
     "dquote": lambda v: str(v).replace("'", '"'),
 }
-_TEMPLATES_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates"
-)
+_TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 
 
 def load_file(
@@ -44,7 +42,7 @@ def load_file(
         # Apply dquote filter by default
         return str(value).replace("'", '"')
 
-    with open(os.path.join(_TEMPLATES_DIR, file_path), "r", encoding="utf-8") as file:
+    with (_TEMPLATES_DIR / file_path).open("r", encoding="utf-8") as file:
         text = file.read()
 
     result = _TOKEN_RE.sub(replace, text)

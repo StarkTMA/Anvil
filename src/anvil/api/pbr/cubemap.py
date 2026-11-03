@@ -3,10 +3,11 @@ from typing import overload
 from anvil.api.pbr.texture_set import KeyFrame
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
-class CubeMapSettings(AddonObject):
+class CubeMapSettings(JsonFile):
     """Cubemap settings for sky and indirect lighting in Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"

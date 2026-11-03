@@ -3,8 +3,8 @@ from anvil.api.core.enums import ItemCategory, RecipeUnlockContext, SmeltingTags
 from anvil.api.core.types import Identifier
 from anvil.api.items.items import Item
 from anvil.lib.config import CONFIG, Pack
+from anvil.lib.jsonmodel import JsonFile
 from anvil.lib.schemas import (
-    AddonObject,
     JsonSchemes,
     MinecraftBlockDescriptor,
     MinecraftItemDescriptor,
@@ -12,7 +12,7 @@ from anvil.lib.schemas import (
 from anvil.lib.translator import AnvilTranslator
 
 
-class CraftingItemCatalog(AddonObject):
+class CraftingItemCatalog(JsonFile):
     _instance = None
     _extension = ".json"
     _pack = Pack.BP
@@ -122,7 +122,7 @@ class CraftingItemCatalog(AddonObject):
         return super().queue()
 
 
-class _BaseRecipe(AddonObject):
+class _BaseRecipe(JsonFile):
     _extension = ".recipe.json"
     _pack = Pack.BP
     _folder = "recipes"

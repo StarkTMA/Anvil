@@ -23,8 +23,8 @@ from anvil.api.core.enums import MusicCategory, SoundCategory
 from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
 from anvil.api.core.types import Color, FoliageColorMap, GrassColorMap
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import validate_components
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile, validate_components
+from anvil.lib.schemas import JsonSchemes
 
 from anvil.api.pbr.atmosphere import AtmosphericSettings
 from anvil.api.pbr.color_grading import ColorGradingSettings
@@ -36,7 +36,7 @@ from anvil.api.pbr.water import WaterSettings
 __all__ = ["BiomeClient"]
 
 
-class BiomeClient(AddonObject):
+class BiomeClient(JsonFile):
     """The biome client object."""
 
     _extension = ".client_biome.json"

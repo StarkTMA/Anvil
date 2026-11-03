@@ -1,8 +1,8 @@
 from anvil.api.actors.description import _ActorClientDescription
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.reports import ReportType
+from anvil.lib.jsonmodel import JsonFile
 from anvil.lib.schemas import (
-    AddonObject,
     JsonSchemes,
 )
 
@@ -24,7 +24,7 @@ class _AttachableClientDescription(_ActorClientDescription):
         super().__init__(name, is_vanilla)
 
 
-class Attachable(AddonObject):
+class Attachable(JsonFile):
     _extension = ".attachable.json"
     _pack = Pack.RP
     _folder = "attachables"

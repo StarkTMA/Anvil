@@ -2,6 +2,7 @@
 
 import os
 import zipfile
+from pathlib import PurePosixPath
 
 import pytest
 
@@ -242,8 +243,8 @@ class TestAnvilArchive:
         src.mkdir()
         (src / "hello.txt").write_text("hello")
 
-        zip_path = str(tmp_path / "out.zip")
-        AnvilArchive.from_mapping(zip_path, {str(src): "content"})
+        zip_path = tmp_path / "out.zip"
+        AnvilArchive.from_mapping(zip_path, {src: PurePosixPath("content")})
 
         assert os.path.exists(zip_path)
         with zipfile.ZipFile(zip_path) as zf:
@@ -256,8 +257,8 @@ class TestAnvilArchive:
         (src / "main.js").write_text("code")
         (src / "main.js.map").write_text("sourcemap")
 
-        zip_path = str(tmp_path / "out.zip")
-        AnvilArchive.from_mapping(zip_path, {str(src): "scripts"})
+        zip_path = tmp_path / "out.zip"
+        AnvilArchive.from_mapping(zip_path, {src: PurePosixPath("scripts")})
 
         with zipfile.ZipFile(zip_path) as zf:
             names = zf.namelist()
@@ -268,8 +269,8 @@ class TestAnvilArchive:
         src_file = tmp_path / "data.json"
         src_file.write_text('{"key": "value"}')
 
-        zip_path = str(tmp_path / "out.zip")
-        AnvilArchive.from_mapping(zip_path, {str(src_file): "root"})
+        zip_path = tmp_path / "out.zip"
+        AnvilArchive.from_mapping(zip_path, {src_file: PurePosixPath("root")})
 
         with zipfile.ZipFile(zip_path) as zf:
             names = zf.namelist()
@@ -281,8 +282,8 @@ class TestAnvilArchive:
         nested.mkdir(parents=True)
         (nested / "file.txt").write_text("nested")
 
-        zip_path = str(tmp_path / "out.zip")
-        AnvilArchive.from_mapping(zip_path, {str(src): "root"})
+        zip_path = tmp_path / "out.zip"
+        AnvilArchive.from_mapping(zip_path, {src: PurePosixPath("root")})
 
         with zipfile.ZipFile(zip_path) as zf:
             names = zf.namelist()

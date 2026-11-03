@@ -157,7 +157,8 @@ def _choice(values: tuple[Any, ...], label: str, enum: type | None = None) -> No
 
 def _object(cls: type) -> Node:
     """A part, written by its `__json__()` and described under `$defs`. The `$defs` entry is
-    set before the part's body is built, so a part that contains itself ends in a `$ref`."""
+    set before the part's body is built, so a part that contains itself ends in a `$ref`.
+    """
 
     def describe(definitions: dict[str, JsonSchema]) -> JsonSchema:
         if cls.__name__ not in definitions:

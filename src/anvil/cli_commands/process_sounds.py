@@ -1,4 +1,3 @@
-import os
 import subprocess
 from pathlib import Path
 
@@ -97,10 +96,10 @@ def process_sounds(target_lufs, sample_rate, quality) -> None:
         click.echo("Aborted by user.")
         return
 
-    for root, _, files in os.walk(input_root):
+    for root, _, files in input_root.walk():
         for filename in files:
             if filename.lower().endswith((".wav", ".mp3", ".ogg")):
-                input_file: Path = Path(root) / filename
+                input_file: Path = root / filename
                 relative_path: Path = input_file.relative_to(input_root)
                 output_file: Path = output_root / relative_path.with_suffix(".ogg")
                 result: str = process_file(

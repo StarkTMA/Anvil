@@ -3,10 +3,11 @@ from anvil.api.core.types import (
 )
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import AnvilFormatter
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
-class PBRFallback(AddonObject):
+class PBRFallback(JsonFile):
     """PBR fallback settings acting as default values when texture sets are not provided."""
 
     _extension = ".json"

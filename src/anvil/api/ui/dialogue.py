@@ -1,5 +1,6 @@
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 from anvil.lib.translator import AnvilTranslator
 
 
@@ -147,7 +148,7 @@ class _DialogueScene:
         )
 
 
-class Dialogue(AddonObject):
+class Dialogue(JsonFile):
     _extension = ".dialogue.json"
     _pack = Pack.BP
     _folder = "dialogue"

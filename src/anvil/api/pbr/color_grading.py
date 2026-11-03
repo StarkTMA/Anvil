@@ -5,10 +5,11 @@ from anvil.api.core.types import (
 )
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
-class ColorGradingSettings(AddonObject):
+class ColorGradingSettings(JsonFile):
     """Color grading and tone mapping configuration settings for Vibrant Visuals (PBR) rendering."""
 
     _extension = ".json"

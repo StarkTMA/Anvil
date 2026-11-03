@@ -48,7 +48,7 @@ from typing import Literal
 import click
 from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
 from anvil.lib.lib import *
-from anvil.lib.schemas import AddonObject
+from anvil.lib.jsonmodel import JsonFile
 from PIL import Image
 
 __all__ = [
@@ -280,7 +280,7 @@ class UIFontSize(StrEnum):
 # Subclasses ==========================================================
 
 
-class NinesliceJson(AddonObject):
+class NinesliceJson(JsonFile):
     _extension = ".json"
     _pack = Pack.RP
     _folder = os.path.join("textures", "ui")
@@ -2040,14 +2040,14 @@ class _UICreditsConstructor:
 
 
 # UI files ============================================================
-class _UIVariables(AddonObject):
+class _UIVariables(JsonFile):
     """Manages global UI variables for the resource pack.
 
     This class handles the creation and management of global variables
     that can be used throughout the UI system for dynamic content and
     conditional logic.
 
-    Inherits from AddonObject to provide file generation capabilities.
+    Inherits from JsonFile to provide file generation capabilities.
     """
 
     _extension = ".json"
@@ -2070,13 +2070,13 @@ class _UIVariables(AddonObject):
         return self
 
 
-class _UIDefs(AddonObject):
+class _UIDefs(JsonFile):
     """Manages UI definition files list for the resource pack.
 
     This class maintains a list of UI files that should be loaded
     by the game's UI system.
 
-    Inherits from AddonObject to provide file generation capabilities.
+    Inherits from JsonFile to provide file generation capabilities.
     """
 
     _extension = ".json"
@@ -2107,14 +2107,14 @@ class _UIDefs(AddonObject):
         return super().queue("ui")
 
 
-class _UIAnimation(AddonObject):
+class _UIAnimation(JsonFile):
     """Manages UI animations for a specific namespace.
 
     This class handles the creation and management of animations
     that can be applied to UI elements. It maintains a collection
     of animation elements and generates the final animation file.
 
-    Inherits from AddonObject to provide file generation capabilities.
+    Inherits from JsonFile to provide file generation capabilities.
 
     Attributes:
         _defs (_UIDefs): Reference to UI definitions manager
@@ -2171,14 +2171,14 @@ class _UIAnimation(AddonObject):
         return super().queue(directory)
 
 
-class _UIScreen(AddonObject):
+class _UIScreen(JsonFile):
     """Manages a UI screen with elements, animations, and bindings.
 
     This is the base class for creating UI screens. It handles element
     management, trigger systems, and integration with the broader UI
     framework.
 
-    Inherits from AddonObject to provide file generation capabilities.
+    Inherits from JsonFile to provide file generation capabilities.
 
     Attributes:
         _namespace (str): Namespace for the screen

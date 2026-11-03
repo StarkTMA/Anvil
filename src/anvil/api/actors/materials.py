@@ -6,10 +6,11 @@ from anvil.api.core.enums import (
 )
 from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
-class MaterialsObject(AddonObject):
+class MaterialsObject(JsonFile):
     """Handles materials as a singleton.
 
     Attributes:

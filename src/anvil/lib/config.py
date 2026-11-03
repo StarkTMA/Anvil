@@ -1,5 +1,4 @@
 import copy
-import os
 import re
 import sys
 import uuid
@@ -7,6 +6,7 @@ from contextlib import contextmanager
 from dataclasses import MISSING, dataclass, field, fields, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
+from pathlib import Path
 from typing import Any, Iterator, List
 
 import click
@@ -98,15 +98,18 @@ class ConfigPackageTarget(StrEnum):
     ADDON = "addon"
 
 
+CONFIG_FILE = Path("anvilconfig.json")
+"""The project's config file, in the current folder."""
+
+
 class Config:
     """A class used to read and write to the config.ini file."""
 
     def __init__(self, allow_missing: bool = False) -> None:
         """Initializes a Config object."""
         self._config: dict[str, Any] = {}
-        if os.path.exists("anvilconfig.json"):
-            with open("anvilconfig.json", "rb") as f:
-                self._config = orjson.loads(f.read())
+        if CONFIG_FILE.exists():
+            self._config = orjson.loads(CONFIG_FILE.read_bytes())
         elif not allow_missing:
             click.echo(
                 click.style(
@@ -118,7 +121,7 @@ class Config:
 
     def save(self):
         """Saves the anvilconfig.json file."""
-        with open("anvilconfig.json", "wb") as f:
+        with CONFIG_FILE.open("wb") as f:
             f.write(
                 orjson.dumps(
                     self._config, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
@@ -405,14 +408,14 @@ class AnvilConfig:
         return cls(**values)
 
     @classmethod
-    def from_file(cls, path: str = "anvilconfig.json") -> "AnvilConfig":
+    def from_file(cls, path: str | Path = "anvilconfig.json") -> "AnvilConfig":
         """Reads the settings of the project whose `anvilconfig.json` is at `path`.
 
         Args:
-            path (str, optional): The config file. Defaults to the one in the current folder.
+            path (str | Path, optional): The config file. Defaults to the one in the current
+                folder.
         """
-        with open(path, "rb") as f:
-            return cls.from_dict(orjson.loads(f.read()))
+        return cls.from_dict(orjson.loads(Path(path).read_bytes()))
 
     @property
     def _DEBUG(self) -> bool:
@@ -425,30 +428,30 @@ class AnvilConfig:
         return _initials(self.PROJECT_NAME)
 
     @property
-    def _COM_MOJANG(self) -> str:
+    def _COM_MOJANG(self) -> Path:
         """The `com.mojang` folder the packs are exported to."""
         if self._LOCAL_EXPORT:
-            return os.path.join(os.path.abspath("output"), "com.mojang")
+            return Path.cwd() / "output" / "com.mojang"
         return PREVIEW_COM_MOJANG if self._PREVIEW else RELEASE_COM_MOJANG
 
     @property
-    def RP_PATH(self) -> str:
+    def RP_PATH(self) -> Path:
         """The development resource pack folder."""
-        return os.path.join(
-            self._COM_MOJANG, "development_resource_packs", f"RP_{self.PROJECT_NAME}"
+        return (
+            self._COM_MOJANG / "development_resource_packs" / f"RP_{self.PROJECT_NAME}"
         )
 
     @property
-    def BP_PATH(self) -> str:
+    def BP_PATH(self) -> Path:
         """The development behavior pack folder."""
-        return os.path.join(
-            self._COM_MOJANG, "development_behavior_packs", f"BP_{self.PROJECT_NAME}"
+        return (
+            self._COM_MOJANG / "development_behavior_packs" / f"BP_{self.PROJECT_NAME}"
         )
 
     @property
-    def _WORLD_PATH(self) -> str:
+    def _WORLD_PATH(self) -> Path:
         """The development world folder."""
-        return os.path.join(self._COM_MOJANG, "minecraftWorlds", self.PROJECT_NAME)
+        return self._COM_MOJANG / "minecraftWorlds" / self.PROJECT_NAME
 
 
 CONFIG: AnvilConfig = object.__new__(AnvilConfig)

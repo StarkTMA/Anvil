@@ -4,12 +4,12 @@ from anvil.api.core.enums import (
     BlockSoundEvent,
     BlockSoundGroup,
 )
-from anvil.lib.schemas import AddonObject
+from anvil.lib.jsonmodel import JsonFile
 
 __all__ = ["BlockClient"]
 
 
-class BlockClient(AddonObject):
+class BlockClient(JsonFile):
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
         super().__init__(name, is_vanilla)
 

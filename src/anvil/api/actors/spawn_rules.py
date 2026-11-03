@@ -4,8 +4,8 @@ from anvil.api.core.enums import Difficulty, Population
 from anvil.api.core.filters import Filter
 from anvil.lib.config import Pack
 from anvil.lib.lib import AnvilFormatter
+from anvil.lib.jsonmodel import JsonFile
 from anvil.lib.schemas import (
-    AddonObject,
     JsonSchemes,
     MinecraftBlockDescriptor,
     MinecraftDescription,
@@ -625,7 +625,7 @@ class _SpawnRuleCondition:
         return self._condition
 
 
-class SpawnRule(AddonObject):
+class SpawnRule(JsonFile):
     _extension = ".spawn_rules.json"
     _pack = Pack.BP
     _folder = "spawn_rules"

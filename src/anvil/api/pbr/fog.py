@@ -1,7 +1,8 @@
 from anvil.api.core.enums import FogCameraLocation, RenderDistanceType
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import RGB, AnvilFormatter, Color, clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes, MinecraftDescription
 
 
 class _FogDistance:
@@ -100,7 +101,7 @@ class _FogDistance:
         return self._distance
 
 
-class FogSettings(AddonObject):
+class FogSettings(JsonFile):
     """
     Represents a Minecraft Fog resource pack definition.
 

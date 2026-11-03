@@ -25,7 +25,8 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 from anvil.api.models.geometry import Geometry
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 _Value = Sequence[Union[float, int, str]]
 
@@ -265,7 +266,7 @@ class _Animation:
         return {full_name: data}
 
 
-class Animations(AddonObject):
+class Animations(JsonFile):
     """An animations file (``<name>.animations.json``) holding many animations."""
 
     _extension = ".animations.json"

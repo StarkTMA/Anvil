@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, overload
 from anvil.api.core.enums import Target
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import Pack
+from anvil.lib.jsonmodel import JsonFile
 from anvil.lib.schemas import (
-    AddonObject,
     JsonSchemes,
 )
 
@@ -434,7 +434,7 @@ class _RP_Controller(_BP_Controller):
         return self._controller_state
 
 
-class BPAnimationControllers(AddonObject):
+class BPAnimationControllers(JsonFile):
     _extension = ".bp_ac.json"
     _pack = Pack.BP
     _folder = "animation_controllers"
@@ -474,7 +474,7 @@ class BPAnimationControllers(AddonObject):
             return super().queue(directory=directory)
 
 
-class RPAnimationControllers(AddonObject):
+class RPAnimationControllers(JsonFile):
     _extension = ".rp_ac.json"
     _pack = Pack.RP
     _folder = "animation_controllers"

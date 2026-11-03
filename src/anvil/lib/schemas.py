@@ -8,9 +8,9 @@ from typing import Dict, Mapping
 
 from anvil.__version__ import __version__
 from anvil.api.core.types import Identifier, Vector2D
-from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
+from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.format_versions import *
-from anvil.lib.lib import APPDATA, AnvilIO, salt_from_str
+from anvil.lib.lib import APPDATA, salt_from_str
 from anvil.lib.templater import load_file
 
 
@@ -452,14 +452,6 @@ class JsonSchemes:
         return load_file(
             "vv_fog_settings.jsont",
             {"format_version": FOG_VERSION, "identifier": identifier},
-            is_json=True,
-        )
-
-    @staticmethod
-    def shadow_settings():
-        return load_file(
-            "vv_shadow_settings.jsont",
-            {"format_version": SHADOW_SETTINGS_VERSION},
             is_json=True,
         )
 
@@ -956,88 +948,6 @@ class MinecraftDescription(AddonDescriptor):
             dict: The description
         """
         return self._description
-
-
-class AddonObject(AddonDescriptor):
-    """
-    An object representing an addon with functionality to modify its content, queue it for processing, and export it.
-
-    Attributes:
-        name (str): The name of the addon object.
-        is_vanilla (bool): Indicates if the object is from vanilla Minecraft.
-        object_type (str, optional): The type of the addon object.
-    """
-
-    _extension = ".json"
-    _pack: Pack | None = None
-    _folder = ""
-    _object_type = "addon_object"
-    _queued = False
-
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """
-        Constructs all the necessary attributes for the AddonObject object.
-
-        Args:
-            name (str): The name of the addon object.
-        """
-        super().__init__(name, is_vanilla)
-
-        self._directory = ""
-        self._content = {}
-
-    def content(self, content) -> "AddonObject":
-        """
-        Sets the content of the addon object and returns the object.
-
-        Args:
-            content (any): The content to be set for the addon object.
-
-        Returns:
-            self: The instance of the current AddonObject.
-        """
-        self._content = content
-        return self
-
-    def queue(self, directory: str | None = None) -> "AddonObject":
-        """
-        Queues the addon object for processing and logs the event.
-
-        Args:
-            directory (str, optional): The directory of the addon object.
-
-        Returns:
-            self: The instance of the current AddonObject.
-        """
-        from anvil.api.core.core import ANVIL
-
-        if self._queued:
-            return self
-
-        self._directory = directory if not directory is None else ""
-        self._queued = True
-        ANVIL.__queue__(self)
-        return self
-
-    @property
-    def _path(self) -> str:
-        """The folder the object is written to: its folder in its pack, then its directory."""
-        pack = CONFIG.RP_PATH if self._pack == Pack.RP else CONFIG.BP_PATH
-        return os.path.normpath(os.path.join(pack, self._folder, self._directory))
-
-    def __export__(self) -> None:
-        """
-        Exports the addon object after potentially shortening its content and replacing backslashes.
-        Logs the event and writes the object to a file.
-        """
-        path = self._path.removeprefix(CONFIG.RP_PATH).removeprefix(CONFIG.BP_PATH)
-        path = os.path.join(path, f"{self._name}{self._extension}")
-        if len(path) > 96:
-            raise ValueError(
-                f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [96] characters."
-            )
-
-        AnvilIO.file(f"{self._name}{self._extension}", self._content, self._path, "w")
 
 
 class MinecraftAddonObject(AddonDescriptor):

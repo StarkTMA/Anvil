@@ -3,7 +3,8 @@ from typing import Any, List, Union
 
 from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.schemas import AddonObject, MinecraftItemDescriptor
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import MinecraftItemDescriptor
 
 from .loot_tables import _LootPoolEntryFunctions
 
@@ -166,7 +167,7 @@ class _TradeTier:
         }
 
 
-class TradeTable(AddonObject):
+class TradeTable(JsonFile):
     """A Minecraft Bedrock trade table for defining villager trades.
 
     Used to customize the trades available from villagers and wandering traders.

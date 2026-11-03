@@ -5,10 +5,11 @@ from anvil.api.core.filters import Filter
 from anvil.api.core.types import Identifier
 from anvil.api.features.features import DistributionMixin, Feature
 from anvil.lib.config import Pack
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
-class FeatureRule(AddonObject, DistributionMixin):
+class FeatureRule(JsonFile, DistributionMixin):
     """Controls where and when a feature is placed during world generation.
 
     Each feature rule controls exactly one feature and can attach that feature to

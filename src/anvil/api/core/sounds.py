@@ -15,7 +15,8 @@ from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import Directory
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 from anvil.lib.translator import AnvilTranslator
 
 
@@ -204,7 +205,7 @@ class _SoundDescription:
         return self._sound
 
 
-class SoundDefinition(AddonObject):
+class SoundDefinition(JsonFile):
     """Singleton for handling sound definitions.
 
     Attributes:
@@ -294,7 +295,7 @@ class SoundDefinition(AddonObject):
         return super().__export__()
 
 
-class ServerSoundDefinition(AddonObject):
+class ServerSoundDefinition(JsonFile):
     """Singleton for handling server-side (behavior pack) sound definitions.
 
     Experimental system introduced in Minecraft Bedrock 26.40 (`minecraft:server_sound_definitions`)
@@ -362,7 +363,7 @@ class ServerSoundDefinition(AddonObject):
         return super().__export__()
 
 
-class MusicDefinition(AddonObject):
+class MusicDefinition(JsonFile):
     """Singleton for handling music definitions.
 
     Attributes:
@@ -441,7 +442,7 @@ class MusicDefinition(AddonObject):
         return super().__export__()
 
 
-class SoundEvent(AddonObject):
+class SoundEvent(JsonFile):
     """Singleton for handling sound events for entities and individual sounds.
 
     Manages the creation and configuration of sound events that can be
@@ -670,7 +671,7 @@ class SoundEvent(AddonObject):
         return super().queue()
 
 
-class BlocksJSONObject(AddonObject):
+class BlocksJSONObject(JsonFile):
     _instance = None
     _extension = ".json"
     _pack = Pack.RP

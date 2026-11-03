@@ -2,7 +2,8 @@ from typing import Dict, Literal
 
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import Pack
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
 class _RenderController:
@@ -199,7 +200,7 @@ class _RenderController:
         return self._controller
 
 
-class RenderControllers(AddonObject):
+class RenderControllers(JsonFile):
     _extension = ".rc.json"
     _pack = Pack.RP
     _folder = "render_controllers"

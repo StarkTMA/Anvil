@@ -4,8 +4,8 @@ from anvil.api.logic.molang import Molang
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.blockbench import _BlockBenchSource
 from anvil.lib.config import CONFIG, Pack
+from anvil.lib.jsonmodel import JsonFile
 from anvil.lib.schemas import (
-    AddonObject,
     JsonSchemes,
 )
 
@@ -106,7 +106,7 @@ class _EntityClientDescription(_ActorClientDescription):
         return self._description
 
 
-class EntityClient(AddonObject):
+class EntityClient(JsonFile):
     """Base class for all client entities."""
 
     _extension = ".entity.json"

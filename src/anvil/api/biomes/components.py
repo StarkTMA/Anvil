@@ -38,7 +38,6 @@ from anvil.api.pbr.fog import FogSettings
 from anvil.api.pbr.lighting import LightingSettings
 from anvil.api.pbr.water import WaterSettings
 
-
 # region Parts: objects nested inside components
 
 
@@ -867,9 +866,7 @@ class BiomeClientAtmosphereIdentifier(BiomeClientComponent):
 
     identifier = "minecraft:atmosphere_identifier"
 
-    atmosphere_identifier: Annotated[AtmosphericSettings | str, AsString] = (
-        json_field()
-    )
+    atmosphere_identifier: Annotated[AtmosphericSettings | str, AsString] = json_field()
 
 
 class BiomeClientMusic(BiomeClientComponent):

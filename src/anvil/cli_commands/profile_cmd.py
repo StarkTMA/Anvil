@@ -1,14 +1,12 @@
-import os
-
 import click
 
-from anvil.lib.config import Config, ConfigOption, ConfigSection
+from anvil.lib.config import CONFIG_FILE, Config, ConfigOption, ConfigSection
 from anvil.lib.lib import process_subcommand
 
 
 @click.command(help="Profile the current Anvil project")
 def profile() -> None:
-    if not os.path.exists("anvilconfig.json"):
+    if not CONFIG_FILE.exists():
         click.echo(
             click.style(
                 "No valid Anvil project found, to create a new project run: `anvil create --help`",

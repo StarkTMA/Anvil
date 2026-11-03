@@ -2,6 +2,7 @@ import os
 import sys
 import uuid
 from datetime import datetime
+from pathlib import Path
 
 import click
 from anvil.lib.config import (
@@ -13,6 +14,7 @@ from anvil.lib.config import (
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
     DESKTOP,
+    OUTPUT,
     PREVIEW_COM_MOJANG,
     RELEASE_COM_MOJANG,
     AnvilDisplay,
@@ -115,21 +117,12 @@ class JsonSchemes:
         Returns:
             dict: The workspace configuration data.
         """
-        DEV_RES_DIR = dev_res_path or os.path.join(
-            PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG,
-            "development_resource_packs",
-        )
-        DEV_BEH_DIR = dev_beh_path or os.path.join(
-            PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG,
-            "development_behavior_packs",
-        )
+        com_mojang = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
+        DEV_RES_DIR = dev_res_path or com_mojang / "development_resource_packs"
+        DEV_BEH_DIR = dev_beh_path or com_mojang / "development_behavior_packs"
 
-        DEV_PREV_RES_DIR = os.path.join(
-            PREVIEW_COM_MOJANG, "development_resource_packs"
-        )
-        DEV_PREV_BEH_DIR = os.path.join(
-            PREVIEW_COM_MOJANG, "development_behavior_packs"
-        )
+        DEV_PREV_RES_DIR = PREVIEW_COM_MOJANG / "development_resource_packs"
+        DEV_PREV_BEH_DIR = PREVIEW_COM_MOJANG / "development_behavior_packs"
 
         return load_file(
             "code_workspace.jsont",
@@ -148,7 +141,7 @@ class JsonSchemes:
     def tsconfig(out_dir):
         return load_file(
             "tsconfig.jsont",
-            {"out_dir": os.path.join(out_dir, "scripts")},
+            {"out_dir": Path(out_dir) / "scripts"},
             is_json=True,
         )
 
@@ -262,13 +255,13 @@ def create_directories_from_tree(tree: dict) -> None:
         None
     """
 
-    def find_key(tree: dict, path: str, a: list) -> list:
+    def find_key(tree: dict, path: Path, a: list) -> list:
         """
         Recursively finds keys in the tree structure.
 
         Args:
             tree (dict): The tree structure.
-            path (str): The current path.
+            path (Path): The current path.
             a (list): The list to store the found keys.
 
         Returns:
@@ -276,12 +269,12 @@ def create_directories_from_tree(tree: dict) -> None:
         """
         for key, value in tree.items():
             if isinstance(value, dict):
-                find_key(value, f"{path}/{key}", a)
+                find_key(value, path / key, a)
             if value == {}:
-                a.append(f"{path}/{key}")
+                a.append(path / key)
         return a
 
-    directories = find_key(tree, "", a=[])
+    directories = find_key(tree, Path(), a=[])
     for directory in directories:
         Directory.create(directory)
 
@@ -290,8 +283,8 @@ def handle_script(
     config: Config,
     namespace: str,
     project_name: str,
-    DEV_BEH_DIR: str,
-    WORKING_DIR: str,
+    DEV_BEH_DIR: Path,
+    WORKING_DIR: Path,
     vscode: bool,
 ) -> None:
     click.echo("Initiating ScriptingAPI modules")
@@ -310,9 +303,9 @@ def handle_script(
     config.add_option(
         ConfigSection.BUILD, ConfigOption.JS_BUNDLE_SCRIPT, "node esbuild.js"
     )
-    DEV_BEH_DIR = os.path.join(
-        DEV_BEH_DIR,
-        f"BP_{config.get_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME)}",
+    DEV_BEH_DIR = (
+        DEV_BEH_DIR
+        / f"BP_{config.get_option(ConfigSection.PACKAGE, ConfigOption.PROJECT_NAME)}"
     )
 
     AnvilIO.file(
@@ -332,7 +325,7 @@ def handle_script(
     AnvilIO.file(
         "esbuild.js",
         JsonSchemes.esbuild_config_js(
-            os.path.join(DEV_BEH_DIR, "scripts"),
+            DEV_BEH_DIR / "scripts",
             bool(config.get_option(ConfigSection.BUILD, ConfigOption.MINIFY)),
         ),
         "",
@@ -342,14 +335,14 @@ def handle_script(
     AnvilIO.file(
         "constants.ts",
         JsonSchemes.tsconstants(namespace, project_name),
-        os.path.join("scripts", "javascript"),
+        Path("scripts", "javascript"),
         "w",
         False,
     )
     AnvilIO.file(
         "main.ts",
         'import { world, system } from "@minecraft/server";\n',
-        os.path.join("scripts", "javascript"),
+        Path("scripts", "javascript"),
         "w",
         False,
     )
@@ -357,8 +350,8 @@ def handle_script(
         AnvilIO.file(
             "launch.json",
             JsonSchemes.vscode(
-                os.path.join(DEV_BEH_DIR, "scripts"),
-                os.path.join(WORKING_DIR, "scripts", "javascript"),
+                DEV_BEH_DIR / "scripts",
+                WORKING_DIR / "scripts" / "javascript",
                 script_uuid,
                 project_name,
             ),
@@ -444,26 +437,26 @@ def init(
     )
     os.chdir(project_name)
     config.save()
-    WORKING_DIR = os.getcwd()
+    WORKING_DIR = Path.cwd()
     local_export = (
         bool(config.get_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT))
         if config.has_option(ConfigSection.BUILD, ConfigOption.LOCAL_EXPORT)
         else (sys.platform != "win32")
     )
     if local_export or sys.platform != "win32":
-        COM_MOJANG = os.path.join(os.path.abspath("output"), "com.mojang")
+        COM_MOJANG = WORKING_DIR / OUTPUT / "com.mojang"
     else:
         COM_MOJANG = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
 
-    DEV_RES_DIR = os.path.join(COM_MOJANG, "development_resource_packs")
-    DEV_BEH_DIR = os.path.join(COM_MOJANG, "development_behavior_packs")
+    DEV_RES_DIR = COM_MOJANG / "development_resource_packs"
+    DEV_BEH_DIR = COM_MOJANG / "development_behavior_packs"
 
-    AnvilIO.file("main.py", JsonSchemes.python(), "scripts/python/", "w")
+    AnvilIO.file("main.py", JsonSchemes.python(), Path("scripts", "python"), "w")
     AnvilIO.file(".gitignore", JsonSchemes.gitignore(), "", "w")
     AnvilIO.file(
         "release.yml",
         JsonSchemes.github_release_workflow(project_name, display_name),
-        os.path.join(".github", "workflows"),
+        Path(".github", "workflows"),
         "w",
     )
     AnvilIO.file("CHANGELOG.md", "", "", "w")
@@ -471,7 +464,7 @@ def init(
         handle_script(config, namespace, project_name, DEV_BEH_DIR, WORKING_DIR, vscode)
     if vscode:
         workspace_file = f"{project_name}.code-workspace"
-        workspace_dir = DESKTOP if os.path.isdir(DESKTOP) else WORKING_DIR
+        workspace_dir = DESKTOP if DESKTOP.is_dir() else WORKING_DIR
         AnvilIO.file(
             workspace_file,
             JsonSchemes.code_workspace(
@@ -484,7 +477,7 @@ def init(
             workspace_dir,
             "w",
         )
-        workspace_full_path = os.path.join(workspace_dir, workspace_file)
+        workspace_full_path = workspace_dir / workspace_file
         if sys.platform == "win32":
             process_subcommand(
                 f'start "" "{workspace_full_path}"',

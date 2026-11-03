@@ -1450,8 +1450,8 @@ class BlockRedstoneProducer(JsonComponent):
     identifier = "minecraft:redstone_producer"
 
     power: Annotated[int, RedstoneSignal] | None = json_field(default=None)
-    connected_faces: Annotated[list[BlockFaceValues], ExpandFaces] | None = (
-        json_field(default=None)
+    connected_faces: Annotated[list[BlockFaceValues], ExpandFaces] | None = json_field(
+        default=None
     )
     strongly_powered_face: BlockFaceValues | None = json_field(default=None)
     transform_relative: bool | None = json_field(default=None)

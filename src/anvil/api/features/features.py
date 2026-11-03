@@ -8,7 +8,8 @@ from anvil.api.core.types import Identifier, Vector3DInt
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import Pack
 from anvil.lib.lib import AnvilFormatter, clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes, MinecraftBlockDescriptor
 
 
 @dataclass
@@ -127,7 +128,7 @@ class DistributionMixin:
         return self
 
 
-class Feature(AddonObject):
+class Feature(JsonFile):
     """Base class for Bedrock worldgen feature definitions."""
 
     _object_type = "Feature"

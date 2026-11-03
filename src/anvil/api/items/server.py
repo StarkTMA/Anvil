@@ -2,8 +2,8 @@ from anvil.api.core.components import ComponentGroup
 from anvil.api.core.enums import ItemCategory, ItemGroups
 from anvil.api.items.components import ItemDisplayName
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import validate_components
-from anvil.lib.schemas import AddonObject, JsonSchemes, MinecraftDescription
+from anvil.lib.jsonmodel import JsonFile, validate_components
+from anvil.lib.schemas import JsonSchemes, MinecraftDescription
 
 __all__ = ["ItemServer"]
 
@@ -40,7 +40,7 @@ class _ItemServerDescription(MinecraftDescription):
         return super().__export__()
 
 
-class ItemServer(AddonObject):
+class ItemServer(JsonFile):
     _extension = ".item.json"
     _pack = Pack.BP
     _folder = "items"

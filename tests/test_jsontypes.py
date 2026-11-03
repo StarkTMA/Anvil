@@ -234,9 +234,7 @@ def test_bounds():
 
 def test_triggers_and_kept_parts():
     class _Events(JsonObject):
-        on_hit: Annotated[EventTrigger | str, Trigger] | None = json_field(
-            default=None
-        )
+        on_hit: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
         part: Annotated[_Part, Kept] | None = json_field(default=None)
         switch: Annotated[bool, Kept] | None = json_field(default=None)
 

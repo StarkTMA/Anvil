@@ -19,9 +19,8 @@ from anvil.api.core.components import ComponentGroup
 from anvil.api.core.enums import DamageSensor
 from anvil.api.logic.molang import Molang, Variable
 from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
-from anvil.lib.jsonmodel import validate_components
+from anvil.lib.jsonmodel import JsonFile, validate_components
 from anvil.lib.schemas import (
-    AddonObject,
     JsonSchemes,
     MinecraftEntityDescriptor,
 )
@@ -260,7 +259,7 @@ class _EntityServerDescription(_ActorDescription):
         return super().__export__()
 
 
-class EntityServer(AddonObject):
+class EntityServer(JsonFile):
     """Base class for all server entities."""
 
     _extension = ".behavior.json"

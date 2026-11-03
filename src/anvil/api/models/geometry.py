@@ -36,8 +36,8 @@ from typing import (
 )
 
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.jsonmodel import FitToFrame, JsonObject, json_field
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import FitToFrame, json_field, JsonFile, JsonObject
+from anvil.lib.schemas import JsonSchemes
 
 _FACES = ("north", "east", "south", "west", "up", "down")
 _FACE_KEYS = {"uv", "uv_size", "uv_rotation", "material_instance"}
@@ -449,7 +449,7 @@ class _Bone:
         return bone
 
 
-class Geometry(AddonObject):
+class Geometry(JsonFile):
     """A Bedrock geometry file (``*.geo.json``) built from a tree of bones."""
 
     _extension = ".geo.json"

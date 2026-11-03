@@ -4,7 +4,7 @@ import os
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import AddonObject
+from anvil.lib.jsonmodel import JsonFile
 
 
 class ParticlesNotRegisteredError(RuntimeError):
@@ -30,7 +30,7 @@ class ParticleNameMismatch(ParticlesNotRegisteredError):
         super().__init__(f"Expected '{particle_name}', found '{found_id}'")
 
 
-class Particle(AddonObject):
+class Particle(JsonFile):
     _non_queued_particles: set[str] = set()
     _queued_particles: set[str] = set()
     _extension = ".particle.json"

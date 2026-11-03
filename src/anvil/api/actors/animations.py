@@ -1,6 +1,7 @@
 from anvil.api.logic.molang import Molang, Query
 from anvil.lib.config import Pack
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
 class _BPAnimation:
@@ -88,7 +89,7 @@ class _BPAnimation:
         return self._animation
 
 
-class BPAnimations(AddonObject):
+class BPAnimations(JsonFile):
     _extension = ".animation.json"
     _pack = Pack.BP
     _folder = "animations"

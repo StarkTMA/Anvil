@@ -6,10 +6,11 @@ from typing import Literal
 from anvil.api.core.enums import AimAssistTargetMode, CameraPresets, ControlSchemes
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.lib import Directory, clamp
-from anvil.lib.schemas import AddonObject, JsonSchemes
+from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.schemas import JsonSchemes
 
 
-class AimAssistPreset(AddonObject):
+class AimAssistPreset(JsonFile):
     """Represents an Aim Assist Preset in Minecraft Bedrock.
 
     Aim assist presets allow creators to customize targeting rules, such as
@@ -157,7 +158,7 @@ class AimAssistCategory:
         return self.__export__()
 
 
-class AimAssistCategories(AddonObject):
+class AimAssistCategories(JsonFile):
     """Represents a set of Aim Assist Categories.
 
     To define evaluation priority between blocks and entities, a categories.json
@@ -199,7 +200,7 @@ class AimAssistCategories(AddonObject):
         return super().queue()
 
 
-class CameraPreset(AddonObject):
+class CameraPreset(JsonFile):
     """Represents a custom Camera Preset in Minecraft Bedrock.
 
     Camera presets allow creators to customize how players view the game.
