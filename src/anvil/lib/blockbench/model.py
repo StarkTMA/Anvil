@@ -1,11 +1,20 @@
 """Converts Blockbench models into geometries, voxel shapes and block culling rules."""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from anvil.api.core.enums import BlockFaceValues
 from anvil.api.core.types import Vector2D, Vector3D
 from anvil.api.logic.molang import Molang
-from anvil.api.models.geometry import Geometry, _Bone, _Cube
+from anvil.api.models.geometry import (
+    Geometry,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
+    ItemDisplayTransforms,
+    _Bone,
+    _Cube,
+    _CubeFace,
+    _CubeFaces,
+)
 from anvil.api.models.voxel_shape import VoxelShape, _VoxelGroup
 from anvil.lib.blockbench.common import _blockbench_geometry_name, _BlockBenchSource
 from anvil.lib.blockbench.mesh import _Mesh
@@ -43,7 +52,7 @@ class _BlockCulling(JsonFile):
                 f"Bone '{bone}' not found in geometry '{self._geometry.name}'."
             )
         if cube_index is not None:
-            cube_count = len(geometry_bone.compile()["cubes"])
+            cube_count = len(geometry_bone.cubes)
             if cube_index < 0 or cube_index >= cube_count:
                 raise ValueError(
                     f"Cube index '{cube_index}' out of range for bone '{bone}' in geometry '{self._geometry.name}' ({cube_count} cubes)."
@@ -107,9 +116,9 @@ def _geometry_block_culling(geometry: Geometry) -> _BlockCulling:
     return culling
 
 
-def _process_uv(data: dict, box_uv: bool) -> Union[List[float], Dict[str, Any]]:
+def _process_uv(data: dict, box_uv: bool) -> tuple[float, float] | _CubeFaces:
     if box_uv:
-        return data.get("uv_offset", [0, 0])
+        return tuple(data.get("uv_offset", [0, 0]))
 
     uvs = {}
     for face, face_data in data.get("faces", {}).items():
@@ -118,7 +127,7 @@ def _process_uv(data: dict, box_uv: bool) -> Union[List[float], Dict[str, Any]]:
 
         uv_map = face_data.get("uv", [])
         rotation = face_data.get("rotation", 0)
-        material_instance = face_data.get("material_name", {})
+        material_instance = face_data.get("material_name") or None
 
         if face in ("up", "down"):
             uv_map = [uv_map[2], uv_map[3], uv_map[0], uv_map[1]]
@@ -129,15 +138,13 @@ def _process_uv(data: dict, box_uv: bool) -> Union[List[float], Dict[str, Any]]:
         ]
 
         if uv_size[0] != 0 and uv_size[1] != 0:
-            face_uv = {
-                "uv": [uv_map[0], uv_map[1]],
-                "uv_size": uv_size,
-                "material_instance": material_instance,
-            }
-            if rotation != 0:
-                face_uv["uv_rotation"] = rotation
-            uvs[face] = face_uv
-    return uvs
+            uvs[face] = _CubeFace(
+                uv=(uv_map[0], uv_map[1]),
+                uv_size=tuple(uv_size),
+                uv_rotation=rotation or None,
+                material_instance=material_instance,
+            )
+    return _CubeFaces(**uvs)
 
 
 def _add_bb_cube(bone: _Bone, data: dict) -> None:
@@ -158,11 +165,11 @@ def _add_bb_cube(bone: _Bone, data: dict) -> None:
     # visible face (an empty per-face UV), which the public API does not offer.
     bone._add_cube(
         _Cube(
-            origin,
-            size,
-            _process_uv(data, data.get("box_uv", False)),
-            pivot=pivot,
-            rotation=rot,
+            origin=tuple(origin),
+            size=tuple(size),
+            uv=_process_uv(data, data.get("box_uv", False)),
+            pivot=tuple(pivot),
+            rotation=tuple(rot),
             inflate=data.get("inflate", 0),
             mirror=data.get("mirror_uv", False),
         )
@@ -172,11 +179,13 @@ def _add_bb_cube(bone: _Bone, data: dict) -> None:
 def _add_bb_locator(bone: _Bone, data: dict) -> None:
     position = list(data["position"])
     position[0] *= -1
+    rotation = [-x for x in data.get("rotation", [0, 0, 0])]
+    ignore_inherited_scale = data.get("ignore_inherited_scale", False)
     bone.locator(
         data["name"],
         position,
-        rotation=[-x for x in data.get("rotation", [0, 0, 0])],
-        ignore_inherited_scale=data.get("ignore_inherited_scale", False),
+        rotation=rotation if any(rotation) or ignore_inherited_scale else None,
+        ignore_inherited_scale=ignore_inherited_scale,
     )
 
 
@@ -430,10 +439,10 @@ class _ModelManager:
             if parent is None and implicit_root and implicit_root[0].name == name:
                 # A real group named 'root' takes over the implicit one.
                 bone = implicit_root[0]
-                bone.pivot = args["pivot"]
-                bone.rotation = args["rotation"]
-                bone.mirror = args["mirror"]
-                bone.binding = args["binding"]
+                bone.set_pivot(*args["pivot"]).set_rotation(*args["rotation"])
+                bone.set_mirror(args["mirror"])
+                if args["binding"] is not None:
+                    bone.set_binding(args["binding"])
                 implicit_root.clear()
             elif parent is None:
                 bone = geometry.bone(name, **args)
@@ -534,23 +543,31 @@ class _ModelManager:
         display_data: dict[str, dict[str, list[str | float | Molang]]] = (
             self._bbmodel.get("display", {})
         )
-        transforms = geometry.item_display_transforms
-        if transforms is None:
-            transforms = geometry.item_display_transforms = {}
-        if display_data:
-            for display, transform in display_data.items():
-                if any(
-                    [
-                        transform.get("rotation") != zero,
-                        transform.get("translation") != zero,
-                        transform.get("scale") != unit,
-                        transform.get("rotation_pivot") != zero,
-                        transform.get("scale_pivot") != zero,
-                    ]
-                ):
-                    # Minecraft will not accept fit_to_frame=False from "1.21.130" onwards
-                    # transforms[display] = {**transform, "fit_to_frame": {}} Works now I guess
-                    transforms[display] = transform
+        slots = {}
+        for display, transform in display_data.items():
+            if any(
+                [
+                    transform.get("rotation") != zero,
+                    transform.get("translation") != zero,
+                    transform.get("scale") != unit,
+                    transform.get("rotation_pivot") != zero,
+                    transform.get("scale_pivot") != zero,
+                ]
+            ):
+                kind = (
+                    ItemDisplayGuiTransform
+                    if display == "gui"
+                    else ItemDisplayTransform
+                )
+                slots[display] = kind(
+                    **{
+                        key: tuple(value) if isinstance(value, list) else value
+                        for key, value in transform.items()
+                        if key in kind.__dataclass_fields__
+                    }
+                )
+        if slots:
+            geometry.set_item_display_transforms(ItemDisplayTransforms(**slots))
 
     def _build_geometry(
         self, model_name: str, nodes: List[Union[str, dict]]
@@ -571,7 +588,7 @@ class _ModelManager:
         )
         offset = [0, self._bbmodel["visible_box"][2], 0]
 
-        geometry = Geometry(model_name, size, bounding_box, offset)
+        geometry = Geometry(model_name, size, bounding_box[:2], offset)
         self._populate_geometry(geometry, nodes, None, [])
 
         if self._source == _BlockBenchSource.BLOCK:
@@ -631,7 +648,7 @@ class _ModelManager:
         """Overrides the visible bounds of every geometry of this model, built or not."""
         self.bounding_box = bounding_box
         for geometry in self._geometries.values():
-            geometry.visible_bounds = list(bounding_box)
+            geometry.set_visible_bounds(*bounding_box[:2])
 
     def block_culling(self, collection: Optional[str] = None) -> _BlockCulling:
         """Culling rules of the model's geometry, or of one of its collections.

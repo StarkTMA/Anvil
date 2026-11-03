@@ -1035,18 +1035,14 @@ class TestQuery:
 class TestPackSettings:
     @pytest.fixture(autouse=True)
     def manifest(self, monkeypatch):
-        manifest = MagicMock()
-        manifest._content = {
-            "settings": [
-                {"type": "slider", "name": "test:volume"},
-                {"type": "toggle", "name": "test:shadows"},
-                {
-                    "type": "dropdown",
-                    "name": "test:quality",
-                    "options": [{"name": "low"}, {"name": "high"}],
-                },
-            ]
+        names = {
+            "slider": ["test:volume"],
+            "toggle": ["test:shadows"],
+            "dropdown": ["test:quality"],
         }
+        manifest = MagicMock()
+        manifest._setting_names = names.__getitem__
+        manifest._dropdown_options = {"test:quality": ["low", "high"]}.get
         monkeypatch.setattr("anvil.api.core.core.ManifestRP", lambda: manifest)
 
     def test_GetPackSetting(self):

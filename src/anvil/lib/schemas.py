@@ -8,7 +8,7 @@ from typing import Dict, Mapping
 import orjson
 
 from anvil.__version__ import __version__
-from anvil.api.core.types import Identifier, Vector2D
+from anvil.api.core.types import Identifier
 from anvil.lib.config import CONFIG, ConfigPackageTarget
 from anvil.lib.format_versions import *
 from anvil.lib.lib import APPDATA
@@ -49,44 +49,6 @@ class JsonSchemes:
             },
             is_json=False,
         )
-
-    @staticmethod
-    def manifest_bp(version: str):
-        content = load_file(
-            "manifest_bp.jsont",
-            {
-                "format_version": MANIFEST_VERSION,
-                "bp_uuid": CONFIG._BP_UUID[0],
-                "version": version,
-                "min_engine_version": (
-                    MANIFEST_BUILD if not CONFIG._PREVIEW else MANIFEST_BUILD_PREVIEW
-                ),
-                "data_module_uuid": CONFIG._DATA_MODULE_UUID,
-                "rp_uuid": CONFIG._RP_UUID[0],
-                "company": CONFIG.COMPANY,
-            },
-            is_json=True,
-        )
-        return content
-
-    @staticmethod
-    def manifest_rp(version: str):
-        content = load_file(
-            "manifest_rp.jsont",
-            {
-                "format_version": MANIFEST_VERSION,
-                "rp_uuid": CONFIG._RP_UUID[0],
-                "version": version,
-                "min_engine_version": (
-                    MANIFEST_BUILD if not CONFIG._PREVIEW else MANIFEST_BUILD_PREVIEW
-                ),
-                "resource_module_uuid": CONFIG._RESOURCE_MODULE_UUID,
-                "bp_uuid": CONFIG._BP_UUID[0],
-                "company": CONFIG.COMPANY,
-            },
-            is_json=True,
-        )
-        return content
 
     @staticmethod
     def manifest_world(version):
@@ -144,38 +106,6 @@ class JsonSchemes:
     @staticmethod
     def description(namespace, identifier):
         return {"description": {"identifier": f"{namespace}:{identifier}"}}
-
-    @staticmethod
-    def item_texture(resource_pack_name):
-        return load_file(
-            "item_texture.jsont",
-            {"resource_pack_name": resource_pack_name},
-            is_json=True,
-        )
-
-    @staticmethod
-    def sound_definitions():
-        return load_file(
-            "sound_definitions.jsont",
-            {"format_version": SOUND_DEFINITIONS_VERSION},
-            is_json=True,
-        )
-
-    @staticmethod
-    def server_sound_definitions():
-        return load_file(
-            "server_sound_definitions.jsont",
-            {"format_version": SERVER_SOUND_DEFINITIONS_VERSION},
-            is_json=True,
-        )
-
-    @staticmethod
-    def music_definitions():
-        return load_file("music_definitions.jsont", is_json=True)
-
-    @staticmethod
-    def sound(name, category):
-        return {name: {"category": category, "sounds": []}}
 
     @staticmethod
     def materials() -> Dict:
@@ -238,14 +168,6 @@ class JsonSchemes:
         }
 
     @staticmethod
-    def animations_rp():
-        return load_file(
-            "animations_rp.jsont",
-            {"format_version": RP_ANIMATION_VERSION},
-            is_json=True,
-        )
-
-    @staticmethod
     def animation_controller_state(state):
         return {
             state: {
@@ -272,28 +194,6 @@ class JsonSchemes:
         return load_file(
             "animation_controllers.jsont",
             {"format_version": ANIMATION_CONTROLLERS_VERSION},
-            is_json=True,
-        )
-
-    @staticmethod
-    def geometry(
-        model_name: str,
-        texture_size: list[int],
-        visible_box: Vector2D,
-        visible_offset: list[int],
-    ):
-        return load_file(
-            "geometry.jsont",
-            {
-                "format_version": GEOMETRY_VERSION,
-                "namespace": CONFIG.NAMESPACE,
-                "model_name": model_name,
-                "texture_width": texture_size[0],
-                "texture_height": texture_size[1],
-                "visible_bounds_width": visible_box[0],
-                "visible_bounds_height": visible_box[1],
-                "visible_bounds_offset": visible_offset,
-            },
             is_json=True,
         )
 
@@ -336,18 +236,6 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def terrain_texture(resource_pack_name):
-        return load_file(
-            "terrain_texture.jsont",
-            {"resource_pack_name": resource_pack_name},
-            is_json=True,
-        )
-
-    @staticmethod
-    def flipbook_textures():
-        return load_file("flipbook_textures.jsont", is_json=True)
-
-    @staticmethod
     def font(font_name, font_file):
         return load_file(
             "font.jsont", {"font_name": font_name, "font_file": font_file}, is_json=True
@@ -357,18 +245,6 @@ class JsonSchemes:
     def server_item():
         return load_file(
             "server_item.jsont", {"format_version": ITEM_SERVER_VERSION}, is_json=True
-        )
-
-    @staticmethod
-    def camera_preset(identifier, inherit_from):
-        return load_file(
-            "camera_preset.jsont",
-            {
-                "format_version": CAMERA_PRESET_VERSION,
-                "identifier": identifier,
-                "inherit_from": inherit_from,
-            },
-            is_json=True,
         )
 
     @staticmethod
@@ -397,18 +273,6 @@ class JsonSchemes:
             {"out_dir": os.path.join(out_dir, "scripts")},
             is_json=True,
         )
-
-    @staticmethod
-    def blocks_json():
-        return load_file(
-            "blocks_json.jsont",
-            {"format_version": BLOCK_JSON_FORMAT_VERSION},
-            is_json=True,
-        )
-
-    @staticmethod
-    def sounds_json():
-        return load_file("sounds_json.jsont", is_json=True)
 
     @staticmethod
     def local_lighting():
@@ -512,16 +376,6 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def aim_assist_preset(identifier: str):
-        return load_file(
-            "aim_assist_preset.jsont", {"identifier": identifier}, is_json=True
-        )
-
-    @staticmethod
-    def aim_assist_categories():
-        return load_file("aim_assist_categories.jsont", is_json=True)
-
-    @staticmethod
     def python():
         return load_file("python.jsont")
 
@@ -594,26 +448,6 @@ class JsonSchemes:
         )
 
     @staticmethod
-    def worldgen_feature(template_name: str, identifier: Identifier):
-        return load_file(
-            f"{template_name}.jsont",
-            {"format_version": FEATURE_VERSION, "identifier": identifier},
-            is_json=True,
-        )
-
-    @staticmethod
-    def worldgen_feature_rule(identifier: Identifier, feature_identifier: Identifier):
-        return load_file(
-            "feature_rule.jsont",
-            {
-                "format_version": FEATURE_RULE_VERSION,
-                "identifier": identifier,
-                "feature_identifier": feature_identifier,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
     def github_release_workflow(project_name: str, display_name: str):
         return load_file(
             "github_release_workflow.ymlt",
@@ -624,20 +458,6 @@ class JsonSchemes:
                 "gha": "${{",
                 "end": "}}",
             },
-        )
-
-    @staticmethod
-    def voxel_shape(
-        model_name: str,
-    ):
-        return load_file(
-            "voxel_shape.jsont",
-            {
-                "format_version": VOXEL_SHAPE_VERSION,
-                "namespace": CONFIG.NAMESPACE,
-                "model_name": model_name,
-            },
-            is_json=True,
         )
 
 

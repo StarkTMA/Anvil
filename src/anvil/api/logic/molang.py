@@ -3306,12 +3306,7 @@ class Query(Molang):
 
         from anvil.api.core.core import ManifestRP
 
-        settings_list = ManifestRP()._content.get("settings", [])
-        slider_ids = [
-            slider["name"] for slider in settings_list if slider.get("type") == "slider"
-        ]
-
-        if f"{CONFIG.NAMESPACE}:{id}" not in slider_ids:
+        if f"{CONFIG.NAMESPACE}:{id}" not in ManifestRP()._setting_names("slider"):
             raise ValueError(
                 f"Pack Setting '{id}' does not exist in sliders, make sure to register it using `ManifestRP()`."
             )
@@ -3339,12 +3334,7 @@ class Query(Molang):
 
         from anvil.api.core.core import ManifestRP
 
-        settings_list = ManifestRP()._content.get("settings", [])
-        toggle_ids = [
-            toggle["name"] for toggle in settings_list if toggle.get("type") == "toggle"
-        ]
-
-        if f"{CONFIG.NAMESPACE}:{id}" not in toggle_ids:
+        if f"{CONFIG.NAMESPACE}:{id}" not in ManifestRP()._setting_names("toggle"):
             raise ValueError(
                 f"Pack Setting '{id}' does not exist in toggles, make sure to register it using `ManifestRP()`."
             )
@@ -3374,23 +3364,13 @@ class Query(Molang):
 
         from anvil.api.core.core import ManifestRP
 
-        settings_list = ManifestRP()._content.get("settings", [])
-        dropdown = next(
-            (
-                d
-                for d in settings_list
-                if d.get("type") == "dropdown"
-                and d["name"] == f"{CONFIG.NAMESPACE}:{id}"
-            ),
-            None,
-        )
+        options = ManifestRP()._dropdown_options(f"{CONFIG.NAMESPACE}:{id}")
 
-        if not dropdown:
+        if options is None:
             raise ValueError(
                 f"Pack Setting '{id}' does not exist in dropdowns, make sure to register it using `ManifestRP()`."
             )
 
-        options = [entry["name"] for entry in dropdown.get("options", [])]
         if option not in options:
             raise ValueError(
                 f"Option '{option}' does not exist in dropdown '{id}', available options are: {', '.join(options)}."

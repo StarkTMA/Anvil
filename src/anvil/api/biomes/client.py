@@ -20,7 +20,8 @@ from anvil.api.biomes.components import (
 from anvil.api.biomes.server import BiomeDescription
 from anvil.api.core.components import ComponentGroup
 from anvil.api.core.enums import MusicCategory, SoundCategory
-from anvil.api.core.sounds import MusicDefinition, SoundEvent, _SoundDescription
+from anvil.api.sounds import MusicDefinition, SoundEvent
+from anvil.api.sounds.sound_definitions import _SoundDescription
 from anvil.api.core.types import Color, FoliageColorMap, GrassColorMap
 from anvil.lib.config import Pack
 from anvil.lib.jsonmodel import JsonFile, validate_components

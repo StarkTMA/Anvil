@@ -10,14 +10,15 @@ from typing import Optional
 
 import click
 from anvil.api.actors.materials import MaterialsObject
-from anvil.api.core.sounds import (
-    BlocksJSONObject,
+from anvil.api.core.manifest import ManifestBP, ManifestRP
+from anvil.api.blocks.blocks_json import BlocksJSONObject
+from anvil.api.sounds import (
     MusicDefinition,
     ServerSoundDefinition,
     SoundDefinition,
     SoundEvent,
 )
-from anvil.api.core.textures import (
+from anvil.api.textures import (
     FlipBookTexturesObject,
     ItemTexturesObject,
     TerrainTexturesObject,
@@ -28,14 +29,6 @@ from anvil.lib.config import (
     CONFIG,
     ConfigPackageTarget,
     AnvilConfig,
-    Pack,
-)
-from anvil.lib.format_versions import (
-    MANIFEST_VERSION,
-    MODULE_MINECRAFT_SERVER,
-    MODULE_MINECRAFT_SERVER_PREVIEW,
-    MODULE_MINECRAFT_SERVER_UI,
-    MODULE_MINECRAFT_SERVER_UI_PREVIEW,
 )
 from anvil.lib.lib import (
     AnvilArchive,
@@ -615,248 +608,6 @@ def clean_old_dev(config: AnvilConfig):
             fg="green",
         )
     )
-
-
-class ManifestRP(JsonFile):
-    _instance = None
-    _extension = ".json"
-    _pack = Pack.RP
-    _setting_ids: set[str] = set()
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ManifestRP, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self) -> None:
-        """Initializes a ManifestRP instance."""
-        if not hasattr(self, "_initialized"):
-            super().__init__("manifest")
-            self.content(JsonSchemes.manifest_rp(version=CONFIG._RELEASE))
-            self._initialized = True
-
-    @property
-    def settings(self) -> "_ManifestSettings":
-        """Returns a Manifest Settings object to add settings to the manifest."""
-        return _ManifestSettings(self)
-
-    def queue(self) -> "ManifestRP":
-        if self._queued:
-            return
-        if CONFIG.PBR:
-            self._content.update({"capabilities": ["pbr"]})
-
-        if CONFIG._TARGET == "addon":
-            self._content["header"]["pack_scope"] = "world"
-            self._content["metadata"]["product_type"] = "addon"
-
-        return super().queue()
-
-
-class ManifestBP(JsonFile):
-    _instance = None
-    _extension = ".json"
-    _pack = Pack.BP
-    _setting_ids: set[str] = set()
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(ManifestBP, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self) -> None:
-        """Initializes a ManifestBP instance."""
-        if not hasattr(self, "_initialized"):
-            super().__init__("manifest")
-            self.content(JsonSchemes.manifest_bp(version=CONFIG._RELEASE))
-            self._initialized = True
-
-    @property
-    def settings(self) -> "_ManifestSettings":
-        """Returns a Manifest Settings object to add settings to the manifest."""
-        return _ManifestSettings(self)
-
-    def queue(self) -> "ManifestBP":
-        if self._queued:
-            return
-        if CONFIG._SCRIPT_API:
-            self._content["modules"].append(
-                {
-                    "uuid": CONFIG._SCRIPT_MODULE_UUID,
-                    "version": CONFIG._RELEASE,
-                    "type": "script",
-                    "language": "javascript",
-                    "entry": "scripts/main.js",
-                }
-            )
-            self._content["dependencies"].append(
-                {
-                    "module_name": "@minecraft/server",
-                    "version": (
-                        MODULE_MINECRAFT_SERVER
-                        if not (CONFIG._PREVIEW and CONFIG._EXPERIMENTAL)
-                        else MODULE_MINECRAFT_SERVER_PREVIEW
-                    ),
-                }
-            )
-            if CONFIG._SCRIPT_UI:
-                self._content["dependencies"].append(
-                    {
-                        "module_name": "@minecraft/server-ui",
-                        "version": (
-                            MODULE_MINECRAFT_SERVER_UI
-                            if not (CONFIG._PREVIEW and CONFIG._EXPERIMENTAL)
-                            else MODULE_MINECRAFT_SERVER_UI_PREVIEW
-                        ),
-                    }
-                )
-
-        if CONFIG._TARGET == "addon":
-            self._content["header"]["pack_scope"] = "world"
-            self._content["metadata"]["product_type"] = "addon"
-
-        return super().queue()
-
-
-class _ManifestSettings:
-    def __init__(self, manifest: ManifestRP | ManifestBP):
-        if MANIFEST_VERSION < 3:
-            raise RuntimeError(
-                "Settings labels are only supported in manifest version 3 and above."
-            )
-        self.manifest = manifest
-
-        # Initialize settings in _content if not present
-        if "settings" not in self.manifest._content:
-            self.manifest._content["settings"] = []
-
-        self.labels = 0
-        self.toggles = 0
-        self.sliders = 0
-        self.dropdowns = 0
-
-    def label(self, label: str):
-        key = f"pack.manifest.setting.label_{self.labels}"
-        AnvilTranslator().add_localization_entry(key, label)
-        self.manifest._content["settings"].append({"type": "label", "text": key})
-
-        self.labels += 1
-        return self
-
-    def toggle(self, id: str, text: str, default: bool = True):
-        if id in self.manifest._setting_ids:
-            raise ValueError(f"Setting ID '{id}' is already used.")
-
-        key = f"pack.manifest.setting.toggle_{self.toggles}"
-        AnvilTranslator().add_localization_entry(key, text)
-
-        self.manifest._setting_ids.add(id)
-        self.manifest._content["settings"].append(
-            {
-                "type": "toggle",
-                "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": key,
-                "default": default,
-            }
-        )
-
-        self.toggles += 1
-        return self
-
-    def slider(self, id: str, text: str, min: int, max: int, step: int, default: int):
-        if min >= max:
-            raise ValueError(f"Min value '{min}' must be less than max '{max}'.")
-
-        if step <= 0:
-            raise ValueError(f"Step value '{step}' must be greater than 0.")
-
-        if not (min <= default <= max):
-            raise ValueError(
-                f"Default value '{default}' must be between min '{min}' and max '{max}'."
-            )
-
-        if id in self.manifest._setting_ids:
-            raise ValueError(f"Setting ID '{id}' is already used.")
-
-        self.manifest._setting_ids.add(id)
-
-        key = f"pack.manifest.setting.slider_{self.sliders}"
-        AnvilTranslator().add_localization_entry(key, text)
-
-        self.manifest._content["settings"].append(
-            {
-                "type": "slider",
-                "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": key,
-                "min": min,
-                "max": max,
-                "step": step,
-                "default": default,
-            }
-        )
-        self.sliders += 1
-        return self
-
-    def _dropdown_options(self, options: dict[str, str]) -> list[dict[str, str]]:
-        o = []
-
-        for i, (k, v) in enumerate(options.items()):
-
-            translation_key = (
-                f"pack.manifest.setting.dropdown_{self.dropdowns}.option_{i}"
-            )
-            AnvilTranslator().add_localization_entry(translation_key, v)
-
-            o.append({"name": k, "text": translation_key})
-
-        return o
-
-    def dropdown(self, id: str, text: str, options: dict[str, str], default: str):
-        if not isinstance(options, dict) or len(options.items()) == 0:
-            raise ValueError("Options must be a non-empty list of dictionaries.")
-
-        if default not in options.keys():
-            raise ValueError(f"Default value '{default}' is not in the options list.")
-
-        if id in self.manifest._setting_ids:
-            raise ValueError(f"Setting ID '{id}' is already used.")
-
-        key = f"pack.manifest.setting.dropdown_{self.dropdowns}"
-        AnvilTranslator().add_localization_entry(key, text)
-
-        self.manifest._setting_ids.add(id)
-        self.manifest._content["settings"].append(
-            {
-                "type": "dropdown",
-                "name": f"{CONFIG.NAMESPACE}:{id}",
-                "text": key,
-                "options": self._dropdown_options(options),
-                "default": default,
-            }
-        )
-        self.dropdowns += 1
-        return self
-
-    # def multiselect(self, id: str, text: str, options: list[str]):
-    #    if not isinstance(options, list) or len(options) == 0:
-    #        raise ValueError("Options must be a non-empty list.")
-    #
-    #    for option in options:
-    #        if not isinstance(option, str):
-    #            raise ValueError("Options must be a list of strings.")
-    #
-    #    if id in self.manifest._setting_ids:
-    #        raise ValueError(f"Setting ID '{id}' is already used.")
-    #
-    #    self.manifest._setting_ids.add(id)
-    #    self.manifest._content["settings"].append(
-    #        {
-    #            "type": "multiselect",
-    #            "name": f"{CONFIG.NAMESPACE}:{id}",
-    #            "text": text,
-    #            "options": options
-    #        }
-    #    )
 
 
 class _Anvil:

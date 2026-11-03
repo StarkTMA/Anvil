@@ -465,14 +465,13 @@ def test_block_descriptor_states():
     )
 
     assert block.descriptor() == "test:leaves"
-    assert block.descriptor(natural=True, cardinal_direction="north") == {
+    assert block.descriptor(natural=True, cardinal_direction="north").descriptor() == {
         "name": "test:leaves",
         "states": {"test:natural": True, "minecraft:cardinal_direction": "north"},
     }
-    assert block.descriptor(tags=["x"]) == {
+    assert block.descriptor(tags="q.any_tag('x')").descriptor() == {
         "name": "test:leaves",
-        "states": {},
-        "tags": ["x"],
+        "tags": "q.any_tag('x')",
     }
     with pytest.raises(ValueError, match="Unknown state"):
         block.descriptor(decaying=True)
@@ -498,7 +497,7 @@ def test_block_descriptor_trait_values_from_enums():
         connection_north=True,
         cardinal_direction=CardinalDirectionsValues.EAST,
         corner="inner_left",
-    )["states"] == {
+    ).states == {
         "minecraft:connection_north": True,
         "minecraft:cardinal_direction": "east",
         "minecraft:corner": "inner_left",
@@ -513,7 +512,7 @@ def test_block_descriptor_multi_block_part():
     door = Block("door")
     door.server.description.traits.multi_block("up", 3)
 
-    assert door.descriptor(multi_block_part=2)["states"] == {
+    assert door.descriptor(multi_block_part=2).states == {
         "minecraft:multi_block_part": 2
     }
     with pytest.raises(ValueError, match="Invalid value"):

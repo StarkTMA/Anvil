@@ -45,62 +45,6 @@ def mock_config(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# manifest_bp
-# ---------------------------------------------------------------------------
-
-
-class TestManifestBP:
-    def test_has_format_version(self):
-        from anvil.lib.schemas import JsonSchemes
-
-        result = JsonSchemes.manifest_bp([1, 0, 0])
-        assert "format_version" in result
-
-    def test_has_header(self):
-        from anvil.lib.schemas import JsonSchemes
-
-        result = JsonSchemes.manifest_bp([1, 0, 0])
-        assert "header" in result
-
-    def test_has_modules(self):
-        from anvil.lib.schemas import JsonSchemes
-
-        result = JsonSchemes.manifest_bp([1, 0, 0])
-        assert "modules" in result
-
-    def test_header_uuid_is_string(self):
-        from anvil.lib.schemas import JsonSchemes
-
-        result = JsonSchemes.manifest_bp([1, 0, 0])
-        assert isinstance(result["header"]["uuid"], str)
-
-
-# ---------------------------------------------------------------------------
-# manifest_rp
-# ---------------------------------------------------------------------------
-
-
-class TestManifestRP:
-    def test_has_format_version(self):
-        from anvil.lib.schemas import JsonSchemes
-
-        result = JsonSchemes.manifest_rp([1, 0, 0])
-        assert "format_version" in result
-
-    def test_has_header(self):
-        from anvil.lib.schemas import JsonSchemes
-
-        result = JsonSchemes.manifest_rp([1, 0, 0])
-        assert "header" in result
-
-    def test_header_uuid_is_string(self):
-        from anvil.lib.schemas import JsonSchemes
-
-        result = JsonSchemes.manifest_rp([1, 0, 0])
-        assert isinstance(result["header"]["uuid"], str)
-
-
-# ---------------------------------------------------------------------------
 # manifest_world
 # ---------------------------------------------------------------------------
 

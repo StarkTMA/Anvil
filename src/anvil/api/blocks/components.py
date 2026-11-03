@@ -7,7 +7,7 @@ from anvil.api.core.enums import (
     BlockLiquidDetectionTouching,
     BlockMaterial,
 )
-from anvil.api.core.textures import FlipBookTexturesObject, TerrainTexturesObject
+from anvil.api.textures import FlipBookTexturesObject, TerrainTexturesObject
 from anvil.api.core.types import (
     RGB,
     RGB255,
@@ -244,7 +244,7 @@ class ItemTagFilter(JsonObject):
     """Items matched by their tags, for `BlockDestructibleByMining`.
 
     Args:
-        tags (Molang | str): A tag query, for example `Query.AnyTag("minecraft:is_pickaxe")`.
+        tags (Molang | str): A tag query, for example `Query.AnyTag(["minecraft:is_pickaxe"])`.
     """
 
     tags: Molang | str = json_field()
@@ -1083,11 +1083,17 @@ class BlockItemVisual(_BlockVisual):
 
         geometry = self._model.model.geometry(self._collection)
         kept = geometry.item_display_transforms if merge else None
-        geometry.item_display_transforms = ItemDisplayTransforms(
-            **{
-                slot: transform if transform is not None else getattr(kept, slot, None)
-                for slot, transform in slots.items()
-            }
+        geometry.set_item_display_transforms(
+            ItemDisplayTransforms(
+                **{
+                    slot: (
+                        transform
+                        if transform is not None
+                        else getattr(kept, slot, None)
+                    )
+                    for slot, transform in slots.items()
+                }
+            )
         )
         return self
 
@@ -1238,9 +1244,7 @@ class BlockMaterialInstance(JsonValueComponent):
             TerrainTexturesObject().add_block_variations(
                 block_name=spec.color_texture(),
                 directory=spec.blockbench,
-                block_variant=[
-                    {"texture": vp.color, "weight": vp.weight} for vp in spec.variations
-                ],
+                block_variant=[(vp.color, vp.weight) for vp in spec.variations],
                 force_vanilla=force_vanilla,
             )
         else:

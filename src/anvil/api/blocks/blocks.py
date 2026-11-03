@@ -29,13 +29,15 @@ class Block(MinecraftBlockDescriptor):
         self._texture_only = False
 
     def descriptor(
-        self, tags: list[str] = None, **state_values: str | int | float | bool
-    ) -> Identifier | dict:
-        """The block as a descriptor: its identifier, or the states and tags to match.
+        self, tags: str | None = None, **state_values: str | int | float | bool
+    ) -> Identifier | MinecraftBlockDescriptor:
+        """The block as a descriptor: its identifier, or a `MinecraftBlockDescriptor` with the
+        states and tags to match.
 
         States are keywords, `leaves.descriptor(natural=True)`. A name without a namespace is
         one of this block's states, `natural` is `<namespace>:natural`, or a state a trait
-        adds, `cardinal_direction` is `minecraft:cardinal_direction`.
+        adds, `cardinal_direction` is `minecraft:cardinal_direction`. `tags` is a Molang
+        expression over block tags, such as `Query.AllTags(["stone"])`.
 
         Raises:
             ValueError: When the block has no such state, or the state cannot have the value.
@@ -76,12 +78,11 @@ class Block(MinecraftBlockDescriptor):
                         f"{[str(allowed) for allowed in registered[state]]}. {self._object_type}[{identifier}]"
                     )
             states[str(state)] = value
-        if not states and not tags:
+        if not states and tags is None:
             return identifier
-        result: dict = {"name": identifier, "states": states}
-        if tags:
-            result["tags"] = tags
-        return result
+        return MinecraftBlockDescriptor(
+            identifier, is_vanilla=vanilla_block, states=states, tags=tags
+        )
 
     @property
     def item(self) -> "Item":

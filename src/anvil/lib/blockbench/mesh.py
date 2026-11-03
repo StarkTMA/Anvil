@@ -2,6 +2,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
+from anvil.api.models.geometry import _Cube, _CubeFace, _CubeFaces
+
 
 @dataclass
 class _Mesh:
@@ -181,12 +183,12 @@ class _Mesh:
             # Note: map_vertices expects specific args.
             direction = self.map_vertices(original_origin, vertices)
 
-            uv[direction] = {
-                "uv": [x_min, y_min],
-                "uv_size": [round(x_max - x_min, 4), round(y_max - y_min, 4)],
-            }
+            uv[direction] = _CubeFace(
+                uv=(x_min, y_min),
+                uv_size=(round(x_max - x_min, 4), round(y_max - y_min, 4)),
+            )
 
-        return [{"origin": origin, "size": size, "uv": uv}]
+        return [_Cube(origin=tuple(origin), size=tuple(size), uv=_CubeFaces(**uv))]
 
     def compile(self):
         vertices_count = len(self.vertices.keys())

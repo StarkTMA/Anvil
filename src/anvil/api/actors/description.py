@@ -5,7 +5,7 @@ from anvil.api.actors.animation_controllers import (
 )
 from anvil.api.actors.render_controller import RenderControllers
 from anvil.api.core.core import SoundDefinition, SoundEvent
-from anvil.api.core.sounds import EntitySoundEvent, SoundCategory
+from anvil.api.core.enums import EntitySoundEvent, SoundCategory
 from anvil.api.core.types import Vector2D
 from anvil.api.logic.molang import Molang, Variable
 from anvil.api.models.animations import _Animation
@@ -236,7 +236,7 @@ class _ActorClientDescription(_ActorDescription):
         if isinstance(geometry_name, Geometry):
             geometry = geometry_name
             if override_bounding_box:
-                geometry.visible_bounds = list(override_bounding_box)
+                geometry.set_visible_bounds(*override_bounding_box)
             geometry.queue(_BlockBenchSource.ACTOR)
             self._description["description"]["geometry"].update(
                 {geometry.name: geometry.geometry_identifier}
@@ -439,8 +439,8 @@ class _ActorClientDescription(_ActorDescription):
         self,
         sound: str,
         category: SoundCategory = SoundCategory.Neutral,
-        max_distance: int = 0,
-        min_distance: int = 9999,
+        max_distance: float | None = None,
+        min_distance: float | None = None,
         subtitle: str = None,
     ):
         """This method manages the sound effects for an entity.
@@ -449,8 +449,8 @@ class _ActorClientDescription(_ActorDescription):
             sound_shortname (str): The shortname of the sound effect.
             sound_path (str): The path to the sound effects from the assets/sounds folder.
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
-            max_distance (int, optional): The maximum distance of the sound effect. Defaults to 0.
-            min_distance (int, optional): The minimum distance of the sound effect. Defaults to 9999.
+            max_distance (float, optional): The distance the sound is no longer heard at.
+            min_distance (float, optional): The distance the sound starts to fade at.
             subtitle (str, optional): The subtitle of the sound effect. Defaults to None.
         """
         if not isinstance(category, SoundCategory):
@@ -483,8 +483,8 @@ class _ActorClientDescription(_ActorDescription):
         category: SoundCategory = SoundCategory.Neutral,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
-        max_distance: int = 0,
-        min_distance: int = 9999,
+        max_distance: float | None = None,
+        min_distance: float | None = None,
         variant_query: Molang = None,
         variant_map: str = None,
         subtitle: str = None,
@@ -497,8 +497,8 @@ class _ActorClientDescription(_ActorDescription):
             category (SoundCategory, optional): The category of the sound effect. Defaults to SoundCategory.Neutral.
             volume (float, optional): The volume of the sound effect. Defaults to 1.0.
             pitch (tuple[float, float], optional): The pitch of the sound effect. Defaults to (0.8, 1.2).
-            max_distance (int, optional): The maximum distance of the sound effect. Defaults to 0.
-            min_distance (int, optional): The minimum distance of the sound effect. Defaults to 9999.
+            max_distance (float, optional): The distance the sound is no longer heard at.
+            min_distance (float, optional): The distance the sound starts to fade at.
             variant_query (Molang, optional): The variant query of the sound effect. Defaults to None.
             variant_map (str, optional): The variant map of the sound effect. Defaults to None.
             subtitle (str, optional): The subtitle of the sound effect. Defaults to None.

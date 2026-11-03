@@ -5,7 +5,7 @@ from collections import defaultdict
 from enum import StrEnum
 from typing import Any, Dict, List, Optional, Union
 
-from anvil.api.models.animations import _Animation, Animations
+from anvil.api.models.animations import Animations, _Animation
 
 
 class _ChannelType(StrEnum):
@@ -124,7 +124,7 @@ def _animation_args(data: Dict[str, Any]) -> Dict[str, Any]:
     }
     return {
         "name": data.get("name", "animation"),
-        "length": round(data.get("length", 0.0), 4),
+        "length": round(data.get("length", 0.0), 4) or None,
         "loop": loop_map.get(data.get("loop", "once"), False),
         "anim_time_update": data.get("anim_time_update"),
         "override_previous_animation": data.get("override", False),
@@ -159,10 +159,19 @@ def _populate_animation(anim: _Animation, data: Dict[str, Any]) -> None:
                 ),
             )
             for channel, negate in vector_channels.items():
+                add = getattr(bone, f"add_{channel}")
                 for time, value in _process_vector_channel(
                     channels.get(channel, []), negate
                 ).items():
-                    bone._set_keyframe(str(channel), time, value)
+                    if isinstance(value, dict):
+                        add(
+                            time,
+                            value["post"],
+                            pre=value.get("pre"),
+                            lerp_mode=value.get("lerp_mode"),
+                        )
+                    else:
+                        add(time, value)
 
         for kf in channels.get(_ChannelType.PARTICLE, []):
             time = round(float(kf.get("time")), 4)
@@ -185,7 +194,7 @@ def _populate_animation(anim: _Animation, data: Dict[str, Any]) -> None:
 
         for kf in channels.get(_ChannelType.TIMELINE, []):
             time = round(float(kf.get("time")), 4)
-            anim.timeline(time, kf.get("data_points")[0]["script"])
+            anim.add_timeline(time, kf.get("data_points")[0]["script"])
 
 
 class _AnimationsManager:

@@ -249,6 +249,35 @@ class Bounds(JsonType):
 
 
 @dataclass(frozen=True, slots=True)
+class NumeratorDenominator(JsonType):
+    """A `(numerator, denominator)` pair as `{"numerator": ..., "denominator": ...}`. Other
+    values, such as a number or a Molang expression, are written as they are. The denominator
+    must be above 0."""
+
+    def validate(self, name: str, value: Any) -> None:
+        if isinstance(value, (tuple, list)) and value[1] <= 0:
+            raise ValueError(f"'{name}' denominator must be above 0, got {value[1]}.")
+
+    def encode(self, value: Any) -> Any:
+        if isinstance(value, (tuple, list)):
+            return {"numerator": value[0], "denominator": value[1]}
+        return value
+
+    def schema(self, inner: JsonSchema) -> JsonSchema:
+        fraction = _object_schema(
+            {
+                "numerator": {"type": "integer"},
+                "denominator": {"type": "integer", "exclusiveMinimum": 0},
+            }
+        )
+        arms = [
+            fraction if arm.get("type") == "array" else arm
+            for arm in inner.get("anyOf", [inner])
+        ]
+        return arms[0] if len(arms) == 1 else {"anyOf": arms}
+
+
+@dataclass(frozen=True, slots=True)
 class Wrapped(JsonType):
     """The value as `{key: value}`.
 
@@ -470,9 +499,12 @@ Chance = InRange(0, 1)
 RedstoneSignal = InRange(0, 15)
 ShortTag = Length(maximum=64)
 Ordered = OrderedPair()
+Fraction = NumeratorDenominator()
 
 MinMax = Bounds("min", "max")
 RangeMinMax = Bounds("range_min", "range_max")
+ExactRangeMinMax = Bounds("range_min", "range_max", exact=True)
+"""A range as `range_min`/`range_max`, a single number as both ends."""
 XpRange = Bounds("minXP", "maxXP", exact=True)
 DespawnDistance = Bounds("min_distance", "max_distance")
 ItemObject = Wrapped("item")

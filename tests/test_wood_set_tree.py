@@ -16,7 +16,7 @@ def mock_material(monkeypatch):
         block_components.BlockMaterialInstance, "add_instance", lambda self, spec: self
     )
     monkeypatch.setattr(
-        "anvil.api.core.textures.ItemTexturesObject.add_item",
+        "anvil.api.textures.ItemTexturesObject.add_item",
         lambda self, *args, **kwargs: None,
     )
     monkeypatch.setattr(

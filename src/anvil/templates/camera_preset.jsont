@@ -1,7 +1,0 @@
-{
-    "format_version": "{{ format_version }}",
-    "minecraft:camera_preset": {
-        "identifier": "{{ identifier }}",
-        "inherit_from": "{{ inherit_from }}"
-    }
-}

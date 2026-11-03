@@ -15,35 +15,103 @@ Example:
 
     BlockGeometry(table).block_culling(shape)
     ```
+
+## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/voxelshapes)
 """
 
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
+from typing import Annotated, ClassVar, Iterator, Sequence
 
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.jsonmodel import JsonFile
-from anvil.lib.schemas import JsonSchemes
+from anvil.lib.format_versions import VOXEL_SHAPE_VERSION
+from anvil.lib.jsonmodel import JsonFile, JsonObject, Length, json_field
 
 
-def _vec3(value: Sequence[float]) -> List[float]:
-    values = list(value)
-    if len(values) != 3:
-        raise ValueError(f"Expected a vector of 3 values, got {values}.")
-    return values
+class _Box(JsonObject):
+    """An axis-aligned box, in pixels from the block's corner. Created through
+    :meth:`_VoxelGroup.box`.
 
+    Args:
+        min (tuple[float, float, float]): The corner with the smallest coordinates.
+        max (tuple[float, float, float]): The opposite corner.
+    """
 
-class _Box:
-    """An axis-aligned box. Created through :meth:`_VoxelGroup.box`."""
+    min: tuple[float, float, float] = json_field()
+    max: tuple[float, float, float] = json_field()
 
-    def __init__(self, min: Sequence[float], max: Sequence[float]) -> None:
-        self.min = _vec3(min)
-        self.max = _vec3(max)
-        if any(lo > hi for lo, hi in zip(self.min, self.max)):
+    def set_min(self, x: float, y: float, z: float) -> "_Box":
+        """Sets the corner with the smallest coordinates."""
+        self.min = (x, y, z)
+        return self
+
+    def set_max(self, x: float, y: float, z: float) -> "_Box":
+        """Sets the corner with the largest coordinates."""
+        self.max = (x, y, z)
+        return self
+
+    def __validate__(self) -> None:
+        if any(low >= high for low, high in zip(self.min, self.max)):
             raise ValueError(
-                f"Box min {self.min} must not be greater than max {self.max} on any axis."
+                f"Box min {self.min} must be smaller than max {self.max} on every axis."
+            )
+        if any(not -30 <= value <= 30 for value in (*self.min, *self.max)):
+            raise ValueError(
+                f"Box {self.min} to {self.max} must stay within -30 and 30 pixels."
+            )
+        if any(
+            min(high, 16) - max(low, 0) < 1 for low, high in zip(self.min, self.max)
+        ):
+            raise ValueError(
+                f"Box {self.min} to {self.max} must overlap the block by at least one pixel."
             )
 
-    def compile(self) -> Dict[str, Any]:
-        return {"min": self.min, "max": self.max}
+
+class _VoxelShapeDescription(JsonObject):
+    """The `description` of a voxel shape."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("identifier",)
+
+    identifier: str | None = None
+
+    def set_identifier(self, identifier: str) -> None:
+        """Sets the `namespace:name` blocks reference the shape by."""
+        self.identifier = identifier
+
+    def __validate__(self) -> None:
+        if self.identifier is None:
+            raise ValueError("A voxel shape needs an identifier.")
+
+
+class _VoxelShapeBoxes(JsonObject):
+    """The `shape` of a voxel shape: up to 32 boxes."""
+
+    boxes: Annotated[list[_Box], Length(1, 32)] = json_field(default_factory=list)
+
+    def set_boxes(self, boxes: Sequence[_Box]) -> None:
+        """Sets every box of the shape."""
+        self.boxes = list(boxes)
+
+
+class _VoxelShapeDefinition(JsonObject):
+    """The `minecraft:voxel_shape` object."""
+
+    description: _VoxelShapeDescription = json_field(
+        default_factory=_VoxelShapeDescription
+    )
+    shape: _VoxelShapeBoxes = json_field(default_factory=_VoxelShapeBoxes)
+
+
+class _VoxelShapeFile(JsonObject):
+    """The content of `shapes/<name>.shape.json`."""
+
+    __required__: ClassVar[tuple[str, ...]] = (
+        "format_version",
+        "minecraft:voxel_shape",
+    )
+
+    format_version: str = json_field(default=VOXEL_SHAPE_VERSION, init=False)
+    voxel_shape: _VoxelShapeDefinition = json_field(
+        key="minecraft:voxel_shape", default_factory=_VoxelShapeDefinition
+    )
 
 
 class _VoxelGroup:
@@ -54,17 +122,14 @@ class _VoxelGroup:
     """
 
     def __init__(
-        self, shape: "VoxelShape", name: str, parent: Optional["_VoxelGroup"] = None
+        self, shape: "VoxelShape", name: str, parent: "_VoxelGroup | None" = None
     ) -> None:
         if not name:
             raise ValueError("Group names cannot be empty.")
-        self._shape: Optional["VoxelShape"] = shape
+        self._shape: "VoxelShape | None" = shape
         self._parent = parent
         self._name = name
-        # Boxes and child groups, in the order they were added
-        self._items: List[Union[_Box, "_VoxelGroup"]] = []
-
-    # -- structure -----------------------------------------------------------
+        self._items: list["_Box | _VoxelGroup"] = []
 
     @property
     def name(self) -> str:
@@ -72,15 +137,15 @@ class _VoxelGroup:
         return self._name
 
     @property
-    def parent(self) -> Optional["_VoxelGroup"]:
+    def parent(self) -> "_VoxelGroup | None":
         return self._parent
 
     @property
-    def children(self) -> List["_VoxelGroup"]:
+    def children(self) -> list["_VoxelGroup"]:
         return [item for item in self._items if isinstance(item, _VoxelGroup)]
 
     @property
-    def boxes(self) -> List[_Box]:
+    def boxes(self) -> list[_Box]:
         """The boxes directly in this group (not in its child groups)."""
         return [item for item in self._items if isinstance(item, _Box)]
 
@@ -98,9 +163,16 @@ class _VoxelGroup:
         return child
 
     def box(self, min: Sequence[float], max: Sequence[float]) -> "_VoxelGroup":
-        """Adds a box to this group. Returns this group so calls can be chained."""
-        self._alive()
-        self._items.append(_Box(min, max))
+        """Adds a box to this group. Returns this group so calls can be chained.
+
+        Args:
+            min (Sequence[float]): The corner with the smallest coordinates, in pixels from
+                the block's corner.
+            max (Sequence[float]): The opposite corner.
+        """
+        shape = self._alive()
+        self._items.append(_Box(min=tuple(min), max=tuple(max)))
+        shape._sync()
         return self
 
     def remove(self) -> None:
@@ -112,6 +184,7 @@ class _VoxelGroup:
             shape._by_name.pop(group._name, None)
             group._shape = None
         self._parent = None
+        shape._sync()
 
     def walk(self) -> Iterator["_VoxelGroup"]:
         """Yields this group followed by all of its descendants (depth-first)."""
@@ -132,17 +205,27 @@ class VoxelShape(JsonFile):
 
     The file is named after `name`. The shape identifier is
     ``<namespace>:<identifier_name>`` and defaults to `name`.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/voxelshapes)
     """
 
+    _document = _VoxelShapeFile
     _extension = ".shape.json"
     _pack = Pack.BP
     _folder = "shapes"
+    _object_type = "Voxel Shape"
 
-    def __init__(self, name: str, identifier_name: Optional[str] = None) -> None:
+    def __init__(self, name: str, identifier_name: str | None = None) -> None:
         super().__init__(name)
-        self.identifier_name = identifier_name or name
-        self._roots: List[_VoxelGroup] = []
-        self._by_name: Dict[str, _VoxelGroup] = {}
+        self._identifier_name = identifier_name or name
+        self._roots: list[_VoxelGroup] = []
+        self._by_name: dict[str, _VoxelGroup] = {}
+        self._content.voxel_shape.description.set_identifier(self.shape_identifier)
+
+    @property
+    def identifier_name(self) -> str:
+        """The name in the shape identifier."""
+        return self._identifier_name
 
     def _register(self, group: _VoxelGroup) -> None:
         if group._name in self._by_name:
@@ -151,6 +234,9 @@ class VoxelShape(JsonFile):
             )
         self._by_name[group._name] = group
 
+    def _sync(self) -> None:
+        self._content.voxel_shape.shape.set_boxes(self.boxes)
+
     def group(self, name: str) -> _VoxelGroup:
         """Creates a root group and returns it."""
         group = _VoxelGroup(self, name)
@@ -158,34 +244,20 @@ class VoxelShape(JsonFile):
         self._roots.append(group)
         return group
 
-    def find(self, name: str) -> Optional[_VoxelGroup]:
+    def find(self, name: str) -> _VoxelGroup | None:
         return self._by_name.get(name)
 
     @property
-    def groups(self) -> List[_VoxelGroup]:
+    def groups(self) -> list[_VoxelGroup]:
         """All groups, parents always before their children."""
         return [group for root in self._roots for group in root.walk()]
 
     @property
-    def boxes(self) -> List[_Box]:
+    def boxes(self) -> list[_Box]:
         """Every box of the shape, in the order they were added."""
         return [box for root in self._roots for box in root._all_boxes()]
 
     @property
     def shape_identifier(self) -> str:
         """How a block's geometry references this shape: ``<namespace>:<identifier_name>``."""
-        return f"{CONFIG.NAMESPACE}:{self.identifier_name}"
-
-    def compile(self) -> dict:
-        boxes = self.boxes
-        if not boxes:
-            raise ValueError(f"Voxel shape '{self.identifier.name}' has no boxes.")
-        content = JsonSchemes.voxel_shape(self.identifier_name)
-        content["minecraft:voxel_shape"]["shape"]["boxes"] = [
-            box.compile() for box in boxes
-        ]
-        return content
-
-    def __export__(self) -> None:
-        self.content(self.compile())
-        super().__export__()
+        return f"{CONFIG.NAMESPACE}:{self._identifier_name}"

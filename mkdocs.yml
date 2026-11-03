@@ -89,6 +89,7 @@ nav:
                 - Overview: api/blocks/index.md
                 - Blocks: api/blocks/blocks.md
                 - Components: api/blocks/components.md
+                - blocks.json: api/blocks/blocks_json.md
           - Items:
                 - Overview: api/items/index.md
                 - Items: api/items/items.md
@@ -119,18 +120,28 @@ nav:
                 - Overview: api/vanilla/index.md
                 - Entities: api/vanilla/entities.md
                 - Items: api/vanilla/items.md
+          - Camera:
+                - Camera Presets: api/camera/camera.md
+                - Aim Assist: api/camera/aim_assist.md
+          - Sounds:
+                - Sound Definitions: api/sounds/sound_definitions.md
+                - Music Definitions: api/sounds/music_definitions.md
+                - Server Sound Definitions: api/sounds/server_sound_definitions.md
+                - Sound Events: api/sounds/sound_events.md
+          - Textures:
+                - Item Atlas: api/textures/item_atlas.md
+                - Terrain Atlas: api/textures/terrain_atlas.md
+                - Flipbook Textures: api/textures/flipbook.md
           - Core Library:
                 - Overview: api/core/index.md
                 - Config: api/core/config.md
-                - Camera: api/core/camera.md
+                - Manifest: api/core/manifest.md
                 - Schemas: api/core/schemas.md
                 - Types: api/core/types.md
                 - Enums: api/core/enums.md
                 - Filters: api/core/filters.md
                 - Lib: api/core/lib.md
                 - Reports: api/core/reports.md
-                - Sounds: api/core/sounds.md
-                - Textures: api/core/textures.md
                 - Templater: api/core/templater.md
                 - Translator: api/core/translator.md
                 - Blockbench: api/core/blockbench.md

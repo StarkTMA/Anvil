@@ -7,7 +7,7 @@ This guide shows how to create a custom **Camera Preset** in Anvil. Camera prese
 ## Define the Camera
 
 ```python title="misc/my_camera.py"
-from anvil.api.core.camera import CameraPreset
+from anvil.api.camera import CameraPreset
 from anvil.api.core.enums import CameraPresets
 
 def register_my_camera():

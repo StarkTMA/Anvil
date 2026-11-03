@@ -1,5 +1,5 @@
 from anvil.api.actors.description import _ActorClientDescription
-from anvil.api.core.textures import ItemTexturesObject
+from anvil.api.textures import ItemTexturesObject
 from anvil.api.logic.molang import Molang
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.blockbench import _BlockBenchSource

@@ -2,7 +2,7 @@ from dataclasses import InitVar
 from typing import TYPE_CHECKING, Annotated
 
 from anvil.api.core.enums import DamageCause, EnchantsSlots
-from anvil.api.core.textures import ItemTexturesObject
+from anvil.api.textures import ItemTexturesObject
 from anvil.api.core.types import (
     RGB,
     RGB255,

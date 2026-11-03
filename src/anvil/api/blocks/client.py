@@ -1,4 +1,5 @@
-from anvil.api.core.core import BlocksJSONObject, SoundEvent
+from anvil.api.blocks.blocks_json import BlocksJSONObject
+from anvil.api.sounds import SoundEvent
 from anvil.api.core.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
@@ -30,8 +31,8 @@ class BlockClient(JsonFile):
         sound_event: BlockSoundEvent | BlockInteractiveSoundEvent,
         volume: float = 1.0,
         pitch: tuple[float, float] = (0.8, 1.2),
-        max_distance: float = 0,
-        min_distance: float = 9999,
+        max_distance: float | None = None,
+        min_distance: float | None = None,
         subtitle: str = None,
     ):
         sound_event_obj = SoundEvent()
