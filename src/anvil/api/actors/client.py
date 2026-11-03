@@ -123,7 +123,9 @@ class EntityClient(JsonFile):
         """
         super().__init__(name, is_vanilla)
         self._client_entity = JsonSchemes.entity_client()
-        self._description = _EntityClientDescription(self.identifier, self._is_vanilla)
+        self._description = _EntityClientDescription(
+            self.identifier, self.identifier.is_vanilla
+        )
 
     @property
     def description(self) -> "_EntityClientDescription":

@@ -21,8 +21,11 @@ from .component import (
 )
 from .container import JsonContainer, validate_components
 from .fields import json_field
+from .file import JsonFile
 from .identifier import VANILLA_NAMESPACE, Identifier
 from .jsontypes import (
+    COLOR_SCHEMA,
+    AnyColor,
     AsObject,
     AsString,
     AtLeastOne,
@@ -55,7 +58,10 @@ from .jsontypes import (
     PropertyName,
     RangeMinMax,
     RedstoneSignal,
+    RGB255Color,
+    RGBA255Color,
     RGBAColor,
+    RGBColor,
     ShortTag,
     Trigger,
     Unique,
@@ -63,6 +69,7 @@ from .jsontypes import (
     XpRange,
     YesNo,
 )
+from .keyframes import KeyFrame, KeyFramed, KeyFramedColor
 from .object import JsonObject, JsonValue
 
 __all__ = [
@@ -70,10 +77,14 @@ __all__ = [
     "JsonComponent",
     "JsonCustomComponent",
     "JsonContainer",
+    "JsonFile",
     "JsonValue",
     "JsonValueComponent",
     "validate_components",
     "Identifier",
+    "KeyFrame",
+    "KeyFramed",
+    "KeyFramedColor",
     "VANILLA_NAMESPACE",
     "json_field",
     "ComponentPlacement",
@@ -109,7 +120,12 @@ __all__ = [
     "DespawnDistance",
     "Kept",
     "Hex",
+    "AnyColor",
+    "RGBColor",
     "RGBAColor",
+    "COLOR_SCHEMA",
+    "RGB255Color",
+    "RGBA255Color",
     "BlockObject",
     "ItemObject",
     "ColorMap",

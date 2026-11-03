@@ -305,7 +305,6 @@ def test_valid_custom_identifiers(identifier, project_namespace):
 @pytest.mark.parametrize(
     "identifier",
     [
-        "climate",
         "Minecraft:climate",
         "minecraft:Climate",
         "1ns:climate",
@@ -320,6 +319,15 @@ def test_valid_custom_identifiers(identifier, project_namespace):
 def test_invalid_identifiers_are_refused(identifier):
     with pytest.raises(ValueError, match="Invalid name|Invalid namespace"):
         type("_Bad", (JsonComponent,), {"identifier": identifier})
+
+
+def test_bare_names_get_the_namespace_vanilla_asks_for(project_namespace):
+    from anvil.lib.jsonmodel import Identifier
+
+    assert Identifier.parse("climate", vanilla=True) == "minecraft:climate"
+    assert Identifier.parse("climate") == "proj:climate"
+    _Bare = type("_Bare", (JsonComponent,), {"identifier": "climate"})
+    assert _Bare.identifier == "minecraft:climate"
 
 
 def test_component_types_resolve_for_type_checkers():

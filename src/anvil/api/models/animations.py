@@ -290,7 +290,9 @@ class Animations(JsonFile):
         This is the only way to add an animation to a set.
         """
         if name in self._animations:
-            raise ValueError(f"Duplicate animation '{name}' in '{self._name}'.")
+            raise ValueError(
+                f"Duplicate animation '{name}' in '{self.identifier.name}'."
+            )
         animation = _Animation(
             name,
             length,
@@ -333,12 +335,12 @@ class Animations(JsonFile):
         if problems:
             details = "\n  - ".join(sorted(set(problems)))
             raise ValueError(
-                f"Animations in '{self._name}' do not match geometry '{geometry.name}':\n  - {details}"
+                f"Animations in '{self.identifier.name}' do not match geometry '{geometry.name}':\n  - {details}"
             )
         return self
 
     def _full_name(self, animation: _Animation) -> str:
-        return f"animation.{CONFIG.NAMESPACE}.{self._name}.{animation.name}"
+        return f"animation.{CONFIG.NAMESPACE}.{self.identifier.name}.{animation.name}"
 
     def compile(self) -> dict:
         content = JsonSchemes.animations_rp()

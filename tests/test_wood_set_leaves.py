@@ -74,7 +74,7 @@ def test_leaves_loot_table_conditions(make_leaves):
         for obj in ANVIL._objects_list
         if getattr(obj, "_object_type", None) == "Loot Table"
     ]
-    table = [t for t in queued_tables if t._name == "rotten_leaves"][-1]
+    table = [t for t in queued_tables if t.name == "rotten_leaves"][-1]
     exported = [pool.__export__() for pool in table._pools]
 
     # Pool 0: Shears
@@ -115,6 +115,6 @@ def test_leaves_loot_table_without_sapling(make_leaves):
         for obj in ANVIL._objects_list
         if getattr(obj, "_object_type", None) == "Loot Table"
     ]
-    (table,) = [t for t in queued_tables if t._name == "rotten_leaves"]
+    (table,) = [t for t in queued_tables if t.name == "rotten_leaves"]
     exported = [pool.__export__() for pool in table._pools]
     assert len(exported) == 3  # shears, silk touch, sticks (no sapling)

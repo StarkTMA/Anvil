@@ -1230,7 +1230,7 @@ class LootTable(JsonFile):
         return os.path.join(
             "loot_tables",
             CONFIG.NAMESPACE,
-            self._name + self._extension,
+            self.identifier.name + self._extension,
         )
 
     def queue(self) -> "LootTable":

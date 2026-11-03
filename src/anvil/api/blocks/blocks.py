@@ -7,7 +7,7 @@ from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import VANILLA_NAMESPACE, Identifier
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import JsonSchemes, MinecraftBlockDescriptor
+from anvil.lib.schemas import MinecraftBlockDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 if TYPE_CHECKING:
@@ -106,7 +106,6 @@ class Block(MinecraftBlockDescriptor):
         """
         self._texture_only = True
         texture_set = TextureSet(self.name, "blocks", overriding_vanilla=True)
-        texture_set.content(JsonSchemes.texture_set())
         texture_set.set_vanilla_texture(blockbench, component, subfolder)
         texture_set.queue(subfolder)
 

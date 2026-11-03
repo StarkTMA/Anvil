@@ -34,7 +34,7 @@ class BiomeServer(JsonFile):
             name (str): The name of the biome.
             is_vanilla (bool, optional): Whether or not the biome is a vanilla biome. Defaults to False.
         """
-        super().__init__(name)
+        super().__init__(name, is_vanilla)
         self.content(JsonSchemes.biome_server())
         self._description = BiomeDescription(name, is_vanilla)
         self._components = ComponentGroup(name="components")
@@ -59,7 +59,7 @@ class BiomeServer(JsonFile):
             if isinstance(component, BiomeClientComponent):
                 raise ValueError(
                     f"{type(component).__name__} is a client biome component. "
-                    f"Add it to the biome client instead. {self._object_type}[{self._name}]"
+                    f"Add it to the biome client instead. {self._object_type}[{self.identifier.name}]"
                 )
         validate_components(self, self._components, [])
         self._content["minecraft:biome"].update(self.description.__export__())

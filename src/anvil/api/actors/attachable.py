@@ -54,8 +54,8 @@ class Attachable(JsonFile):
 
         CONFIG.Report.add_report(
             ReportType.ATTACHABLE,
-            vanilla=self._is_vanilla,
-            col0=self._display_name,
+            vanilla=self.identifier.is_vanilla,
+            col0=self.identifier.display_name,
             col1=self.identifier,
         )
         super().queue()

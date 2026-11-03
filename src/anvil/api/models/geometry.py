@@ -475,7 +475,7 @@ class Geometry(JsonFile):
     def _register(self, bone: _Bone) -> None:
         if bone._name in self._by_name:
             raise ValueError(
-                f"Duplicate bone '{bone._name}' in geometry '{self._name}'. Bone names must be unique."
+                f"Duplicate bone '{bone._name}' in geometry '{self.identifier.name}'. Bone names must be unique."
             )
         self._by_name[bone._name] = bone
 
@@ -497,7 +497,7 @@ class Geometry(JsonFile):
     @property
     def geometry_identifier(self) -> str:
         """How entities and blocks reference this geometry: ``geometry.<namespace>.<name>``."""
-        return f"geometry.{CONFIG.NAMESPACE}.{self._name}"
+        return f"geometry.{CONFIG.NAMESPACE}.{self.identifier.name}"
 
     @property
     def bones(self) -> List[_Bone]:
@@ -513,7 +513,7 @@ class Geometry(JsonFile):
     def clone(self, name: Optional[str] = None) -> "Geometry":
         """Returns an independent copy, optionally under a new name."""
         clone = Geometry(
-            name or self._name,
+            name or self.identifier.name,
             self.texture_size,
             self.visible_bounds,
             self.visible_offset,
@@ -600,7 +600,7 @@ class Geometry(JsonFile):
 
     def compile(self) -> dict:
         content = JsonSchemes.geometry(
-            self._name,
+            self.identifier.name,
             self.texture_size,
             self.visible_bounds,
             self.visible_offset,

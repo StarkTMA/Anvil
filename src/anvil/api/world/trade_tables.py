@@ -207,7 +207,7 @@ class TradeTable(JsonFile):
         return os.path.join(
             "trading",
             CONFIG.NAMESPACE,
-            self._name + self._extension,
+            self.identifier.name + self._extension,
         )
 
     def queue(self) -> "TradeTable":

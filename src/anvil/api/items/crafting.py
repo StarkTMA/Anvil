@@ -176,9 +176,8 @@ class SmithingRecipe(_BaseRecipe):
     _extension = ".recipe.json"
 
     def __init__(self, name: str, tags: list[str] = ["smithing_table"]) -> None:
-        self._name = name
-        self.content(JsonSchemes.recipe_smithing_table(self.identifier, tags))
         super().__init__(name)
+        self.content(JsonSchemes.recipe_smithing_table(self.identifier, tags))
 
     def base(self, identifier: Identifier) -> "SmithingRecipe":
         self._content["minecraft:recipe_smithing_transform"]["base"] = identifier
@@ -207,7 +206,7 @@ class ShapelessRecipe(_BaseRecipe):
     def ingredients(self, items: list[tuple[Identifier, int]]) -> "ShapelessRecipe":
         if len(items) > 9:
             raise ValueError(
-                f"Too many items in shapeless recipe, maximum is 9. {self._object_type}[{self._name}]"
+                f"Too many items in shapeless recipe, maximum is 9. {self._object_type}[{self.identifier.name}]"
             )
 
         for i, item in enumerate(items):
@@ -345,9 +344,8 @@ class SmithingTrimRecipe(_BaseRecipe):
     _extension = ".recipe.json"
 
     def __init__(self, name: str, tags: list[str] = ["smithing_table"]) -> None:
-        self._name = name
-        self.content(JsonSchemes.recipe_smithing_table_trim(self.identifier, tags))
         super().__init__(name)
+        self.content(JsonSchemes.recipe_smithing_table_trim(self.identifier, tags))
 
     def base(
         self, item: MinecraftItemDescriptor | MinecraftBlockDescriptor | Identifier

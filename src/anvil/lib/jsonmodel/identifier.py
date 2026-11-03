@@ -55,8 +55,8 @@ class Identifier(str):
         data: str | int | None = None,
         object_type: str = "Name",
     ) -> Identifier:
-        """Parses `name` or `namespace:name`. A name without a namespace gets the project
-        namespace, `CONFIG.NAMESPACE`.
+        """Parses `name` or `namespace:name`. A name without a namespace gets the namespace
+        `vanilla` asks for: `minecraft`, or the project namespace `CONFIG.NAMESPACE`.
 
         Args:
             text (str): The name, with or without its namespace.
@@ -71,6 +71,7 @@ class Identifier(str):
         """
         from anvil.lib.config import CONFIG
 
+        namespace = VANILLA_NAMESPACE if vanilla else CONFIG.NAMESPACE
         if isinstance(text, Identifier) and data is None:
             identifier = text
         else:
@@ -81,10 +82,7 @@ class Identifier(str):
                     f"letters, digits, '_', '.', '-' or '/'. A name cannot start with a digit, "
                     f"and a namespace must start with a letter. {object_type}[{text}]"
                 )
-            identifier = cls(
-                match["namespace"] or CONFIG.NAMESPACE, match["name"], data
-            )
-        namespace = VANILLA_NAMESPACE if vanilla else CONFIG.NAMESPACE
+            identifier = cls(match["namespace"] or namespace, match["name"], data)
         if identifier.namespace != namespace:
             kind = "vanilla" if vanilla else "custom"
             raise ValueError(

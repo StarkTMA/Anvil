@@ -147,7 +147,7 @@ class VoxelShape(JsonFile):
     def _register(self, group: _VoxelGroup) -> None:
         if group._name in self._by_name:
             raise ValueError(
-                f"Duplicate group '{group._name}' in voxel shape '{self._name}'. Group names must be unique."
+                f"Duplicate group '{group._name}' in voxel shape '{self.identifier.name}'. Group names must be unique."
             )
         self._by_name[group._name] = group
 
@@ -179,7 +179,7 @@ class VoxelShape(JsonFile):
     def compile(self) -> dict:
         boxes = self.boxes
         if not boxes:
-            raise ValueError(f"Voxel shape '{self._name}' has no boxes.")
+            raise ValueError(f"Voxel shape '{self.identifier.name}' has no boxes.")
         content = JsonSchemes.voxel_shape(self.identifier_name)
         content["minecraft:voxel_shape"]["shape"]["boxes"] = [
             box.compile() for box in boxes

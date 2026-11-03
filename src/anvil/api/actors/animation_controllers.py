@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, overload
 from anvil.api.core.enums import Target
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.jsonmodel import Identifier, JsonFile
 from anvil.lib.schemas import (
     JsonSchemes,
 )
@@ -440,8 +440,8 @@ class BPAnimationControllers(JsonFile):
     _folder = "animation_controllers"
     _object_type = "Behavior Pack Animation Controller"
 
-    def __init__(self, identifier) -> None:
-        super().__init__(identifier)
+    def __init__(self, identifier: Identifier) -> None:
+        super().__init__(identifier, identifier.is_vanilla)
         self._animation_controllers = JsonSchemes.animation_controllers()
         self._controllers_list: list[_BP_Controller] = []
 

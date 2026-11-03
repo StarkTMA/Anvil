@@ -640,7 +640,7 @@ class SpawnRule(JsonFile):
         """
         super().__init__(identifier, is_vanilla)
         self._description = _SpawnRuleDescription(
-            self, self.identifier, self._is_vanilla
+            self, self.identifier, self.identifier.is_vanilla
         )
         self._spawn_rule = JsonSchemes.spawn_rules()
         self._conditions: list[_SpawnRuleCondition] = []

@@ -24,13 +24,13 @@ class Biome(MinecraftBiomeDescriptor):
     @property
     def server(self) -> BiomeServer:
         if self._server is None:
-            self._server = BiomeServer(self._name, self._is_vanilla)
+            self._server = BiomeServer(self.identifier, self._is_vanilla)
         return self._server
 
     @property
     def client(self) -> BiomeClient:
         if self._client is None:
-            self._client = BiomeClient(self._name, self._is_vanilla)
+            self._client = BiomeClient(self.identifier, self._is_vanilla)
         return self._client
 
     def queue(self) -> None:

@@ -68,7 +68,7 @@ class Particle(JsonFile):
 
     def _check_reference_file_exists(self, source_path, reference_name):
         if not os.path.exists(source_path):
-            raise ParticleReferencedNotFoundError(self._name, reference_name)
+            raise ParticleReferencedNotFoundError(self.identifier.name, reference_name)
 
     def _load_file_content(self, source_path):
         with open(source_path, "rb") as file:
@@ -125,8 +125,8 @@ class Particle(JsonFile):
         CONFIG.Report.add_report(
             ReportType.PARTICLE,
             vanilla=False,
-            col0=self._name.replace("_", " ").title(),
-            col1=f"{CONFIG.NAMESPACE}:{self._name}",
+            col0=self.identifier.name.replace("_", " ").title(),
+            col1=f"{CONFIG.NAMESPACE}:{self.identifier.name}",
         )
 
         return super().queue()

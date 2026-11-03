@@ -278,7 +278,7 @@ class BlockServer(JsonFile):
             name (str): The name of the block.
             is_vanilla (bool, optional): Whether or not the block is a vanilla block. Defaults to False.
         """
-        super().__init__(name)
+        super().__init__(name, is_vanilla)
         self._server_block = JsonSchemes.server_block()
         self._description = _BlockServerDescription(name, is_vanilla)
         self._components = ComponentGroup(name="components")
@@ -312,7 +312,7 @@ class BlockServer(JsonFile):
             *((permutation, False) for permutation in self._permutations),
         ]:
             if root and not any(isinstance(c, BlockDisplayName) for c in group):
-                group.add(BlockDisplayName(value=self._display_name))
+                group.add(BlockDisplayName(value=self.identifier.display_name))
             for component in group:
                 component.__prepare_export__(self, root=root)
 

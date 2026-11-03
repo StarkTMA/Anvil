@@ -281,10 +281,12 @@ class EntityServer(JsonFile):
         """
         super().__init__(name, is_vanilla)
         self._server_entity = JsonSchemes.entity_server()
-        self._description = _EntityServerDescription(self.identifier, self._is_vanilla)
+        self._description = _EntityServerDescription(
+            self.identifier, self.identifier.is_vanilla
+        )
         self._animation_controllers = BPAnimationControllers(self.identifier)
         self._animations = BPAnimations(self.identifier)
-        self._spawn_rule = SpawnRule(self.name, self._is_vanilla)
+        self._spawn_rule = SpawnRule(self.identifier, self.identifier.is_vanilla)
         self._components = ComponentGroup(name="components")
         self._events: dict[str, _Event] = {}
         self._component_groups: list[ComponentGroup] = []
@@ -337,7 +339,9 @@ class EntityServer(JsonFile):
             condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
 
         """
-        self._description._animations(self._name, animation_name, animate, condition)
+        self._description._animations(
+            self.identifier.name, animation_name, animate, condition
+        )
         return self._animations.add_animation(animation_name, loop)
 
     def init_vars(self, **vars) -> "EntityServer":

@@ -48,7 +48,7 @@ def test_aim_assist_preset():
 def test_aim_assist_category_and_categories():
     categories = AimAssistCategories()
     assert categories._path == config.CONFIG.BP_PATH / "cameras" / "presets"
-    assert categories._name == "categories"
+    assert categories.name == "categories"
 
     cat = categories.add_category("test_cat")
     cat.entity_default(5).block_default(10)

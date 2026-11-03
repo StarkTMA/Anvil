@@ -18,7 +18,7 @@ import math
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from anvil.api.core.types import RGBA, HexRGB, JsonSchema
+from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, JsonSchema
 
 NUMBER: JsonSchema = {"type": "number"}
 STRING: JsonSchema = {"type": "string"}
@@ -391,10 +391,38 @@ def _hex(value: Any) -> str:
     return AnvilFormatter.convert_color(value, HexRGB)
 
 
+def _color(value: Any) -> Any:
+    from anvil.lib.lib import AnvilFormatter
+
+    return AnvilFormatter.convert_color(value)
+
+
+def _rgb(value: Any) -> Any:
+    from anvil.lib.lib import AnvilFormatter
+
+    return AnvilFormatter.convert_color(value, RGB)
+
+
 def _rgba(value: Any) -> Any:
     from anvil.lib.lib import AnvilFormatter
 
     return AnvilFormatter.convert_color(value, RGBA)
+
+
+def _rgb255(value: Any) -> Any:
+    from anvil.lib.lib import AnvilFormatter
+
+    if isinstance(value, str) and len(value.removeprefix("#")) in (4, 8):
+        raise ValueError(
+            f"The color {value} has an alpha channel; give only the color channels."
+        )
+    return AnvilFormatter.convert_color(value, RGB255)
+
+
+def _rgba255(value: Any) -> Any:
+    from anvil.lib.lib import AnvilFormatter
+
+    return AnvilFormatter.convert_color(value, RGBA255)
 
 
 def _block_object(value: Any) -> dict[str, Any]:
@@ -453,6 +481,34 @@ left out when False."""
 Hex = Encoded(_hex, {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"})
 """A color in any format as a `#rrggbb` string."""
 
+COLOR_SCHEMA: JsonSchema = {
+    "anyOf": [
+        {"type": "string", "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"},
+        {
+            "type": "array",
+            "items": {"type": "number", "minimum": 0},
+            "minItems": 3,
+            "maxItems": 4,
+        },
+    ]
+}
+"""A color as the game reads it: a `#rrggbb(aa)` string, or three or four numbers."""
+
+AnyColor = Encoded(_color, COLOR_SCHEMA)
+"""A color in any format, written in that format. A hex string is written in full, in
+lower case."""
+
+RGBColor = Encoded(
+    _rgb,
+    {
+        "type": "array",
+        "items": {"type": "number", "minimum": 0, "maximum": 1},
+        "minItems": 3,
+        "maxItems": 3,
+    },
+)
+"""A color in any format as three numbers from 0 to 1."""
+
 RGBAColor = Encoded(
     _rgba,
     {
@@ -463,6 +519,29 @@ RGBAColor = Encoded(
     },
 )
 """A color in any format as four numbers from 0 to 1."""
+
+RGB255Color = Encoded(
+    _rgb255,
+    {
+        "type": "array",
+        "items": {"type": "integer", "minimum": 0, "maximum": 255},
+        "minItems": 3,
+        "maxItems": 3,
+    },
+)
+"""A color without alpha, in any format, as three whole numbers from 0 to 255. A hex color
+with an alpha channel is refused."""
+
+RGBA255Color = Encoded(
+    _rgba255,
+    {
+        "type": "array",
+        "items": {"type": "integer", "minimum": 0, "maximum": 255},
+        "minItems": 4,
+        "maxItems": 4,
+    },
+)
+"""A color in any format as four whole numbers from 0 to 255."""
 
 BlockObject = Encoded(
     _block_object,

@@ -47,7 +47,7 @@ class ItemServer(JsonFile):
     _object_type = "Item Server"
 
     def __init__(self, name: str, is_vanilla: bool) -> None:
-        super().__init__(name)
+        super().__init__(name, is_vanilla)
         self._server_item = JsonSchemes.server_item()
         self._description = _ItemServerDescription(name, is_vanilla)
         self._components = ComponentGroup(name="components")
@@ -69,7 +69,7 @@ class ItemServer(JsonFile):
         validate_components(self, self._components, [])
 
         if not any(isinstance(c, ItemDisplayName) for c in self._components):
-            self._components.add(ItemDisplayName(value=self._display_name))
+            self._components.add(ItemDisplayName(value=self.identifier.display_name))
         for component in self._components:
             component.__prepare_export__(self)
 

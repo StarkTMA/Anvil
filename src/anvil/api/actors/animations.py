@@ -1,6 +1,6 @@
 from anvil.api.logic.molang import Molang, Query
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import JsonFile
+from anvil.lib.jsonmodel import Identifier, JsonFile
 from anvil.lib.schemas import JsonSchemes
 
 
@@ -95,8 +95,8 @@ class BPAnimations(JsonFile):
     _folder = "animations"
     _object_type = "behavior Pack Animation"
 
-    def __init__(self, identifier) -> None:
-        super().__init__(identifier)
+    def __init__(self, identifier: Identifier) -> None:
+        super().__init__(identifier, identifier.is_vanilla)
         self._animations = JsonSchemes.animations_bp()
         self._animations_list: list[_BPAnimation] = []
 
