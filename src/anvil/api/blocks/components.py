@@ -2,13 +2,57 @@ import dataclasses
 from dataclasses import InitVar
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Literal, get_args
 
-from anvil.api.core.enums import (
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.items.items import Item
+from anvil.api.logic.molang import Molang
+from anvil.api.models.geometry import (
+    Geometry,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
+    ItemDisplayTransforms,
+)
+from anvil.api.models.voxel_shape import VoxelShape
+from anvil.api.pbr.texture_set import TextureComponents, TextureSet
+from anvil.api.textures import FlipBookTexturesObject, TerrainTexturesObject
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.world.loot_tables import LootTable
+from anvil.lib.blockbench import (
+    _Blockbench,
+    _blockbench_geometry_name,
+    _BlockBenchSource,
+    _geometry_block_culling,
+)
+from anvil.lib.config import CONFIG
+from anvil.lib.jsonmodel import (
+    BlockId,
+    ComponentPlacement,
+    ExpandFaces,
+    Hex,
+    InRange,
+    ItemId,
+    JsonComponent,
+    JsonCustomComponent,
+    JsonObject,
+    JsonValue,
+    JsonValueComponent,
+    Keyed,
+    Length,
+    MinMax,
+    NonNegative,
+    Ordered,
+    RedstoneSignal,
+    ShortTag,
+    Unique,
+    json_field,
+)
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
 )
-from anvil.api.textures import FlipBookTexturesObject, TerrainTexturesObject
-from anvil.api.core.types import (
+from anvil.lib.jsonmodel.identifier import Identifier
+from anvil.lib.jsonmodel.types import (
     RGB,
     RGB255,
     RGBA,
@@ -27,46 +71,6 @@ from anvil.api.core.types import (
     InstrumentSound,
     TintMethod,
 )
-from anvil.api.logic.molang import Molang
-from anvil.api.models.geometry import (
-    Geometry,
-    ItemDisplayGuiTransform,
-    ItemDisplayTransform,
-    ItemDisplayTransforms,
-)
-from anvil.api.models.voxel_shape import VoxelShape
-from anvil.api.pbr.texture_set import TextureComponents, TextureSet
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.world.loot_tables import LootTable
-from anvil.lib.blockbench import (
-    _Blockbench,
-    _blockbench_geometry_name,
-    _BlockBenchSource,
-    _geometry_block_culling,
-)
-from anvil.lib.config import CONFIG
-from anvil.lib.jsonmodel import (
-    ComponentPlacement,
-    ExpandFaces,
-    Hex,
-    InRange,
-    JsonComponent,
-    JsonCustomComponent,
-    JsonObject,
-    JsonValue,
-    JsonValueComponent,
-    Keyed,
-    Length,
-    MinMax,
-    NonNegative,
-    Ordered,
-    RedstoneSignal,
-    ShortTag,
-    Unique,
-    json_field,
-)
-from anvil.lib.jsonmodel.identifier import Identifier
-from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 if TYPE_CHECKING:
@@ -254,11 +258,11 @@ class ItemSpecificSpeed(JsonObject):
     """How long the block takes to mine with specific items.
 
     Args:
-        item (str | MinecraftItemDescriptor | ItemTagFilter): The item, or the tags of the items.
+        item (str | Item | ItemTagFilter): The item, or the tags of the items.
         destroy_speed (float): The seconds to destroy the block with those items.
     """
 
-    item: str | MinecraftItemDescriptor | ItemTagFilter = json_field()
+    item: Annotated[str | Item, ItemId] | ItemTagFilter = json_field()
     destroy_speed: float = json_field()
 
 
@@ -267,14 +271,17 @@ class PlacementCondition(JsonObject):
 
     Args:
         allowed_faces (list[BlockFaceValues], optional): The faces of the block below or beside it the block can be placed on. Game default every face.
-        block_filter (list[str | MinecraftBlockDescriptor], optional): The blocks it can be placed on, at most 64. Game default any block.
+        block_filter (list[str | Block | BlockDescriptor], optional): The blocks it can be placed on, at most 64. Game default any block.
     """
 
     allowed_faces: Annotated[list[BlockFaceValues], ExpandFaces] | None = json_field(
         default=None
     )
     block_filter: (
-        Annotated[list[str | MinecraftBlockDescriptor], Length(maximum=64)] | None
+        Annotated[
+            list[Annotated[str | Block | BlockDescriptor, BlockId]], Length(maximum=64)
+        ]
+        | None
     ) = json_field(default=None)
 
 
@@ -696,7 +703,7 @@ class BlockDestructibleByMining(_Switchable):
     def add_item_specific_speed(
         self,
         *,
-        item: str | MinecraftItemDescriptor | ItemTagFilter,
+        item: str | Item | ItemTagFilter,
         destroy_speed: float,
     ) -> "BlockDestructibleByMining":
         """Adds the seconds to mine the block with an item, or items with tags.
@@ -891,15 +898,11 @@ class BlockGeometry(JsonComponent):
 
     identifier = "minecraft:geometry"
 
-    # public init
-    # init only
     blockbench: InitVar[str | Geometry] = "minecraft:geometry.full_block"
     collection: InitVar[str | None] = None
-    # fields
     culling_layer: BlockCullingLayer | None = json_field(default=None)
     n_way_visual_rotation: NWayVisualRotation | None = json_field(default=None)
     uv_lock: bool | list[str] | None = json_field(default=None)
-    # private from init
     geometry: str = json_field(default=None, init=False, key="identifier")
     bone_visibility: Annotated[list[BoneVisibility], Unique("bone"), Keyed("bone")] = (
         json_field(default_factory=list, init=False, omit_default=True)
@@ -1326,7 +1329,7 @@ class BlockPlacementFilter(JsonComponent):
         self,
         *,
         allowed_faces: list[BlockFaceValues] | None = None,
-        block_filter: list[str | MinecraftBlockDescriptor] | None = None,
+        block_filter: list[str | Block | BlockDescriptor] | None = None,
     ) -> "BlockPlacementFilter":
         """Adds a condition. See `PlacementCondition` for the parameters."""
         self.conditions.append(

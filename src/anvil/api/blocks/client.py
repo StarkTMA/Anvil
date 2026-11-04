@@ -1,18 +1,36 @@
 from anvil.api.blocks.blocks_json import BlocksJSONObject
 from anvil.api.sounds import SoundEvent
-from anvil.api.core.enums import (
+from anvil.lib.jsonmodel import Identifier
+from anvil.lib.jsonmodel.enums import (
     BlockInteractiveSoundEvent,
     BlockSoundEvent,
     BlockSoundGroup,
 )
-from anvil.lib.jsonmodel import JsonFile
 
 __all__ = ["BlockClient"]
 
 
-class BlockClient(JsonFile):
+class BlockClient:
+    """The client side of a block: its sounds. Blocks have no client file, their sounds are
+    written to `blocks.json` and `sounds.json`."""
+
+    _object_type = "Block Client"
+
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        super().__init__(name, is_vanilla)
+        """Creates the client side of a block.
+
+        Args:
+            name (str): The block's name.
+            is_vanilla (bool, optional): If the block is a vanilla one. Defaults to False.
+        """
+        self.identifier = Identifier.parse(
+            name, vanilla=is_vanilla, object_type=self._object_type
+        )
+
+    @property
+    def name(self) -> str:
+        """The block's name, without its namespace."""
+        return self.identifier.name
 
     def sound_group(self, group: BlockSoundGroup | str) -> "BlockClient":
         """Gives the block the sounds of a vanilla sound group, like oak planks have the `wood`
@@ -33,8 +51,23 @@ class BlockClient(JsonFile):
         pitch: tuple[float, float] = (0.8, 1.2),
         max_distance: float | None = None,
         min_distance: float | None = None,
-        subtitle: str = None,
+        subtitle: str | None = None,
     ):
+        """Gives the block a sound of its own for one of its sound events, registered in
+        `sounds.json`. The sound file is `sound_reference`.
+
+        Args:
+            sound_reference (str): The sound definition's name.
+            sound_event (BlockSoundEvent | BlockInteractiveSoundEvent): The event it plays on.
+            volume (float, optional): Defaults to 1.0.
+            pitch (tuple[float, float], optional): The pitch range. Defaults to (0.8, 1.2).
+            max_distance (float, optional): Where the sound fades out.
+            min_distance (float, optional): Where the sound starts to fade.
+            subtitle (str, optional): The subtitle shown.
+
+        Raises:
+            TypeError: When the event is not a block sound event.
+        """
         sound_event_obj = SoundEvent()
         if isinstance(sound_event, BlockSoundEvent):
             sound_def = sound_event_obj.add_block_event(
@@ -64,4 +97,5 @@ class BlockClient(JsonFile):
             raise TypeError("Invalid sound event type.")
 
     def queue(self) -> "BlockClient":
+        """Blocks have no client file, so there is nothing to queue."""
         return self

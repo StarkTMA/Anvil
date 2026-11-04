@@ -1,13 +1,10 @@
 from typing import TYPE_CHECKING
 
-from anvil.api.blocks.client import BlockClient
-from anvil.api.blocks.server import BlockServer
-from anvil.api.core.core import ANVIL
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import VANILLA_NAMESPACE, Identifier
 from anvil.lib.reports import ReportType
-from anvil.lib.schemas import MinecraftBlockDescriptor
 from anvil.lib.translator import AnvilTranslator
 
 if TYPE_CHECKING:
@@ -16,22 +13,50 @@ if TYPE_CHECKING:
 __all__ = ["Block"]
 
 
-class Block(MinecraftBlockDescriptor):
+class Block:
     _object_type = "Block"
 
-    def __init__(self, name, is_vanilla=False) -> None:
-        super().__init__(name, is_vanilla)
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        """Creates a block: its server and client files share one identifier.
 
-        self.server = BlockServer(name, is_vanilla)
-        self.client = BlockClient(name, is_vanilla)
+        Args:
+            name (str): The block's name, with or without its namespace.
+            is_vanilla (bool, optional): If the block is a vanilla one. Defaults to False.
+
+        Raises:
+            ValueError: When the name is not valid (see `Identifier.parse`), or a vanilla
+                block is not in `MinecraftBlockTypes`.
+        """
+        from anvil.api.blocks.client import BlockClient
+        from anvil.api.blocks.server import BlockServer
+        from anvil.api.vanilla.blocks import vanilla_block_ids
+
+        self.identifier = Identifier.parse(
+            name, vanilla=is_vanilla, object_type=self._object_type
+        )
+        if self.identifier.is_vanilla and self.identifier not in vanilla_block_ids():
+            raise ValueError(
+                f"Invalid vanilla block '{self.identifier}'. Please use a valid vanilla "
+                f"block from MinecraftBlockTypes. Block [{self.identifier}]"
+            )
+        self.server = BlockServer(self.identifier, self.identifier.is_vanilla)
+        self.client = BlockClient(self.identifier, self.identifier.is_vanilla)
 
         self._item = None
         self._texture_only = False
 
+    @property
+    def name(self) -> str:
+        """The block's name, without its namespace."""
+        return self.identifier.name
+
+    def __str__(self) -> str:
+        return self.identifier
+
     def descriptor(
         self, tags: str | None = None, **state_values: str | int | float | bool
-    ) -> Identifier | MinecraftBlockDescriptor:
-        """The block as a descriptor: its identifier, or a `MinecraftBlockDescriptor` with the
+    ) -> Identifier | BlockDescriptor:
+        """The block as a descriptor: its identifier, or a `BlockDescriptor` with the
         states and tags to match.
 
         States are keywords, `leaves.descriptor(natural=True)`. A name without a namespace is
@@ -42,15 +67,10 @@ class Block(MinecraftBlockDescriptor):
         Raises:
             ValueError: When the block has no such state, or the state cannot have the value.
         """
-        identifier = Identifier.parse(
-            self.identifier, vanilla=self._is_vanilla, object_type=self._object_type
-        )
+        identifier = self.identifier
         vanilla_block = identifier.is_vanilla
         description = self.server.description
-        registered = (
-            description._description["description"]["states"]
-            | description.traits.states
-        )
+        registered = description.states | description.traits.states
         states = {}
         for key, value in state_values.items():
             if ":" not in key and (
@@ -80,9 +100,7 @@ class Block(MinecraftBlockDescriptor):
             states[str(state)] = value
         if not states and tags is None:
             return identifier
-        return MinecraftBlockDescriptor(
-            identifier, is_vanilla=vanilla_block, states=states, tags=tags
-        )
+        return BlockDescriptor(name=identifier, states=states, tags=tags)
 
     @property
     def item(self) -> "Item":
@@ -121,30 +139,29 @@ class Block(MinecraftBlockDescriptor):
         if self._item:
             self._item.queue()
 
+        from anvil.api.core.core import ANVIL
+
         ANVIL.__queue__(self)
         return self
 
     def __export__(self) -> None:
-
         from anvil.api.blocks.components import BlockDisplayName
 
-        block_name_comp = self.server._server_block["minecraft:block"]["components"][
-            BlockDisplayName.identifier
-        ]
-        if block_name_comp.startswith("tile."):
-            display_name = AnvilTranslator().get_localization_value(block_name_comp)
-        else:
-            display_name = block_name_comp
+        display_name = next(
+            component.value
+            for component in self.server.components
+            if isinstance(component, BlockDisplayName)
+        )
+        if display_name.startswith("tile."):
+            display_name = AnvilTranslator().get_localization_value(display_name)
 
         CONFIG.Report.add_report(
             ReportType.BLOCK,
-            vanilla=self._is_vanilla,
+            vanilla=self.identifier.is_vanilla,
             col0=display_name,
             col1=self.identifier,
             col2=[
                 f"{key}: {[', '.join(str(v) for v in value)]}"
-                for key, value in self.server.description._description["description"][
-                    "states"
-                ].items()
+                for key, value in self.server.description.states.items()
             ],
         )

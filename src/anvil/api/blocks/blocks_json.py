@@ -2,11 +2,10 @@
 
 from typing import Annotated, Any, ClassVar
 
-from anvil.api.core.enums import BlockSoundGroup
-from anvil.api.core.types import JsonSchema
 from anvil.lib.config import Pack
 from anvil.lib.format_versions import BLOCK_JSON_FORMAT_VERSION
 from anvil.lib.jsonmodel import JsonFile, JsonObject, Keyed, json_field
+from anvil.lib.jsonmodel.enums import BlockSoundGroup
 
 
 class _BlockEntry(JsonObject):
@@ -41,7 +40,7 @@ class _BlocksJsonFile(JsonObject):
         return payload
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         blocks = schema["properties"].pop("blocks")
         schema["required"] = ["format_version"]

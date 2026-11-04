@@ -1,6 +1,6 @@
 import orjson
-
 import pytest
+
 from anvil.api.blocks.components import (
     BlockCollisionBox,
     BlockConnectionRule,
@@ -33,15 +33,7 @@ from anvil.api.blocks.components import (
     MaterialParams,
     NWayVisualRotation,
 )
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockLiquidDetectionTouching,
-    BlockMaterial,
-    PlacementDirectionTrait,
-)
 from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.lib.jsonmodel import json_field
-from anvil.lib.lib import AnvilIO
 from anvil.api.vanilla.factories.minecraft_blocks import (
     Cinnabar,
     CinnabarBrickSlab,
@@ -51,33 +43,41 @@ from anvil.api.vanilla.factories.minecraft_blocks import (
     Sulfur,
 )
 from anvil.api.vanilla.factories.minecraft_blocks import SulfurSpike as SulfurSpikeBlock
+from anvil.lib.jsonmodel import json_field
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockLiquidDetectionTouching,
+    BlockMaterial,
+    PlacementDirectionTrait,
+)
+from anvil.lib.lib import AnvilIO
 
 
 def test_new_blocks():
     cinnabar = Cinnabar()
-    assert cinnabar.identifier == "minecraft:cinnabar"
+    assert cinnabar == "minecraft:cinnabar"
 
     slab = CinnabarBrickSlab(minecraft_vertical_half="top")
-    assert slab.identifier == "minecraft:cinnabar_brick_slab"
+    assert slab.name == "minecraft:cinnabar_brick_slab"
     assert slab.states["minecraft:vertical_half"] == "top"
 
     stairs = CinnabarBrickStairs(upside_down_bit="1b", weirdo_direction="2")
-    assert stairs.identifier == "minecraft:cinnabar_brick_stairs"
+    assert stairs.name == "minecraft:cinnabar_brick_stairs"
     assert stairs.states["upside_down_bit"] == "1b"
     assert stairs.states["weirdo_direction"] == "2"
 
     wall = CinnabarBrickWall(wall_post_bit="1b")
-    assert wall.identifier == "minecraft:cinnabar_brick_wall"
+    assert wall.name == "minecraft:cinnabar_brick_wall"
     assert wall.states["wall_post_bit"] == "1b"
 
     sulfur = Sulfur()
-    assert sulfur.identifier == "minecraft:sulfur"
+    assert sulfur == "minecraft:sulfur"
 
     potent = PotentSulfur()
-    assert potent.identifier == "minecraft:potent_sulfur"
+    assert potent == "minecraft:potent_sulfur"
 
     spike_block = SulfurSpikeBlock(dripstone_thickness="tip", hanging="1b")
-    assert spike_block.identifier == "minecraft:sulfur_spike"
+    assert spike_block.name == "minecraft:sulfur_spike"
     assert spike_block.states["dripstone_thickness"] == "tip"
     assert spike_block.states["hanging"] == "1b"
 
@@ -365,10 +365,9 @@ def test_safe_key():
 
 
 def test_block_names_are_keyed_from_the_identifier():
+    from anvil.api.blocks.components import BlockCraftingTable, BlockDisplayName
     from anvil.api.blocks.server import BlockServer
     from anvil.lib.translator import AnvilTranslator
-
-    from anvil.api.blocks.components import BlockCraftingTable, BlockDisplayName
 
     server = BlockServer(name="oak_table")
     server.components.add(
@@ -383,7 +382,7 @@ def test_block_names_are_keyed_from_the_identifier():
     root = server.components.__json__()["components"]
     assert root["minecraft:display_name"] == f"{prefix}.name"
     assert root["minecraft:crafting_table"]["table_name"] == f"{prefix}.table_name"
-    permutation = server._permutations[0].__json__()["components"]
+    permutation = server.permutations[0].__json__()["components"]
     assert permutation["minecraft:display_name"] == f"{prefix}.wet_oak_table.name"
     translator = AnvilTranslator()
     assert translator.get_localization_value(f"{prefix}.name") == "Oak Table"
@@ -460,16 +459,16 @@ def test_block_descriptor_states():
 
     block = Block("leaves")
     block.server.description.add_state("natural", (False, True))
-    block.server.description.traits.placement_direction(
+    block.server.description.traits.set_placement_direction(
         traits=[PlacementDirectionTrait.CardinalDirection]
     )
 
     assert block.descriptor() == "test:leaves"
-    assert block.descriptor(natural=True, cardinal_direction="north").descriptor() == {
+    assert _export(block.descriptor(natural=True, cardinal_direction="north")) == {
         "name": "test:leaves",
         "states": {"test:natural": True, "minecraft:cardinal_direction": "north"},
     }
-    assert block.descriptor(tags="q.any_tag('x')").descriptor() == {
+    assert _export(block.descriptor(tags="q.any_tag('x')")) == {
         "name": "test:leaves",
         "tags": "q.any_tag('x')",
     }
@@ -485,11 +484,13 @@ def test_block_descriptor_states():
 
 def test_block_descriptor_trait_values_from_enums():
     from anvil.api.blocks.blocks import Block
-    from anvil.api.core.enums import CardinalDirectionsValues, ConnectionTrait
+    from anvil.lib.jsonmodel.enums import CardinalDirectionsValues, ConnectionTrait
 
     fence = Block("fence")
-    fence.server.description.traits.connection([ConnectionTrait.CardinalConnections])
-    fence.server.description.traits.placement_direction(
+    fence.server.description.traits.set_connection(
+        [ConnectionTrait.CardinalConnections]
+    )
+    fence.server.description.traits.set_placement_direction(
         traits=[PlacementDirectionTrait.CornerAndCardinalDirection]
     )
 
@@ -510,7 +511,7 @@ def test_block_descriptor_multi_block_part():
     from anvil.api.blocks.blocks import Block
 
     door = Block("door")
-    door.server.description.traits.multi_block("up", 3)
+    door.server.description.traits.set_multi_block("up", 3)
 
     assert door.descriptor(multi_block_part=2).states == {
         "minecraft:multi_block_part": 2
@@ -561,3 +562,199 @@ def test_part_builders_for_blocks_and_biomes():
     ]
     for built, constructed in pairs:
         assert built.__json__() == constructed.__json__()
+
+
+def _check_file(file):
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = type(file).__schema__()
+    jsonschema.Draft202012Validator.check_schema(schema)
+    exported = AnvilIO._normalize_json_like(file._content)
+    jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
+    return exported
+
+
+@pytest.fixture
+def no_write(monkeypatch):
+    """Exports files without writing them."""
+    monkeypatch.setattr("anvil.lib.jsonmodel.file.AnvilIO.file", lambda *a, **k: None)
+
+
+def test_block_server_file(no_write):
+    from anvil.api.blocks.blocks import Block
+    from anvil.api.blocks.server import BlockServer
+    from anvil.lib.jsonmodel.enums import (
+        ItemCategory,
+        ItemGroups,
+        PlacementPositionTrait,
+    )
+
+    block = Block("lantern")
+    description = block.server.description
+    description.add_state("lit", (False, True))
+    description.set_menu_category(ItemCategory.Items, ItemGroups.Anvil, True)
+    description.traits.set_placement_position([PlacementPositionTrait.BlockFace])
+    block.server.components.add(
+        BlockGeometry(),
+        BlockMaterialInstance(instances=[MaterialInstance(texture="test:lantern")]),
+    )
+    block.server.permutation("q.block_state('test:lit')").add(
+        BlockLightDampening(value=0)
+    )
+    block.server.__export__()
+
+    exported = _check_file(block.server)
+    body = exported["minecraft:block"]
+    assert body["description"] == {
+        "identifier": "test:lantern",
+        "states": {"test:lit": [False, True]},
+        "menu_category": {
+            "category": "items",
+            "group": "minecraft:itemGroup.name.anvil",
+            "is_hidden_in_commands": True,
+        },
+        "traits": {
+            "minecraft:placement_position": {"enabled_states": ["minecraft:block_face"]}
+        },
+    }
+    assert body["components"]["minecraft:display_name"] == "tile.test:lantern.name"
+    assert body["components"]["minecraft:geometry"] == {
+        "identifier": "minecraft:geometry.full_block"
+    }
+    assert body["permutations"] == [
+        {
+            "condition": "q.block_state('test:lit')",
+            "components": {"minecraft:light_dampening": 0},
+        }
+    ]
+    assert BlockServer.__schema__()["x-anvil-file"] == {
+        "pack": "behavior_pack",
+        "folder": "blocks",
+        "extension": ".block.json",
+    }
+
+
+def test_block_server_needs_geometry_and_material(no_write):
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("bare")
+    with pytest.raises(ValueError, match="geometry"):
+        block.server.__export__()
+    block.server.components.add(BlockGeometry())
+    with pytest.raises(ValueError, match="material instance"):
+        block.server.__export__()
+
+
+def test_block_traits_are_checked():
+    from anvil.api.blocks.server import _BlockTraits
+    from anvil.lib.jsonmodel.enums import ConnectionTrait, PlacementPositionTrait
+
+    traits = _BlockTraits()
+    with pytest.raises(ValueError, match="multiple of 90"):
+        traits.set_placement_direction(y_rotation_offset=45)
+    with pytest.raises(ValueError, match="CornerAndCardinalDirection"):
+        traits.set_placement_direction(
+            blocks_to_corner_with=["minecraft:stone"],
+            traits=[PlacementDirectionTrait.CardinalDirection],
+        )
+    traits.set_placement_direction(
+        y_rotation_offset=90,
+        blocks_to_corner_with=["minecraft:stone"],
+        traits=[PlacementDirectionTrait.CornerAndCardinalDirection],
+    )
+    assert _export(traits) == {
+        "minecraft:placement_direction": {
+            "enabled_states": ["minecraft:corner_and_cardinal_direction"],
+            "y_rotation_offset": 90,
+            "blocks_to_corner_with": ["minecraft:stone"],
+        }
+    }
+    with pytest.raises(ValueError, match="multi_block"):
+        traits.set_multi_block("up")
+
+    door = _BlockTraits().set_multi_block("down", 3)
+    assert _export(door) == {
+        "minecraft:multi_block": {
+            "enabled_states": ["minecraft:multi_block_part"],
+            "parts": 3,
+            "direction": "down",
+        }
+    }
+    with pytest.raises(ValueError):
+        door.set_connection([ConnectionTrait.CardinalConnections])
+    with pytest.raises(ValueError):
+        door.set_placement_position([PlacementPositionTrait.VerticalHalf])
+    with pytest.raises(ValueError, match="between 2 and 4"):
+        _BlockTraits().set_multi_block("up", 5)
+    with pytest.raises(ValueError, match="experimental"):
+        _BlockTraits().set_multi_block("north")
+
+
+def test_block_state_limit():
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("counter")
+    with pytest.raises(ValueError, match="16 values"):
+        block.server.description.add_state("count", list(range(17)))
+    block.server.description.add_state("count", range(16))
+    assert block.server.description.states["test:count"] == list(range(16))
+
+
+def test_block_client_is_not_a_file():
+    from anvil.api.blocks.blocks import Block
+    from anvil.lib.jsonmodel import JsonFile
+
+    block = Block("drum")
+    assert not isinstance(block.client, JsonFile)
+    assert block.client.identifier == "test:drum"
+    assert block.client.name == "drum"
+    assert block.client.queue() is block.client
+
+
+def test_vanilla_factories_reject_unknown_names():
+    from anvil.api.vanilla.blocks import MinecraftBlockTypes
+    from anvil.api.vanilla.entities import MinecraftEntityTypes
+    from anvil.api.vanilla.items import MinecraftItemTypes
+
+    assert MinecraftBlockTypes.Magma() == "minecraft:magma"
+    assert MinecraftEntityTypes.VillagerV2() == "minecraft:villager_v2"
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.MagmaBlock
+    with pytest.raises(AttributeError):
+        MinecraftItemTypes.MagmaBlock
+    with pytest.raises(AttributeError):
+        MinecraftEntityTypes.MagmaBlock
+    with pytest.raises(AttributeError):
+        MinecraftBlockTypes.OakLogStates
+
+
+def test_vanilla_block_factories_and_descriptors():
+    from anvil.api.blocks.blocks import Block
+    from anvil.api.blocks.descriptor import BlockDescriptor
+    from anvil.api.vanilla.blocks import MinecraftBlockTypes
+    from anvil.api.vanilla.items import MinecraftItemTypes
+    from anvil.lib.jsonmodel import BlockId, Identifier
+
+    stone = MinecraftBlockTypes.Stone()
+    assert isinstance(stone, Identifier) and stone == "minecraft:stone"
+    log = MinecraftBlockTypes.OakLog(pillar_axis="y")
+    assert isinstance(log, BlockDescriptor)
+    assert _export(log) == {"name": "minecraft:oak_log", "states": {"pillar_axis": "y"}}
+    assert _export(BlockDescriptor(tags="q.any_tag('stone')")) == {
+        "tags": "q.any_tag('stone')"
+    }
+    with pytest.raises(ValueError):
+        _export(BlockDescriptor())
+    with pytest.raises(ValueError):
+        _export(BlockDescriptor(states={"a": 1}, tags="q.any_tag('stone')"))
+
+    BlockId.validate("block", stone)
+    BlockId.validate("block", log)
+    BlockId.validate("block", Block("ruby_ore"))
+    BlockId.validate("block", "anything:goes")
+    with pytest.raises(ValueError):
+        BlockId.validate("block", MinecraftItemTypes.Apple())
+    with pytest.raises(ValueError):
+        BlockId.validate(
+            "block",
+            BlockDescriptor(name=Identifier.parse("minecraft:apple", vanilla=True)),
+        )
