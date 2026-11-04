@@ -1,11 +1,14 @@
 """The `minecraft:recipe_smithing_transform`."""
 
-from typing import ClassVar, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.crafting.recipe import _BaseRecipe, _Recipe
+from anvil.api.items.items import Item
 from anvil.lib.format_versions import RECIPE_JSON_FORMAT_VERSION
 from anvil.lib.jsonmodel import JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
 
 
 class _SmithingTransformRecipe(_Recipe):
@@ -77,45 +80,45 @@ class SmithingRecipe(_BaseRecipe):
         super().__init__(name, tags)
 
     def template(
-        self, identifier: MinecraftItemDescriptor | MinecraftBlockDescriptor | str
+        self, identifier: Item | str | Block | BlockDescriptor
     ) -> "SmithingRecipe":
         """Sets the smithing template item.
 
         Args:
-            identifier (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The item.
+            identifier (Item | Block | BlockDescriptor | str): The item.
         """
         self._recipe.set_template(str(identifier))
         return self
 
     def base(
-        self, identifier: MinecraftItemDescriptor | MinecraftBlockDescriptor | str
+        self, identifier: Item | str | Block | BlockDescriptor
     ) -> "SmithingRecipe":
         """Sets the item transformed.
 
         Args:
-            identifier (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The item.
+            identifier (Item | Block | BlockDescriptor | str): The item.
         """
         self._recipe.set_base(str(identifier))
         return self
 
     def addition(
-        self, identifier: MinecraftItemDescriptor | MinecraftBlockDescriptor | str
+        self, identifier: Item | str | Block | BlockDescriptor
     ) -> "SmithingRecipe":
         """Sets the material added.
 
         Args:
-            identifier (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The item.
+            identifier (Item | Block | BlockDescriptor | str): The item.
         """
         self._recipe.set_addition(str(identifier))
         return self
 
     def result(
-        self, identifier: MinecraftItemDescriptor | MinecraftBlockDescriptor | str
+        self, identifier: Item | str | Block | BlockDescriptor
     ) -> "SmithingRecipe":
         """Sets the item produced.
 
         Args:
-            identifier (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The item.
+            identifier (Item | Block | BlockDescriptor | str): The item.
         """
         self._recipe.set_result(str(identifier))
         return self

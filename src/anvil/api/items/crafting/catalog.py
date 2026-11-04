@@ -1,15 +1,18 @@
+from anvil.lib.jsonmodel import Identifier
+
 """The crafting item catalog: the groups and items added to the creative inventory and
 the recipe book."""
 
-from typing import ClassVar, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 
 from anvil.api.blocks.blocks import Block
-from anvil.api.core.enums import ItemCategory
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.items import Item
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import CRAFTING_ITEMS_CATALOG
 from anvil.lib.jsonmodel import JsonFile, JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
+from anvil.lib.jsonmodel.enums import ItemCategory
 from anvil.lib.translator import AnvilTranslator
 
 
@@ -112,7 +115,7 @@ class CraftingItemCatalog(JsonFile):
         self,
         category: ItemCategory,
         name: str,
-        icon: MinecraftItemDescriptor | MinecraftBlockDescriptor,
+        icon: Item | Identifier | Block | BlockDescriptor,
         items: Sequence[Item | Block] = (),
     ) -> "CraftingItemCatalog":
         """Adds a group to a category, or adds the items to the group when it is already
@@ -121,7 +124,7 @@ class CraftingItemCatalog(JsonFile):
         Args:
             category (ItemCategory): The category to add the group to.
             name (str): The group's display name, localized as `tag.<namespace>:<name>`.
-            icon (MinecraftItemDescriptor | MinecraftBlockDescriptor): The item shown as the
+            icon (Item | Block | BlockDescriptor): The item shown as the
                 group's icon.
             items (Sequence[Item | Block], optional): The items of the group.
 
@@ -132,7 +135,7 @@ class CraftingItemCatalog(JsonFile):
         AnvilTranslator().add_localization_entry(localized_key, name)
 
         for item in items:
-            item.server.description.menu_category(
+            item.server.description.set_menu_category(
                 category=category, group=localized_key
             )
 
@@ -168,7 +171,7 @@ class CraftingItemCatalog(JsonFile):
             CraftingItemCatalog: The current instance of CraftingItemCatalog.
         """
         for item in items:
-            item.server.description.menu_category(category=category)
+            item.server.description.set_menu_category(category=category)
 
         self._content.catalog.category(category).add_group(
             _CatalogGroup(items=[str(item.identifier) for item in items])

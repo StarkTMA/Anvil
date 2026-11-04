@@ -1,7 +1,6 @@
 import orjson
-
 import pytest
-from anvil.api.core.enums import DamageCause, Slots
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.components import (
     ItemAllowOffHand,
     ItemBlockPlacer,
@@ -32,19 +31,41 @@ from anvil.api.items.components import (
     ItemUseModifiers,
     ItemWearable,
 )
-from anvil.lib.jsonmodel import json_field
-from anvil.lib.lib import AnvilIO
-from anvil.lib.schemas import MinecraftBlockDescriptor
-from anvil.api.vanilla.factories.minecraft_items import SulfurSpike, MusicDiscBounce
+from anvil.api.items.items import Item
+from anvil.api.vanilla.factories.minecraft_items import (
+    MusicDiscBounce,
+    Potion,
+    SulfurSpike,
+)
 from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.config import CONFIG
+from anvil.lib.jsonmodel import Identifier, json_field
+from anvil.lib.jsonmodel.enums import DamageCause, Slots
+from anvil.lib.lib import AnvilIO
 
 
 def test_new_items():
     spike = SulfurSpike()
-    assert spike.identifier == "minecraft:sulfur_spike"
+    assert spike == "minecraft:sulfur_spike"
+    assert isinstance(spike, Identifier) and spike.is_vanilla
 
     disc = MusicDiscBounce()
-    assert disc.identifier == "minecraft:music_disc_bounce"
+    assert disc == "minecraft:music_disc_bounce"
+
+
+def test_potion_factory():
+    assert Potion() == "minecraft:potion"
+    assert Potion("long_swiftness") == "minecraft:potion_type:long_swiftness"
+    assert Potion("long_swiftness").data == "long_swiftness"
+
+
+def test_item_identifier():
+    item = Item("ruby")
+    assert item.identifier == f"{CONFIG.NAMESPACE}:ruby"
+    assert item.name == "ruby"
+    assert str(item) == f"{CONFIG.NAMESPACE}:ruby"
+    with pytest.raises(ValueError):
+        Item("minecraft:ruby")
 
 
 def test_promoted_tags():
@@ -164,9 +185,7 @@ def test_kinetic_weapon_conditions_are_written():
 def test_list_builders():
     digger = (
         ItemDigger(use_efficiency=True)
-        .add_destroy_speed(
-            block=MinecraftBlockDescriptor(tags="query.any_tag('wood')"), speed=6
-        )
+        .add_destroy_speed(block=BlockDescriptor(tags="query.any_tag('wood')"), speed=6)
         .add_destroy_speed(block="minecraft:coal_ore", speed=2)
     )
     assert _export(digger) == {
@@ -271,3 +290,93 @@ def test_custom_component():
     assert _export(Explosive(power=2.5)) == {"test:explosive": {"power": 2.5}}
     with pytest.raises(TypeError):
         ItemCustomComponent()
+
+
+def _check_file(file):
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = type(file).__schema__()
+    jsonschema.Draft202012Validator.check_schema(schema)
+    exported = AnvilIO._normalize_json_like(file._content)
+    jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
+    return exported
+
+
+@pytest.fixture
+def no_write(monkeypatch):
+    """Exports files without writing them."""
+    monkeypatch.setattr("anvil.lib.jsonmodel.file.AnvilIO.file", lambda *a, **k: None)
+
+
+def test_item_server_file(no_write):
+    from anvil.api.items.items import Item
+    from anvil.api.items.server import ItemServer
+    from anvil.lib.jsonmodel.enums import ItemCategory, ItemGroups
+
+    item = Item("ruby")
+    item.server.description.set_menu_category(ItemCategory.Items, ItemGroups.Anvil)
+    item.server.components.add(ItemMaxStackSize(value=16))
+    item.server.__export__()
+
+    exported = _check_file(item.server)
+    assert exported["minecraft:item"] == {
+        "description": {
+            "identifier": "test:ruby",
+            "menu_category": {
+                "category": "items",
+                "group": "minecraft:itemGroup.name.anvil",
+            },
+        },
+        "components": {
+            "minecraft:max_stack_size": 16,
+            "minecraft:display_name": {"value": "item.test:ruby.name"},
+        },
+    }
+    assert ItemServer.__schema__()["x-anvil-file"] == {
+        "pack": "behavior_pack",
+        "folder": "items",
+        "extension": ".item.json",
+    }
+    assert (
+        ItemServer("tag_test")
+        .description.set_menu_category(ItemCategory.Items, "tag.test:gems", True)
+        .menu_category.is_hidden_in_commands
+        is True
+    )
+
+
+def test_item_server_needs_components(no_write):
+    from anvil.api.items.items import Item
+
+    with pytest.raises(ValueError, match="at least one component"):
+        Item("empty").server.__export__()
+
+
+def test_vanilla_item_must_exist():
+    assert Item("apple", is_vanilla=True).identifier == "minecraft:apple"
+    with pytest.raises(ValueError):
+        Item("not_an_item", is_vanilla=True)
+
+
+def test_item_references_check_vanilla_identifiers():
+    from anvil.api.actors.components.ai_goals import EntityAIBeg
+    from anvil.api.vanilla.entities import MinecraftEntityTypes
+    from anvil.api.vanilla.items import MinecraftItemTypes
+    from anvil.lib.jsonmodel import EntityId, ItemId
+
+    ItemId.validate("item", MinecraftItemTypes.Apple())
+    ItemId.validate("item", Potion("long_swiftness"))
+    ItemId.validate("item", "anything:goes")
+    ItemId.validate("item", Item("ruby"))
+    with pytest.raises(ValueError):
+        ItemId.validate("item", MinecraftEntityTypes.Zombie())
+    EntityId.validate("entity", MinecraftEntityTypes.Zombie())
+    with pytest.raises(ValueError):
+        EntityId.validate("entity", MinecraftItemTypes.Apple())
+
+    assert _export(
+        EntityAIBeg(priority=1, items=[MinecraftItemTypes.Apple(), "x:y"])
+    ) == {
+        "minecraft:behavior.beg": {"priority": 1, "items": ["minecraft:apple", "x:y"]}
+    }
+    with pytest.raises(ValueError):
+        _export(EntityAIBeg(priority=1, items=[MinecraftEntityTypes.Zombie()]))

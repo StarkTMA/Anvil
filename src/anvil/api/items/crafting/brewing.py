@@ -1,11 +1,14 @@
 """The brewing recipes: `minecraft:recipe_brewing_container` and `minecraft:recipe_brewing_mix`."""
 
-from typing import ClassVar, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.crafting.recipe import _BaseRecipe, _Recipe
+from anvil.api.items.items import Item
 from anvil.lib.format_versions import RECIPE_JSON_FORMAT_VERSION
 from anvil.lib.jsonmodel import JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
 
 
 class _BrewingRecipe(_Recipe):
@@ -73,17 +76,17 @@ class _PotionRecipe(_BaseRecipe):
 
     def recipe(
         self,
-        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | str,
-        reagent: MinecraftItemDescriptor | MinecraftBlockDescriptor | str,
-        output: MinecraftItemDescriptor | MinecraftBlockDescriptor | str,
+        item: Item | str | Block | BlockDescriptor,
+        reagent: Item | str | Block | BlockDescriptor,
+        output: Item | str | Block | BlockDescriptor,
     ) -> "_PotionRecipe":
         """Sets the brewing.
 
         Args:
-            item (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The input potion.
-            reagent (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The item
+            item (Item | Block | BlockDescriptor | str): The input potion.
+            reagent (Item | Block | BlockDescriptor | str): The item
                 brewed with the input potion.
-            output (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The output
+            output (Item | Block | BlockDescriptor | str): The output
                 potion.
         """
         self._recipe.set_recipe(str(item), str(reagent), str(output))

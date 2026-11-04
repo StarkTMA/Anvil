@@ -1,12 +1,15 @@
 """The `minecraft:recipe_furnace`."""
 
-from typing import Annotated, ClassVar, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar
 
-from anvil.api.core.enums import SmeltingTags
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.crafting.recipe import _BaseRecipe, _Recipe
+from anvil.api.items.items import Item
 from anvil.lib.format_versions import RECIPE_JSON_FORMAT_VERSION
 from anvil.lib.jsonmodel import ItemObject, JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
+from anvil.lib.jsonmodel.enums import SmeltingTags
 
 
 class _FurnaceRecipe(_Recipe):
@@ -57,23 +60,23 @@ class SmeltingRecipe(_BaseRecipe):
         super().__init__(name, tags)
 
     def input(
-        self, identifier: MinecraftItemDescriptor | MinecraftBlockDescriptor | str
+        self, identifier: Item | str | Block | BlockDescriptor
     ) -> "SmeltingRecipe":
         """Sets the item smelted.
 
         Args:
-            identifier (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The item.
+            identifier (Item | Block | BlockDescriptor | str): The item.
         """
         self._recipe.set_input(str(identifier))
         return self
 
     def output(
-        self, identifier: MinecraftItemDescriptor | MinecraftBlockDescriptor | str
+        self, identifier: Item | str | Block | BlockDescriptor
     ) -> "SmeltingRecipe":
         """Sets the item produced.
 
         Args:
-            identifier (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The item.
+            identifier (Item | Block | BlockDescriptor | str): The item.
         """
         self._recipe.set_output(str(identifier))
         return self

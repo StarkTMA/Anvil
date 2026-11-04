@@ -5,3 +5,7 @@
 ## Server
 
 ::: anvil.api.items.server
+
+## Client
+
+::: anvil.api.items.client

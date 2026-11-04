@@ -1,9 +1,34 @@
 from dataclasses import InitVar
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
-from anvil.api.core.enums import DamageCause, EnchantsSlots
+from anvil.api.actors.entity import Entity
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.items.items import Item
+from anvil.api.logic.molang import Molang
+from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 from anvil.api.textures import ItemTexturesObject
-from anvil.api.core.types import (
+from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.blockbench import _BlockBenchSource
+from anvil.lib.config import CONFIG
+from anvil.lib.jsonmodel import (
+    BlockId,
+    EntityId,
+    Hex,
+    IconTexture,
+    InRange,
+    ItemId,
+    JsonComponent,
+    JsonCustomComponent,
+    JsonObject,
+    JsonValueComponent,
+    Length,
+    MinMax,
+    NonNegative,
+    json_field,
+)
+from anvil.lib.jsonmodel.enums import DamageCause, EnchantsSlots
+from anvil.lib.jsonmodel.types import (
     RGB,
     RGB255,
     RGBA,
@@ -17,34 +42,7 @@ from anvil.api.core.types import (
     ItemWearableSlots,
     Rarity,
 )
-from anvil.api.logic.molang import Molang
-from anvil.api.pbr.texture_set import TextureComponents, TextureSet
-from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.blockbench import _BlockBenchSource
-from anvil.lib.config import CONFIG
-from anvil.lib.jsonmodel import (
-    Hex,
-    IconTexture,
-    InRange,
-    JsonComponent,
-    JsonCustomComponent,
-    JsonObject,
-    JsonValueComponent,
-    Length,
-    MinMax,
-    NonNegative,
-    json_field,
-)
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
-)
 from anvil.lib.translator import AnvilTranslator
-
-if TYPE_CHECKING:
-    from anvil.api.items.items import Item
-
 
 # region Parts: objects nested inside components
 
@@ -85,11 +83,11 @@ class DestroySpeed(JsonObject):
     """How fast a digger item breaks a block.
 
     Args:
-        block (str | MinecraftBlockDescriptor): The block, by descriptor, identifier or tag query.
+        block (str | Block | BlockDescriptor): The block, by descriptor, identifier or tag query.
         speed (int): Digging speed for the block.
     """
 
-    block: str | MinecraftBlockDescriptor = json_field()
+    block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     speed: int = json_field()
 
 
@@ -97,11 +95,11 @@ class RepairItem(JsonObject):
     """Items that repair an item, and how much durability they restore.
 
     Args:
-        items (list[str | MinecraftItemDescriptor]): Items that may be used to repair the item.
+        items (list[str | Item]): Items that may be used to repair the item.
         repair_amount (Molang | float, optional): How much the item is repaired.
     """
 
-    items: list[str | MinecraftItemDescriptor] = json_field()
+    items: list[Annotated[str | Item, ItemId]] = json_field()
     repair_amount: Molang | str | float | None = json_field(default=None)
 
 
@@ -109,13 +107,13 @@ class Ammunition(JsonObject):
     """An item a shooter can fire.
 
     Args:
-        item (str | MinecraftItemDescriptor): The ammunition item. It needs a `minecraft:projectile` component.
+        item (str | Item): The ammunition item. It needs a `minecraft:projectile` component.
         search_inventory (bool, optional): Whether the inventory is searched for the ammunition. Game default false.
         use_in_creative (bool, optional): Whether the ammunition can be used in creative mode. Game default false.
         use_offhand (bool, optional): Whether the ammunition can be used from the off hand. Game default false.
     """
 
-    item: str | MinecraftItemDescriptor = json_field()
+    item: Annotated[str | Item, ItemId] = json_field()
     search_inventory: bool | None = json_field(default=None)
     use_in_creative: bool | None = json_field(default=None)
     use_offhand: bool | None = json_field(default=None)
@@ -163,8 +161,8 @@ class ItemStorageItem(JsonComponent):
 
     Args:
         allow_nested_storage_items (bool, optional): Whether another storage item is allowed inside this item. Game default true.
-        allowed_items (list[str | MinecraftItemDescriptor], optional): Items that are exclusively allowed in this storage item. If empty, all items are allowed.
-        banned_items (list[str | MinecraftItemDescriptor], optional): Items that are not allowed in this storage item.
+        allowed_items (list[str | Item], optional): Items that are exclusively allowed in this storage item. If empty, all items are allowed.
+        banned_items (list[str | Item], optional): Items that are not allowed in this storage item.
         max_slots (int, optional): The maximum number of slots, from 1 to 64. Game default 64.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_storage_item)
@@ -173,8 +171,8 @@ class ItemStorageItem(JsonComponent):
     identifier = "minecraft:storage_item"
 
     allow_nested_storage_items: bool | None = json_field(default=None)
-    allowed_items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
-    banned_items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    allowed_items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
+    banned_items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
     max_slots: Annotated[int, InRange(1, 64)] | None = json_field(default=None)
 
 
@@ -240,21 +238,24 @@ class ItemBlockPlacer(JsonComponent):
     """Sets the item as a placer item component for blocks. Items with this component will place a block when used.
 
     Args:
-        block (str | MinecraftBlockDescriptor): The block that will be placed.
+        block (str | Block | BlockDescriptor): The block that will be placed.
         replace_block_item (bool, optional): If true, the item is registered as the item for this block, and is returned when the block is broken or picked. The item identifier must match the block identifier. Game default false.
         aligned_placement (bool, optional): Whether block placement is aligned while the interaction button is held down. Requires format version 1.26.10.
-        use_on (list[str | MinecraftBlockDescriptor], optional): Blocks this item can be used on, at most 256. If empty, all blocks are allowed.
+        use_on (list[str | Block | BlockDescriptor], optional): Blocks this item can be used on, at most 256. If empty, all blocks are allowed.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_block_placer)
     """
 
     identifier = "minecraft:block_placer"
 
-    block: str | MinecraftBlockDescriptor = json_field()
+    block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     replace_block_item: bool | None = json_field(default=None)
     aligned_placement: bool | None = json_field(default=None)
     use_on: (
-        Annotated[list[str | MinecraftBlockDescriptor], Length(maximum=256)] | None
+        Annotated[
+            list[Annotated[str | Block | BlockDescriptor, BlockId]], Length(maximum=256)
+        ]
+        | None
     ) = json_field(default=None)
 
 
@@ -365,7 +366,7 @@ class ItemDigger(JsonComponent):
     )
     use_efficiency: bool | None = json_field(default=None)
 
-    def add_destroy_speed(self, *, block: str | MinecraftBlockDescriptor, speed: int):
+    def add_destroy_speed(self, *, block: str | Block | BlockDescriptor, speed: int):
         """Adds a block and its digging speed. See `DestroySpeed` for the parameters.
 
         Returns:
@@ -471,18 +472,22 @@ class ItemEntityPlacer(JsonComponent):
     """Allows an item to place entities into the world, and to set the spawn type of a monster spawner.
 
     Args:
-        entity (MinecraftEntityDescriptor | str): The entity to be placed in the world.
-        dispense_on (list[str | MinecraftBlockDescriptor], optional): Blocks this item can be dispensed on. If empty, all blocks are allowed.
-        use_on (list[str | MinecraftBlockDescriptor], optional): Blocks this item can be used on. If empty, all blocks are allowed.
+        entity (str | Entity): The entity to be placed in the world.
+        dispense_on (list[str | Block | BlockDescriptor], optional): Blocks this item can be dispensed on. If empty, all blocks are allowed.
+        use_on (list[str | Block | BlockDescriptor], optional): Blocks this item can be used on. If empty, all blocks are allowed.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_entity_placer)
     """
 
     identifier = "minecraft:entity_placer"
 
-    entity: MinecraftEntityDescriptor | str = json_field()
-    dispense_on: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
-    use_on: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
+    entity: Annotated[str | Entity, EntityId] = json_field()
+    dispense_on: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
+    )
+    use_on: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = json_field(
+        default=None
+    )
 
 
 class ItemFireResistant(JsonComponent):
@@ -506,7 +511,7 @@ class ItemFood(JsonComponent):
         can_always_eat (bool, optional): Whether the item can be eaten even when not hungry. Game default false.
         nutrition (int, optional): The value added to the entity's nutrition when the item is used. Game default 0.
         saturation_modifier (float, optional): Used in `nutrition * saturation_modifier * 2` to compute the saturation buff. Game default 0.6.
-        using_converts_to (str | MinecraftItemDescriptor, optional): The item this one converts to when used.
+        using_converts_to (str | Item, optional): The item this one converts to when used.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_food)
     """
@@ -517,7 +522,7 @@ class ItemFood(JsonComponent):
     can_always_eat: bool | None = json_field(default=None)
     nutrition: Annotated[int, NonNegative] | None = json_field(default=None)
     saturation_modifier: Annotated[float, NonNegative] | None = json_field(default=None)
-    using_converts_to: str | MinecraftItemDescriptor | None = json_field(default=None)
+    using_converts_to: Annotated[str | Item, ItemId] | None = json_field(default=None)
 
 
 class ItemFuel(JsonComponent):
@@ -754,7 +759,7 @@ class ItemProjectile(JsonComponent):
     """Defines an item as a projectile that can be shot from dispensers or used as ammunition by `minecraft:shooter`. With `minecraft:throwable`, sets the entity spawned when the item is thrown.
 
     Args:
-        projectile_entity (MinecraftEntityDescriptor | str): The entity fired as a projectile. A spawn event can be added as `"entity<event>"`.
+        projectile_entity (str | Entity): The entity fired as a projectile. A spawn event can be added as `"entity<event>"`.
         minimum_critical_power (float, optional): How long the projectile must be charged to critically hit. Game default 0.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/examples/itemcomponents/minecraft_projectile)
@@ -762,7 +767,7 @@ class ItemProjectile(JsonComponent):
 
     identifier = "minecraft:projectile"
 
-    projectile_entity: MinecraftEntityDescriptor | str = json_field()
+    projectile_entity: Annotated[str | Entity, EntityId] = json_field()
     minimum_critical_power: float | None = json_field(default=None)
 
 
@@ -816,7 +821,7 @@ class ItemRepairable(JsonComponent):
     def add_repair_item(
         self,
         *,
-        items: list[str | MinecraftItemDescriptor],
+        items: list[str | Item],
         repair_amount: Molang | str | float | None = None,
     ):
         """Adds a repair entry. See `RepairItem` for the parameters.
@@ -832,8 +837,8 @@ class ItemSeed(JsonComponent):
     """Sets the item as a seed that can be planted to grow crops.
 
     Args:
-        crop_result (str | MinecraftBlockDescriptor): The block placed when the seed is planted.
-        plant_at (list[str | MinecraftBlockDescriptor], optional): Blocks this seed can be planted on or attached to. If not set, standard farmland rules apply.
+        crop_result (str | Block | BlockDescriptor): The block placed when the seed is planted.
+        plant_at (list[str | Block | BlockDescriptor], optional): Blocks this seed can be planted on or attached to. If not set, standard farmland rules apply.
         plant_at_any_solid_surface (bool, optional): Deprecated. Has no effect from format version 1.19.0.
         plant_at_face (ItemPlantAtFace, optional): Deprecated. Has no effect from format version 1.19.0.
 
@@ -842,8 +847,10 @@ class ItemSeed(JsonComponent):
 
     identifier = "minecraft:seed"
 
-    crop_result: str | MinecraftBlockDescriptor = json_field()
-    plant_at: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
+    crop_result: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
+    plant_at: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
+    )
     plant_at_any_solid_surface: bool | None = json_field(default=None)
     plant_at_face: ItemPlantAtFace | None = json_field(default=None)
 
@@ -873,7 +880,7 @@ class ItemShooter(JsonComponent):
     def add_ammunition(
         self,
         *,
-        item: str | MinecraftItemDescriptor,
+        item: str | Item,
         search_inventory: bool | None = None,
         use_in_creative: bool | None = None,
         use_offhand: bool | None = None,

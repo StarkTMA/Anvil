@@ -1,11 +1,14 @@
 """The `minecraft:recipe_shaped`."""
 
-from typing import Annotated, ClassVar, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.crafting.recipe import _BaseRecipe, _item, _Recipe, _RecipeItem
+from anvil.api.items.items import Item
 from anvil.lib.format_versions import RECIPE_JSON_FORMAT_VERSION
 from anvil.lib.jsonmodel import JsonObject, Keyed, Length, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
 
 
 class _ShapedKey(_RecipeItem):
@@ -105,10 +108,12 @@ class ShapedCraftingRecipe(_BaseRecipe):
         self,
         items: Sequence[
             Sequence[
-                MinecraftItemDescriptor
-                | MinecraftBlockDescriptor
+                Item
                 | str
-                | tuple[MinecraftItemDescriptor | MinecraftBlockDescriptor | str, int]
+                | Block
+                | BlockDescriptor
+                | str
+                | tuple[Item | str | Block | BlockDescriptor, int]
                 | None
             ]
         ],
@@ -171,14 +176,14 @@ class ShapedCraftingRecipe(_BaseRecipe):
 
     def result(
         self,
-        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | str,
+        item: Item | str | Block | BlockDescriptor,
         count: int = 1,
         data: int = 0,
     ) -> "ShapedCraftingRecipe":
         """Sets the item produced.
 
         Args:
-            item (MinecraftItemDescriptor | MinecraftBlockDescriptor | str): The item.
+            item (Item | Block | BlockDescriptor | str): The item.
             count (int, optional): How many are produced. Defaults to 1.
             data (int, optional): The deprecated data value. Defaults to 0, left out.
         """

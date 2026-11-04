@@ -3,9 +3,12 @@
 Each recipe type has its own module with a body (`_XRecipe`), the document written to the
 file (`_XRecipeFile`) and the file class you create and build."""
 
-from typing import Annotated, ClassVar, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar
 
-from anvil.api.core.enums import RecipeUnlockContext
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.items.items import Item
 from anvil.lib.config import Pack
 from anvil.lib.jsonmodel import (
     Identifier,
@@ -16,7 +19,7 @@ from anvil.lib.jsonmodel import (
     Wrapped,
     json_field,
 )
-from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
+from anvil.lib.jsonmodel.enums import RecipeUnlockContext
 
 
 class _RecipeItem(JsonObject):
@@ -119,14 +122,12 @@ class _BaseRecipe(JsonFile):
 
     def unlock_items(
         self,
-        unlock_items: Sequence[
-            MinecraftItemDescriptor | MinecraftBlockDescriptor | str
-        ],
+        unlock_items: Sequence[Item | str | Block | BlockDescriptor],
     ) -> "_BaseRecipe":
         """Unlocks the recipe in the recipe book when the player gets one of the items.
 
         Args:
-            unlock_items (Sequence[MinecraftItemDescriptor | MinecraftBlockDescriptor | str]):
+            unlock_items (Sequence[Item | Block | BlockDescriptor | str]):
                 The items.
         """
         self._recipe.set_unlock(

@@ -1,11 +1,14 @@
 """The `minecraft:recipe_smithing_trim`."""
 
-from typing import ClassVar, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.crafting.recipe import _BaseRecipe, _Recipe, _RecipeItem
+from anvil.api.items.items import Item
 from anvil.lib.format_versions import RECIPE_JSON_FORMAT_VERSION
 from anvil.lib.jsonmodel import JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
 
 
 class _SmithingTrimRecipe(_Recipe):
@@ -51,7 +54,7 @@ class _SmithingTrimRecipeFile(JsonObject):
 
 
 def _item_or_tag(
-    item: MinecraftItemDescriptor | MinecraftBlockDescriptor | str | None,
+    item: Item | str | Block | BlockDescriptor | None,
     tag: str | None,
 ) -> str | _RecipeItem:
     if (item is None) == (tag is None):
@@ -80,13 +83,13 @@ class SmithingTrimRecipe(_BaseRecipe):
 
     def template(
         self,
-        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | str | None = None,
+        item: Item | str | Block | BlockDescriptor | None = None,
         tag: str | None = None,
     ) -> "SmithingTrimRecipe":
         """Sets the trim template: an item, or any item of a tag.
 
         Args:
-            item (MinecraftItemDescriptor | MinecraftBlockDescriptor | str, optional): The item.
+            item (Item | Block | BlockDescriptor | str, optional): The item.
             tag (str, optional): The item tag, such as `minecraft:trim_templates`.
         """
         self._recipe.set_template(_item_or_tag(item, tag))
@@ -94,13 +97,13 @@ class SmithingTrimRecipe(_BaseRecipe):
 
     def base(
         self,
-        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | str | None = None,
+        item: Item | str | Block | BlockDescriptor | None = None,
         tag: str | None = None,
     ) -> "SmithingTrimRecipe":
         """Sets the armor trimmed: an item, or any item of a tag.
 
         Args:
-            item (MinecraftItemDescriptor | MinecraftBlockDescriptor | str, optional): The item.
+            item (Item | Block | BlockDescriptor | str, optional): The item.
             tag (str, optional): The item tag, such as `minecraft:trimmable_armors`.
         """
         self._recipe.set_base(_item_or_tag(item, tag))
@@ -108,13 +111,13 @@ class SmithingTrimRecipe(_BaseRecipe):
 
     def addition(
         self,
-        item: MinecraftItemDescriptor | MinecraftBlockDescriptor | str | None = None,
+        item: Item | str | Block | BlockDescriptor | None = None,
         tag: str | None = None,
     ) -> "SmithingTrimRecipe":
         """Sets the trim material: an item, or any item of a tag.
 
         Args:
-            item (MinecraftItemDescriptor | MinecraftBlockDescriptor | str, optional): The item.
+            item (Item | Block | BlockDescriptor | str, optional): The item.
             tag (str, optional): The item tag, such as `minecraft:trim_materials`.
         """
         self._recipe.set_addition(_item_or_tag(item, tag))

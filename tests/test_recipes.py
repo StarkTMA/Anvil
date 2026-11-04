@@ -3,8 +3,6 @@
 from types import SimpleNamespace
 
 import pytest
-
-from anvil.api.core.enums import ItemCategory, RecipeUnlockContext, SmeltingTags
 from anvil.api.items.crafting import (
     CraftingItemCatalog,
     PotionBrewingRecipe,
@@ -17,6 +15,7 @@ from anvil.api.items.crafting import (
     StoneCutterRecipe,
 )
 from anvil.lib import config
+from anvil.lib.jsonmodel.enums import ItemCategory, RecipeUnlockContext, SmeltingTags
 from anvil.lib.lib import AnvilIO
 from anvil.lib.translator import AnvilTranslator
 
@@ -169,7 +168,7 @@ def test_brewing_recipes(cls, key):
 
 def _item(identifier):
     calls = []
-    description = SimpleNamespace(menu_category=lambda **kw: calls.append(kw))
+    description = SimpleNamespace(set_menu_category=lambda **kw: calls.append(kw))
     return SimpleNamespace(
         identifier=identifier,
         server=SimpleNamespace(description=description),

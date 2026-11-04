@@ -4,7 +4,7 @@ Each recipe type writes one typed document. Its file class builds it, and values
 when the file is exported.
 """
 
-from anvil.api.core.enums import ItemCategory, RecipeUnlockContext
+from anvil.lib.jsonmodel.enums import ItemCategory, RecipeUnlockContext
 
 from .brewing import PotionBrewingRecipe, PotionMixingRecipe
 from .catalog import CraftingItemCatalog
