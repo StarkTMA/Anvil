@@ -1,7 +1,5 @@
 from typing import Annotated, ClassVar
 
-from anvil.api.core.enums import FogCameraLocation, RenderDistanceType
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import FOG_VERSION
 from anvil.lib.jsonmodel import (
@@ -13,6 +11,8 @@ from anvil.lib.jsonmodel import (
     Wrapped,
     json_field,
 )
+from anvil.lib.jsonmodel.enums import FogCameraLocation, RenderDistanceType
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 
 __all__ = ["FogSettings", "Fog"]
 
@@ -371,11 +371,11 @@ class FogSettings(JsonFile):
                 Only active when `uniform` is False. Defaults to 0.0.
 
         Raises:
-            RuntimeError: If PBR is not enabled in CONFIG.
+            ValueError: If PBR is not enabled in CONFIG.
             ValueError: If zero_density_height is less than max_density_height.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Volumetric fog settings require PBR to be enabled in the config."
             )
         if not uniform and zero_density_height < max_density_height:
@@ -411,11 +411,11 @@ class FogSettings(JsonFile):
                 Only active when `uniform` is False. Defaults to 0.0.
 
         Raises:
-            RuntimeError: If PBR is not enabled in CONFIG.
+            ValueError: If PBR is not enabled in CONFIG.
             ValueError: If zero_density_height is less than max_density_height.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Volumetric fog settings require PBR to be enabled in the config."
             )
         if not uniform and zero_density_height < max_density_height:
@@ -452,10 +452,10 @@ class FogSettings(JsonFile):
             air_absorption (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, optional): RGB absorption multipliers.
 
         Raises:
-            RuntimeError: If PBR is not enabled in CONFIG.
+            ValueError: If PBR is not enabled in CONFIG.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Volumetric fog settings require PBR to be enabled in the config."
             )
         media = self._content.settings.volumetric.media_coefficients
@@ -480,10 +480,10 @@ class FogSettings(JsonFile):
                 1.0 (forward-scattering)]. Default is 0.6.
 
         Raises:
-            RuntimeError: If PBR is not enabled in CONFIG.
+            ValueError: If PBR is not enabled in CONFIG.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Volumetric fog settings require PBR to be enabled in the config."
             )
         hg = self._content.settings.volumetric.henyey_greenstein_g

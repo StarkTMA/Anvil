@@ -19,7 +19,8 @@ Example:
 ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/voxelshapes)
 """
 
-from typing import Annotated, ClassVar, Iterator, Sequence
+from collections.abc import Iterator, Sequence
+from typing import Annotated, ClassVar
 
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import VOXEL_SHAPE_VERSION

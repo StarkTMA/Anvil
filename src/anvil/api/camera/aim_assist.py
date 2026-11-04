@@ -43,8 +43,10 @@ class _AimAssistPreset(JsonObject):
     )
     default_item_settings: str | None = None
     hand_settings: str | None = None
-    exclusion_list: dict | None = None
-    liquid_targeting_list: dict | None = None
+    exclusion_list: list[str] = json_field(default_factory=list, omit_default=True)
+    liquid_targeting_list: list[str] = json_field(
+        default_factory=list, omit_default=True
+    )
 
     def set_identifier(self, identifier: Identifier) -> None:
         """Sets the preset's identifier, already parsed by the file."""
@@ -65,13 +67,13 @@ class _AimAssistPreset(JsonObject):
         """Sets the category used with an empty hand."""
         self.hand_settings = category
 
-    def set_exclusion_list(self, exclusions: dict) -> None:
+    def set_exclusion_list(self, exclusions: list[str]) -> None:
         """Sets the blocks and entities aim assist never targets."""
-        self.exclusion_list = exclusions
+        self.exclusion_list = list(exclusions)
 
-    def set_liquid_targeting_list(self, targets: dict) -> None:
+    def set_liquid_targeting_list(self, targets: list[str]) -> None:
         """Sets the items that target liquids while held."""
-        self.liquid_targeting_list = targets
+        self.liquid_targeting_list = list(targets)
 
     def __validate__(self) -> None:
         if self.identifier is None:
@@ -146,20 +148,22 @@ class AimAssistPreset(JsonFile):
         self._content.preset.set_hand_settings(category)
         return self
 
-    def exclusion_list(self, exclusions: dict) -> "AimAssistPreset":
+    def exclusion_list(self, exclusions: list[str]) -> "AimAssistPreset":
         """Sets the entities and blocks aim assist ignores.
 
         Args:
-            exclusions (dict): The blocks and entities to exclude.
+            exclusions (list[str]): The block and entity identifiers to exclude, such as
+                `"minecraft:bedrock"`.
         """
         self._content.preset.set_exclusion_list(exclusions)
         return self
 
-    def liquid_targeting_list(self, targets: dict) -> "AimAssistPreset":
+    def liquid_targeting_list(self, targets: list[str]) -> "AimAssistPreset":
         """Sets the items that are allowed to target liquids.
 
         Args:
-            targets (dict): The items that target liquids.
+            targets (list[str]): The item identifiers that target liquids while held, such
+                as `"minecraft:bucket"`.
         """
         self._content.preset.set_liquid_targeting_list(targets)
         return self

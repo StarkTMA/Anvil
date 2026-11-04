@@ -3,12 +3,11 @@ situation."""
 
 from typing import Annotated, Any
 
-from anvil.api.core.enums import MusicCategory, SoundCategory
-from anvil.api.core.types import JsonSchema
 from anvil.api.sounds.server_sound_definitions import MusicInfo
 from anvil.api.sounds.sound_definitions import SoundDefinition, _SoundDescription
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.jsonmodel import JsonFile, JsonObject, Keyed, NonNegative, json_field
+from anvil.lib.jsonmodel.enums import MusicCategory, SoundCategory
 
 
 class _Music(JsonObject):
@@ -48,7 +47,7 @@ class _MusicDefinitionsFile(JsonObject):
         return payload
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         music = schema["properties"].pop("music")
         schema.pop("required", None)

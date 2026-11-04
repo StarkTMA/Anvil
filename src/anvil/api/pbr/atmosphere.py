@@ -1,18 +1,17 @@
 from typing import Annotated, ClassVar
 
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import ATMOSPHERE_SETTINGS_VERSION
 from anvil.lib.jsonmodel import (
     Identifier,
     JsonFile,
     JsonObject,
-    KeyFrame,
     KeyFramed,
     KeyFramedColor,
     Wrapped,
     json_field,
 )
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 
 __all__ = ["AtmosphericSettings"]
 
@@ -22,24 +21,24 @@ class _HorizonBlendStops(JsonObject):
 
     __required__: ClassVar[tuple[str, ...]] = ("min", "start", "mie_start", "max")
 
-    min: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
-    start: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
-    mie_start: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
-    max: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
+    min: Annotated[float | list[tuple[float, float]], KeyFramed()] | None = None
+    start: Annotated[float | list[tuple[float, float]], KeyFramed()] | None = None
+    mie_start: Annotated[float | list[tuple[float, float]], KeyFramed()] | None = None
+    max: Annotated[float | list[tuple[float, float]], KeyFramed()] | None = None
 
-    def set_min(self, min: float | list[KeyFrame]) -> None:
+    def set_min(self, min: float | list[tuple[float, float]]) -> None:
         """Sets the minimum horizon height."""
         self.min = min
 
-    def set_start(self, start: float | list[KeyFrame]) -> None:
+    def set_start(self, start: float | list[tuple[float, float]]) -> None:
         """Sets the height relative to the horizon where the zenith contribution takes over."""
         self.start = start
 
-    def set_mie_start(self, mie_start: float | list[KeyFrame]) -> None:
+    def set_mie_start(self, mie_start: float | list[tuple[float, float]]) -> None:
         """Sets the height relative to the horizon where mie scattering begins."""
         self.mie_start = mie_start
 
-    def set_max(self, max: float | list[KeyFrame]) -> None:
+    def set_max(self, max: float | list[tuple[float, float]]) -> None:
         """Sets the maximum horizon height."""
         self.max = max
 
@@ -53,49 +52,87 @@ class _AtmosphereSettings(JsonObject):
     horizon_blend_stops: _HorizonBlendStops = json_field(
         default_factory=_HorizonBlendStops
     )
-    rayleigh_strength: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
-    sun_mie_strength: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
-    moon_mie_strength: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
-    sun_glare_shape: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
+    rayleigh_strength: (
+        Annotated[float | list[tuple[float, float]], KeyFramed()] | None
+    ) = None
+    sun_mie_strength: (
+        Annotated[float | list[tuple[float, float]], KeyFramed()] | None
+    ) = None
+    moon_mie_strength: (
+        Annotated[float | list[tuple[float, float]], KeyFramed()] | None
+    ) = None
+    sun_glare_shape: (
+        Annotated[float | list[tuple[float, float]], KeyFramed()] | None
+    ) = None
     sky_zenith_color: (
         Annotated[
-            HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame],
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]],
             KeyFramedColor(),
         ]
         | None
     ) = None
     sky_horizon_color: (
         Annotated[
-            HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame],
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]],
             KeyFramedColor(),
         ]
         | None
     ) = None
 
-    def set_rayleigh_strength(self, value: float | list[KeyFrame]) -> None:
+    def set_rayleigh_strength(self, value: float | list[tuple[float, float]]) -> None:
         """Sets how strong the atmosphere's rayleigh scattering term is."""
         self.rayleigh_strength = value
 
-    def set_sun_mie_strength(self, value: float | list[KeyFrame]) -> None:
+    def set_sun_mie_strength(self, value: float | list[tuple[float, float]]) -> None:
         """Sets how strong the sun's mie scattering term is."""
         self.sun_mie_strength = value
 
-    def set_moon_mie_strength(self, value: float | list[KeyFrame]) -> None:
+    def set_moon_mie_strength(self, value: float | list[tuple[float, float]]) -> None:
         """Sets how strong the moon's mie scattering term is."""
         self.moon_mie_strength = value
 
-    def set_sun_glare_shape(self, value: float | list[KeyFrame]) -> None:
+    def set_sun_glare_shape(self, value: float | list[tuple[float, float]]) -> None:
         """Sets how the lobe of the mie scattering is shaped."""
         self.sun_glare_shape = value
 
     def set_sky_zenith_color(
-        self, color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]
+        self,
+        color: (
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+        ),
     ) -> None:
         """Sets the color of the zenith region of the atmosphere."""
         self.sky_zenith_color = color
 
     def set_sky_horizon_color(
-        self, color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]
+        self,
+        color: (
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+        ),
     ) -> None:
         """Sets the color of the horizon region of the atmosphere."""
         self.sky_horizon_color = color
@@ -145,10 +182,10 @@ class AtmosphericSettings(JsonFile):
         """Initializes an AtmosphericSettings instance.
 
         Raises:
-            RuntimeError: If PBR is not enabled in the config.
+            ValueError: If PBR is not enabled in the config.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Atmospherics addon requires PBR to be enabled in the config."
             )
         super().__init__(
@@ -158,18 +195,18 @@ class AtmosphericSettings(JsonFile):
 
     def horizon_blend_stops(
         self,
-        min: float | list[KeyFrame],
-        start: float | list[KeyFrame],
-        mie_start: float | list[KeyFrame],
-        max: float | list[KeyFrame],
+        min: float | list[tuple[float, float]],
+        start: float | list[tuple[float, float]],
+        mie_start: float | list[tuple[float, float]],
+        max: float | list[tuple[float, float]],
     ) -> "AtmosphericSettings":
         """How the atmosphere is divided up.
 
         Args:
-            min (float | list[KeyFrame]): The minimum horizon height.
-            start (float | list[KeyFrame]): The height relative to the horizon where the zenith contribution will take over.
-            mie_start (float | list[KeyFrame]): The height relative to the horizon where mie scattering begins.
-            max (float | list[KeyFrame]): The maximum horizon height.
+            min (float | list[tuple[float, float]]): The minimum horizon height.
+            start (float | list[tuple[float, float]]): The height relative to the horizon where the zenith contribution will take over.
+            mie_start (float | list[tuple[float, float]]): The height relative to the horizon where mie scattering begins.
+            max (float | list[tuple[float, float]]): The maximum horizon height.
         """
         stops = self._content.settings.horizon_blend_stops
         stops.set_min(min)
@@ -178,60 +215,86 @@ class AtmosphericSettings(JsonFile):
         stops.set_max(max)
         return self
 
-    def rayleigh_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
+    def rayleigh_strength(
+        self, value: float | list[tuple[float, float]]
+    ) -> "AtmosphericSettings":
         """How strong the atmosphere's rayleigh scattering term is.
 
         Args:
-            value (float | list[KeyFrame]): Rayleigh scattering strength.
+            value (float | list[tuple[float, float]]): Rayleigh scattering strength.
         """
         self._content.settings.set_rayleigh_strength(value)
         return self
 
-    def sun_mie_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
+    def sun_mie_strength(
+        self, value: float | list[tuple[float, float]]
+    ) -> "AtmosphericSettings":
         """How strong the sun's mie scattering term is.
 
         Args:
-            value (float | list[KeyFrame]): Sun Mie scattering strength.
+            value (float | list[tuple[float, float]]): Sun Mie scattering strength.
         """
         self._content.settings.set_sun_mie_strength(value)
         return self
 
-    def moon_mie_strength(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
+    def moon_mie_strength(
+        self, value: float | list[tuple[float, float]]
+    ) -> "AtmosphericSettings":
         """How strong the moon's mie scattering term is.
 
         Args:
-            value (float | list[KeyFrame]): Moon Mie scattering strength.
+            value (float | list[tuple[float, float]]): Moon Mie scattering strength.
         """
         self._content.settings.set_moon_mie_strength(value)
         return self
 
-    def sun_glare_shape(self, value: float | list[KeyFrame]) -> "AtmosphericSettings":
+    def sun_glare_shape(
+        self, value: float | list[tuple[float, float]]
+    ) -> "AtmosphericSettings":
         """How the lobe of the mie scattering is shaped.
 
         Args:
-            value (float | list[KeyFrame]): Sun glare shape factor.
+            value (float | list[tuple[float, float]]): Sun glare shape factor.
         """
         self._content.settings.set_sun_glare_shape(value)
         return self
 
     def sky_zenith_color(
-        self, color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]
+        self,
+        color: (
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+        ),
     ) -> "AtmosphericSettings":
         """The RGB color of the zenith region of the atmosphere. Supports RGB array or HEX string.
 
         Args:
-            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]): Sky zenith color.
+            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]): Sky zenith color.
         """
         self._content.settings.set_sky_zenith_color(color)
         return self
 
     def sky_horizon_color(
-        self, color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]
+        self,
+        color: (
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+        ),
     ) -> "AtmosphericSettings":
         """The RGB color of the horizon region of the atmosphere. Supports RGB array or HEX string.
 
         Args:
-            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]): Sky horizon color.
+            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]): Sky horizon color.
         """
         self._content.settings.set_sky_horizon_color(color)
         return self

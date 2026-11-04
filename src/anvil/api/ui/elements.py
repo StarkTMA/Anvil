@@ -11,14 +11,6 @@ from typing import Annotated, Any, Literal, Self
 
 from PIL import Image
 
-from anvil.api.core.types import RGB, RGBA, JsonSchema
-from anvil.api.ui.enums import (
-    UIAnchor,
-    UIBindingType,
-    UIElementType,
-    UIFontSize,
-    UITextAlignment,
-)
 from anvil.api.ui.nineslice import NinesliceJson
 from anvil.lib.config import CONFIG
 from anvil.lib.jsonmodel import (
@@ -29,6 +21,14 @@ from anvil.lib.jsonmodel import (
     Keyed,
     json_field,
 )
+from anvil.lib.jsonmodel.enums import (
+    UIAnchor,
+    UIBindingType,
+    UIElementType,
+    UIFontSize,
+    UITextAlignment,
+)
+from anvil.lib.jsonmodel.types import RGB, RGBA
 from anvil.lib.lib import AnvilFormatter, Directory
 
 
@@ -44,7 +44,7 @@ class _UIReferenceType(JsonType):
                 f"or (expression), got {value!r}."
             )
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         return {"type": "string", "pattern": "^[$@#(]"}
 
 
@@ -65,8 +65,8 @@ def _merged_keys(payload: dict[str, Any], key: str) -> dict[str, Any]:
 
 
 def _keyed_schema(
-    schema: JsonSchema, key: str, pattern: str, value: JsonSchema
-) -> JsonSchema:
+    schema: dict[str, Any], key: str, pattern: str, value: dict[str, Any]
+) -> dict[str, Any]:
     """The schema with the `key` property replaced by keys that match `pattern`."""
     schema["properties"].pop(key, None)
     schema["patternProperties"] = {pattern: value}
@@ -145,7 +145,7 @@ class _UIVariableSet(JsonObject):
         return _merged_keys(JsonObject.__json__(self), "$values")
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         return _keyed_schema(schema, "$values", r"^\$", {})
 
@@ -481,7 +481,7 @@ def _each_element(elements: list["_UIElement"]) -> list[dict[str, "_UIElement"]]
     return [{element.name: element} for element in elements]
 
 
-_ELEMENT_ENTRY: JsonSchema = {
+_ELEMENT_ENTRY: dict[str, Any] = {
     "type": "object",
     "minProperties": 1,
     "maxProperties": 1,
@@ -1162,7 +1162,7 @@ class _UIElement(JsonObject):
         return payload or {"$skip_shortening": True}
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         return _keyed_schema(schema, "$keys", r"^\$", {})
 

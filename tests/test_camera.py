@@ -7,8 +7,8 @@ from anvil.api.camera import (
     AimAssistPreset,
     CameraPreset,
 )
-from anvil.api.core.enums import AimAssistTargetMode, CameraPresets, ControlSchemes
 from anvil.lib import config
+from anvil.lib.jsonmodel.enums import AimAssistTargetMode, CameraPresets, ControlSchemes
 from anvil.lib.lib import AnvilIO
 
 jsonschema = pytest.importorskip("jsonschema")
@@ -37,6 +37,8 @@ def test_aim_assist_preset():
     preset.item_setting("minecraft:stone_axe", "other_category")
     preset.item_setting("minecraft:bow", "bow_category")
     preset.default_item_settings("default_category").hand_settings("hand_category")
+    preset.exclusion_list(["minecraft:bedrock", "minecraft:arrow"])
+    preset.liquid_targeting_list(["minecraft:bucket"])
 
     exported = _check(preset)
     assert exported["format_version"] == "1.21.70"
@@ -48,6 +50,8 @@ def test_aim_assist_preset():
         },
         "default_item_settings": "default_category",
         "hand_settings": "hand_category",
+        "exclusion_list": ["minecraft:bedrock", "minecraft:arrow"],
+        "liquid_targeting_list": ["minecraft:bucket"],
     }
 
 

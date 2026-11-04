@@ -4,10 +4,12 @@ and the credits builder."""
 from pathlib import PurePosixPath
 from typing import Annotated, Any, ClassVar
 
-from anvil.api.core.types import JsonSchema
 from anvil.api.ui.animations import _UIAnimation
 from anvil.api.ui.elements import _keyed_schema, _merged_keys, _UIElement
-from anvil.api.ui.enums import (
+from anvil.api.ui.files import _UIDefs, _UIVariables
+from anvil.lib.config import CONFIG, Pack
+from anvil.lib.jsonmodel import JsonFile, JsonObject, Keyed, json_field
+from anvil.lib.jsonmodel.enums import (
     UIAnchor,
     UIAnimType,
     UIBindingType,
@@ -17,9 +19,6 @@ from anvil.api.ui.enums import (
     UIFontSize,
     UITextAlignment,
 )
-from anvil.api.ui.files import _UIDefs, _UIVariables
-from anvil.lib.config import CONFIG, Pack
-from anvil.lib.jsonmodel import JsonFile, JsonObject, Keyed, json_field
 
 
 class _UICreditsConstructor:
@@ -184,14 +183,12 @@ class _UICreditsConstructor:
         Returns:
             _UICreditsConstructor: Self for method chaining
         """
-        # Section Setup
         section = self._credits_panel.add_control(
             f"credits_section_{self._element_count}@anvil_common.stack_panel"
         )
         section.set_orientation("horizontal")
         section.set_size(("100%", "100%c"))
 
-        # Section title
         title = (
             section.add_control(f"panel_title_{self._element_count}@anvil_common.panel")
             .set_size(("45%", "100%c"))
@@ -205,12 +202,10 @@ class _UICreditsConstructor:
         if title_color != (1, 1, 1):
             title.set_color(title_color)
 
-        # Section separator
         section.add_control(
             f"section_sep_{self._element_count}@anvil_common.panel"
         ).set_size(("10%", 0))
 
-        ## Section names
         names = section.add_control(
             f"names_{self._element_count}@anvil_common.stack_panel"
         )
@@ -227,9 +222,6 @@ class _UICreditsConstructor:
                 name.set_color(names_color)
 
         self._element_count += 1
-
-
-# UI files ============================================================
 
 
 class _UIScreenFile(JsonObject):
@@ -254,7 +246,7 @@ class _UIScreenFile(JsonObject):
         return _merged_keys(JsonObject.__json__(self), "elements")
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         return _keyed_schema(
             schema,
@@ -400,14 +392,11 @@ class _UIScreen(JsonFile):
         return super().queue(directory)
 
 
-# UI Screens ==========================================================
-# Vanilla
 class _HUDScreen(_UIScreen):
     def __init__(
         self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
     ) -> None:
         super().__init__("hud_screen", "hud", anvil_animation, variables, defs)
-        # Disable HUD
         self.root_panel = self.add_element("root_panel")
         self.anvil_element = self.root_panel.add_modification().insert_front(
             "anvil@anvil_hud.anvil_hud"
@@ -429,13 +418,6 @@ class _HUDScreen(_UIScreen):
         self._ignored_title_texts = ["$anvil.show.text"]
         self._ignored_actionbar_texts = ["$anvil.hide.text"]
         self._hides_hud = ["$anvil.hide.text"]
-
-    # def disable_mouse(self):
-    #    self.add_element(
-    #        "hud_screen@common.base_screen"
-    #    ).set_should_steal_mouse().set_absorbs_input()
-    #    self.root_panel.add_modification().remove("curor_rend")
-    #    return self
 
     def disable_mob_effect(self) -> "_HUDScreen":
         self.root_panel.add_modification().remove("mob_effects_renderer")
@@ -491,7 +473,6 @@ class _NPCScreen(_UIScreen):
         return super().queue()
 
 
-# Anvil
 class _AnvilHUDScreen(_UIScreen):
     def __init__(
         self, anvil_animation: _UIAnimation, variables: _UIVariables, defs: _UIDefs
@@ -523,7 +504,6 @@ class _AnvilHUDScreen(_UIScreen):
         zoom_wait: float = 6,
         zoom_out: float = 1,
     ) -> "_UIElement":
-        # element
         image_element = self.add_element(name, UIElementTrigger.Title, name)
         image_element.set_type(UIElementType.Panel)
         image_element.set_size(("100%", "100%"))
@@ -559,7 +539,6 @@ class _AnvilHUDScreen(_UIScreen):
         else:
             zoom_steps = ["400%", "70%", "60%"]
 
-        # animations
         self._variables.add_variable(f"$anvil.image.{name}_in", zoom_in)
         self._variables.add_variable(f"$anvil.image.{name}_wait", zoom_wait)
         self._variables.add_variable(f"$anvil.image.{name}_out", zoom_out)
@@ -612,14 +591,11 @@ class _AnvilHUDScreen(_UIScreen):
 
         return image_element
 
-    # Layer 100
     def add_logo(self) -> "_AnvilHUDScreen":
         self.add_image_panel("logo")
         return self
 
-    # Layer 101
     def add_blinking_screen(self) -> "_AnvilHUDScreen":
-        # animation
         blink_fade_in = self._anvil_animation.add_animation("blink_fade_in")
         blink_fade_in.set_anim_type(UIAnimType.Alpha)
         blink_fade_in.set_easing(UIEasing.InOutSine)
@@ -640,8 +616,6 @@ class _AnvilHUDScreen(_UIScreen):
         blink_fade_out.set_from(1).set_to(0)
         self._variables.add_variable("$anvil.blink.fade_out", 1)
         blink_fade_out.set_duration("$anvil.blink.fade_out")
-        # blink_fade_out.set_destroy_at_end('hud_title_text')
-        # element
         blink_element = self.add_element(
             "blink_element", UIElementTrigger.Title, "blink"
         )
@@ -653,7 +627,6 @@ class _AnvilHUDScreen(_UIScreen):
         blink_element.set_alpha("@anvil_animations.blink_fade_in")
         return self
 
-    # Layer 101
     def add_black_bars(self) -> "_AnvilHUDScreen":
         black_bars_in = self._anvil_animation.add_animation("black_bars_in")
         black_bars_in.set_anim_type(UIAnimType.Size)
@@ -674,9 +647,7 @@ class _AnvilHUDScreen(_UIScreen):
         black_bars_out.set_from(("300%", "100%")).set_to(("300%", "300%"))
         self._variables.add_variable("$anvil.black_bars.out", 1.6)
         black_bars_out.set_duration("$anvil.black_bars.out")
-        # black_bars_out.set_destroy_at_end('hud_title_text')
 
-        # element
         black_bars = self.add_element("black_bars_element", UIElementTrigger.Actionbar)
         black_bars.set_type(UIElementType.Image)
         black_bars.set_texture("black_bars")
@@ -696,16 +667,16 @@ class _AnvilHUDScreen(_UIScreen):
         black_bars.set_size("$anim_size")
 
         self._variables.add_variable(
-            f"$anvil.black_bars_in.text", f"{CONFIG.NAMESPACE}:bars_in"
+            "$anvil.black_bars_in.text", f"{CONFIG.NAMESPACE}:bars_in"
         )
         self._variables.add_variable(
-            f"$anvil.black_bars_in.bool", f"($text = $anvil.black_bars_in.text)"
+            "$anvil.black_bars_in.bool", "($text = $anvil.black_bars_in.text)"
         )
         self._variables.add_variable(
-            f"$anvil.black_bars_out.text", f"{CONFIG.NAMESPACE}:bars_out"
+            "$anvil.black_bars_out.text", f"{CONFIG.NAMESPACE}:bars_out"
         )
         self._variables.add_variable(
-            f"$anvil.black_bars_out.bool", f"($text = $anvil.black_bars_out.text)"
+            "$anvil.black_bars_out.bool", "($text = $anvil.black_bars_out.text)"
         )
 
         self._ignored_actionbar_texts.extend(
@@ -825,36 +796,21 @@ class _AnvilCommon(_UIScreen):
         return super().add_element(element_name, trigger, keyword, False)
 
     def basic_components(self) -> "_AnvilCommon":
-        # ---------------------------
-        # Label
-        # Must supply your own text
-        # ---------------------------
         label = self.add_element("label")
         label.set_type(UIElementType.Label)
         label.set_text_alignment(UITextAlignment.Center)
 
-        # ---------------------------
-        # Image
-        # Must supply your own texture
-        # ---------------------------
         image = self.add_element("image")
         image.set_type(UIElementType.Image)
 
-        # ---------------------------
-        # Stack Panel
-        # ---------------------------
         stack_panel = self.add_element("stack_panel")
         stack_panel.set_type(UIElementType.StackPanel)
 
-        # ---------------------------
-        # Stack Panel
-        # ---------------------------
         panel = self.add_element("panel")
         panel.set_type(UIElementType.Panel)
         return self
 
     def complex_components(self) -> "_AnvilCommon":
-        # npc model renderer (for npc screen)
         npc_renderer = self.add_element("npc_renderer")
         npc_renderer.set_type(UIElementType.Panel)
         npc_renderer.set_size(("100%", "100%"))
@@ -871,7 +827,6 @@ class _AnvilCommon(_UIScreen):
             "#skin_index"
         )
 
-        # player model renderer
         player_renderer = self.add_element("player_renderer")
         player_renderer.set_type(UIElementType.Panel)
         player_renderer.set_size(("80%", "80%"))
@@ -885,11 +840,6 @@ class _AnvilCommon(_UIScreen):
         return self
 
     def image_label(self) -> "_AnvilCommon":
-        # ---------------------------
-        # Image Label
-        # Must supply your own text key
-        # Must supply your own texture
-        # ---------------------------
         image_label = self.add_element("image_label@anvil_common.image")
         image_label.set_size(("100%c + 8px", "100%c + 4px"))
         image_label.keys("text", "PLACEHOLDER TEXT")
@@ -901,11 +851,6 @@ class _AnvilCommon(_UIScreen):
         label.set_localize("$localize")
         label.set_color("$text_color")
 
-        # ---------------------------
-        # Image Label Binding
-        # Must supply your own control name key that has a text binding
-        # Must supply your own texture
-        # ---------------------------
         image_label_binding = self.add_element("image_label_binding@anvil_common.image")
         image_label_binding.set_size(("100%c + 8px", "100%c + 4px"))
         image_label_binding.keys("text_color", "#0f0f0f")

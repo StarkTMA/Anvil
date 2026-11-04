@@ -1,42 +1,59 @@
 from typing import Annotated, ClassVar, Literal
 
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.lib.config import CONFIG, Pack
-from anvil.lib.format_versions import LIGHTING_SETTINGS_VERSION
+from anvil.lib.format_versions import (
+    LIGHTING_SETTINGS_VERSION,
+    LOCAL_LIGHTING_SETTINGS_VERSION,
+)
 from anvil.lib.jsonmodel import (
     AnyColor,
     Identifier,
     InRange,
     JsonFile,
     JsonObject,
-    KeyFrame,
     KeyFramed,
     KeyFramedColor,
     Wrapped,
     json_field,
 )
-from anvil.lib.lib import AnvilFormatter
-from anvil.lib.schemas import JsonSchemes, MinecraftBlockDescriptor
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 
 
 class _OrbitalLight(JsonObject):
     """The sun or the moon. Unset keys are left out."""
 
-    illuminance: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
+    illuminance: Annotated[float | list[tuple[float, float]], KeyFramed()] | None = None
     color: (
         Annotated[
-            HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame],
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]],
             KeyFramedColor(),
         ]
         | None
     ) = None
 
-    def set_illuminance(self, illuminance: float | list[KeyFrame]) -> None:
+    def set_illuminance(self, illuminance: float | list[tuple[float, float]]) -> None:
         """Sets the brightness in lux."""
         self.illuminance = illuminance
 
     def set_color(
-        self, color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]
+        self,
+        color: (
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+        ),
     ) -> None:
         """Sets the light color."""
         self.color = color
@@ -47,10 +64,12 @@ class _OrbitalLights(JsonObject):
 
     sun: _OrbitalLight = json_field(default_factory=_OrbitalLight)
     moon: _OrbitalLight = json_field(default_factory=_OrbitalLight)
-    orbital_offset_degrees: Annotated[float | list[KeyFrame], KeyFramed()] | None = None
+    orbital_offset_degrees: (
+        Annotated[float | list[tuple[float, float]], KeyFramed()] | None
+    ) = None
 
     def set_orbital_offset_degrees(
-        self, orbital_offset_degrees: float | list[KeyFrame]
+        self, orbital_offset_degrees: float | list[tuple[float, float]]
     ) -> None:
         """Sets the rotational offset of the sun and moon from the standard orbital axis."""
         self.orbital_offset_degrees = orbital_offset_degrees
@@ -101,21 +120,38 @@ class _Emissive(JsonObject):
 class _Ambient(JsonObject):
     """The light of surfaces that no other light reaches. Unset keys are left out."""
 
-    illuminance: Annotated[float | list[KeyFrame], KeyFramed(0.0, 5.0)] | None = None
+    illuminance: (
+        Annotated[float | list[tuple[float, float]], KeyFramed(0.0, 5.0)] | None
+    ) = None
     color: (
         Annotated[
-            HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame],
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]],
             KeyFramedColor(),
         ]
         | None
     ) = None
 
-    def set_illuminance(self, illuminance: float | list[KeyFrame]) -> None:
+    def set_illuminance(self, illuminance: float | list[tuple[float, float]]) -> None:
         """Sets the light strength in lux, from 0.0 to 5.0."""
         self.illuminance = illuminance
 
     def set_color(
-        self, color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]
+        self,
+        color: (
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+        ),
     ) -> None:
         """Sets the light color."""
         self.color = color
@@ -124,9 +160,11 @@ class _Ambient(JsonObject):
 class _Sky(JsonObject):
     """The indirect light from the sky."""
 
-    intensity: Annotated[float | list[KeyFrame], KeyFramed(0.1, 1.0)] | None = None
+    intensity: (
+        Annotated[float | list[tuple[float, float]], KeyFramed(0.1, 1.0)] | None
+    ) = None
 
-    def set_intensity(self, intensity: float | list[KeyFrame]) -> None:
+    def set_intensity(self, intensity: float | list[tuple[float, float]]) -> None:
         """Sets the energy scaling factor, from 0.1 to 1.0."""
         self.intensity = intensity
 
@@ -187,10 +225,10 @@ class LightingSettings(JsonFile):
         """Initializes a LightingSettings instance.
 
         Raises:
-            RuntimeError: If PBR is not enabled in the config.
+            ValueError: If PBR is not enabled in the config.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Lighting settings require PBR to be enabled in the config."
             )
 
@@ -201,24 +239,38 @@ class LightingSettings(JsonFile):
 
     def orbital_lights(
         self,
-        sun_illuminance: float | list[KeyFrame] | None = None,
+        sun_illuminance: float | list[tuple[float, float]] | None = None,
         sun_color: (
-            HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame] | None
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+            | None
         ) = None,
-        moon_illuminance: float | list[KeyFrame] | None = None,
+        moon_illuminance: float | list[tuple[float, float]] | None = None,
         moon_color: (
-            HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame] | None
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+            | None
         ) = None,
-        orbital_offset_degrees: float | list[KeyFrame] | None = None,
+        orbital_offset_degrees: float | list[tuple[float, float]] | None = None,
     ) -> None:
         """Configures the orbital celestial lights (sun and moon).
 
         Args:
-            sun_illuminance (float | list[KeyFrame]): Brightness of the sun in lux (lx).
-            sun_color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]): Color contributed by the sun. Supports RGB array or HEX string.
-            moon_illuminance (float | list[KeyFrame]): Brightness of the moon in lux (lx).
-            moon_color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]): Color contributed by the moon. Supports RGB array or HEX string.
-            orbital_offset_degrees (float | list[KeyFrame]): Rotational offset of celestial bodies from standard orbital axis.
+            sun_illuminance (float | list[tuple[float, float]]): Brightness of the sun in lux (lx).
+            sun_color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]): Color contributed by the sun. Supports RGB array or HEX string.
+            moon_illuminance (float | list[tuple[float, float]]): Brightness of the moon in lux (lx).
+            moon_color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]): Color contributed by the moon. Supports RGB array or HEX string.
+            orbital_offset_degrees (float | list[tuple[float, float]]): Rotational offset of celestial bodies from standard orbital axis.
         """
         orbital = _OrbitalLights()
         if sun_illuminance is not None:
@@ -258,24 +310,32 @@ class LightingSettings(JsonFile):
 
     def ambient(
         self,
-        illuminance: float | list[KeyFrame],
-        color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame],
+        illuminance: float | list[tuple[float, float]],
+        color: (
+            HexRGB
+            | HexRGBA
+            | RGB
+            | RGBA
+            | RGB255
+            | RGBA255
+            | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]
+        ),
     ) -> None:
         """Controls how surfaces are lit when there are no other light sources available.
 
         Args:
-            illuminance (float | list[KeyFrame]): Minimum fallback light strength in lux (lx). Valid range: 0.0 to 5.0.
-            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[KeyFrame]): Color of the ambient fallback light. Supports RGB array or HEX string.
+            illuminance (float | list[tuple[float, float]]): Minimum fallback light strength in lux (lx). Valid range: 0.0 to 5.0.
+            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]): Color of the ambient fallback light. Supports RGB array or HEX string.
         """
         ambient = self._content.settings.ambient
         ambient.set_illuminance(illuminance)
         ambient.set_color(color)
 
-    def sky(self, intensity: float | list[KeyFrame]) -> None:
+    def sky(self, intensity: float | list[tuple[float, float]]) -> None:
         """Controls indirect lighting contribution from the sky.
 
         Args:
-            intensity (float | list[KeyFrame]): Energy scaling factor. Valid range: 0.1 to 1.0.
+            intensity (float | list[tuple[float, float]]): Energy scaling factor. Valid range: 0.1 to 1.0.
         """
         self._content.settings.sky.set_intensity(intensity)
 
@@ -283,54 +343,90 @@ class LightingSettings(JsonFile):
         return super().queue()
 
 
-class LocalLighting(JsonFile):
-    """Local lighting configurations (point lights and static lights) for Vibrant Visuals (PBR) rendering."""
+class _LocalLight(JsonObject):
+    """A block that gives off light in Vibrant Visuals."""
 
+    __required__: ClassVar[tuple[str, ...]] = ("light_color", "light_type")
+
+    light_color: (
+        Annotated[HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255, AnyColor] | None
+    ) = None
+    light_type: Literal["static_light", "point_light"] = json_field(
+        default="point_light"
+    )
+
+
+class _LocalLightingFile(JsonObject):
+    """The content of the `local_lighting/local_lighting.json` file."""
+
+    __required__: ClassVar[tuple[str, ...]] = (
+        "format_version",
+        "minecraft:local_light_settings",
+    )
+
+    format_version: str = json_field(
+        default=LOCAL_LIGHTING_SETTINGS_VERSION, init=False
+    )
+    lights: dict[str, _LocalLight] = json_field(
+        default_factory=dict, key="minecraft:local_light_settings"
+    )
+
+
+class LocalLighting(JsonFile):
+    """The blocks that give off light in Vibrant Visuals: point lights and static lights.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/vibrantvisuals/locallightingsettings)
+    """
+
+    _document = _LocalLightingFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "local_lighting"
     _object_type = "Local Lighting Settings"
 
     def __init__(self) -> None:
-        """Initializes a LocalLighting instance.
+        """Creates the local lighting settings.
 
         Raises:
-            RuntimeError: If PBR is not enabled in the config.
+            ValueError: If PBR is not enabled in the config.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
-                "Local lighting requires PBR to be enabled in the config."
-            )
+            raise ValueError("Local lighting requires PBR to be enabled in the config.")
         super().__init__("local_lighting")
-        self.content(JsonSchemes.local_lighting())
+
+    @property
+    def lights(self) -> dict[str, _LocalLight]:
+        """The lights, by block identifier."""
+        return self._content.lights
 
     def add_local_light(
         self,
-        block_identifier: MinecraftBlockDescriptor | str,
+        block_identifier: str | Block | BlockDescriptor,
         color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255,
         light_type: Literal["static_light", "point_light"] = "point_light",
-    ) -> None:
-        """Adds a local light to the local lighting configuration.
+    ) -> "LocalLighting":
+        """Makes a block give off light.
 
         Args:
-            block_identifier (MinecraftBlockDescriptor | str): The identifier of the block that emits the light.
-            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The color of the light.
-            light_type (Literal["static_light", "point_light"]): The type of local light.
+            block_identifier (Block | BlockDescriptor | str): The block.
+            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The light's color.
+            light_type (Literal["static_light", "point_light"], optional): Defaults to
+                `point_light`.
         """
-        self._content["minecraft:local_light_settings"][str(block_identifier)] = {
-            "light_color": AnvilFormatter.convert_color(color),
-            "light_type": light_type,
-        }
+        self.lights[str(block_identifier)] = _LocalLight(
+            light_color=color, light_type=light_type
+        )
+        return self
 
     def add_point_light(
         self,
-        block_identifier: MinecraftBlockDescriptor | str,
+        block_identifier: str | Block | BlockDescriptor,
         color: HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255,
-    ) -> None:
-        """Adds a point light to the point lights configuration (legacy fallback).
+    ) -> "LocalLighting":
+        """Makes a block a static light.
 
         Args:
-            block_identifier (MinecraftBlockDescriptor | str): The identifier of the block that emits the light.
-            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The color of the light.
+            block_identifier (Block | BlockDescriptor | str): The block.
+            color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The light's color.
         """
-        self.add_local_light(block_identifier, color, "static_light")
+        return self.add_local_light(block_identifier, color, "static_light")

@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path, PurePosixPath
 from typing import Annotated
 
+from anvil.api.items.items import Item
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.jsonmodel import (
     JsonFile,
@@ -11,7 +12,6 @@ from anvil.lib.jsonmodel import (
     NonNegative,
     json_field,
 )
-from anvil.lib.schemas import MinecraftItemDescriptor
 
 from .loot_tables import _LootFunctionBuilder, _LootFunctions
 
@@ -49,14 +49,14 @@ class _Trade(JsonObject):
 
     def add_wants(
         self,
-        item: MinecraftItemDescriptor | str,
+        item: Item | str,
         quantity: int | tuple[int, int] = 1,
         price_multiplier: float = 0.05,
     ) -> _Trade:
         """Adds an item the trader wants.
 
         Args:
-            item (MinecraftItemDescriptor | str): The item.
+            item (Item | str): The item.
             quantity (int | tuple[int, int], optional): How many, or the minimum and maximum.
                 Defaults to 1.
             price_multiplier (float, optional): How much the price moves with supply and
@@ -75,12 +75,12 @@ class _Trade(JsonObject):
         return self
 
     def add_gives(
-        self, item: MinecraftItemDescriptor | str, quantity: int | tuple[int, int] = 1
+        self, item: Item | str, quantity: int | tuple[int, int] = 1
     ) -> _TradeItemGives:
         """Adds an item the trader gives.
 
         Args:
-            item (MinecraftItemDescriptor | str): The item.
+            item (Item | str): The item.
             quantity (int | tuple[int, int], optional): How many, or the minimum and maximum.
                 Defaults to 1.
 

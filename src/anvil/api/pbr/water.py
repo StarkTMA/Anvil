@@ -187,7 +187,7 @@ class WaterSettings(JsonFile):
     ) -> None:
         """Initializes a WaterSettings instance."""
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Atmospherics addon requires PBR to be enabled in the config."
             )
         super().__init__("water" if name == "default_water" else name, identifier=name)

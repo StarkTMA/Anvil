@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.core import ANVIL
 from anvil.api.core.filters import Filter
 from anvil.api.features.feature import Feature
@@ -10,6 +12,7 @@ from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import JIGSAW_VERSION
 from anvil.lib.jsonmodel import (
     AtLeastOne,
+    BlockId,
     BlockSpecifier,
     Chance,
     Identifier,
@@ -21,7 +24,6 @@ from anvil.lib.jsonmodel import (
     json_field,
 )
 from anvil.lib.lib import Directory, salt_from_str
-from anvil.lib.schemas import MinecraftBlockDescriptor
 
 if TYPE_CHECKING:
     from anvil.api.world.loot_tables import LootTable
@@ -33,7 +35,7 @@ __all__ = [
 ]
 
 
-def _block_name(block: MinecraftBlockDescriptor | str) -> str:
+def _block_name(block: str | Block | BlockDescriptor) -> str:
     return block if isinstance(block, str) else block.identifier
 
 
@@ -72,7 +74,9 @@ class _BlockPredicate(JsonObject):
         | None
     ) = None
     block: str | None = None
-    block_state: Annotated[MinecraftBlockDescriptor | str, BlockSpecifier] | None = None
+    block_state: (
+        Annotated[str | Block | BlockDescriptor, BlockId, BlockSpecifier] | None
+    ) = None
     probability: Annotated[float, Chance] | None = None
     tag: str | None = None
 
@@ -87,23 +91,23 @@ class _BlockPredicate(JsonObject):
         self._clear()
         self.predicate_type = "minecraft:always_true"
 
-    def block_match(self, block: MinecraftBlockDescriptor | str) -> None:
+    def block_match(self, block: str | Block | BlockDescriptor) -> None:
         """Matches the block, whatever its states.
 
         Args:
-            block (MinecraftBlockDescriptor | str): The block identifier.
+            block (Block | BlockDescriptor | str): The block identifier.
         """
         self._clear()
         self.predicate_type = "minecraft:block_match"
         self.block = _block_name(block)
 
     def random_block_match(
-        self, block: MinecraftBlockDescriptor | str, probability: float
+        self, block: str | Block | BlockDescriptor, probability: float
     ) -> None:
         """Matches the block, whatever its states, with a chance.
 
         Args:
-            block (MinecraftBlockDescriptor | str): The block identifier.
+            block (Block | BlockDescriptor | str): The block identifier.
             probability (float): The chance to match, from 0 to 1.
         """
         self._clear()
@@ -111,23 +115,23 @@ class _BlockPredicate(JsonObject):
         self.block = _block_name(block)
         self.probability = probability
 
-    def block_state_match(self, block: MinecraftBlockDescriptor | str) -> None:
+    def block_state_match(self, block: str | Block | BlockDescriptor) -> None:
         """Matches the block and the states of its descriptor.
 
         Args:
-            block (MinecraftBlockDescriptor | str): The block, with the states to match.
+            block (Block | BlockDescriptor | str): The block, with the states to match.
         """
         self._clear()
         self.predicate_type = "minecraft:blockstate_match"
         self.block_state = block
 
     def random_block_state_match(
-        self, block: MinecraftBlockDescriptor | str, probability: float
+        self, block: str | Block | BlockDescriptor, probability: float
     ) -> None:
         """Matches the block and the states of its descriptor, with a chance.
 
         Args:
-            block (MinecraftBlockDescriptor | str): The block, with the states to match.
+            block (Block | BlockDescriptor | str): The block, with the states to match.
             probability (float): The chance to match, from 0 to 1.
         """
         self._clear()
@@ -265,18 +269,18 @@ class _ProcessorRule(JsonObject):
     position_predicate: _PositionPredicate = json_field(
         default_factory=_PositionPredicate
     )
-    output_state: Annotated[MinecraftBlockDescriptor | str, BlockSpecifier] | None = (
-        None
-    )
+    output_state: (
+        Annotated[str | Block | BlockDescriptor, BlockId, BlockSpecifier] | None
+    ) = None
     block_entity_modifier: _BlockEntityModifier = json_field(
         default_factory=_BlockEntityModifier
     )
 
-    def set_output_state(self, block: MinecraftBlockDescriptor | str) -> None:
+    def set_output_state(self, block: str | Block | BlockDescriptor) -> None:
         """Sets the block placed when the rule matches.
 
         Args:
-            block (MinecraftBlockDescriptor | str): The block, with its states.
+            block (Block | BlockDescriptor | str): The block, with its states.
         """
         self.output_state = block
 
@@ -293,7 +297,7 @@ class _BlockIgnoreProcessor(JsonObject):
     )
     blocks: list[str] = json_field(default_factory=list)
 
-    def add_block(self, block: MinecraftBlockDescriptor | str) -> None:
+    def add_block(self, block: str | Block | BlockDescriptor) -> None:
         """Adds a block to leave out."""
         self.blocks.append(_block_name(block))
 
@@ -344,12 +348,12 @@ class _ProcessorBuilder:
         raise NotImplementedError
 
     def add_block_ignore_processor(
-        self, blocks: list[MinecraftBlockDescriptor | str]
+        self, blocks: list[str | Block | BlockDescriptor]
     ) -> None:
         """Leaves the blocks out of the placed structure, keeping the world blocks there.
 
         Args:
-            blocks (list[MinecraftBlockDescriptor | str]): The blocks to leave out.
+            blocks (list[Block | BlockDescriptor | str]): The blocks to leave out.
         """
         processor = _BlockIgnoreProcessor()
         for block in blocks:
@@ -1098,12 +1102,12 @@ class _JigsawStructureProcess(JsonFile):
         self._content.processor_list.set_description(self.identifier)
 
     def add_block_ignore_processor(
-        self, blocks: list[MinecraftBlockDescriptor | str]
+        self, blocks: list[str | Block | BlockDescriptor]
     ) -> "_JigsawStructureProcess":
         """Leaves the blocks out of the placed structure, keeping the world blocks there.
 
         Args:
-            blocks (list[MinecraftBlockDescriptor | str]): The blocks to leave out.
+            blocks (list[Block | BlockDescriptor | str]): The blocks to leave out.
         """
         self._content.processor_list.add_block_ignore_processor(blocks)
         return self
@@ -1420,7 +1424,6 @@ class JigsawStructureSet(JsonFile):
         separation: int,
         spacing: int,
         spread_type: Literal["linear", "triangular"] = "linear",
-        placement_type: Literal["minecraft:random_spread"] = "minecraft:random_spread",
     ) -> None:
         """Initializes a JigsawStructureSet instance.
 
@@ -1432,8 +1435,6 @@ class JigsawStructureSet(JsonFile):
                 random position within each cell.
             spread_type (Literal["linear", "triangular"], optional): How the position is picked
                 in each cell. Defaults to "linear".
-            placement_type (Literal["minecraft:random_spread"], optional): Where structures in
-                the set spawn relative to one another. Defaults to "minecraft:random_spread".
         """
         super().__init__(name)
         structure_set = self._content.structure_set

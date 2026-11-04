@@ -1,8 +1,6 @@
-import warnings
 from typing import Annotated, ClassVar, Literal
 
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import Dimension
 from anvil.lib.config import ConfigPackageTarget, Pack
 from anvil.lib.jsonmodel import (
     Identifier,
@@ -12,6 +10,7 @@ from anvil.lib.jsonmodel import (
     Wrapped,
     json_field,
 )
+from anvil.lib.jsonmodel.enums import Dimension
 
 DIMENSION_FORMAT_VERSION = "1.18.0"
 
@@ -138,7 +137,7 @@ class DimensionConfiguration(JsonFile):
                 The Nether and the End only support void generation, so it is always set for them.
         """
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
-            raise RuntimeError(
+            raise ValueError(
                 "DimensionConfiguration cannot be used in an addon package."
             )
         if dimension not in (Dimension.Overworld, Dimension.Nether, Dimension.TheEnd):

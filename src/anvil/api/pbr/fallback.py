@@ -1,15 +1,15 @@
 from typing import Annotated, ClassVar
 
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import PBR_FALLBACK_SETTINGS_VERSION
 from anvil.lib.jsonmodel import (
-    json_field,
     JsonFile,
     JsonObject,
     RGB255Color,
     RGBA255Color,
+    json_field,
 )
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 
 __all__ = ["PBRFallback"]
 
@@ -87,10 +87,10 @@ class PBRFallback(JsonFile):
         """Initializes a PBRFallback instance.
 
         Raises:
-            RuntimeError: If PBR is not enabled in the config.
+            ValueError: If PBR is not enabled in the config.
         """
         if not CONFIG.PBR:
-            raise RuntimeError("PBR fallback requires PBR to be enabled in the config.")
+            raise ValueError("PBR fallback requires PBR to be enabled in the config.")
         super().__init__(self._file_name)
 
     def block_fallback(

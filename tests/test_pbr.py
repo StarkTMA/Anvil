@@ -1,22 +1,23 @@
-import sys
-import os
+import base64
+import io
 
+import orjson
 import pytest
-from anvil.lib import config
-from anvil.api.core.types import RGB
-from anvil.lib.jsonmodel import KeyFrame
+from PIL import Image
+
 from anvil.api.pbr.atmosphere import AtmosphericSettings
-from anvil.api.pbr.fog import FogSettings
-from anvil.api.pbr.shadow import ShadowSettings
 from anvil.api.pbr.color_grading import ColorGradingSettings
-from anvil.api.pbr.lighting import LightingSettings, LocalLighting
 from anvil.api.pbr.fallback import PBRFallback
-from anvil.api.pbr.fog import Fog
+from anvil.api.pbr.fog import Fog, FogSettings
+from anvil.api.pbr.lighting import LightingSettings, LocalLighting
+from anvil.api.pbr.shadow import ShadowSettings
 from anvil.api.pbr.water import WaterSettings
+from anvil.lib import config
 from anvil.lib.format_versions import (
     PBR_FALLBACK_SETTINGS_VERSION,
     SHADOW_SETTINGS_VERSION,
 )
+from anvil.lib.jsonmodel import KeyFramed, KeyFramedColor
 from anvil.lib.lib import AnvilIO
 
 
@@ -27,19 +28,16 @@ def pbr_project():
 
 
 def test_keyframe_serialization():
-    # Value keyframes
-    kf_val = [KeyFrame(0.0, 1.5), KeyFrame(1.0, 2.5)]
-    assert KeyFrame.keyframe_dict(kf_val) == {"0.0": 1.5, "1.0": 2.5}
+    kf_val = [(0.0, 1.5), (1.0, 2.5)]
+    assert KeyFramed().encode(kf_val) == {"0.0": 1.5, "1.0": 2.5}
+    assert KeyFramed().encode(1.5) == 1.5
 
-    # Color keyframes - defaults to input normalization (RGB255) when passed as tuples
-    kf_color = [KeyFrame(0.0, (255, 0, 0)), KeyFrame(1.0, (0, 255, 0))]
-    assert KeyFrame.keyframe_dict(kf_color) == {"0.0": (255, 0, 0), "1.0": (0, 255, 0)}
-
-    # Color keyframes with target type RGB
-    assert KeyFrame.keyframe_dict(kf_color, RGB) == {
-        "0.0": (1.0, 0.0, 0.0),
-        "1.0": (0.0, 1.0, 0.0),
+    kf_color = [(0.0, (255, 0, 0)), (1.0, "#00FF00")]
+    assert KeyFramedColor().encode(kf_color) == {
+        "0.0": (255, 0, 0),
+        "1.0": "#00ff00",
     }
+    assert KeyFramedColor().encode((255, 0, 0)) == (255, 0, 0)
 
 
 def _exported(file, key):
@@ -52,9 +50,9 @@ def test_atmospheric_settings():
     # Keyframed and simple values for blend stops
     settings.horizon_blend_stops(
         min=0.1,
-        start=[KeyFrame(0.0, 0.2), KeyFrame(1.0, 0.3)],
+        start=[(0.0, 0.2), (1.0, 0.3)],
         mie_start=0.4,
-        max=[KeyFrame(0.0, 0.5), KeyFrame(1.0, 0.6)],
+        max=[(0.0, 0.5), (1.0, 0.6)],
     )
     assert _exported(settings, "minecraft:atmosphere_settings")[
         "horizon_blend_stops"
@@ -70,7 +68,7 @@ def test_atmospheric_settings():
     assert (
         _exported(settings, "minecraft:atmosphere_settings")["rayleigh_strength"] == 0.5
     )
-    settings.rayleigh_strength([KeyFrame(0.0, 0.1)])
+    settings.rayleigh_strength([(0.0, 0.1)])
     assert _exported(settings, "minecraft:atmosphere_settings")[
         "rayleigh_strength"
     ] == {"0.0": 0.1}
@@ -79,7 +77,7 @@ def test_atmospheric_settings():
     assert (
         _exported(settings, "minecraft:atmosphere_settings")["sun_mie_strength"] == 0.8
     )
-    settings.sun_mie_strength([KeyFrame(0.0, 0.2)])
+    settings.sun_mie_strength([(0.0, 0.2)])
     assert _exported(settings, "minecraft:atmosphere_settings")["sun_mie_strength"] == {
         "0.0": 0.2
     }
@@ -88,7 +86,7 @@ def test_atmospheric_settings():
     assert (
         _exported(settings, "minecraft:atmosphere_settings")["moon_mie_strength"] == 0.7
     )
-    settings.moon_mie_strength([KeyFrame(0.0, 0.3)])
+    settings.moon_mie_strength([(0.0, 0.3)])
     assert _exported(settings, "minecraft:atmosphere_settings")[
         "moon_mie_strength"
     ] == {"0.0": 0.3}
@@ -97,7 +95,7 @@ def test_atmospheric_settings():
     assert (
         _exported(settings, "minecraft:atmosphere_settings")["sun_glare_shape"] == 1.2
     )
-    settings.sun_glare_shape([KeyFrame(0.0, 1.1)])
+    settings.sun_glare_shape([(0.0, 1.1)])
     assert _exported(settings, "minecraft:atmosphere_settings")["sun_glare_shape"] == {
         "0.0": 1.1
     }
@@ -109,12 +107,12 @@ def test_atmospheric_settings():
         0,
         0,
     ]
-    settings.sky_zenith_color([KeyFrame(0.0, [255, 255, 255])])
+    settings.sky_zenith_color([(0.0, [255, 255, 255])])
     assert _exported(settings, "minecraft:atmosphere_settings")["sky_zenith_color"] == {
         "0.0": [255, 255, 255]
     }
 
-    settings.sky_horizon_color([0, 255, 绿 := 0])
+    settings.sky_horizon_color([0, 255, 0])
     assert _exported(settings, "minecraft:atmosphere_settings")[
         "sky_horizon_color"
     ] == [
@@ -122,7 +120,7 @@ def test_atmospheric_settings():
         255,
         0,
     ]
-    settings.sky_horizon_color([KeyFrame(0.0, [0, 0, 0])])
+    settings.sky_horizon_color([(0.0, [0, 0, 0])])
     assert _exported(settings, "minecraft:atmosphere_settings")[
         "sky_horizon_color"
     ] == {"0.0": [0, 0, 0]}
@@ -205,10 +203,10 @@ def test_lighting_settings():
 
     # Test orbital_lights with mix of values and keyframes
     settings.orbital_lights(
-        sun_illuminance=[KeyFrame(0.0, 1000.0)],
+        sun_illuminance=[(0.0, 1000.0)],
         sun_color=[255, 255, 255],
         moon_illuminance=200.0,
-        moon_color=[KeyFrame(0.5, [0, 0, 255])],
+        moon_color=[(0.5, [0, 0, 255])],
         orbital_offset_degrees=45.0,
     )
     directional = _exported(settings, "minecraft:lighting_settings")[
@@ -222,37 +220,37 @@ def test_lighting_settings():
 
     # Test ambient with keyframes
     settings.ambient(
-        illuminance=[KeyFrame(0.0, 2.0), KeyFrame(1.0, 3.0)],
-        color=[KeyFrame(0.0, [255, 0, 0])],
+        illuminance=[(0.0, 2.0), (1.0, 3.0)],
+        color=[(0.0, [255, 0, 0])],
     )
     ambient_node = _exported(settings, "minecraft:lighting_settings")["ambient"]
     assert ambient_node["illuminance"] == {"0.0": 2.0, "1.0": 3.0}
     assert ambient_node["color"] == {"0.0": [255, 0, 0]}
 
     # Test sky with keyframes
-    settings.sky(intensity=[KeyFrame(0.0, 0.5), KeyFrame(1.0, 0.8)])
+    settings.sky(intensity=[(0.0, 0.5), (1.0, 0.8)])
     sky_node = _exported(settings, "minecraft:lighting_settings")["sky"]
     assert sky_node["intensity"] == {"0.0": 0.5, "1.0": 0.8}
 
 
 def test_local_lighting():
     settings = LocalLighting()
-
-    # Test add_local_light (uses format version 1.21.120+ schema key 'minecraft:local_light_settings')
     settings.add_local_light("minecraft:glowstone", [255, 200, 150], "point_light")
-    assert settings._content["minecraft:local_light_settings"][
-        "minecraft:glowstone"
-    ] == {
-        "light_color": (255, 200, 150),
-        "light_type": "point_light",
+    settings.add_point_light("minecraft:torch", "#ffffff")
+    assert _exported(settings, "minecraft:local_light_settings") == {
+        "minecraft:glowstone": {
+            "light_color": [255, 200, 150],
+            "light_type": "point_light",
+        },
+        "minecraft:torch": {"light_color": "#ffffff", "light_type": "static_light"},
     }
-
-    # Test legacy add_point_light maps to static_light
-    settings.add_point_light("minecraft:torch", [255, 255, 255])
-    assert settings._content["minecraft:local_light_settings"]["minecraft:torch"] == {
-        "light_color": (255, 255, 255),
-        "light_type": "static_light",
-    }
+    assert settings.lights["minecraft:torch"].light_type == "static_light"
+    with pytest.raises(ValueError):
+        settings.add_local_light("minecraft:lamp", "#fff", "spot_light")
+        settings._content.__json__()
+    with config.override(PBR=False):
+        with pytest.raises(ValueError):
+            LocalLighting()
 
 
 def test_pbr_fallback():
@@ -302,7 +300,7 @@ def test_pbr_fallback_mer_has_no_alpha():
 
 
 def test_combined_fog():
-    from anvil.api.core.enums import FogCameraLocation, RenderDistanceType
+    from anvil.lib.jsonmodel.enums import FogCameraLocation, RenderDistanceType
 
     fog = Fog("test_fog")
     # Set vanilla distance settings
@@ -348,7 +346,7 @@ def test_combined_fog():
 
 
 def test_fog_transition():
-    from anvil.api.core.enums import FogCameraLocation, RenderDistanceType
+    from anvil.lib.jsonmodel.enums import FogCameraLocation, RenderDistanceType
 
     fog = Fog("transition")
     fog.add_distance_location(
@@ -387,7 +385,7 @@ def test_pbr_values_checked_on_export():
 
 def test_keyframed_ranges_checked_on_export():
     lighting = LightingSettings("ranges")
-    lighting.ambient([KeyFrame(0.0, 1.0), KeyFrame(1.0, 6.0)], "#ffffff")
+    lighting.ambient([(0.0, 1.0), (1.0, 6.0)], "#ffffff")
     with pytest.raises(ValueError, match="_Ambient.illuminance"):
         _exported(lighting, "minecraft:lighting_settings")
 
@@ -398,8 +396,8 @@ def test_keyframed_ranges_checked_on_export():
 
 
 def test_keyframe_time_checked_on_export():
-    settings = AtmosphericSettings("late").rayleigh_strength([KeyFrame(1.2, 1.0)])
-    with pytest.raises(ValueError, match=r"rayleigh_strength\[0\]\.time"):
+    settings = AtmosphericSettings("late").rayleigh_strength([(1.2, 1.0)])
+    with pytest.raises(ValueError, match=r"rayleigh_strength\[0\] time"):
         _exported(settings, "minecraft:atmosphere_settings")
 
 
@@ -424,23 +422,20 @@ def test_settings_identifiers_are_checked():
 
 
 def test_fog_disabled_pbr():
-    config.CONFIG.PBR = False
-    try:
+    with config.override(PBR=False):
         fog = Fog("test_fog_no_pbr")
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             fog.water_density(0.5)
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             fog.air_density(0.5)
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             fog.media_coefficients()
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             fog.henyey_greenstein_g()
-    finally:
-        config.CONFIG.PBR = True
 
 
 def test_fog_density_height_validation():
@@ -455,120 +450,94 @@ def test_fog_density_height_validation():
         )
 
 
-def test_textureset_vanilla_override():
-    from anvil.api.pbr.texture_set import TextureSet, TextureComponents
-    from unittest.mock import patch
+@pytest.fixture
+def test_model(tmp_path, monkeypatch):
+    """A Blockbench model `test_model` with blank textures, in a project at tmp_path."""
+    from anvil.lib.blockbench import _Blockbench
 
-    # Mock _Blockbench
-    with patch("anvil.api.pbr.texture_set._Blockbench") as MockBlockbench:
-        mock_bb = MockBlockbench.return_value
-
-        tset = TextureSet("test_block", "blocks", overriding_vanilla=True)
-        assert tset._overriding_vanilla is True
-        assert tset._path == config.CONFIG.RP_PATH / "textures" / "blocks"
-
-        components = TextureComponents(
-            color="test_color", normal="test_normal", mer="test_mer"
-        )
-
-        tset.set_vanilla_texture("test_model", components, subfolder="deepslate")
-
-        # Verify blockbench was instantiated with test_model and blocks target
-        MockBlockbench.assert_called_once_with("test_model", "blocks")
-
-        # Verify queue_texture was called for all textures with correct dest_dir
-        expected_dest_dir = config.CONFIG.RP_PATH / "textures" / "blocks" / "deepslate"
-
-        mock_bb.textures.queue_texture.assert_any_call(
-            "test_color", dest_dir=expected_dest_dir
-        )
-        mock_bb.textures.queue_texture.assert_any_call(
-            "test_normal", dest_dir=expected_dest_dir
-        )
-        mock_bb.textures.queue_texture.assert_any_call(
-            "test_mer", dest_dir=expected_dest_dir
-        )
-
-        # Verify content update
-        assert _exported(tset, "minecraft:texture_set")["color"] == "test_color"
-        assert _exported(tset, "minecraft:texture_set")["normal"] == "test_normal"
-        assert (
-            _exported(tset, "minecraft:texture_set")["metalness_emissive_roughness"]
-            == "test_mer"
-        )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(_Blockbench, "_loaded_blockbench_models", {})
+    image = io.BytesIO()
+    Image.new("RGBA", (16, 16)).save(image, format="PNG")
+    source = "data:image/png;base64," + base64.b64encode(image.getvalue()).decode()
+    names = ["test_color", "test_normal", "test_mer", "test_height", "test_mers"]
+    model = {
+        "meta": {"format_version": "5.0", "model_format": "bedrock"},
+        "model_identifier": "test_model",
+        "resolution": {"width": 16, "height": 16},
+        "elements": [],
+        "outliner": [],
+        "textures": [{"name": f"{name}.png", "source": source} for name in names],
+    }
+    folder = tmp_path / "assets" / "bbmodels"
+    folder.mkdir(parents=True)
+    (folder / "test_model.bbmodel").write_bytes(orjson.dumps(model))
+    with config.override(_LOCAL_EXPORT=True):
+        yield "test_model"
 
 
-def test_textureset_pbr_disabled_color_only():
-    from anvil.api.pbr.texture_set import TextureSet, TextureComponents
-    from unittest.mock import patch
+def test_textureset_vanilla_override(test_model):
+    from anvil.api.pbr.texture_set import TextureComponents, TextureSet
 
-    config.CONFIG.PBR = False
-    try:
-        with patch("anvil.api.pbr.texture_set._Blockbench") as MockBlockbench, patch(
-            "anvil.lib.jsonmodel.file.AnvilIO.file"
-        ) as mock_file:
-            tset = TextureSet("test_block", "blocks")
-            components = TextureComponents(color="test_color")
-            tset.set_blockbench_textures("test_model", components)
+    tset = TextureSet("test_block", "blocks", overriding_vanilla=True)
+    assert tset._overriding_vanilla is True
+    assert tset._path == config.CONFIG.RP_PATH / "textures" / "blocks"
 
-            tset.__export__()
-            # Verify json export was NOT called because PBR is False
-            mock_file.assert_not_called()
-    finally:
-        config.CONFIG.PBR = True
+    components = TextureComponents(
+        color="test_color", normal="test_normal", mer="test_mer"
+    )
+    tset.set_vanilla_texture(test_model, components, subfolder="deepslate")
 
+    folder = config.CONFIG.RP_PATH / "textures" / "blocks" / "deepslate"
+    assert tset._blockbench._source == "blocks"
+    assert tset._blockbench.textures._queued_textures == {
+        "test_color": folder,
+        "test_normal": folder,
+        "test_mer": folder,
+    }
 
-def test_textureset_pbr_disabled_aux_map_raises_error():
-    from anvil.api.pbr.texture_set import TextureSet, TextureComponents
-    from unittest.mock import patch
-
-    config.CONFIG.PBR = False
-    try:
-        with patch("anvil.api.pbr.texture_set._Blockbench"):
-            tset = TextureSet("test_block", "blocks")
-
-            # Normal map
-            with pytest.raises(RuntimeError, match="PBR maps"):
-                tset.set_blockbench_textures(
-                    "test_model",
-                    TextureComponents(color="test_color", normal="test_normal"),
-                )
-
-            # Height map
-            with pytest.raises(RuntimeError, match="PBR maps"):
-                tset.set_blockbench_textures(
-                    "test_model",
-                    TextureComponents(color="test_color", height="test_height"),
-                )
-
-            # MER map
-            with pytest.raises(RuntimeError, match="PBR maps"):
-                tset.set_blockbench_textures(
-                    "test_model", TextureComponents(color="test_color", mer="test_mer")
-                )
-
-            # MERS map
-            with pytest.raises(RuntimeError, match="PBR maps"):
-                tset.set_blockbench_textures(
-                    "test_model",
-                    TextureComponents(color="test_color", mers="test_mers"),
-                )
-    finally:
-        config.CONFIG.PBR = True
+    texture_set = _exported(tset, "minecraft:texture_set")
+    assert texture_set["color"] == "test_color"
+    assert texture_set["normal"] == "test_normal"
+    assert texture_set["metalness_emissive_roughness"] == "test_mer"
 
 
-def test_textureset_pbr_enabled_export():
-    from anvil.api.pbr.texture_set import TextureSet, TextureComponents
-    from unittest.mock import patch
+def _texture_set_files(tset):
+    return list(tset._path.glob("*.texture_set.json"))
 
-    config.CONFIG.PBR = True
-    with patch("anvil.api.pbr.texture_set._Blockbench"), patch(
-        "anvil.lib.jsonmodel.file.AnvilIO.file"
-    ) as mock_file:
+
+def test_textureset_pbr_disabled_color_only(test_model):
+    from anvil.api.pbr.texture_set import TextureComponents, TextureSet
+
+    with config.override(PBR=False):
         tset = TextureSet("test_block", "blocks")
-        components = TextureComponents(color="test_color", normal="test_normal")
-        tset.set_blockbench_textures("test_model", components)
-
+        tset.set_blockbench_textures(test_model, TextureComponents(color="test_color"))
         tset.__export__()
-        # Verify json export WAS called because PBR is True and aux maps are present
-        mock_file.assert_called_once()
+        assert _texture_set_files(tset) == []
+
+
+def test_textureset_pbr_disabled_aux_map_raises_error(test_model):
+    from anvil.api.pbr.texture_set import TextureComponents, TextureSet
+
+    with config.override(PBR=False):
+        tset = TextureSet("test_block", "blocks")
+        for maps in (
+            {"normal": "test_normal"},
+            {"height": "test_height"},
+            {"mer": "test_mer"},
+            {"mers": "test_mers"},
+        ):
+            with pytest.raises(ValueError, match="PBR maps"):
+                tset.set_blockbench_textures(
+                    test_model, TextureComponents(color="test_color", **maps)
+                )
+
+
+def test_textureset_pbr_enabled_export(test_model):
+    from anvil.api.pbr.texture_set import TextureComponents, TextureSet
+
+    tset = TextureSet("test_block", "blocks")
+    components = TextureComponents(color="test_color", normal="test_normal")
+    tset.set_blockbench_textures(test_model, components)
+    tset.__export__()
+    assert len(_texture_set_files(tset)) == 1

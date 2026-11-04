@@ -2,14 +2,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar, Literal
 
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import TEXTURE_SET_VERSION
-from anvil.lib.jsonmodel import json_field, JsonFile, JsonObject, KeyFrame
+from anvil.lib.jsonmodel import JsonFile, JsonObject, json_field
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 from anvil.lib.lib import AnvilFormatter, AnvilValidator, Directory
 
-__all__ = ["KeyFrame", "TextureComponents", "TextureSet"]
+__all__ = ["TextureComponents", "TextureSet"]
 
 
 @dataclass(frozen=True)
@@ -159,7 +159,7 @@ class TextureSet(JsonFile):
             target (Literal["blocks", "items"]): The target directory layout/namespace.
 
         Raises:
-            RuntimeError: If PBR is not enabled in the configuration and auxiliary maps are specified.
+            ValueError: If PBR is not enabled in the configuration and auxiliary maps are specified.
         """
         super().__init__(texture_name)
         self._target = target
@@ -183,10 +183,10 @@ class TextureSet(JsonFile):
 
         Raises:
             ValueError: If mutually exclusive components are provided.
-            RuntimeError: If auxiliary maps are used when PBR is disabled in configuration.
+            ValueError: If auxiliary maps are used when PBR is disabled in configuration.
         """
         if not CONFIG.PBR and components.has_aux():
-            raise RuntimeError(
+            raise ValueError(
                 "PBR maps (normal, height, MER, MERS) require PBR to be enabled in the config."
             )
 

@@ -4,11 +4,10 @@ sounds, for the server."""
 from dataclasses import dataclass
 from typing import Annotated, Any, ClassVar
 
-from anvil.api.core.enums import DurationInfoMode
-from anvil.api.core.types import JsonSchema
 from anvil.lib.config import Pack
 from anvil.lib.format_versions import SERVER_SOUND_DEFINITIONS_VERSION
 from anvil.lib.jsonmodel import JsonFile, JsonObject, NonNegative, json_field
+from anvil.lib.jsonmodel.enums import DurationInfoMode
 
 
 @dataclass(kw_only=True)
@@ -90,7 +89,7 @@ class _ServerSound(JsonObject):
         return {self.identifier: JsonObject.__json__(self)}
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         body = JsonObject.__schema_body__.__func__(cls, definitions)
         return {
             "type": "object",

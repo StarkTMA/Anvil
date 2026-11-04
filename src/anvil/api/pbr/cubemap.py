@@ -7,7 +7,6 @@ from anvil.lib.jsonmodel import (
     InRange,
     JsonFile,
     JsonObject,
-    KeyFrame,
     KeyFramed,
     Wrapped,
     json_field,
@@ -20,7 +19,7 @@ class _CubeMapLighting(JsonObject):
     """The `lighting` object of a cubemap. Unset keys are left out."""
 
     ambient_light_illuminance: (
-        Annotated[float | list[KeyFrame], KeyFramed(0.0, 100000.0)] | None
+        Annotated[float | list[tuple[float, float]], KeyFramed(0.0, 100000.0)] | None
     ) = None
     sky_light_contribution: Annotated[float, InRange(0.0, 1.0)] | None = None
     directional_light_contribution: Annotated[float, InRange(0.0, 1.0)] | None = None
@@ -28,7 +27,7 @@ class _CubeMapLighting(JsonObject):
     affected_by_volumetric_scattering: bool | None = None
 
     def set_ambient_light_illuminance(
-        self, ambient_light_illuminance: float | list[KeyFrame]
+        self, ambient_light_illuminance: float | list[tuple[float, float]]
     ) -> None:
         """Sets the ambient illuminance in lux, from 0.0 to 100000.0."""
         self.ambient_light_illuminance = ambient_light_illuminance
@@ -116,10 +115,10 @@ class CubeMapSettings(JsonFile):
             identifier (str, optional): Unique identifier for the cubemap. Defaults to "minecraft:default_cubemap".
 
         Raises:
-            RuntimeError: If PBR requires PBR to be enabled in the config.
+            ValueError: If PBR requires PBR to be enabled in the config.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Cube map settings require PBR to be enabled in the config."
             )
 
@@ -129,9 +128,9 @@ class CubeMapSettings(JsonFile):
 
     def set_lighting(
         self,
-        ambient_light_illuminance: list[KeyFrame] = [
-            KeyFrame(0.0, 5.625),
-            KeyFrame(1.0, 5.625),
+        ambient_light_illuminance: list[tuple[float, float]] = [
+            (0.0, 5.625),
+            (1.0, 5.625),
         ],
         sky_light_contribution: float = 1.0,
         directional_light_contribution: float = 1.0,
@@ -141,7 +140,7 @@ class CubeMapSettings(JsonFile):
         """Set lighting parameters for the cubemap.
 
         Args:
-            ambient_light_illuminance (list[KeyFrame], optional): Keyframed ambient illuminance (lux) over the day cycle. Each keyframe's time must be from 0.0 to 1.0 and each value from 0.0 to 100000.0. Defaults to a constant 5.625 lux across the day.
+            ambient_light_illuminance (list[tuple[float, float]], optional): Keyframed ambient illuminance (lux) over the day cycle. Each keyframe's time must be from 0.0 to 1.0 and each value from 0.0 to 100000.0. Defaults to a constant 5.625 lux across the day.
             sky_light_contribution (float, optional): How much the sky light contributes to the cubemap, in [0.0, 1.0]. Default 1.0.
             directional_light_contribution (float, optional): How much directional light (sun/moon) contributes to the cubemap, in [0.0, 1.0]. Default 1.0.
             affected_by_atmospheric_scattering (bool, optional): Whether the cubemap is affected by atmospheric scattering (horizon/sky effects). Use True for near-surface sky content. Default False.

@@ -1,16 +1,7 @@
 """Tests for the typed texture atlases, sound files and pack manifests."""
 
 import pytest
-
 from anvil.api.blocks.blocks_json import BlocksJSONObject
-from anvil.api.core.enums import (
-    BlockInteractiveSoundEvent,
-    BlockSoundEvent,
-    BlockSoundGroup,
-    DurationInfoMode,
-    EntitySoundEvent,
-    SoundCategory,
-)
 from anvil.api.core.manifest import ManifestBP, ManifestRP
 from anvil.api.sounds import (
     MusicDefinition,
@@ -25,6 +16,14 @@ from anvil.api.textures import (
     TerrainTexturesObject,
 )
 from anvil.lib import config
+from anvil.lib.jsonmodel.enums import (
+    BlockInteractiveSoundEvent,
+    BlockSoundEvent,
+    BlockSoundGroup,
+    DurationInfoMode,
+    EntitySoundEvent,
+    SoundCategory,
+)
 from anvil.lib.lib import AnvilIO
 
 jsonschema = pytest.importorskip("jsonschema")

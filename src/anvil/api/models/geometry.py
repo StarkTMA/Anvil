@@ -22,11 +22,11 @@ Example:
 ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/schemasreference/schemas/minecraftschema_geometry_1.21.0)
 """
 
+from collections.abc import Iterator, Sequence
 from dataclasses import replace
 from pathlib import Path
-from typing import Annotated, Any, ClassVar, Iterator, Literal, Sequence
+from typing import Annotated, Any, ClassVar, Literal
 
-from anvil.api.core.types import JsonSchema
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import GEOMETRY_VERSION
 from anvil.lib.jsonmodel import (
@@ -246,7 +246,7 @@ class _Locator(JsonObject):
         return payload["offset"] if list(payload) == ["offset"] else payload
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         return {"anyOf": [schema["properties"]["offset"], schema]}
 

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, Annotated, ClassVar, Literal, overload
+from typing import TYPE_CHECKING, Annotated, ClassVar, Literal
 
-from anvil.api.core.enums import ExplorationMapDestinations, LootPoolType
+from anvil.api.actors.entity import Entity
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.items.items import Item
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.jsonmodel import (
     AtLeastOne,
@@ -19,11 +22,7 @@ from anvil.lib.jsonmodel import (
     RangeMinMax,
     json_field,
 )
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
-)
+from anvil.lib.jsonmodel.enums import ExplorationMapDestinations, LootPoolType
 
 if TYPE_CHECKING:
     from anvil.api.vanilla.effects import MinecraftPotionEffectTypes
@@ -194,7 +193,7 @@ class _LootConditions(JsonValue):
 
     def match_tool(
         self,
-        item: MinecraftItemDescriptor | str | None = None,
+        item: Item | str | None = None,
         enchantments: str | list[str | tuple[str, int]] | None = None,
         count: int | tuple[int, int] | None = None,
         durability: int | tuple[int, int] | None = None,
@@ -205,7 +204,7 @@ class _LootConditions(JsonValue):
         """Matches the tool used to break the block or make the loot drop.
 
         Args:
-            item (MinecraftItemDescriptor | str, optional): The tool's item identifier.
+            item (Item | str, optional): The tool's item identifier.
             enchantments (str | list[str | tuple[str, int]], optional): Enchantments the tool
                 must have: a name (any level), or `(name, minimum level)` pairs.
             count (int | tuple[int, int], optional): The tool's count, or its range.
@@ -743,11 +742,11 @@ class _LootFunctionBuilder:
         self._add_function(_RandomDye())
         return self
 
-    def SetActorId(self, actor: MinecraftEntityDescriptor | str | None = None):
+    def SetActorId(self, actor: str | Entity | None = None):
         """Sets the entity of a spawn egg.
 
         Args:
-            actor (MinecraftEntityDescriptor | str, optional): The entity. None takes the
+            actor (str | Entity, optional): The entity. None takes the
                 entity the loot table belongs to; in a chest, that is the player who opens it.
         """
         self._add_function(_SetActorId(id=None if actor is None else str(actor)))
@@ -1012,16 +1011,14 @@ class _LootPool(JsonObject):
 
     def entry(
         self,
-        entry: (
-            MinecraftBlockDescriptor | MinecraftItemDescriptor | str | LootTable | None
-        ),
+        entry: str | Block | BlockDescriptor | Item | LootTable | None,
         count: int = 1,
         weight: int = 1,
     ) -> _LootPoolEntry:
         """Adds an entry to the pool.
 
         Args:
-            entry (MinecraftBlockDescriptor | MinecraftItemDescriptor | str | LootTable | None):
+            entry (Block | BlockDescriptor | Item | str | LootTable | None):
                 An item or block, another loot table, or None for an entry that drops nothing.
             count (int, optional): The entry's count. Defaults to 1.
             weight (int, optional): Its weight against the other entries, at least 1.

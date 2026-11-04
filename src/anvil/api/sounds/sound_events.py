@@ -4,12 +4,6 @@ interactive events."""
 from typing import Annotated
 
 from anvil.api.blocks.blocks_json import BlocksJSONObject
-from anvil.api.core.enums import (
-    BlockInteractiveSoundEvent,
-    BlockSoundEvent,
-    EntitySoundEvent,
-    SoundCategory,
-)
 from anvil.api.logic.molang import Molang
 from anvil.api.sounds.server_sound_definitions import MusicInfo
 from anvil.api.sounds.sound_definitions import SoundDefinition, _SoundDescription
@@ -21,6 +15,12 @@ from anvil.lib.jsonmodel import (
     NonNegative,
     Positive,
     json_field,
+)
+from anvil.lib.jsonmodel.enums import (
+    BlockInteractiveSoundEvent,
+    BlockSoundEvent,
+    EntitySoundEvent,
+    SoundCategory,
 )
 from anvil.lib.translator import AnvilTranslator
 

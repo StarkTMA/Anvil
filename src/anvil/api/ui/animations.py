@@ -6,12 +6,11 @@
 from pathlib import PurePosixPath
 from typing import Annotated, Any, ClassVar, Self
 
-from anvil.api.core.types import JsonSchema
 from anvil.api.ui.elements import _REFERENCE, _keyed_schema, _merged_keys
-from anvil.api.ui.enums import UIAnimType, UIEasing
 from anvil.api.ui.files import _UIDefs
 from anvil.lib.config import Pack
 from anvil.lib.jsonmodel import JsonFile, JsonObject, Keyed, json_field
+from anvil.lib.jsonmodel.enums import UIAnimType, UIEasing
 
 
 class _UIAnimationElement(JsonObject):
@@ -250,7 +249,7 @@ class _UIAnimationFile(JsonObject):
         return _merged_keys(JsonObject.__json__(self), "animations")
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         return _keyed_schema(
             schema,

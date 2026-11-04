@@ -59,10 +59,10 @@ class ShadowSettings(JsonFile):
         """Initializes a ShadowSettings instance.
 
         Raises:
-            RuntimeError: If PBR is not enabled in the config.
+            ValueError: If PBR is not enabled in the config.
         """
         if not CONFIG.PBR:
-            raise RuntimeError(
+            raise ValueError(
                 "Atmospherics addon requires PBR to be enabled in the config."
             )
         super().__init__(self._file_name)

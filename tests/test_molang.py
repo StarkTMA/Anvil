@@ -1,9 +1,7 @@
 from enum import StrEnum
-from unittest.mock import MagicMock
 
 import pytest
 
-from anvil.api.core.enums import InputModes, Slots
 from anvil.api.logic.molang import (
     Context,
     Math,
@@ -16,18 +14,9 @@ from anvil.api.logic.molang import (
     _TRSStruct,
     _UVStruct,
     _Vec3Struct,
-    arrow_operator,
-    molang_conditions,
 )
-
-
-@pytest.fixture(autouse=True)
-def mock_config(monkeypatch):
-    cfg = MagicMock()
-    cfg.NAMESPACE = "test"
-    monkeypatch.setattr("anvil.api.logic.molang.CONFIG", cfg)
-    return cfg
-
+from anvil.lib import config
+from anvil.lib.jsonmodel.enums import InputModes, Slots
 
 # ---------------------------------------------------------------------------
 # Molang
@@ -682,9 +671,9 @@ class TestQuery:
         with pytest.raises(ValueError):
             Query.AverageFrameTime(50)
 
-    def test_BlockState_plain_string(self, mock_config):
-        mock_config.NAMESPACE = "myns"
-        assert str(Query.BlockState("open")) == "q.block_state('myns:open')"
+    def test_BlockState_plain_string(self):
+        with config.override(NAMESPACE="myns"):
+            assert str(Query.BlockState("open")) == "q.block_state('myns:open')"
 
     def test_BlockState_str_enum(self):
         class MyState(StrEnum):
@@ -692,17 +681,17 @@ class TestQuery:
 
         assert str(Query.BlockState(MyState.Open)) == "q.block_state('open')"
 
-    def test_Property(self, mock_config):
-        mock_config.NAMESPACE = "myns"
-        assert str(Query.Property("stage")) == "q.property('myns:stage')"
+    def test_Property(self):
+        with config.override(NAMESPACE="myns"):
+            assert str(Query.Property("stage")) == "q.property('myns:stage')"
 
-    def test_HasProperty(self, mock_config):
-        mock_config.NAMESPACE = "myns"
-        assert str(Query.HasProperty("stage")) == "q.has_property('myns:stage')"
+    def test_HasProperty(self):
+        with config.override(NAMESPACE="myns"):
+            assert str(Query.HasProperty("stage")) == "q.has_property('myns:stage')"
 
-    def test_has_block_state(self, mock_config):
-        mock_config.NAMESPACE = "myns"
-        assert str(Query.HasBlockState("open")) == "q.has_block_state('myns:open')"
+    def test_has_block_state(self):
+        with config.override(NAMESPACE="myns"):
+            assert str(Query.HasBlockState("open")) == "q.has_block_state('myns:open')"
 
     def test_BoneRotation_returns_Vec3Struct(self):
         result = Query.BoneRotation("rightarm")
@@ -1035,15 +1024,12 @@ class TestQuery:
 class TestPackSettings:
     @pytest.fixture(autouse=True)
     def manifest(self, monkeypatch):
-        names = {
-            "slider": ["test:volume"],
-            "toggle": ["test:shadows"],
-            "dropdown": ["test:quality"],
-        }
-        manifest = MagicMock()
-        manifest._setting_names = names.__getitem__
-        manifest._dropdown_options = {"test:quality": ["low", "high"]}.get
-        monkeypatch.setattr("anvil.api.core.core.ManifestRP", lambda: manifest)
+        from anvil.api.core.manifest import ManifestRP
+
+        monkeypatch.setattr(ManifestRP, "_instance", None)
+        ManifestRP().settings.slider("volume", "Volume", 0, 1, 0.1, 0.5).toggle(
+            "shadows", "Shadows"
+        ).dropdown("quality", "Quality", [("low", "Low"), ("high", "High")], "low")
 
     def test_GetPackSetting(self):
         assert (

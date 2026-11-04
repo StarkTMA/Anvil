@@ -4,8 +4,6 @@ identifier plays."""
 from pathlib import Path, PurePosixPath
 from typing import Annotated, Any, ClassVar
 
-from anvil.api.core.enums import SoundCategory
-from anvil.api.core.types import JsonSchema
 from anvil.api.sounds.server_sound_definitions import MusicInfo, ServerSoundDefinition
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import SOUND_DEFINITIONS_VERSION
@@ -17,6 +15,7 @@ from anvil.lib.jsonmodel import (
     Positive,
     json_field,
 )
+from anvil.lib.jsonmodel.enums import SoundCategory
 from anvil.lib.lib import Directory
 from anvil.lib.reports import ReportType
 from anvil.lib.translator import AnvilTranslator
@@ -44,7 +43,7 @@ class _Sound(JsonObject):
         return payload["name"] if list(payload) == ["name"] else payload
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         return {"anyOf": [{"type": "string"}, schema]}
 

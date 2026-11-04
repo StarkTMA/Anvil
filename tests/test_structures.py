@@ -18,9 +18,10 @@ def structures(tmp_path, monkeypatch):
 
 
 def test_processor_list():
+    from anvil.api.blocks.descriptor import BlockDescriptor
     from anvil.api.vanilla.blocks import MinecraftBlockTypes as Blocks
     from anvil.api.world.structures import _JigsawStructureProcess
-    from anvil.lib.schemas import MinecraftBlockDescriptor
+    from anvil.lib.jsonmodel import Identifier
 
     processor = _JigsawStructureProcess("ruins")
     processor.add_block_ignore_processor([Blocks.Air(), "minecraft:stone"])
@@ -29,7 +30,10 @@ def test_processor_list():
     rule = processor.add_block_rule()
     rule.input_predicate.random_block_match(Blocks.Cobblestone(), 0.3)
     rule.location_predicate.block_state_match(
-        MinecraftBlockDescriptor("minecraft:oak_log", states={"pillar_axis": "y"})
+        BlockDescriptor(
+            name=Identifier.parse("minecraft:oak_log", vanilla=True),
+            states={"pillar_axis": "y"},
+        )
     )
     rule.block_entity_modifier.append_loot("loot_tables/chest.json")
     rule.set_output_state(Blocks.MossyCobblestone())

@@ -1,9 +1,9 @@
 import jsonschema
 import pytest
 
-from anvil.api.core.enums import Dimension
 from anvil.lib import config
 from anvil.lib.config import ConfigPackageTarget
+from anvil.lib.jsonmodel.enums import Dimension
 from anvil.lib.lib import AnvilIO
 
 
@@ -56,5 +56,5 @@ def test_dimensions_refused_in_addons():
     from anvil.api.world.dimensions import DimensionConfiguration
 
     with config.override(_TARGET=ConfigPackageTarget.ADDON, NAMESPACE="test_t"):
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError):
             DimensionConfiguration(Dimension.Overworld)

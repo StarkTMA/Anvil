@@ -23,9 +23,9 @@ Example:
 ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/schemasreference/schemas/minecraftschema_actor_animation_1.8.0)
 """
 
-from typing import Annotated, Any, ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, Any, ClassVar, Literal
 
-from anvil.api.core.types import JsonSchema
 from anvil.api.models.geometry import Geometry
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import RP_ANIMATION_VERSION
@@ -57,7 +57,7 @@ def _one_or_list(values: list[Any]) -> Any:
     return values[0] if len(values) == 1 else values
 
 
-def _one_or_list_schema(inner: JsonSchema) -> JsonSchema:
+def _one_or_list_schema(inner: dict[str, Any]) -> dict[str, Any]:
     return {"anyOf": [inner["items"], inner]}
 
 
@@ -92,7 +92,7 @@ class _AnimKeyframe(JsonObject):
         return payload["post"] if list(payload) == ["post"] else payload
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         return {"anyOf": [schema["properties"]["post"], schema]}
 

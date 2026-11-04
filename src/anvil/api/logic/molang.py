@@ -1,13 +1,15 @@
 from enum import StrEnum
-from typing import Literal, Optional, overload
+from typing import TYPE_CHECKING, Literal, overload
 from warnings import deprecated
 
 import orjson
 
-from anvil.api.core.enums import InputModes, Slots
 from anvil.lib.config import CONFIG
 from anvil.lib.format_versions import MANIFEST_VERSION
-from anvil.lib.schemas import MinecraftBiomeDescriptor
+from anvil.lib.jsonmodel.enums import InputModes, Slots
+
+if TYPE_CHECKING:
+    from anvil.api.biomes.biomes import Biome
 
 __all__ = [
     "Molang",
@@ -55,7 +57,7 @@ class MolangProperty:
     def __init__(self, func):
         self.func = func
 
-    def __get__(self, instance, owner):
+    def __get__(self, _instance, _owner):
         return self.func()
 
 
@@ -81,7 +83,7 @@ class Molang(str):
     def condition(
         condition: "Molang",
         expression: "Molang",
-        expression2: Optional["Molang"] = None,
+        expression2: "Molang" | None = None,
     ) -> "Molang":
         """Returns a Molang object representing a conditional expression for Molang."""
         if expression2 is not None:
@@ -649,7 +651,6 @@ class Query(Molang):
         """
         return cls.__query__(cls, cls.handle, "body_y_rotation")
 
-    # More info needed
     @classmethod
     def BoneAabb(cls) -> "_AabbStruct":
         """Returns the axis aligned bounding box of a bone as a struct with members '.min', '.max', along with '.x', '.y', and '.z' values for each.
@@ -659,7 +660,6 @@ class Query(Molang):
         """
         return _AabbStruct(cls.__query__(cls, cls.handle, "bone_aabb"))
 
-    # More info needed
     @classmethod
     def BoneOrigin(cls) -> "_Vec3Struct":
         """Returns the initial (from the .geo) pivot of a bone as a struct with members '.x', '.y', and '.z'.
@@ -669,7 +669,6 @@ class Query(Molang):
         """
         return _Vec3Struct(cls.__query__(cls, cls.handle, "bone_origin"))
 
-    # More info needed
     @classmethod
     def BoneRotation(cls, bone_name: str) -> _Vec3Struct:
         """Returns the initial (from the .geo) rotation of a bone as a struct with members '.x', '.y', and '.z' in degrees.
@@ -829,7 +828,6 @@ class Query(Molang):
         """
         return cls.__query__(cls, cls.handle, "cardinal_player_facing")
 
-    # More info needed
     @classmethod
     def CombineEntities(cls) -> Molang:
         """Combines any valid entity references from all arguments into a single array.  Note that order is not preserved, and duplicates and invalid values are removed.
@@ -1041,7 +1039,6 @@ class Query(Molang):
         """
         return cls.__query__(cls, cls.handle, "get_animation_frame")
 
-    # More info needed
     @classmethod
     def GetDefaultBonePivot(cls) -> Molang:
         """Gets the specified axis of the specified bone orientation pivot.
@@ -1069,7 +1066,6 @@ class Query(Molang):
             index,
         )
 
-    # More info needed
     @classmethod
     def GetLocatorOffset(cls) -> Molang:
         """Gets specified axis of the specified locator offset.
@@ -1091,7 +1087,6 @@ class Query(Molang):
         """
         return cls.__query__(cls, cls.handle, "get_name")
 
-    # More info needed
     @classmethod
     def GetRootLocatorOffset(cls) -> Molang:
         """Gets specified axis of the specified locator offset of the root model.
@@ -3414,9 +3409,9 @@ class Query(Molang):
 
     @classmethod
     def EntityBiomeHasAnyIdentifier(
-        cls, identifiers: tuple[MinecraftBiomeDescriptor | str]
+        cls, identifiers: tuple["Biome | str", ...]
     ) -> Molang:
-        """Takes one or more biome identifiers or MinecraftBiomeDescriptor instances, and returns either 0 or 1 based on if the biome the entity is currently in matches any of the identifiers provided.
+        """Takes one or more biome identifiers or Biome instances, and returns either 0 or 1 based on if the biome the entity is currently in matches any of the identifiers provided.
 
         Returns:
             Molang(Molang): A Molang Instance
@@ -3659,13 +3654,13 @@ class Context(Query):
         setattr(cls, name, cls.__query__(cls, cls.handle, name))
 
     @classmethod
-    def OwningEntity(cls, molang: Optional[Molang] = None) -> Molang:
+    def OwningEntity(cls, molang: Molang | None = None) -> Molang:
         if molang:
             return Molang.arrow(cls.__query__(cls, cls.handle, "owning_entity"), molang)
         return Molang.__query__(cls, cls.handle, "owning_entity")
 
     @classmethod
-    def Other(cls, molang: Optional[Molang] = None) -> Molang:
+    def Other(cls, molang: Molang | None = None) -> Molang:
         if molang:
             return Molang.arrow(cls.__query__(cls, cls.handle, "other"), molang)
         return Molang.__query__(cls, cls.handle, "other")
@@ -3974,6 +3969,6 @@ def arrow_operator(left: Molang, right: Molang) -> Molang:
     "molang_conditions is deprecated and will be removed in a future version. Use `Molang.condition()` instead for better readability and maintainability."
 )
 def molang_conditions(
-    condition: Molang, expression: Molang, expression2: Optional[Molang] = None
+    condition: Molang, expression: Molang, expression2: Molang | None = None
 ) -> Molang:
     return Molang.condition(condition, expression, expression2)

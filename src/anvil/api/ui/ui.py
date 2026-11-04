@@ -43,17 +43,8 @@ Example:
 """
 
 import click
+
 from anvil.api.ui.animations import _AnvilAnimations
-from anvil.api.ui.enums import (
-    UIAnchor,
-    UIAnimType,
-    UIBindingType,
-    UIEasing,
-    UIElementTrigger,
-    UIElementType,
-    UIFontSize,
-    UITextAlignment,
-)
 from anvil.api.ui.files import _UIDefs, _UIVariables
 from anvil.api.ui.screens import (
     _AnvilCommon,
@@ -64,6 +55,16 @@ from anvil.api.ui.screens import (
     _UIScreen,
 )
 from anvil.lib.config import CONFIG, ConfigPackageTarget
+from anvil.lib.jsonmodel.enums import (
+    UIAnchor,
+    UIAnimType,
+    UIBindingType,
+    UIEasing,
+    UIElementTrigger,
+    UIElementType,
+    UIFontSize,
+    UITextAlignment,
+)
 
 __all__ = [
     "UIBindingType",
@@ -122,7 +123,7 @@ class UI:
     def __init__(self) -> None:
         """Initialize the UI framework with core screens and managers."""
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
-            raise RuntimeError(
+            raise ValueError(
                 f"UI is not allowed for packages of type '{CONFIG._TARGET}'."
             )
 
@@ -138,7 +139,6 @@ class UI:
 
         self.animations_screen = _AnvilAnimations(self._defs)
 
-        # Screens
         self.anvil_common = _AnvilCommon(
             self.animations_screen, self.variables, self._defs
         )
@@ -148,7 +148,6 @@ class UI:
             self.animations_screen, self.variables, self._defs
         )
 
-        # NPC Screens
         self.npc_screen = _NPCScreen(self.animations_screen, self.variables, self._defs)
         self.anvil_npc_screen = _AnvilNPCScreen(
             self.animations_screen, self.variables, self._defs
@@ -193,7 +192,6 @@ class UI:
         - Variable generation
         - File output coordination
         """
-        # Manage Titles, Subtitles and actionbars
         ignored_title_texts = self.hud_screen._ignored_title_texts
         ignored_title_texts.extend(self.anvil_hud_screen._ignored_title_texts)
 
@@ -202,20 +200,19 @@ class UI:
 
         hides_hud = self.hud_screen._hides_hud
 
-        # Add to ANVIL queue
         for screen in self._screens:
             ignored_actionbar_texts.extend(screen._ignored_actionbar_texts)
             ignored_title_texts.extend(screen._ignored_title_texts)
             hides_hud.extend(screen._hides_hud)
 
         self.anvil_hud_screen._variables.add_variable(
-            f"$anvil.title_visible.bool",
+            "$anvil.title_visible.bool",
             f"({'(' * len(ignored_title_texts)}#text - "
             + " - ".join(f"{var})" for var in ignored_title_texts)
             + " = #text)",
         )
         self.anvil_hud_screen._variables.add_variable(
-            f"$anvil.actionbar_visible.bool",
+            "$anvil.actionbar_visible.bool",
             f"({'(' * len(ignored_actionbar_texts)}$text - "
             + " - ".join(f"{var})" for var in ignored_actionbar_texts)
             + " = $text)",
@@ -224,11 +221,11 @@ class UI:
         self.hud_screen.hud_title_text.add_binding().set_binding_type(
             UIBindingType.View
         ).set_source_property_name(
-            f"$anvil.title_visible.bool"
+            "$anvil.title_visible.bool"
         ).set_target_property_name(
             "#visible"
         )
-        self.hud_screen.hud_actionbar_text.set_visible(f"$anvil.actionbar_visible.bool")
+        self.hud_screen.hud_actionbar_text.set_visible("$anvil.actionbar_visible.bool")
 
         source_prop = (
             f"(#hud_visible and ({'(' * len(hides_hud)}#text - "

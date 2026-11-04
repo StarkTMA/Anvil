@@ -2,7 +2,6 @@
 
 from typing import Annotated, Any
 
-from anvil.api.core.types import JsonSchema
 from anvil.api.ui.elements import _keyed_schema, _merged_keys, _plain_value, _UIValue
 from anvil.lib.config import Pack
 from anvil.lib.jsonmodel import JsonFile, JsonObject, Keyed, json_field
@@ -28,7 +27,7 @@ class _UIVariablesFile(JsonObject):
         return _merged_keys(JsonObject.__json__(self), "$variables")
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = JsonObject.__schema_body__.__func__(cls, definitions)
         return _keyed_schema(schema, "$variables", r"^\$", {})
 

@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Annotated, ClassVar, Literal
 
 from anvil.api.camera.aim_assist import _PRESETS_FOLDER, AimAssistPreset
-from anvil.api.core.enums import AimAssistTargetMode, CameraPresets, ControlSchemes
 from anvil.lib.config import CONFIG, Pack
 from anvil.lib.format_versions import CAMERA_PRESET_VERSION
 from anvil.lib.jsonmodel import (
@@ -17,6 +16,7 @@ from anvil.lib.jsonmodel import (
     NonNegative,
     json_field,
 )
+from anvil.lib.jsonmodel.enums import AimAssistTargetMode, CameraPresets, ControlSchemes
 from anvil.lib.lib import Directory
 
 
