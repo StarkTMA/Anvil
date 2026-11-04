@@ -1,9 +1,10 @@
-import os
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
 
 from anvil.api.core.core import ANVIL
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import Directory
-from PIL import Image, ImageDraw, ImageFont
 
 
 class Fonts:
@@ -22,14 +23,14 @@ class Fonts:
             )
         self._character_size = character_size
         self._font_size = round(character_size * 0.8)
-        self._path = os.path.join(CONFIG.RP_PATH, "font")
+        self._path = CONFIG.RP_PATH / "font"
 
         extensions = ["ttf", "otf"]
         self._font_image = None
         self._particles_image = None
         for ext in extensions:
-            path = os.path.join("assets", "textures", "ui", f"{font_name}.{ext}")
-            if os.path.exists(path):
+            path = Path("assets", "textures", "ui", f"{font_name}.{ext}")
+            if path.exists():
                 self.font = ImageFont.truetype(path, self._font_size)
                 return
 
@@ -57,8 +58,6 @@ class Fonts:
 
             bbox = font_target.getbbox(i)
 
-            char_height = bbox[3] - bbox[1]
-
             x = offset[0] * self._character_size - bbox[0]
             y = offset[1] * self._character_size
 
@@ -83,8 +82,6 @@ class Fonts:
 
         img_draw = ImageDraw.Draw(image)
         for i in range(0, 1000):
-            bbox = self.font.getbbox(str(i))
-
             x = offset[0] * max_size
             y = offset[1] * self._character_size
 
@@ -106,15 +103,12 @@ class Fonts:
         """Exports the font configuration."""
         Directory.create(self._path)
         if self._font_image:
-            self._font_image.save(os.path.join(self._path, "default8.png"))
+            self._font_image.save(self._path / "default8.png")
 
         if self._particles_image:
-            self._particles_image.save(
-                os.path.join("assets", "particles", "numbers.png")
-            )
+            self._particles_image.save(Path("assets", "particles", "numbers.png"))
 
         for file in ["glyph_E1.png"]:
-            if os.path.exists(os.path.join("assets", "textures", "ui", file)):
-                Directory.copy_files(
-                    os.path.join("assets", "textures", "ui"), self._path, file
-                )
+            ui = Path("assets", "textures", "ui")
+            if (ui / file).exists():
+                Directory.copy_files(ui, self._path, file)

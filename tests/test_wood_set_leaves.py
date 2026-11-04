@@ -22,7 +22,7 @@ def _component_ids(exported: dict) -> list[str]:
 
 def test_natural_state_is_off_for_placed_leaves(make_leaves):
     block = make_leaves("rotten", {"log"})
-    states = block.server.description._description["description"]["states"]
+    states = block.server.description.states
     ((name, values),) = states.items()
     assert name.endswith(":natural")
     # The first value is the default, so placed leaves are not natural
@@ -34,7 +34,7 @@ def test_leaves_decay_on_random_ticks_not_a_scheduled_tick(make_leaves):
     block = make_leaves("rotten", {"log"})
     base = block.server.components.__json__()["components"]
     assert "minecraft:tick" not in base
-    assert not block.server._permutations
+    assert not block.server.permutations
 
 
 def test_trunks_are_the_selected_ones_only(make_leaves):

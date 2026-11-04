@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
@@ -22,25 +22,24 @@ from anvil.api.blocks.components import (
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.features import Feature
+from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemIcon
+from anvil.api.pbr.texture_set import TextureComponents
+from anvil.api.world.loot_tables import LootTable
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
     BlockSoundGroup,
     ItemCategory,
     ItemGroups,
+    SupportedBy,
 )
-from anvil.api.core.types import Identifier
-from anvil.api.features import Feature
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemIcon
-from anvil.api.pbr.texture_set import TextureComponents
-from anvil.api.world.loot_tables import LootTable
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
 
-from ..components import BlockWoodSetSapling, BlockWoodSetSupport, SupportedBy
+from ..components import BlockWoodSetSapling, BlockWoodSetSupport
 from . import MAP_COLOR, MODEL
 
-# What a sapling can be planted on, unless the set says otherwise
 DEFAULT_SOIL = (
     "minecraft:dirt",
     "minecraft:grass_block",
@@ -53,8 +52,8 @@ DEFAULT_SOIL = (
 def create(
     wood: str,
     selected: set[str],
-    tree: Feature | Identifier,
-    soil: Sequence[Identifier] = DEFAULT_SOIL,
+    tree: Feature | str,
+    soil: Sequence[str] = DEFAULT_SOIL,
     *,
     map_color: Color = MAP_COLOR,
     sound_group: BlockSoundGroup | str = BlockSoundGroup.Grass,
@@ -68,12 +67,10 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Sapling"
 
-    # It drops itself
     drop = LootTable(f"{wood}_sapling")
     drop.pool().entry(f"{namespace}:{wood}_sapling")
     drop.queue()
 
-    # Like vanilla, it has two stages: the first growth sets this, the second grows the tree
     block.server.description.add_state("stage", (False, True))
 
     block.server.components.add(
@@ -91,7 +88,6 @@ def create(
         BlockCollisionBox(enabled=False),
         BlockSelectionBox(origin=(-6, 0, -6), size=(12, 12, 12)),
         BlockFlammable(),
-        # Flowing water pops it off and drops its loot, like vanilla saplings
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.Popped,
         ),
@@ -115,7 +111,7 @@ def create(
         ItemDisplayName(value=display_name),
         ItemIcon(textures=TextureComponents(color=f"{wood}_sapling")),
     )
-    block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Sapling)
+    block.item.server.description.set_menu_category(ItemCategory.Nature, ItemGroups.Sapling)
 
     block.queue()
     return block

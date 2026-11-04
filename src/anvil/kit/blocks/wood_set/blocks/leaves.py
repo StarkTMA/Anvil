@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
@@ -24,15 +24,6 @@ from anvil.api.blocks.components import (
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockLiquidDetectionTouching,
-    BlockMaterial,
-    BlockSoundGroup,
-    ItemCategory,
-    ItemGroups,
-)
-from anvil.api.core.types import Identifier
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemCompostable,
@@ -43,7 +34,15 @@ from anvil.api.items.items import Item
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
 from anvil.api.world.loot_tables import LootTable
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockLiquidDetectionTouching,
+    BlockMaterial,
+    BlockSoundGroup,
+    ItemCategory,
+    ItemGroups,
+)
+from anvil.lib.jsonmodel.types import Color
 
 from ..components import BlockWoodSetLeaves
 from . import MAP_COLOR, MODEL
@@ -58,7 +57,7 @@ class LeafDrop:
     vanilla item like `minecraft:apple`).
     """
 
-    item: Item | Identifier
+    item: Item | str
     chance: float
     """The chance of the drop, from 0 to 1: `0.005` for the apple's 0.5%."""
     count: int | tuple[int, int] = 1
@@ -73,11 +72,10 @@ class LeafDrop:
             raise ValueError(f"A leaf drop's count range is invalid: {self.count}.")
 
     @property
-    def identifier(self) -> Identifier:
+    def identifier(self) -> str:
         return self.item.identifier if isinstance(self.item, Item) else self.item
 
 
-# Blocks that hold natural leaves up, from the kit's own blocks
 TRUNKS = ("log", "log_stripped", "wood", "wood_stripped")
 
 
@@ -95,13 +93,8 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Leaves"
 
-    # Off for leaves a player placed, which never decay. Whatever generates leaves (a feature,
-    # a jigsaw structure, a script) turns it on: only those leaves decay without a trunk.
     block.server.description.add_state("natural", (False, True))
 
-    # The loot table defines leaf drops with conditions:
-    # - Breaking with shears or silk touch drops the leaves block itself
-    # - Breaking without shears/silk touch (or decaying) drops saplings or sticks by chance
     loot = LootTable(f"{wood}_leaves")
 
     shears_pool = loot.pool()
@@ -152,7 +145,6 @@ def create(
         BlockSelectionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
         BlockMovable(movement_type="push_pull"),
         BlockFlammable(catch_chance_modifier=60, destroy_chance_modifier=30),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
@@ -177,11 +169,10 @@ def create(
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
-        # Vanilla recipes take leaves by this tag, like smelting them into leaf litter
         ItemTags(tags=[MinecraftItemTags.Leaves]),
         ItemCompostable(composting_chance=30),
     )
-    block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Leaves)
+    block.item.server.description.set_menu_category(ItemCategory.Nature, ItemGroups.Leaves)
 
     block.queue()
     return block

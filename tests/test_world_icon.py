@@ -1,27 +1,11 @@
-import os
-import shutil
-from unittest.mock import MagicMock
-import pytest
 from PIL import Image
 
-# Import CONFIG and pack_art
 import anvil.api.core.core as core
-from anvil.lib.config import ConfigPackageTarget
+from anvil.lib import config
 
 
 def test_pack_art_compiles_world_icon(tmp_path, monkeypatch):
-    # Change current working directory to tmp_path
     monkeypatch.chdir(tmp_path)
-
-    # Mock CONFIG properties
-    mock_config = MagicMock()
-    mock_config._TARGET = ConfigPackageTarget.WORLD
-    mock_config._WORLD_PATH = str(tmp_path / "world")
-    mock_config.BP_PATH = str(tmp_path / "bp")
-    mock_config.RP_PATH = str(tmp_path / "rp")
-
-    # Patch core.CONFIG
-    monkeypatch.setattr(core, "CONFIG", mock_config)
 
     # Create marketing directory
     marketing_dir = tmp_path / "marketing"
@@ -32,10 +16,11 @@ def test_pack_art_compiles_world_icon(tmp_path, monkeypatch):
     keyart_img.save(marketing_dir / "keyart.png")
 
     # Call pack_art
-    core.pack_art(apply_overlay=False)
+    with config.override(_TARGET="world", _LOCAL_EXPORT=True):
+        core.pack_art(apply_overlay=False)
+        world_icon_path = config.CONFIG._WORLD_PATH / "world_icon.jpeg"
 
     # Check that world_icon.jpeg was created in the world path
-    world_icon_path = tmp_path / "world" / "world_icon.jpeg"
     assert world_icon_path.exists()
 
     # Verify that the image can be opened and is resized
@@ -44,18 +29,7 @@ def test_pack_art_compiles_world_icon(tmp_path, monkeypatch):
 
 
 def test_pack_art_compiles_world_icon_with_overlay(tmp_path, monkeypatch):
-    # Change current working directory to tmp_path
     monkeypatch.chdir(tmp_path)
-
-    # Mock CONFIG properties
-    mock_config = MagicMock()
-    mock_config._TARGET = ConfigPackageTarget.WORLD
-    mock_config._WORLD_PATH = str(tmp_path / "world")
-    mock_config.BP_PATH = str(tmp_path / "bp")
-    mock_config.RP_PATH = str(tmp_path / "rp")
-
-    # Patch core.CONFIG
-    monkeypatch.setattr(core, "CONFIG", mock_config)
 
     # Create marketing directory
     marketing_dir = tmp_path / "marketing"
@@ -70,10 +44,11 @@ def test_pack_art_compiles_world_icon_with_overlay(tmp_path, monkeypatch):
     overlay_img.save(marketing_dir / "keyart_overlay.png")
 
     # Call pack_art with apply_overlay=True
-    core.pack_art(apply_overlay=True)
+    with config.override(_TARGET="world", _LOCAL_EXPORT=True):
+        core.pack_art(apply_overlay=True)
+        world_icon_path = config.CONFIG._WORLD_PATH / "world_icon.jpeg"
 
     # Check that world_icon.jpeg was created in the world path
-    world_icon_path = tmp_path / "world" / "world_icon.jpeg"
     assert world_icon_path.exists()
 
     # Verify image properties

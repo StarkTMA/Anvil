@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from anvil.api.models.geometry import _Cube, _CubeFace, _CubeFaces
 
@@ -8,16 +8,16 @@ from anvil.api.models.geometry import _Cube, _CubeFace, _CubeFaces
 @dataclass
 class _Mesh:
     name: str
-    vertices: Dict[str, List[float]]
-    faces: Dict[str, Any]
-    model_center_offset: List[float] = field(default_factory=lambda: [0, 0, 0])
+    vertices: dict[str, list[float]]
+    faces: dict[str, Any]
+    model_center_offset: list[float] = field(default_factory=lambda: [0, 0, 0])
     parent: str = "root"
 
     mesh_texture_multiplier: int = 64
 
     @classmethod
     def from_dict(
-        cls, data: dict, parent: str = "root", model_center_offset: List[float] = None
+        cls, data: dict, parent: str = "root", model_center_offset: list[float] = None
     ) -> "_Mesh":
         return cls(
             name=data.get("name", "mesh"),
@@ -28,7 +28,6 @@ class _Mesh:
         )
 
     def extract_cuboids(self):
-        # Re-implementation of extract_cuboids using internal data
         face_verts = {fid: set(face["vertices"]) for fid, face in self.faces.items()}
 
         vertex_to_faces = defaultdict(list)
@@ -59,7 +58,6 @@ class _Mesh:
             if fid in all_visited:
                 continue
 
-            # Extract a connected component of faces
             original_component = set()
             stack = [fid]
             while stack:
@@ -116,7 +114,7 @@ class _Mesh:
 
         return cuboids
 
-    def map_vertices(self, cube_origin: List[float], vertices: List[float]) -> str:
+    def map_vertices(self, cube_origin: list[float], vertices: list[float]) -> str:
         x_min = min(v[0] for v in vertices)
         y_min = min(v[1] for v in vertices)
         z_min = min(v[2] for v in vertices)
@@ -180,7 +178,6 @@ class _Mesh:
                 origin[2] + self.model_center_offset[2],
             ]
 
-            # Note: map_vertices expects specific args.
             direction = self.map_vertices(original_origin, vertices)
 
             uv[direction] = _CubeFace(
@@ -199,7 +196,6 @@ class _Mesh:
             cuboids = self.extract_cuboids()
 
             for cube_data in cuboids:
-                # Recursively create Mesh objects for sub-cuboids and compile them
                 m = _Mesh.from_dict(cube_data, self.parent, self.model_center_offset)
                 meshes.extend(m.compile())
             return meshes

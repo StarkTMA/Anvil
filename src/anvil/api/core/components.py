@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Annotated, ClassVar
 
-from anvil.api.core.enums import ControlFlags, FilterSubject, ItemCategory
 from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Molang
 from anvil.lib.jsonmodel import (
@@ -12,6 +11,7 @@ from anvil.lib.jsonmodel import (
     NonNegative,
     json_field,
 )
+from anvil.lib.jsonmodel.enums import ControlFlags, FilterSubject, ItemCategory
 
 
 class AIGoal(JsonComponent, abstract=True):

@@ -20,14 +20,6 @@ from anvil.api.blocks.components import (
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockMaterial,
-    BlockSoundGroup,
-    ItemCategory,
-    ItemGroups,
-    RecipeUnlockContext,
-)
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemDisplayName,
@@ -38,10 +30,18 @@ from anvil.api.items.crafting import ShapedCraftingRecipe, ShapelessRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockMaterial,
+    BlockSoundGroup,
+    ItemCategory,
+    ItemGroups,
+    RecipeUnlockContext,
+)
+from anvil.lib.jsonmodel.types import Color
+
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 1.5,
     MinecraftItemTags.StoneTier: 0.75,
@@ -100,20 +100,18 @@ def create(
         ),
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace, and its vanilla tag lets every vanilla wood recipe use it
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=15),
         ItemTags(tags=[MinecraftItemTags.Planks]),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.Planks
     )
 
     block.queue()
 
-    # 4 planks from any trunk block
     for trunk in ("log", "log_stripped", "wood", "wood_stripped"):
         if trunk in selected:
             recipe = ShapelessRecipe(f"{wood}_planks_from_{trunk}")
@@ -122,7 +120,6 @@ def create(
             recipe.unlock_context(RecipeUnlockContext.AlwaysUnlocked)
             recipe.queue()
 
-    # 1 plank from 2 slabs
     if "slab" in selected:
         slab = f"{namespace}:{wood}_slab"
         recipe = ShapedCraftingRecipe(f"{wood}_planks_from_slab")

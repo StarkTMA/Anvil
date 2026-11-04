@@ -2,8 +2,6 @@ from itertools import product
 
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
-    ItemDisplayGuiTransform,
-    ItemDisplayTransform,
     BlockCollisionBox,
     BlockConnectionRule,
     BlockDestructibleByExplosion,
@@ -23,11 +21,18 @@ from anvil.api.blocks.components import (
     BlockTagComponent,
     InstanceSpec,
     InstanceVariant,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
     ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
+from anvil.api.items.crafting import ShapedCraftingRecipe
+from anvil.api.logic.molang import Query
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
@@ -38,15 +43,10 @@ from anvil.api.core.enums import (
     ItemGroups,
     RecipeUnlockContext,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.logic.molang import Query
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
+
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 1.5,
     MinecraftItemTags.StoneTier: 0.75,
@@ -57,7 +57,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.25,
 }
 
-# (size, origin) for the central post and each connected arm
 POST = ([4, 24, 4], [-2, 0, -2])
 ARMS = {
     CardinalConnectionStates.North: ([2, 24, 6], [-1, 0, -8]),
@@ -79,8 +78,7 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Fence"
 
-    # Connects to its neighbours, with a collision and selection box per combination
-    block.server.description.traits.connection([ConnectionTrait.CardinalConnections])
+    block.server.description.traits.set_connection([ConnectionTrait.CardinalConnections])
 
     for combo in product([False, True], repeat=len(ARMS)):
         boxes = [POST]
@@ -96,7 +94,6 @@ def create(
         for size, origin in boxes[1:]:
             collision.add_box(origin=origin, size=size)
 
-        # Selection box: the bounding envelope of the active boxes
         min_x = min(origin[0] for _, origin in boxes)
         min_z = min(origin[2] for _, origin in boxes)
         max_x = max(origin[0] + size[0] for size, origin in boxes)
@@ -152,7 +149,6 @@ def create(
         ),
         BlockMovable(movement_type="push"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
@@ -175,13 +171,12 @@ def create(
         item_visual,
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=15),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.Fence
     )
 

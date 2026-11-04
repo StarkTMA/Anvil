@@ -27,17 +27,6 @@ from anvil.api.blocks.components import (
     NWayVisualRotation,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockLiquidDetectionTouching,
-    BlockMaterial,
-    BlockSoundGroup,
-    CardinalDirectionsValues,
-    ItemCategory,
-    ItemGroups,
-    PlacementDirectionTrait,
-    RecipeUnlockContext,
-)
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemDisplayName,
@@ -51,12 +40,23 @@ from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
 from anvil.api.world.loot_tables import LootTable
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockLiquidDetectionTouching,
+    BlockMaterial,
+    BlockSoundGroup,
+    CardinalDirectionsValues,
+    ItemCategory,
+    ItemGroups,
+    PlacementDirectionTrait,
+    RecipeUnlockContext,
+    SupportedBy,
+)
+from anvil.lib.jsonmodel.types import Color
 
-from ..components import BlockWoodSetSign, BlockWoodSetSupport, SupportedBy
+from ..components import BlockWoodSetSign, BlockWoodSetSupport
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 0.5,
     MinecraftItemTags.StoneTier: 0.25,
@@ -67,8 +67,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.1,
 }
 
-# Rotation (x, y, z) per direction the wall sign points at, i.e. towards the wall. The
-# `wall_sign` collection is modelled against the north wall of the block.
 WALL_ROTATIONS = {
     CardinalDirectionsValues.NORTH: (0, 0, 0),
     CardinalDirectionsValues.WEST: (0, 90, 0),
@@ -100,7 +98,7 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Sign"
 
-    block.server.description.traits.placement_direction(
+    block.server.description.traits.set_placement_direction(
         y_rotation_offset=180,
         traits=[
             PlacementDirectionTrait.SixteenWayRotation,
@@ -143,7 +141,6 @@ def create(
         BlockSelectionBox(origin=(-4, 0, -4), size=(8, 16, 8)),
         BlockMovable(movement_type="popped"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
@@ -179,10 +176,9 @@ def create(
         ItemDisplayName(value=display_name),
         ItemIcon(textures=TextureComponents(color=f"{wood}_sign")),
         ItemFuel(duration=10),
-        # Vanilla signs stack to 16
         ItemMaxStackSize(value=16),
     )
-    block.item.server.description.menu_category(ItemCategory.Items, ItemGroups.Sign)
+    block.item.server.description.set_menu_category(ItemCategory.Items, ItemGroups.Sign)
 
     block.queue()
 

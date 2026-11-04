@@ -1,5 +1,5 @@
 import base64
-import os
+from pathlib import Path
 
 from anvil.lib.config import CONFIG
 
@@ -10,7 +10,7 @@ class _TexturesManager:
         self._name = filename
         self._bbmodel = bbmodel
 
-        self._path = os.path.join(
+        self._path = Path(
             config.RP_PATH,
             "textures",
             config.NAMESPACE,
@@ -66,7 +66,6 @@ class _TexturesManager:
             layer_bytes = base64.b64decode(base64_data)
             layer_img = Image.open(io.BytesIO(layer_bytes)).convert("RGBA")
 
-            # Apply scale if not [1, 1]
             scale = layer.get("scale", [1, 1])
             if scale != [1, 1]:
                 new_width = int(round(layer_img.width * scale[0]))
@@ -76,7 +75,6 @@ class _TexturesManager:
                         (new_width, new_height), Image.Resampling.NEAREST
                     )
 
-            # Apply opacity directly to the alpha channel
             opacity = layer.get("opacity", 100) / 100.0
             if opacity < 1.0:
                 layer_img.putalpha(
@@ -86,7 +84,6 @@ class _TexturesManager:
             ox, oy = map(int, layer.get("offset", [0, 0]))
             blend_mode = layer.get("blend_mode", "default")
 
-            # Crop overlapping region to perform fast, native Pillow blending
             start_x, end_x = max(0, ox), min(width, ox + layer_img.width)
             start_y, end_y = max(0, oy), min(height, oy + layer_img.height)
 
@@ -124,7 +121,6 @@ class _TexturesManager:
                 )
                 blended_region = Image.alpha_composite(crop_base, blended_layer)
             else:
-                # Custom HSL color and divide modes fallback
                 px_b = crop_base.load()
                 px_l = crop_layer.load()
                 blended_region = crop_base.copy()
@@ -177,8 +173,8 @@ class _TexturesManager:
         from PIL import Image
 
         for texture, dest_dir in self._queued_textures.items():
-            path = dest_dir if dest_dir is not None else self._path
-            os.makedirs(path, exist_ok=True)
+            path = Path(dest_dir if dest_dir is not None else self._path)
+            path.mkdir(parents=True, exist_ok=True)
 
             tex_data = self._textures[texture]
             if tex_data.get("layers_enabled", False) and tex_data.get("layers"):
@@ -216,8 +212,6 @@ class _TexturesManager:
                     img = img.convert("RGB")
 
                 img.save(out_bytes, format=pil_format)
-                with open(os.path.join(path, f"{texture}.{ext}"), "wb") as file:
-                    file.write(out_bytes.getvalue())
+                (path / f"{texture}.{ext}").write_bytes(out_bytes.getvalue())
             else:
-                with open(os.path.join(path, f"{texture}.png"), "wb") as file:
-                    file.write(image_data)
+                (path / f"{texture}.png").write_bytes(image_data)

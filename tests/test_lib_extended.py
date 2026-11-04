@@ -1,21 +1,20 @@
 """Tests for anvil/lib/lib.py utilities not yet covered by test_lib.py."""
 
-import os
 import zipfile
 from pathlib import PurePosixPath
 
 import pytest
 
+from anvil.lib.jsonmodel.types import RGB, RGBA, HexRGB, HexRGBA
 from anvil.lib.lib import (
-    AnvilFormatter,
-    AnvilValidator,
     AnvilArchive,
+    AnvilFormatter,
     AnvilIO,
+    AnvilValidator,
     clamp,
     frange,
     salt_from_str,
 )
-from anvil.api.core.types import RGB, RGBA, RGB255, RGBA255, HexRGB, HexRGBA
 
 # ---------------------------------------------------------------------------
 # clamp
@@ -246,7 +245,7 @@ class TestAnvilArchive:
         zip_path = tmp_path / "out.zip"
         AnvilArchive.from_mapping(zip_path, {src: PurePosixPath("content")})
 
-        assert os.path.exists(zip_path)
+        assert zip_path.exists()
         with zipfile.ZipFile(zip_path) as zf:
             names = zf.namelist()
         assert any("hello.txt" in n for n in names)

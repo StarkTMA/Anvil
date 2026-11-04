@@ -1,7 +1,5 @@
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
-    ItemDisplayGuiTransform,
-    ItemDisplayTransform,
     BlockCollisionBox,
     BlockConnectionRule,
     BlockDestructibleByExplosion,
@@ -20,21 +18,12 @@ from anvil.api.blocks.components import (
     BlockTagComponent,
     InstanceSpec,
     InstanceVariant,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
     ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockLiquidDetectionTouching,
-    BlockMaterial,
-    BlockSoundGroup,
-    ItemCategory,
-    ItemGroups,
-    PlacementPositionTrait,
-    RecipeUnlockContext,
-    VerticalHalfValues,
-)
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemDisplayName,
@@ -45,12 +34,22 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockLiquidDetectionTouching,
+    BlockMaterial,
+    BlockSoundGroup,
+    ItemCategory,
+    ItemGroups,
+    PlacementPositionTrait,
+    RecipeUnlockContext,
+    VerticalHalfValues,
+)
+from anvil.lib.jsonmodel.types import Color
 
 from ..components import BlockWoodSetSlab
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 1.5,
     MinecraftItemTags.StoneTier: 0.75,
@@ -74,11 +73,10 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Slab"
 
-    block.server.description.traits.placement_position(
+    block.server.description.traits.set_placement_position(
         [PlacementPositionTrait.VerticalHalf]
     )
 
-    # A second slab placed on the open half sets `double`, making it a full block (script).
     block.server.description.add_state("double", (False, True))
 
     half = Query.BlockState(PlacementPositionTrait.VerticalHalf)
@@ -139,7 +137,6 @@ def create(
         ),
         BlockMovable(movement_type="push_pull"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
@@ -158,14 +155,13 @@ def create(
         item_visual,
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace, and its vanilla tag lets every vanilla wood recipe use it
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=7.5),
         ItemTags(tags=[MinecraftItemTags.WoodenSlabs]),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.Slab
     )
 

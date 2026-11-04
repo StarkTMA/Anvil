@@ -1,5 +1,6 @@
+from pathlib import Path
+
 import orjson
-import os
 
 try:
     import amulet
@@ -19,14 +20,12 @@ from anvil.lib.lib import Directory
 
 class LDtk:
     def _load_data(self):
-        with open(self._file, "rb") as f:
-            self._data = orjson.loads(f.read())
+        self._data = orjson.loads(self._file.read_bytes())
 
         if self._data["defaultGridSize"] != 16:
             raise ValueError("Grid size incompatible, must be 16px.")
 
     def _collect_tile_data(self):
-        # Collecting tile data
         for tileset in self._data["defs"]["tilesets"]:
             self.dictionary["tilesets"][tileset["uid"]] = {}
 
@@ -56,7 +55,6 @@ class LDtk:
                         )
 
     def _collect_level_data(self):
-        # Collecting level Data
         for level in self._data["levels"]:
             origin = [level["worldX"] // 16, level["worldY"] // 16]
             size = [abs(level["pxWid"]) // 16, abs(level["pxHei"]) // 16]
@@ -71,35 +69,24 @@ class LDtk:
                 "corner_1": [origin[0] + size[0], origin[1] - 64 + size[1]],
             }
             level_data = {}
-            # Levels saved in the same file
             if level.get("layerInstances") is not None:
                 level_data = level["layerInstances"]
 
             else:
-                with open(
-                    os.path.join("world", "ldtk", level["externalRelPath"]), "rb"
-                ) as File:
-                    level_data = orjson.loads(File.read())["layerInstances"]
+                level_data = orjson.loads(
+                    Path("world", "ldtk", level["externalRelPath"]).read_bytes()
+                )["layerInstances"]
 
-            # Level Layers
             for layer_ix, layer in enumerate(reversed(level_data)):
-                # Divide by 16 to normalize block/entity coordinates to the 16x tile grid
-                # Auto Tiles
-                # 0: No flips
-                # 1: X flip
-                # 2: Y flip
-                # 3: X and Y flip
                 for block in layer["autoLayerTiles"]:
                     self.dictionary["levels"][level["identifier"]]["tiles"].append(
                         {
                             "x": block["px"][0] / 16,
                             "y": block["px"][1] / 16,
                             "id": block["t"],
-                            # "rotation": 180 if block["f"] == 3 else 90 if block["f"] == 2 else 270 if block["f"] == 1 else 0,
                             "tileset_id": layer["__tilesetDefUid"],
                         }
                     )
-                # Grid Tiles
                 for block in layer["gridTiles"]:
                     self.dictionary["levels"][level["identifier"]]["tiles"].append(
                         {
@@ -109,10 +96,8 @@ class LDtk:
                             "tileset_id": layer["__tilesetDefUid"],
                         }
                     )
-                # Entities
                 for entity in layer["entityInstances"]:
                     dat = {}
-                    # Collecting Entity data per level
                     for tile_custom_data in entity["fieldInstances"]:
                         dat[tile_custom_data["__identifier"]] = tile_custom_data[
                             "__value"
@@ -132,19 +117,13 @@ class LDtk:
                         }
                     )
 
-    def _dump_dictionary(self):
-        with open(self._file.split(".")[0] + ".json", "wb") as File:
-            File.write(orjson.dumps(self.dictionary, option=orjson.OPT_NON_STR_KEYS))
-
     def _prepare_level(self):
         world = amulet.load_level(CONFIG._WORLD_PATH)
 
-        # The following deletes EVERYTHING, DO NOT USE IF YOU HAVE HAND BUILT STRUCTURES
         if self._clear_chunks:
             for chunk in world.all_chunk_coords("minecraft:overworld"):
                 world.delete_chunk(*chunk, "minecraft:overworld")
 
-        # The following creates chunks that are present only in LDtk
         for level in self.dictionary["levels"].values():
             for x in range(level["origin"][0], level["size"][0], 16):
                 for y in range(level["origin"][1], level["size"][1], 16):
@@ -165,14 +144,13 @@ class LDtk:
             filename (str): filename of the map, no extension.
             clear_chunks (bool, optional): If chunks should be cleared before writing to the map. Defaults to False.
         """
-        self._file = os.path.join("world", "ldtk", filename + ".ldtk")
+        self._file = Path("world", "ldtk", f"{filename}.ldtk")
         self.dictionary = {"tilesets": {}, "levels": {}, "entities": {}, "enums": []}
         self._clear_chunks = clear_chunks
         self._default_origin_block = default_origin_block
         self._load_data()
         self._collect_tile_data()
         self._collect_level_data()
-        # self._dump_dictionary()
 
     def convert(
         self,
@@ -183,7 +161,7 @@ class LDtk:
     ):
         import click
 
-        click.echo(click.style(f"\r[INFO]: Converting LDtk world...", fg="cyan"))
+        click.echo(click.style("\r[INFO]: Converting LDtk world...", fg="cyan"))
 
         def map_coordinates(level_origin, x, y, layer):
             if plane in ["yx", "xy"]:
@@ -213,7 +191,6 @@ class LDtk:
             world = self._prepare_level()
             for level_name, level in self.dictionary["levels"].items():
                 for tile in level["tiles"]:
-                    functions = {k: [] for k in self.dictionary["enums"]}
                     mapped_coords = map_coordinates(
                         level["origin"], tile["x"], tile["y"], level["layer"]
                     )
@@ -225,10 +202,10 @@ class LDtk:
                             .get(tile["id"])
                             .get("properties")
                         )
-                    except:
+                    except AttributeError as error:
                         raise KeyError(
                             f"Error retrieving custom data for tile id: [{tile['id']}]"
-                        )
+                        ) from error
 
                     properties = {
                         str(k): StringTag(v)
@@ -269,7 +246,6 @@ class LDtk:
                 level_entities = []
                 spawn_point = None
 
-                # Calculate corners in Minecraft coordinates using map_coordinates
                 corner_0_mc = map_coordinates(level["origin"], 0, 0, level["layer"])
                 corner_1_mc = map_coordinates(
                     level["origin"], level["size"][0], level["size"][1], level["layer"]
@@ -282,7 +258,7 @@ class LDtk:
 
                     entity_data = copy.deepcopy(entity["data"])
                     point = entity_data.get("point")
-                    if point != None:
+                    if point is not None:
                         cy = point.get("cy")
                         cx = point.get("cx")
                         if plane in ["yx", "xy", "yz", "zy"]:
@@ -296,7 +272,6 @@ class LDtk:
                         else:
                             point["cx"] = cx + level["origin"][0] + offset[0]
 
-                    # Check if the entity is called "spawn"
                     if entity["entity_id"].split(":")[-1] == "spawn":
                         spawn_point = {
                             "x": mapped_coords[0],
@@ -335,21 +310,11 @@ class LDtk:
             if entities.keys() == 0:
                 return
 
-            path = os.path.join(
-                "scripts",
-                "javascript",
-                "content",
-                "levels",
-            )
+            path = Path("scripts", "javascript", "content", "levels")
             Directory.create(path)
             for level_name, level_data in entities.items():
                 if len(level_data["entities"]) == 0:
                     continue
-                with open(
-                    os.path.join(
-                        path,
-                        level_name + ".json",
-                    ),
-                    "wb",
-                ) as File:
-                    File.write(orjson.dumps(level_data, option=orjson.OPT_INDENT_2))
+                (path / f"{level_name}.json").write_bytes(
+                    orjson.dumps(level_data, option=orjson.OPT_INDENT_2)
+                )

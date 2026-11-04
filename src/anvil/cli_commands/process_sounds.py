@@ -19,7 +19,6 @@ def process_file(
 
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # Write to a temporary file first
     temp_output: Path = output_file.with_suffix(".tmp.ogg")
 
     ffmpeg_cmd: list[str] = [
@@ -50,7 +49,6 @@ def process_file(
 
     try:
         subprocess.run(ffmpeg_cmd, check=True, capture_output=True)
-        # Replace the original file with the processed temp file
         temp_output.replace(output_file)
         return f"Processed: {relative_path}"
     except subprocess.CalledProcessError as e:
@@ -63,7 +61,6 @@ def process_file(
     "process-sounds",
     help="Batch process and normalize audio files in assets/sounds (DESTRUCTIVE: overwrites originals).",
 )
-# Removed threads option
 @click.option(
     "--target-lufs",
     default=DEFAULT_TARGET_LUFS,
@@ -110,4 +107,4 @@ def process_sounds(target_lufs, sample_rate, quality) -> None:
                     sample_rate,
                     quality,
                 )
-                print(result)
+                click.echo(result)

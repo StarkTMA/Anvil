@@ -1,8 +1,9 @@
-import os
-import tempfile
 import base64
-from PIL import Image
 import io
+import tempfile
+from pathlib import Path
+
+from PIL import Image
 
 from anvil.lib.blockbench import _TexturesManager
 
@@ -82,8 +83,8 @@ def test_texture_layer_blending():
         manager.__export__()
 
         # Verify that grass_side.tga was created in tmpdir
-        tga_path = os.path.join(tmpdir, "grass_side.tga")
-        assert os.path.exists(tga_path)
+        tga_path = Path(tmpdir, "grass_side.tga")
+        assert tga_path.exists()
 
         # Load the TGA and verify pixels match expected
         img = Image.open(tga_path).convert("RGBA")

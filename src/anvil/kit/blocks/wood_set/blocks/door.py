@@ -25,7 +25,17 @@ from anvil.api.blocks.components import (
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.items.components import (
+    ItemBlockPlacer,
+    ItemDisplayName,
+    ItemFuel,
+    ItemIcon,
+)
+from anvil.api.items.crafting import ShapedCraftingRecipe
+from anvil.api.logic.molang import Query
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
@@ -37,17 +47,7 @@ from anvil.api.core.enums import (
     PlacementDirectionTrait,
     RecipeUnlockContext,
 )
-from anvil.api.items.components import (
-    ItemBlockPlacer,
-    ItemDisplayName,
-    ItemFuel,
-    ItemIcon,
-)
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.logic.molang import Query
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
 
 from ..components import (
     BlockWoodSetDoor,
@@ -57,7 +57,6 @@ from ..components import (
 )
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 2.25,
     MinecraftItemTags.StoneTier: 1.15,
@@ -68,7 +67,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.4,
 }
 
-# Rotation (x, y, z) per direction the player is facing
 CARDINAL_ROTATIONS = {
     CardinalDirectionsValues.NORTH: (0, 0, 0),
     CardinalDirectionsValues.WEST: (0, 90, 0),
@@ -102,7 +100,6 @@ def _material(wood: str, texture: str) -> BlockMaterialInstance:
     )
 
 
-# Vanilla's sounds for it, which the scripts play when it opens and closes
 OPEN_SOUND = "open.wooden_door"
 CLOSE_SOUND = "close.wooden_door"
 
@@ -121,7 +118,7 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Door"
 
-    block.server.description.traits.placement_direction(
+    block.server.description.traits.set_placement_direction(
         y_rotation_offset=0, traits=[PlacementDirectionTrait.CardinalDirection]
     )
     for direction, rotation in CARDINAL_ROTATIONS.items():
@@ -129,12 +126,11 @@ def create(
             Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
         ).add(BlockTransformation(rotation=rotation))
 
-    block.server.description.traits.multi_block("up", 2)
+    block.server.description.traits.set_multi_block("up", 2)
     block.server.description.add_state("open", (False, True))
     block.server.description.add_state("powered", (False, True))
     block.server.description.add_state("hinge_right", (False, True))
 
-    # Part 0 is the lower half (base texture), part 1 the upper half.
     block.server.permutation(Query.BlockState(MultiblockPartState.Part) == 1).add(
         _material(wood, f"{wood}_door_top")
     )
@@ -184,7 +180,6 @@ def create(
         ),
         _material(wood, f"{wood}_door_bottom"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
@@ -203,8 +198,6 @@ def create(
         ),
         BlockRedstoneConsumer(min_power=0, propagates_power=True),
         BlockReplaceable(),
-        # Scripts: both halves open together, by players and by redstone; broken with
-        # the block below
         BlockWoodSetInteractable(
             multi_part=True,
             open_sound=open_sound,
@@ -219,14 +212,13 @@ def create(
         BlockWoodSetSupport(),
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=10),
         ItemIcon(textures=TextureComponents(color=f"{wood}_door")),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.Door
     )
 

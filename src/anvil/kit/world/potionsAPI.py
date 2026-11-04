@@ -1,7 +1,6 @@
 from dataclasses import dataclass
-from typing import Annotated, Dict, Optional, Union
+from typing import Annotated
 
-from anvil.api.actors.entity import Entity
 from anvil.api.actors.components import (
     BandwidthValues,
     EntityBodyRotationBlocked,
@@ -13,10 +12,8 @@ from anvil.api.actors.components import (
     EntityPushableByEntity,
     ProjectileOnHit,
 )
-from anvil.api.blocks.blocks import Block
+from anvil.api.actors.entity import Entity
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import ItemCategory
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA, Vector3D
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemCustomComponent,
@@ -36,12 +33,19 @@ from anvil.api.logic.molang import Query
 from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.vanilla.items import MinecraftItemTypes
 from anvil.lib.jsonmodel import InRange, RGBAColor, json_field
+from anvil.lib.jsonmodel.enums import ItemCategory
+from anvil.lib.jsonmodel.types import (
+    RGB,
+    RGB255,
+    RGBA,
+    RGBA255,
+    HexRGB,
+    HexRGBA,
+    Vector3D,
+)
 from anvil.lib.lib import AnvilFormatter
 
-# ========================== Utility Functions ===============================
-
-# Cache for formatted durations to avoid repeated calculations
-_duration_cache: Dict[int, str] = {}
+_duration_cache: dict[int, str] = {}
 
 
 def _format_duration(seconds: int) -> str:
@@ -55,30 +59,26 @@ def _format_duration(seconds: int) -> str:
 def create_universal_potion_projectile() -> Entity:
     """Create a single universal projectile entity for all potion types"""
     entity = Entity("potion_projectile")
-    entity.server.description.Summonable
+    entity.server.description.config(is_spawnable=False)
 
-    # Properties for potion configuration
-    entity.server.description.add_property.int("amplifier", (1, 255), default=1)
-    entity.server.description.add_property.int("duration", (1, 2**31 - 1), default=1)
-    entity.server.description.add_property.int(
+    entity.server.description.add_int_property("amplifier", (1, 255), default=1)
+    entity.server.description.add_int_property("duration", (1, 2**31 - 1), default=1)
+    entity.server.description.add_int_property(
         "type", (0, 2**31 - 1), default=0, client_sync=True
     )
-    entity.server.description.add_property.int(
+    entity.server.description.add_int_property(
         "effect_id", (0, 2**31 - 1), default=0, client_sync=True
     )
 
-    # Color properties for different potion effects
     for color in ["r", "g", "b", "a"]:
         default_val = 1.0 if color == "a" else 0.8
-        entity.server.description.add_property.float(
+        entity.server.description.add_float_property(
             f"color_{color}", (0, 1), default=default_val
         )
 
-    # Client description
     entity.client.description.animation("potion_model", "face_camera", True)
-    entity.client.description.geometry("potion_model")
+    entity.client.description.add_geometry("potion_model")
 
-    # Components - optimized grouping
     entity.server.components.add(
         EntityCollisionBox(height=0.25, width=0.25),
         EntityPhysics(),
@@ -105,9 +105,6 @@ def create_universal_potion_projectile() -> Entity:
     return entity
 
 
-# ========================== Potion Variant Classes ===============================
-
-
 @dataclass
 class PotionVariant:
     """Base class for all potion variants with common functionality."""
@@ -131,9 +128,8 @@ class PotionVariant:
         display_name = f"{title}\\n{subtitle}"
         icon_name = f"{config.effect_key}_{self.potion_type}_potion"
 
-        # Create item
         item = Item(f"{self.potion_type}_{config.effect_key}_potion_{index}")
-        item.server.description.menu_category(
+        item.server.description.set_menu_category(
             ItemCategory.Equipment, is_hidden_in_commands=True
         )
 
@@ -195,7 +191,7 @@ class Drinkable(PotionVariant):
 class Splash(PotionVariant):
     """Splash potion variant."""
 
-    duration: int = 135  # Default 75% of base duration
+    duration: int = 135
     projectile_offset: Vector3D = (0, 0, 0.3)
     projectile_angle: float = -20
     potion_type: str = "splash"
@@ -239,7 +235,7 @@ class Splash(PotionVariant):
         }
 
         for prop, value in properties.items():
-            event.set_property(prop, value)
+            event.add_property(prop, value)
 
 
 @dataclass
@@ -291,7 +287,7 @@ class Lingering(PotionVariant):
         }
 
         for prop, value in properties.items():
-            event.set_property(prop, value)
+            event.add_property(prop, value)
 
 
 @dataclass
@@ -309,7 +305,6 @@ class Tick(PotionVariant):
     ) -> Item:
         """Create base drinkable potion item."""
         item = super()._create_item(config, index, effect_component, projectile)
-        event_name = f"{config.effect_key}_tick_{index}"
 
         components = [ItemBlockPlacer()]
 
@@ -317,20 +312,17 @@ class Tick(PotionVariant):
         return item
 
 
-# ========================== Configuration Classes ===============================
-
-# Union of all variant types (now using the base class)
-PotionVariantType = Union[Drinkable, Splash, Lingering]
+PotionVariantType = Drinkable | Splash | Lingering
 
 
 @dataclass
 class Brewing:
     """Brewing recipe configuration"""
 
-    from_index: int  # Index of input potion (from variants list, -1 for awkward potion)
-    to_index: int  # Index of output potion (from variants list)
-    reagent: str  # Item ID or reagent name
-    unlock_reagent: Optional[str] = None  # Optional different unlock item
+    from_index: int
+    to_index: int
+    reagent: str
+    unlock_reagent: str | None = None
 
 
 @dataclass
@@ -342,17 +334,14 @@ class PotionConfig:
     effect_id: int
     color_hex: str
     variants: list[PotionVariantType]
-    brewing: Optional[list[Brewing]] = None
-
-
-# ========================== Main API Class ===============================
+    brewing: list[Brewing] | None = None
 
 
 class PotionAPI:
     """Optimized potion registration API"""
 
-    _projectile: Optional[Entity] = None
-    _component_cache: Dict[str, type] = {}
+    _projectile: Entity | None = None
+    _component_cache: dict[str, type] = {}
     _catalog: list = []
 
     @classmethod
@@ -410,28 +399,24 @@ class PotionAPI:
         """Setup render controller for projectile textures."""
         projectile = cls._get_projectile()
 
-        # Set up textures
         for texture in textures:
-            projectile.client.description.texture(
+            projectile.client.description.add_texture(
                 "potion_model", TextureComponents(color=texture)
             )
 
-        # Create render controller
         rc = projectile.client.description.render_controller(
             config.effect_key, Query.Property("effect_id") == config.effect_id
         )
-        rc.geometry("potion_model")
+        rc.set_geometry("potion_model")
         rc.texture_array("potions", textures)
-        rc.textures(f'Array.potions[{Query.Property("type")}]')
+        rc.add_texture(f'Array.potions[{Query.Property("type")}]')
 
     @classmethod
     def register(cls, config: PotionConfig) -> list[Item]:
         """Register a complete potion configuration."""
-        # Create effect component
         effect_component = cls._create_custom_component(config.effect_key)
         projectile = cls._get_projectile()
 
-        # Create all variant items and collect textures
         items = []
         textures = []
 
@@ -444,19 +429,15 @@ class PotionAPI:
                 textures.append(texture_name)
             items.append(item)
 
-        # Setup render controller
         cls._setup_render_controller(config, textures)
 
-        # Setup brewing recipes
         cls._setup_brewing_recipes(config, items)
 
-        # Add to catalog
         cls._catalog.append({config.effect_key: items})
 
         return items
 
 
-# ========================== API Exports ===================================
 __all__ = [
     "PotionAPI",
     "PotionConfig",

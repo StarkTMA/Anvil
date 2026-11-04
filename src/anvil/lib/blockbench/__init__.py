@@ -4,11 +4,12 @@ into the builders of `anvil.api.models` (geometry, animations, voxel shapes) plu
 Not meant to be used directly: entities, blocks and items load models through it.
 """
 
-import orjson
-import os
+from pathlib import Path
 
 import click
-from anvil.api.core.types import Vector2D
+import orjson
+from packaging.version import Version
+
 from anvil.lib.blockbench.animations import _AnimationsManager
 from anvil.lib.blockbench.common import _blockbench_geometry_name, _BlockBenchSource
 from anvil.lib.blockbench.model import (
@@ -17,7 +18,7 @@ from anvil.lib.blockbench.model import (
     _ModelManager,
 )
 from anvil.lib.blockbench.textures import _TexturesManager
-from packaging.version import Version
+from anvil.lib.jsonmodel.types import Vector2D
 
 
 class _Blockbench:
@@ -51,29 +52,27 @@ class _Blockbench:
         try:
             self._load(filename, source)
         except Exception:
-            # Do not leave a half-initialised model in the cache.
             _Blockbench._loaded_blockbench_models.pop(filename, None)
             raise
 
     def _load(self, filename: str, source: str) -> None:
-        self._path = os.path.join("assets", "bbmodels", f"{filename}.bbmodel")
+        self._path = Path("assets", "bbmodels", f"{filename}.bbmodel")
         self._source = source
 
-        if os.path.exists(self._path):
-            with open(self._path, "rb") as model:
-                self.bbmodel = orjson.loads(model.read())
-                if self.bbmodel["model_identifier"] != filename:
-                    raise ValueError(
-                        f"Blockbench model identifier mismatch: expected '{filename}', found '{self.bbmodel['model_identifier']}'."
-                    )
+        if self._path.exists():
+            self.bbmodel = orjson.loads(self._path.read_bytes())
+            if self.bbmodel["model_identifier"] != filename:
+                raise ValueError(
+                    f"Blockbench model identifier mismatch: expected '{filename}', found '{self.bbmodel['model_identifier']}'."
+                )
 
-                if Version(self.bbmodel["meta"]["format_version"]) < Version("5.0"):
-                    raise ValueError(
-                        f"'{filename}.bbmodel' Blockbench model format version '{self.bbmodel['meta']['format_version']}' is not supported. Please update your models with Blockbench 5.0 or higher to export the model."
-                    )
+            if Version(self.bbmodel["meta"]["format_version"]) < Version("5.0"):
+                raise ValueError(
+                    f"'{filename}.bbmodel' Blockbench model format version '{self.bbmodel['meta']['format_version']}' is not supported. Please update your models with Blockbench 5.0 or higher to export the model."
+                )
         else:
             raise FileNotFoundError(
-                f"{filename}.bbmodel not found in {os.path.join('assets', 'bbmodels')}. Please ensure the file exists."
+                f"{filename}.bbmodel not found in {Path('assets', 'bbmodels')}. Please ensure the file exists."
             )
 
         self.model = _ModelManager(filename, source, self.bbmodel)
@@ -95,13 +94,12 @@ class _Blockbench:
         if len(meshes) > 0:
             click.echo(
                 click.style(
-                    f"\r[INFO]: Some Blockbench models are using a Wavefront format. This is not fully supported and it may not work correctly.",
+                    "\r[INFO]: Some Blockbench models are using a Wavefront format. This is not fully supported and it may not work correctly.",
                     fg="yellow",
                 )
             )
 
 
-# Used by the API modules (and tests) through `anvil.lib.blockbench`
 __all__ = [
     "_Blockbench",
     "_BlockBenchSource",

@@ -41,19 +41,18 @@ feature, which `/place feature` builds at its position. See docs/kit for the det
 
 import shutil
 import sys
+from collections.abc import Callable, Iterable
 from enum import Flag, auto
 from pathlib import Path
-from typing import Callable, Iterable, NamedTuple
+from typing import NamedTuple
 
 from anvil.api.actors.entity import Entity
 from anvil.api.blocks.blocks import Block
-from anvil.api.core.enums import ItemCategory
-from anvil.api.core.enums import BlockSoundGroup
-from anvil.api.core.types import Identifier
 from anvil.api.features import Feature
 from anvil.api.items.crafting import CraftingItemCatalog
 from anvil.api.items.items import Item
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import BlockSoundGroup, ItemCategory
+from anvil.lib.jsonmodel.types import Color
 
 from .blocks import (
     BOAT_MODEL,
@@ -183,7 +182,7 @@ class WoodSet(dict[str, WoodSetPart]):
         self.name = name
         self.own_creative_group = own_creative_group
         self._tree = None
-        self.tree_feature: Feature | Identifier | None = None
+        self.tree_feature: Feature | str | None = None
         """The feature the saplings grow into, once the set is built."""
         self._drops: list[LeafDrop] = []
         self._leaf_distance = 4
@@ -192,14 +191,13 @@ class WoodSet(dict[str, WoodSetPart]):
         self._soil = list(sapling.DEFAULT_SOIL)
         self._built = False
 
-        # `exclude` is one WoodBlock (they combine with `|`) or a list of them
         excluded = WoodBlock(0)
         for kind in [exclude] if isinstance(exclude, WoodBlock) else exclude:
             excluded |= kind
         self.blocks = WoodBlock.ALL & ~excluded
 
     def tree(
-        self, tree: Feature | Identifier | Callable[["WoodSet"], Feature | Identifier]
+        self, tree: Feature | str | Callable[["WoodSet"], Feature | str]
     ) -> "WoodSet":
         """Sets the feature the saplings grow into: a `Feature`, its identifier, or a function
         that builds it from the set once its blocks exist (so the tree can use them). The
@@ -209,13 +207,13 @@ class WoodSet(dict[str, WoodSetPart]):
         return self
 
     def leaf_drop(
-        self, item: Item | Identifier, chance: float, count: int | tuple[int, int] = 1
+        self, item: Item | str, chance: float, count: int | tuple[int, int] = 1
     ) -> "WoodSet":
         """Adds an item the leaves drop by chance, like the apple of oak (`LeafDrop`)."""
         self._drops.append(LeafDrop(item, chance, count))
         return self
 
-    def sapling_on(self, blocks: Iterable[Identifier | object]) -> "WoodSet":
+    def sapling_on(self, blocks: Iterable[str | object]) -> "WoodSet":
         """Sets the blocks the sapling can be planted on (by default dirt, grass, sand...).
         Accepts identifiers and block descriptors like `MinecraftBlockTypes.Sand()`."""
         self._soil = [str(block) for block in blocks]
@@ -270,11 +268,8 @@ class WoodSet(dict[str, WoodSetPart]):
 
         _offer_base_models()
 
-        # Block names like "log_stripped", so each block knows what else is in the set
         selected = {kind.name.lower() for kind in BLOCKS if kind in self.blocks}
 
-        # What the blocks that need more than their name are given. The sapling comes last
-        # in `BLOCKS`: the tree it grows can then be built from the other blocks.
         extra_arguments = {
             WoodBlock.LEAVES: lambda: (self._drops, self._leaf_distance),
             WoodBlock.SAPLING: lambda: (self._resolve_tree(), self._soil),
@@ -296,7 +291,7 @@ class WoodSet(dict[str, WoodSetPart]):
         self._built = True
         return self
 
-    def _resolve_tree(self) -> Feature | Identifier:
+    def _resolve_tree(self) -> Feature | str:
         """The tree feature, built now if it was given as a function."""
         self.tree_feature = self._tree(self) if callable(self._tree) else self._tree
         return self.tree_feature
@@ -308,10 +303,8 @@ class WoodSet(dict[str, WoodSetPart]):
         self[kind.name.lower()] = WoodSetPart(block, item)
 
 
-# The base models shipped with Anvil, which `_offer_base_models` copies on request
 BASE_MODELS = Path(__file__).parent / "models"
 
-# The parts that are entities, which have no map color
 ENTITY_PARTS = {WoodBlock.BOAT, WoodBlock.CHEST_BOAT}
 
 BLOCKS = {
@@ -341,9 +334,7 @@ def create_wood_set(
     name: str,
     exclude: WoodBlock | Iterable[WoodBlock] = (),
     *,
-    tree: (
-        Feature | Identifier | Callable[[WoodSet], Feature | Identifier] | None
-    ) = None,
+    tree: Feature | str | Callable[[WoodSet], Feature | str] | None = None,
     leaf_drops: Iterable[LeafDrop] = (),
     map_color: Color = MAP_COLOR,
     own_creative_group: bool = False,
@@ -392,7 +383,6 @@ def _offer_base_models() -> None:
 
 def _add_creative_group(name: str, items: list[Item]) -> None:
     """Move the items out of their vanilla groups into a group of their own."""
-    # The first item is the planks when selected, which makes the group's icon
     CraftingItemCatalog().add_group(
         ItemCategory.Construction,
         f"{name.replace('_', ' ').title()} Wood",

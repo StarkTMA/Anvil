@@ -2,16 +2,17 @@ import copy
 import re
 import sys
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import MISSING, dataclass, field, fields, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Iterator, List
+from typing import Any
 
 import click
 import orjson
-from anvil.__version__ import __version__
+
 from anvil.lib.format_versions import MANIFEST_BUILD
 from anvil.lib.lib import (
     PREVIEW_COM_MOJANG,
@@ -151,7 +152,7 @@ class Config:
         self,
         section: str,
         option: str,
-        value: str | bool | int | float | List[str | bool | int | float],
+        value: str | bool | int | float | list[str | bool | int | float],
     ) -> None:
         """Sets a value in the anvilconfig.json file.
 

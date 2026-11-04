@@ -1,7 +1,5 @@
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
-    ItemDisplayGuiTransform,
-    ItemDisplayTransform,
     BlockCollisionBox,
     BlockConnectionRule,
     BlockDestructibleByExplosion,
@@ -22,11 +20,19 @@ from anvil.api.blocks.components import (
     BlockTransformation,
     InstanceSpec,
     InstanceVariant,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
     ItemTagFilter,
     MaterialParams,
 )
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
+from anvil.api.items.crafting import ShapedCraftingRecipe
+from anvil.api.logic.molang import Query
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.jsonmodel.enums import (
     BlockCornerState,
     BlockCornerValues,
     BlockFaceValues,
@@ -41,16 +47,10 @@ from anvil.api.core.enums import (
     RecipeUnlockContext,
     VerticalHalfValues,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.logic.molang import Query
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.schemas import MinecraftBlockDescriptor
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
+
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 1.5,
     MinecraftItemTags.StoneTier: 0.75,
@@ -61,7 +61,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.25,
 }
 
-# Rotation (x, y, z) per direction the player is facing
 CARDINAL_ROTATIONS = {
     CardinalDirectionsValues.NORTH: (0, 0, 0),
     CardinalDirectionsValues.WEST: (0, 90, 0),
@@ -69,7 +68,6 @@ CARDINAL_ROTATIONS = {
     CardinalDirectionsValues.EAST: (0, 270, 0),
 }
 
-# Upper quadrants: origin, then the (equal, corner) visibility rule for bottom and top stairs
 QUADRANTS = {
     "outer_right": (
         (-8, 8, 0),
@@ -102,15 +100,13 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Stairs"
 
-    block.server.description.traits.placement_direction(
+    block.server.description.traits.set_placement_direction(
         traits=[PlacementDirectionTrait.CornerAndCardinalDirection],
         blocks_to_corner_with=[
-            MinecraftBlockDescriptor(
-                tags=Query.AllTags([MinecraftBlockTags.CornerableStairs])
-            )
+            BlockDescriptor(tags=Query.AllTags([MinecraftBlockTags.CornerableStairs]))
         ],
     )
-    block.server.description.traits.placement_position(
+    block.server.description.traits.set_placement_position(
         [PlacementPositionTrait.VerticalHalf]
     )
 
@@ -119,7 +115,6 @@ def create(
     bottom = half == VerticalHalfValues.BOTTOM
     top = half == VerticalHalfValues.TOP
 
-    # Each upper quadrant is a bone, visible when `(corner == value) == equal`.
     geometry = BlockGeometry(
         blockbench=MODEL,
         collection="stairs",
@@ -132,7 +127,6 @@ def create(
         }
     )
 
-    # Collision: the lower slab plus the upper quadrants visible for each half/corner.
     for h, rule_index in (
         (VerticalHalfValues.BOTTOM, 0),
         (VerticalHalfValues.TOP, 1),
@@ -143,11 +137,9 @@ def create(
                 equal, rule_value = rules[rule_index]
                 if (value == rule_value) == equal:
                     x, y, z = origin
-                    # Collision x is mirrored relative to the geometry's x.
                     collision.add_box(origin=(-x - 8, y, z), size=(8, 8, 8))
             block.server.permutation((half == h) & (corner == value)).add(collision)
 
-    # Rotation: towards the player, y+180 on the bottom half, flipped upside down on the top
     for direction, (x, y, z) in CARDINAL_ROTATIONS.items():
         facing = (
             Query.BlockState(PlacementDirectionTrait.CardinalDirection) == direction
@@ -197,7 +189,6 @@ def create(
         BlockSelectionBox(origin=(-8, 0, -8), size=(16, 16, 16)),
         BlockMovable(movement_type="push_pull"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
@@ -219,13 +210,12 @@ def create(
         BlockSupport(shape="stair"),
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=15),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.Stairs
     )
 

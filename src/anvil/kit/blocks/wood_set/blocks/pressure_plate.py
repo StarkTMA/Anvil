@@ -1,7 +1,5 @@
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
-    ItemDisplayGuiTransform,
-    ItemDisplayTransform,
     BlockCollisionBox,
     BlockConnectionRule,
     BlockDestructibleByExplosion,
@@ -24,11 +22,18 @@ from anvil.api.blocks.components import (
     BlockTransformation,
     InstanceSpec,
     InstanceVariant,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
     ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
+from anvil.api.items.crafting import ShapedCraftingRecipe
+from anvil.api.logic.molang import Query
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
@@ -37,22 +42,16 @@ from anvil.api.core.enums import (
     ItemGroups,
     PlacementPositionTrait,
     RecipeUnlockContext,
+    SupportedBy,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.logic.molang import Query
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
 
 from ..components import (
     BlockWoodSetSupport,
     BlockWoodSetTogglable,
-    SupportedBy,
 )
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 0.4,
     MinecraftItemTags.StoneTier: 0.2,
@@ -64,7 +63,6 @@ AXE_SPEEDS = {
 }
 
 
-# Vanilla's sounds for it, which the script plays when it is stepped on and released
 ON_SOUND = "click_on.wooden_pressure_plate"
 OFF_SOUND = "click_off.wooden_pressure_plate"
 
@@ -83,14 +81,13 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Pressure Plate"
 
-    block.server.description.traits.placement_position(
+    block.server.description.traits.set_placement_position(
         [PlacementPositionTrait.BlockFace]
     )
     block.server.description.add_state("powered", (False, True))
     block.server.permutation(Query.BlockState("powered")).add(
         BlockRedstoneProducer(power=15, strongly_powered_face=BlockFaceValues.Up),
         BlockTransformation(translation=(0, -0.5 / 16, 0)),
-        # Ticks only while pressed, to release; idle plates don't tick
         BlockTick(interval_range=(20, 20), looping=True),
     )
     block.server.permutation(~Query.BlockState("powered")).add(
@@ -152,7 +149,6 @@ def create(
         BlockRedstoneConductivity(
             allows_wire_to_step_down=True, redstone_conductor=True
         ),
-        # Format 1.26.20+ wants it in the base components too when a permutation sets it
         BlockRedstoneProducer(power=0, strongly_powered_face=BlockFaceValues.Down),
         BlockPlacementFilter().add_condition(
             allowed_faces=[BlockFaceValues.Up, BlockFaceValues.Side]
@@ -162,9 +158,6 @@ def create(
             can_contain_liquid=True,
             use_liquid_clipping=True,
         ),
-        # and only the powered permutation above keeps ticking
-        # The script's onTick needs a tick in the base components: it ticks once and stops,
-        # Scripts: pressed when stepped on and released on tick, broken with its support.
         BlockTick(interval_range=(20, 20), looping=False),
         BlockWoodSetTogglable(
             on_interact=False,
@@ -175,13 +168,12 @@ def create(
         item_visual,
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=15),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Items, ItemGroups.PressurePlate
     )
 

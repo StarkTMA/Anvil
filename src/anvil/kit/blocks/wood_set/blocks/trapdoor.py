@@ -1,7 +1,5 @@
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
-    ItemDisplayGuiTransform,
-    ItemDisplayTransform,
     BlockCollisionBox,
     BlockConnectionRule,
     BlockDestructibleByExplosion,
@@ -22,11 +20,18 @@ from anvil.api.blocks.components import (
     BlockTransformation,
     InstanceSpec,
     InstanceVariant,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
     ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
+from anvil.api.items.crafting import ShapedCraftingRecipe
+from anvil.api.logic.molang import Query
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockLiquidDetectionTouching,
     BlockMaterial,
@@ -39,12 +44,7 @@ from anvil.api.core.enums import (
     RecipeUnlockContext,
     VerticalHalfValues,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
-from anvil.api.items.crafting import ShapedCraftingRecipe
-from anvil.api.logic.molang import Query
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
 
 from ..components import (
     BlockWoodSetInteractable,
@@ -52,7 +52,6 @@ from ..components import (
 )
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 1.5,
     MinecraftItemTags.StoneTier: 0.75,
@@ -63,7 +62,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.25,
 }
 
-# Rotation (x, y, z) per direction the player is facing
 CARDINAL_ROTATIONS = {
     CardinalDirectionsValues.NORTH: (0, 0, 0),
     CardinalDirectionsValues.WEST: (0, 90, 0),
@@ -72,7 +70,6 @@ CARDINAL_ROTATIONS = {
 }
 
 
-# Vanilla's sounds for it, which the scripts play when it opens and closes
 OPEN_SOUND = "open.wooden_trapdoor"
 CLOSE_SOUND = "close.wooden_trapdoor"
 
@@ -91,11 +88,10 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Trapdoor"
 
-    # Rotation: towards the player, y+180 on the bottom half, flipped upside down on the top
-    block.server.description.traits.placement_direction(
+    block.server.description.traits.set_placement_direction(
         y_rotation_offset=0, traits=[PlacementDirectionTrait.CardinalDirection]
     )
-    block.server.description.traits.placement_position(
+    block.server.description.traits.set_placement_position(
         [PlacementPositionTrait.VerticalHalf]
     )
     half = Query.BlockState(PlacementPositionTrait.VerticalHalf)
@@ -165,7 +161,6 @@ def create(
         ),
         BlockMovable(movement_type="popped"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
@@ -185,7 +180,6 @@ def create(
             allows_wire_to_step_down=False, redstone_conductor=False
         ),
         BlockRedstoneConsumer(min_power=0, propagates_power=True),
-        # Scripts: opened by players and by redstone
         BlockWoodSetInteractable(
             open_sound=open_sound,
             close_sound=close_sound,
@@ -197,13 +191,12 @@ def create(
         item_visual,
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=15),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Construction, ItemGroups.Trapdoor
     )
 

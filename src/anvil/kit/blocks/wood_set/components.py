@@ -1,13 +1,12 @@
 """The custom components the wood set blocks use, one per script in `typescript/`."""
 
-from enum import StrEnum
 from typing import Annotated
 
 from anvil.api.blocks.components import BlockCustomComponent
 from anvil.lib.jsonmodel import AtLeastOne, Chance, InRange, Positive, json_field
+from anvil.lib.jsonmodel.enums import SupportedBy
 
 __all__ = [
-    "SupportedBy",
     "BlockWoodSetSupport",
     "BlockWoodSetTogglable",
     "BlockWoodSetInteractable",
@@ -23,20 +22,6 @@ __all__ = [
 
 class _WoodSetComponent(BlockCustomComponent, abstract=True):
     """Base of the wood set components, named `<namespace>:wood_set_<name>`."""
-
-
-class SupportedBy(StrEnum):
-    """Where the block holding up a supported block is."""
-
-    Below = "below"
-    """The block below."""
-    BlockFace = "block_face"
-    """The block it was placed against, read from `minecraft:block_face`."""
-    Facing = "facing"
-    """The block its `minecraft:cardinal_direction` points at."""
-    Sign = "sign"
-    """The block below when its `standing` state is on, otherwise the block its
-    `minecraft:cardinal_direction` points at."""
 
 
 class BlockWoodSetSupport(_WoodSetComponent):

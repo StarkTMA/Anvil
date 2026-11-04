@@ -25,18 +25,6 @@ from anvil.api.blocks.components import (
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockLiquidDetectionTouching,
-    BlockMaterial,
-    BlockSoundGroup,
-    CardinalDirectionsValues,
-    ItemCategory,
-    ItemGroups,
-    PlacementDirectionTrait,
-    PlacementPositionTrait,
-    RecipeUnlockContext,
-)
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemDisplayName,
@@ -49,12 +37,24 @@ from anvil.api.logic.molang import Query
 from anvil.api.pbr.texture_set import TextureComponents
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags, MinecraftItemTypes
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockLiquidDetectionTouching,
+    BlockMaterial,
+    BlockSoundGroup,
+    CardinalDirectionsValues,
+    ItemCategory,
+    ItemGroups,
+    PlacementDirectionTrait,
+    PlacementPositionTrait,
+    RecipeUnlockContext,
+    SupportedBy,
+)
+from anvil.lib.jsonmodel.types import Color
 
-from ..components import BlockWoodSetSign, BlockWoodSetSupport, SupportedBy
+from ..components import BlockWoodSetSign, BlockWoodSetSupport
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 0.5,
     MinecraftItemTags.StoneTier: 0.25,
@@ -65,13 +65,9 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.1,
 }
 
-# The two exclusive bones of the `hanging_sign` collection: the bar across the top that
-# hangs it on a wall, and the chains up to the block above
 SIDE_BONE = "top_bit"
 BOTTOM_BONE = "top_chain"
 
-# Hung under a block: rotation (x, y, z) per direction the player faced when placing it.
-# The `hanging_sign` collection is modelled with its board facing north and south.
 BOTTOM_ROTATIONS = {
     CardinalDirectionsValues.NORTH: (0, 0, 0),
     CardinalDirectionsValues.WEST: (0, 90, 0),
@@ -79,9 +75,6 @@ BOTTOM_ROTATIONS = {
     CardinalDirectionsValues.EAST: (0, 270, 0),
 }
 
-# Hung on the side of a block: rotation per face it was placed on. The side bone's bar
-# runs west to east, so at rotation 0 it hangs from the block to the west (placed on its
-# east face).
 SIDE_ROTATIONS = {
     BlockFaceValues.East: (0, 0, 0),
     BlockFaceValues.North: (0, 90, 0),
@@ -102,12 +95,10 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Hanging Sign"
 
-    # Which way the player faced, and which face it was placed on: under a block it hangs
-    # facing the player, on the side of a block it hangs from that block
-    block.server.description.traits.placement_direction(
+    block.server.description.traits.set_placement_direction(
         y_rotation_offset=0, traits=[PlacementDirectionTrait.CardinalDirection]
     )
-    block.server.description.traits.placement_position(
+    block.server.description.traits.set_placement_position(
         [PlacementPositionTrait.BlockFace]
     )
     face = Query.BlockState(PlacementPositionTrait.BlockFace)
@@ -122,7 +113,6 @@ def create(
             BlockTransformation(rotation=rotation)
         )
 
-    # Selectable: the board and its chains, plus the bar across the block on a wall
     block.server.permutation(hung_under).add(
         BlockSelectionBox(origin=(-7, 0, -1), size=(14, 16, 2))
     )
@@ -149,15 +139,12 @@ def create(
                 blockbench=MODEL,
                 face=BlockFaceValues.All,
                 variations=[InstanceVariant(color=f"{wood}_hanging_sign")],
-                # The chains are flat cut-outs seen from both sides
                 params=MaterialParams(render_method=BlockMaterial.AlphaTest),
             )
         ),
-        # Walked through like a vanilla sign
         BlockCollisionBox(enabled=False),
         BlockMovable(movement_type="popped"),
         BlockFlammable(),
-        # Waterloggable like vanilla Bedrock: water flows into it and stays
         BlockLiquidDetection().add_detection_rule(
             on_liquid_touches=BlockLiquidDetectionTouching.NoReaction,
             can_contain_liquid=True,
@@ -176,30 +163,24 @@ def create(
             allowed_faces=[BlockFaceValues.Down, BlockFaceValues.Side]
         ),
         BlockTick(interval_range=(1, 1), looping=True),
-        # The text lives in the block entity's dynamic properties
         BlockEntity(dynamic_properties=True),
-        # Script: asks for the text when placed, and again when interacted with; shown on
-        # both sides of the board (14 x 10, 2 thick, centred), in the middle of its height
         BlockWoodSetSign(
             text_offset=(8, 3.2, 9.1),
             text_scale=0.53,
             line_length=9,
             double_sided=False,
         ),
-        # Breaks with the block its block face was placed on
         BlockWoodSetSupport(supported_by=SupportedBy.BlockFace),
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemIcon(textures=TextureComponents(color=f"{wood}_hanging_sign")),
         ItemFuel(duration=10),
-        # Vanilla signs stack to 16
         ItemMaxStackSize(value=16),
     )
-    block.item.server.description.menu_category(
+    block.item.server.description.set_menu_category(
         ItemCategory.Items, ItemGroups.HangingSign
     )
 

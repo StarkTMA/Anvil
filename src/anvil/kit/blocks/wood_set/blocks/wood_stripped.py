@@ -21,16 +21,6 @@ from anvil.api.blocks.components import (
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockMaterial,
-    BlockSoundGroup,
-    FacingDirectionValues,
-    ItemCategory,
-    ItemGroups,
-    PlacementPositionTrait,
-    RecipeUnlockContext,
-)
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemDisplayName,
@@ -41,10 +31,20 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockMaterial,
+    BlockSoundGroup,
+    FacingDirectionValues,
+    ItemCategory,
+    ItemGroups,
+    PlacementPositionTrait,
+    RecipeUnlockContext,
+)
+from anvil.lib.jsonmodel.types import Color
+
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 3,
     MinecraftItemTags.StoneTier: 1.5,
@@ -55,7 +55,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.35,
 }
 
-# Rotation (x, y, z) per face the block was placed against
 FACE_ROTATIONS = {
     FacingDirectionValues.NORTH: (270, 0, 0),
     FacingDirectionValues.SOUTH: (90, 0, 0),
@@ -78,7 +77,7 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Wood Stripped"
 
-    block.server.description.traits.placement_position(
+    block.server.description.traits.set_placement_position(
         [PlacementPositionTrait.BlockFace]
     )
     for direction, rotation in FACE_ROTATIONS.items():
@@ -97,7 +96,6 @@ def create(
         BlockDisplayName(value=display_name),
         mining,
         BlockGeometry(),
-        # Stripped wood on every face
         BlockMaterialInstance().add_instance(
             spec=InstanceSpec(
                 blockbench=MODEL,
@@ -126,14 +124,13 @@ def create(
         ),
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace, and its vanilla tag lets every vanilla wood recipe use it
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=15),
         ItemTags(tags=[MinecraftItemTags.Logs, MinecraftItemTags.LogsThatBurn]),
     )
-    block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Wood)
+    block.item.server.description.set_menu_category(ItemCategory.Nature, ItemGroups.Wood)
 
     block.queue()
 

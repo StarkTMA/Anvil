@@ -1,26 +1,25 @@
 """A collection of useful functions and classes used throughout the program."""
 
-import inspect
 import os
-import re
 import shutil
 import subprocess
 import sys
 import zipfile
 from datetime import datetime
 from enum import StrEnum
-from functools import wraps
 from pathlib import Path, PurePosixPath
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 import click
 import orjson
 import requests
 
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, Color, HexRGB, HexRGBA
 from anvil.lib.format_versions import MANIFEST_BUILD
 
 from ..__version__ import __version__
+
+if TYPE_CHECKING:
+    from anvil.lib.jsonmodel.types import Color
 
 
 def validate_platform() -> None:
@@ -123,12 +122,10 @@ class AnvilIO:
         "mcfunction": "#",
         "lang": "##",
     }
-    _BLOCK_DESCRIPTOR_NAMES = frozenset({"MinecraftBlockDescriptor", "Block"})
     _IDENTIFIER_NAMES = frozenset(
         {
-            "MinecraftItemDescriptor",
-            "MinecraftEntityDescriptor",
-            "MinecraftBiomeDescriptor",
+            "Biome",
+            "Block",
             "Item",
             "Entity",
         }
@@ -194,9 +191,6 @@ class AnvilIO:
 
         class_name = value.__class__.__name__
 
-        if class_name in cls._BLOCK_DESCRIPTOR_NAMES:
-            return cls._normalize_json_like(value.descriptor())
-
         if class_name in cls._IDENTIFIER_NAMES:
             return cls._normalize_json_like(value.identifier)
 
@@ -232,7 +226,7 @@ class AnvilIO:
 
     @classmethod
     def _parse_json_like(
-        cls, content: str | bytes | Dict | List, minify: bool = False
+        cls, content: str | bytes | dict | list, minify: bool = False
     ) -> bytes:
         return cls._dump_json_like(content, minify=minify)
 
@@ -240,10 +234,9 @@ class AnvilIO:
     def file(
         cls,
         name: str,
-        content: str | bytes | Dict | List,
+        content: str | bytes | dict | list,
         directory: str | Path,
         mode: str,
-        **parameters,
     ):
         """
         Create or modify a file with the given content.
@@ -253,7 +246,6 @@ class AnvilIO:
             content (Any): The content of the file.
             directory (str | Path): The folder where the file is created or modified.
             mode (str): The file mode, either "w" (write) or "a" (append).
-            **parameters (Any): Additional keyword arguments.
 
         Note:
             The file content is converted to the appropriate format based on the file extension.
@@ -604,7 +596,15 @@ class AnvilFormatter:
             >>> convert_color((128, 64, 32))  # No target, normalizes to RGB255
             (128.0, 64.0, 32.0)
         """
-        # Type validation first
+        from anvil.lib.jsonmodel.types import (
+            RGB,
+            RGB255,
+            RGBA,
+            RGBA255,
+            HexRGB,
+            HexRGBA,
+        )
+
         if isinstance(color, str):
             if not color.startswith("#"):
                 raise ValueError("Hex color must start with '#'")
@@ -625,7 +625,6 @@ class AnvilFormatter:
                 f"Unsupported color type: {type(color).__name__}. Expected str, tuple, or list."
             )
 
-        # Determine target from source if not specified
         convert_target = None
         if target is None:
             if is_str:
@@ -641,9 +640,7 @@ class AnvilFormatter:
         else:
             convert_target = target
 
-        # Parse input color to normalized RGBA (0-1 range with alpha)
         if is_str:
-            # Expand short hex format (#RGB or #RGBA) to full format
             if len(hex_color) in [3, 4]:
                 hex_color = "".join([c * 2 for c in hex_color])
 
@@ -652,11 +649,9 @@ class AnvilFormatter:
             b = int(hex_color[4:6], 16) / 255.0
             a = int(hex_color[6:8], 16) / 255.0 if len(hex_color) == 8 else 1.0
         else:
-            # Determine if values are in 0-1 or 0-255 range
             max_val = float(max(color[:3]))
 
             if max_val > 1.0:
-                # Assume 0-255 range
                 r = clamp(float(color[0]), 0.0, 255.0) / 255.0
                 g = clamp(float(color[1]), 0.0, 255.0) / 255.0
                 b = clamp(float(color[2]), 0.0, 255.0) / 255.0
@@ -666,15 +661,12 @@ class AnvilFormatter:
                     else 1.0
                 )
             else:
-                # Assume 0-1 range
                 r = clamp(float(color[0]), 0.0, 1.0)
                 g = clamp(float(color[1]), 0.0, 1.0)
                 b = clamp(float(color[2]), 0.0, 1.0)
                 a = clamp(float(color[3]), 0.0, 1.0) if len(color) == 4 else 1.0
 
-        # Convert to target format
         if convert_target in (HexRGB, HexRGBA):
-            # Convert to hex (pre-compute once)
             hex_r = int(round(r * 255))
             hex_g = int(round(g * 255))
             hex_b = int(round(b * 255))
@@ -706,9 +698,8 @@ class AnvilValidator:
     @classmethod
     def check_new_versions(cls):
         click.echo(click.style("Checking for package updates...", fg="cyan"))
-        outdated_packages: List[Dict[str, str]] = []
+        outdated_packages: list[dict[str, str]] = []
 
-        # Check npm updates
         try:
             res = subprocess.run(
                 "npm outdated --json",
@@ -745,10 +736,9 @@ class AnvilValidator:
                                     "latest": parts[3],
                                 }
                             )
-        except Exception:
+        except (OSError, subprocess.SubprocessError):
             pass
 
-        # Check pip updates for mcanvil
         try:
             res = subprocess.run(
                 [sys.executable, "-m", "pip", "list", "--outdated", "--format=json"],
@@ -784,7 +774,7 @@ class AnvilValidator:
                                         "latest": parts[2],
                                     }
                                 )
-        except Exception:
+        except (OSError, subprocess.SubprocessError):
             pass
 
         if outdated_packages:
@@ -816,7 +806,7 @@ class AnvilValidator:
                 "https://raw.githubusercontent.com/Mojang/bedrock-samples/refs/heads/main/version.json"
             )
             vanilla_latest_build: str = orjson.loads(request.text)["latest"]["version"]
-        except Exception:
+        except (requests.RequestException, orjson.JSONDecodeError, KeyError, TypeError):
             click.echo(
                 click.style(
                     "[WARN]: Could not fetch latest Minecraft version.", fg="yellow"
@@ -836,7 +826,6 @@ class AnvilValidator:
         if value is None:
             return False
 
-        # Check for tuple/list types (RGB, RGBA)
         if (
             isinstance(value, (tuple, list))
             and len(value) in (3, 4)
@@ -849,7 +838,6 @@ class AnvilValidator:
         ):
             return True
 
-        # Check for hex color strings (start with #)
         if isinstance(value, str) and value.startswith("#"):
             hex_val = value[1:]
             if len(hex_val) in (3, 4, 6, 8) and all(
@@ -857,7 +845,6 @@ class AnvilValidator:
             ):
                 return True
 
-        # Everything else (including plain strings) are treated as texture file names
         return False
 
 
@@ -889,9 +876,6 @@ class AnvilDisplay:
                 ]
             )
         )
-
-
-# --------------------------------------------------------------------------
 
 
 def clamp(value: float | int, _min: float | int, _max: float | int) -> float | int:
@@ -940,7 +924,7 @@ def process_subcommand(
     try:
         subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"{error_handle}: {e}")
+        click.echo(click.style(f"{error_handle}: {e}", fg="red"), err=True)
         if exit_on_error:
             sys.exit(e.returncode or 1)
 
@@ -958,35 +942,3 @@ def salt_from_str(s: str) -> int:
     for ch in s:
         h = (h * 131 + ord(ch)) % 1_000_000
     return h
-
-
-def extract_ids_from_factory_class(cls) -> set[str]:
-    _IDENT_RE = re.compile(r'["\'](minecraft:[a-z0-9_]+)["\']')
-    ids: set[str] = set()
-    for _, fn in inspect.getmembers(cls, predicate=inspect.isfunction):
-        try:
-            src = inspect.getsource(fn)
-        except OSError:
-            # Builtins / C-extensions or unavailable source; skip cleanly
-            continue
-        ids.update(m.group(1) for m in _IDENT_RE.finditer(src))
-    return ids
-
-
-def experimental(func):
-    """
-    Decorator that ensures a function is only executed
-    if the CONFIG._EXPERIMENTAL flag is enabled.
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        from anvil.lib.config import CONFIG
-
-        if not CONFIG._EXPERIMENTAL:
-            raise ValueError(
-                f"{func.__name__} requires experimental features to be enabled in the config."
-            )
-        return func(*args, **kwargs)
-
-    return wrapper

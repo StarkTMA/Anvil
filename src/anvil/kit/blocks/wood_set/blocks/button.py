@@ -1,7 +1,5 @@
 from anvil.api.blocks.blocks import Block
 from anvil.api.blocks.components import (
-    ItemDisplayGuiTransform,
-    ItemDisplayTransform,
     BlockCollisionBox,
     BlockConnectionRule,
     BlockDestructibleByExplosion,
@@ -21,11 +19,18 @@ from anvil.api.blocks.components import (
     BlockTransformation,
     InstanceSpec,
     InstanceVariant,
+    ItemDisplayGuiTransform,
+    ItemDisplayTransform,
     ItemTagFilter,
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
+from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
+from anvil.api.items.crafting import ShapelessRecipe
+from anvil.api.logic.molang import Query
+from anvil.api.vanilla.blocks import MinecraftBlockTags
+from anvil.api.vanilla.items import MinecraftItemTags
+from anvil.lib.jsonmodel.enums import (
     BlockFaceValues,
     BlockMaterial,
     BlockSoundGroup,
@@ -34,22 +39,16 @@ from anvil.api.core.enums import (
     ItemGroups,
     PlacementPositionTrait,
     RecipeUnlockContext,
+    SupportedBy,
 )
-from anvil.api.items.components import ItemBlockPlacer, ItemDisplayName, ItemFuel
-from anvil.api.items.crafting import ShapelessRecipe
-from anvil.api.logic.molang import Query
-from anvil.api.vanilla.blocks import MinecraftBlockTags
-from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.types import Color
 
 from ..components import (
     BlockWoodSetSupport,
     BlockWoodSetTogglable,
-    SupportedBy,
 )
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 0.4,
     MinecraftItemTags.StoneTier: 0.2,
@@ -60,7 +59,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.1,
 }
 
-# Rotation (x, y, z) per face the button was placed against
 FACE_ROTATIONS = {
     FacingDirectionValues.NORTH: (270, 0, 0),
     FacingDirectionValues.SOUTH: (90, 0, 0),
@@ -71,7 +69,6 @@ FACE_ROTATIONS = {
 }
 
 
-# Vanilla's sounds for it, which the script plays when it is pressed and released
 ON_SOUND = "random.wood_click"
 OFF_SOUND = "random.wood_click"
 
@@ -90,7 +87,7 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Button"
 
-    block.server.description.traits.placement_position(
+    block.server.description.traits.set_placement_position(
         [PlacementPositionTrait.BlockFace]
     )
     for direction, rotation in FACE_ROTATIONS.items():
@@ -102,7 +99,6 @@ def create(
     block.server.permutation(Query.BlockState("powered")).add(
         BlockRedstoneProducer(power=15, strongly_powered_face=BlockFaceValues.South),
         BlockSelectionBox(origin=(-3, 0, -2), size=(6, 1, 4)),
-        # Ticks only while pressed, to release; idle buttons don't tick
         BlockTick(interval_range=(20, 20), looping=True),
     )
     block.server.permutation(~Query.BlockState("powered")).add(
@@ -169,11 +165,7 @@ def create(
         BlockRedstoneConductivity(
             allows_wire_to_step_down=False, redstone_conductor=False
         ),
-        # Format 1.26.20+ wants it in the base components too when a permutation sets it
         BlockRedstoneProducer(power=0, strongly_powered_face=BlockFaceValues.South),
-        # only the powered permutation above keeps ticking
-        # script's onTick needs a tick in the base components: it ticks once and stops, and
-        # Scripts: pressed on interact and released on tick, broken with its support. The
         BlockTick(interval_range=(20, 20), looping=False),
         BlockWoodSetTogglable(
             on_interact=True,
@@ -184,13 +176,12 @@ def create(
         item_visual,
     )
 
-    # Its item: shown in the creative inventory, burns in a furnace
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=5),
     )
-    block.item.server.description.menu_category(ItemCategory.Items, ItemGroups.Buttons)
+    block.item.server.description.set_menu_category(ItemCategory.Items, ItemGroups.Buttons)
 
     block.queue()
 

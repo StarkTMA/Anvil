@@ -21,15 +21,6 @@ from anvil.api.blocks.components import (
     MaterialParams,
 )
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    BlockFaceValues,
-    BlockMaterial,
-    BlockSoundGroup,
-    FacingDirectionValues,
-    ItemCategory,
-    ItemGroups,
-    PlacementPositionTrait,
-)
 from anvil.api.items.components import (
     ItemBlockPlacer,
     ItemDisplayName,
@@ -39,12 +30,20 @@ from anvil.api.items.components import (
 from anvil.api.logic.molang import Query
 from anvil.api.vanilla.blocks import MinecraftBlockTags
 from anvil.api.vanilla.items import MinecraftItemTags
-from anvil.lib.lib import Color
+from anvil.lib.jsonmodel.enums import (
+    BlockFaceValues,
+    BlockMaterial,
+    BlockSoundGroup,
+    FacingDirectionValues,
+    ItemCategory,
+    ItemGroups,
+    PlacementPositionTrait,
+)
+from anvil.lib.jsonmodel.types import Color
 
 from ..components import BlockWoodSetStrippable
 from . import MAP_COLOR, MODEL
 
-# Mining time per axe tier
 AXE_SPEEDS = {
     MinecraftItemTags.WoodenTier: 3,
     MinecraftItemTags.StoneTier: 1.5,
@@ -55,7 +54,6 @@ AXE_SPEEDS = {
     MinecraftItemTags.GoldenTier: 0.35,
 }
 
-# Rotation (x, y, z) per face the log was placed against
 FACE_ROTATIONS = {
     FacingDirectionValues.NORTH: (270, 0, 0),
     FacingDirectionValues.SOUTH: (90, 0, 0),
@@ -78,7 +76,7 @@ def create(
     block.client.sound_group(sound_group)
     display_name = f"{wood.replace('_', ' ').title()} Log"
 
-    block.server.description.traits.placement_position(
+    block.server.description.traits.set_placement_position(
         [PlacementPositionTrait.BlockFace]
     )
     for direction, rotation in FACE_ROTATIONS.items():
@@ -93,7 +91,6 @@ def create(
             destroy_speed=speed,
         )
 
-    # Bark all round, rings on the ends
     materials = BlockMaterialInstance()
     for face, texture in (
         (BlockFaceValues.All, f"{wood}_log"),
@@ -134,20 +131,18 @@ def create(
         ),
     )
 
-    # Script: an axe turns it into the stripped log, keeping its rotation
     if "log_stripped" in selected:
         block.server.components.add(
             BlockWoodSetStrippable(stripped_block=f"{namespace}:{wood}_log_stripped")
         )
 
-    # Its item: shown in the creative inventory, burns in a furnace, and its vanilla tag lets every vanilla wood recipe use it
     block.item.server.components.add(
         ItemBlockPlacer(block=block.identifier, replace_block_item=True),
         ItemDisplayName(value=display_name),
         ItemFuel(duration=15),
         ItemTags(tags=[MinecraftItemTags.Logs, MinecraftItemTags.LogsThatBurn]),
     )
-    block.item.server.description.menu_category(ItemCategory.Nature, ItemGroups.Log)
+    block.item.server.description.set_menu_category(ItemCategory.Nature, ItemGroups.Log)
 
     block.queue()
 

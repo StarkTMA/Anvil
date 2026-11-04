@@ -1,12 +1,16 @@
-import orjson
 import os
+from pathlib import Path
+
+import orjson
 import pytest
+
 from anvil.lib import config
 
 is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
 
 try:
     import amulet
+
     import anvil.kit.world.ldtk as ldtk
     from anvil.kit.world.ldtk import LDtk
 
@@ -33,8 +37,8 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # Prepare LDtk file directory structure
-    os.makedirs(os.path.join("world", "ldtk"), exist_ok=True)
-    ldtk_file_path = os.path.join("world", "ldtk", "test_map.ldtk")
+    Path("world", "ldtk").mkdir(parents=True, exist_ok=True)
+    ldtk_file_path = Path("world", "ldtk", "test_map.ldtk")
 
     # Define minimal valid LDtk structure
     ldtk_data = {
@@ -99,8 +103,7 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
         ],
     }
 
-    with open(ldtk_file_path, "wb") as f:
-        f.write(orjson.dumps(ldtk_data))
+    ldtk_file_path.write_bytes(orjson.dumps(ldtk_data))
 
     # Initialize LDtk
     ldtk_instance = LDtk("test_map")
@@ -111,18 +114,17 @@ def test_ldtk_export_entities_yx_plane(tmp_path, monkeypatch):
     )
 
     # Output path for entity JSON
-    entities_dir = os.path.join("scripts", "javascript", "content", "levels")
-    empty_level_json = os.path.join(entities_dir, "Level_Empty.json")
-    entities_level_json = os.path.join(entities_dir, "Level_With_Entities.json")
+    entities_dir = Path("scripts", "javascript", "content", "levels")
+    empty_level_json = entities_dir / "Level_Empty.json"
+    entities_level_json = entities_dir / "Level_With_Entities.json"
 
     # Verify that the empty level file is skipped
-    assert not os.path.exists(empty_level_json)
+    assert not empty_level_json.exists()
 
     # Verify that the level with entities exists and is correctly populated
-    assert os.path.exists(entities_level_json)
+    assert entities_level_json.exists()
 
-    with open(entities_level_json, "rb") as f:
-        data = orjson.loads(f.read())
+    data = orjson.loads(entities_level_json.read_bytes())
 
     # Check corners
     # level origin = [10, -20]
@@ -182,8 +184,8 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # Prepare LDtk file directory structure
-    os.makedirs(os.path.join("world", "ldtk"), exist_ok=True)
-    ldtk_file_path = os.path.join("world", "ldtk", "test_map.ldtk")
+    Path("world", "ldtk").mkdir(parents=True, exist_ok=True)
+    ldtk_file_path = Path("world", "ldtk", "test_map.ldtk")
 
     # Define minimal valid LDtk structure
     ldtk_data = {
@@ -219,8 +221,7 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
         ],
     }
 
-    with open(ldtk_file_path, "wb") as f:
-        f.write(orjson.dumps(ldtk_data))
+    ldtk_file_path.write_bytes(orjson.dumps(ldtk_data))
 
     # Initialize LDtk
     ldtk_instance = LDtk("test_map")
@@ -231,13 +232,12 @@ def test_ldtk_export_entities_xz_plane(tmp_path, monkeypatch):
     )
 
     # Output path for entity JSON
-    entities_dir = os.path.join("scripts", "javascript", "content", "levels")
-    entities_level_json = os.path.join(entities_dir, "Level_With_Entities.json")
+    entities_dir = Path("scripts", "javascript", "content", "levels")
+    entities_level_json = entities_dir / "Level_With_Entities.json"
 
-    assert os.path.exists(entities_level_json)
+    assert entities_level_json.exists()
 
-    with open(entities_level_json, "rb") as f:
-        data = orjson.loads(f.read())
+    data = orjson.loads(entities_level_json.read_bytes())
 
     # level origin = [10, -20]
     # level size = [20, 30]
@@ -267,8 +267,8 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
     # Prepare LDtk file directory structure
-    os.makedirs(os.path.join("world", "ldtk"), exist_ok=True)
-    ldtk_file_path = os.path.join("world", "ldtk", "test_map.ldtk")
+    Path("world", "ldtk").mkdir(parents=True, exist_ok=True)
+    ldtk_file_path = Path("world", "ldtk", "test_map.ldtk")
 
     # Define minimal valid LDtk structure
     ldtk_data = {
@@ -304,8 +304,7 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
         ],
     }
 
-    with open(ldtk_file_path, "wb") as f:
-        f.write(orjson.dumps(ldtk_data))
+    ldtk_file_path.write_bytes(orjson.dumps(ldtk_data))
 
     # Initialize LDtk
     ldtk_instance = LDtk("test_map")
@@ -316,13 +315,12 @@ def test_ldtk_export_entities_yz_plane(tmp_path, monkeypatch):
     )
 
     # Output path for entity JSON
-    entities_dir = os.path.join("scripts", "javascript", "content", "levels")
-    entities_level_json = os.path.join(entities_dir, "Level_With_Entities.json")
+    entities_dir = Path("scripts", "javascript", "content", "levels")
+    entities_level_json = entities_dir / "Level_With_Entities.json"
 
-    assert os.path.exists(entities_level_json)
+    assert entities_level_json.exists()
 
-    with open(entities_level_json, "rb") as f:
-        data = orjson.loads(f.read())
+    data = orjson.loads(entities_level_json.read_bytes())
 
     # Check corners in YZ plane
     # level origin = [10, -20]

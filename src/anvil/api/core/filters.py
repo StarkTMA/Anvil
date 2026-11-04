@@ -1,7 +1,11 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
-from anvil.api.core.enums import (
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
+from anvil.lib.config import CONFIG
+from anvil.lib.jsonmodel.enums import (
     Difficulty,
     FilterEquipmentDomain,
     FilterOperation,
@@ -10,12 +14,9 @@ from anvil.api.core.enums import (
     Slots,
     Weather,
 )
-from anvil.api.core.types import Identifier
-from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
-from anvil.lib.config import CONFIG
-from anvil.lib.schemas import MinecraftBiomeDescriptor, MinecraftBlockDescriptor
 
 if TYPE_CHECKING:
+    from anvil.api.biomes.biomes import Biome
     from anvil.lib.jsonmodel import JsonComponent
 
 
@@ -31,11 +32,11 @@ class Filter:
     operator: FilterOperation | None = None
     domain: str | None = None
     value: Any | None = None
-    is_all_of: List["Filter"] | None = None
-    is_any_of: List["Filter"] | None = None
-    is_none_of: List["Filter"] | None = None
+    is_all_of: list["Filter"] | None = None
+    is_any_of: list["Filter"] | None = None
+    is_none_of: list["Filter"] | None = None
 
-    def __export_dict__(self) -> Dict[str, Any]:
+    def __export_dict__(self) -> dict[str, Any]:
         if self.is_all_of is not None:
             return {"all_of": self.is_all_of}
         if self.is_any_of is not None:
@@ -56,13 +57,12 @@ class Filter:
             "domain": self.domain,
         }
 
-    # Filter Groups
     @staticmethod
-    def all_of(filters: List["Filter"]) -> "Filter":
+    def all_of(filters: list["Filter"]) -> "Filter":
         """Returns true when all of the filters evaluate to true.
 
         Args:
-            filters (List[Filter]): List of filter conditions.
+            filters (list[Filter]): List of filter conditions.
 
         Returns:
             Filter: Filter group requiring all conditions to be true.
@@ -79,11 +79,11 @@ class Filter:
         return Filter(is_all_of=filters)
 
     @staticmethod
-    def any_of(filters: List["Filter"]) -> "Filter":
+    def any_of(filters: list["Filter"]) -> "Filter":
         """Returns true when any of the filters evaluate to true.
 
         Args:
-            filters (List[Filter]): List of filter conditions.
+            filters (list[Filter]): List of filter conditions.
 
         Returns:
             Filter: Filter group requiring at least one condition to be true.
@@ -100,11 +100,11 @@ class Filter:
         return Filter(is_any_of=filters)
 
     @staticmethod
-    def none_of(filters: List["Filter"]) -> "Filter":
+    def none_of(filters: list["Filter"]) -> "Filter":
         """Returns true when none of the filters evaluate to true.
 
         Args:
-            filters (List[Filter]): List of filter conditions.
+            filters (list[Filter]): List of filter conditions.
 
         Returns:
             Filter: Filter group requiring no conditions to be true.
@@ -989,7 +989,7 @@ class Filter:
     @classmethod
     def is_biome(
         cls,
-        value: MinecraftBiomeTypes | MinecraftBiomeDescriptor,
+        value: "MinecraftBiomeTypes | Biome | str",
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
@@ -999,7 +999,7 @@ class Filter:
     @classmethod
     def is_block(
         cls,
-        value: MinecraftBlockDescriptor | Identifier,
+        value: str | Block | BlockDescriptor,
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,
@@ -1007,7 +1007,7 @@ class Filter:
         """Returns true when the block has the given name.
 
         Args:
-            value (MinecraftBlockDescriptor | Identifier): Block descriptor or identifier to test
+            value (Block | BlockDescriptor | Identifier): Block descriptor or identifier to test
             subject (FilterSubject, optional): Subject to test. Defaults to FilterSubject.Self.
             operator (FilterOperation, optional): Operation to use. Defaults to FilterOperation.Equals.
 
@@ -2221,7 +2221,7 @@ class Filter:
     @classmethod
     def has_item_with_component(
         cls,
-        component: Identifier,
+        component: str,
         *,
         subject: FilterSubject = FilterSubject.Self,
         operator: FilterOperation = FilterOperation.Equals,

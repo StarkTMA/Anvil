@@ -1,7 +1,6 @@
-from anvil.api.actors.entity import Entity
 from anvil.api.actors.components import (
-    EntityBodyRotationAlwaysFollowsHead,
     EntityAIRiseToLiquidLevel,
+    EntityBodyRotationAlwaysFollowsHead,
     EntityCollisionBox,
     EntityDamageSensor,
     EntityIsCollidable,
@@ -14,14 +13,8 @@ from anvil.api.actors.components import (
     EntityRideable,
     EntityTypeFamily,
 )
-from anvil.api.core.enums import DamageSensor
+from anvil.api.actors.entity import Entity
 from anvil.api.core.core import CONFIG
-from anvil.api.core.enums import (
-    DamageCause,
-    ItemCategory,
-    ItemGroups,
-    RecipeUnlockContext,
-)
 from anvil.api.items.components import (
     ItemDisplayName,
     ItemEntityPlacer,
@@ -34,17 +27,21 @@ from anvil.api.items.crafting import ShapedCraftingRecipe
 from anvil.api.items.items import Item
 from anvil.api.logic.molang import Math, Molang, Query, Variable
 from anvil.api.pbr.texture_set import TextureComponents
+from anvil.lib.jsonmodel.enums import (
+    DamageSensor,
+    ItemCategory,
+    ItemGroups,
+    RecipeUnlockContext,
+)
+
 from . import BOAT_MODEL
 
-# boat.ts steers, faces and breaks this family
 BOAT_FAMILY = "wood_set_boat"
 RIDER_ROTATION = 90
 SEATS = [(0, 0.2, 0.2), (0, 0.2, -0.6)]
-# Degrees per second
 TURNING = 20
 SHAKE_PER_HIT = 0.25
 SHAKE_DECAY = 1
-# Must match boat.ts
 HITS_WRAP = 16
 
 
@@ -53,16 +50,16 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
     entity = Entity(f"{wood}_boat")
     display_name = f"{wood.replace('_', ' ').title()} Boat"
 
-    entity.client.description.geometry(BOAT_MODEL)
-    entity.client.description.texture(
+    entity.client.description.add_geometry(BOAT_MODEL)
+    entity.client.description.add_texture(
         blockbench=BOAT_MODEL, component=TextureComponents(color=f"{wood}_boat")
     )
-    entity.client.description.material("blend", "entity_alphablend")
-    entity.client.description.material("alpha", "entity_alphatest")
+    entity.client.description.add_material("blend", "entity_alphablend")
+    entity.client.description.add_material("alpha", "entity_alphatest")
     render = entity.client.description.render_controller("default")
-    render.geometry(BOAT_MODEL)
-    render.textures(f"{wood}_boat")
-    render.part_visibility("chest", False)
+    render.set_geometry(BOAT_MODEL)
+    render.add_texture(f"{wood}_boat")
+    render.add_part_visibility("chest", False)
     render.material("*", "alpha")
     render.material("water_clip", "blend")
 
@@ -80,13 +77,12 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
             condition=Query.HasRider() & condition,
         )
 
-    # The client can't tell who hit it, so boat.ts counts hits in a synced property
-    entity.server.description.add_property.int(
+    entity.server.description.add_int_property(
         "hits", (0, HITS_WRAP - 1), client_sync=True
     )
     hits = Query.Property("hits")
     entity.client.description.init_vars(shake_strength=0, last_hits=hits)
-    entity.client.description.script(
+    entity.client.description.add_script(
         Variable.shake_strength,
         Math.clamp(
             Variable.shake_strength
@@ -96,7 +92,7 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
             1,
         ),
     )
-    entity.client.description.script(Variable.last_hits, hits)
+    entity.client.description.add_script(Variable.last_hits, hits)
     entity.client.description.animation(
         blockbench=BOAT_MODEL,
         animation_name="shake",
@@ -125,7 +121,6 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
         ),
         EntityNavigationGeneric(can_sink=False, can_walk=False, can_jump=False),
         EntityMovementBasic(),
-        # boat.ts turns the head; without this the body lags and snaps on the spot
         EntityBodyRotationAlwaysFollowsHead(),
         rideable,
         EntityLeashable(),
@@ -134,7 +129,7 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
         EntityPushableByEntity(),
         EntityPushableByBlock(),
     )
-    entity.queue(display_name=display_name)
+    entity.set_display_name(display_name).queue()
 
     item = Item(f"{wood}_boat")
     item.server.components.add(
@@ -145,7 +140,7 @@ def create(wood: str, selected: set[str]) -> tuple[Entity, Item]:
         ItemMaxStackSize(value=1),
         ItemFuel(duration=60),
     )
-    item.server.description.menu_category(ItemCategory.Items, ItemGroups.Boat)
+    item.server.description.set_menu_category(ItemCategory.Items, ItemGroups.Boat)
     item.queue()
 
     if "planks" in selected:
