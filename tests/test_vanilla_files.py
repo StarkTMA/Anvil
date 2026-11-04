@@ -11,14 +11,16 @@ def world_project():
 
 
 def test_vanilla_entity_files_keep_the_vanilla_identifier():
+    from anvil.api.actors.animation_controllers import BPAnimationControllers
+    from anvil.api.actors.animations import BPAnimations
     from anvil.api.actors.entity import Entity
 
     entity = Entity("minecraft:zombie", is_vanilla=True)
     server = entity.server
     for file in (
         server,
-        server._animation_controllers,
-        server._animations,
+        BPAnimationControllers(server.description),
+        BPAnimations(server.description),
         server._spawn_rule,
         entity.client,
     ):
@@ -26,11 +28,29 @@ def test_vanilla_entity_files_keep_the_vanilla_identifier():
         assert file.identifier.is_vanilla
 
 
+def test_vanilla_block_files_keep_the_vanilla_identifier():
+    from anvil.api.blocks.blocks import Block
+
+    block = Block("minecraft:stone", is_vanilla=True)
+    for file in (block.server, block.client):
+        assert file.identifier == "minecraft:stone"
+        assert file.identifier.is_vanilla
+    with pytest.raises(ValueError):
+        Block("minecraft:not_a_block", is_vanilla=True)
+
+
+def test_vanilla_item_files_keep_the_vanilla_identifier():
+    from anvil.api.items.items import Item
+
+    item = Item("minecraft:apple", is_vanilla=True)
+    for file in (item.server, item.client):
+        assert file.identifier == "minecraft:apple"
+        assert file.identifier.is_vanilla
+
+
 @pytest.mark.parametrize(
     "module, cls",
     [
-        ("anvil.api.items.items", "Item"),
-        ("anvil.api.blocks.blocks", "Block"),
         ("anvil.api.biomes.biomes", "Biome"),
     ],
 )

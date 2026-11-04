@@ -379,10 +379,16 @@ def name_map(identifiers: list[str]) -> dict[str, str]:
     return {pascal(i): i for i in identifiers if f"minecraft:{snake(pascal(i))}" != i}
 
 
-def factory_module(descriptor: str, make: str, mapping: dict[str, str]) -> str:
+def factory_module(
+    descriptor: str,
+    make: str,
+    mapping: dict[str, str],
+    module: str,
+    ids: str,
+) -> str:
     return f"""import re
 
-from anvil.lib.schemas import {descriptor}
+from {module} import {descriptor}
 
 _NAMES: dict[str, str] = {json.dumps(mapping, indent=4)}
 
@@ -402,7 +408,10 @@ def _make_factory(name: str):
 
 
 def __getattr__(name: str):
-    if name.startswith("_"):
+    from anvil.api.vanilla.{ids} import vanilla_{ids[:-1]}_ids
+
+    identifier = _NAMES.get(name, f"minecraft:{{_to_snake(name)}}")
+    if name.startswith("_") or identifier not in vanilla_{ids[:-1]}_ids():
         raise AttributeError(f"module {{__name__!r}} has no attribute {{name!r}}")
     func = _make_factory(name)
     globals()[name] = func
@@ -413,7 +422,7 @@ def __getattr__(name: str):
 def potion_signature() -> str:
     return f"""def Potion(
     potion_addition: {literal(POTION_TYPES)} | None = None,
-) -> MinecraftItemDescriptor"""
+) -> Identifier"""
 
 
 def blocks(tag: str, files: dict[str, str]) -> None:
@@ -429,7 +438,8 @@ def blocks(tag: str, files: dict[str, str]) -> None:
         "from enum import StrEnum",
         "from typing import Literal, TypedDict, Unpack",
         "",
-        "from anvil.lib.schemas import MinecraftBlockDescriptor",
+        "from anvil.api.blocks.descriptor import BlockDescriptor",
+        "from anvil.lib.jsonmodel import Identifier",
         "",
         enum(
             "BlockStateKeys",
@@ -445,15 +455,20 @@ def blocks(tag: str, files: dict[str, str]) -> None:
             stub.append("")
     for block in blocks:
         name = pascal(block["name"])
-        args = f"**states: Unpack[{name}States]" if block["properties"] else ""
-        stub.append(f"def {name}({args}) -> MinecraftBlockDescriptor: ...")
+        if block["properties"]:
+            stub.append(
+                f"def {name}(**states: Unpack[{name}States]) -> Identifier | BlockDescriptor: ..."
+            )
+        else:
+            stub.append(f"def {name}() -> Identifier: ...")
     files["factories/minecraft_blocks.pyi"] = "\n".join(stub) + "\n"
 
     keys = {keyword(s): s for s in sorted(states) if ":" in s}
     files["factories/minecraft_blocks.py"] = f"""import re
 from typing import Any
 
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.lib.jsonmodel import Identifier
 
 _STATE_KEYS: dict[str, str] = {json.dumps(keys, indent=4)}
 
@@ -463,9 +478,12 @@ _STATE_KEYS: dict[str, str] = {json.dumps(keys, indent=4)}
 def _make_factory(name: str):
     identifier = f"minecraft:{{_to_snake(name)}}"
 
-    def factory(**states: Any) -> MinecraftBlockDescriptor:
+    def factory(**states: Any) -> Identifier | BlockDescriptor:
         states = {{_STATE_KEYS.get(k, k): v for k, v in states.items() if v is not None}}
-        return MinecraftBlockDescriptor(identifier, True, states or None)
+        name = Identifier.parse(identifier, vanilla=True)
+        if states:
+            return BlockDescriptor(name=name, states=states)
+        return name
 
     factory.__name__ = name
     factory.__qualname__ = name
@@ -474,17 +492,19 @@ def _make_factory(name: str):
 
 
 def __getattr__(name: str):
-    if name.startswith("_"):
+    from anvil.api.vanilla.blocks import vanilla_block_ids
+
+    if name.startswith("_") or f"minecraft:{{_to_snake(name)}}" not in vanilla_block_ids():
         raise AttributeError(f"module {{__name__!r}} has no attribute {{name!r}}")
-    if name.endswith("States"):
-        return Any
     func = _make_factory(name)
     globals()[name] = func
     return func
 """
+    listed = "".join(f'        "{i}",\n' for i in identifiers)
     files["blocks.py"] = (
         "from enum import StrEnum\n\n"
         "from .factories import minecraft_blocks as MinecraftBlockTypes\n\n\n"
+        f"def vanilla_block_ids() -> list[str]:\n    return [\n{listed}    ]\n\n\n"
         + enum("MinecraftBlockTags", "Vanilla block tags.", BLOCK_TAGS)
     )
 
@@ -494,20 +514,22 @@ def items(tag: str, files: dict[str, str]) -> None:
     stub = [
         "from typing import Literal",
         "",
-        "from anvil.lib.schemas import MinecraftItemDescriptor",
+        "from anvil.lib.jsonmodel import Identifier",
         "",
     ]
     for identifier in identifiers:
         if identifier == "minecraft:potion":
             stub.append(potion_signature() + ": ...")
         else:
-            stub.append(f"def {pascal(identifier)}() -> MinecraftItemDescriptor: ...")
+            stub.append(f"def {pascal(identifier)}() -> Identifier: ...")
     files["factories/minecraft_items.pyi"] = "\n".join(stub) + "\n"
 
     runtime = factory_module(
-        "MinecraftItemDescriptor",
-        "MinecraftItemDescriptor(identifier)",
+        "Identifier",
+        "Identifier.parse(identifier, vanilla=True)",
         name_map(identifiers),
+        "anvil.lib.jsonmodel",
+        "items",
     )
     runtime = runtime.replace(
         "import re\n",
@@ -520,20 +542,24 @@ def items(tag: str, files: dict[str, str]) -> None:
 
 {potion_signature()}:
     if potion_addition is not None:
-        return MinecraftItemDescriptor("minecraft:potion_type").set_identifier_data(
-            potion_addition
+        return Identifier.parse(
+            "minecraft:potion_type", vanilla=True, data=potion_addition
         )
-    return MinecraftItemDescriptor("minecraft:potion")
+    return Identifier.parse("minecraft:potion", vanilla=True)
 
 
 _NAMES""",
         1,
     )
     files["factories/minecraft_items.py"] = runtime
+    listed = "".join(
+        f'        "{i}",\n' for i in [*identifiers, "minecraft:potion_type"]
+    )
     files["items.py"] = (
         "from enum import StrEnum\n\n"
         "from .factories import minecraft_items as MinecraftItemTypes\n\n"
-        '__all__ = ["MinecraftItemTypes", "MinecraftItemTags"]\n\n\n'
+        '__all__ = ["MinecraftItemTypes", "MinecraftItemTags", "vanilla_item_ids"]\n\n\n'
+        f"def vanilla_item_ids() -> list[str]:\n    return [\n{listed}    ]\n\n\n"
         + enum("MinecraftItemTags", "Vanilla item tags.", ITEM_TAGS)
     )
 
@@ -541,17 +567,17 @@ _NAMES""",
 def entities(tag: str, files: dict[str, str]) -> None:
     identifiers = [entity["name"] for entity in fetch(tag, "entities")]
     stub = [
-        "from anvil.lib.schemas import MinecraftEntityDescriptor",
+        "from anvil.lib.jsonmodel import Identifier",
         "",
     ]
-    stub += [
-        f"def {pascal(i)}() -> MinecraftEntityDescriptor: ..." for i in identifiers
-    ]
+    stub += [f"def {pascal(i)}() -> Identifier: ..." for i in identifiers]
     files["factories/minecraft_entities.pyi"] = "\n".join(stub) + "\n"
     files["factories/minecraft_entities.py"] = factory_module(
-        "MinecraftEntityDescriptor",
-        "MinecraftEntityDescriptor(identifier, True)",
+        "Identifier",
+        "Identifier.parse(identifier, vanilla=True)",
         name_map(identifiers),
+        "anvil.lib.jsonmodel",
+        "entities",
     )
     listed = "".join(f'        "{i}",\n' for i in identifiers)
     files["entities.py"] = (

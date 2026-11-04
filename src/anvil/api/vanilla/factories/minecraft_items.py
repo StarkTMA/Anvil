@@ -1,7 +1,7 @@
 import re
 from typing import Literal
 
-from anvil.lib.schemas import MinecraftItemDescriptor
+from anvil.lib.jsonmodel import Identifier
 
 
 def Potion(
@@ -53,12 +53,12 @@ def Potion(
         ]
         | None
     ) = None,
-) -> MinecraftItemDescriptor:
+) -> Identifier:
     if potion_addition is not None:
-        return MinecraftItemDescriptor("minecraft:potion_type").set_identifier_data(
-            potion_addition
+        return Identifier.parse(
+            "minecraft:potion_type", vanilla=True, data=potion_addition
         )
-    return MinecraftItemDescriptor("minecraft:potion")
+    return Identifier.parse("minecraft:potion", vanilla=True)
 
 
 _NAMES: dict[str, str] = {}
@@ -74,8 +74,8 @@ def _to_snake(s: str) -> str:
 def _make_factory(name: str):
     identifier = _NAMES.get(name, f"minecraft:{_to_snake(name)}")
 
-    def factory() -> MinecraftItemDescriptor:
-        return MinecraftItemDescriptor(identifier)
+    def factory() -> Identifier:
+        return Identifier.parse(identifier, vanilla=True)
 
     factory.__name__ = name
     factory.__qualname__ = name
@@ -84,7 +84,10 @@ def _make_factory(name: str):
 
 
 def __getattr__(name: str):
-    if name.startswith("_"):
+    from anvil.api.vanilla.items import vanilla_item_ids
+
+    identifier = _NAMES.get(name, f"minecraft:{_to_snake(name)}")
+    if name.startswith("_") or identifier not in vanilla_item_ids():
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     func = _make_factory(name)
     globals()[name] = func

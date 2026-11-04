@@ -1,6 +1,6 @@
 import re
 
-from anvil.lib.schemas import MinecraftEntityDescriptor
+from anvil.lib.jsonmodel import Identifier
 
 _NAMES: dict[str, str] = {
     "VillagerV2": "minecraft:villager_v2",
@@ -18,8 +18,8 @@ def _to_snake(s: str) -> str:
 def _make_factory(name: str):
     identifier = _NAMES.get(name, f"minecraft:{_to_snake(name)}")
 
-    def factory() -> MinecraftEntityDescriptor:
-        return MinecraftEntityDescriptor(identifier, True)
+    def factory() -> Identifier:
+        return Identifier.parse(identifier, vanilla=True)
 
     factory.__name__ = name
     factory.__qualname__ = name
@@ -28,7 +28,10 @@ def _make_factory(name: str):
 
 
 def __getattr__(name: str):
-    if name.startswith("_"):
+    from anvil.api.vanilla.entities import vanilla_entity_ids
+
+    identifier = _NAMES.get(name, f"minecraft:{_to_snake(name)}")
+    if name.startswith("_") or identifier not in vanilla_entity_ids():
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     func = _make_factory(name)
     globals()[name] = func

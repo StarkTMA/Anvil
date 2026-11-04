@@ -1,7 +1,8 @@
 import re
 from typing import Any
 
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.lib.jsonmodel import Identifier
 
 _STATE_KEYS: dict[str, str] = {
     "minecraft_block_face": "minecraft:block_face",
@@ -30,9 +31,12 @@ def _to_snake(s: str) -> str:
 def _make_factory(name: str):
     identifier = f"minecraft:{_to_snake(name)}"
 
-    def factory(**states: Any) -> MinecraftBlockDescriptor:
+    def factory(**states: Any) -> Identifier | BlockDescriptor:
         states = {_STATE_KEYS.get(k, k): v for k, v in states.items() if v is not None}
-        return MinecraftBlockDescriptor(identifier, True, states or None)
+        name = Identifier.parse(identifier, vanilla=True)
+        if states:
+            return BlockDescriptor(name=name, states=states)
+        return name
 
     factory.__name__ = name
     factory.__qualname__ = name
@@ -41,10 +45,13 @@ def _make_factory(name: str):
 
 
 def __getattr__(name: str):
-    if name.startswith("_"):
+    from anvil.api.vanilla.blocks import vanilla_block_ids
+
+    if (
+        name.startswith("_")
+        or f"minecraft:{_to_snake(name)}" not in vanilla_block_ids()
+    ):
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    if name.endswith("States"):
-        return Any
     func = _make_factory(name)
     globals()[name] = func
     return func
