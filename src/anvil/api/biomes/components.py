@@ -1,8 +1,31 @@
 from typing import Annotated, Literal
 from warnings import deprecated
 
-from anvil.api.core.enums import Dimension, MusicCategory
-from anvil.api.core.types import (
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.pbr.atmosphere import AtmosphericSettings
+from anvil.api.pbr.color_grading import ColorGradingSettings
+from anvil.api.pbr.cubemap import CubeMapSettings
+from anvil.api.pbr.fog import FogSettings
+from anvil.api.pbr.lighting import LightingSettings
+from anvil.api.pbr.water import WaterSettings
+from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
+from anvil.lib.jsonmodel import (
+    AsString,
+    BlockId,
+    Chance,
+    ColorMap,
+    Hex,
+    Identifier,
+    InRange,
+    JsonComponent,
+    JsonObject,
+    Length,
+    MinMax,
+    json_field,
+)
+from anvil.lib.jsonmodel.enums import Dimension, MusicCategory
+from anvil.lib.jsonmodel.types import (
     RGB,
     RGB255,
     RGBA,
@@ -16,27 +39,6 @@ from anvil.api.core.types import (
     HexRGB,
     HexRGBA,
 )
-from anvil.api.vanilla.biomes import MinecraftBiomeTags, MinecraftBiomeTypes
-from anvil.lib.jsonmodel import (
-    AsString,
-    Chance,
-    ColorMap,
-    Hex,
-    InRange,
-    JsonComponent,
-    JsonObject,
-    Length,
-    MinMax,
-    json_field,
-)
-from anvil.lib.schemas import MinecraftBlockDescriptor
-
-from anvil.api.pbr.atmosphere import AtmosphericSettings
-from anvil.api.pbr.color_grading import ColorGradingSettings
-from anvil.api.pbr.cubemap import CubeMapSettings
-from anvil.api.pbr.fog import FogSettings
-from anvil.api.pbr.lighting import LightingSettings
-from anvil.api.pbr.water import WaterSettings
 
 # region Parts: objects nested inside components
 
@@ -59,7 +61,7 @@ class NoiseBlockSpecifier(JsonObject):
     """A block placed where the noise is above a threshold, or inside a range.
 
     Args:
-        block (MinecraftBlockDescriptor): The block placed.
+        block (str | Block | BlockDescriptor): The block placed.
         noise (str, optional): The noise sampled. Defaults to the builder's noise.
         threshold (float, optional): The block is placed where the noise is above this value. Set this or `range`.
         range (tuple[float, float], optional): The block is placed where the noise is inside this `(min, max)` range, each in [-1, 1]. Set this or `threshold`.
@@ -70,7 +72,7 @@ class NoiseBlockSpecifier(JsonObject):
     range: Annotated[tuple[float, float], InRange(-1.0, 1.0), MinMax] | None = (
         json_field(default=None)
     )
-    block: MinecraftBlockDescriptor = json_field()
+    block: Annotated[Identifier | Block | BlockDescriptor, BlockId] = json_field()
 
     def __validate__(self) -> None:
         if self.threshold is None and self.range is None:
@@ -87,20 +89,30 @@ class OverworldSurface(Surface):
     """Controls the blocks used for the default Minecraft Overworld terrain generation.
 
     Args:
-        foundation_material (MinecraftBlockDescriptor): The block used deep underground.
-        mid_material (MinecraftBlockDescriptor): The block used in a layer below the surface.
-        sea_floor_material (MinecraftBlockDescriptor): The block used as the floor of bodies of water.
-        sea_material (MinecraftBlockDescriptor): The block used in bodies of water.
-        top_material (MinecraftBlockDescriptor): The block used for the surface.
+        foundation_material (str | Block | BlockDescriptor): The block used deep underground.
+        mid_material (str | Block | BlockDescriptor): The block used in a layer below the surface.
+        sea_floor_material (str | Block | BlockDescriptor): The block used as the floor of bodies of water.
+        sea_material (str | Block | BlockDescriptor): The block used in bodies of water.
+        top_material (str | Block | BlockDescriptor): The block used for the surface.
         sea_floor_depth (int, optional): How deep the sea floor material goes, up to 127.
     """
 
     type: str = json_field(default="minecraft:overworld", init=False)
-    foundation_material: MinecraftBlockDescriptor = json_field()
-    mid_material: MinecraftBlockDescriptor = json_field()
-    top_material: MinecraftBlockDescriptor = json_field()
-    sea_floor_material: MinecraftBlockDescriptor = json_field()
-    sea_material: MinecraftBlockDescriptor = json_field()
+    foundation_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
+    mid_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
+    top_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
+    sea_floor_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
+    sea_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
     sea_floor_depth: Annotated[int, InRange(maximum=127)] | None = json_field(
         default=None
     )
@@ -116,15 +128,19 @@ class MesaSurface(OverworldSurface):
     """Similar to the overworld surface. Adds colored strata and optional pillars.
 
     Args:
-        clay_material (MinecraftBlockDescriptor): The base clay block.
-        hard_clay_material (MinecraftBlockDescriptor): The hardened clay block.
+        clay_material (str | Block | BlockDescriptor): The base clay block.
+        hard_clay_material (str | Block | BlockDescriptor): The hardened clay block.
         bryce_pillars (bool, optional): Whether to add Bryce pillars.
         has_forest (bool, optional): Whether to add a forest on top.
     """
 
     type: str = json_field(default="minecraft:mesa", init=False)
-    clay_material: MinecraftBlockDescriptor = json_field()
-    hard_clay_material: MinecraftBlockDescriptor = json_field()
+    clay_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
+    hard_clay_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
     bryce_pillars: bool | None = json_field(default=None)
     has_forest: bool | None = json_field(default=None)
 
@@ -146,23 +162,31 @@ class CappedSurface(Surface):
     """Generates surface on blocks with non-solid blocks above or below.
 
     Args:
-        beach_material (MinecraftBlockDescriptor): The block used for beaches.
-        ceiling_materials (list[MinecraftBlockDescriptor]): Blocks used for ceilings, at least 1.
-        floor_materials (list[MinecraftBlockDescriptor]): Blocks used for floors, at least 1.
-        foundation_material (MinecraftBlockDescriptor): The block used deep underground.
-        sea_material (MinecraftBlockDescriptor): The block used in bodies of water.
+        beach_material (str | Block | BlockDescriptor): The block used for beaches.
+        ceiling_materials (list[str | Block | BlockDescriptor]): Blocks used for ceilings, at least 1.
+        floor_materials (list[str | Block | BlockDescriptor]): Blocks used for floors, at least 1.
+        foundation_material (str | Block | BlockDescriptor): The block used deep underground.
+        sea_material (str | Block | BlockDescriptor): The block used in bodies of water.
     """
 
     type: str = json_field(default="minecraft:capped", init=False)
-    foundation_material: MinecraftBlockDescriptor = json_field()
-    sea_material: MinecraftBlockDescriptor = json_field()
-    beach_material: MinecraftBlockDescriptor = json_field()
-    ceiling_materials: Annotated[list[MinecraftBlockDescriptor], Length(minimum=1)] = (
+    foundation_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
         json_field()
     )
-    floor_materials: Annotated[list[MinecraftBlockDescriptor], Length(minimum=1)] = (
+    sea_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
         json_field()
     )
+    beach_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
+    ceiling_materials: Annotated[
+        list[Annotated[Identifier | Block | BlockDescriptor, BlockId]],
+        Length(minimum=1),
+    ] = json_field()
+    floor_materials: Annotated[
+        list[Annotated[Identifier | Block | BlockDescriptor, BlockId]],
+        Length(minimum=1),
+    ] = json_field()
 
 
 class TheEndSurface(Surface):
@@ -177,7 +201,7 @@ class NoiseGradientSurface(Surface):
     Args:
         noise_descriptor (NoiseDescriptor): The noise used by the surface builder.
         noise_block_specifiers (list[NoiseBlockSpecifier]): Which noise ranges map to which blocks, at least 1.
-        non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks the builder may not replace.
+        non_replaceable_blocks (list[str | Block | BlockDescriptor], optional): Blocks the builder may not replace.
     """
 
     type: str = json_field(default="minecraft:noise_gradient", init=False)
@@ -185,23 +209,23 @@ class NoiseGradientSurface(Surface):
     noise_block_specifiers: Annotated[list[NoiseBlockSpecifier], Length(minimum=1)] = (
         json_field()
     )
-    non_replaceable_blocks: list[MinecraftBlockDescriptor] | None = json_field(
-        default=None
-    )
+    non_replaceable_blocks: (
+        list[Annotated[Identifier | Block | BlockDescriptor, BlockId]] | None
+    ) = json_field(default=None)
 
 
 class SteepMaterialAdjustment(JsonObject):
     """Surface material for steep slopes.
 
     Args:
-        material (MinecraftBlockDescriptor): The block used on steep slopes.
+        material (str | Block | BlockDescriptor): The block used on steep slopes.
         north_slopes (bool, optional): Enable for north-facing slopes. Defaults to None.
         south_slopes (bool, optional): Enable for south-facing slopes. Defaults to None.
         east_slopes (bool, optional): Enable for east-facing slopes. Defaults to None.
         west_slopes (bool, optional): Enable for west-facing slopes. Defaults to None.
     """
 
-    material: MinecraftBlockDescriptor = json_field()
+    material: Annotated[Identifier | Block | BlockDescriptor, BlockId] = json_field()
     north_slopes: bool | None = json_field(default=None)
     south_slopes: bool | None = json_field(default=None)
     east_slopes: bool | None = json_field(default=None)
@@ -244,18 +268,28 @@ class SurfaceAdjustmentMaterials(JsonObject):
     """The blocks a surface material adjustment uses while it is active.
 
     Args:
-        foundation_material (MinecraftBlockDescriptor, optional): The block used deep underground.
-        mid_material (MinecraftBlockDescriptor, optional): The block used in a layer below the surface.
-        sea_floor_material (MinecraftBlockDescriptor, optional): The block used as the floor of bodies of water.
-        sea_material (MinecraftBlockDescriptor, optional): The block used in bodies of water.
-        top_material (MinecraftBlockDescriptor, optional): The block used for the surface.
+        foundation_material (str | Block | BlockDescriptor, optional): The block used deep underground.
+        mid_material (str | Block | BlockDescriptor, optional): The block used in a layer below the surface.
+        sea_floor_material (str | Block | BlockDescriptor, optional): The block used as the floor of bodies of water.
+        sea_material (str | Block | BlockDescriptor, optional): The block used in bodies of water.
+        top_material (str | Block | BlockDescriptor, optional): The block used for the surface.
     """
 
-    foundation_material: MinecraftBlockDescriptor | None = json_field(default=None)
-    mid_material: MinecraftBlockDescriptor | None = json_field(default=None)
-    sea_floor_material: MinecraftBlockDescriptor | None = json_field(default=None)
-    sea_material: MinecraftBlockDescriptor | None = json_field(default=None)
-    top_material: MinecraftBlockDescriptor | None = json_field(default=None)
+    foundation_material: (
+        Annotated[Identifier | Block | BlockDescriptor, BlockId] | None
+    ) = json_field(default=None)
+    mid_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] | None = (
+        json_field(default=None)
+    )
+    sea_floor_material: (
+        Annotated[Identifier | Block | BlockDescriptor, BlockId] | None
+    ) = json_field(default=None)
+    sea_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] | None = (
+        json_field(default=None)
+    )
+    top_material: Annotated[Identifier | Block | BlockDescriptor, BlockId] | None = (
+        json_field(default=None)
+    )
 
 
 class GrassTint(JsonObject):
@@ -306,11 +340,11 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
     def set_overworld_builder(
         self,
         *,
-        foundation_material: MinecraftBlockDescriptor,
-        mid_material: MinecraftBlockDescriptor,
-        sea_floor_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-        top_material: MinecraftBlockDescriptor,
+        foundation_material: Identifier | Block | BlockDescriptor,
+        mid_material: Identifier | Block | BlockDescriptor,
+        sea_floor_material: Identifier | Block | BlockDescriptor,
+        sea_material: Identifier | Block | BlockDescriptor,
+        top_material: Identifier | Block | BlockDescriptor,
         sea_floor_depth: int | None = None,
     ):
         """Controls the blocks used for the default Minecraft Overworld terrain generation."""
@@ -327,11 +361,11 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
     def set_frozen_ocean_builder(
         self,
         *,
-        foundation_material: MinecraftBlockDescriptor,
-        mid_material: MinecraftBlockDescriptor,
-        sea_floor_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-        top_material: MinecraftBlockDescriptor,
+        foundation_material: Identifier | Block | BlockDescriptor,
+        mid_material: Identifier | Block | BlockDescriptor,
+        sea_floor_material: Identifier | Block | BlockDescriptor,
+        sea_material: Identifier | Block | BlockDescriptor,
+        top_material: Identifier | Block | BlockDescriptor,
         sea_floor_depth: int | None = None,
     ):
         """Similar to overworld_surface. Adds icebergs."""
@@ -348,13 +382,13 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
     def set_mesa_builder(
         self,
         *,
-        clay_material: MinecraftBlockDescriptor,
-        foundation_material: MinecraftBlockDescriptor,
-        hard_clay_material: MinecraftBlockDescriptor,
-        mid_material: MinecraftBlockDescriptor,
-        sea_floor_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-        top_material: MinecraftBlockDescriptor,
+        clay_material: Identifier | Block | BlockDescriptor,
+        foundation_material: Identifier | Block | BlockDescriptor,
+        hard_clay_material: Identifier | Block | BlockDescriptor,
+        mid_material: Identifier | Block | BlockDescriptor,
+        sea_floor_material: Identifier | Block | BlockDescriptor,
+        sea_material: Identifier | Block | BlockDescriptor,
+        top_material: Identifier | Block | BlockDescriptor,
         bryce_pillars: bool | None = None,
         has_forest: bool | None = None,
         sea_floor_depth: int | None = None,
@@ -377,11 +411,11 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
     def set_swamp_builder(
         self,
         *,
-        foundation_material: MinecraftBlockDescriptor,
-        mid_material: MinecraftBlockDescriptor,
-        sea_floor_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
-        top_material: MinecraftBlockDescriptor,
+        foundation_material: Identifier | Block | BlockDescriptor,
+        mid_material: Identifier | Block | BlockDescriptor,
+        sea_floor_material: Identifier | Block | BlockDescriptor,
+        sea_material: Identifier | Block | BlockDescriptor,
+        top_material: Identifier | Block | BlockDescriptor,
         sea_floor_depth: int | None = None,
         max_puddle_depth_below_sea_level: int | None = None,
     ):
@@ -400,11 +434,11 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
     def set_capped_builder(
         self,
         *,
-        beach_material: MinecraftBlockDescriptor,
-        ceiling_materials: list[MinecraftBlockDescriptor],
-        floor_materials: list[MinecraftBlockDescriptor],
-        foundation_material: MinecraftBlockDescriptor,
-        sea_material: MinecraftBlockDescriptor,
+        beach_material: Identifier | Block | BlockDescriptor,
+        ceiling_materials: list[Identifier | Block | BlockDescriptor],
+        floor_materials: list[Identifier | Block | BlockDescriptor],
+        foundation_material: Identifier | Block | BlockDescriptor,
+        sea_material: Identifier | Block | BlockDescriptor,
     ):
         """Generates surface on blocks with non-solid blocks above or below."""
         self.builder = CappedSurface(
@@ -426,7 +460,9 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
         *,
         noise_descriptor: NoiseDescriptor,
         noise_block_specifiers: list[NoiseBlockSpecifier],
-        non_replaceable_blocks: list[MinecraftBlockDescriptor] | None = None,
+        non_replaceable_blocks: (
+            list[Identifier | Block | BlockDescriptor] | None
+        ) = None,
     ):
         """Places continuous bands of blocks according to a noise distribution.
 
@@ -434,7 +470,7 @@ class _BaseBiomeSurfaceBuilder(JsonComponent, abstract=True):
             noise_descriptor (NoiseDescriptor): The NoiseDescriptor used by the surface builder.
             noise_block_specifiers (list[NoiseBlockSpecifier]): The noise block specifiers defining which ranges
                 of noise are associated with which blocks.
-            non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks that the
+            non_replaceable_blocks (list[str | Block | BlockDescriptor], optional): Blocks that the
                 surface builder is not allowed to replace. Defaults to None.
         """
         self.builder = NoiseGradientSurface(
@@ -542,7 +578,7 @@ class BiomeMountainParameters(JsonComponent):
     def set_steep_material_adjustment(
         self,
         *,
-        material: MinecraftBlockDescriptor,
+        material: Identifier | Block | BlockDescriptor,
         north_slopes: bool | None = None,
         south_slopes: bool | None = None,
         east_slopes: bool | None = None,
@@ -595,7 +631,7 @@ class BiomeNoiseGradient(JsonComponent):
         type (BiomeNoiseGradientBuilderType, optional): The builder type. Defaults to None.
         noise_descriptor (NoiseDescriptor, optional): The specification for the noise used by the surface builder. Defaults to None.
         noise_block_specifiers (list[NoiseBlockSpecifier], optional): Which ranges of noise are associated with which blocks.
-        non_replaceable_blocks (list[MinecraftBlockDescriptor], optional): Blocks the surface builder may not replace. Defaults to None.
+        non_replaceable_blocks (list[str | Block | BlockDescriptor], optional): Blocks the surface builder may not replace. Defaults to None.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/examples/components/minecraftbiomes_noise_gradient)
     """
@@ -607,11 +643,23 @@ class BiomeNoiseGradient(JsonComponent):
     noise_block_specifiers: list[NoiseBlockSpecifier] = json_field(
         default_factory=list, omit_default=True
     )
-    non_replaceable_blocks: list[MinecraftBlockDescriptor] | None = json_field(
-        default=None
-    )
+    non_replaceable_blocks: (
+        list[Annotated[Identifier | Block | BlockDescriptor, BlockId]] | None
+    ) = json_field(default=None)
 
-    def set_type(self, *, builder_type: BiomeNoiseGradientBuilderType):
+    def set_type(
+        self,
+        *,
+        builder_type: Literal[
+            "minecraft:capped",
+            "minecraft:frozen_ocean",
+            "minecraft:mesa",
+            "minecraft:noise_gradient",
+            "minecraft:overworld",
+            "minecraft:swamp",
+            "minecraft:the_end",
+        ],
+    ):
         """Sets the builder type for this noise gradient component."""
         self.type = builder_type
         return self
@@ -631,7 +679,9 @@ class BiomeNoiseGradient(JsonComponent):
         self.noise_block_specifiers.append(specifier)
         return self
 
-    def set_non_replaceable_blocks(self, *, blocks: list[MinecraftBlockDescriptor]):
+    def set_non_replaceable_blocks(
+        self, *, blocks: list[Identifier | Block | BlockDescriptor]
+    ):
         """Sets the list of blocks that the surface builder is not allowed to replace."""
         self.non_replaceable_blocks = list(blocks)
         return self
@@ -772,11 +822,11 @@ class BiomeSurfaceMaterialAdjustments(JsonComponent):
         height_range: tuple[float | str, float | str] | None = None,
         noise_frequency_scale: float | None = None,
         noise_range: tuple[float, float] | None = None,
-        foundation_material: MinecraftBlockDescriptor | None = None,
-        mid_material: MinecraftBlockDescriptor | None = None,
-        sea_floor_material: MinecraftBlockDescriptor | None = None,
-        sea_material: MinecraftBlockDescriptor | None = None,
-        top_material: MinecraftBlockDescriptor | None = None,
+        foundation_material: Identifier | Block | BlockDescriptor | None = None,
+        mid_material: Identifier | Block | BlockDescriptor | None = None,
+        sea_floor_material: Identifier | Block | BlockDescriptor | None = None,
+        sea_material: Identifier | Block | BlockDescriptor | None = None,
+        top_material: Identifier | Block | BlockDescriptor | None = None,
     ):
         """Adds an adjustment. See `SurfaceMaterialAdjustment` and `SurfaceAdjustmentMaterials` for the parameters."""
         self.adjustments.append(

@@ -1,7 +1,5 @@
 import orjson
-
 import pytest
-from anvil.api.vanilla.biomes import MinecraftBiomeTypes
 from anvil.api.biomes.components import (
     BiomeClimate,
     BiomeCreatureSpawnProbability,
@@ -22,13 +20,14 @@ from anvil.api.biomes.components import (
     BiomeVillageType,
     GrassTint,
     MesaSurface,
+    NoiseBlockSpecifier,
+    NoiseDescriptor,
     OverworldSurface,
     Surface,
 )
-from anvil.api.core.enums import Dimension
-from anvil.lib.jsonmodel import ComponentPlacement, JsonComponent
-from anvil.api.biomes.components import NoiseBlockSpecifier, NoiseDescriptor
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.api.vanilla.biomes import MinecraftBiomeTypes
+from anvil.lib.jsonmodel import ComponentPlacement, Identifier, JsonComponent
+from anvil.lib.jsonmodel.enums import Dimension
 from anvil.lib.lib import AnvilIO
 
 
@@ -74,7 +73,7 @@ def test_biome_components():
     with pytest.raises(ValueError):
         _export(ng.set_type(builder_type="minecraft:not_a_builder"))
 
-    stone = MinecraftBlockDescriptor("minecraft:stone", True)
+    stone = Identifier.parse("minecraft:stone", vanilla=True)
     ng.add_noise_block_specifier(
         specifier=NoiseBlockSpecifier(block=stone, range=(-0.5, 0.5))
     )
@@ -103,8 +102,8 @@ def test_noise_descriptor():
 
 
 def test_noise_block_specifier():
-    stone = MinecraftBlockDescriptor("minecraft:stone", True)
-    dirt = MinecraftBlockDescriptor("minecraft:dirt", True)
+    stone = Identifier.parse("minecraft:stone", vanilla=True)
+    dirt = Identifier.parse("minecraft:dirt", vanilla=True)
 
     assert _export(NoiseBlockSpecifier(block=stone, threshold=0.5)) == {
         "threshold": 0.5,
@@ -131,8 +130,8 @@ def test_noise_block_specifier():
 
 def test_biome_noise_gradient():
     nd = NoiseDescriptor(name="test_noise", first_octave=4, amplitudes=[1.0, 0.5, 0.25])
-    stone = MinecraftBlockDescriptor("minecraft:stone", True)
-    dirt = MinecraftBlockDescriptor("minecraft:dirt", True)
+    stone = Identifier.parse("minecraft:stone", vanilla=True)
+    dirt = Identifier.parse("minecraft:dirt", vanilla=True)
     nbs1 = NoiseBlockSpecifier(block=stone, threshold=0.5)
     nbs2 = NoiseBlockSpecifier(block=dirt, range=(0.1, 0.9), noise="custom_noise")
 
@@ -181,8 +180,8 @@ def test_biome_noise_gradient():
 
 def test_surface_builder_noise_gradient():
     nd = NoiseDescriptor(name="test_noise", first_octave=4, amplitudes=[1.0, 0.5, 0.25])
-    stone = MinecraftBlockDescriptor("minecraft:stone", True)
-    dirt = MinecraftBlockDescriptor("minecraft:dirt", True)
+    stone = Identifier.parse("minecraft:stone", vanilla=True)
+    dirt = Identifier.parse("minecraft:dirt", vanilla=True)
     nbs1 = NoiseBlockSpecifier(block=stone, threshold=0.5)
     nbs2 = NoiseBlockSpecifier(block=dirt, range=(0.1, 0.9), noise="custom_noise")
 
@@ -225,11 +224,11 @@ def _export(component):
 
 def _overworld_materials():
     return dict(
-        foundation_material=MinecraftBlockDescriptor("minecraft:stone", True),
-        mid_material=MinecraftBlockDescriptor("minecraft:dirt", True),
-        sea_floor_material=MinecraftBlockDescriptor("minecraft:gravel", True),
-        sea_material=MinecraftBlockDescriptor("minecraft:water", True),
-        top_material=MinecraftBlockDescriptor("minecraft:grass_block", True),
+        foundation_material=Identifier.parse("minecraft:stone", vanilla=True),
+        mid_material=Identifier.parse("minecraft:dirt", vanilla=True),
+        sea_floor_material=Identifier.parse("minecraft:gravel", vanilla=True),
+        sea_material=Identifier.parse("minecraft:water", vanilla=True),
+        top_material=Identifier.parse("minecraft:grass_block", vanilla=True),
     )
 
 
@@ -299,8 +298,8 @@ def test_surface_builder_overworld_variants():
 
     sb.set_mesa_builder(
         **_overworld_materials(),
-        clay_material=MinecraftBlockDescriptor("minecraft:clay", True),
-        hard_clay_material=MinecraftBlockDescriptor("minecraft:terracotta", True),
+        clay_material=Identifier.parse("minecraft:clay", vanilla=True),
+        hard_clay_material=Identifier.parse("minecraft:hardened_clay", vanilla=True),
         bryce_pillars=True,
     )
     assert isinstance(sb.builder, MesaSurface)
@@ -330,13 +329,13 @@ def test_surface_builder_validation():
 
 
 def test_surface_builder_capped_and_end():
-    stone = MinecraftBlockDescriptor("minecraft:stone", True)
+    stone = Identifier.parse("minecraft:stone", vanilla=True)
     sb = BiomeSubSurfaceBuilder().set_capped_builder(
         beach_material=stone,
         ceiling_materials=[stone],
         floor_materials=[stone],
         foundation_material=stone,
-        sea_material=MinecraftBlockDescriptor("minecraft:lava", True),
+        sea_material=Identifier.parse("minecraft:lava", vanilla=True),
     )
     builder = _export(sb)["minecraft:subsurface_builder"]["builder"]
     assert builder["type"] == "minecraft:capped"
@@ -400,7 +399,7 @@ def test_biome_map_tints_writes_hex_color():
 
 
 def test_biome_mountain_parameters_writes_material():
-    stone = MinecraftBlockDescriptor("minecraft:stone", True)
+    stone = Identifier.parse("minecraft:stone", vanilla=True)
     mountain = (
         BiomeMountainParameters()
         .set_steep_material_adjustment(material=stone, north_slopes=True)
@@ -509,7 +508,7 @@ def test_biome_surface_material_adjustments():
         height_range=(0, 64),
         noise_range=(-0.5, 0.5),
         noise_frequency_scale=0.5,
-        top_material=MinecraftBlockDescriptor("minecraft:sand", True),
+        top_material=Identifier.parse("minecraft:sand", vanilla=True),
     )
     assert _export(adjustments) == {
         "minecraft:surface_material_adjustments": {
@@ -611,7 +610,7 @@ def test_replacement_allows_nether_and_height_range_allows_molang():
 
     adjustments = BiomeSurfaceMaterialAdjustments().add_adjustment(
         height_range=("variable.sea_level", 120),
-        top_material=MinecraftBlockDescriptor("minecraft:sand", True),
+        top_material=Identifier.parse("minecraft:sand", vanilla=True),
     )
     assert _export(adjustments)["minecraft:surface_material_adjustments"][
         "adjustments"
@@ -674,7 +673,22 @@ def test_biome_client_builders_and_components_mix():
     assert water.surface_opacity == 0.8
 
 
-def test_biome_sides_refuse_the_other_sides_components():
+def _check_file(file):
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = type(file).__schema__()
+    jsonschema.Draft202012Validator.check_schema(schema)
+    exported = AnvilIO._normalize_json_like(file._content)
+    jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
+    return exported
+
+
+@pytest.fixture
+def no_write(monkeypatch):
+    """Exports files without writing them."""
+    monkeypatch.setattr("anvil.lib.jsonmodel.file.AnvilIO.file", lambda *a, **k: None)
+
+
+def test_biome_sides_refuse_the_other_sides_components(no_write):
     from anvil.api.biomes.client import BiomeClient
     from anvil.api.biomes.components import BiomeClientSkyColor
     from anvil.api.biomes.server import BiomeServer
@@ -682,9 +696,102 @@ def test_biome_sides_refuse_the_other_sides_components():
     server = BiomeServer("test_biome")
     server.components.add(BiomeClientSkyColor(sky_color="#ff0000"))
     with pytest.raises(ValueError, match="client biome component"):
-        server.queue()
+        server.__export__()
 
     client = BiomeClient("test_biome")
     client.components.add(BiomeHumidity(is_humid=True))
     with pytest.raises(ValueError, match="server biome component"):
-        client.queue()
+        client.__export__()
+
+
+def test_biome_server_file():
+    from anvil.api.biomes.server import BiomeServer
+
+    server = BiomeServer("test_biome")
+    server.components.add(BiomeClimate(temperature=0.8, downfall=0.4))
+    server.components.add(BiomeTags(tags=["custom", "overworld"]))
+    assert server.identifier == "test:test_biome"
+    assert _check_file(server) == {
+        "format_version": server._content.format_version,
+        "minecraft:biome": {
+            "description": {"identifier": "test:test_biome"},
+            "components": {
+                "minecraft:climate": {"temperature": 0.8, "downfall": 0.4},
+                "minecraft:tags": {"tags": ["custom", "overworld"]},
+            },
+        },
+    }
+    assert BiomeServer.__schema__()["x-anvil-file"] == {
+        "pack": "behavior_pack",
+        "folder": "biomes",
+        "extension": ".biome.json",
+    }
+
+
+def test_biome_client_file():
+    from anvil.api.biomes.client import BiomeClient
+
+    client = BiomeClient("test_biome")
+    client.sky_color("#80a0ff").grass_appearance("swamp_grass").precipitation(ash=0.5)
+    assert _check_file(client) == {
+        "format_version": client._content.format_version,
+        "minecraft:client_biome": {
+            "description": {"identifier": "test:test_biome"},
+            "components": {
+                "minecraft:sky_color": {"sky_color": "#80a0ff"},
+                "minecraft:grass_appearance": {"color": {"color_map": "swamp_grass"}},
+                "minecraft:precipitation": {"ash": 0.5},
+            },
+        },
+    }
+    assert BiomeClient.__schema__()["x-anvil-file"]["pack"] == "resource_pack"
+
+
+def test_biome_files_are_empty_by_default():
+    """Empty components are left out, as the file shortener always dropped them."""
+    from anvil.api.biomes.client import BiomeClient
+    from anvil.api.biomes.server import BiomeServer
+
+    assert _check_file(BiomeServer("plains", True))["minecraft:biome"] == {
+        "description": {"identifier": "minecraft:plains"}
+    }
+    assert _check_file(BiomeClient("plains", True))["minecraft:client_biome"] == {
+        "description": {"identifier": "minecraft:plains"}
+    }
+
+
+def test_biome_object(monkeypatch):
+    from anvil.api.biomes.biomes import Biome
+    from anvil.api.biomes.client import BiomeClient
+    from anvil.api.biomes.server import BiomeServer
+    from anvil.lib import config
+
+    biome = Biome("mushroom_caves")
+    assert biome.identifier == "test:mushroom_caves"
+    assert biome.name == "mushroom_caves"
+    assert str(biome) == "test:mushroom_caves"
+    assert biome._server is None and biome._client is None
+
+    assert isinstance(biome.server, BiomeServer)
+    assert biome.server is biome.server
+    assert biome.server.identifier == "test:mushroom_caves"
+    assert biome.server.description.identifier == "test:mushroom_caves"
+    assert biome._client is None
+
+    queued = []
+    monkeypatch.setattr(
+        BiomeServer, "queue", lambda self, directory=None: queued.append(self)
+    )
+    monkeypatch.setattr(
+        BiomeClient, "queue", lambda self, directory=None: queued.append(self)
+    )
+    assert biome.queue() is biome
+    assert queued == [biome._server]
+
+    vanilla = Biome(MinecraftBiomeTypes.Plains, True)
+    assert vanilla.identifier == "minecraft:plains"
+    assert isinstance(vanilla.client, BiomeClient)
+    assert vanilla.client.identifier.is_vanilla
+    with config.override(_TARGET="addon", NAMESPACE="test_t"):
+        with pytest.raises(ValueError, match="partial overrides"):
+            Biome(MinecraftBiomeTypes.Plains, True)

@@ -1,69 +1,98 @@
+"""The behavior pack's `biomes/<biome>.biome.json`: a server biome, its description and
+components."""
+
+from typing import Annotated, Any, ClassVar
+
 from anvil.api.biomes.components import BiomeClientComponent
+from anvil.api.biomes.description import _BiomeDescription
 from anvil.api.core.components import ComponentGroup
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import JsonFile, validate_components
-from anvil.lib.schemas import JsonSchemes, MinecraftDescription
+from anvil.lib.format_versions import BIOME_SERVER_VERSION
+from anvil.lib.jsonmodel import (
+    Encoded,
+    JsonFile,
+    JsonObject,
+    json_field,
+    validate_components,
+)
 
-__all__ = ["BiomeDescription", "BiomeServer"]
+__all__ = ["BiomeServer"]
 
 
-class BiomeDescription(MinecraftDescription):
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """The biome description.
+# region Parts
 
-        Args:
-            name (str): The name of the biome.
-            is_vanilla (bool, optional): Whether or not the biome is a vanilla biome. Defaults to False.
-        """
-        super().__init__(name, is_vanilla)
+
+def _components(group: ComponentGroup) -> Any:
+    return group.__payload__()
+
+
+class _BiomeServer(JsonObject):
+    """The `minecraft:biome` body."""
+
+    description: _BiomeDescription = json_field(default_factory=_BiomeDescription)
+    components: Annotated[ComponentGroup, Encoded(_components, {"type": "object"})] = (
+        json_field(default_factory=lambda: ComponentGroup(name="components"))
+    )
+
+
+class _BiomeServerFile(JsonObject):
+    """The content of a `.biome.json` file."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("format_version", "minecraft:biome")
+
+    format_version: str = json_field(default=BIOME_SERVER_VERSION, init=False)
+    biome: _BiomeServer = json_field(
+        default_factory=_BiomeServer, key="minecraft:biome"
+    )
+
+
+# endregion
 
 
 class BiomeServer(JsonFile):
-    """The biome server object."""
+    """A server biome: its description and the components that generate it.
 
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/)
+    """
+
+    _document = _BiomeServerFile
     _extension = ".biome.json"
     _pack = Pack.BP
     _folder = "biomes"
     _object_type = "Biomes Server"
 
     def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """The biome server object. Add the biome components from
+        """Creates a server biome. Add the biome components from
         `anvil.api.biomes.components` to `components`.
 
         Args:
-            name (str): The name of the biome.
-            is_vanilla (bool, optional): Whether or not the biome is a vanilla biome. Defaults to False.
+            name (str): The biome's name.
+            is_vanilla (bool, optional): If the biome is a vanilla one. Defaults to False.
         """
         super().__init__(name, is_vanilla)
-        self.content(JsonSchemes.biome_server())
-        self._description = BiomeDescription(name, is_vanilla)
-        self._components = ComponentGroup(name="components")
+        self.description.set_identifier(self.identifier)
 
     @property
-    def description(self) -> BiomeDescription:
+    def description(self) -> _BiomeDescription:
         """The biome description."""
-        return self._description
+        return self._content.biome.description
 
     @property
     def components(self) -> ComponentGroup:
         """The biome components."""
-        return self._components
+        return self._content.biome.components
 
-    def queue(self) -> "BiomeServer":
-        """Queues the biome to be exported.
+    def __export__(self) -> None:
+        """Checks the components before the file is written.
 
         Raises:
             ValueError: A client biome component was added to the server biome.
         """
-        for component in self._components:
+        for component in self.components:
             if isinstance(component, BiomeClientComponent):
                 raise ValueError(
                     f"{type(component).__name__} is a client biome component. "
-                    f"Add it to the biome client instead. {self._object_type}[{self.identifier.name}]"
+                    f"Add it to the biome client instead. {self._object_type}[{self.identifier}]"
                 )
-        validate_components(self, self._components, [])
-        self._content["minecraft:biome"].update(self.description.__export__())
-        self._content["minecraft:biome"]["components"] = self._components.__payload__()
-
-        self.content(self._content)
-        super().queue()
+        validate_components(self, self.components, [])
+        return super().__export__()
