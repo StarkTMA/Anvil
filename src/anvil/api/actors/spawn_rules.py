@@ -1,356 +1,468 @@
-from typing import List, Literal
+"""The behavior pack's `spawn_rules/<entity>.spawn_rules.json`: where and how an entity
+spawns."""
 
-from anvil.api.core.enums import Difficulty, Population
+from collections.abc import Sequence
+from typing import Annotated, Any, ClassVar, Literal
+
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.filters import Filter
 from anvil.lib.config import Pack
-from anvil.lib.lib import AnvilFormatter
-from anvil.lib.jsonmodel import JsonFile
-from anvil.lib.schemas import (
-    JsonSchemes,
-    MinecraftBlockDescriptor,
-    MinecraftDescription,
+from anvil.lib.format_versions import SPAWN_RULES_VERSION
+from anvil.lib.jsonmodel import (
+    BlockId,
+    Identifier,
+    InRange,
+    JsonComponent,
+    JsonFile,
+    JsonObject,
+    JsonValue,
+    JsonValueComponent,
+    Merged,
+    NonNegative,
+    json_field,
 )
+from anvil.lib.jsonmodel.enums import Difficulty, Population
+from anvil.lib.jsonmodel.types import MobEvent
 
 __all__ = ["SpawnRule"]
 
 
-class _SpawnRuleDescription(MinecraftDescription):
-    def __init__(self, spawn_rule_obj, name: str, is_vanilla) -> None:
-        """Initialize the spawn rule description.
-
-        Args:
-            spawn_rule_obj: Reference to the parent SpawnRule object.
-            name (str): The entity identifier for this spawn rule.
-            is_vanilla (bool): Whether this is a vanilla Minecraft entity.
-        """
-        super().__init__(name, is_vanilla)
-        self._spawn_rule_obj: "SpawnRule" = spawn_rule_obj
-        self._description["description"]["population_control"] = Population.Ambient
-
-    def population_control(self, population: Population) -> "SpawnRule":
-        """Assign the entity to a population pool for spawn limit management.
-
-        Each population pool has its own spawn limits. Entities assigned to a pool
-        will only spawn if that pool hasn't reached its spawn limit. The 'cat' pool
-        functions differently than others - cat spawn rules are based on villages.
-
-        Available pools:
-        - **Animal**: Land animals (cows, pigs, sheep, etc.)
-        - **UnderwaterAnimal**: Aquatic creatures (fish, dolphins, etc.)
-        - **Monster**: Hostile mobs (zombies, skeletons, etc.)
-        - **Ambient**: Ambient creatures (bats, etc.)
-
-        Args:
-            population (Population): The population pool to assign this entity to.
-
-        Returns:
-            SpawnRule: The parent spawn rule for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/cliententitydocumentation/datadrivenspawning)
-        """
-        self._description["description"]["population_control"] = population.value
-        return self._spawn_rule_obj
+# region Conditions
 
 
-class _SpawnRuleCondition:
-    """Defines conditions that must be met for an entity to spawn.
+class _SpawnBiomeFilter(JsonValueComponent):
+    """The biomes the entity spawns in.
 
-    This class provides methods to set various spawn conditions including biome requirements,
-    light levels, difficulty settings, spatial constraints, and behavioral modifiers.
-    Multiple conditions can be combined to create precise spawn requirements.
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/biome_filter)
     """
 
-    def __init__(self):
-        """Initialize an empty spawn condition set."""
-        self._condition = {}
+    identifier = "minecraft:biome_filter"
 
-    def biome_filter(self, filter: List[Filter]):
-        """Specifies which biomes the entity can spawn in using biome tags.
+    filters: list[Filter] = json_field(default_factory=list)
 
-        Biome tags include: animal, monster, desert, forest, jungle, ocean, nether,
-        the_end, cold, warm, frozen, and many others. Each biome has multiple tags
-        that can be used for filtering.
 
-        Example biome tags:
-        - monster: Most overworld biomes where hostile mobs spawn
-        - animal: Biomes where passive animals spawn
-        - nether: All nether dimension biomes
-        - ocean: All ocean biomes
+class _SpawnBrightnessFilter(JsonComponent):
+    """The light levels the entity spawns in.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/brightness_filter)
+    """
+
+    identifier = "minecraft:brightness_filter"
+
+    min: Annotated[int, InRange(0, 15)] | None = None
+    max: Annotated[int, InRange(0, 15)] | None = None
+    adjust_for_weather: bool | None = None
+
+
+class _SpawnDelayFilter(JsonComponent):
+    """A delay before the entity spawns.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/delay_filter)
+    """
+
+    identifier = "minecraft:delay_filter"
+
+    min: Annotated[int, NonNegative] | None = None
+    max: Annotated[int, NonNegative] | None = None
+    identifier_: str = json_field(key="identifier")
+    spawn_chance: Annotated[int, InRange(0, 100)] | None = None
+
+
+class _SpawnDensityLimit(JsonComponent):
+    """How many of the entity may spawn around.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/density_limit)
+    """
+
+    identifier = "minecraft:density_limit"
+
+    surface: Annotated[int, NonNegative] | None = None
+    underground: Annotated[int, NonNegative] | None = None
+
+
+class _SpawnDifficultyFilter(JsonComponent):
+    """The difficulties the entity spawns on.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/difficulty_filter)
+    """
+
+    identifier = "minecraft:difficulty_filter"
+
+    min: Difficulty | None = None
+    max: Difficulty | None = None
+
+
+class _SpawnDisallowInBubble(JsonComponent):
+    """Keeps the entity from spawning in bubble columns.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/disallow_spawns_in_bubble)
+    """
+
+    identifier = "minecraft:disallow_spawns_in_bubble"
+
+
+class _SpawnDistanceFilter(JsonComponent):
+    """The distance from the nearest player the entity spawns at.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/distance_filter)
+    """
+
+    identifier = "minecraft:distance_filter"
+
+    min: Annotated[float, NonNegative] | None = None
+    max: Annotated[float, NonNegative] | None = None
+
+
+class _SpawnHeightFilter(JsonComponent):
+    """The heights the entity spawns at.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/height_filter)
+    """
+
+    identifier = "minecraft:height_filter"
+
+    min: int | None = None
+    max: int | None = None
+
+
+class _Herd(JsonObject):
+    """One herd size the entity spawns in."""
+
+    min_size: Annotated[int, NonNegative] | None = None
+    max_size: Annotated[int, NonNegative] | None = None
+    event: str | None = None
+    event_skip_count: Annotated[int, NonNegative] | None = None
+
+
+class _SpawnHerd(JsonValueComponent):
+    """The herds the entity spawns in.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/herd)
+    """
+
+    identifier = "minecraft:herd"
+
+    herds: list[_Herd] = json_field(default_factory=list)
+
+
+class _SpawnMobEventFilter(JsonComponent):
+    """The mob event the entity spawns with.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/mob_event_filter)
+    """
+
+    identifier = "minecraft:mob_event_filter"
+
+    event: MobEvent = json_field()
+
+
+class _PermuteType(JsonObject):
+    """One entity that may spawn in place of this one."""
+
+    weight: Annotated[int, NonNegative] | None = None
+    entity_type: str | None = None
+    guaranteed_count: Annotated[int, NonNegative] | None = None
+
+
+class _SpawnPermuteType(JsonValueComponent):
+    """The entities that may spawn in place of this one.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/permute_type)
+    """
+
+    identifier = "minecraft:permute_type"
+
+    types: list[_PermuteType] = json_field(default_factory=list)
+
+
+class _SpawnPlayerInVillageFilter(JsonComponent):
+    """How close the player is to a village.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/player_in_village_filter)
+    """
+
+    identifier = "minecraft:player_in_village_filter"
+
+    distance: Annotated[int, NonNegative] | None = None
+    village_border_tolerance: Annotated[int, NonNegative] | None = None
+
+
+class _SpawnAboveBlockFilter(JsonComponent):
+    """The blocks the entity spawns above."""
+
+    identifier = "minecraft:spawns_above_block_filter"
+
+    blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] = json_field(
+        default_factory=list
+    )
+    distance: Annotated[int, NonNegative] | None = None
+
+
+class _SpawnLava(JsonComponent):
+    """Lets the entity spawn in lava.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_lava)
+    """
+
+    identifier = "minecraft:spawns_lava"
+
+
+class _SpawnOnBlockFilter(JsonValueComponent):
+    """The blocks the entity spawns on.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_block_filter)
+    """
+
+    identifier = "minecraft:spawns_on_block_filter"
+
+    blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] = json_field(
+        default_factory=list
+    )
+
+
+class _SpawnOnBlockPreventedFilter(JsonValueComponent):
+    """The blocks the entity never spawns on.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_block_prevented_filter)
+    """
+
+    identifier = "minecraft:spawns_on_block_prevented_filter"
+
+    blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] = json_field(
+        default_factory=list
+    )
+
+
+class _SpawnOnSurface(JsonComponent):
+    """Lets the entity spawn on the surface.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_surface)
+    """
+
+    identifier = "minecraft:spawns_on_surface"
+
+
+class _SpawnUnderground(JsonComponent):
+    """Lets the entity spawn underground.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underground)
+    """
+
+    identifier = "minecraft:spawns_underground"
+
+
+class _SpawnUnderwater(JsonComponent):
+    """Lets the entity spawn underwater.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underwater)
+    """
+
+    identifier = "minecraft:spawns_underwater"
+
+
+class _SpawnWeight(JsonComponent):
+    """How often the condition is picked over the others.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/weight)
+    """
+
+    identifier = "minecraft:weight"
+
+    default: Annotated[int, NonNegative] | None = None
+
+
+class _SpawnWorldAgeFilter(JsonComponent):
+    """The world age the entity starts spawning at.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/world_age_filter)
+    """
+
+    identifier = "minecraft:world_age_filter"
+
+    min: Annotated[int, NonNegative] | None = None
+
+
+class _SpawnEvent(JsonComponent):
+    """The event run on the entity when it spawns.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawn_event)
+    """
+
+    identifier = "minecraft:spawn_event"
+
+    event: str = json_field()
+
+
+# endregion
+
+
+class _SpawnRuleCondition(JsonValue):
+    """A set of requirements the entity spawns under, written as one object of conditions.
+    Each builder replaces the condition it sets, except `biome_filter`, `herd` and
+    `permute_type`, which add to theirs."""
+
+    conditions: Annotated[list[JsonComponent], Merged()] = json_field(
+        default_factory=list
+    )
+
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, Any]) -> dict[str, Any]:
+        return {"type": "object", "additionalProperties": {"type": ["object", "array"]}}
+
+    def _set(self, condition: JsonComponent) -> "_SpawnRuleCondition":
+        self.conditions = [
+            c for c in self.conditions if c.identifier != condition.identifier
+        ] + [condition]
+        return self
+
+    def _get(self, cls: type[JsonComponent]) -> JsonComponent | None:
+        return next((c for c in self.conditions if isinstance(c, cls)), None)
+
+    def biome_filter(self, filter: Sequence[Filter]) -> "_SpawnRuleCondition":
+        """Adds tests on the biome tags, which must all pass, such as
+        `Filter.has_biome_tag("monster")`.
 
         Args:
-            filter (list[Filter]): List of filter conditions to test biome tags
-                (e.g., [Filter.has_biome_tag("monster")]).
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            filter (Sequence[Filter]): The filters.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/biome_filter)
         """
-        if "minecraft:biome_filter" not in self._condition:
-            self._condition.update({"minecraft:biome_filter": []})
-        self._condition["minecraft:biome_filter"].extend(filter)
-        return self
+        current = self._get(_SpawnBiomeFilter)
+        filters = (current.filters if current else []) + list(filter)
+        return self._set(_SpawnBiomeFilter(filters=filters))
 
     def brightness_filter(
         self,
         min_brightness: int = 0,
         max_brightness: int = 15,
         adjust_for_weather: bool = True,
-    ):
-        """Sets the light level range that allows the entity to spawn.
-
-        Light levels range from 0 (complete darkness) to 15 (full sunlight).
-        Most hostile mobs spawn in low light (0-7), while peaceful mobs typically
-        require higher light levels.
+    ) -> "_SpawnRuleCondition":
+        """Sets the light levels the entity spawns in, from 0 (dark) to 15 (sunlight).
 
         Args:
-            min_brightness (int): Minimum light level for spawning (0-15). Defaults to 0.
-            max_brightness (int): Maximum light level for spawning (0-15). Defaults to 15.
-            adjust_for_weather (bool): Whether weather affects light level calculations
-                (e.g., allows hostile mobs to spawn during day when it rains). Defaults to True.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            min_brightness (int, optional): The lowest light level. Defaults to 0.
+            max_brightness (int, optional): The highest light level. Defaults to 15.
+            adjust_for_weather (bool, optional): Lets the weather change the light level,
+                so hostile mobs spawn by day in the rain. Defaults to True.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/brightness_filter)
         """
-        min_brightness = max(0, min_brightness)
-        max_brightness = min(15, max_brightness)
-        self._condition.update(
-            {
-                "minecraft:brightness_filter": {
-                    "min": min_brightness,
-                    "max": max_brightness,
-                    "adjust_for_weather": adjust_for_weather,
-                }
-            }
+        return self._set(
+            _SpawnBrightnessFilter(
+                min=min_brightness,
+                max=max_brightness,
+                adjust_for_weather=adjust_for_weather,
+            )
         )
-        return self
 
     def delay_filter(
         self, minimum: int, maximum: int, identifier: str, spawn_chance: int
-    ):
-        """Sets specific time delays before entities will spawn.
-
-        This creates a delay mechanism where the entity specified by identifier
-        has a chance to spawn after a random delay period.
+    ) -> "_SpawnRuleCondition":
+        """Spawns an entity after a random delay.
 
         Args:
-            minimum (int): Minimum delay time before spawning can occur.
-            maximum (int): Maximum delay time before spawning can occur.
-            identifier (str): The entity identifier that will spawn after the delay.
-            spawn_chance (int): Percentage chance (0-100) that the entity will spawn.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            minimum (int): The shortest delay.
+            maximum (int): The longest delay.
+            identifier (str): The entity that spawns after the delay.
+            spawn_chance (int): The percent chance it spawns, 0 to 100.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/delay_filter)
         """
-        self._condition.update(
-            {
-                "minecraft:delay_filter": {
-                    "min": minimum,
-                    "max": maximum,
-                    "identifier": identifier,
-                    "spawn_chance": max(min(spawn_chance, 100), 0),
-                }
-            }
+        return self._set(
+            _SpawnDelayFilter(
+                min=minimum,
+                max=maximum,
+                identifier_=identifier,
+                spawn_chance=spawn_chance,
+            )
         )
 
-        return self
-
-    def density_limit(self, surface: int = -1, underground: int = -1):
-        """Limits the number of this entity type that can spawn in a given area.
-
-        This provides local density control separate from global population limits.
-        Useful for preventing overcrowding of specific entity types in small areas.
+    def density_limit(
+        self, surface: int | None = None, underground: int | None = None
+    ) -> "_SpawnRuleCondition":
+        """Limits how many of the entity may spawn around, apart from the population limit.
 
         Args:
-            surface (int): Maximum number of this entity type on the surface.
-                Use -1 for unlimited. Defaults to -1.
-            underground (int): Maximum number of this entity type underground.
-                Use -1 for unlimited. Defaults to -1.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            surface (int, optional): The most on the surface. Unlimited when unset.
+            underground (int, optional): The most underground. Unlimited when unset.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/density_limit)
         """
-        density = {"minecraft:density_limit": {}}
-        if surface != -1:
-            density["minecraft:density_limit"]["surface"] = surface
-        if underground != -1:
-            density["minecraft:density_limit"]["underground"] = underground
-        self._condition.update(density)
-        return self
+        return self._set(_SpawnDensityLimit(surface=surface, underground=underground))
 
     def difficulty_filter(
         self,
-        min_difficulty: Difficulty = Difficulty.Easy,
-        max_difficulty: Difficulty = Difficulty.Hardcore,
-    ):
-        """Restricts spawning to specific difficulty levels.
-
-        Allows entities to spawn only within the specified difficulty range.
-        Useful for making certain entities only appear on harder difficulties.
-
-        Difficulty levels: Peaceful < Easy < Normal < Hard
+        min_difficulty: Difficulty | None = None,
+        max_difficulty: Difficulty | None = None,
+    ) -> "_SpawnRuleCondition":
+        """Sets the difficulties the entity spawns on.
 
         Args:
-            min_difficulty (Difficulty): Minimum difficulty for spawning. Defaults to Easy.
-            max_difficulty (Difficulty): Maximum difficulty for spawning. Defaults to Hard.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            min_difficulty (Difficulty, optional): The lowest difficulty.
+            max_difficulty (Difficulty, optional): The highest difficulty.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/difficulty_filter)
         """
-        self._condition.update(
-            {
-                "minecraft:difficulty_filter": {
-                    "min": (
-                        min_difficulty if min_difficulty != Difficulty.Easy else None
-                    ),
-                    "max": (
-                        max_difficulty
-                        if max_difficulty != Difficulty.Hardcore
-                        else None
-                    ),
-                }
-            }
-        )
-        return self
+        return self._set(_SpawnDifficultyFilter(min=min_difficulty, max=max_difficulty))
 
-    def disallow_spawns_in_bubble(self):
-        """Prevents the entity from spawning in water bubble columns.
-
-        Blocks spawning in bubble columns created by magma blocks or soul sand underwater.
-        Useful for aquatic entities that should avoid these special water areas.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+    def disallow_spawns_in_bubble(self) -> "_SpawnRuleCondition":
+        """Keeps the entity from spawning in bubble columns.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/disallow_spawns_in_bubble)
         """
-        self._condition.update({"minecraft:disallow_spawns_in_bubble": {}})
-        return self
+        return self._set(_SpawnDisallowInBubble())
 
-    def distance_filter(self, range: tuple[int, int] = (24, 128)):
-        """Sets the distance range from players where entities can spawn.
-
-        Entities will only spawn within this distance range from the nearest player.
-        Typical values are 24-128 blocks for most mobs to prevent spawning too close
-        or too far from players.
+    def distance_filter(
+        self, range: tuple[float, float] = (24, 128)
+    ) -> "_SpawnRuleCondition":
+        """Sets how far from the nearest player the entity spawns.
 
         Args:
-            range (tuple[int, int]): Distance range from a player for spawning (min, max) in blocks. Defaults to (24, 128).
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            range (tuple[float, float], optional): The (min, max) distance in blocks.
+                Defaults to (24, 128).
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/distance_filter)
         """
-        self._condition.update(
-            {
-                "minecraft:distance_filter": AnvilFormatter.min_max_dict(
-                    range, "minecraft:distance_filter", clamp_min=0
-                )
-            }
-        )
-        return self
+        return self._set(_SpawnDistanceFilter(min=range[0], max=range[1]))
 
-    def entity_types(
-        self,
-        filters: Filter = None,
-        max_dist: float = 16,
-        must_see: bool = False,
-        must_see_forget_duration: float = 3.0,
-        sprint_speed_multiplier: float = 1.0,
-        walk_speed_multiplier: float = 1.0,
-    ):
-        """Defines entity targeting data for spawn-related behaviors.
-
-        This encapsulates entity data used in certain spawn behaviors and components
-        that need to reference or interact with other entities during spawning.
+    def height_filter(self, min: int, max: int) -> "_SpawnRuleCondition":
+        """Sets the heights the entity spawns at.
 
         Args:
-            filters (Filter, optional): Conditions that make entities valid targets.
-            max_dist (float): Maximum distance for entity interactions. Defaults to 16.
-            must_see (bool): Whether line of sight is required. Defaults to False.
-            must_see_forget_duration (float): Time to remember unseen targets (seconds). Defaults to 3.0.
-            sprint_speed_multiplier (float): Sprint speed modifier. Defaults to 1.0.
-            walk_speed_multiplier (float): Walk speed modifier. Defaults to 1.0.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/entity_types)
-        """
-        entity_types = {
-            "max_dist": max_dist,
-            "must_see": must_see,
-            "must_see_forget_duration": must_see_forget_duration,
-            "sprint_speed_multiplier": sprint_speed_multiplier,
-            "walk_speed_multiplier": walk_speed_multiplier,
-        }
-
-        if filters is not None:
-            entity_types["filters"] = filters
-
-        self._condition.update({"minecraft:entity_types ": entity_types})
-        return self
-
-    def height_filter(self, min: int, max: int):
-        """Restricts spawning to specific Y-coordinate ranges.
-
-        Useful for creating entities that only spawn at certain heights,
-        such as cave-dwelling mobs or high-altitude creatures.
-
-        Args:
-            min (int): Minimum Y-coordinate (height level) for spawning.
-            max (int): Maximum Y-coordinate (height level) for spawning.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            min (int): The lowest Y.
+            max (int): The highest Y.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/height_filter)
         """
-        self._condition.update({"minecraft:height_filter": {"min": min, "max": max}})
-        return self
+        return self._set(_SpawnHeightFilter(min=min, max=max))
 
     def herd(
         self,
         min_size: int = 1,
         max_size: int = 4,
-        spawn_event: str = None,
+        spawn_event: str | None = None,
         event_skip_count: int = 0,
-    ):
-        """Configures group spawning behavior for entities.
-
-        When entities spawn, they will appear in groups (herds) of the specified size.
-        Useful for animals that naturally appear in groups or for creating pack behaviors.
+    ) -> "_SpawnRuleCondition":
+        """Adds a herd size the entity spawns in.
 
         Args:
-            min_size (int): Minimum number of entities in a spawn group. Defaults to 1.
-            max_size (int): Maximum number of entities in a spawn group. Defaults to 4.
-            spawn_event (str, optional): Event to trigger on some spawned entities.
-            event_skip_count (int): Number of entities spawned before triggering the event.
-                Defaults to 0.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            min_size (int, optional): The smallest herd. Defaults to 1.
+            max_size (int, optional): The largest herd. Defaults to 4.
+            spawn_event (str, optional): An event run on some of the herd.
+            event_skip_count (int, optional): How many spawn before the event runs.
+                Defaults to 0, written only with an event.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/herd)
         """
-        if "minecraft:herd" not in self._condition:
-            self._condition.update({"minecraft:herd": []})
-        self_herd = {"min_size": min_size, "max_size": max_size}
-        if spawn_event != None:
-            self_herd.update(
-                {"event": spawn_event, "event_skip_count": event_skip_count}
-            )
-        self._condition["minecraft:herd"].append(self_herd)
-        return self
+        herd = _Herd(
+            min_size=min_size,
+            max_size=max_size,
+            event=spawn_event,
+            event_skip_count=None if spawn_event is None else event_skip_count,
+        )
+        current = self._get(_SpawnHerd)
+        return self._set(_SpawnHerd(herds=(current.herds if current else []) + [herd]))
 
     def mob_event_filter(
         self,
@@ -359,334 +471,251 @@ class _SpawnRuleCondition:
             "minecraft:wandering_trader_event",
             "minecraft:ender_dragon_event",
         ],
-    ):
-        """Restricts spawning to specific mob events.
-
-        Allows entities to spawn only during certain game events like pillager patrols,
-        wandering trader visits, or ender dragon encounters.
+    ) -> "_SpawnRuleCondition":
+        """Spawns the entity only with a mob event.
 
         Args:
-            event (Literal): The mob event that triggers spawning. Options:
-                - "minecraft:pillager_patrols_event": Pillager patrol spawns
-                - "minecraft:wandering_trader_event": Wandering trader spawns
-                - "minecraft:ender_dragon_event": Ender dragon related spawns
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            event (str): `minecraft:pillager_patrols_event`,
+                `minecraft:wandering_trader_event` or `minecraft:ender_dragon_event`.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/mob_event_filter)
         """
-        self._condition.update({"minecraft:mob_event_filter": {"event": event}})
+        return self._set(_SpawnMobEventFilter(event=event))
 
-        return self
-
-    def permute_type(self, entity_type: str, weight: int = 10, spawn_event: str = None):
-        """Creates a chance for spawned entities to be replaced with a different type.
-
-        Allows spawn variation where the original entity has a chance to spawn as
-        a different entity type instead. Commonly used for zombie/zombie villager
-        variations or baby/adult variants.
+    def permute_type(
+        self,
+        entity_type: str | None,
+        weight: int = 10,
+        spawn_event: str | None = None,
+        guaranteed_count: int | None = None,
+    ) -> "_SpawnRuleCondition":
+        """Adds an entity that may spawn in place of this one. The weights of all the
+        permutations add up to 100.
 
         Args:
-            entity_type (str): The entity identifier to potentially spawn instead.
-            weight (int): Relative weight for this permutation. Defaults to 10.
-            spawn_event (str, optional): Event to trigger on the permuted entity.
+            entity_type (str | None): The entity spawned instead, or None for this entity.
+            weight (int, optional): Its share out of 100. Defaults to 10.
+            spawn_event (str, optional): An event run on the entity when it spawns.
+            guaranteed_count (int, optional): How many spawn before the other permutations.
 
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/permute_type)
         """
-        if "minecraft:permute_type" not in self._condition:
-            self._condition.update({"minecraft:permute_type": []})
-        self_permute_type = {"entity_type": entity_type, "weight": weight}
-        if spawn_event != None:
-            self_permute_type.update({"entity_type": f"{entity_type}<{spawn_event}>"})
-        self._condition["minecraft:permute_type"].append(self_permute_type)
-        return self
+        if entity_type is not None and spawn_event is not None:
+            entity_type = f"{entity_type}<{spawn_event}>"
+        permutation = _PermuteType(
+            weight=weight, entity_type=entity_type, guaranteed_count=guaranteed_count
+        )
+        current = self._get(_SpawnPermuteType)
+        return self._set(
+            _SpawnPermuteType(types=(current.types if current else []) + [permutation])
+        )
 
-    def player_in_village_filter(self, distance: int, village_border_tolerance: int):
-        """Filters spawning based on player proximity to villages.
-
-        Controls whether entities can spawn based on how close players are to villages.
-        Useful for village-related spawns or preventing certain spawns near villages.
+    def player_in_village_filter(
+        self, distance: int, village_border_tolerance: int
+    ) -> "_SpawnRuleCondition":
+        """Spawns the entity by how close the player is to a village.
 
         Args:
-            distance (int): Required distance from village center.
-            village_border_tolerance (int): Additional tolerance from village borders.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            distance (int): The distance from the village.
+            village_border_tolerance (int): The tolerance past the village border.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/player_in_village_filter)
         """
-        self._condition.update(
-            {
-                "minecraft:player_in_village_filter": {
-                    "distance": distance,
-                    "village_border_tolerance": village_border_tolerance,
-                }
-            }
+        return self._set(
+            _SpawnPlayerInVillageFilter(
+                distance=distance, village_border_tolerance=village_border_tolerance
+            )
         )
-        return self
 
     def spawns_above_block_filter(
-        self, blocks: tuple[MinecraftBlockDescriptor | str], distance: int = 1
-    ):
-        """Restricts spawning to areas above specific block types.
-
-        Entity will only spawn above the specified blocks, at a distance defined by the `distance` parameter.
+        self, blocks: Sequence[str | Block | BlockDescriptor], distance: int = 1
+    ) -> "_SpawnRuleCondition":
+        """Spawns the entity above some blocks.
 
         Args:
-            blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types the entity can spawn above.
-            distance (int): Distance above the block to check for spawning. Defaults to 1.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
-
-        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_above_block_filter)
+            blocks (Sequence[Block | BlockDescriptor | str]): The blocks.
+            distance (int, optional): How far above the block. Defaults to 1.
         """
-        self._condition["minecraft:spawns_above_block_filter"] = {
-            "blocks": [
-                (
-                    block.identifier
-                    if isinstance(block, MinecraftBlockDescriptor)
-                    else str(block)
-                )
-                for block in blocks
-            ],
-            "distance": distance,
-        }
-        return self
+        return self._set(_SpawnAboveBlockFilter(blocks=list(blocks), distance=distance))
 
-    def spawns_in_lava(self):
-        """Allows the entity to spawn in lava blocks.
-
-        Enables spawning in lava source blocks, typically used for nether creatures
-        like striders or custom fire-resistant entities.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+    def spawns_in_lava(self) -> "_SpawnRuleCondition":
+        """Lets the entity spawn in lava.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_lava)
         """
-        self._condition.update({"minecraft:spawns_lava": {}})
-        return self
+        return self._set(_SpawnLava())
 
-    def spawns_on_block_filter(self, blocks: tuple[MinecraftBlockDescriptor | str]):
-        """Restricts spawning to specific block types.
-
-        Entity will only spawn on top of the specified blocks. Useful for creating
-        specialized spawning requirements like mushroom island mobs or desert creatures.
+    def spawns_on_block_filter(
+        self, blocks: Sequence[str | Block | BlockDescriptor]
+    ) -> "_SpawnRuleCondition":
+        """Spawns the entity only on some blocks.
 
         Args:
-            blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types the entity can spawn on.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            blocks (Sequence[Block | BlockDescriptor | str]): The blocks.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_block_filter)
         """
-        self._condition["minecraft:spawns_on_block_filter"] = [
-            (
-                block.identifier
-                if isinstance(block, MinecraftBlockDescriptor)
-                else str(block)
-            )
-            for block in blocks
-        ]
-        return self
+        return self._set(_SpawnOnBlockFilter(blocks=list(blocks)))
 
     def spawns_on_block_prevented_filter(
-        self, blocks: tuple[MinecraftBlockDescriptor | str]
-    ):
-        """Prevents spawning on specific block types.
-
-        Entity will not spawn on the specified blocks, even if other conditions are met.
-        Useful for preventing spawning on inappropriate surfaces.
+        self, blocks: Sequence[str | Block | BlockDescriptor]
+    ) -> "_SpawnRuleCondition":
+        """Keeps the entity from spawning on some blocks.
 
         Args:
-            blocks (tuple[MinecraftBlockDescriptor | str]): Tuple of block types to prevent spawning on.
+            blocks (Sequence[Block | BlockDescriptor | str]): The blocks.
 
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+        ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_block_prevented_filter)
         """
-        self._condition["minecraft:spawns_on_block_prevented_filter"] = [
-            (
-                block.identifier
-                if isinstance(block, MinecraftBlockDescriptor)
-                else str(block)
-            )
-            for block in blocks
-        ]
-        return self
+        return self._set(_SpawnOnBlockPreventedFilter(blocks=list(blocks)))
 
-    def spawns_on_surface(self):
-        """Allows the entity to spawn on the world surface.
-
-        Enables spawning on the topmost solid blocks exposed to sky.
-        Commonly used for overworld mobs and animals.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+    def spawns_on_surface(self) -> "_SpawnRuleCondition":
+        """Lets the entity spawn on the surface.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_on_surface)
         """
-        self._condition.update({"minecraft:spawns_on_surface": {}})
-        return self
+        return self._set(_SpawnOnSurface())
 
-    def spawns_underground(self):
-        """Allows the entity to spawn in underground locations.
-
-        Enables spawning in caves, tunnels, and other enclosed underground spaces.
-        Typically used for cave-dwelling mobs and underground creatures.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+    def spawns_underground(self) -> "_SpawnRuleCondition":
+        """Lets the entity spawn underground, in caves.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underground)
         """
-        self._condition.update({"minecraft:spawns_underground": {}})
-        return self
+        return self._set(_SpawnUnderground())
 
-    def spawns_underwater(self):
-        """Allows the entity to spawn in water blocks.
-
-        Enables spawning inside water source blocks or flowing water.
-        Essential for aquatic creatures like fish, dolphins, and guardians.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+    def spawns_underwater(self) -> "_SpawnRuleCondition":
+        """Lets the entity spawn in water.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawns_underwater)
         """
-        self._condition.update({"minecraft:spawns_underwater": {}})
-        return self
+        return self._set(_SpawnUnderwater())
 
-    def weight(self, weight: int = 0):
-        """Sets spawn priority relative to other valid spawn conditions.
-
-        Higher weight values make this spawn condition more likely to be chosen
-        when multiple valid conditions exist. Weight acts as a probability multiplier
-        in the spawn selection process.
+    def weight(self, weight: int = 0) -> "_SpawnRuleCondition":
+        """Sets how often this condition is picked over the others: higher spawns more.
 
         Args:
-            weight (int): Spawn weight/priority value. Higher values = higher priority.
-                Defaults to 0.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            weight (int, optional): The weight. Defaults to 0.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/weight)
         """
-        self._condition.update({"minecraft:weight": {"default": weight}})
-        return self
+        return self._set(_SpawnWeight(default=weight))
 
-    def world_age_filter(self, min: int):
-        """Prevents spawning until the world reaches a minimum age.
-
-        Useful for creating entities that only appear in established worlds
-        or after certain progression milestones.
+    def world_age_filter(self, min: int) -> "_SpawnRuleCondition":
+        """Waits until the world is old enough before the entity spawns.
 
         Args:
-            min (int): Minimum world age (in ticks) before spawning can occur.
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            min (int): The world age, in ticks.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/world_age_filter)
         """
-        self._condition.update({"minecraft:world_age_filter": {"min": min}})
+        return self._set(_SpawnWorldAgeFilter(min=min))
 
-        return self
-
-    def spawn_event(self, event: str = "minecraft:entity_spawned"):
-        """Specifies an event to trigger when the entity spawns.
-
-        Allows custom initialization or setup when entities are spawned through spawn rules.
-        Default behavior uses "minecraft:entity_spawned" event.
+    def spawn_event(
+        self, event: str = "minecraft:entity_spawned"
+    ) -> "_SpawnRuleCondition":
+        """Sets the event run on the entity when it spawns.
 
         Args:
-            event (str): Event identifier to trigger on spawn.
-                Defaults to "minecraft:entity_spawned".
-
-        Returns:
-            _SpawnRuleCondition: Self for method chaining.
+            event (str, optional): The event. Defaults to `minecraft:entity_spawned`.
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/definitions/nestedtables/spawn_event)
         """
-        self._condition.update({"minecraft:spawn_event": {"event": event}})
+        return self._set(_SpawnEvent(event=event))
+
+
+class _SpawnRuleDescription(JsonObject):
+    """The `description` of a spawn rule, and its builders."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("identifier",)
+
+    identifier: Identifier | None = None
+    population_control: Population = json_field(default=Population.Ambient)
+
+    def set_identifier(self, identifier: Identifier) -> None:
+        """Sets the identifier, already parsed by the file."""
+        self.identifier = identifier
+
+    def __validate__(self) -> None:
+        if self.identifier is None:
+            raise ValueError("The description has no identifier.")
+
+    def set_population_control(self, population: Population) -> "_SpawnRuleDescription":
+        """Puts the entity in a population pool, whose spawn limit it counts toward:
+        `Animal`, `WaterAnimal`, `Monster`, `Ambient`, `Cat` (spawned by villages) or
+        `Pillager`. Defaults to `Ambient`.
+
+        Args:
+            population (Population): The pool.
+        """
+        self.population_control = population
         return self
 
-    def __export__(self):
-        """Export the condition data for JSON serialization.
 
-        Returns:
-            dict: Condition data for spawn rules JSON.
-        """
-        return self._condition
+class _SpawnRules(JsonObject):
+    """The `minecraft:spawn_rules` body."""
+
+    description: _SpawnRuleDescription = json_field(
+        default_factory=_SpawnRuleDescription
+    )
+    conditions: list[_SpawnRuleCondition] = json_field(default_factory=list)
+
+
+class _SpawnRulesFile(JsonObject):
+    """The content of a spawn rules file."""
+
+    __required__: ClassVar[tuple[str, ...]] = (
+        "format_version",
+        "minecraft:spawn_rules",
+    )
+
+    format_version: str = json_field(default=SPAWN_RULES_VERSION, init=False)
+    spawn_rules: _SpawnRules = json_field(
+        default_factory=_SpawnRules, key="minecraft:spawn_rules"
+    )
 
 
 class SpawnRule(JsonFile):
+    """An entity's spawn rules: its population pool and the conditions it spawns under.
+    Written only when it has conditions.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/cliententitydocumentation/datadrivenspawning)
+    """
+
+    _document = _SpawnRulesFile
     _extension = ".spawn_rules.json"
     _pack = Pack.BP
     _folder = "spawn_rules"
     _object_type = "Spawn Rule"
 
-    def __init__(self, identifier, is_vanilla):
-        """Initialize a spawn rule for the specified entity.
+    def __init__(self, identifier: str, is_vanilla: bool = False) -> None:
+        """Creates the spawn rules of an entity.
 
         Args:
-            identifier (str): Entity identifier (e.g., "mypack:custom_mob").
-            is_vanilla (bool): Whether this is a vanilla Minecraft entity.
+            identifier (str): The entity identifier, such as `mypack:custom_mob`.
+            is_vanilla (bool, optional): If the entity is a vanilla one.
         """
         super().__init__(identifier, is_vanilla)
-        self._description = _SpawnRuleDescription(
-            self, self.identifier, self.identifier.is_vanilla
-        )
-        self._spawn_rule = JsonSchemes.spawn_rules()
-        self._conditions: list[_SpawnRuleCondition] = []
+        self.description.set_identifier(self.identifier)
 
     @property
-    def description(self) -> "_SpawnRuleDescription":
-        """Access the spawn rule description for setting basic properties.
-
-        Returns:
-            _SpawnRuleDescription: Description interface for population control and metadata.
-        """
-        return self._description
+    def description(self) -> _SpawnRuleDescription:
+        """The description builders, such as `set_population_control`."""
+        return self._content.spawn_rules.description
 
     @property
-    def add_condition(self) -> "_SpawnRuleCondition":
-        """Create and add a new spawn condition to this spawn rule.
+    def add_condition(self) -> _SpawnRuleCondition:
+        """Adds a set of conditions the entity spawns under, and returns it. Each set is
+        another way to spawn, such as on the surface or underground."""
+        condition = _SpawnRuleCondition()
+        self._content.spawn_rules.conditions.append(condition)
+        return condition
 
-        Each condition represents a different spawning scenario. Multiple conditions
-        allow entities to spawn under various circumstances (e.g., surface vs underground).
-
-        Returns:
-            _SpawnRuleCondition: New condition interface for setting spawn requirements.
-        """
-        self._condition = _SpawnRuleCondition()
-        self._conditions.append(self._condition)
-        return self._condition
-
-    def queue(self, directory: str = None) -> "SpawnRule":
-        """Queue this spawn rule for generation in the behavior pack.
-
-        Exports the description and all conditions to JSON format and adds the
-        spawn rule file to the generation queue. Only queues if conditions exist.
+    def queue(self, directory: str | None = None) -> "SpawnRule | None":
+        """Queues the spawn rules for export, when they have conditions.
 
         Args:
-            directory (str, optional): Custom directory path. Uses default if None.
-
-        Returns:
-            SpawnRule: Self for method chaining, or None if no conditions exist.
+            directory (str, optional): The folder inside `spawn_rules`.
         """
-        if len(self._conditions) > 0:
+        if self._content.spawn_rules.conditions:
             return super().queue(directory=directory)
-
-    def __export__(self) -> None:
-        self._spawn_rule["minecraft:spawn_rules"].update(self._description.__export__())
-        self._spawn_rule["minecraft:spawn_rules"]["conditions"] = [
-            condition.__export__() for condition in self._conditions
-        ]
-        self.content(self._spawn_rule)
-        return super().__export__()
+        return None

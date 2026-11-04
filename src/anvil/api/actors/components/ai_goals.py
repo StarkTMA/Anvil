@@ -4,22 +4,25 @@ from typing import (
     Self,
 )
 
+from anvil.api.actors.entity import Entity
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import (
     AIGoal,
     EventTrigger,
 )
-from anvil.api.core.enums import (
-    DamageCause,
-    FilterSubject,
-)
 from anvil.api.core.filters import Filter
+from anvil.api.items.items import Item
 from anvil.api.logic.molang import Molang
 from anvil.api.world.loot_tables import LootTable
 from anvil.lib.jsonmodel import (
     AtLeastOne,
+    BlockId,
     BlockObject,
     Chance,
+    EntityId,
     InRange,
+    ItemId,
     JsonObject,
     MinMax,
     NonNegative,
@@ -27,10 +30,9 @@ from anvil.lib.jsonmodel import (
     Trigger,
     json_field,
 )
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
+from anvil.lib.jsonmodel.enums import (
+    DamageCause,
+    FilterSubject,
 )
 
 # region Parts: objects nested inside components
@@ -40,12 +42,12 @@ class EatBlockPair(JsonObject):
     """A block an entity eats, and the block that replaces it.
 
     Args:
-        eat_block (str | MinecraftBlockDescriptor): The block the entity eats.
-        replace_block (str | MinecraftBlockDescriptor): The block that replaces the eaten block.
+        eat_block (str | Block | BlockDescriptor): The block the entity eats.
+        replace_block (str | Block | BlockDescriptor): The block that replaces the eaten block.
     """
 
-    eat_block: str | MinecraftBlockDescriptor = json_field()
-    replace_block: str | MinecraftBlockDescriptor = json_field()
+    eat_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
+    replace_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
 
 
 class GoalEntityType(JsonObject):
@@ -133,12 +135,12 @@ class PlaceableBlock(JsonObject):
     """A block an entity places at random, with its weight.
 
     Args:
-        block (str | MinecraftBlockDescriptor): The block to place.
+        block (str | Block | BlockDescriptor): The block to place.
         filter (Filter, optional): Conditions for this entry to be picked. Self, Target and Block are set.
         weight (int, optional): Weight of this entry. Game default 1.
     """
 
-    block: Annotated[str | MinecraftBlockDescriptor, BlockObject] = json_field()
+    block: Annotated[str | Block | BlockDescriptor, BlockId, BlockObject] = json_field()
     filter: Filter | None = json_field(default=None)
     weight: Annotated[int, NonNegative] | None = json_field(default=None)
 
@@ -222,7 +224,7 @@ class SummonStep(JsonObject):
     """A step of a summon spell.
 
     Args:
-        entity_type (MinecraftEntityDescriptor | str): The entity to summon.
+        entity_type (str | Entity): The entity to summon.
         base_delay (float, optional): Seconds before this step starts. Game default 0.
         delay_per_summon (float, optional): Seconds between each summoned entity. Game default 0.
         entity_lifespan (float, optional): Seconds the summoned entity lives; -1 keeps it alive. Game default -1.
@@ -236,7 +238,7 @@ class SummonStep(JsonObject):
         target (FilterSubject, optional): Where the spell starts: a line starts there, a circle is centered there. Game default self.
     """
 
-    entity_type: MinecraftEntityDescriptor | str = json_field()
+    entity_type: Annotated[str | Entity, EntityId] = json_field()
     base_delay: Annotated[float, NonNegative] | None = json_field(default=None)
     delay_per_summon: Annotated[float, NonNegative] | None = json_field(default=None)
     entity_lifespan: float | None = json_field(default=None)
@@ -284,7 +286,7 @@ class SummonChoice(JsonObject):
     def add_step(
         self,
         *,
-        entity_type: MinecraftEntityDescriptor | str,
+        entity_type: str | Entity,
         base_delay: float | None = None,
         delay_per_summon: float | None = None,
         entity_lifespan: float | None = None,
@@ -392,7 +394,7 @@ class EntityAIAvoidBlock(AIGoal):
         search_range (int, optional): Maximum distance to look for a block in xz. Game default 0.
         sound_interval (float | tuple[float, float], optional): The range of time in seconds to randomly wait before playing the sound again.
         sprint_speed_modifier (float, optional): Modifier for sprint speed. 1.0 means keep the regular speed, while higher numbers make the sprint speed faster. Game default 1.
-        target_blocks (list[str | MinecraftBlockDescriptor], optional): List of block types this mob avoids.
+        target_blocks (list[str | Block | BlockDescriptor], optional): List of block types this mob avoids.
         target_selection_method (str, optional): Block search method. Game default nearest.
         tick_interval (int, optional): Should start tick interval. Game default 1.
         walk_speed_modifier (float, optional): Modifier for walking speed. 1.0 means keep the regular speed, while higher numbers make the walking speed faster. Game default 1.
@@ -410,8 +412,8 @@ class EntityAIAvoidBlock(AIGoal):
         default=None
     )
     sprint_speed_modifier: float | None = json_field(default=None)
-    target_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
+    target_blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
     )
     target_selection_method: str | None = json_field(default=None)
     tick_interval: int | None = json_field(default=None)
@@ -486,7 +488,7 @@ class EntityAIBeg(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        items (list[str | MinecraftItemDescriptor], optional): List of items that this mob likes.
+        items (list[str | Item], optional): List of items that this mob likes.
         look_distance (float, optional): Distance in blocks the mob will beg from. Game default 8.
         look_time (tuple[int, int], optional): The range of time in seconds this mob will stare at the player holding a food they like, begging for it.
 
@@ -495,7 +497,7 @@ class EntityAIBeg(AIGoal):
 
     identifier = "minecraft:behavior.beg"
 
-    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
     look_distance: float | None = json_field(default=None)
     look_time: Annotated[tuple[int, int], MinMax] | None = json_field(default=None)
 
@@ -613,14 +615,14 @@ class EntityAIChargeHeldItem(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        items (list[str | MinecraftItemDescriptor], optional): The list of items that can be used to charge the held item. This list is required and must have at least one item in it. Value must have at least 1 items.
+        items (list[str | Item], optional): The list of items that can be used to charge the held item. This list is required and must have at least one item in it. Value must have at least 1 items.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_charge_held_item)
     """
 
     identifier = "minecraft:behavior.charge_held_item"
 
-    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
 
 
 class EntityAICircleAroundAnchor(AIGoal):
@@ -994,8 +996,8 @@ class EntityAIEatBlock(AIGoal):
     def add_block_pair(
         self,
         *,
-        eat_block: str | MinecraftBlockDescriptor,
-        replace_block: str | MinecraftBlockDescriptor,
+        eat_block: str | Block | BlockDescriptor,
+        replace_block: str | Block | BlockDescriptor,
     ) -> "EntityAIEatBlock":
         """Adds a block to eat and the block that replaces it."""
         self.eat_and_replace_block_pairs.append(
@@ -1250,7 +1252,7 @@ class EntityAIFireAtTarget(AIGoal):
         owner_offset (tuple[float, float, float], optional): Offset vector from the owner_anchor.
         post_shoot_delay (float, optional): Time in seconds between firing the projectile and ending the goal. Game default 0.2.
         pre_shoot_delay (float, optional): Time in seconds before firing the projectile. Game default 0.75.
-        projectile_def (MinecraftEntityDescriptor | str, optional): Actor definition to use as projectile for the ranged attack. The actor must be a projectile. This field is required for the goal to be usable.
+        projectile_def (str | Entity, optional): Actor definition to use as projectile for the ranged attack. The actor must be a projectile. This field is required for the goal to be usable.
         ranged_fov (float, optional): Field of view (in degrees) when using sensing to detect a target for attack. Game default 90.
         target_anchor (int, optional): Entity anchor for projectile target. Game default 2.
         target_offset (tuple[float, float, float], optional): Offset vector from the target_anchor.
@@ -1271,7 +1273,7 @@ class EntityAIFireAtTarget(AIGoal):
     owner_offset: tuple[float, float, float] | None = json_field(default=None)
     post_shoot_delay: float | None = json_field(default=None)
     pre_shoot_delay: float | None = json_field(default=None)
-    projectile_def: MinecraftEntityDescriptor | str | None = json_field(default=None)
+    projectile_def: Annotated[str | Entity, EntityId] | None = json_field(default=None)
     ranged_fov: float | None = json_field(default=None)
     target_anchor: int | None = json_field(default=None)
     target_offset: tuple[float, float, float] | None = json_field(default=None)
@@ -1322,7 +1324,7 @@ class EntityAIFloatTempt(AIGoal):
         can_get_scared (bool, optional): If true, the mob can stop being tempted if the player moves too fast while close to this mob. Game default false.
         can_tempt_vertically (bool, optional): If true, vertical distance to the player will be considered when tempting. Game default false.
         can_tempt_while_ridden (bool, optional): If true, the mob can be tempted even if it has a passenger (i.e. if being ridden). Game default false.
-        items (list[str | MinecraftItemDescriptor], optional): List of items that can tempt the mob.
+        items (list[str | Item], optional): List of items that can tempt the mob.
         on_tempt_end (EventTrigger | str, optional): Event to trigger when this mob stops being tempted.
         on_tempt_start (EventTrigger | str, optional): Event to trigger when this mob starts being tempted.
         sound_interval (float | tuple[float, float], optional): Range of random ticks to wait between tempt sounds.
@@ -1339,7 +1341,7 @@ class EntityAIFloatTempt(AIGoal):
     can_get_scared: bool | None = json_field(default=None)
     can_tempt_vertically: bool | None = json_field(default=None)
     can_tempt_while_ridden: bool | None = json_field(default=None)
-    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
     on_tempt_end: Annotated[EventTrigger | str, Trigger] | None = json_field(
         default=None
     )
@@ -1423,7 +1425,7 @@ class EntityAIFollowMob(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         filters (Filter, optional): If non-empty, provides criteria for filtering which nearby Mobs can be followed.
-        preferred_actor_type (MinecraftEntityDescriptor | str, optional): The type of actor to prefer following. If left unspecified, a random actor among those in range will be chosen.
+        preferred_actor_type (str | Entity, optional): The type of actor to prefer following. If left unspecified, a random actor among those in range will be chosen.
         search_range (int, optional): The distance in blocks it will look for a mob to follow. Game default 0.
         speed_multiplier (float, optional): Movement speed multiplier of the mob when using this AI Goal. Game default 1.
         stop_distance (float, optional): The distance in blocks this mob stops from the mob it is following. Game default 2.
@@ -1435,7 +1437,7 @@ class EntityAIFollowMob(AIGoal):
     identifier = "minecraft:behavior.follow_mob"
 
     filters: Filter | None = json_field(default=None)
-    preferred_actor_type: MinecraftEntityDescriptor | str | None = json_field(
+    preferred_actor_type: Annotated[str | Entity, EntityId] | None = json_field(
         default=None
     )
     search_range: int | None = json_field(default=None)
@@ -1834,11 +1836,11 @@ class EntityAIJumpToBlock(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         cooldown_range (float | tuple[float, float], optional): Minimum and maximum cooldown time-range (positive, in seconds) between each attempted jump.
-        forbidden_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks that the mob can't jump to.
+        forbidden_blocks (list[str | Block | BlockDescriptor], optional): Blocks that the mob can't jump to.
         max_velocity (float, optional): The maximum velocity with which the mob can jump. Game default 1.5.
         minimum_distance (int, optional): The minimum distance (in blocks) from the mob to a block, in order to consider jumping to it. Game default 2.
         minimum_path_length (int, optional): The minimum length (in blocks) of the mobs path to a block, in order to consider jumping to it. Game default 5.
-        preferred_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks that the mob prefers jumping to.
+        preferred_blocks (list[str | Block | BlockDescriptor], optional): Blocks that the mob prefers jumping to.
         preferred_blocks_chance (float, optional): Chance (between 0.0 and 1.0) that the mob will jump to a preferred block, if in range. Only matters if preferred blocks are defined. Game default 1.
         scale_factor (float, optional): The scalefactor of the bounding box of the mob while it is jumping. Game default 0.7.
         search_height (int, optional): The height (in blocks, in range [1, 15]) of the search box, centered around the mob. Game default 10.
@@ -1852,14 +1854,14 @@ class EntityAIJumpToBlock(AIGoal):
     cooldown_range: Annotated[float | tuple[float, float], MinMax] | None = json_field(
         default=None
     )
-    forbidden_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
+    forbidden_blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
     )
     max_velocity: float | None = json_field(default=None)
     minimum_distance: int | None = json_field(default=None)
     minimum_path_length: int | None = json_field(default=None)
-    preferred_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
+    preferred_blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
     )
     preferred_blocks_chance: Annotated[float, InRange(maximum=1)] | None = json_field(
         default=None
@@ -1936,7 +1938,7 @@ class EntityAILayEgg(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         allow_laying_from_below (bool, optional): Allows the mob to lay its eggs from below the target if it can't get there. This is useful if the target block is water with air above, since mobs may not be able to get to the air block above water. Game default false.
-        egg_type (str | MinecraftBlockDescriptor, optional): Block type for the egg to lay. If this is a turtle egg, the number of eggs in the block is randomly set. Game default minecraft:turtle_egg.
+        egg_type (str | Block | BlockDescriptor, optional): Block type for the egg to lay. If this is a turtle egg, the number of eggs in the block is randomly set. Game default minecraft:turtle_egg.
         goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Game default 0.5.
         lay_egg_sound (str, optional): Name of the sound event played when laying the egg. Defaults to lay_egg, which is used for Turtles. Game default lay_egg.
         lay_seconds (float, optional): Duration of the laying egg process in seconds. From 1.26.10 onward, `lay_seconds` only accepts values greater than or equal to 0; entity JSON with negative values will fail to load. Game default 10.
@@ -1944,7 +1946,7 @@ class EntityAILayEgg(AIGoal):
         search_height (int, optional): The height in blocks the mob will look for the block to move towards. Game default 1.
         search_range (int, optional): The distance in blocks it will look for the block to move towards. Game default 0.
         speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Game default 1.
-        target_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks that the mob can lay its eggs on top of.
+        target_blocks (list[str | Block | BlockDescriptor], optional): Blocks that the mob can lay its eggs on top of.
         target_materials_above_block (list[Literal["Air", "Lava", "Water"]], optional): Types of materials that can exist above the target block. Valid types are Air, Water, and Lava.
         use_default_animation (bool, optional): Specifies if the default lay-egg animation should be played when the egg is placed or not. Game default true.
 
@@ -1954,7 +1956,9 @@ class EntityAILayEgg(AIGoal):
     identifier = "minecraft:behavior.lay_egg"
 
     allow_laying_from_below: bool | None = json_field(default=None)
-    egg_type: str | MinecraftBlockDescriptor | None = json_field(default=None)
+    egg_type: Annotated[str | Block | BlockDescriptor, BlockId] | None = json_field(
+        default=None
+    )
     goal_radius: Annotated[float, Positive] | None = json_field(default=None)
     lay_egg_sound: str | None = json_field(default=None)
     lay_seconds: float | None = json_field(default=None)
@@ -1962,8 +1966,8 @@ class EntityAILayEgg(AIGoal):
     search_height: Annotated[int, Positive] | None = json_field(default=None)
     search_range: Annotated[int, Positive] | None = json_field(default=None)
     speed_multiplier: float | None = json_field(default=None)
-    target_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
+    target_blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
     )
     target_materials_above_block: list[Literal["Air", "Lava", "Water"]] | None = (
         json_field(default=None)
@@ -2253,7 +2257,7 @@ class EntityAIMingle(AIGoal):
         cooldown_time (float, optional): Time in seconds the mob has to wait before using the goal again. Game default 0.
         duration (float, optional): Amount of time in seconds that the entity will chat with another entity. Game default 1.
         mingle_distance (float, optional): The distance from its partner that this entity will mingle. If the entity type is not the same as the entity, this value needs to be identical on both entities. Game default 2.
-        mingle_partner_type (MinecraftEntityDescriptor | str, optional): The entity type that this entity is allowed to mingle with.
+        mingle_partner_type (str | Entity, optional): The entity type that this entity is allowed to mingle with.
         speed_multiplier (float, optional): Movement speed multiplier of the mob when using this goal. Game default 1.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_mingle)
@@ -2264,7 +2268,7 @@ class EntityAIMingle(AIGoal):
     cooldown_time: float | None = json_field(default=None)
     duration: float | None = json_field(default=None)
     mingle_distance: float | None = json_field(default=None)
-    mingle_partner_type: MinecraftEntityDescriptor | str | None = json_field(
+    mingle_partner_type: Annotated[str | Entity, EntityId] | None = json_field(
         default=None
     )
     speed_multiplier: float | None = json_field(default=None)
@@ -2397,7 +2401,7 @@ class EntityAIMoveToBlock(AIGoal):
         start_chance (float, optional): Chance to start the behavior (applied after each random tick_interval). Game default 1.
         stay_duration (float, optional): Number of ticks needed to complete a stay at the block. Game default 0.
         target_block_filters (Filter, optional): Conditions that need to be met for a block to be a valid target.
-        target_blocks (list[str | MinecraftBlockDescriptor], optional): Block types to move to.
+        target_blocks (list[str | Block | BlockDescriptor], optional): Block types to move to.
         target_offset (tuple[float, float, float], optional): Offset to add to the selected target position.
         target_selection_method (Literal["nearest", "random"], optional): Kind of block to find fitting the specification. Valid values are "random" and "nearest". Game default nearest.
         tick_interval (int, optional): Average interval in ticks to try to run this behavior. Game default 20.
@@ -2424,8 +2428,8 @@ class EntityAIMoveToBlock(AIGoal):
     start_chance: float | None = json_field(default=None)
     stay_duration: float | None = json_field(default=None)
     target_block_filters: Filter | None = json_field(default=None)
-    target_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
+    target_blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
     )
     target_offset: tuple[float, float, float] | None = json_field(default=None)
     target_selection_method: Literal["nearest", "random"] | None = json_field(
@@ -2957,7 +2961,7 @@ class EntityAIPickupItems(AIGoal):
         can_pickup_any_item (bool, optional): If true, the mob can pick up any item. Game default false.
         can_pickup_to_hand_or_equipment (bool, optional): If true, the mob can pick up items to its hand or armor slots. Game default true.
         cooldown_after_being_attacked (int, optional): Time in seconds the mob cannot pickup items after being attacked. Game default 0.
-        excluded_items (list[str | MinecraftItemDescriptor], optional): List of items this mob will not pick up.
+        excluded_items (list[str | Item], optional): List of items this mob will not pick up.
         goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Game default 0.5.
         max_dist (int, optional): Maximum distance this mob will look for items to pick up. Game default 1.
         on_pickup_item_end (EventTrigger | str, optional): Event to run when this mob either finishes or loses interest in picking up an item.
@@ -2977,7 +2981,7 @@ class EntityAIPickupItems(AIGoal):
     can_pickup_any_item: bool | None = json_field(default=None)
     can_pickup_to_hand_or_equipment: bool | None = json_field(default=None)
     cooldown_after_being_attacked: int | None = json_field(default=None)
-    excluded_items: list[str | MinecraftItemDescriptor] | None = json_field(
+    excluded_items: list[Annotated[str | Item, ItemId]] | None = json_field(
         default=None
     )
     goal_radius: float | None = json_field(default=None)
@@ -3006,7 +3010,7 @@ class EntityAIPlaceBlock(AIGoal):
         can_place (Filter, optional): Filters for if the entity should try to place its block. Self and Target are set.
         chance (float, optional): Chance each tick for the entity to try and place a block. Game default 1.
         on_place (EventTrigger | str, optional): Trigger ran if the entity does place its block. Self, Target, and Block are set.
-        placeable_carried_blocks (list[str | MinecraftBlockDescriptor], optional): Block descriptors for which blocks are valid to be placed from the entity's carried item, if empty all blocks are valid.
+        placeable_carried_blocks (list[str | Block | BlockDescriptor], optional): Block descriptors for which blocks are valid to be placed from the entity's carried item, if empty all blocks are valid.
         randomly_placeable_blocks (list[PlaceableBlock], optional): Weighted block descriptors for which blocks should be randomly placed, if empty the entity will try to place its carried block from placeable_carried_blocks. Add more with `add_randomly_placeable_block`.
         xz_range (tuple[int, int], optional): XZ range from which the entity will try and place blocks in.
         y_range (tuple[int, int], optional): Y range from which the entity will try and place blocks in.
@@ -3021,7 +3025,7 @@ class EntityAIPlaceBlock(AIGoal):
     chance: Annotated[float, InRange(maximum=1)] | None = json_field(default=None)
     on_place: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
     placeable_carried_blocks: (
-        list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None
+        list[Annotated[str | Block | BlockDescriptor, BlockId, BlockObject]] | None
     ) = json_field(default=None)
     randomly_placeable_blocks: list[PlaceableBlock] = json_field(
         default_factory=list, omit_default=True
@@ -3032,7 +3036,7 @@ class EntityAIPlaceBlock(AIGoal):
     def add_randomly_placeable_block(
         self,
         *,
-        block: str | MinecraftBlockDescriptor,
+        block: str | Block | BlockDescriptor,
         filter: Filter | None = None,
         weight: int | None = None,
     ) -> "EntityAIPlaceBlock":
@@ -3165,7 +3169,7 @@ class EntityAIRaidGarden(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        blocks (list[str | MinecraftBlockDescriptor], optional): Blocks that the mob is looking for to eat/raid.
+        blocks (list[str | Block | BlockDescriptor], optional): Blocks that the mob is looking for to eat/raid.
         eat_delay (int, optional): Time in seconds between each time it eats/raids. Game default 2.
         full_delay (int, optional): Amount of time in seconds before this mob wants to eat/raid again after eating its maximum. Game default 100.
         goal_radius (float, optional): Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot. Game default 0.5.
@@ -3180,7 +3184,9 @@ class EntityAIRaidGarden(AIGoal):
 
     identifier = "minecraft:behavior.raid_garden"
 
-    blocks: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
+    blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = json_field(
+        default=None
+    )
     eat_delay: int | None = json_field(default=None)
     full_delay: int | None = json_field(default=None)
     goal_radius: Annotated[float, Positive] | None = json_field(default=None)
@@ -3383,7 +3389,7 @@ class EntityAIRandomSearchAndDig(AIGoal):
         spawn_item_after_seconds (float, optional): Digging duration before spawning item in seconds. Game default 0.
         spawn_item_pos_offset (float, optional): Distance to offset the item's spawn location in the direction the mob is facing. Game default 0.
         speed_multiplier (float, optional): Searching movement speed multiplier. Game default 1.
-        target_blocks (list[str | MinecraftBlockDescriptor], optional): List of target block types the goal will look to dig on. Overrides the default list.
+        target_blocks (list[str | Block | BlockDescriptor], optional): List of target block types the goal will look to dig on. Overrides the default list.
         target_dig_position_offset (float, optional): Dig target position offset from the feet position of the mob in their facing direction. Game default 2.25.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_random_search_and_dig)
@@ -3422,7 +3428,7 @@ class EntityAIRandomSearchAndDig(AIGoal):
     spawn_item_pos_offset: float | None = json_field(default=None)
     speed_multiplier: float | None = json_field(default=None)
     target_blocks: (
-        list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None
+        list[Annotated[str | Block | BlockDescriptor, BlockId, BlockObject]] | None
     ) = json_field(default=None)
     target_dig_position_offset: float | None = json_field(default=None)
 
@@ -3921,7 +3927,7 @@ class EntityAISnacking(AIGoal):
     Args:
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
-        items (list[str | MinecraftItemDescriptor], optional): Items that we are interested in snacking on.
+        items (list[str | Item], optional): Items that we are interested in snacking on.
         snacking_cooldown (float, optional): The cooldown time in seconds before the mob is able to snack again. Game default 7.5.
         snacking_cooldown_min (float, optional): The minimum time in seconds before the mob is able to snack again. Game default 0.5.
         snacking_stop_chance (float, optional): This is the chance that the mob will stop snacking, from 0 to 1. Game default 0.0017.
@@ -3931,7 +3937,7 @@ class EntityAISnacking(AIGoal):
 
     identifier = "minecraft:behavior.snacking"
 
-    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
     snacking_cooldown: float | None = json_field(default=None)
     snacking_cooldown_min: float | None = json_field(default=None)
     snacking_stop_chance: float | None = json_field(default=None)
@@ -4471,7 +4477,7 @@ class EntityAITakeBlock(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         affected_by_griefing_rule (bool, optional): If true, whether the goal is affected by the mob griefing game rule. Game default true.
-        blocks (list[str | MinecraftBlockDescriptor], optional): Block descriptors for which blocks are valid to be taken by the entity, if empty all blocks are valid.
+        blocks (list[str | Block | BlockDescriptor], optional): Block descriptors for which blocks are valid to be taken by the entity, if empty all blocks are valid.
         can_take (Filter, optional): Filters for if the entity should try to take a block. Self and Target are set.
         chance (float, optional): Chance each tick for the entity to try and take a block. Game default 1.
         on_take (EventTrigger | str, optional): Trigger ran if the entity does take a block. Self, Target, and Block are set.
@@ -4485,9 +4491,9 @@ class EntityAITakeBlock(AIGoal):
     identifier = "minecraft:behavior.take_block"
 
     affected_by_griefing_rule: bool | None = json_field(default=None)
-    blocks: list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None = (
-        json_field(default=None)
-    )
+    blocks: (
+        list[Annotated[str | Block | BlockDescriptor, BlockId, BlockObject]] | None
+    ) = json_field(default=None)
     can_take: Filter | None = json_field(default=None)
     chance: Annotated[float, InRange(maximum=1)] | None = json_field(default=None)
     on_take: Annotated[EventTrigger | str, Trigger] | None = json_field(default=None)
@@ -4557,7 +4563,7 @@ class EntityAITempt(AIGoal):
         can_get_scared (bool, optional): If true, the mob can stop being tempted if the player moves too fast while close to this mob. Game default false.
         can_tempt_vertically (bool, optional): If true, vertical distance to the player will be considered when tempting. Game default false.
         can_tempt_while_ridden (bool, optional): If true, the mob can be tempted even if it has a passenger (i.e. if being ridden). Game default false.
-        items (list[str | MinecraftItemDescriptor], optional): List of items that can tempt the mob.
+        items (list[str | Item], optional): List of items that can tempt the mob.
         on_tempt_end (EventTrigger | str, optional): Event to trigger when this mob stops being tempted.
         on_tempt_start (EventTrigger | str, optional): Event to trigger when this mob starts being tempted.
         sound_interval (float | tuple[float, float], optional): Range of random ticks to wait between tempt sounds. Can be a number, an array [min, max], or an object with range_min/range_max or min/max.
@@ -4574,7 +4580,7 @@ class EntityAITempt(AIGoal):
     can_get_scared: bool | None = json_field(default=None)
     can_tempt_vertically: bool | None = json_field(default=None)
     can_tempt_while_ridden: bool | None = json_field(default=None)
-    items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
     on_tempt_end: Annotated[EventTrigger | str, Trigger] | None = json_field(
         default=None
     )
@@ -4717,9 +4723,9 @@ class EntityAITransportItems(AIGoal):
         priority (int, optional): Lower values run first. Game default 0.
         control_flags (list[ControlFlags], optional): The controls this goal takes over.
         allow_simultaneous_interaction (bool, optional): When true the mob will wait until a container is not used by other entities before starting to interact with it. Game default false.
-        allowed_items (list[str | MinecraftItemDescriptor], optional): A list of item descriptors that are the only items the mob is allowed to transport.
-        destination_container_types (list[str | MinecraftBlockDescriptor], optional): A list of block descriptors that should be container types to put items in. Can be simple block identifier strings or objects with name, states, and tags.
-        disallowed_items (list[str | MinecraftItemDescriptor], optional): A list of item descriptors that are the mob is not allowed to transport. If non-empty "allowed_items" must be empty.
+        allowed_items (list[str | Item], optional): A list of item descriptors that are the only items the mob is allowed to transport.
+        destination_container_types (list[str | Block | BlockDescriptor], optional): A list of block descriptors that should be container types to put items in. Can be simple block identifier strings or objects with name, states, and tags.
+        disallowed_items (list[str | Item], optional): A list of item descriptors that are the mob is not allowed to transport. If non-empty "allowed_items" must be empty.
         idle_cooldown (int, optional): When the mob cannot find a container in which to get or put items, the goal will stop being active for this amount of time in seconds. Game default 20.
         initial_cooldown (int, optional): How long the mob will wait after spawning or getting the goal added before the goal can start. Game default 0.
         interaction_time (float, optional): The amount of time in seconds spent interacting with the containers. Game default 3.
@@ -4728,7 +4734,7 @@ class EntityAITransportItems(AIGoal):
         place_strategy (Literal["any", "with_matching", "with_matching_or_empty"], optional): The strategy to use for placing the transported item. Game default any.
         search_distance (tuple[int, int], optional): The maximum search distance horizontally and vertically at which to find containers for taking or placing items.
         search_strategy (Literal["nearest", "random"], optional): The strategy to use for finding source or destination containers. The nearest valid container or a random valid container in range. Game default random.
-        source_container_types (list[str | MinecraftBlockDescriptor], optional): A list of block descriptors that should be container types to take items from. Can be simple block identifier strings or objects with name, states, and tags.
+        source_container_types (list[str | Block | BlockDescriptor], optional): A list of block descriptors that should be container types to take items from. Can be simple block identifier strings or objects with name, states, and tags.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitygoals/minecraftbehavior_transport_items)
     """
@@ -4736,11 +4742,11 @@ class EntityAITransportItems(AIGoal):
     identifier = "minecraft:behavior.transport_items"
 
     allow_simultaneous_interaction: bool | None = json_field(default=None)
-    allowed_items: list[str | MinecraftItemDescriptor] | None = json_field(default=None)
+    allowed_items: list[Annotated[str | Item, ItemId]] | None = json_field(default=None)
     destination_container_types: (
-        list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None
+        list[Annotated[str | Block | BlockDescriptor, BlockId, BlockObject]] | None
     ) = json_field(default=None)
-    disallowed_items: list[str | MinecraftItemDescriptor] | None = json_field(
+    disallowed_items: list[Annotated[str | Item, ItemId]] | None = json_field(
         default=None
     )
     idle_cooldown: int | None = json_field(default=None)
@@ -4756,7 +4762,7 @@ class EntityAITransportItems(AIGoal):
     search_distance: tuple[int, int] | None = json_field(default=None)
     search_strategy: Literal["nearest", "random"] | None = json_field(default=None)
     source_container_types: (
-        list[Annotated[str | MinecraftBlockDescriptor, BlockObject]] | None
+        list[Annotated[str | Block | BlockDescriptor, BlockId, BlockObject]] | None
     ) = json_field(default=None)
 
     def __validate__(self) -> None:

@@ -1,7 +1,9 @@
+from typing import Annotated
+
+from anvil.api.actors.entity import Entity
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import CONFIG
-from anvil.lib.jsonmodel import JsonComponent, json_field
-from anvil.lib.schemas import MinecraftEntityDescriptor
+from anvil.lib.jsonmodel import EntityId, JsonComponent, json_field
 
 
 class EntityReflectProjectiles(JsonComponent):
@@ -10,7 +12,7 @@ class EntityReflectProjectiles(JsonComponent):
     Args:
         azimuth_angle (Molang | str | float, optional): Angle in degrees added to the projectile's y axis rotation. Game default 0.
         elevation_angle (Molang | str | float, optional): Angle in degrees added to the projectile's x axis rotation. Game default 0.
-        reflected_projectiles (list[MinecraftEntityDescriptor | str], optional): Projectiles that are reflected when they hit the entity.
+        reflected_projectiles (list[str | Entity], optional): Projectiles that are reflected when they hit the entity.
         reflection_scale (Molang | str | float, optional): Velocity scale of the reflected projectile. Below 1 slows it, above 1 speeds it up. Game default 1.
         reflection_sound (str, optional): Sound event played when a projectile is reflected. Game default reflect.
 
@@ -21,7 +23,7 @@ class EntityReflectProjectiles(JsonComponent):
 
     azimuth_angle: Molang | str | float | None = json_field(default=None)
     elevation_angle: Molang | str | float | None = json_field(default=None)
-    reflected_projectiles: list[MinecraftEntityDescriptor | str] | None = json_field(
+    reflected_projectiles: list[Annotated[str | Entity, EntityId]] | None = json_field(
         default=None
     )
     reflection_scale: Molang | str | float | None = json_field(default=None)

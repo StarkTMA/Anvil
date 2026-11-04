@@ -1,9 +1,12 @@
-from typing import Literal
-from warnings import deprecated
+"""The behavior pack's `entities/<entity>.behavior.json`: a server entity, its description,
+components, component groups and events."""
+
+from typing import Annotated, Any, ClassVar, Literal
 
 from anvil.api.actors.animation_controllers import (
     BPAnimationControllers,
-    _BP_Controller,
+    _ActorScripts,
+    _BPAnimationController,
 )
 from anvil.api.actors.animations import BPAnimations, _BPAnimation
 from anvil.api.actors.components import (
@@ -12,344 +15,424 @@ from anvil.api.actors.components import (
     EntityPushableByEntity,
     EntityRideable,
 )
-from anvil.api.actors.description import _ActorDescription
 from anvil.api.actors.events import _Event
 from anvil.api.actors.spawn_rules import SpawnRule
 from anvil.api.core.components import ComponentGroup
-from anvil.api.core.enums import DamageSensor
 from anvil.api.logic.molang import Molang, Variable
 from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
-from anvil.lib.jsonmodel import JsonFile, validate_components
-from anvil.lib.schemas import (
-    JsonSchemes,
-    MinecraftEntityDescriptor,
+from anvil.lib.format_versions import ENTITY_SERVER_VERSION
+from anvil.lib.jsonmodel import (
+    Encoded,
+    Identifier,
+    JsonFile,
+    JsonObject,
+    Keyed,
+    json_field,
+    validate_components,
 )
+from anvil.lib.jsonmodel.enums import DamageSensor
+from anvil.lib.jsonmodel.types import SpawnCategory
 from anvil.lib.translator import AnvilTranslator
 
 __all__ = ["EntityServer"]
 
 
-class _Properties:
-    def _enforce_count_limit(self):
-        if len(self._properties) > 32:
+# region Description
+
+
+class _EntityProperty(JsonObject):
+    """An entity property of the project, `<namespace>:<name>`."""
+
+    name: str = json_field(exclude=True, positional=True)
+    type: Literal["enum", "int", "float", "bool"] = json_field()
+    default: bool | int | float | str = json_field()
+    values: list[str] | None = None
+    range: tuple[int, int] | tuple[float, float] | None = None
+    client_sync: bool = False
+
+
+class _EntityServerDescription(JsonObject):
+    """The `description` of a server entity, and its builders. Unset keys are left out."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("identifier",)
+
+    identifier: Identifier | None = None
+    is_spawnable: bool = json_field(default=True, omit_default=True)
+    is_summonable: bool = json_field(default=True, omit_default=True)
+    is_experimental: bool = json_field(default=False, omit_default=True)
+    spawn_category: SpawnCategory | None = None
+    runtime_identifier: str | None = None
+    properties: Annotated[list[_EntityProperty], Keyed("name")] = json_field(
+        default_factory=list, omit_default=True
+    )
+    animations: dict[str, str] = json_field(default_factory=dict)
+    scripts: _ActorScripts = json_field(default_factory=_ActorScripts)
+
+    _animations: list[_BPAnimation | _BPAnimationController] = json_field(
+        default_factory=list, init=False, exclude=True
+    )
+    """The animations and controllers, in the order they were added."""
+
+    @property
+    def name(self) -> str:
+        """The entity's name, without its namespace."""
+        return self.identifier.name
+
+    def set_identifier(self, identifier: Identifier) -> None:
+        """Sets the identifier, already parsed by the file."""
+        self.identifier = identifier
+
+    def __validate__(self) -> None:
+        if self.identifier is None:
+            raise ValueError("The description has no identifier.")
+        if len(self.properties) > 32:
             raise ValueError(
-                "Cannot have more than 32 properties in a component group."
+                f"An entity can have at most 32 properties, it has {len(self.properties)}. "
+                f"Entity [{self.identifier}]"
             )
 
-    def __init__(self):
-        self._properties = {}
-
-    def enum(
-        self, name: str, values: tuple[str], default: str, *, client_sync: bool = False
-    ):
-        self._enforce_count_limit()
-        self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
-            "type": "enum",
-            "default": default,
-            "values": values,
-            "client_sync": client_sync,
-        }
-        return self
-
-    def int(
-        self,
-        name: str,
-        range: tuple[int, int],
-        *,
-        default: int = 0,
-        client_sync: bool = False,
-    ):
-        self._enforce_count_limit()
-        self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
-            "type": "int",
-            "default": default if isinstance(default, Molang) else int(default),
-            "range": range,
-            "client_sync": client_sync,
-        }
-        return self
-
-    def float(
-        self,
-        name: str,
-        range: tuple[float, float],
-        *,
-        default: float = 0,
-        client_sync: bool = False,
-    ):
-        self._enforce_count_limit()
-        self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
-            "type": "float",
-            "default": float(default),
-            "range": [float(f) for f in range],
-            "client_sync": client_sync,
-        }
-        return self
-
-    def bool(self, name: str, *, default: bool = False, client_sync: bool = False):
-        self._enforce_count_limit()
-        self._properties[f"{CONFIG.NAMESPACE}:{name}"] = {
-            "type": "bool",
-            "default": default,
-            "client_sync": client_sync,
-        }
-        return self
-
-    def __iter__(self):
-        return iter(self._properties.keys())
-
-    def __export__(self):
-        return self._properties
-
-
-class _EntityServerDescription(_ActorDescription):
-    """Base class for all server entity descriptions."""
-
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """Base class for all server entity descriptions.
-
-        Args:
-            name (str): The name of the entity.
-            is_vanilla (bool, optional): Whether or not the entity is a vanilla entity. Defaults to False.
-        """
-        super().__init__(name, is_vanilla)
-        self._properties = _Properties()
-        self._description["description"].update(
-            {
-                "properties": {},
-            }
-        )
-
-    @property
-    @deprecated(
-        "The Summonable property is deprecated and will be removed in a future version. Please use the config method instead.",
-    )
-    def Summonable(self) -> "_EntityServerDescription":
-        """Sets whether or not we can summon this entity using commands such as /summon.
-
-        Returns
-        -------
-            Entity description object.
-
-        """
-        self._description["description"]["is_summonable"] = True
-        return self
-
-    @property
-    @deprecated(
-        "The Spawnable property is deprecated and will be removed in a future version. Please use the config method instead.",
-    )
-    def Spawnable(self) -> "_EntityServerDescription":
-        """Sets whether or not this entity has a spawn egg in the creative ui.
-
-        Returns
-        -------
-            Entity description object.
-
-        """
-        self._description["description"]["is_spawnable"] = True
-        return self
-
-    @property
-    @deprecated(
-        "The Experimental property is deprecated and will be removed in a future version. Please use the config method instead.",
-    )
-    def Experimental(self) -> "_EntityServerDescription":
-        """Sets whether or not this entity is experimental. Experimental entities are only enabled when the experimental toggle is enabled.
-
-        Returns
-        -------
-            Entity description object.
-
-        """
-        if CONFIG._EXPERIMENTAL:
-            if CONFIG._TARGET == "addon":
-                raise RuntimeError(
-                    f"Experimental entities are not allowed for packages of type 'addon'. Entity [{self.identifier}]."
-                )
-
-        self._description["description"]["is_experimental"] = True
-        return self
-
-    @deprecated(
-        "The RuntimeIdentifier property is deprecated and will be removed in a future version. Please use the config method instead.",
-    )
-    def RuntimeIdentifier(
-        self, entity: "MinecraftEntityDescriptor"
-    ) -> "_EntityServerDescription":
-        """Sets the runtime identifier of the entity.
-
-        Args:
-            entity (MinecraftEntityDescriptor): The vanilla entity to get the runtime identifier from.
-        """
-        if CONFIG._TARGET != ConfigPackageTarget.ADDON:
-            if type(entity) is MinecraftEntityDescriptor:
-                if entity._allow_runtime:
-                    self._description["description"][
-                        "runtime_identifier"
-                    ] = entity.identifier
-                else:
-                    raise RuntimeError(
-                        f"Entity {entity.identifier} does not allow runtime identifier usage. Entity [{self.identifier}]."
-                    )
-            else:
-                raise TypeError(
-                    f"Expected Entity, got {type(entity).__name__}. Entity [{self.identifier}]"
-                )
-        else:
-            raise RuntimeError(
-                f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]"
+    def _runtime_identifier(self, entity: str) -> Identifier:
+        if CONFIG._TARGET == ConfigPackageTarget.ADDON:
+            raise ValueError(
+                f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. "
+                f"Entity [{self.identifier}]"
             )
-        return self
+        if not isinstance(entity, str):
+            raise TypeError(
+                f"Expected a vanilla entity identifier, got {type(entity).__name__}. "
+                f"Entity [{self.identifier}]"
+            )
+        return Identifier.parse(entity, vanilla=True, object_type="Runtime Identifier")
 
     def config(
         self,
         is_summonable: bool = True,
         is_spawnable: bool = True,
         is_experimental: bool = False,
-        runtime_identifier: "MinecraftEntityDescriptor" = None,
-        spawn_category: str = "misc",
+        runtime_identifier: str | None = None,
+        spawn_category: (
+            Literal[
+                "creature",
+                "monster",
+                "ambient",
+                "axolotls",
+                "water_creature",
+                "water_ambient",
+                "underground_water_creature",
+                "misc",
+            ]
+            | None
+        ) = None,
     ) -> "_EntityServerDescription":
-        """Sets the config of the entity.
+        """Sets how the entity can be spawned. Values equal to the game defaults are left
+        out.
 
         Args:
-            is_summonable (bool, optional): Whether or not we can summon this entity using commands such as /summon. Defaults to True.
-            is_spawnable (bool, optional): Whether or not this entity has a spawn egg in the creative ui. Defaults to True.
-            is_experimental (bool, optional): Whether or not this entity is experimental. Experimental entities are only enabled when the experimental toggle is enabled. Defaults to False.
-            runtime_identifier (MinecraftEntityDescriptor, optional): The vanilla entity to get the runtime identifier from. Defaults to None.
-            spawn_category (str, optional): The spawn category of the entity. Defaults to "misc".
+            is_summonable (bool, optional): Lets commands such as /summon spawn it.
+                Defaults to True.
+            is_spawnable (bool, optional): Gives it a spawn egg in the creative inventory.
+                Defaults to True.
+            is_experimental (bool, optional): Enables it only with the experimental toggle.
+                Defaults to False.
+            runtime_identifier (str, optional): The vanilla entity
+                whose hard-coded behavior it takes.
+            spawn_category (str, optional): The mob cap it counts toward,
+                such as `creature` or `monster`. Left out when not given.
         """
-        self._description["description"]["is_summonable"] = is_summonable
-        self._description["description"]["is_spawnable"] = is_spawnable
-        self._description["description"]["is_experimental"] = is_experimental
-        self._description["description"]["spawn_category"] = spawn_category
+        if is_experimental and CONFIG._TARGET == ConfigPackageTarget.ADDON:
+            raise ValueError(
+                "Experimental entities are not allowed for packages of type 'addon'. "
+                f"Entity [{self.identifier}]."
+            )
+        self.is_summonable = is_summonable
+        self.is_spawnable = is_spawnable
+        self.is_experimental = is_experimental
+        self.spawn_category = spawn_category
         if runtime_identifier is not None:
-            if CONFIG._TARGET != ConfigPackageTarget.ADDON:
-                if type(runtime_identifier) is MinecraftEntityDescriptor:
-                    if runtime_identifier._allow_runtime:
-                        self._description["description"][
-                            "runtime_identifier"
-                        ] = runtime_identifier.identifier
-                    else:
-                        raise RuntimeError(
-                            f"Entity {runtime_identifier.identifier} does not allow runtime identifier usage. Entity [{self.identifier}]."
-                        )
-                else:
-                    raise TypeError(
-                        f"Expected Entity, got {type(runtime_identifier).__name__}. Entity [{self.identifier}]"
-                    )
-            else:
-                raise RuntimeError(
-                    f"Using runtime is not allowed for packages of type '{CONFIG._TARGET}'. Entity [{self.identifier}]"
-                )
+            self.runtime_identifier = self._runtime_identifier(runtime_identifier)
         return self
 
-    @property
-    def add_property(self) -> "_Properties":
-        """Adds a property to the entity."""
-        return self._properties
-
-    def spawn_category(self) -> "_EntityServerDescription":
-        """Sets the spawn category of the entity."""
-        self._description["description"]["spawn_category"] = "none"
+    def _add_property(self, name: str, **values: Any) -> "_EntityServerDescription":
+        name = f"{CONFIG.NAMESPACE}:{name}"
+        self.properties[:] = [p for p in self.properties if p.name != name]
+        self.properties.append(_EntityProperty(name, **values))
         return self
 
-    def __export__(self) -> dict:
-        """Exports the entity description."""
-        self._description["description"]["properties"] = self._properties.__export__()
-        return super().__export__()
-
-
-class EntityServer(JsonFile):
-    """Base class for all server entities."""
-
-    _extension = ".behavior.json"
-    _pack = Pack.BP
-    _folder = "entities"
-    _object_type = "Server Entity"
-
-    def _add_despawn_function(self):
-        """Adds a despawn function to the entity."""
-        self.component_group("despawn").add(EntityInstantDespawn())
-        self.event("despawn").add(["despawn"])
-
-    def __init__(self, name: str, is_vanilla: bool = False) -> None:
-        """Base class for all server entities.
-
-        Args:
-            name (str): The name of the entity.
-            is_vanilla (bool, optional): Whether or not the entity is a vanilla entity. Defaults to False.
-        """
-        super().__init__(name, is_vanilla)
-        self._server_entity = JsonSchemes.entity_server()
-        self._description = _EntityServerDescription(
-            self.identifier, self.identifier.is_vanilla
-        )
-        self._animation_controllers = BPAnimationControllers(self.identifier)
-        self._animations = BPAnimations(self.identifier)
-        self._spawn_rule = SpawnRule(self.identifier, self.identifier.is_vanilla)
-        self._components = ComponentGroup(name="components")
-        self._events: dict[str, _Event] = {}
-        self._component_groups: list[ComponentGroup] = []
-        self._vars = []
-        self._add_despawn_function()
-
-    @property
-    def description(self) -> "_EntityServerDescription":
-        """Returns the entity description."""
-        return self._description
-
-    @property
-    def spawn_rule(self) -> "SpawnRule":
-        """Returns the spawn rule of the entity."""
-        return self._spawn_rule
-
-    def animation_controller(
+    def add_enum_property(
         self,
-        controller_name: str,
-        animate: bool = False,
-        condition: str | Molang = None,
-        initial_state: str = "default",
-    ) -> "_BP_Controller":
-        """Sets the mapping of internal animation controller references to actual animations.
+        name: str,
+        values: tuple[str, ...],
+        default: str,
+        *,
+        client_sync: bool = False,
+    ) -> "_EntityServerDescription":
+        """Adds a property that holds one of some names.
 
         Args:
-            controller_name (str): The name of the animation controller.
-            animate (bool, optional): Whether or not to animate the animation controller. Defaults to False.
-            condition (str | Molang, optional): The condition to animate the animation controller. Defaults to None.
-
+            name (str): The property name, without namespace.
+            values (tuple[str, ...]): The names.
+            default (str): The starting value.
+            client_sync (bool, optional): Sends the value to clients. Defaults to False.
         """
-        self._description._animation_controller(controller_name, animate, condition)
-        return self._animation_controllers.add_controller(
-            controller_name, initial_state
+        return self._add_property(
+            name,
+            type="enum",
+            default=default,
+            values=list(values),
+            client_sync=client_sync,
+        )
+
+    def add_int_property(
+        self,
+        name: str,
+        range: tuple[int, int],
+        *,
+        default: int | Molang = 0,
+        client_sync: bool = False,
+    ) -> "_EntityServerDescription":
+        """Adds a property that holds a whole number.
+
+        Args:
+            name (str): The property name, without namespace.
+            range (tuple[int, int]): The (min, max) values.
+            default (int | Molang, optional): The starting value. Defaults to 0.
+            client_sync (bool, optional): Sends the value to clients. Defaults to False.
+        """
+        return self._add_property(
+            name,
+            type="int",
+            default=default if isinstance(default, Molang) else int(default),
+            range=tuple(range),
+            client_sync=client_sync,
+        )
+
+    def add_float_property(
+        self,
+        name: str,
+        range: tuple[float, float],
+        *,
+        default: float | Molang = 0,
+        client_sync: bool = False,
+    ) -> "_EntityServerDescription":
+        """Adds a property that holds a number.
+
+        Args:
+            name (str): The property name, without namespace.
+            range (tuple[float, float]): The (min, max) values.
+            default (float | Molang, optional): The starting value. Defaults to 0.
+            client_sync (bool, optional): Sends the value to clients. Defaults to False.
+        """
+        return self._add_property(
+            name,
+            type="float",
+            default=default if isinstance(default, Molang) else float(default),
+            range=tuple(float(f) for f in range),
+            client_sync=client_sync,
+        )
+
+    def add_bool_property(
+        self, name: str, *, default: bool = False, client_sync: bool = False
+    ) -> "_EntityServerDescription":
+        """Adds a property that holds true or false.
+
+        Args:
+            name (str): The property name, without namespace.
+            default (bool, optional): The starting value. Defaults to False.
+            client_sync (bool, optional): Sends the value to clients. Defaults to False.
+        """
+        return self._add_property(
+            name, type="bool", default=default, client_sync=client_sync
         )
 
     def animation(
         self,
         animation_name: str,
-        loop: bool = False,
+        loop: bool | None = None,
         animate: bool = False,
-        condition: str | Molang = None,
-    ) -> "_BPAnimation":
-        """Sets the mapping of internal animation references to actual animations.
+        condition: str | Molang | None = None,
+    ) -> _BPAnimation:
+        """Returns the behavior pack animation with this name, added on first use, and maps
+        its short name.
 
         Args:
-            animation_name (str): The name of the animation.
-            loop (bool, optional): Whether or not the animation should loop. Defaults to False.
-            animate (bool, optional): Whether or not to animate the animation. Defaults to False.
-            condition (str | Molang, optional): The condition to animate the animation. Defaults to None.
-
+            animation_name (str): The animation's short name.
+            loop (bool, optional): If it loops, set when the animation is added. Defaults to
+                False.
+            animate (bool, optional): Runs it all the time. Defaults to False.
+            condition (str | Molang, optional): When it runs, with `animate`.
         """
-        self._description._animations(
-            self.identifier.name, animation_name, animate, condition
+        animation = next(
+            (
+                a
+                for a in self._animations
+                if isinstance(a, _BPAnimation) and a.name == animation_name
+            ),
+            None,
         )
-        return self._animations.add_animation(animation_name, loop)
+        if animation is None:
+            animation = _BPAnimation(
+                animation_name, owner=self.identifier, loop=bool(loop)
+            )
+            self._animations.append(animation)
+        elif loop is not None and loop != animation.loop:
+            raise ValueError(
+                f"Animation '{animation_name}' was added with loop={animation.loop}. "
+                f"Entity [{self.identifier}]"
+            )
+        if animate is True:
+            animation._set_animate(condition)
+        return animation
+
+    def animation_controller(
+        self,
+        controller_name: str,
+        animate: bool = False,
+        condition: str | Molang | None = None,
+        initial_state: str | None = None,
+    ) -> _BPAnimationController:
+        """Returns the behavior pack animation controller with this name, added on first
+        use, and maps its short name.
+
+        Args:
+            controller_name (str): The controller's short name.
+            animate (bool, optional): Runs it all the time. Defaults to False.
+            condition (str | Molang, optional): When it runs, with `animate`.
+            initial_state (str, optional): The state it starts in, set when the controller is
+                added. Defaults to `default`.
+        """
+        controller = next(
+            (
+                c
+                for c in self._animations
+                if isinstance(c, _BPAnimationController) and c.name == controller_name
+            ),
+            None,
+        )
+        if controller is None:
+            controller = _BPAnimationController(
+                controller_name,
+                owner=self.identifier,
+                initial_state=initial_state or "default",
+            )
+            self._animations.append(controller)
+        elif initial_state is not None and initial_state != controller.initial_state:
+            raise ValueError(
+                f"Animation controller '{controller_name}' was added with initial state "
+                f"'{controller.initial_state}'. Entity [{self.identifier}]"
+            )
+        if animate is True:
+            controller._set_animate(condition)
+        return controller
+
+    def __prepare_export__(self, owner: JsonFile, *, root: bool = True) -> None:
+        """Maps the animations and the controllers that have something to write, runs the
+        animated ones, and queues their files next to the owner's."""
+        self._animations = [
+            entry
+            for entry in self._animations
+            if not (isinstance(entry, _BPAnimationController) and entry._is_empty())
+        ]
+        for entry in self._animations:
+            self.animations[entry.name] = entry.identifier
+            if entry.animate:
+                self.scripts.add_animate(entry.name, entry.condition)
+        BPAnimationControllers(self).queue(owner._directory)
+        BPAnimations(self).queue(owner._directory)
+
+
+# endregion
+
+
+# region Parts
+
+
+def _components(group: ComponentGroup) -> Any:
+    return group.__payload__()
+
+
+def _groups(groups: list[ComponentGroup]) -> Any:
+    return {group.name: group.__payload__() for group in groups}
+
+
+# endregion
+
+
+class _EntityServer(JsonObject):
+    """The `minecraft:entity` body."""
+
+    description: _EntityServerDescription = json_field(
+        default_factory=_EntityServerDescription
+    )
+    components: Annotated[ComponentGroup, Encoded(_components, {"type": "object"})] = (
+        json_field(default_factory=lambda: ComponentGroup(name="components"))
+    )
+    component_groups: Annotated[
+        list[ComponentGroup], Encoded(_groups, {"type": "object"})
+    ] = json_field(default_factory=list)
+    events: Annotated[list[_Event], Keyed("name")] = json_field(default_factory=list)
+
+
+class _EntityServerFile(JsonObject):
+    """The content of a `.behavior.json` file."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("format_version", "minecraft:entity")
+
+    format_version: str = json_field(default=ENTITY_SERVER_VERSION, init=False)
+    entity: _EntityServer = json_field(
+        default_factory=_EntityServer, key="minecraft:entity"
+    )
+
+
+class EntityServer(JsonFile):
+    """A server entity: its description, components, component groups and events.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/)
+    """
+
+    _document = _EntityServerFile
+    _extension = ".behavior.json"
+    _pack = Pack.BP
+    _folder = "entities"
+    _object_type = "Server Entity"
+
+    def __init__(self, name: str, is_vanilla: bool = False) -> None:
+        """Creates a server entity.
+
+        Args:
+            name (str): The entity's name.
+            is_vanilla (bool, optional): If the entity is a vanilla one. Defaults to False.
+        """
+        super().__init__(name, is_vanilla)
+        self.description.set_identifier(self.identifier)
+        self._spawn_rule = SpawnRule(self.identifier, self.identifier.is_vanilla)
+        self._vars: list[str] = []
+        self.component_group("despawn").add(EntityInstantDespawn())
+        self.event("despawn").add_component_groups(["despawn"])
+
+    @property
+    def _body(self) -> _EntityServer:
+        return self._content.entity
+
+    @property
+    def description(self) -> _EntityServerDescription:
+        """The description builders."""
+        return self._body.description
+
+    @property
+    def spawn_rule(self) -> SpawnRule:
+        """The entity's spawn rules."""
+        return self._spawn_rule
+
+    @property
+    def events(self) -> list[_Event]:
+        """The entity's events, in the order they were added."""
+        return self._body.events
 
     def init_vars(self, **vars) -> "EntityServer":
-        """Initializes variables for an entity."""
+        """Initializes variables when the entity is created, in a `variables` controller."""
         for k, v in vars.items():
             Variable._set_var(k)
-            self._vars.extend([f"v.{k}={v}"])
-
+            self._vars.append(f"v.{k}={v}")
         return self
 
     def event(
@@ -363,43 +446,44 @@ class EntityServer(JsonFile):
             ]
             | str
         ),
-    ) -> "_Event":
-        """Adds an event to the entity.
-            - `minecraft:entity_born` triggers an event call on an entity when the entity is born via breeding.
-            - `minecraft:entity_spawned` triggers an event call on an entity when the entity is spawned in the world.
-            - `minecraft:entity_transformed` triggers an event call on an entity when transformed into another entity.
-            - `minecraft:on_prime` triggers an event call on an entity when the entity is set to explode.
+    ) -> _Event:
+        """Returns the event with this name, added on first use.
+            - `minecraft:entity_born` runs when the entity is born from breeding.
+            - `minecraft:entity_spawned` runs when the entity spawns in the world.
+            - `minecraft:entity_transformed` runs when another entity transforms into it.
+            - `minecraft:on_prime` runs when the entity is about to explode.
 
         Args:
-            event_name (str): The name of the event.
+            event_name (str): The event name.
         """
-        if event_name in self._events:
-            return self._events[event_name]
-
-        self._events[event_name] = _Event(event_name)
-        return self._events[event_name]
+        for event in self.events:
+            if event.name == event_name:
+                return event
+        event = _Event(event_name)
+        self.events.append(event)
+        return event
 
     @property
-    def components(self) -> "ComponentGroup":
-        """Returns the components of the entity."""
-        return self._components
+    def components(self) -> ComponentGroup:
+        """The entity's root components."""
+        return self._body.components
 
-    def component_group(self, component_group_name: str) -> "ComponentGroup":
+    def component_group(self, component_group_name: str) -> ComponentGroup:
         """Returns the component group with this name, added on first use.
 
         Args:
-            component_group_name (str): The name of the component group.
-
+            component_group_name (str): The group name.
         """
         if component_group_name == "components":
             raise ValueError(
                 "'components' is the root group. Use `entity.server.components` instead."
             )
-        for group in self._component_groups:
+        for group in self._body.component_groups:
             if group.name == component_group_name:
                 return group
-        self._component_groups.append(ComponentGroup(name=component_group_name))
-        return self._component_groups[-1]
+        group = ComponentGroup(name=component_group_name)
+        self._body.component_groups.append(group)
+        return group
 
     def add_basic_components(self) -> "EntityServer":
         """Adds basic server components to the entity.
@@ -450,57 +534,19 @@ class EntityServer(JsonFile):
         )
         return self
 
-    def queue(self, directory: str = None) -> "EntityServer":
-        """Queues the entity for export.
-
-        Args:
-            directory (str, optional): The directory to export the entity to. Defaults to None.
-        """
-        super().queue(directory=directory)
-
     def __export__(self) -> None:
-        if len(self._vars) > 0:
-            self.animation_controller("variables", True).add_state("default").on_entry(
-                *self._vars
-            )
-        self._animations.queue(directory=self._directory)
-        self._animation_controllers.queue(directory=self._directory)
+        if self._vars:
+            self.animation_controller("variables", True).add_state(
+                "default"
+            ).add_on_entry(*self._vars)
+        self.description.__prepare_export__(self)
         self._spawn_rule.queue(directory=self._directory)
 
-        validate_components(self, self._components, self._component_groups)
+        body = self._body
+        validate_components(self, body.components, body.component_groups)
 
-        self._server_entity["minecraft:entity"].update(self.description.__export__())
-        self._server_entity["minecraft:entity"]["components"].update(
-            self._components.__payload__()
-        )
-
-        for event in self._events.values():
-            self._server_entity["minecraft:entity"]["events"].update(event.__export__())
-
-        for group in self._component_groups:
-            self._server_entity["minecraft:entity"]["component_groups"].update(
-                group.__json__()
-            )
-
-        self.content(self._server_entity)
-
-        controllers = list(
-            self._animation_controllers._animation_controllers[
-                "animation_controllers"
-            ].keys()
-        )
-        cleared_items = []
-        for key, controller in self._description._description["description"][
-            "animations"
-        ].items():
-            if controller.startswith("controller.") and controller not in controllers:
-                cleared_items.append(key)
-
-        for item in cleared_items:
-            self._description._description["description"]["animations"].pop(item)
-
-        if self._components.has(EntityRideable) or any(
-            c.has(EntityRideable) for c in self._component_groups
+        if body.components.has(EntityRideable) or any(
+            group.has(EntityRideable) for group in body.component_groups
         ):
             AnvilTranslator().add_localization_entry(
                 f"action.hint.exit.{self.identifier}", "Sneak to exit"

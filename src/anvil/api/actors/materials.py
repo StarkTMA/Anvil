@@ -1,22 +1,503 @@
-from anvil.api.core.enums import (
+"""The resource pack's `materials/entity.material`: custom entity materials."""
+
+from typing import Annotated, Any, Literal
+
+from anvil.lib.config import CONFIG, Pack
+from anvil.lib.format_versions import MATERIALS_VERSION
+from anvil.lib.jsonmodel import (
+    InRange,
+    JsonFile,
+    JsonObject,
+    Keyed,
+    NonNegative,
+    Wrapped,
+    json_field,
+)
+from anvil.lib.jsonmodel.enums import (
     MaterialDefinitions,
     MaterialFunc,
     MaterialOperation,
     MaterialStates,
 )
-from anvil.api.core.types import Identifier
-from anvil.lib.config import CONFIG, Pack
-from anvil.lib.jsonmodel import JsonFile
-from anvil.lib.schemas import JsonSchemes
+from anvil.lib.jsonmodel.types import TextureFilter, TextureWrap
+
+
+class _StencilFace(JsonObject):
+    """The stencil test of the front or back faces of a material. Unset keys are left out."""
+
+    stencilFunc: MaterialFunc | None = None
+    stencilFailOp: MaterialOperation | None = None
+    stencilDepthFailOp: MaterialOperation | None = None
+    stencilPassOp: MaterialOperation | None = None
+    stencilPass: MaterialOperation | None = None
+
+
+class _SamplerState(JsonObject):
+    """How a material samples one of its textures. Unset keys are left out."""
+
+    samplerIndex: Annotated[int, NonNegative] = json_field()
+    textureFilter: TextureFilter | None = None
+    textureWrap: TextureWrap | None = None
+
+
+class _MaterialSettings(JsonObject, abstract=True):
+    """The settings shared by a material and its variants, with their builders. A plain key
+    replaces what the base material has, a `+` key adds to it and a `-` key takes from it.
+    Unset keys are left out."""
+
+    states: list[MaterialStates] | None = None
+    plus_states: list[MaterialStates] | None = json_field(default=None, key="+states")
+    minus_states: list[MaterialStates] | None = json_field(default=None, key="-states")
+    defines: list[MaterialDefinitions] | None = None
+    plus_defines: list[MaterialDefinitions] | None = json_field(
+        default=None, key="+defines"
+    )
+    minus_defines: list[MaterialDefinitions] | None = json_field(
+        default=None, key="-defines"
+    )
+    frontFace: _StencilFace | None = None
+    backFace: _StencilFace | None = None
+    stencilRef: Annotated[int, InRange(0, 255)] | None = None
+    depthFunc: MaterialFunc | None = None
+    blendSrc: str | None = None
+    blendDst: str | None = None
+    vertexShader: str | None = None
+    fragmentShader: str | None = None
+    geometryShader: str | None = None
+    vrGeometryShader: str | None = None
+    vertexFields: list[Annotated[str, Wrapped("field")]] | None = None
+    msaaSupport: str | None = None
+    primitiveMode: str | None = None
+    depthBias: float | None = None
+    slopeScaledDepthBias: float | None = None
+    depthBiasOGL: float | None = None
+    slopeScaledDepthBiasOGL: float | None = None
+    samplerStates: list[_SamplerState] | None = None
+    plus_samplerStates: list[_SamplerState] | None = json_field(
+        default=None, key="+samplerStates"
+    )
+
+    def set_states(self, *states: MaterialStates) -> "_MaterialSettings":
+        """Sets the rendering states, replacing the base material's.
+
+        Rendering states control basic graphics pipeline settings, such as blending, culling
+        (rendering backfaces) or writing to the depth buffer.
+
+        Args:
+            states (MaterialStates): The states, such as `MaterialStates.DisableCulling`.
+        """
+        self.states = list(states)
+        return self
+
+    def add_states(self, *states: MaterialStates) -> "_MaterialSettings":
+        """Adds rendering states to the base material's.
+
+        Args:
+            states (MaterialStates): The states to add.
+        """
+        self.plus_states = (self.plus_states or []) + list(states)
+        return self
+
+    def remove_states(self, *states: MaterialStates) -> "_MaterialSettings":
+        """Removes rendering states of the base material, such as `DisableCulling` to cull
+        backfaces again.
+
+        Args:
+            states (MaterialStates): The states to remove.
+        """
+        self.minus_states = (self.minus_states or []) + list(states)
+        return self
+
+    def set_defines(self, *defines: MaterialDefinitions) -> "_MaterialSettings":
+        """Sets the shader defines, replacing the base material's.
+
+        Defines toggle shader features, such as alpha testing (`ALPHA_TEST`), the enchantment
+        glint (`GLINT`) or color masking (`USE_COLOR_MASK`).
+
+        Args:
+            defines (MaterialDefinitions): The defines.
+        """
+        self.defines = list(defines)
+        return self
+
+    def add_defines(self, *defines: MaterialDefinitions) -> "_MaterialSettings":
+        """Adds shader defines to the base material's.
+
+        Args:
+            defines (MaterialDefinitions): The defines to add.
+        """
+        self.plus_defines = (self.plus_defines or []) + list(defines)
+        return self
+
+    def remove_defines(self, *defines: MaterialDefinitions) -> "_MaterialSettings":
+        """Removes shader defines of the base material, such as `USE_OVERLAY` to stop the
+        entity flashing red when hurt.
+
+        Args:
+            defines (MaterialDefinitions): The defines to remove.
+        """
+        self.minus_defines = (self.minus_defines or []) + list(defines)
+        return self
+
+    def set_frontFace(
+        self,
+        stencilFunc: MaterialFunc | None = None,
+        stencilFailOp: MaterialOperation | None = None,
+        stencilDepthFailOp: MaterialOperation | None = None,
+        stencilPassOp: MaterialOperation | None = None,
+        stencilPass: MaterialOperation | None = None,
+    ) -> "_MaterialSettings":
+        """Sets the stencil test of front-facing polygons. The stencil buffer masks pixels
+        and decides what is drawn by custom rules.
+
+        Args:
+            stencilFunc (MaterialFunc, optional): Compares the reference value with the
+                buffer to decide if the test passes.
+            stencilFailOp (MaterialOperation, optional): What happens to the buffer when the
+                stencil test fails.
+            stencilDepthFailOp (MaterialOperation, optional): What happens when the stencil
+                test passes but the depth test fails.
+            stencilPassOp (MaterialOperation, optional): What happens when both tests pass.
+            stencilPass (MaterialOperation, optional): The older name of `stencilPassOp`.
+        """
+        self.frontFace = _StencilFace(
+            stencilFunc=stencilFunc,
+            stencilFailOp=stencilFailOp,
+            stencilDepthFailOp=stencilDepthFailOp,
+            stencilPassOp=stencilPassOp,
+            stencilPass=stencilPass,
+        )
+        return self
+
+    def set_backFace(
+        self,
+        stencilFunc: MaterialFunc | None = None,
+        stencilFailOp: MaterialOperation | None = None,
+        stencilDepthFailOp: MaterialOperation | None = None,
+        stencilPassOp: MaterialOperation | None = None,
+        stencilPass: MaterialOperation | None = None,
+    ) -> "_MaterialSettings":
+        """Sets the stencil test of back-facing polygons, like `set_frontFace`.
+
+        Args:
+            stencilFunc (MaterialFunc, optional): The comparison.
+            stencilFailOp (MaterialOperation, optional): On stencil fail.
+            stencilDepthFailOp (MaterialOperation, optional): On stencil pass and depth fail.
+            stencilPassOp (MaterialOperation, optional): When both pass.
+            stencilPass (MaterialOperation, optional): The older name of `stencilPassOp`.
+        """
+        self.backFace = _StencilFace(
+            stencilFunc=stencilFunc,
+            stencilFailOp=stencilFailOp,
+            stencilDepthFailOp=stencilDepthFailOp,
+            stencilPassOp=stencilPassOp,
+            stencilPass=stencilPass,
+        )
+        return self
+
+    def set_stencilRef(self, stencilRef: int) -> "_MaterialSettings":
+        """Sets the reference value the stencil test compares with the buffer.
+
+        Args:
+            stencilRef (int): The value, 0 to 255.
+        """
+        self.stencilRef = stencilRef
+        return self
+
+    def set_depthFunc(self, depthFunc: MaterialFunc) -> "_MaterialSettings":
+        """Sets the depth test. The usual test is `LessEqual` (drawn when closer or equal);
+        `Always` draws on top of everything.
+
+        Args:
+            depthFunc (MaterialFunc): The comparison.
+        """
+        self.depthFunc = depthFunc
+        return self
+
+    def set_blendSrc(self, blendSrc: str) -> "_MaterialSettings":
+        """Sets the blend factor of the color being drawn, such as `SourceAlpha`.
+
+        Args:
+            blendSrc (str): The factor.
+        """
+        self.blendSrc = blendSrc
+        return self
+
+    def set_blendDst(self, blendDst: str) -> "_MaterialSettings":
+        """Sets the blend factor of the color already drawn, such as `OneMinusSrcAlpha`.
+
+        Args:
+            blendDst (str): The factor.
+        """
+        self.blendDst = blendDst
+        return self
+
+    def set_vertexShader(self, shader: str) -> "_MaterialSettings":
+        """Sets the vertex shader, such as `shaders/entity.vertex`.
+
+        Args:
+            shader (str): The shader path.
+        """
+        self.vertexShader = shader
+        return self
+
+    def set_fragmentShader(self, shader: str) -> "_MaterialSettings":
+        """Sets the fragment (pixel) shader, such as `shaders/entity.fragment`.
+
+        Args:
+            shader (str): The shader path.
+        """
+        self.fragmentShader = shader
+        return self
+
+    def set_geometryShader(self, shader: str) -> "_MaterialSettings":
+        """Sets the geometry shader.
+
+        Args:
+            shader (str): The shader path.
+        """
+        self.geometryShader = shader
+        return self
+
+    def set_vrGeometryShader(self, shader: str) -> "_MaterialSettings":
+        """Sets the geometry shader used in virtual reality, such as
+        `shaders/entity.geometry`.
+
+        Args:
+            shader (str): The shader path.
+        """
+        self.vrGeometryShader = shader
+        return self
+
+    def set_vertexFields(self, *fields: str) -> "_MaterialSettings":
+        """Sets the vertex data passed to the shader, which must match what the shader reads.
+
+        Args:
+            fields (str): The fields, such as `"Position"`, `"Normal"`, `"UV0"`.
+        """
+        self.vertexFields = list(fields)
+        return self
+
+    def set_msaaSupport(self, support: str) -> "_MaterialSettings":
+        """Sets the multisample anti-aliasing support, such as `"Both"`.
+
+        Args:
+            support (str): The support mode.
+        """
+        self.msaaSupport = support
+        return self
+
+    def set_primitiveMode(self, mode: str) -> "_MaterialSettings":
+        """Sets how vertices are drawn, such as `"Triangle"` or `"Line"`.
+
+        Args:
+            mode (str): The primitive mode.
+        """
+        self.primitiveMode = mode
+        return self
+
+    def set_depthBias(self, bias: float) -> "_MaterialSettings":
+        """Sets the depth bias, which draws the geometry closer to the camera than it is, to
+        stop two overlapping surfaces flickering.
+
+        Args:
+            bias (float): The bias.
+        """
+        self.depthBias = bias
+        return self
+
+    def set_slopeScaledDepthBias(self, bias: float) -> "_MaterialSettings":
+        """Sets the depth bias scaled by the polygon's angle to the camera.
+
+        Args:
+            bias (float): The slope factor.
+        """
+        self.slopeScaledDepthBias = bias
+        return self
+
+    def set_depthBiasOGL(self, bias: float) -> "_MaterialSettings":
+        """Sets the depth bias on OpenGL.
+
+        Args:
+            bias (float): The bias.
+        """
+        self.depthBiasOGL = bias
+        return self
+
+    def set_slopeScaledDepthBiasOGL(self, bias: float) -> "_MaterialSettings":
+        """Sets the slope-scaled depth bias on OpenGL.
+
+        Args:
+            bias (float): The slope factor.
+        """
+        self.slopeScaledDepthBiasOGL = bias
+        return self
+
+    def set_samplerState(
+        self,
+        samplerIndex: int,
+        textureFilter: (
+            Literal[
+                "Point", "Bilinear", "Trilinear", "MipMapBilinear", "TexelAA", "PCF"
+            ]
+            | None
+        ) = None,
+        textureWrap: Literal["Repeat", "Clamp"] | None = None,
+    ) -> "_MaterialSettings":
+        """Adds how a texture is sampled to `samplerStates`, which replaces the base
+        material's sampler states.
+
+        Args:
+            samplerIndex (int): The texture's index.
+            textureFilter (str, optional): The filter, `"Point"` keeping pixels sharp.
+            textureWrap (str, optional): `"Repeat"` or `"Clamp"`.
+        """
+        state = _SamplerState(
+            samplerIndex=samplerIndex,
+            textureFilter=textureFilter,
+            textureWrap=textureWrap,
+        )
+        self.samplerStates = (self.samplerStates or []) + [state]
+        return self
+
+    def add_samplerState(
+        self,
+        samplerIndex: int,
+        textureFilter: (
+            Literal[
+                "Point", "Bilinear", "Trilinear", "MipMapBilinear", "TexelAA", "PCF"
+            ]
+            | None
+        ) = None,
+        textureWrap: Literal["Repeat", "Clamp"] | None = None,
+    ) -> "_MaterialSettings":
+        """Adds how a texture is sampled to the base material's sampler states.
+
+        Args:
+            samplerIndex (int): The texture's index.
+            textureFilter (str, optional): The filter, `"Point"` keeping pixels sharp.
+            textureWrap (str, optional): `"Repeat"` or `"Clamp"`.
+        """
+        state = _SamplerState(
+            samplerIndex=samplerIndex,
+            textureFilter=textureFilter,
+            textureWrap=textureWrap,
+        )
+        self.plus_samplerStates = (self.plus_samplerStates or []) + [state]
+        return self
+
+
+class _MaterialVariant(_MaterialSettings):
+    """A variant of a material, such as `skinning`, written as `{name: settings}`."""
+
+    name: str = json_field(exclude=True, positional=True)
+
+    def __json__(self) -> Any:
+        return {self.name: _MaterialSettings.__json__(self)}
+
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": JsonObject.__schema_body__.__func__(
+                cls, definitions
+            ),
+        }
+
+
+class Material(_MaterialSettings):
+    """A custom entity material, written to `materials/entity.material` when queued. Its
+    identifier is `<namespace>.<material_name>`, which the entity's client description
+    refers to.
+
+    Args:
+        material_name (str): The material's name.
+        baseMaterial (str, optional): The material it builds on, such as
+            `entity_alphatest`.
+    """
+
+    material_name: str = json_field(exclude=True, positional=True)
+    baseMaterial: str | None = json_field(default=None, exclude=True, positional=True)
+    variants: list[_MaterialVariant] | None = None
+
+    @property
+    def identifier(self) -> str:
+        """The material's identifier, `<namespace>.<material_name>`."""
+        return f"{CONFIG.NAMESPACE}.{self.material_name}"
+
+    @property
+    def key(self) -> str:
+        """The material's key in the file, `<identifier>:<baseMaterial>`."""
+        if self.baseMaterial is None:
+            return self.identifier
+        return f"{self.identifier}:{self.baseMaterial}"
+
+    def add_variant(self, name: str) -> _MaterialVariant:
+        """Adds a shader variant, such as `skinning`, and returns it to set it up with the
+        same builders as the material.
+
+        Args:
+            name (str): The variant's name.
+        """
+        variant = _MaterialVariant(name)
+        self.variants = (self.variants or []) + [variant]
+        return variant
+
+    def queue(self) -> "Material":
+        """Adds the material to `materials/entity.material`."""
+        MaterialsObject()._content.materials.add(self)
+        return self
+
+    def __str__(self) -> str:
+        return self.identifier
+
+
+class _Materials(JsonObject):
+    """The `materials` object: the version, then each material under its key."""
+
+    version: str = json_field(default=MATERIALS_VERSION)
+    definitions: Annotated[list[Material], Keyed("key")] = json_field(
+        default_factory=list
+    )
+
+    def add(self, material: Material) -> None:
+        """Adds a material, replacing one with the same key."""
+        self.definitions = [m for m in self.definitions if m.key != material.key] + [
+            material
+        ]
+
+    def __json__(self) -> Any:
+        payload = JsonObject.__json__(self)
+        payload.update(payload.pop("definitions", {}))
+        return payload
+
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, Any]) -> dict[str, Any]:
+        material = Material.__schema_body__(definitions)
+        return {
+            "type": "object",
+            "properties": {"version": {"type": "string"}},
+            "required": ["version"],
+            "additionalProperties": material,
+        }
+
+
+class _MaterialsFile(JsonObject):
+    """The content of a `.material` file."""
+
+    materials: _Materials = json_field(default_factory=_Materials)
 
 
 class MaterialsObject(JsonFile):
-    """Handles materials as a singleton.
+    """The project's custom entity materials, `materials/entity.material`. There is one per
+    pack.
 
-    Attributes:
-        Materials (list[Material], optional): A list of materials. Defaults to empty list.
+    ## [Documentation reference](https://wiki.bedrock.dev/visuals/materials)
     """
 
+    _document = _MaterialsFile
     _instance = None
     _extension = ".material"
     _pack = Pack.RP
@@ -33,515 +514,15 @@ class MaterialsObject(JsonFile):
         if getattr(self, "_initialized", False):
             return
         super().__init__("entity")
-        self._materials: list[Material] = []
-        self._content = JsonSchemes.materials()
         self._initialized = True
 
-    def add_material(self, material: "Material"):
-        self._materials.append(material)
+    def add_material(self, material: Material) -> Material:
+        """Adds a material to the file."""
+        self._content.materials.add(material)
         return material
 
     def queue(self) -> "MaterialsObject":
-        """Queues the materials for export."""
-        if (len(self._materials)) > 0:
-            for m in self._materials:
-                self._content["materials"].update(m.__export__())
+        """Queues the materials for export, when there is any."""
+        if self._content.materials.definitions:
             super().queue()
         return self
-
-
-class Material:
-    """A class representing a material with customizable states and definitions.
-
-    Attributes:
-        Material_name (str): The name of the material.
-        Material (dict): The attributes and states of the material.
-    """
-
-    def __init__(self, material_name, baseMaterial) -> None:
-        """
-        Initializes a Material instance.
-
-        Args:
-            material_name (str): The name of the material.
-            baseMaterial (str): The base material's name, if any.
-        """
-        self._identifier = f"{CONFIG.NAMESPACE}.{material_name}"
-        self._material_name = (
-            f"{self._identifier}"
-            if baseMaterial == None
-            else f"{self._identifier}:{baseMaterial}"
-        )
-        self._material = {self._material_name: {}}
-
-    @property
-    def identifier(self):
-        return self._identifier
-
-    def states(self, *states: MaterialStates) -> "Material":
-        """
-        Sets the rendering states for the material.
-
-        Rendering states control basic graphics pipeline settings, such as whether to enable blending,
-        disable culling (rendering backfaces), or write to the depth buffer.
-
-        Args:
-            states (MaterialStates): One or more `MaterialStates` enum values (e.g., `MaterialStates.DisableCulling`, `MaterialStates.Blending`).
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["states"] = states
-        return self
-
-    def remove_states(self, *states: MaterialStates) -> "Material":
-        """
-        Removes specific rendering states from the material configuration.
-
-        Use this to disable default behaviors inherited from a base material.
-        For example, removing `DisableCulling` to restore backface culling.
-
-        Args:
-            states (MaterialStates): The material states to remove.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["-states"] = states
-        return self
-
-    def add_states(self, *states: MaterialStates) -> "Material":
-        """
-        Adds rendering states to the existing material configuration.
-
-        This appends to the states inherited from the base material instead of replacing them.
-
-        Args:
-            states (MaterialStates): The material states to add.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["+states"] = states
-        return self
-
-    def frontFace(
-        self,
-        stencilFunc: MaterialFunc = None,
-        stencilFailOp: MaterialOperation = None,
-        stencilDepthFailOp: MaterialOperation = None,
-        stencilPassOp: MaterialOperation = None,
-        stencilPass: MaterialOperation = None,
-    ) -> "Material":
-        """
-        Configures stencil testing for front-facing polygons.
-
-        The stencil buffer is used to mask pixels and control drawing based on custom rules.
-        This method defines how the stencil test behaves for the front side of the geometry.
-
-        Args:
-            stencilFunc (MaterialFunc, optional): The comparison function (e.g. Equal, Always) used to determine if the stencil test passes.
-            stencilFailOp (MaterialOperation, optional): The operation to perform on the stencil buffer value if the stencil test fails.
-            stencilDepthFailOp (MaterialOperation, optional): The operation to perform if the stencil test passes but the depth test fails.
-            stencilPassOp (MaterialOperation, optional): The operation to perform if both stencil and depth tests pass.
-            stencilPass (MaterialOperation, optional): (Legacy/Alternative name for stencilPassOp).
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        a = {
-            "stencilFunc": stencilFunc,
-            "stencilFailOp": stencilFailOp,
-            "stencilDepthFailOp": stencilDepthFailOp,
-            "stencilPassOp": stencilPassOp,
-            "stencilPass": stencilPass,
-        }
-        self._material[self._material_name]["frontFace"] = {
-            key: value.value for key, value in a.items() if value != None
-        }
-        return self
-
-    def backFace(
-        self,
-        stencilFunc: MaterialFunc = None,
-        stencilFailOp: MaterialOperation = None,
-        stencilDepthFailOp: MaterialOperation = None,
-        stencilPassOp: MaterialOperation = None,
-        stencilPass: MaterialOperation = None,
-    ) -> "Material":
-        """
-        Configures stencil testing for back-facing polygons.
-
-        Functionally identical to `frontFace`, but applied to the back side of geometry.
-        This allows for double-sided stencil effects (e.g. treating the inside of a volume differently).
-
-        Args:
-            stencilFunc (MaterialFunc, optional): The comparison function.
-            stencilFailOp (MaterialOperation, optional): Operation on stencil fail.
-            stencilDepthFailOp (MaterialOperation, optional): Operation on stencil pass but depth fail.
-            stencilPassOp (MaterialOperation, optional): Operation on both pass.
-            stencilPass (MaterialOperation, optional): (Legacy/Alternative name).
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        a = {
-            "stencilFunc": stencilFunc,
-            "stencilFailOp": stencilFailOp,
-            "stencilDepthFailOp": stencilDepthFailOp,
-            "stencilPassOp": stencilPassOp,
-            "stencilPass": stencilPass,
-        }
-        self._material[self._material_name]["backFace"] = {
-            key: value for key, value in a.items() if value != None
-        }
-        return self
-
-    def stencilRef(self, stencilRef: int) -> "Material":
-        """
-        Sets the reference value for the stencil test.
-
-        This value is compared against the value in the stencil buffer using the `stencilFunc`.
-        For example, if `stencilFunc` is `Equal` and `stencilRef` is 1, pixels are only drawn where the stencil buffer is 1.
-
-        Args:
-            stencilRef (int): The integer reference value (0-255).
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-
-        self._material[self._material_name]["stencilRef"] = stencilRef
-        return self
-
-    def depthFunc(self, depthFunc: MaterialFunc) -> "Material":
-        """
-        Sets the function used for the depth test.
-
-        The depth test determines if a pixel is obscured by other objects.
-        Standard depth testing uses `LessEqual` (draw if closer or equal).
-        Changing this allows valid rendering of objects behind others (e.g. `Greater`) or always drawing on top (`Always`).
-
-        Args:
-            depthFunc (MaterialFunc): The comparison function to use (e.g. `MaterialFunc.LessEqual`, `MaterialFunc.Always`).
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["depthFunc"] = depthFunc
-        return self
-
-    def blendSrc(self, blendSrc: str) -> "Material":
-        """
-        Sets the blending factor for the source color (the pixel being drawn).
-
-        Blending combines the source color with the destination color (the pixel already in the buffer).
-        Example: `SourceAlpha` uses the texture's alpha channel for transparency.
-
-        Args:
-            blendSrc (str): The source blend factor string (e.g., "SourceAlpha", "One").
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["blendSrc"] = blendSrc
-        return self
-
-    def blendDst(self, blendDst: str) -> "Material":
-        """
-        Sets the blending factor for the destination color (the background).
-
-        Together with `blendSrc`, this determines the final pixel color.
-        Example: `OneMinusSrcAlpha` is commonly used for standard transparency (inverted alpha).
-
-        Args:
-            blendDst (str): The destination blend factor (e.g., "OneMinusSrcAlpha", "Zero").
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["blendDst"] = blendDst
-        return self
-
-    def vertexShader(self, shader: str) -> "Material":
-        """
-        Sets the path to the vertex shader file.
-
-        The vertex shader processes each vertex's position and attributes (UVs, normals).
-        It transforms 3D model coordinates into screen space.
-
-        Args:
-            shader (str): The relative path to the vertex shader (e.g., "shaders/entity.vertex").
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["vertexShader"] = shader
-        return self
-
-    def fragmentShader(self, shader: str) -> "Material":
-        """
-        Sets the path to the fragment (pixel) shader file.
-
-        The fragment shader calculates the color of each pixel, applying textures, lighting, and effects.
-
-        Args:
-            shader (str): The relative path to the fragment shader (e.g., "shaders/entity.fragment").
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["fragmentShader"] = shader
-        return self
-
-    def geometryShader(self, shader: str) -> "Material":
-        """
-        Sets the path to the geometry shader file.
-
-        Geometry shaders can generate new geometry (vertices/primitives) on the fly.
-        (Less commonly used in standard Bedrock entity materials).
-
-        Args:
-            shader (str): The relative path to the geometry shader file.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["geometryShader"] = shader
-        return self
-
-    def vrGeometryShader(self, shader: str) -> "Material":
-        """
-        Sets the path to the VR-specific geometry shader.
-
-        Used when playing in Virtual Reality mode to handle stereo rendering adjustments.
-
-        Args:
-            shader (str): The relative path to the shader (e.g., "shaders/entity.geometry").
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["vrGeometryShader"] = shader
-        return self
-
-    def vertexFields(self, fields: list[dict]) -> "Material":
-        """
-        Defines the data layout for vertices passed to the shader.
-
-        Specifies what information (Position, Normal, UVs, Color/BoneWeights) is available
-        in the shader input attributes. Must match the shader's expectation.
-
-        Args:
-            fields (list[dict]): List of field objects (e.g., `[{"field": "Position"}, {"field": "UV0"}]`).
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["vertexFields"] = fields
-        return self
-
-    def variants(self, variants: list[dict]) -> "Material":
-        """
-        Defines shader variants.
-
-        Variants allow switching between different shader setups (defines, vertex fields)
-        based on conditions, such as skinning support or specific defines being active.
-
-        Args:
-            variants (list[dict]): A list of variant configuration dictionaries.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["variants"] = variants
-        return self
-
-    def msaaSupport(self, support: str) -> "Material":
-        """
-        Configures Multisample Anti-Aliasing (MSAA) support.
-
-        Controls whether the material benefits from MSAA to smooth jagged edges.
-
-        Args:
-            support (str): The support mode (e.g., "Both", "None", "MSAA").
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["msaaSupport"] = support
-        return self
-
-    def primitiveMode(self, mode: str) -> "Material":
-        """
-        Sets the geometric primitive drawing mode.
-
-        Determines how vertices are interpreted.
-        - "Triangle": Standard mesh rendering.
-        - "Line": Draws wireframe lines.
-        - "Quad": Draws quads.
-
-        Args:
-            mode (str): The primitive mode string.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["primitiveMode"] = mode
-        return self
-
-    def depthBias(self, bias: float) -> "Material":
-        """
-        Sets the depth bias.
-
-        Offsets the depth value of the rendered geometry. Positive values pull the geometry "closer" to the camera
-        without changing its actual position. Used to prevent z-fighting (flickering) when two surfaces overlap.
-
-        Args:
-            bias (float): The bias value (typically small, e.g., 100.0).
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["depthBias"] = bias
-        return self
-
-    def slopeScaledDepthBias(self, bias: float) -> "Material":
-        """
-        Sets the slope-scaled depth bias.
-
-        Offsets depth based on the polygon's angle to the camera. Surfaces viewed at a steep angle need more bias
-        to prevent z-fighting. Works in conjunction with `depthBias`.
-
-        Args:
-            bias (float): The slope-scale factor (e.g., 0.1).
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["slopeScaledDepthBias"] = bias
-        return self
-
-    def depthBiasOGL(self, bias: float) -> "Material":
-        """
-        Sets the OpenGL-specific depth bias.
-
-        Similar to `depthBias`, but specifically for the OpenGL backend (some platforms).
-        Usually kept consistent with `depthBias`.
-
-        Args:
-            bias (float): The OpenGL depth bias value.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["depthBiasOGL"] = bias
-        return self
-
-    def slopeScaledDepthBiasOGL(self, bias: float) -> "Material":
-        """
-        Sets the OpenGL-specific slope-scaled depth bias.
-
-        Similar to `slopeScaledDepthBias`, but for the OpenGL backend.
-
-        Args:
-            bias (float): The OpenGL slope-scale factor.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["slopeScaledDepthBiasOGL"] = bias
-        return self
-
-    def samplerStates(self, states: list[dict]) -> "Material":
-        """
-        Configures texture sampling.
-
-        Defines how textures are filtered (Nearest/Linear) and wrapped (Repeat/Clamp).
-        Example: Setting filter to 'Point' creates a pixelated look (Minecraft default).
-
-        Args:
-            states (list[dict]): A list of sampler state objects.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["samplerStates"] = states
-        return self
-
-    def add_samplerStates(self, states: list[dict]) -> "Material":
-        """
-        Adds additional sampler states.
-
-        Appends to existing sampler states inherited from the base material.
-
-        Args:
-            states (list[dict]): A list of sampler state objects to add.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["+samplerStates"] = states
-        return self
-
-    def defines(self, *defines: MaterialDefinitions) -> "Material":
-        """
-        Sets the shader preprocessor defines.
-
-        Defines toggle features in the shader code, such as enabling alpha testing (`ALPHA_TEST`),
-        glint effects (`GLINT`), or color masking (`USE_COLOR_MASK`).
-        **Overwrites** all existing defines.
-
-        Args:
-            defines (MaterialDefinitions): Variable arguments of `MaterialDefinitions`.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["defines"] = defines
-        return self
-
-    def remove_defines(self, *defines: MaterialDefinitions) -> "Material":
-        """
-        Removes specific defines from the material.
-
-        Use this to disable features inherited from a base material.
-        Example: Removing `USE_OVERLAY` to stop an entity from flashing red when hit.
-
-        Args:
-            defines (MaterialDefinitions): The defines to remove.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["-defines"] = defines
-        return self
-
-    def add_defines(self, *defines: MaterialDefinitions) -> "Material":
-        """
-        Adds defines to the material.
-
-        Enables additional features like emulation or multi-texturing on top of the base material's configuration.
-
-        Args:
-            defines (MaterialDefinitions): The defines to add.
-
-        Returns:
-            Material: The instance of the class to enable method chaining.
-        """
-        self._material[self._material_name]["+defines"] = defines
-        return self
-
-    def queue(self) -> "Material":
-        MaterialsObject().add_material(self)
-
-    def __export__(self) -> dict:
-        """Exports the material as a dictionary.
-
-        Returns:
-            dict: The material as a dictionary.
-        """
-        return self._material
-
-    def __str__(self) -> Identifier:
-        return self.identifier

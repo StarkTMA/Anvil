@@ -1,16 +1,19 @@
 from typing import Annotated, Literal
 
+from anvil.api.actors.entity import Entity
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import EventTrigger
-from anvil.api.core.enums import (
-    LeashSpringType,
-    RideableDismountMode,
-)
 from anvil.api.core.filters import Filter
+from anvil.api.items.items import Item
 from anvil.api.logic.molang import Molang
 from anvil.lib.jsonmodel import (
     AtLeastOne,
+    BlockId,
     Chance,
+    EntityId,
     InRange,
+    ItemId,
     JsonComponent,
     JsonObject,
     MetersPerSecond,
@@ -19,10 +22,9 @@ from anvil.lib.jsonmodel import (
     Trigger,
     json_field,
 )
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
+from anvil.lib.jsonmodel.enums import (
+    LeashSpringType,
+    RideableDismountMode,
 )
 from anvil.lib.translator import AnvilTranslator
 
@@ -33,14 +35,14 @@ class BoostItem(JsonObject):
     """An item that boosts a ridden entity.
 
     Args:
-        item (str | MinecraftItemDescriptor): The item that can be used to boost.
+        item (str | Item): The item that can be used to boost.
         damage (int, optional): The damage the item takes each time it is used.
-        replace_item (str | MinecraftItemDescriptor, optional): The item the boost item becomes once it is used up.
+        replace_item (str | Item, optional): The item the boost item becomes once it is used up.
     """
 
-    item: str | MinecraftItemDescriptor = json_field()
+    item: Annotated[str | Item, ItemId] = json_field()
     damage: int | None = json_field(default=None)
-    replace_item: str | MinecraftItemDescriptor | None = json_field(default=None)
+    replace_item: Annotated[str | Item, ItemId] | None = json_field(default=None)
 
 
 class JumpData(JsonObject):
@@ -64,22 +66,22 @@ class PreferredPathBlocks(JsonObject):
 
     Args:
         cost (float): Cost of walking on these blocks.
-        blocks (list[str | MinecraftBlockDescriptor]): The blocks.
+        blocks (list[str | Block | BlockDescriptor]): The blocks.
     """
 
     cost: float = json_field()
-    blocks: list[str | MinecraftBlockDescriptor] = json_field()
+    blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] = json_field()
 
 
 class Rider(JsonObject):
     """A rider `minecraft:addrider` adds.
 
     Args:
-        entity_type (MinecraftEntityDescriptor | str): The entity type that rides this entity.
+        entity_type (str | Entity): The entity type that rides this entity.
         spawn_event (str, optional): The spawn event used when the rider is created.
     """
 
-    entity_type: MinecraftEntityDescriptor | str = json_field()
+    entity_type: Annotated[str | Entity, EntityId] = json_field()
     spawn_event: str | None = json_field(default=None)
 
 
@@ -101,7 +103,7 @@ class EntityNavigation(JsonComponent, abstract=True):
         avoid_portals (bool, optional): Avoids portals. Game default false.
         avoid_sun (bool, optional): Avoids blocks exposed to the sun. Game default false.
         avoid_water (bool, optional): Avoids water. Game default false.
-        blocks_to_avoid (list[str | MinecraftBlockDescriptor], optional): Blocks the pathfinder avoids.
+        blocks_to_avoid (list[str | Block | BlockDescriptor], optional): Blocks the pathfinder avoids.
         can_breach (bool, optional): Can jump out of water, like a dolphin. Game default false.
         can_break_doors (bool, optional): Can path through a closed door, breaking it. Game default false.
         can_float (bool, optional): Can float in water.
@@ -123,8 +125,8 @@ class EntityNavigation(JsonComponent, abstract=True):
     avoid_portals: bool | None = json_field(default=None)
     avoid_sun: bool | None = json_field(default=None)
     avoid_water: bool | None = json_field(default=None)
-    blocks_to_avoid: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
+    blocks_to_avoid: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
     )
     can_breach: bool | None = json_field(default=None)
     can_break_doors: bool | None = json_field(default=None)
@@ -208,13 +210,13 @@ class EntityAddRider(JsonComponent):
     def add_rider(
         self,
         *,
-        entity_type: MinecraftEntityDescriptor | str,
+        entity_type: str | Entity,
         spawn_event: str | None = None,
     ) -> "EntityAddRider":
         """Adds a rider.
 
         Args:
-            entity_type (MinecraftEntityDescriptor | str): The entity type that rides this entity.
+            entity_type (str | Entity): The entity type that rides this entity.
             spawn_event (str, optional): The spawn event used when the rider is created.
         """
         self.riders.append(Rider(entity_type=entity_type, spawn_event=spawn_event))
@@ -292,9 +294,9 @@ class EntityBoostable(JsonComponent):
     def add_boost_item(
         self,
         *,
-        item: str | MinecraftItemDescriptor,
+        item: str | Item,
         damage: int | None = None,
-        replace_item: str | MinecraftItemDescriptor | None = None,
+        replace_item: str | Item | None = None,
     ) -> "EntityBoostable":
         """Adds an item that boosts the entity. See `BoostItem` for the parameters."""
         self.boost_items.append(
@@ -307,7 +309,7 @@ class EntityBuoyant(JsonComponent):
     """Enables an entity to float on the given liquid blocks.
 
     Args:
-        liquid_blocks (list[str | MinecraftBlockDescriptor]): Blocks this entity can float on. Must be liquid blocks.
+        liquid_blocks (list[str | Block | BlockDescriptor]): Blocks this entity can float on. Must be liquid blocks.
         apply_gravity (bool, optional): Applies gravity each tick. Game default true.
         base_buoyancy (float, optional): Base buoyancy used to calculate how much the entity floats. Game default 1.
         big_wave_probability (float, optional): Probability of a big wave hitting the entity, with `movement_type` waves. Game default 0.03.
@@ -321,7 +323,9 @@ class EntityBuoyant(JsonComponent):
 
     identifier = "minecraft:buoyant"
 
-    liquid_blocks: list[str | MinecraftBlockDescriptor] = json_field()
+    liquid_blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] = (
+        json_field()
+    )
     apply_gravity: bool | None = json_field(default=None)
     base_buoyancy: float | None = json_field(default=None)
     big_wave_probability: Annotated[float, Chance] | None = json_field(default=None)
@@ -544,7 +548,7 @@ class EntityHome(JsonComponent):
     """Saves a home position for when the entity is spawned.
 
     Args:
-        home_block_list (list[str | MinecraftBlockDescriptor], optional): Blocks that can be a valid home.
+        home_block_list (list[str | Block | BlockDescriptor], optional): Blocks that can be a valid home.
         restriction_radius (int, optional): Radius the entity is restricted to around its home. Game default 0.
         restriction_type (Literal["none", "random_movement", "all_movement"], optional): How the entity is restricted to its home. Game default none.
 
@@ -553,8 +557,8 @@ class EntityHome(JsonComponent):
 
     identifier = "minecraft:home"
 
-    home_block_list: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
+    home_block_list: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
     )
     restriction_radius: Annotated[int, NonNegative] | None = json_field(default=None)
     restriction_type: Literal["none", "random_movement", "all_movement"] | None = (
@@ -605,20 +609,18 @@ class EntityItemControllable(JsonComponent):
     """Defines what items can be used to control this entity while ridden.
 
     Args:
-        control_items (list[str | MinecraftItemDescriptor], optional): The items that can be used to control this entity while ridden. Add more with `add_control_items`.
+        control_items (list[str | Item], optional): The items that can be used to control this entity while ridden. Add more with `add_control_items`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_item_controllable)
     """
 
     identifier = "minecraft:item_controllable"
 
-    control_items: list[str | MinecraftItemDescriptor] = json_field(
+    control_items: list[Annotated[str | Item, ItemId]] = json_field(
         default_factory=list, omit_default=True
     )
 
-    def add_control_items(
-        self, *items: str | MinecraftItemDescriptor
-    ) -> "EntityItemControllable":
+    def add_control_items(self, *items: str | Item) -> "EntityItemControllable":
         """Adds items that control the entity."""
         self.control_items.extend(items)
         return self
@@ -1066,7 +1068,7 @@ class EntityPreferredPath(JsonComponent):
     )
 
     def add_preferred_path_blocks(
-        self, *, cost: float, blocks: list[str | MinecraftBlockDescriptor]
+        self, *, cost: float, blocks: list[str | Block | BlockDescriptor]
     ) -> "EntityPreferredPath":
         """Adds blocks and their cost. See `PreferredPathBlocks`."""
         self.preferred_path_blocks.append(PreferredPathBlocks(cost=cost, blocks=blocks))

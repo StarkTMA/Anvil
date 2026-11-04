@@ -1,8 +1,8 @@
 import pytest
-from anvil.api.core.enums import FilterSubject
 from anvil.api.vanilla.entities import vanilla_entity_ids
 from anvil.api.vanilla.factories.minecraft_entities import SulfurCube
 from anvil.lib.jsonmodel import JsonComponent
+from anvil.lib.jsonmodel.enums import FilterSubject
 from anvil.lib.lib import AnvilIO
 
 
@@ -14,7 +14,8 @@ def payload(obj):
 
 def test_sulfur_cube_entity():
     desc = SulfurCube()
-    assert desc.identifier == "minecraft:sulfur_cube"
+    assert desc == "minecraft:sulfur_cube"
+    assert desc.is_vanilla
     assert "minecraft:sulfur_cube" in vanilla_entity_ids()
 
 
@@ -22,21 +23,12 @@ def test_entity_hide_held_items():
     from anvil.api.actors.entity import Entity
 
     entity = Entity("custom_entity")
-    entity.client.description.hide_held_items(True)
-    assert (
-        entity.client.description._description["description"]["scripts"][
-            "hide_held_items"
-        ]
-        == "1"
-    )
+    scripts = entity.client.description.scripts
+    entity.client.description.set_hide_held_items(True)
+    assert scripts.hide_held_items == "1"
 
-    entity.client.description.hide_held_items("q.is_sheared")
-    assert (
-        entity.client.description._description["description"]["scripts"][
-            "hide_held_items"
-        ]
-        == "q.is_sheared"
-    )
+    entity.client.description.set_hide_held_items("q.is_sheared")
+    assert scripts.hide_held_items == "q.is_sheared"
 
 
 def test_entity_ai_pickup_items():
@@ -50,7 +42,7 @@ def test_entity_ai_pickup_items():
 
 def test_ai_goal_priority_and_control_flags():
     from anvil.api.actors.components import EntityAIFloat
-    from anvil.api.core.enums import ControlFlags
+    from anvil.lib.jsonmodel.enums import ControlFlags
 
     goal = EntityAIFloat(priority=0, control_flags=[ControlFlags.Jump])
     assert payload(goal) == {"priority": 0, "control_flags": ["jump"]}
@@ -213,7 +205,7 @@ def test_entity_pushable_by_entity():
 
 def test_entity_area_attack():
     from anvil.api.actors.components import EntityAreaAttack
-    from anvil.api.core.enums import DamageCause
+    from anvil.lib.jsonmodel.enums import DamageCause
 
     aa = EntityAreaAttack(cause=DamageCause.Magic, use_self_as_damage_source=False)
     assert payload(aa) == {"cause": "magic", "use_self_as_damage_source": False}
@@ -221,7 +213,7 @@ def test_entity_area_attack():
 
 def test_entity_leashable():
     from anvil.api.actors.components import EntityLeashable, EntityLeashableTo
-    from anvil.api.core.enums import LeashSpringType
+    from anvil.lib.jsonmodel.enums import LeashSpringType
 
     leash = EntityLeashable(unleash_on_removal=True).add_preset(
         max_distance=12, spring_type=LeashSpringType.Bouncy
@@ -240,9 +232,8 @@ def test_entity_unleash_event_response():
 
     ent = Entity("test_unleash")
     evt = ent.server.event("minecraft:entity_spawned")
-    evt.unleash(unleash_self=True, unleash_others=True)
-    exported = evt.__export__()
-    assert exported["minecraft:entity_spawned"]["unleash"] == {
+    evt.set_unleash(unleash_self=True, unleash_others=True)
+    assert evt.__json__()["unleash"] == {
         "unleash_self": True,
         "unleash_others": True,
     }
@@ -322,7 +313,7 @@ def test_entity_knockback_resistance_is_checked_not_clamped():
 def test_entity_trigger_components():
     from anvil.api.actors.components import EntityOnDeath, EntityOnTargetEscape
     from anvil.api.core.components import EventTrigger
-    from anvil.api.core.enums import FilterSubject
+    from anvil.lib.jsonmodel.enums import FilterSubject
 
     on_death = EntityOnDeath(event="die", target=FilterSubject.Holder)
     assert isinstance(on_death, EventTrigger)
@@ -335,7 +326,7 @@ def test_entity_trigger_components():
 def test_entity_event_parts():
     from anvil.api.actors.components import EntityGiveable, EntitySittable
     from anvil.api.core.components import EventTrigger
-    from anvil.api.core.enums import FilterSubject
+    from anvil.lib.jsonmodel.enums import FilterSubject
 
     sittable = EntitySittable(sit_event="sit", stand_event=EventTrigger(event="stand"))
     assert payload(sittable) == {
@@ -367,7 +358,7 @@ def test_entity_environment_sensor_triggers():
 def test_entity_on_equipment_changed_slots():
     import pytest
     from anvil.api.actors.components import EntityOnEquipmentChanged
-    from anvil.api.core.enums import Slots
+    from anvil.lib.jsonmodel.enums import Slots
 
     changed = EntityOnEquipmentChanged().add_slot(slot=Slots.Head, on_equip="hat_on")
     assert payload(changed) == {
@@ -389,7 +380,7 @@ def test_entity_loot_and_trade_table_paths():
 def test_entity_burns_in_daylight_slot():
     import pytest
     from anvil.api.actors.components import EntityBurnsInDaylight
-    from anvil.api.core.enums import Slots
+    from anvil.lib.jsonmodel.enums import Slots
 
     assert payload(EntityBurnsInDaylight(protection_slot=Slots.Head)) == {
         "protection_slot": "slot.armor.head"
@@ -401,7 +392,7 @@ def test_entity_burns_in_daylight_slot():
 def test_entity_damage_sensor_triggers():
     from anvil.api.actors.components import EntityDamageSensor
     from anvil.api.core.components import EventTrigger
-    from anvil.api.core.enums import DamageCause, DamageSensor
+    from anvil.lib.jsonmodel.enums import DamageCause, DamageSensor
 
     sensor = (
         EntityDamageSensor()
@@ -606,7 +597,7 @@ def test_entity_transformation():
 def test_entity_interact():
     from anvil.api.actors.components import EntityInteract, RepairEntityItem
     from anvil.api.core.components import EventTrigger
-    from anvil.api.core.enums import Slots
+    from anvil.lib.jsonmodel.enums import Slots
 
     interact = EntityInteract().add_interaction(
         on_interact=EventTrigger(event="fed", target=FilterSubject.Self),

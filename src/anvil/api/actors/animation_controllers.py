@@ -1,524 +1,443 @@
-from typing import TYPE_CHECKING, overload
+"""The animation controllers of an actor: `animation_controllers/<actor>.bp_ac.json` in the
+behavior pack and `animation_controllers/<actor>.rp_ac.json` in the resource pack. A
+controller is a state machine; each state runs animations and Molang, and moves to another
+state when a condition is true."""
 
-from anvil.api.core.enums import Target
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Self, overload
+
+from anvil.api.actors.animations import _bp_command
 from anvil.api.logic.molang import Molang
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import Identifier, JsonFile
-from anvil.lib.schemas import (
-    JsonSchemes,
+from anvil.lib.format_versions import ANIMATION_CONTROLLERS_VERSION
+from anvil.lib.jsonmodel import (
+    Identifier,
+    JsonFile,
+    JsonObject,
+    JsonValue,
+    Keyed,
+    NonNegative,
+    json_field,
 )
 
 if TYPE_CHECKING:
-    from .description import _ActorClientDescription
+    from anvil.api.actors.client import _ActorClientDescription
+    from anvil.api.actors.server import _EntityServerDescription
 
 __all__ = ["BPAnimationControllers", "RPAnimationControllers"]
 
 
-class _BP_ControllerState:
-    def __init__(self, state_name):
-        self._state_name = state_name
-        self._controller_state: dict = JsonSchemes.animation_controller_state(
-            self._state_name
-        )
-        self._default = True
+# region States
 
-    def on_entry(self, *commands: str):
-        """Events, commands or molang to preform on entry of this state.
+
+class _Named(JsonValue):
+    """A name and an optional value, written as `name` or `{name: value}`."""
+
+    name: str = json_field(positional=True)
+    value: str | bool | None = json_field(default=None, exclude=True, positional=True)
+
+    def __json__(self) -> Any:
+        if self.value is None:
+            return self.name
+        return {self.name: self.value}
+
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "anyOf": [
+                {"type": "string"},
+                {
+                    "type": "object",
+                    "minProperties": 1,
+                    "maxProperties": 1,
+                    "additionalProperties": {"type": ["string", "boolean"]},
+                },
+            ]
+        }
+
+
+class _ActorScripts(JsonObject):
+    """The `scripts` of an actor description: the animations and controllers it always
+    runs. The client scripts add their own keys."""
+
+    animate: list[_Named] = json_field(default_factory=list)
+
+    def add_animate(self, name: str, condition: str | Molang | None = None) -> Self:
+        """Runs an animation or controller all the time, or while a condition is true.
+        The same name and condition are added once.
 
         Args:
-            *commands (str): The Events, commands or molang to preform on entry of this state.
-
-        Returns:
-            This state.
+            name (str): The short name in the description's `animations`.
+            condition (str | Molang, optional): When it runs.
         """
-        for command in commands:
-            if str(command).startswith(Target.S):
-                self._controller_state[self._state_name]["on_entry"].append(command)
-            elif any(str(command).startswith(v) for v in Molang.prefixes):
-                self._controller_state[self._state_name]["on_entry"].append(
-                    f"{command};"
-                )
-            else:
-                self._controller_state[self._state_name]["on_entry"].append(
-                    f"/{command}"
-                )
-        self._default = False
+        condition = None if condition is None else str(condition)
+        if not any(e.name == name and e.value == condition for e in self.animate):
+            self.animate.append(_Named(name, condition))
         return self
 
-    def on_exit(self, *commands: str):
-        """Events, commands or molang to preform on exit of this state.
+
+class _StateEffect(JsonObject):
+    """A particle or sound effect a state plays, by its short name in the client
+    description. Unset keys are left out."""
+
+    effect: str = json_field()
+    locator: str | None = None
+    pre_effect_script: str | None = None
+    bind_to_actor: bool | None = None
+
+
+class _ControllerState(JsonObject, abstract=True):
+    """The parts of a state shared by both packs. Unset keys are left out; a state with
+    nothing set is not written."""
+
+    name: str = json_field(exclude=True, positional=True)
+
+    on_entry: list[str] | None = None
+    on_exit: list[str] | None = None
+    animations: list[_Named] | None = None
+    transitions: list[_Named] | None = None
+
+    def _is_empty(self) -> bool:
+        return not self.__json__()
+
+    def animation(
+        self, animation: str, condition: str | None = None
+    ) -> "_ControllerState":
+        """Plays an animation or controller of the actor during this state.
 
         Args:
-            *commands (str): The Events, commands or molang to preform on exit of this state.
-
-        Returns:
-            This state.
+            animation (str): Its short name.
+            condition (str, optional): When it plays, Molang. Its value blends the
+                animation in the resource pack.
         """
-        for command in commands:
-            if str(command).startswith(Target.S.value):
-                self._controller_state[self._state_name]["on_exit"].append(f"{command}")
-            elif any(str(command).startswith(v) for v in Molang.prefixes):
-                self._controller_state[self._state_name]["on_exit"].append(
-                    f"{command};"
-                )
-            else:
-                self._controller_state[self._state_name]["on_exit"].append(
-                    f"/{command}"
-                )
-        self._default = False
+        self.animations = (self.animations or []) + [
+            _Named(animation, None if condition is None else str(condition))
+        ]
         return self
 
-    def animation(self, animation: str, condition: str = None):
-        """Animation short name to play during this state.
+    def transition(self, state: str, condition: str) -> "_ControllerState":
+        """Moves to another state when a condition is true.
 
         Args:
-            animation (str): The name of the animation to play.
-            condition (str, optional): The condition on which this animation plays.
-
-        Returns:
-            This state.
+            state (str): The state's name.
+            condition (str): When to move, Molang.
         """
-        if condition is None:
-            self._controller_state[self._state_name]["animations"].append(animation)
-        else:
-            self._controller_state[self._state_name]["animations"].append(
-                {animation: condition}
+        self.transitions = (self.transitions or []) + [_Named(state, str(condition))]
+        return self
+
+
+class _BPControllerState(_ControllerState):
+    """A state of a behavior pack animation controller."""
+
+    def add_on_entry(self, *commands: str) -> "_BPControllerState":
+        """Runs commands, events (`@s <event>`) or Molang when the state starts."""
+        self.on_entry = (self.on_entry or []) + [_bp_command(str(c)) for c in commands]
+        return self
+
+    def add_on_exit(self, *commands: str) -> "_BPControllerState":
+        """Runs commands, events (`@s <event>`) or Molang when the state ends."""
+        self.on_exit = (self.on_exit or []) + [_bp_command(str(c)) for c in commands]
+        return self
+
+
+def _rp_molang(args: tuple, state: str) -> list[str]:
+    if len(args) == 2:
+        commands = [f"{args[0]}={args[1]}"]
+    else:
+        commands = [str(command) for command in args]
+    for command in commands:
+        if not any(command.startswith(prefix) for prefix in Molang.prefixes):
+            raise ValueError(
+                f"Invalid command '{command}'. Only Molang is allowed. Resource Pack "
+                f"Controller State [{state}]"
             )
-        self._default = False
-        return self
-
-    def transition(self, state: str, condition: str):
-        """Target state to switch to and the condition to do so.
-
-        Parameters
-        ----------
-        state : str
-            The name of the state to transition to.
-        condition : str
-            The condition that must be met for the transition to occur.
-
-        Returns
-        -------
-            This state.
-
-        """
-        self._controller_state[self._state_name]["transitions"].append(
-            {state: str(condition)}
-        )
-        self._default = False
-        return self
-
-    def __export__(self):
-        return self._controller_state
+    return [f"{command};" for command in commands]
 
 
-class _RP_ControllerState:
-    def __init__(self, actor: "_ActorClientDescription", state_name):
-        self._actor = actor
-        self._state_name = state_name
-        self._controller_state = JsonSchemes.animation_controller_state(
-            self._state_name
-        )
-        self._controller_state[self._state_name]["particle_effects"] = []
-        self._controller_state[self._state_name]["sound_effects"] = []
-        self._default = True
+class _RPControllerState(_ControllerState):
+    """A state of a resource pack animation controller."""
+
+    particle_effects: list[_StateEffect] | None = None
+    sound_effects: list[_StateEffect] | None = None
+    blend_transition: Annotated[float, NonNegative] | None = None
+    blend_via_shortest_path: bool | None = None
 
     @overload
-    def on_entry(self, *commands: str | Molang) -> "_RP_ControllerState": ...
+    def add_on_entry(self, *commands: str | Molang) -> "_RPControllerState": ...
 
     @overload
-    def on_entry(
+    def add_on_entry(
         self, variable: Molang | str, value: Molang | str | int | float
-    ) -> "_RP_ControllerState": ...
+    ) -> "_RPControllerState": ...
 
-    def on_entry(self, *args, **kwargs) -> "_RP_ControllerState":
-        """molang to preform on entry of this state.
-
-        Parameters
-        ----------
-        *args : str | Molang or (variable, value)
-            param args: molang commands to perform on entry of this state, or variable assignment.
-
-        Returns
-        -------
-            This state.
-
-        """
-        # Handle variable assignment case: on_entry(variable, value)
-        if len(args) == 2 and not kwargs:
-            variable, value = args
-            command = f"{variable}={value}"
-            if any(command.startswith(v) for v in Molang.prefixes):
-                self._controller_state[self._state_name]["on_entry"].append(
-                    f"{command};"
-                )
-            else:
-                raise RuntimeError(
-                    f"Invalid variable assignment for on_entry: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
-                )
-        # Handle commands case: on_entry(*commands)
-        else:
-            for command in args:
-                if any(str(command).startswith(v) for v in Molang.prefixes):
-                    self._controller_state[self._state_name]["on_entry"].append(
-                        f"{command};"
-                    )
-                else:
-                    raise RuntimeError(
-                        f"Invalid command for on_entry: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
-                    )
-
-        self._default = False
+    def add_on_entry(self, *args) -> "_RPControllerState":
+        """Runs Molang when the state starts: expressions, or a variable and its value."""
+        self.on_entry = (self.on_entry or []) + _rp_molang(args, self.name)
         return self
 
     @overload
-    def on_exit(self, *commands: str | Molang) -> "_RP_ControllerState": ...
+    def add_on_exit(self, *commands: str | Molang) -> "_RPControllerState": ...
 
     @overload
-    def on_exit(
+    def add_on_exit(
         self, variable: Molang | str, value: Molang | str | int | float
-    ) -> "_RP_ControllerState": ...
+    ) -> "_RPControllerState": ...
 
-    def on_exit(self, *args, **kwargs) -> "_RP_ControllerState":
-        """molang to preform on entry of this state.
-
-        Parameters
-        ----------
-        *args : str | Molang or (variable, value)
-            param args: molang commands to perform on entry of this state, or variable assignment.
-
-        Returns
-        -------
-            This state.
-
-        """
-        # Handle variable assignment case: on_exit(variable, value)
-        if len(args) == 2 and not kwargs:
-            variable, value = args
-            command = f"{variable}={value}"
-            if any(command.startswith(v) for v in Molang.prefixes):
-                self._controller_state[self._state_name]["on_exit"].append(
-                    f"{command};"
-                )
-            else:
-                raise RuntimeError(
-                    f"Invalid variable assignment for on_exit: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
-                )
-        # Handle commands case: on_exit(*commands)
-        else:
-            for command in args:
-                if any(str(command).startswith(v) for v in Molang.prefixes):
-                    self._controller_state[self._state_name]["on_exit"].append(
-                        f"{command};"
-                    )
-                else:
-                    raise RuntimeError(
-                        f"Invalid command for on_exit: {command}. Only Molang commands are allowed. Resource Pack Controller State [{self._state_name}]"
-                    )
-
-        self._default = False
-        return self
-
-    def animation(self, animation: str, condition: str = None):
-        """Animation short name to play during this state.
-
-        Parameters
-        ----------
-        animation : str
-            The name of the animation to play.
-        condition : str , optional
-            The condition on which this animation plays.
-
-        Returns
-        -------
-            This state.
-
-        """
-        if condition is None:
-            self._controller_state[self._state_name]["animations"].append(animation)
-        else:
-            self._controller_state[self._state_name]["animations"].append(
-                {animation: condition}
-            )
-        self._default = False
-        return self
-
-    def transition(self, state: str, condition: str):
-        """Target state to switch to and the condition to do so.
-
-        Parameters
-        ----------
-        state : str
-            The name of the state to transition to.
-        condition : str
-            The condition that must be met for the transition to occur.
-
-        Returns
-        -------
-            This state.
-
-        """
-        self._controller_state[self._state_name]["transitions"].append(
-            {state: str(condition)}
-        )
-        self._default = False
+    def add_on_exit(self, *args) -> "_RPControllerState":
+        """Runs Molang when the state ends: expressions, or a variable and its value."""
+        self.on_exit = (self.on_exit or []) + _rp_molang(args, self.name)
         return self
 
     def particle(
         self,
         effect: str,
         locator: str = "root",
-        pre_anim_script: str = None,
+        pre_anim_script: str | None = None,
         bind_to_actor: bool = True,
-    ):
-        """The effect to be emitted during this state.
+    ) -> "_RPControllerState":
+        """Emits a particle effect during this state.
 
-        Parameters
-        ----------
-        effect : str
-            The shortname of the particle effect to be played, defined in the Client Entity.
-        locator : str
-            The name of a locator on the actor where the effect should be located.
-        pre_anim_script : str , optional
-            A molang script that will be run when the particle emitter is initialized.
-        bind_to_actor : bool , optional
-            Set to false to have the effect spawned in the world without being bound to an actor.
-
-        Returns
-        -------
-            This state.
-
+        Args:
+            effect (str): The effect's short name in the client description.
+            locator (str, optional): The locator it plays at. Defaults to `root`.
+            pre_anim_script (str, optional): Molang run when the emitter starts.
+            bind_to_actor (bool, optional): False leaves the effect in the world instead of
+                following the actor. Defaults to True.
         """
-        if not self._actor._description["description"]["particle_effects"].get(effect):
-            raise RuntimeError(
-                f"Particle effect '{effect}' is not defined in the Client Entity for Actor '{self._actor.name}'."
-            )
-        particle = {"effect": effect, "locator": locator}
+        script = None
         if pre_anim_script is not None:
-            particle.update(
-                {"pre_effect_script": f"{pre_anim_script};".replace(";;", ";")}
+            script = f"{pre_anim_script};".replace(";;", ";")
+        self.particle_effects = (self.particle_effects or []) + [
+            _StateEffect(
+                effect=effect,
+                locator=locator,
+                pre_effect_script=script,
+                bind_to_actor=None if bind_to_actor else False,
             )
-        if bind_to_actor is False:
-            particle.update({"bind_to_actor": False})
-        self._controller_state[self._state_name]["particle_effects"].append(particle)
-        self._default = False
+        ]
         return self
 
-    def sound_effect(
-        self,
-        effect: str,
-        locator: str = "root",
-    ):
-        """Collection of sounds to trigger on entry to this animation state.
+    def sound_effect(self, effect: str, locator: str = "root") -> "_RPControllerState":
+        """Plays a sound effect when the state starts.
 
-        Parameters
-        ----------
-        effect : str
-            The shortname of the sound effect to be played, defined in the Client Entity.
-
-        Returns
-        -------
-            This state.
-
+        Args:
+            effect (str): The effect's short name in the client description.
+            locator (str, optional): The locator it plays at. Defaults to `root`.
         """
-        self._controller_state[self._state_name]["sound_effects"].append(
-            {"effect": effect, "locator": locator}
-        )
-        self._default = False
+        self.sound_effects = (self.sound_effects or []) + [
+            _StateEffect(effect=effect, locator=locator)
+        ]
         return self
 
-    def blend_transition(self, blend_value: float):
-        """Sets the amount of time to fade out if the animation is interrupted.
-
-        Parameters
-        ----------
-        blend_value : float
-            Blend out time.
-
-        Returns
-        -------
-            This state.
-
-        """
-        self._controller_state[self._state_name]["blend_transition"] = blend_value
-        self._default = False
+    def set_blend_transition(self, blend_value: float) -> "_RPControllerState":
+        """Sets how long, in seconds, the state's animations fade out when it moves on."""
+        self.blend_transition = blend_value
         return self
+
+    def set_blend_via_shortest_path(self, value: bool = True) -> "_RPControllerState":
+        """Blends each rotation axis through the shortest way when moving on."""
+        self.blend_via_shortest_path = value
+        return self
+
+
+# endregion
+
+
+# region Controllers
+
+
+class _AnimationController(JsonObject, abstract=True):
+    """An animation controller, `controller.animation.<namespace>.<actor>.<name>`. The
+    actor's description lists it by its short name; a controller whose states are all empty
+    is not written.
+    """
+
+    _state: ClassVar[type[_ControllerState]]
+    _side: ClassVar[str]
+
+    name: str = json_field(exclude=True, positional=True)
+    owner: Identifier = json_field(exclude=True)
+    """The actor identifier."""
+    animate: bool = json_field(default=False, exclude=True)
+    """Runs all the time, or while `condition` is true."""
+    condition: str | None = json_field(default=None, exclude=True)
+
+    initial_state: str = "default"
+    states: Annotated[list[_ControllerState], Keyed("name")] = json_field(
+        default_factory=list
+    )
 
     @property
-    def blend_via_shortest_path(self):
-        """When blending a transition to another state, animate each euler axis through the shortest rotation, instead of by value.
+    def identifier(self) -> str:
+        """The controller's identifier, `controller.animation.<namespace>.<actor>.<name>`."""
+        return f"controller.animation.{self.owner.replace(':', '.')}.{self.name}"
 
-        Returns
-        -------
-            This state.
+    def add_state(self, state_name: str) -> Any:
+        """Returns the state with this name, added on first use.
 
+        Args:
+            state_name (str): The state's name.
         """
-        self._controller_state[self._state_name]["blend_via_shortest_path"] = True
-        self._default = False
-        return self
+        for state in self.states:
+            if state.name == state_name:
+                return state
+        state = self._state(state_name)
+        self.states.append(state)
+        return state
 
-    def __export__(self):
-        return self._controller_state
+    def _is_empty(self) -> bool:
+        return all(state._is_empty() for state in self.states)
+
+    def _set_animate(self, condition: str | Molang | None = None) -> None:
+        """Runs it all the time, or while the condition is true."""
+        self.animate = True
+        self.condition = None if condition is None else str(condition)
+
+    def __validate__(self) -> None:
+        names = {state.name for state in self.states}
+        for state in self.states:
+            for transition in state.transitions or []:
+                if transition.name not in names:
+                    raise ValueError(
+                        f"State '{transition.name}' is referenced in transitions but not "
+                        f"defined. {self._side} Animation Controller [{self.identifier}]."
+                    )
 
 
-class _BP_Controller:
-    def __init__(self, identifier, controller_name, initial_state: str = "default"):
-        self._identifier = identifier
-        self._controller_shortname = controller_name
-        self._controllers = JsonSchemes.animation_controller(
-            self._identifier, self._controller_shortname, initial_state
+class _BPAnimationController(_AnimationController):
+    """A behavior pack animation controller."""
+
+    _state = _BPControllerState
+    _side = "Behavior Pack"
+
+    states: Annotated[list[_BPControllerState], Keyed("name")] = json_field(
+        default_factory=list
+    )
+
+    def add_state(self, state_name: str) -> _BPControllerState:
+        """Returns the state with this name, added on first use.
+
+        Args:
+            state_name (str): The state's name.
+        """
+        return super().add_state(state_name)
+
+
+class _RPAnimationController(_AnimationController):
+    """A resource pack animation controller."""
+
+    _state = _RPControllerState
+    _side = "Resource Pack"
+
+    states: Annotated[list[_RPControllerState], Keyed("name")] = json_field(
+        default_factory=list
+    )
+
+    def add_state(self, state_name: str) -> _RPControllerState:
+        """Returns the state with this name, added on first use.
+
+        Args:
+            state_name (str): The state's name.
+        """
+        return super().add_state(state_name)
+
+
+# endregion
+
+
+# region Files
+
+
+class _AnimationControllersFile(JsonObject, abstract=True):
+    """The content of an animation controllers file."""
+
+    __required__: ClassVar[tuple[str, ...]] = (
+        "format_version",
+        "animation_controllers",
+    )
+
+    format_version: str = json_field(default=ANIMATION_CONTROLLERS_VERSION, init=False)
+
+
+class _BPAnimationControllersFile(_AnimationControllersFile):
+    """The content of a `.bp_ac.json` file."""
+
+    animation_controllers: Annotated[
+        list[_BPAnimationController], Keyed("identifier")
+    ] = json_field(default_factory=list)
+
+
+class _RPAnimationControllersFile(_AnimationControllersFile):
+    """The content of a `.rp_ac.json` file."""
+
+    animation_controllers: Annotated[
+        list[_RPAnimationController], Keyed("identifier")
+    ] = json_field(default_factory=list)
+
+
+class _AnimationControllers(JsonFile):
+    """The base of the animation controllers files of an actor, built at export from its
+    description, which holds the controllers (`animation_controller()` adds them)."""
+
+    _source: "_EntityServerDescription | _ActorClientDescription"
+
+    def queue(self, directory: str | None = None):
+        """Queues the controllers for export, when the actor has any."""
+        self._content = self._document(
+            animation_controllers=[
+                e
+                for e in self._source._animations
+                if isinstance(e, _AnimationController)
+            ]
         )
-        self._controller_states: list[_BP_ControllerState] = []
-        self._controller_namespace = f"controller.animation.{self._identifier.replace(':', '.')}.{self._controller_shortname}"
-        self._states_names = []
-        self._side = "Server"
-
-    def add_state(self, state_name: str):
-        self._states_names.append(state_name)
-        """Adds a new state to the animation controller.
-        
-        Parameters
-        ----------
-        state_name : str
-            The name of the state to add.
-        
-        Returns
-        -------
-            Animation controller state.
-        
-        """
-        self._controller_state = _BP_ControllerState(state_name)
-        self._controller_states.append(self._controller_state)
-        return self._controller_state
-
-    def __export__(self):
-        collected_states = []
-        for state in self._controller_states:
-            if not state._default:
-                self._controllers[self._controller_namespace]["states"].update(
-                    state.__export__()
-                )
-                for tr in state.__export__().values():
-                    if "transitions" in tr:
-                        for st in tr["transitions"]:
-                            collected_states.extend(st.keys())
-
-        for state in set(collected_states):
-            if state not in self._states_names:
-                raise RuntimeError(
-                    f"State '{state}' is referenced in transitions but not defined in the. behavior Pack Animation Controller[{self._identifier}]."
-                )
-
-        if len(self._controllers[self._controller_namespace]["states"].items()) > 0:
-            return self._controllers
-        return {}
+        if self._content.animation_controllers:
+            return super().queue(directory=directory)
+        return None
 
 
-class _RP_Controller(_BP_Controller):
-    def __init__(
-        self,
-        actor: "_ActorClientDescription",
-        name,
-        controller_name,
-        initial_state: str = "default",
-    ):
-        super().__init__(name, controller_name, initial_state)
-        self._actor = actor
-        self._side = "Client"
-        self._controller_states: list[_RP_ControllerState] = []
+class BPAnimationControllers(_AnimationControllers):
+    """The behavior pack animation controllers of an entity.
 
-    def add_state(self, state_name: str):
-        self._states_names.append(state_name)
-        self._controller_state = _RP_ControllerState(self._actor, state_name)
-        self._controller_states.append(self._controller_state)
-        return self._controller_state
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/animations/animationcontroller)
+    """
 
-
-class BPAnimationControllers(JsonFile):
+    _document = _BPAnimationControllersFile
     _extension = ".bp_ac.json"
     _pack = Pack.BP
     _folder = "animation_controllers"
     _object_type = "Behavior Pack Animation Controller"
 
-    def __init__(self, identifier: Identifier) -> None:
-        super().__init__(identifier, identifier.is_vanilla)
-        self._animation_controllers = JsonSchemes.animation_controllers()
-        self._controllers_list: list[_BP_Controller] = []
+    def __init__(self, source: "_EntityServerDescription") -> None:
+        """Creates the behavior pack animation controllers file of an entity, at export.
 
-    def add_controller(
-        self, controller_name: str, initial_state: str = "default"
-    ) -> _BP_Controller:
-        """Adds a new animation controller to the current actor with `default` as the `initial_state`.
-
-        Parameters
-        ----------
-        controller_name : str
-            The shortname of the controller you want to add.
-
-        Returns
-        -------
-            Animation controller.
-
+        Args:
+            source (_EntityServerDescription): The entity's description, which holds the
+                controllers.
         """
-        ctrl = _BP_Controller(self.identifier, controller_name, initial_state)
-        self._controllers_list.append(ctrl)
-        return ctrl
-
-    def queue(self, directory: str = None) -> "BPAnimationControllers":
-        if len(self._controllers_list) > 0:
-            for controller in self._controllers_list:
-                self._animation_controllers["animation_controllers"].update(
-                    controller.__export__()
-                )
-            self.content(self._animation_controllers)
-            return super().queue(directory=directory)
+        super().__init__(source.identifier, source.identifier.is_vanilla)
+        self._source = source
 
 
-class RPAnimationControllers(JsonFile):
+class RPAnimationControllers(_AnimationControllers):
+    """The resource pack animation controllers of an entity or attachable.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/animations/animationcontroller)
+    """
+
+    _document = _RPAnimationControllersFile
     _extension = ".rp_ac.json"
     _pack = Pack.RP
     _folder = "animation_controllers"
     _object_type = "Resource Pack Animation Controller"
 
-    def __init__(self, actor: "_ActorClientDescription", name) -> None:
-        super().__init__(name)
-        self._actor = actor
-        self._animation_controllers = JsonSchemes.animation_controllers()
-        self._controllers_list: list[_RP_Controller] = []
+    def __init__(self, source: "_ActorClientDescription") -> None:
+        """Creates the resource pack animation controllers file of an actor, at export.
 
-    def add_controller(
-        self, controller_name: str, initial_state: str = "default"
-    ) -> _RP_Controller:
-        """Adds a new animation controller to the current actor with `default` as the `initial_state`.
-
-        Parameters
-        ----------
-        controller_name : str
-            The shortname of the controller you want to add.
-        initial_state : str, optional
-            The initial state of the controller, by default "default".
-
-        Returns
-        -------
-            Animation controller.
-
+        Args:
+            source (_ActorClientDescription): The actor's client description, which holds the
+                controllers.
         """
-        self._animation_controller = _RP_Controller(
-            self._actor, self.identifier, controller_name, initial_state
-        )
-        self._controllers_list.append(self._animation_controller)
-        return self._animation_controller
+        super().__init__(source.name)
+        self._source = source
 
-    def _is_populated(self):
-        return len(self._controllers_list) > 0 and any(
-            [len(t._controller_states) > 0 for t in [c for c in self._controllers_list]]
-        )
 
-    def queue(self, directory: str = None) -> "RPAnimationControllers":
-        if self._is_populated():
-            for controller in self._controllers_list:
-                self._animation_controllers["animation_controllers"].update(
-                    controller.__export__()
-                )
-            self.content(self._animation_controllers)
-            return super().queue(directory=directory)
+# endregion

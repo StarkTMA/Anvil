@@ -1,14 +1,13 @@
 from typing import Annotated, Literal
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import EventTrigger
-from anvil.api.core.enums import (
-    DamageCause,
-    Slots,
-)
 from anvil.api.core.filters import Filter
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.lib.jsonmodel import (
+    BlockId,
     Chance,
     DespawnDistance,
     InRange,
@@ -21,7 +20,10 @@ from anvil.lib.jsonmodel import (
     Trigger,
     json_field,
 )
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel.enums import (
+    DamageCause,
+    Slots,
+)
 
 # region Parts: objects nested inside components
 
@@ -230,7 +232,7 @@ class EntityBreathable(JsonComponent):
     """Defines what blocks this entity can breathe in and gives them the ability to suffocate.
 
     Args:
-        breathe_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks this entity can breathe in, in addition to the options below.
+        breathe_blocks (list[str | Block | BlockDescriptor], optional): Blocks this entity can breathe in, in addition to the options below.
         breathes_air (bool, optional): Whether this entity can breathe in air. Game default true.
         breathes_lava (bool, optional): Whether this entity can breathe in lava. Game default true.
         breathes_solids (bool, optional): Whether this entity can breathe in solid blocks. Game default false.
@@ -238,7 +240,7 @@ class EntityBreathable(JsonComponent):
         can_dehydrate (bool, optional): Whether water-only breathers take damage out of water. Game default false.
         generates_bubbles (bool, optional): Whether this entity has visible bubbles in water. Game default true.
         inhale_time (float, optional): Seconds to recover breath to maximum. Game default 0.
-        non_breathe_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks this entity cannot breathe in.
+        non_breathe_blocks (list[str | Block | BlockDescriptor], optional): Blocks this entity cannot breathe in.
         suffocate_time (int, optional): Seconds between suffocation damage. Game default -20.
         total_supply (int, optional): Seconds the entity can hold its breath. Game default 15.
 
@@ -247,8 +249,8 @@ class EntityBreathable(JsonComponent):
 
     identifier = "minecraft:breathable"
 
-    breathe_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
+    breathe_blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
     )
     breathes_air: bool | None = json_field(default=None)
     breathes_lava: bool | None = json_field(default=None)
@@ -257,9 +259,9 @@ class EntityBreathable(JsonComponent):
     can_dehydrate: bool | None = json_field(default=None)
     generates_bubbles: bool | None = json_field(default=None)
     inhale_time: float | None = json_field(default=None)
-    non_breathe_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
-        default=None
-    )
+    non_breathe_blocks: (
+        list[Annotated[str | Block | BlockDescriptor, BlockId]] | None
+    ) = json_field(default=None)
     suffocate_time: int | None = json_field(default=None)
     total_supply: int | None = json_field(default=None)
 

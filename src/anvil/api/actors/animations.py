@@ -1,129 +1,159 @@
-from anvil.api.logic.molang import Molang, Query
+"""The behavior pack's `animations/<entity>.animation.json`: timelines of commands, events
+and Molang an entity runs."""
+
+from typing import TYPE_CHECKING, Annotated, ClassVar
+
+from anvil.api.logic.molang import Molang
 from anvil.lib.config import Pack
-from anvil.lib.jsonmodel import Identifier, JsonFile
-from anvil.lib.schemas import JsonSchemes
+from anvil.lib.format_versions import BP_ANIMATION_VERSION
+from anvil.lib.jsonmodel import (
+    Identifier,
+    JsonFile,
+    JsonObject,
+    JsonValue,
+    Keyed,
+    NonNegative,
+    json_field,
+)
+from anvil.lib.jsonmodel.enums import Target
+
+if TYPE_CHECKING:
+    from anvil.api.actors.server import _EntityServerDescription
 
 
-class _BPAnimation:
-    def __init__(self, identifier, animation_short_name: str, loop: bool):
-        self._identifier = identifier
-        self._animation_key = (
-            f"animation.{identifier.replace(':', '.')}.{animation_short_name}"
-        )
-        self._animation_length = 0.05
-        self._animation = JsonSchemes.bp_animation(
-            self._identifier, animation_short_name, loop
-        )
+# region Parts
 
-    def timeline(self, timestamp: float, commands: list[str]):
-        """Takes a timestamp and a list of events, command or molang to run at that time.
+
+def _bp_command(command: str) -> str:
+    """A behavior pack command as written: an `@s` event as is, Molang ending with `;`, and
+    a slash command starting with `/`."""
+    if not isinstance(command, str):
+        raise TypeError(f"Expected a command, event or Molang string. [{command}]")
+    if command.startswith(Target.S.value):
+        return command
+    if any(command.startswith(prefix) for prefix in Molang.prefixes):
+        return f"{command};"
+    return f"/{command}"
+
+
+class _BPTimelineEntry(JsonValue):
+    """What an animation runs at one time."""
+
+    time: float = json_field(exclude=True, positional=True)
+    commands: list[str] = json_field(default_factory=list)
+
+
+class _BPAnimation(JsonObject):
+    """A behavior pack animation, `animation.<namespace>.<entity>.<name>`: commands, events
+    and Molang run along a timeline. The entity's description lists it by its short name.
+    Unset keys are left out.
+    """
+
+    name: str = json_field(exclude=True, positional=True)
+    owner: Identifier = json_field(exclude=True)
+    """The entity identifier."""
+    animate: bool = json_field(default=False, exclude=True)
+    """Runs all the time, or while `condition` is true."""
+    condition: str | None = json_field(default=None, exclude=True)
+
+    loop: bool = False
+    animation_length: Annotated[float, NonNegative] | None = None
+    anim_time_update: str | None = None
+    timeline: Annotated[list[_BPTimelineEntry], Keyed("time")] = json_field(
+        default_factory=list
+    )
+
+    @property
+    def identifier(self) -> str:
+        """The animation's identifier, `animation.<namespace>.<entity>.<name>`."""
+        return f"animation.{self.owner.replace(':', '.')}.{self.name}"
+
+    def _set_animate(self, condition: str | Molang | None = None) -> None:
+        """Runs it all the time, or while the condition is true."""
+        self.animate = True
+        self.condition = None if condition is None else str(condition)
+
+    def add_timeline(self, timestamp: float, commands: list[str]) -> "_BPAnimation":
+        """Runs commands, events (`@s <event>`) or Molang at a time. Makes the animation
+        last until just after it, at least 0.05 seconds, unless it already lasts longer.
 
         Args:
-            timestamp (float): The timestamp of the event.
-            *commands (str): The Events, commands or molang to run on exit of this state.
-
-        Returns:
-            This animation.
+            timestamp (float): The time, in seconds.
+            commands (list[str]): What runs.
         """
-        if self._animation_length <= timestamp:
-            self._animation_length = timestamp + 0.05
-
-        self._animation[self._animation_key][
-            "animation_length"
-        ] = self._animation_length
-        if timestamp not in self._animation[self._animation_key]["timeline"]:
-            self._animation[self._animation_key]["timeline"][timestamp] = []
         if not isinstance(commands, list):
             raise TypeError("Animation timeline expected a list of strings.")
-
-        for command in commands:
-            if not isinstance(command, str):
-                raise TypeError(
-                    f"Animation timeline command must be a string. [{command}]"
-                )
-
-            if str(command).startswith("@s"):
-                self._animation[self._animation_key]["timeline"][timestamp].append(
-                    f"{command}"
-                )
-            elif any(str(command).startswith(v) for v in Molang.prefixes):
-                self._animation[self._animation_key]["timeline"][timestamp].append(
-                    f"{command};"
-                )
-            else:
-                self._animation[self._animation_key]["timeline"][timestamp].append(
-                    f"/{command}"
-                )
+        length = 0.05 if self.animation_length is None else self.animation_length
+        self.animation_length = timestamp + 0.05 if length <= timestamp else length
+        entry = next((e for e in self.timeline if e.time == timestamp), None)
+        if entry is None:
+            entry = _BPTimelineEntry(timestamp)
+            self.timeline.append(entry)
+        entry.commands.extend(_bp_command(command) for command in commands)
         return self
 
-    def animation_length(self, animation_length: float):
-        """This function sets the length of the animation.
-
-        Args:
-            animation_length (float): The length of the animation in seconds.
-
-        Returns:
-            This animation.
-        """
-        self._animation[self._animation_key]["animation_length"] = animation_length
+    def set_animation_length(self, animation_length: float) -> "_BPAnimation":
+        """Sets how long the animation lasts, in seconds."""
+        self.animation_length = animation_length
         return self
 
-    def anim_time_update(self, anim_time_update: Query):
-        """Sets the animation time update query.
-
-        Args:
-            anim_time_update (Query): The animation time update query.
-
-        Returns:
-            This animation.
-        """
-        self._animation[self._animation_key]["anim_time_update"] = anim_time_update
+    def set_anim_time_update(self, anim_time_update: str) -> "_BPAnimation":
+        """Sets how the animation time moves each frame, Molang."""
+        self.anim_time_update = anim_time_update
         return self
 
-    def __export__(self):
-        """Exports the animation data.
 
-        Returns:
-            dict: The animation data.
-        """
-        return self._animation
+# endregion
+
+
+# region File
+
+
+class _BPAnimationsFile(JsonObject):
+    """The content of a behavior pack `.animation.json` file."""
+
+    __required__: ClassVar[tuple[str, ...]] = ("format_version", "animations")
+
+    format_version: str = json_field(default=BP_ANIMATION_VERSION, init=False)
+    animations: Annotated[list[_BPAnimation], Keyed("identifier")] = json_field(
+        default_factory=list
+    )
 
 
 class BPAnimations(JsonFile):
+    """The behavior pack animations of an entity, written when it has any. The entity's
+    description holds them (`entity.server.description.animation()` adds them); the
+    file writes them.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/animations/animationsoverview)
+    """
+
+    _document = _BPAnimationsFile
     _extension = ".animation.json"
     _pack = Pack.BP
     _folder = "animations"
-    _object_type = "behavior Pack Animation"
+    _object_type = "Behavior Pack Animation"
 
-    def __init__(self, identifier: Identifier) -> None:
-        super().__init__(identifier, identifier.is_vanilla)
-        self._animations = JsonSchemes.animations_bp()
-        self._animations_list: list[_BPAnimation] = []
-
-    def add_animation(
-        self, animation_short_name: str, loop: bool = False
-    ) -> "_BPAnimation":
-        """Adds a new animation to the current actor.
+    def __init__(self, source: "_EntityServerDescription") -> None:
+        """Creates the animations file of an entity.
 
         Args:
-            animation_short_name (str): The shortname of the animation you want to add.
-            loop (bool, optional): If the animation should loop or not. Defaults to False.
-
-        Returns:
-            _BPAnimation: The created animation.
+            source (_EntityServerDescription): The entity's description, which holds the
+                animations.
         """
-        self._animation = _BPAnimation(self.identifier, animation_short_name, loop)
-        self._animations_list.append(self._animation)
-        return self._animation
+        super().__init__(source.identifier, source.identifier.is_vanilla)
+        self._source = source
 
-    def queue(self, directory: str = None) -> "BPAnimations":
-        """Queues the animations for export.
-
-        Args:
-            directory (str, optional): The directory to export to. Defaults to None.
-        """
-        if len(self._animations_list) > 0:
-            for animation in self._animations_list:
-                self._animations["animations"].update(animation.__export__())
-            self.content(self._animations)
+    def queue(self, directory: str | None = None) -> "BPAnimations | None":
+        """Queues the animations for export, when the entity has any."""
+        self._content = self._document(
+            animations=[
+                e for e in self._source._animations if isinstance(e, _BPAnimation)
+            ]
+        )
+        if self._content.animations:
             return super().queue(directory=directory)
+        return None
+
+
+# endregion

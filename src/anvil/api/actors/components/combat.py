@@ -1,27 +1,23 @@
 from typing import Annotated, Literal
 
+from anvil.api.actors.entity import Entity
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.components import EventTrigger
-from anvil.api.core.enums import (
-    DamageCause,
-    DamageSensor,
-    Difficulty,
-    ExplosionParticleEffect,
-    FilterSubject,
-    LineOfSightObstructionType,
-    LookAtLocation,
-    LootedAtSetTarget,
-    Slots,
-)
 from anvil.api.core.filters import Filter
+from anvil.api.items.items import Item
 from anvil.api.logic.molang import Molang
 from anvil.api.vanilla.effects import MinecraftEffects
 from anvil.lib.jsonmodel import (
     AtLeastOne,
+    BlockId,
     BlockObject,
     Chance,
     EffectName,
+    EntityId,
     IndexInto,
     InRange,
+    ItemId,
     JsonComponent,
     JsonObject,
     Kept,
@@ -35,10 +31,16 @@ from anvil.lib.jsonmodel import (
     YesNo,
     json_field,
 )
-from anvil.lib.schemas import (
-    MinecraftBlockDescriptor,
-    MinecraftEntityDescriptor,
-    MinecraftItemDescriptor,
+from anvil.lib.jsonmodel.enums import (
+    DamageCause,
+    DamageSensor,
+    Difficulty,
+    ExplosionParticleEffect,
+    FilterSubject,
+    LineOfSightObstructionType,
+    LookAtLocation,
+    LootedAtSetTarget,
+    Slots,
 )
 
 # region Parts: objects nested inside components
@@ -91,11 +93,11 @@ class BlockBreakWatch(JsonObject):
     """Blocks `minecraft:block_sensor` watches, and the event it runs when one breaks.
 
     Args:
-        block_list (list[str | MinecraftBlockDescriptor]): Blocks that trigger the event.
+        block_list (list[str | Block | BlockDescriptor]): Blocks that trigger the event.
         on_block_broken (str): Event to call when a block in `block_list` is broken.
     """
 
-    block_list: list[str | MinecraftBlockDescriptor] = json_field()
+    block_list: list[Annotated[str | Block | BlockDescriptor, BlockId]] = json_field()
     on_block_broken: str = json_field()
 
 
@@ -139,12 +141,12 @@ class InsideBlockWatch(JsonObject):
     """A block `minecraft:inside_block_notifier` watches, and the events it runs.
 
     Args:
-        block (str | MinecraftBlockDescriptor): The block to watch. A descriptor's states are matched too.
+        block (str | Block | BlockDescriptor): The block to watch. A descriptor's states are matched too.
         entered_block_event (EventTrigger | str, optional): Event to run when the entity enters the block.
         exited_block_event (EventTrigger | str, optional): Event to run when the entity exits the block.
     """
 
-    block: Annotated[str | MinecraftBlockDescriptor, BlockObject] = json_field()
+    block: Annotated[str | Block | BlockDescriptor, BlockId, BlockObject] = json_field()
     entered_block_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
         default=None
     )
@@ -201,13 +203,13 @@ class ShooterProjectile(JsonObject):
     """A projectile `minecraft:shooter` can use, and when.
 
     Args:
-        def_ (MinecraftEntityDescriptor | str): The projectile entity. Written as `def`.
+        def_ (str | Entity): The projectile entity. Written as `def`.
         aux_val (int, optional): ID of the potion effect applied on hit.
         filters (Filter, optional): Conditions for this projectile to be used.
         lose_target (bool, optional): Whether the shooter loses its target after shooting.
     """
 
-    def_: MinecraftEntityDescriptor | str = json_field(key="def")
+    def_: Annotated[str | Entity, EntityId] = json_field(key="def")
     aux_val: int | None = json_field(default=None)
     filters: Filter | None = json_field(default=None)
     lose_target: bool | None = json_field(default=None)
@@ -451,7 +453,7 @@ class ProjectileSpawnChance(JsonObject):
     """Spawns entities at the impact.
 
     Args:
-        spawn_definition (MinecraftEntityDescriptor | str): The entity to spawn.
+        spawn_definition (str | Entity): The entity to spawn.
         first_spawn_chance (float, optional): Chance the first group spawns, from 0 to 1. Game default 0.
         first_spawn_count (int, optional): Entities in the first group. Game default 0.
         on_spawn (list[EventTrigger], optional): Events run on each spawned entity.
@@ -460,7 +462,7 @@ class ProjectileSpawnChance(JsonObject):
         spawn_baby (bool, optional): Spawned entities start as babies. Game default false.
     """
 
-    spawn_definition: MinecraftEntityDescriptor | str = json_field()
+    spawn_definition: Annotated[str | Entity, EntityId] = json_field()
     first_spawn_chance: Annotated[float, Chance] | None = json_field(default=None)
     first_spawn_count: int | None = json_field(default=None)
     on_spawn: list[EventTrigger] | None = json_field(default=None)
@@ -558,8 +560,8 @@ class SpawnedEntity(JsonObject):
     Set `spawn_entity` to spawn an entity, or leave it out to spawn `spawn_item`.
 
     Args:
-        spawn_entity (MinecraftEntityDescriptor | str, optional): The entity to spawn.
-        spawn_item (str | MinecraftItemDescriptor, optional): The item to spawn when no entity is set. Game default egg.
+        spawn_entity (str | Entity, optional): The entity to spawn.
+        spawn_item (str | Item, optional): The item to spawn when no entity is set. Game default egg.
         spawn_event (EventTrigger | str, optional): Event run on the spawned entity. Game default minecraft:entity_born.
         spawn_item_event (EventTrigger | str, optional): Event run on this entity when the item spawns.
         spawn_method (str, optional): How the entity is spawned. Game default born.
@@ -572,8 +574,8 @@ class SpawnedEntity(JsonObject):
         single_use (bool, optional): Spawns only once. Game default false.
     """
 
-    spawn_entity: MinecraftEntityDescriptor | str | None = json_field(default=None)
-    spawn_item: str | MinecraftItemDescriptor | None = json_field(default=None)
+    spawn_entity: Annotated[str | Entity, EntityId] | None = json_field(default=None)
+    spawn_item: Annotated[str | Item, ItemId] | None = json_field(default=None)
     spawn_event: EventTrigger | str | None = json_field(default=None)
     spawn_item_event: Annotated[EventTrigger | str, Trigger] | None = json_field(
         default=None
@@ -599,7 +601,7 @@ class TransformationDelay(JsonObject):
         block_chance (float, optional): Chance a found block speeds up the transformation, from 0 to 1. Game default 0.
         block_max (int, optional): Maximum number of helping blocks. 0 uses the block radius. Game default 0.
         block_radius (int, optional): Distance in blocks searched for helping blocks. Game default 0.
-        block_types (list[str | MinecraftBlockDescriptor], optional): Blocks that help the transformation.
+        block_types (list[str | Block | BlockDescriptor], optional): Blocks that help the transformation.
     """
 
     value: Annotated[float, NonNegative] | None = json_field(default=None)
@@ -609,7 +611,9 @@ class TransformationDelay(JsonObject):
     block_chance: Annotated[float, Chance] | None = json_field(default=None)
     block_max: int | None = json_field(default=None)
     block_radius: int | None = json_field(default=None)
-    block_types: list[str | MinecraftBlockDescriptor] | None = json_field(default=None)
+    block_types: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        json_field(default=None)
+    )
 
 
 # endregion
@@ -851,12 +855,12 @@ class EntityBlockSensor(JsonComponent):
     sources: Filter | None = json_field(default=None)
 
     def add_on_break(
-        self, *, block_list: list[str | MinecraftBlockDescriptor], on_block_broken: str
+        self, *, block_list: list[str | Block | BlockDescriptor], on_block_broken: str
     ) -> "EntityBlockSensor":
         """Adds blocks to watch.
 
         Args:
-            block_list (list[str | MinecraftBlockDescriptor]): Blocks that trigger the event.
+            block_list (list[str | Block | BlockDescriptor]): Blocks that trigger the event.
             on_block_broken (str): Event to run when one of them is broken.
         """
         self.on_break.append(
@@ -869,19 +873,19 @@ class EntityBreakBlocks(JsonComponent):
     """Specifies the blocks that the entity can break as it moves around.
 
     Args:
-        breakable_blocks (list[str | MinecraftBlockDescriptor], optional): The blocks that can be broken as this entity moves around. Add more with `add_breakable_blocks`.
+        breakable_blocks (list[str | Block | BlockDescriptor], optional): The blocks that can be broken as this entity moves around. Add more with `add_breakable_blocks`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/entitycomponents/minecraftcomponent_break_blocks)
     """
 
     identifier = "minecraft:break_blocks"
 
-    breakable_blocks: list[str | MinecraftBlockDescriptor] = json_field(
-        default_factory=list, omit_default=True
+    breakable_blocks: list[Annotated[str | Block | BlockDescriptor, BlockId]] = (
+        json_field(default_factory=list, omit_default=True)
     )
 
     def add_breakable_blocks(
-        self, *blocks: str | MinecraftBlockDescriptor
+        self, *blocks: str | Block | BlockDescriptor
     ) -> "EntityBreakBlocks":
         """Adds blocks the entity can break."""
         self.breakable_blocks.extend(blocks)
@@ -1125,7 +1129,7 @@ class EntityInsideBlockNotifier(JsonComponent):
     def add_block(
         self,
         *,
-        block: str | MinecraftBlockDescriptor,
+        block: str | Block | BlockDescriptor,
         entered_block_event: EventTrigger | str | None = None,
         exited_block_event: EventTrigger | str | None = None,
     ) -> "EntityInsideBlockNotifier":
@@ -1423,7 +1427,7 @@ class EntityProjectile(JsonComponent):
         hit_sound (str, optional): Sound played when hitting an entity.
         hit_water (bool, optional): Water stops the projectile. Game default false.
         homing (bool, optional): The projectile steers towards its target. Game default false.
-        ignored_entities (list[MinecraftEntityDescriptor | str], optional): Entities the projectile passes through.
+        ignored_entities (list[str | Entity], optional): Entities the projectile passes through.
         inertia (float, optional): Fraction of velocity kept each tick in air. Game default 0.99.
         is_dangerous (bool, optional): Marks the projectile as dangerous to AI. Game default false.
         isolated_physics (bool, optional): Outside forces such as friction do not affect the projectile. Game default true.
@@ -1468,7 +1472,7 @@ class EntityProjectile(JsonComponent):
     hit_sound: str | None = json_field(default=None)
     hit_water: bool | None = json_field(default=None)
     homing: bool | None = json_field(default=None)
-    ignored_entities: list[MinecraftEntityDescriptor | str] | None = json_field(
+    ignored_entities: list[Annotated[str | Entity, EntityId]] | None = json_field(
         default=None
     )
     inertia: float | None = json_field(default=None)
@@ -1703,7 +1707,7 @@ class EntityShooter(JsonComponent):
     """Defines the entity's ranged attack behavior, used by `minecraft:behavior.ranged_attack`.
 
     Args:
-        def_ (MinecraftEntityDescriptor | str, optional): The default projectile entity. Written as `def`.
+        def_ (str | Entity, optional): The default projectile entity. Written as `def`.
         aux_val (int, optional): ID of the potion effect applied by the default projectile. Game default -1.
         magic (bool, optional): Flags the projectiles as magic. Game default false.
         power (float, optional): Velocity of the projectiles; 0 uses the projectile's default. Game default 0.
@@ -1715,7 +1719,7 @@ class EntityShooter(JsonComponent):
 
     identifier = "minecraft:shooter"
 
-    def_: MinecraftEntityDescriptor | str | None = json_field(default=None, key="def")
+    def_: Annotated[str | Entity, EntityId] | None = json_field(default=None, key="def")
     aux_val: int | None = json_field(default=None)
     magic: bool | None = json_field(default=None)
     power: Annotated[float, NonNegative] | None = json_field(default=None)
@@ -1727,7 +1731,7 @@ class EntityShooter(JsonComponent):
     def add_projectile(
         self,
         *,
-        def_: MinecraftEntityDescriptor | str,
+        def_: str | Entity,
         aux_val: int | None = None,
         filters: Filter | None = None,
         lose_target: bool | None = None,
@@ -1757,8 +1761,8 @@ class EntitySpawnEntity(JsonComponent):
     def add_entity(
         self,
         *,
-        spawn_entity: MinecraftEntityDescriptor | str | None = None,
-        spawn_item: str | MinecraftItemDescriptor | None = None,
+        spawn_entity: str | Entity | None = None,
+        spawn_item: str | Item | None = None,
         spawn_event: EventTrigger | str | None = None,
         spawn_item_event: EventTrigger | str | None = None,
         spawn_method: str | None = None,
@@ -1794,7 +1798,7 @@ class EntitySpawnOnDeath(JsonComponent):
     """Spawns entities when the entity dies.
 
     Args:
-        entity_to_spawn (MinecraftEntityDescriptor | str, optional): The entity to spawn. Game default the entity itself.
+        entity_to_spawn (str | Entity, optional): The entity to spawn. Game default the entity itself.
         additional_spawn_range (tuple[float, float], optional): A `(min, max)` range of extra entities to spawn. Game default (0, 0).
         filters (Filter, optional): Conditions for the entities to spawn.
         inherit_parent_name (bool, optional): Whether spawned entities take the name of the parent. Game default true.
@@ -1806,7 +1810,7 @@ class EntitySpawnOnDeath(JsonComponent):
 
     identifier = "minecraft:spawn_on_death"
 
-    entity_to_spawn: MinecraftEntityDescriptor | str | None = json_field(default=None)
+    entity_to_spawn: Annotated[str | Entity, EntityId] | None = json_field(default=None)
     additional_spawn_range: Annotated[tuple[float, float], MinMax] | None = json_field(
         default=None
     )
@@ -2003,10 +2007,10 @@ class EntityTrail(JsonComponent):
     """Makes the entity leave a trail of blocks as it moves. Obeys Mob Griefing rules.
 
     Args:
-        block_type (str | MinecraftBlockDescriptor, optional): The block spawned behind the entity. Game default air.
+        block_type (str | Block | BlockDescriptor, optional): The block spawned behind the entity. Game default air.
         force_replace_matched_blocks (bool, optional): Replaces matching blocks even where placement rules prevent it. Game default false.
         radius (int, optional): Spawns blocks over a (2 * radius + 1) square around the offset. Game default -1.
-        replaceable_blocks (list[str | MinecraftBlockDescriptor], optional): Blocks the trail may replace. Game default air only.
+        replaceable_blocks (list[str | Block | BlockDescriptor], optional): Blocks the trail may replace. Game default air only.
         spawn_filter (Filter, optional): Conditions for the block to spawn.
         spawn_offset (tuple[float, float, float], optional): Offset from the entity where the block spawns, at most 16 blocks. Game default (0, 0, 0).
 
@@ -2015,12 +2019,14 @@ class EntityTrail(JsonComponent):
 
     identifier = "minecraft:trail"
 
-    block_type: str | MinecraftBlockDescriptor | None = json_field(default=None)
-    force_replace_matched_blocks: bool | None = json_field(default=None)
-    radius: int | None = json_field(default=None)
-    replaceable_blocks: list[str | MinecraftBlockDescriptor] | None = json_field(
+    block_type: Annotated[str | Block | BlockDescriptor, BlockId] | None = json_field(
         default=None
     )
+    force_replace_matched_blocks: bool | None = json_field(default=None)
+    radius: int | None = json_field(default=None)
+    replaceable_blocks: (
+        list[Annotated[str | Block | BlockDescriptor, BlockId]] | None
+    ) = json_field(default=None)
     spawn_filter: Filter | None = json_field(default=None)
     spawn_offset: tuple[float, float, float] | None = json_field(default=None)
 
@@ -2029,7 +2035,7 @@ class EntityTransformation(JsonComponent):
     """Transforms the entity into another entity.
 
     Args:
-        into (MinecraftEntityDescriptor | str): The entity to transform into. Add an event to run on it as `"namespace:name<event>"`.
+        into (str | Entity): The entity to transform into. Add an event to run on it as `"namespace:name<event>"`.
         add (list[str], optional): Component groups added after the transformation. Add more with `add_component_groups`.
         begin_transform_sound (str, optional): Sound played when the transformation starts.
         delay (float | TransformationDelay, optional): Seconds before the entity transforms, or the full delay options. Set it with `set_delay`.
@@ -2045,7 +2051,7 @@ class EntityTransformation(JsonComponent):
 
     identifier = "minecraft:transformation"
 
-    into: MinecraftEntityDescriptor | str = json_field()
+    into: Annotated[str | Entity, EntityId] = json_field()
     add: Annotated[list[str], Wrapped("component_groups")] = json_field(
         default_factory=list, omit_default=True
     )
@@ -2073,7 +2079,7 @@ class EntityTransformation(JsonComponent):
         block_chance: float | None = None,
         block_max: int | None = None,
         block_radius: int | None = None,
-        block_types: list[str | MinecraftBlockDescriptor] | None = None,
+        block_types: list[str | Block | BlockDescriptor] | None = None,
     ) -> "EntityTransformation":
         """Sets the full delay options before the entity transforms. See `TransformationDelay` for the parameters."""
         self.delay = TransformationDelay(
