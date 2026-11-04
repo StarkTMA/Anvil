@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 
 import click
+
+from anvil.lib import scaffold
 from anvil.lib.config import (
     Config,
     ConfigOption,
@@ -23,155 +25,6 @@ from anvil.lib.lib import (
     Directory,
     process_subcommand,
 )
-from anvil.lib.templater import load_file
-
-from ..__version__ import __version__
-
-
-class JsonSchemes:
-    """Collection of static methods for generating various project templates and configurations."""
-
-    @staticmethod
-    def python():
-        """Generates a Python template.
-
-        Returns:
-            str: The Python template content.
-        """
-        return load_file("python.jsont")
-
-    @staticmethod
-    def package_json(project_name, version, description, author):
-        """Generates a package.json template.
-
-        Args:
-            project_name (str): The name of the project.
-            version (str): The version of the project.
-            description (str): The project description.
-            author (str): The project author.
-
-        Returns:
-            dict: The package.json template data.
-        """
-        return load_file(
-            "package_json.jsont",
-            {
-                "project_name": project_name,
-                "version": version,
-                "description": description,
-                "author": author,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def vscode(path, wkspc, script_uuid, project_name):
-        """Generates a VSCode configuration template.
-
-        Args:
-            path (str): The project path.
-            wkspc (str): The workspace path.
-            script_uuid (str): The script UUID.
-            project_name (str): The project name.
-
-        Returns:
-            dict: The VSCode configuration data.
-        """
-        return load_file(
-            "vscode.jsont",
-            {
-                "script_uuid": script_uuid,
-                "wkspc": wkspc,
-                "path": path,
-                "project_name": project_name,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def gitignore():
-        """Generates a .gitignore template.
-
-        Returns:
-            str: The .gitignore template content.
-        """
-        return load_file("gitignore.jsont")
-
-    @staticmethod
-    def code_workspace(
-        name,
-        path,
-        preview=False,
-        dev_res_path=None,
-        dev_beh_path=None,
-    ):
-        """Generates a VS Code workspace configuration.
-
-        Args:
-            name (str): The workspace name.
-            path (str): The workspace path.
-            preview (bool, optional): Whether this is for preview mode. Defaults to False.
-            dev_res_path (str, optional): Custom development resource packs path.
-            dev_beh_path (str, optional): Custom development behavior packs path.
-
-        Returns:
-            dict: The workspace configuration data.
-        """
-        com_mojang = PREVIEW_COM_MOJANG if preview else RELEASE_COM_MOJANG
-        DEV_RES_DIR = dev_res_path or com_mojang / "development_resource_packs"
-        DEV_BEH_DIR = dev_beh_path or com_mojang / "development_behavior_packs"
-
-        DEV_PREV_RES_DIR = PREVIEW_COM_MOJANG / "development_resource_packs"
-        DEV_PREV_BEH_DIR = PREVIEW_COM_MOJANG / "development_behavior_packs"
-
-        return load_file(
-            "code_workspace.jsont",
-            {
-                "name": name,
-                "path": path,
-                "dev_res_path": DEV_RES_DIR,
-                "dev_beh_path": DEV_BEH_DIR,
-                "dev_prev_res_path": DEV_PREV_RES_DIR,
-                "dev_prev_beh_path": DEV_PREV_BEH_DIR,
-            },
-            is_json=True,
-        )
-
-    @staticmethod
-    def tsconfig(out_dir):
-        return load_file(
-            "tsconfig.jsont",
-            {"out_dir": Path(out_dir) / "scripts"},
-            is_json=True,
-        )
-
-    @staticmethod
-    def esbuild_config_js(outDir, minify: bool = False):
-        return load_file(
-            "esbuild.jsont",
-            {
-                "out_dir": outDir,
-                "minify": minify,
-            },
-        )
-
-    @staticmethod
-    def tsconstants(namespace: str, project_name: str):
-        return load_file(
-            "tsconstants.jsont", {"namespace": namespace, "project_name": project_name}
-        )
-
-    @staticmethod
-    def github_release_workflow(project_name: str, display_name: str):
-        return load_file(
-            "github_release_workflow.ymlt",
-            {
-                "project_name": project_name,
-                "display_name": display_name,
-                "gha": "${{",
-                "end": "}}",
-            },
-        )
 
 
 def handle_configuration(
@@ -310,7 +163,7 @@ def handle_script(
 
     AnvilIO.file(
         "package.json",
-        JsonSchemes.package_json(
+        scaffold.package_json(
             project_name,
             "1.0.0",
             str(config.get_option(ConfigSection.PACKAGE, ConfigOption.DISPLAY_NAME))
@@ -319,37 +172,30 @@ def handle_script(
         ),
         "",
         "w",
-        True,
     )
-    AnvilIO.file("tsconfig.json", JsonSchemes.tsconfig(DEV_BEH_DIR), "", "w", False)
+    AnvilIO.file("tsconfig.json", scaffold.tsconfig(DEV_BEH_DIR), "", "w")
     AnvilIO.file(
         "esbuild.js",
-        JsonSchemes.esbuild_config_js(
-            DEV_BEH_DIR / "scripts",
-            bool(config.get_option(ConfigSection.BUILD, ConfigOption.MINIFY)),
-        ),
+        scaffold.esbuild_js(),
         "",
         "w",
-        False,
     )
     AnvilIO.file(
         "constants.ts",
-        JsonSchemes.tsconstants(namespace, project_name),
+        scaffold.ts_constants(namespace, project_name),
         Path("scripts", "javascript"),
         "w",
-        False,
     )
     AnvilIO.file(
         "main.ts",
         'import { world, system } from "@minecraft/server";\n',
         Path("scripts", "javascript"),
         "w",
-        False,
     )
     if vscode:
         AnvilIO.file(
             "launch.json",
-            JsonSchemes.vscode(
+            scaffold.vscode_launch(
                 DEV_BEH_DIR / "scripts",
                 WORKING_DIR / "scripts" / "javascript",
                 script_uuid,
@@ -357,10 +203,9 @@ def handle_script(
             ),
             ".vscode",
             "w",
-            False,
         )
 
-    print(f"Installing npm packages... [{', '.join(install_dependencies)}]")
+    click.echo(f"Installing npm packages... [{', '.join(install_dependencies)}]")
     process_subcommand(
         f"npm init -y && npm install {' '.join(install_dependencies)}",
         f"Unable to initiate npm packages [{', '.join(install_dependencies)}].",
@@ -451,11 +296,11 @@ def init(
     DEV_RES_DIR = COM_MOJANG / "development_resource_packs"
     DEV_BEH_DIR = COM_MOJANG / "development_behavior_packs"
 
-    AnvilIO.file("main.py", JsonSchemes.python(), Path("scripts", "python"), "w")
-    AnvilIO.file(".gitignore", JsonSchemes.gitignore(), "", "w")
+    AnvilIO.file("main.py", scaffold.main_py(), Path("scripts", "python"), "w")
+    AnvilIO.file(".gitignore", scaffold.gitignore(), "", "w")
     AnvilIO.file(
         "release.yml",
-        JsonSchemes.github_release_workflow(project_name, display_name),
+        scaffold.github_release_workflow(project_name),
         Path(".github", "workflows"),
         "w",
     )
@@ -467,7 +312,7 @@ def init(
         workspace_dir = DESKTOP if DESKTOP.is_dir() else WORKING_DIR
         AnvilIO.file(
             workspace_file,
-            JsonSchemes.code_workspace(
+            scaffold.code_workspace(
                 config.get_option(ConfigSection.PACKAGE, ConfigOption.COMPANY),
                 WORKING_DIR,
                 preview,

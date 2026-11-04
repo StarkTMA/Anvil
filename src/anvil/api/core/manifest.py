@@ -1,6 +1,8 @@
-"""The resource and behavior pack manifests, and their pack settings."""
+"""The resource and behavior pack manifests, their pack settings, and the world template
+manifest and pack lists."""
 
-from typing import Annotated, ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar, Literal
 
 from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
 from anvil.lib.format_versions import (
@@ -11,11 +13,19 @@ from anvil.lib.format_versions import (
     MODULE_MINECRAFT_SERVER_PREVIEW,
     MODULE_MINECRAFT_SERVER_UI,
     MODULE_MINECRAFT_SERVER_UI_PREVIEW,
+    WORLD_TEMPLATE_MANIFEST_VERSION,
 )
-from anvil.lib.jsonmodel import JsonFile, JsonObject, Length, Positive, json_field
+from anvil.lib.jsonmodel import (
+    JsonFile,
+    JsonObject,
+    JsonValue,
+    Length,
+    Positive,
+    json_field,
+)
 from anvil.lib.translator import AnvilTranslator
 
-__all__ = ["ManifestRP", "ManifestBP"]
+__all__ = ["ManifestRP", "ManifestBP", "world_template_manifest", "world_packs"]
 
 
 # region Parts
@@ -241,7 +251,7 @@ class _ManifestSettings:
 
     def __init__(self, manifest: "ManifestRP | ManifestBP") -> None:
         if MANIFEST_VERSION < 3:
-            raise RuntimeError(
+            raise ValueError(
                 "Settings labels are only supported in manifest version 3 and above."
             )
         self.manifest = manifest
@@ -474,6 +484,95 @@ class ManifestBP(_PackManifest):
                 )
         self._addon_target()
         return super().queue()
+
+
+# endregion
+# region World template
+
+
+class _WorldTemplateHeader(JsonObject):
+    """The `header` of a world template manifest."""
+
+    name: str = json_field(default="pack.name")
+    description: str = json_field(default="pack.description")
+    version: tuple[int, int, int] = json_field()
+    uuid: str = json_field()
+    lock_template_options: bool = json_field(default=True)
+    base_game_version: tuple[int, int, int] = json_field()
+    allow_random_seed: bool = json_field(default=False, omit_default=True)
+
+
+class _WorldTemplateModule(JsonObject):
+    """The `world_template` module of a world template manifest."""
+
+    type: Literal["world_template"] = json_field(default="world_template", init=False)
+    uuid: str = json_field()
+    version: tuple[int, int, int] = json_field()
+
+
+class _WorldTemplateManifest(JsonObject):
+    """The content of a world template's `manifest.json`."""
+
+    __required__: ClassVar[tuple[str, ...]] = (
+        "format_version",
+        "header",
+        "modules",
+    )
+
+    format_version: int = json_field(
+        default=WORLD_TEMPLATE_MANIFEST_VERSION, init=False
+    )
+    header: _WorldTemplateHeader = json_field()
+    modules: list[_WorldTemplateModule] = json_field()
+    metadata: _ManifestMetadata = json_field()
+
+
+class _WorldPack(JsonObject):
+    """A pack the world applies, by its UUID."""
+
+    pack_id: str = json_field()
+    version: tuple[int, int, int] = json_field()
+
+
+class _WorldPacks(JsonValue):
+    """The content of `world_resource_packs.json` or `world_behavior_packs.json`: the packs
+    the world applies, written as a list."""
+
+    packs: list[_WorldPack] = json_field(default_factory=list)
+
+
+def world_template_manifest(
+    version: tuple[int, int, int], module_uuid: str
+) -> _WorldTemplateManifest:
+    """The world template's `manifest.json`, from the project config.
+
+    Args:
+        version (tuple[int, int, int]): The world template's version.
+        module_uuid (str): The UUID of its `world_template` module.
+    """
+    return _WorldTemplateManifest(
+        header=_WorldTemplateHeader(
+            version=version,
+            uuid=CONFIG._PACK_UUID,
+            base_game_version=tuple(int(i) for i in MANIFEST_BUILD.split(".")),
+            allow_random_seed=bool(CONFIG._RANDOM_SEED),
+        ),
+        modules=[_WorldTemplateModule(uuid=module_uuid, version=version)],
+        metadata=_ManifestMetadata(authors=[CONFIG.COMPANY]),
+    )
+
+
+def world_packs(version: tuple[int, int, int], pack_ids: Sequence[str]) -> _WorldPacks:
+    """The packs a world applies, for `world_resource_packs.json` or
+    `world_behavior_packs.json`.
+
+    Args:
+        version (tuple[int, int, int]): The version of every pack.
+        pack_ids (Sequence[str]): The UUIDs of the packs.
+    """
+    return _WorldPacks(
+        packs=[_WorldPack(pack_id=pack, version=version) for pack in pack_ids]
+    )
 
 
 # endregion

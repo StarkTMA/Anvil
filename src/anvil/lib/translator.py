@@ -1,23 +1,52 @@
 import csv
-import os
 import re
 import unicodedata
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import click
+import requests
 from deep_translator import GoogleTranslator
+from deep_translator.exceptions import BaseError, RequestError, TooManyRequests
 
 from anvil.lib.config import CONFIG
 from anvil.lib.lib import AnvilIO
-from anvil.lib.schemas import JsonSchemes
+
+LANGUAGES = (
+    "en_US",
+    "en_GB",
+    "de_DE",
+    "es_ES",
+    "es_MX",
+    "fr_FR",
+    "fr_CA",
+    "it_IT",
+    "pt_BR",
+    "pt_PT",
+    "ru_RU",
+    "zh_CN",
+    "zh_TW",
+    "nl_NL",
+    "bg_BG",
+    "cs_CZ",
+    "da_DK",
+    "el_GR",
+    "fi_FI",
+    "hu_HU",
+    "id_ID",
+    "nb_NO",
+    "pl_PL",
+    "sk_SK",
+    "sv_SE",
+    "tr_TR",
+    "uk_UA",
+)
+"""The languages Minecraft can show, in the order their `.lang` files are listed."""
 
 
 class AnvilTranslator:
     _instance = None
 
     PACK_PREFIX = "pack."
-    # Maps a pack target to the key whose value becomes that pack's `pack.description`.
     PACK_DESCRIPTION_KEYS = {
         "resource": "pack.resource_description",
         "behaviour": "pack.behaviour_description",
@@ -43,10 +72,10 @@ class AnvilTranslator:
         self._translated = False
         self.translated_languages = [self._source_language]
         self.config = CONFIG
-        self._languages = list(JsonSchemes.languages())
+        self._languages = list(LANGUAGES)
 
-        self._runtime_entries: Dict[str, str] = {}
-        self._entries: Dict[str, Dict[str, Optional[str]]] = {}
+        self._runtime_entries: dict[str, str] = {}
+        self._entries: dict[str, dict[str, str | None]] = {}
         for language in self._languages:
             self._entries[language] = {}
 
@@ -64,7 +93,7 @@ class AnvilTranslator:
             "pack.behaviour_description", self.config.BEHAVIOUR_DESCRIPTION
         )
 
-    def _normalize_value(self, value) -> Optional[str]:
+    def _normalize_value(self, value) -> str | None:
         if value is None:
             return None
 
@@ -75,8 +104,8 @@ class AnvilTranslator:
 
     def _read_csv_entries(
         self,
-    ) -> tuple[Dict[str, Dict[str, Optional[str]]], list[str]]:
-        entries: Dict[str, Dict[str, Optional[str]]] = {}
+    ) -> tuple[dict[str, dict[str, str | None]], list[str]]:
+        entries: dict[str, dict[str, str | None]] = {}
 
         for language in self._languages:
             entries[language] = {}
@@ -109,7 +138,7 @@ class AnvilTranslator:
         language = language.replace("en_GB", "en")
         return language
 
-    def _translate_pending_languages(self, source_keys: List[str]) -> None:
+    def _translate_pending_languages(self, source_keys: list[str]) -> None:
         if not self._pending_translation_languages:
             return
 
@@ -123,8 +152,8 @@ class AnvilTranslator:
                 continue
 
             language_entries = self._entries[language]
-            keys_to_translate: List[str] = []
-            values_to_translate: List[str] = []
+            keys_to_translate: list[str] = []
+            values_to_translate: list[str] = []
 
             for key in source_keys:
                 source_value = source_entries.get(key)
@@ -157,7 +186,12 @@ class AnvilTranslator:
                         translated_values = list(batch_values)
                     elif len(translated_values) != len(batch_values):
                         translated_values = list(batch_values)
-                except Exception as error:
+                except (
+                    BaseError,
+                    RequestError,
+                    TooManyRequests,
+                    requests.RequestException,
+                ) as error:
                     click.echo(
                         click.style(
                             f"[INFO]: Translation error for {language}: {error}",
@@ -203,7 +237,7 @@ class AnvilTranslator:
         saved_entries, saved_fieldnames = self._read_csv_entries()
         saved_source_entries = saved_entries[self._source_language]
 
-        source_keys: List[str] = []
+        source_keys: list[str] = []
         for key in saved_source_entries:
             if key in self._runtime_entries:
                 source_keys.append(key)
@@ -217,7 +251,7 @@ class AnvilTranslator:
             if saved_source_entries.get(key) != value:
                 changed_source_keys.add(key)
 
-        merged_entries: Dict[str, Dict[str, Optional[str]]] = {}
+        merged_entries: dict[str, dict[str, str | None]] = {}
         for language in self._languages:
             merged_entries[language] = {}
 
@@ -261,14 +295,14 @@ class AnvilTranslator:
         """
         self._runtime_entries[key] = value
 
-    def add_entries(self, entries: Dict[str, str]) -> None:
+    def add_entries(self, entries: dict[str, str]) -> None:
         """
         Add multiple localization entries.
         """
         for key, value in entries.items():
             self.add_localization_entry(key, value)
 
-    def get_localization_value(self, key: str) -> Optional[str]:
+    def get_localization_value(self, key: str) -> str | None:
         """
         Return the current source-language value for a localization key.
         """
@@ -278,7 +312,7 @@ class AnvilTranslator:
         source_entries = self._entries.get(self._source_language, {})
         return source_entries.get(key)
 
-    def auto_translate_all(self, languages: Optional[list[str]] = None) -> None:
+    def auto_translate_all(self, languages: list[str] | None = None) -> None:
         """
         Queue languages for translation during the next export sync.
         """
@@ -341,8 +375,8 @@ class AnvilTranslator:
         return key
 
     def _build_pack_lines(
-        self, entries: Dict[str, Optional[str]], target: str
-    ) -> List[str]:
+        self, entries: dict[str, str | None], target: str
+    ) -> list[str]:
         """
         Build the `pack.*` lines for a single pack target.
 
@@ -354,7 +388,7 @@ class AnvilTranslator:
         description_keys = set(self.PACK_DESCRIPTION_KEYS.values())
         target_description_key = self.PACK_DESCRIPTION_KEYS[target]
 
-        pack_entries: Dict[str, Optional[str]] = {}
+        pack_entries: dict[str, str | None] = {}
         for key, value in entries.items():
             if not key.startswith(self.PACK_PREFIX):
                 continue
@@ -417,13 +451,13 @@ class AnvilTranslator:
             AnvilIO.file(
                 f"{lang_code}.lang",
                 "\n".join(rp_content),
-                os.path.join(self.config.RP_PATH, "texts"),
+                Path(self.config.RP_PATH, "texts"),
                 "w",
             )
             AnvilIO.file(
                 f"{lang_code}.lang",
                 "\n".join(bp_content),
-                os.path.join(self.config.BP_PATH, "texts"),
+                Path(self.config.BP_PATH, "texts"),
                 "w",
             )
 
@@ -431,7 +465,7 @@ class AnvilTranslator:
                 AnvilIO.file(
                     f"{lang_code}.lang",
                     "\n".join(world_content),
-                    os.path.join(self.config._WORLD_PATH, "texts"),
+                    Path(self.config._WORLD_PATH, "texts"),
                     "w",
                 )
 
@@ -446,13 +480,13 @@ class AnvilTranslator:
         AnvilIO.file(
             "languages.json",
             languages,
-            os.path.join(self.config.BP_PATH, "texts"),
+            Path(self.config.BP_PATH, "texts"),
             "w",
         )
         AnvilIO.file(
             "languages.json",
             languages,
-            os.path.join(self.config.RP_PATH, "texts"),
+            Path(self.config.RP_PATH, "texts"),
             "w",
         )
 
@@ -460,6 +494,6 @@ class AnvilTranslator:
             AnvilIO.file(
                 "languages.json",
                 languages,
-                os.path.join(self.config._WORLD_PATH, "texts"),
+                Path(self.config._WORLD_PATH, "texts"),
                 "w",
             )

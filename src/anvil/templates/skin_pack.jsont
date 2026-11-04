@@ -1,5 +1,0 @@
-{
-    "serialize_name": "{{ serialize_name }}",
-    "localization_name": "{{ serialize_name }}",
-    "skins": []
-}

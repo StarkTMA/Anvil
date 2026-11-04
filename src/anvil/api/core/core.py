@@ -3,15 +3,21 @@ import io
 import math
 import shutil
 import sys
-import traceback as tb
+import uuid
 import zipfile
 from pathlib import Path
-from typing import Optional
 
 import click
+from PIL import Image
+
 from anvil.api.actors.materials import MaterialsObject
-from anvil.api.core.manifest import ManifestBP, ManifestRP
 from anvil.api.blocks.blocks_json import BlocksJSONObject
+from anvil.api.core.manifest import (
+    ManifestBP,
+    ManifestRP,
+    world_packs,
+    world_template_manifest,
+)
 from anvil.api.sounds import (
     MusicDefinition,
     ServerSoundDefinition,
@@ -24,26 +30,22 @@ from anvil.api.textures import (
     TerrainTexturesObject,
 )
 from anvil.api.world.particles import Particle
+from anvil.lib import scaffold
 from anvil.lib.blockbench import _Blockbench
 from anvil.lib.config import (
     CONFIG,
-    ConfigPackageTarget,
     AnvilConfig,
+    ConfigPackageTarget,
 )
+from anvil.lib.jsonmodel import JsonFile
 from anvil.lib.lib import (
-    AnvilArchive,
     OUTPUT,
+    AnvilArchive,
     AnvilIO,
     Directory,
     process_subcommand,
 )
-from anvil.lib.reports import ReportType
-from anvil.lib.jsonmodel import JsonFile
-from anvil.lib.schemas import JsonSchemes
 from anvil.lib.translator import AnvilTranslator
-from PIL import Image
-
-from ...__version__ import __version__
 
 
 def resize(
@@ -148,22 +150,22 @@ def extract_world_pack(extract_world: str | None = None):
 
 
 def manifests():
-    release_list = [int(i) for i in CONFIG._RELEASE.split(".")]
+    version = tuple(int(i) for i in CONFIG._RELEASE.split("."))
     AnvilIO.file(
         "manifest.json",
-        JsonSchemes.manifest_world(release_list),
+        world_template_manifest(version, str(uuid.uuid4())),
         CONFIG._WORLD_PATH,
         "w",
     )
     AnvilIO.file(
         "world_resource_packs.json",
-        JsonSchemes.world_packs(release_list, CONFIG._RP_UUID),
+        world_packs(version, CONFIG._RP_UUID),
         CONFIG._WORLD_PATH,
         "w",
     )
     AnvilIO.file(
         "world_behavior_packs.json",
-        JsonSchemes.world_packs(release_list, CONFIG._BP_UUID),
+        world_packs(version, CONFIG._BP_UUID),
         CONFIG._WORLD_PATH,
         "w",
     )
@@ -174,7 +176,7 @@ def scriptapi():
         if not Path("tsconfig.json").exists():
             AnvilIO.file(
                 "tsconfig.json",
-                JsonSchemes.tsconfig(CONFIG.BP_PATH),
+                scaffold.tsconfig(CONFIG.BP_PATH),
                 "",
                 "w",
             )
@@ -184,14 +186,14 @@ def scriptapi():
         ):
             AnvilIO.file(
                 "esbuild.js",
-                JsonSchemes.esbuild_config_js(CONFIG.BP_PATH, CONFIG._MINIFY),
+                scaffold.esbuild_js(),
                 "",
                 "w",
             )
         if not Path("package.json").exists():
             AnvilIO.file(
                 "package.json",
-                JsonSchemes.package_json(
+                scaffold.package_json(
                     CONFIG.PROJECT_NAME,
                     CONFIG._RELEASE,
                     CONFIG.PROJECT_DESCRIPTION,
@@ -203,13 +205,10 @@ def scriptapi():
 
 
 def addon_object_exception(object: JsonFile, e: Exception):
-    full_traceback = tb.format_exc()
     creation_info = f"<{object.__class__.__name__} created from:\n{''.join(getattr(object, "_created_from", None))}>"
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
-    click.echo(click.style(f"\r\nCreation Context:", fg="cyan"), err=True)
+    click.echo(click.style("\r\nCreation Context:", fg="cyan"), err=True)
     click.echo(click.style(f"\r{creation_info}", fg="white"), err=True)
-    # click.echo(click.style(f"\r\nFull Traceback:", fg="cyan"), err=True)
-    # click.echo(click.style(f"\r{full_traceback}", fg="white"), err=True)
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)
     click.echo(
         click.style(
@@ -251,7 +250,7 @@ def pack_art(apply_overlay: bool = False):
     else:
         click.echo(
             click.style(
-                f"\r[INFO]: pack_icon.png not found in marketing directory. Using placeholder pack icon.",
+                "\r[INFO]: pack_icon.png not found in marketing directory. Using placeholder pack icon.",
                 fg="yellow",
             )
         )
@@ -283,7 +282,7 @@ def pack_art(apply_overlay: bool = False):
         else:
             click.echo(
                 click.style(
-                    f"\r[INFO]: keyart.png not found in marketing directory. Cannot compile world icon.",
+                    "\r[INFO]: keyart.png not found in marketing directory. Cannot compile world icon.",
                     fg="yellow",
                 )
             )
@@ -297,7 +296,7 @@ def process_art(
     """Process marketing art for packaging."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Processing Art...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Processing Art...", fg="cyan"))
 
     pack_icon_size = (256, 256)
     store_screenshot_size = (800, 450)
@@ -356,7 +355,7 @@ def process_art(
             original = Image.open(source / "panorama.png")
             scale_factor = 450 / original.size[1]
             if (round(original.size[0] * scale_factor)) > 4000:
-                raise RuntimeError(
+                raise ValueError(
                     f"panorama.png width exceeds 4000 pixels when resized to 450 pixels in height. Please use a smaller image. The recommended original size for this image would be {math.floor(4000 / scale_factor)}x450 pixels."
                 )
 
@@ -372,7 +371,7 @@ def process_art(
         else:
             click.echo(
                 click.style(
-                    f"\r[INFO]: panorama.png does not exist. It is optional but might have been left out unintentionally.",
+                    "\r[INFO]: panorama.png does not exist. It is optional but might have been left out unintentionally.",
                     fg="yellow",
                 )
             )
@@ -443,7 +442,7 @@ def package_zip_core(
 
     process_art(config, apply_overlay)
 
-    click.echo(click.style(f"\r[INFO]: Packaging ZIP...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Packaging ZIP...", fg="cyan"))
 
     AnvilArchive.marketplace_zip()
 
@@ -455,7 +454,7 @@ def mcaddon_core(config):
     """Core logic for packaging the project into a .mcaddon file."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Packaging mcaddon...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Packaging mcaddon...", fg="cyan"))
 
     AnvilArchive.mcaddon()
     output_development_pack_sizes(CONFIG)
@@ -465,7 +464,7 @@ def mcworld_core(config: AnvilConfig):
     """Core logic for packaging the project into a .mcworld file."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Packaging mcworld...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Packaging mcworld...", fg="cyan"))
 
     AnvilArchive.mcworld()
 
@@ -481,7 +480,7 @@ def compile_objects(
     import click
 
     if not js_only and not no_compile:
-        click.echo(click.style(f"\r[INFO]: Compiling projects...", fg="cyan"))
+        click.echo(click.style("\r[INFO]: Compiling projects...", fg="cyan"))
 
     extract_world_pack(extract_world)
     scriptapi()
@@ -533,9 +532,7 @@ def compile_objects(
     if workflow:
         AnvilIO.file(
             "release.yml",
-            JsonSchemes.github_release_workflow(
-                CONFIG.PROJECT_NAME, CONFIG.DISPLAY_NAME
-            ),
+            scaffold.github_release_workflow(CONFIG.PROJECT_NAME),
             Path(".github", "workflows"),
             "w",
         )
@@ -544,7 +541,7 @@ def compile_objects(
 
     if Permutation._count > 10000:
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
-            raise RuntimeError(
+            raise ValueError(
                 f"\rTotal Block permutations exceeded 10000 ({Permutation._count}). Addons must not exceed this limit."
             )
         else:
@@ -575,20 +572,20 @@ def compile_objects(
 
     if CONFIG._TARGET == ConfigPackageTarget.ADDON:
         if len(CONFIG._RP_UUID) > 1:
-            raise RuntimeError(
+            raise ValueError(
                 "Multiple resource pack UUIDs found. Please ensure only one UUID is set for the resource pack."
             )
         if len(CONFIG._BP_UUID) > 1:
-            raise RuntimeError(
+            raise ValueError(
                 "Multiple behavior pack UUIDs found. Please ensure only one UUID is set for the behavior pack."
             )
 
 
-def translate(languages: Optional[list[str]] = None) -> None:
+def translate(languages: list[str] | None = None) -> None:
     """Translates the project."""
     import click
 
-    click.echo(click.style(f"\r[INFO]: Translating in progress...", fg="cyan"))
+    click.echo(click.style("\r[INFO]: Translating in progress...", fg="cyan"))
 
     AnvilTranslator().auto_translate_all(languages)
 
@@ -629,7 +626,7 @@ class _Anvil:
 
         self.config = CONFIG
 
-    def translate(self, languages: Optional[list[str]] = None) -> None:
+    def translate(self, languages: list[str] | None = None) -> None:
         """Translates the project."""
         translate(languages)
 
@@ -672,7 +669,7 @@ class _Anvil:
 
         if generate_technical_notes:
             click.echo(
-                click.style(f"\r[INFO]: Generating technical notes...", fg="cyan")
+                click.style("\r[INFO]: Generating technical notes...", fg="cyan")
             )
             self.config.Report.generate_report()
 
