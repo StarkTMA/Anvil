@@ -102,12 +102,14 @@ def generate_dungeon():
     # 4. Add Biome Filters
     main_structure.add_biome_filters(
         Filter.any_of(
-            Filter.has_biome_tag(MinecraftBiomeTags.Plains),
-            Filter.has_biome_tag(MinecraftBiomeTags.Forest)
+            [
+                Filter.has_biome_tag(MinecraftBiomeTags.Plains),
+                Filter.has_biome_tag(MinecraftBiomeTags.Forest),
+            ]
         )
     )
 
-    # 6. Queue everything
+    # 5. Queue everything
     for pool in pools:
         pool.queue()
     dungeon_set.queue()

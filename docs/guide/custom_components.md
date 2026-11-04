@@ -42,7 +42,7 @@ Each field is a parameter your script reads. The annotation says what the field 
 from typing import Annotated
 
 from anvil.api.blocks.components import BlockCustomComponent
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 from anvil.lib.jsonmodel import Hex, InRange, MinMax, json_field
 
 class GravityWell(BlockCustomComponent):
@@ -58,7 +58,7 @@ block.server.components.add(GravityWell(pull=4, delay=(1, 3), color=(255, 0, 0))
 # {"<namespace>:gravity_well": {"pull": 4, "delay": {"min": 1, "max": 3}, "color": "#ff0000"}}
 ```
 
-A field set to `None` is left out of the JSON. The metadata Anvil provides is in `anvil.lib.jsonmodel`: bounds (`InRange`, `NonNegative`, `Chance`, `Length`), JSON shapes (`MinMax`, `Wrapped`, `Keyed`, `Hex`, `Trigger`...) and more. `GravityWell.__schema__()` returns the JSON Schema of the component.
+A field set to `None` is left out of the JSON. The metadata Anvil provides is in `anvil.lib.jsonmodel`: bounds (`InRange`, `NonNegative`, `Chance`, `Length`), JSON shapes (`MinMax`, `Wrapped`, `Keyed`, `Hex`, `Trigger`...) and more. `GravityWell.__schema__()` returns the JSON Schema of the component, and `GravityWell.__from_json__(data)` builds one back from its parsed JSON.
 
 ## 2. Implementing Logic in TypeScript
 
@@ -116,53 +116,27 @@ system.beforeEvents.startup.subscribe((startup) => {
 });
 ```
 
-## 3. Passing Custom Parameters
+## 3. Reading Parameters in TypeScript
 
-You can pass parameters from Python to your TypeScript component.
-
-### Python Definition
-
-Create a class that inherits from `BlockCustomComponents` (or `ItemCustomComponents`) and add your parameters using `_add_field`.
-
-```python
-from anvil import CONFIG
-from anvil.api.blocks.components import BlockCustomComponents
-
-class MyBlockLogic(BlockCustomComponents):
-    _identifier = f"{CONFIG.NAMESPACE}:my_block_logic"
-
-    def __init__(self, speed: float, active: bool) -> None:
-        super().__init__(self._identifier)
-        self._add_field("speed", speed)
-        self._add_field("active", active)
-
-# Usage
-block.server.components.add(
-    MyBlockLogic(speed=5.0, active=True)
-)
-```
-
-### TypeScript Usage
-
-Define an interface for your parameters and cast `customComponentParameters.params` to it.
+The fields of the Python component arrive as `customComponentParameters.params`. Define an interface for them and cast.
 
 ```typescript
 import { BlockComponentStepOnEvent, CustomComponentParameters } from "@minecraft/server";
 
-interface MyBlockParams {
-	speed: number;
-	active: boolean;
+interface GravityWellParams {
+	pull: number;
+	delay: { min: number; max: number };
+	color?: string;
 }
 
-const myBlockLogic: BlockCustomComponent = {
+const gravityWell: BlockCustomComponent = {
 	onStepOn(e: BlockComponentStepOnEvent, params: CustomComponentParameters) {
-		const myParams = params.params as MyBlockParams;
-
-		if (myParams.active) {
-			console.log(`Speed is: ${myParams.speed}`);
-		}
+		const { pull, delay } = params.params as GravityWellParams;
+		console.log(`Pull ${pull} after ${delay.min}-${delay.max}s`);
 	},
 };
 ```
 
 Ensure your `scriptapi` flag is enabled when creating your project or added to your `anvilconfig.json`.
+
+A worked block example with a parameter and states is in [Block states, permutations and traits](block_states.md).

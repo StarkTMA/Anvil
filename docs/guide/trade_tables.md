@@ -146,11 +146,25 @@ The `.add_gives()` method returns the given item, which has the loot table funct
 
 ```python
 # Trade that gives an enchanted sword
-trade.add_gives(MinecraftItemTypes.IronSword(), 1).enchant_with_levels(
-    levels=30,
-    treasure=True
+trade.add_gives(MinecraftItemTypes.IronSword(), 1).EnchantWithLevels(
+    (20, 30), treasure=True
 )
 ```
+
+---
+
+## Attaching the Table to an Entity
+
+```python
+from anvil.api.actors.components import EntityAITradeWithPlayer, EntityEconomyTradeTable
+
+entity.server.components.add(
+    EntityEconomyTradeTable(table=table, display_name="Tinker"),
+    EntityAITradeWithPlayer(priority=1),
+)
+```
+
+`EntityEconomyTradeTable` accepts the `TradeTable` object or a path string. `EntityAITradeWithPlayer` is the AI goal that opens the trade screen.
 
 !!! check "Efficiency"
     Using the loop approach is recommended for entities with standard profession hierarchies (Novice, Apprentice, Journeyman, etc.) to keep your code DRY (Don't Repeat Yourself).

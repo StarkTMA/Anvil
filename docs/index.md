@@ -21,14 +21,26 @@ Anvil is a Python-first toolkit for creating Minecraft Bedrock content. This sit
 
 ## Tutorials
 
+Start with the three basics, then pick the topics your pack needs. Every snippet in the guides is taken from a project that compiles.
+
 - [Add a Custom Entity](guide/adding_entity.md)
 - [Add a Custom Block](guide/adding_block.md)
 - [Add a Custom Item](guide/adding_item.md)
-- [Custom Components](guide/custom_components.md)
-- [Localization](guide/localization.md)
+- [Animating an Entity](guide/entity_animations.md): animations, animation controllers, render controller arrays.
+- [Block States, Permutations and Traits](guide/block_states.md): a lit lantern that faces its placement.
+- [Spawn Rules and Loot](guide/spawning_and_loot.md): natural spawning and drops.
+- [Particles and Sounds](guide/particles_and_sounds.md): particles, sound definitions, sound events, music.
+- [Recipes and the Item Catalog](guide/recipes.md): shaped, shapeless, smelting, stonecutter, creative groups.
+- [NPC Dialogues](guide/dialogues.md)
 - [Trade Tables](guide/trade_tables.md)
-- [Using Jigsaw](guide/using_jigsaw.md)
+- [Wearables and Attachables](guide/wearables.md): armor rendered on the player.
+- [Creating a Biome](guide/custom_biome.md): generation and Vibrant Visuals.
+- [Generating Features](guide/world_features.md): ores, scattered blocks, trees.
+- [Using Jigsaw](guide/using_jigsaw.md): procedural structures.
+- [Custom Components](guide/custom_components.md): Script API logic on blocks and items.
+- [Custom Camera](guide/adding_camera.md)
 - [PBR](guide/pbr.md)
+- [Localization](guide/localization.md)
 
 ## Quick Workflow
 
