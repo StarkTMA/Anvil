@@ -16,12 +16,16 @@ Example:
 ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_tree_feature)
 """
 
-from typing import Annotated, ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar, Literal
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
 from anvil.lib.jsonmodel import (
     AtLeastOne,
+    BlockId,
     Bounds,
     Chance,
     ExactRangeMinMax,
@@ -32,7 +36,6 @@ from anvil.lib.jsonmodel import (
     RangeMinMax,
     json_field,
 )
-from anvil.lib.schemas import MinecraftBlockDescriptor
 
 _ExactMinMax = Bounds("min", "max", exact=True)
 
@@ -44,14 +47,14 @@ class _TreeDecoration(JsonObject):
     the trunk, the canopy or the roots."""
 
     decoration_chance: Annotated[float | tuple[int, int], Fraction] = json_field()
-    decoration_block: str | MinecraftBlockDescriptor | None = None
+    decoration_block: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
     num_steps: Annotated[int, NonNegative] | None = None
     step_direction: Literal["down", "up", "out", "away"] | None = None
 
 
 def _decoration(
     decoration_chance: float | tuple[int, int],
-    decoration_block: str | MinecraftBlockDescriptor | None,
+    decoration_block: str | Block | BlockDescriptor | None,
     num_steps: int | None,
     step_direction: Literal["down", "up", "out", "away"] | None,
 ) -> _TreeDecoration:
@@ -72,7 +75,7 @@ class _AcaciaCanopy(JsonObject):
     """An `acacia_canopy`."""
 
     canopy_size: Annotated[int, AtLeastOne] = json_field()
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     simplify_canopy: bool | None = None
 
 
@@ -94,7 +97,7 @@ class _Canopy(JsonObject):
         | Annotated[float | tuple[int, int], Fraction]
         | None
     ) = None
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     canopy_decoration: _TreeDecoration | None = None
 
     def set_canopy_decoration(self, decoration: _TreeDecoration) -> None:
@@ -105,7 +108,7 @@ class _Canopy(JsonObject):
 class _CherryCanopy(JsonObject):
     """A `cherry_canopy`."""
 
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     height: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     radius: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     trunk_width: Annotated[int, AtLeastOne] | None = None
@@ -124,7 +127,7 @@ class _FancyCanopy(JsonObject):
 
     height: Annotated[int, AtLeastOne] = json_field()
     radius: Annotated[int, NonNegative] = json_field()
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
 
 
 class _MangroveCanopy(JsonObject):
@@ -134,10 +137,13 @@ class _MangroveCanopy(JsonObject):
     canopy_radius: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     leaf_placement_attempts: Annotated[int, AtLeastOne] = json_field()
     leaf_blocks: list[
-        tuple[str | MinecraftBlockDescriptor, Annotated[float, NonNegative]]
+        tuple[
+            Annotated[str | Block | BlockDescriptor, BlockId],
+            Annotated[float, NonNegative],
+        ]
     ] = json_field()
     canopy_decoration: _TreeDecoration | None = None
-    hanging_block: str | MinecraftBlockDescriptor | None = None
+    hanging_block: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
     hanging_block_placement_chance: (
         Annotated[float | tuple[int, int], Fraction] | None
     ) = None
@@ -154,7 +160,7 @@ class _MegaCanopy(JsonObject):
     base_radius: Annotated[int, NonNegative] = json_field()
     core_width: Annotated[int, AtLeastOne] | None = None
     simplify_canopy: bool | None = None
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
 
 
 class _MegaPineCanopy(JsonObject):
@@ -164,7 +170,7 @@ class _MegaPineCanopy(JsonObject):
     base_radius: Annotated[int, NonNegative] = json_field()
     radius_step_modifier: Annotated[float, NonNegative] = json_field()
     core_width: Annotated[int, AtLeastOne] | None = None
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
 
 
 class _PineCanopy(JsonObject):
@@ -172,7 +178,7 @@ class _PineCanopy(JsonObject):
 
     canopy_height: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     base_radius: Annotated[int, AtLeastOne] = json_field()
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
 
 
 class _PoplarRadius(JsonObject):
@@ -185,7 +191,7 @@ class _PoplarRadius(JsonObject):
 class _PoplarCanopy(JsonObject):
     """A `poplar_canopy`."""
 
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     radius: list[_PoplarRadius] | None = None
     trunk_width: Annotated[int, AtLeastOne] | None = None
 
@@ -197,7 +203,10 @@ class _RandomSpreadCanopy(JsonObject):
     canopy_radius: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     leaf_placement_attempts: Annotated[int, AtLeastOne] = json_field()
     leaf_blocks: list[
-        tuple[str | MinecraftBlockDescriptor, Annotated[float, NonNegative]]
+        tuple[
+            Annotated[str | Block | BlockDescriptor, BlockId],
+            Annotated[float, NonNegative],
+        ]
     ] = json_field()
 
 
@@ -208,7 +217,7 @@ class _RoofedCanopy(JsonObject):
     core_width: Annotated[int, AtLeastOne] = json_field()
     outer_radius: Annotated[int, NonNegative] = json_field()
     inner_radius: Annotated[int, NonNegative] = json_field()
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
 
 
 class _SpruceCanopy(JsonObject):
@@ -217,7 +226,7 @@ class _SpruceCanopy(JsonObject):
     lower_offset: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     upper_offset: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     max_radius: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
-    leaf_block: str | MinecraftBlockDescriptor = json_field()
+    leaf_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
 
 
 class _BranchCanopy(JsonObject):
@@ -281,7 +290,7 @@ class _AcaciaTrunk(JsonObject):
     trunk_width: Annotated[int, AtLeastOne] = json_field()
     trunk_height: _TrunkHeight = json_field()
     trunk_lean: _TrunkLean = json_field()
-    trunk_block: str | MinecraftBlockDescriptor = json_field()
+    trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     branches: _AcaciaBranches | None = None
     trunk_decoration: _TreeDecoration | None = None
 
@@ -321,7 +330,7 @@ class _CherryBranches(JsonObject):
 class _CherryTrunk(JsonObject):
     """A `cherry_trunk`."""
 
-    trunk_block: str | MinecraftBlockDescriptor = json_field()
+    trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     trunk_height: _TrunkHeight = json_field()
     branches: _CherryBranches = json_field()
 
@@ -335,7 +344,7 @@ class _CherryTrunk(JsonObject):
 class _FallenTrunk(JsonObject):
     """A `fallen_trunk`."""
 
-    trunk_block: str | MinecraftBlockDescriptor = json_field()
+    trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     log_length: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     stump_height: Annotated[int | tuple[int, int], ExactRangeMinMax] | None = None
     height_modifier: Annotated[int | tuple[int, int], ExactRangeMinMax] | None = None
@@ -366,7 +375,7 @@ class _FancyBranches(JsonObject):
 class _FancyTrunk(JsonObject):
     """A `fancy_trunk`."""
 
-    trunk_block: str | MinecraftBlockDescriptor = json_field()
+    trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     trunk_width: Annotated[int, AtLeastOne] = json_field()
     trunk_height: _FancyTrunkHeight = json_field()
     branches: _FancyBranches = json_field()
@@ -393,7 +402,7 @@ class _MangroveBranches(JsonObject):
 class _MangroveTrunk(JsonObject):
     """A `mangrove_trunk`."""
 
-    trunk_block: str | MinecraftBlockDescriptor = json_field()
+    trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     trunk_width: Annotated[int, AtLeastOne] = json_field()
     trunk_height: _MangroveTrunkHeight = json_field()
     branches: _MangroveBranches | None = None
@@ -423,7 +432,7 @@ class _MegaBranches(JsonObject):
 class _MegaTrunk(JsonObject):
     """A `mega_trunk`."""
 
-    trunk_block: str | MinecraftBlockDescriptor = json_field()
+    trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     trunk_width: Annotated[int, AtLeastOne] = json_field()
     trunk_height: _TrunkHeight = json_field()
     height_modifier: Annotated[int | tuple[int, int], ExactRangeMinMax] | None = None
@@ -438,7 +447,7 @@ class _MegaTrunk(JsonObject):
 class _PoplarTrunk(JsonObject):
     """A `poplar_trunk`."""
 
-    trunk_block: str | MinecraftBlockDescriptor = json_field()
+    trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     trunk_height: Annotated[int | tuple[int, int], ExactRangeMinMax] = json_field()
     remaining_trunk_height_above_branches: (
         Annotated[int | tuple[int, int], ExactRangeMinMax] | None
@@ -456,7 +465,7 @@ class _SubmergedDepth(JsonObject):
 class _Trunk(JsonObject):
     """A `trunk`."""
 
-    trunk_block: str | MinecraftBlockDescriptor = json_field()
+    trunk_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     trunk_height: Annotated[int | tuple[int, int], RangeMinMax] = json_field()
     height_modifier: Annotated[int | tuple[int, int], ExactRangeMinMax] | None = None
     can_be_submerged: bool | _SubmergedDepth | None = None
@@ -475,7 +484,7 @@ class _Trunk(JsonObject):
 class _BaseCluster(JsonObject):
     """The `base_cluster` of a tree: clusters of the base block around its base."""
 
-    may_replace: list[str | MinecraftBlockDescriptor] = json_field()
+    may_replace: list[Annotated[str | Block | BlockDescriptor, BlockId]] = json_field()
     num_clusters: Annotated[int, AtLeastOne] = json_field()
     cluster_radius: Annotated[int, NonNegative] = json_field()
 
@@ -484,7 +493,7 @@ class _AboveRoot(JsonObject):
     """The `above_root` of mangrove roots: blocks on top of the roots."""
 
     above_root_chance: Annotated[float | tuple[int, int], Fraction] | None = None
-    above_root_block: str | MinecraftBlockDescriptor | None = None
+    above_root_block: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
 
 
 class _MangroveRoots(JsonObject):
@@ -492,12 +501,14 @@ class _MangroveRoots(JsonObject):
 
     max_root_width: Annotated[int, AtLeastOne] = json_field()
     max_root_length: Annotated[int, AtLeastOne] = json_field()
-    root_block: str | MinecraftBlockDescriptor = json_field()
+    root_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     above_root: _AboveRoot | None = None
-    muddy_root_block: str | MinecraftBlockDescriptor | None = None
-    mud_block: str | MinecraftBlockDescriptor | None = None
+    muddy_root_block: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
+    mud_block: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
     y_offset: int = json_field()
-    roots_may_grow_through: list[str | MinecraftBlockDescriptor] | None = None
+    roots_may_grow_through: (
+        list[Annotated[str | Block | BlockDescriptor, BlockId]] | None
+    ) = None
     root_decoration: _TreeDecoration | None = None
 
     def set_root_decoration(self, decoration: _TreeDecoration) -> None:
@@ -535,12 +546,16 @@ class _TreeFeature(_Feature):
     """The `minecraft:tree_feature` body."""
 
     base_block: (
-        str | MinecraftBlockDescriptor | list[str | MinecraftBlockDescriptor] | None
+        Annotated[str | Block | BlockDescriptor, BlockId]
+        | list[Annotated[str | Block | BlockDescriptor, BlockId]]
+        | None
     ) = None
     base_cluster: _BaseCluster | None = None
-    may_grow_on: list[str | MinecraftBlockDescriptor] | None = None
-    may_replace: list[str | MinecraftBlockDescriptor] | None = None
-    may_grow_through: list[str | MinecraftBlockDescriptor] | None = None
+    may_grow_on: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    may_replace: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    may_grow_through: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = (
+        None
+    )
     acacia_trunk: _AcaciaTrunk | None = None
     cherry_trunk: _CherryTrunk | None = None
     fallen_trunk: _FallenTrunk | None = None
@@ -565,14 +580,12 @@ class _TreeFeature(_Feature):
 
     def set_base_block(
         self,
-        blocks: (
-            str | MinecraftBlockDescriptor | Sequence[str | MinecraftBlockDescriptor]
-        ),
+        blocks: str | Block | BlockDescriptor | Sequence[str | Block | BlockDescriptor],
     ) -> None:
         """Sets the block, or blocks, at the base of the tree."""
         self.base_block = (
             blocks
-            if isinstance(blocks, (str, MinecraftBlockDescriptor))
+            if isinstance(blocks, (str, Block, BlockDescriptor))
             else list(blocks)
         )
 
@@ -580,16 +593,16 @@ class _TreeFeature(_Feature):
         """Sets the clusters of the base block around the base."""
         self.base_cluster = cluster
 
-    def set_may_grow_on(self, blocks: Sequence[str | MinecraftBlockDescriptor]) -> None:
+    def set_may_grow_on(self, blocks: Sequence[str | Block | BlockDescriptor]) -> None:
         """Sets the blocks the tree can grow on."""
         self.may_grow_on = _blocks(blocks)
 
-    def set_may_replace(self, blocks: Sequence[str | MinecraftBlockDescriptor]) -> None:
+    def set_may_replace(self, blocks: Sequence[str | Block | BlockDescriptor]) -> None:
         """Sets the blocks the tree may replace."""
         self.may_replace = _blocks(blocks)
 
     def set_may_grow_through(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> None:
         """Sets the blocks the tree can grow through."""
         self.may_grow_through = _blocks(blocks)
@@ -641,9 +654,9 @@ class _TreeFeatureFile(JsonObject):
 
 def _leaves(
     leaf_blocks: Sequence[
-        tuple[str | MinecraftBlockDescriptor, float] | str | MinecraftBlockDescriptor
+        tuple[str | Block | BlockDescriptor, float] | str | Block | BlockDescriptor
     ],
-) -> list[tuple[str | MinecraftBlockDescriptor, float]]:
+) -> list[tuple[str | Block | BlockDescriptor, float]]:
     """Leaf blocks with their weight, 1 for a block given alone."""
     return [
         (entry[0], float(entry[1])) if isinstance(entry, tuple) else (entry, 1.0)
@@ -675,14 +688,12 @@ class TreeFeature(Feature):
 
     def base_block(
         self,
-        blocks: (
-            str | MinecraftBlockDescriptor | Sequence[str | MinecraftBlockDescriptor]
-        ),
+        blocks: str | Block | BlockDescriptor | Sequence[str | Block | BlockDescriptor],
     ) -> "TreeFeature":
         """Sets the block at the base of the tree.
 
         Args:
-            blocks (str | MinecraftBlockDescriptor | Sequence[str | MinecraftBlockDescriptor]):
+            blocks (str | Block | BlockDescriptor | Sequence[str | Block | BlockDescriptor]):
                 The block, or blocks.
         """
         self._feature.set_base_block(blocks)
@@ -692,7 +703,7 @@ class TreeFeature(Feature):
         self,
         num_clusters: int = 1,
         cluster_radius: int = 0,
-        may_replace: Sequence[str | MinecraftBlockDescriptor] | None = None,
+        may_replace: Sequence[str | Block | BlockDescriptor] | None = None,
     ) -> "TreeFeature":
         """Sets clusters of the base block, placed at random around the base of the tree.
 
@@ -700,7 +711,7 @@ class TreeFeature(Feature):
             num_clusters (int, optional): The number of clusters. At least 1. Defaults to 1.
             cluster_radius (int, optional): The radius of each cluster. At least 0.
                 Defaults to 0.
-            may_replace (Sequence[str | MinecraftBlockDescriptor], optional): The blocks a
+            may_replace (Sequence[str | Block | BlockDescriptor], optional): The blocks a
                 cluster may replace.
         """
         self._feature.set_base_cluster(
@@ -713,34 +724,34 @@ class TreeFeature(Feature):
         return self
 
     def may_grow_on(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "TreeFeature":
         """Sets the blocks the tree can grow on.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
         """
         self._feature.set_may_grow_on(blocks)
         return self
 
     def may_replace(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "TreeFeature":
         """Sets the blocks the tree may replace.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
         """
         self._feature.set_may_replace(blocks)
         return self
 
     def may_grow_through(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "TreeFeature":
         """Sets the blocks the tree can grow through.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
         """
         self._feature.set_may_grow_through(blocks)
         return self
@@ -756,7 +767,7 @@ class TreeFeature(Feature):
 
     def trunk(
         self,
-        trunk_block: str | MinecraftBlockDescriptor,
+        trunk_block: str | Block | BlockDescriptor,
         trunk_height: int | tuple[int, int] = (4, 7),
         height_modifier: int | tuple[int, int] | None = None,
         can_be_submerged: bool | int | None = None,
@@ -764,7 +775,7 @@ class TreeFeature(Feature):
         """Sets a straight trunk.
 
         Args:
-            trunk_block (str | MinecraftBlockDescriptor): The block of the trunk.
+            trunk_block (str | Block | BlockDescriptor): The block of the trunk.
             trunk_height (int | tuple[int, int], optional): The height, or a range it is
                 picked from. Defaults to (4, 7).
             height_modifier (int | tuple[int, int], optional): Added to the height, or a
@@ -790,7 +801,7 @@ class TreeFeature(Feature):
 
     def acacia_trunk(
         self,
-        trunk_block: str | MinecraftBlockDescriptor,
+        trunk_block: str | Block | BlockDescriptor,
         trunk_width: int = 1,
         base_height: int = 5,
         height_intervals: Sequence[int] | None = None,
@@ -806,7 +817,7 @@ class TreeFeature(Feature):
         """Sets a trunk that can lean, with branches, like an acacia.
 
         Args:
-            trunk_block (str | MinecraftBlockDescriptor): The block of the trunk.
+            trunk_block (str | Block | BlockDescriptor): The block of the trunk.
             trunk_width (int, optional): The width of the trunk. At least 1. Defaults to 1.
             base_height (int, optional): The least height. At least 1. Defaults to 5.
             height_intervals (Sequence[int], optional): Each adds a random number below it
@@ -854,7 +865,7 @@ class TreeFeature(Feature):
 
     def cherry_trunk(
         self,
-        trunk_block: str | MinecraftBlockDescriptor,
+        trunk_block: str | Block | BlockDescriptor,
         base_height: int = 7,
         height_intervals: Sequence[int] | None = None,
         one_branch_weight: int = 10,
@@ -867,7 +878,7 @@ class TreeFeature(Feature):
         """Sets a trunk with one or two long branches, like a cherry tree.
 
         Args:
-            trunk_block (str | MinecraftBlockDescriptor): The block of the trunk.
+            trunk_block (str | Block | BlockDescriptor): The block of the trunk.
             base_height (int, optional): The least height. At least 2. Defaults to 7.
             height_intervals (Sequence[int], optional): Each adds a random number below it
                 to the height.
@@ -909,7 +920,7 @@ class TreeFeature(Feature):
 
     def fallen_trunk(
         self,
-        trunk_block: str | MinecraftBlockDescriptor,
+        trunk_block: str | Block | BlockDescriptor,
         log_length: int | tuple[int, int] = (4, 7),
         stump_height: int | tuple[int, int] | None = None,
         height_modifier: int | tuple[int, int] | None = None,
@@ -918,7 +929,7 @@ class TreeFeature(Feature):
         """Sets a fallen log, with an optional stump.
 
         Args:
-            trunk_block (str | MinecraftBlockDescriptor): The block of the log.
+            trunk_block (str | Block | BlockDescriptor): The block of the log.
             log_length (int | tuple[int, int], optional): The length of the log, or a range.
                 Defaults to (4, 7).
             stump_height (int | tuple[int, int], optional): The height of the stump, or a
@@ -945,7 +956,7 @@ class TreeFeature(Feature):
 
     def fancy_trunk(
         self,
-        trunk_block: str | MinecraftBlockDescriptor,
+        trunk_block: str | Block | BlockDescriptor,
         trunk_width: int = 1,
         base_height: int = 5,
         height_variance: int = 12,
@@ -959,7 +970,7 @@ class TreeFeature(Feature):
         """Sets a tall trunk with many branches, like a fancy oak.
 
         Args:
-            trunk_block (str | MinecraftBlockDescriptor): The block of the trunk.
+            trunk_block (str | Block | BlockDescriptor): The block of the trunk.
             trunk_width (int, optional): The width of the trunk. At least 1. Defaults to 1.
             base_height (int, optional): The least height. At least 1. Defaults to 5.
             height_variance (int, optional): Added to the height at random. At least 1.
@@ -996,7 +1007,7 @@ class TreeFeature(Feature):
 
     def mangrove_trunk(
         self,
-        trunk_block: str | MinecraftBlockDescriptor,
+        trunk_block: str | Block | BlockDescriptor,
         trunk_width: int = 1,
         base_height: int = 5,
         height_rand_a: int = 1,
@@ -1008,7 +1019,7 @@ class TreeFeature(Feature):
         """Sets a trunk with branches, like a mangrove. Add roots with `mangrove_roots()`.
 
         Args:
-            trunk_block (str | MinecraftBlockDescriptor): The block of the trunk.
+            trunk_block (str | Block | BlockDescriptor): The block of the trunk.
             trunk_width (int, optional): The width of the trunk. At least 1. Defaults to 1.
             base_height (int, optional): The least height. At least 1. Defaults to 5.
             height_rand_a (int, optional): The first height modifier. At least 1. Defaults
@@ -1042,7 +1053,7 @@ class TreeFeature(Feature):
 
     def mega_trunk(
         self,
-        trunk_block: str | MinecraftBlockDescriptor,
+        trunk_block: str | Block | BlockDescriptor,
         trunk_width: int = 2,
         base_height: int = 15,
         height_intervals: Sequence[int] | None = None,
@@ -1055,7 +1066,7 @@ class TreeFeature(Feature):
         """Sets a wide trunk, like a mega jungle tree or a dark oak.
 
         Args:
-            trunk_block (str | MinecraftBlockDescriptor): The block of the trunk.
+            trunk_block (str | Block | BlockDescriptor): The block of the trunk.
             trunk_width (int, optional): The width of the trunk. At least 1. Defaults to 2.
             base_height (int, optional): The least height. At least 1. Defaults to 15.
             height_intervals (Sequence[int], optional): Each adds a random number below it
@@ -1098,7 +1109,7 @@ class TreeFeature(Feature):
 
     def poplar_trunk(
         self,
-        trunk_block: str | MinecraftBlockDescriptor,
+        trunk_block: str | Block | BlockDescriptor,
         trunk_height: int | tuple[int, int] = (5, 8),
         remaining_trunk_height_above_branches: int | tuple[int, int] | None = None,
         amount_of_foliage_support_branches: int | None = None,
@@ -1107,7 +1118,7 @@ class TreeFeature(Feature):
         """Sets a tall, thin trunk, like a poplar.
 
         Args:
-            trunk_block (str | MinecraftBlockDescriptor): The block of the trunk.
+            trunk_block (str | Block | BlockDescriptor): The block of the trunk.
             trunk_height (int | tuple[int, int], optional): The height, or a range.
                 Defaults to (5, 8).
             remaining_trunk_height_above_branches (int | tuple[int, int], optional): The
@@ -1131,7 +1142,7 @@ class TreeFeature(Feature):
     def trunk_decoration(
         self,
         decoration_chance: float | tuple[int, int],
-        decoration_block: str | MinecraftBlockDescriptor | None = None,
+        decoration_block: str | Block | BlockDescriptor | None = None,
         num_steps: int | None = None,
         step_direction: Literal["down", "up", "out", "away"] | None = None,
     ) -> "TreeFeature":
@@ -1140,7 +1151,7 @@ class TreeFeature(Feature):
         Args:
             decoration_chance (float | tuple[int, int]): The chance of a decoration: a
                 number or a `(numerator, denominator)` fraction.
-            decoration_block (str | MinecraftBlockDescriptor, optional): The block placed.
+            decoration_block (str | Block | BlockDescriptor, optional): The block placed.
             num_steps (int, optional): How many blocks are placed.
             step_direction (Literal["down", "up", "out", "away"], optional): The direction
                 the blocks spread in.
@@ -1188,7 +1199,7 @@ class TreeFeature(Feature):
 
     def acacia_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         canopy_size: int = 3,
         simplify_canopy: bool = False,
         sync_to_branches: bool = True,
@@ -1196,7 +1207,7 @@ class TreeFeature(Feature):
         """Sets a flat canopy, like an acacia.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             canopy_size (int, optional): The size of the canopy. At least 1. Defaults to 3.
             simplify_canopy (bool, optional): Use a simpler pattern. Defaults to False.
             sync_to_branches (bool, optional): Also grow it at the end of the trunk's
@@ -1214,7 +1225,7 @@ class TreeFeature(Feature):
 
     def canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         min_width: int | None = None,
         canopy_offset_min: int | None = None,
         canopy_offset_max: int | None = None,
@@ -1226,7 +1237,7 @@ class TreeFeature(Feature):
         """Sets a layered canopy, like an oak or a birch.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             min_width (int, optional): The least width of the canopy. At least 0.
             canopy_offset_min (int, optional): The lowest layer, from the block above the
                 trunk. Set with `canopy_offset_max`.
@@ -1265,7 +1276,7 @@ class TreeFeature(Feature):
 
     def cherry_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         height: int | tuple[int, int] = 4,
         radius: int | tuple[int, int] = 4,
         trunk_width: int | None = None,
@@ -1280,7 +1291,7 @@ class TreeFeature(Feature):
         Chances are percentages, or `(numerator, denominator)` fractions.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             height (int | tuple[int, int], optional): The number of layers, or a range.
                 Defaults to 4.
             radius (int | tuple[int, int], optional): The radius, or a range. Defaults to 4.
@@ -1313,7 +1324,7 @@ class TreeFeature(Feature):
 
     def fancy_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         height: int = 4,
         radius: int = 4,
         sync_to_branches: bool = True,
@@ -1321,7 +1332,7 @@ class TreeFeature(Feature):
         """Sets the round canopy of a fancy oak.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             height (int, optional): The number of layers. At least 1. Defaults to 4.
             radius (int, optional): The radius. At least 0. Defaults to 4.
             sync_to_branches (bool, optional): Also grow it at the end of the trunk's
@@ -1336,21 +1347,23 @@ class TreeFeature(Feature):
     def mangrove_canopy(
         self,
         leaf_blocks: Sequence[
-            tuple[str | MinecraftBlockDescriptor, float]
+            tuple[str | Block | BlockDescriptor, float]
             | str
-            | MinecraftBlockDescriptor
+            | str
+            | Block
+            | BlockDescriptor
         ],
         canopy_height: int | tuple[int, int] = (3, 5),
         canopy_radius: int | tuple[int, int] = (3, 5),
         leaf_placement_attempts: int = 100,
-        hanging_block: str | MinecraftBlockDescriptor | None = None,
+        hanging_block: str | Block | BlockDescriptor | None = None,
         hanging_block_placement_chance: float | tuple[int, int] | None = None,
         sync_to_branches: bool = True,
     ) -> "TreeFeature":
         """Sets a canopy of leaves placed at random, with hanging blocks, like a mangrove.
 
         Args:
-            leaf_blocks (Sequence[tuple[str | MinecraftBlockDescriptor, float] | str | MinecraftBlockDescriptor]):
+            leaf_blocks (Sequence[tuple[str | Block | BlockDescriptor, float] | str | Block | BlockDescriptor]):
                 The leaf blocks, with their weight; 1 for a block given alone.
             canopy_height (int | tuple[int, int], optional): The number of layers, or a
                 range. Defaults to (3, 5).
@@ -1358,7 +1371,7 @@ class TreeFeature(Feature):
                 Defaults to (3, 5).
             leaf_placement_attempts (int, optional): How many times a leaf is tried. At
                 least 1. Defaults to 100.
-            hanging_block (str | MinecraftBlockDescriptor, optional): The block hanging
+            hanging_block (str | Block | BlockDescriptor, optional): The block hanging
                 under the leaves.
             hanging_block_placement_chance (float | tuple[int, int], optional): The chance
                 of a hanging block: a number or a `(numerator, denominator)` fraction.
@@ -1380,7 +1393,7 @@ class TreeFeature(Feature):
 
     def mega_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         canopy_height: int | tuple[int, int] = (4, 6),
         base_radius: int = 4,
         core_width: int = 2,
@@ -1390,7 +1403,7 @@ class TreeFeature(Feature):
         """Sets the wide canopy of a mega tree.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             canopy_height (int | tuple[int, int], optional): The number of layers, or a
                 range. Defaults to (4, 6).
             base_radius (int, optional): The radius. At least 0. Defaults to 4.
@@ -1413,7 +1426,7 @@ class TreeFeature(Feature):
 
     def mega_pine_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         canopy_height: int | tuple[int, int] = (8, 12),
         base_radius: int = 4,
         radius_step_modifier: float = 0.5,
@@ -1423,7 +1436,7 @@ class TreeFeature(Feature):
         """Sets the canopy of a mega spruce.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             canopy_height (int | tuple[int, int], optional): The number of layers, or a
                 range. Defaults to (8, 12).
             base_radius (int, optional): The radius. At least 0. Defaults to 4.
@@ -1447,7 +1460,7 @@ class TreeFeature(Feature):
 
     def pine_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         canopy_height: int | tuple[int, int] = (4, 5),
         base_radius: int = 2,
         sync_to_branches: bool = True,
@@ -1455,7 +1468,7 @@ class TreeFeature(Feature):
         """Sets the canopy of a pine.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             canopy_height (int | tuple[int, int], optional): The number of layers, or a
                 range. Defaults to (4, 5).
             base_radius (int, optional): The radius. At least 1. Defaults to 2.
@@ -1474,7 +1487,7 @@ class TreeFeature(Feature):
 
     def poplar_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         radius: Sequence[tuple[int, int]] | None = None,
         trunk_width: int | None = None,
         sync_to_branches: bool = True,
@@ -1482,7 +1495,7 @@ class TreeFeature(Feature):
         """Sets the canopy of a poplar.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             radius (Sequence[tuple[int, int]], optional): `(radius, weight)` pairs the
                 radius is picked from.
             trunk_width (int, optional): The width of the trunk. At least 1.
@@ -1509,9 +1522,11 @@ class TreeFeature(Feature):
     def random_spread_canopy(
         self,
         leaf_blocks: Sequence[
-            tuple[str | MinecraftBlockDescriptor, float]
+            tuple[str | Block | BlockDescriptor, float]
             | str
-            | MinecraftBlockDescriptor
+            | str
+            | Block
+            | BlockDescriptor
         ],
         canopy_height: int | tuple[int, int] = (3, 5),
         canopy_radius: int | tuple[int, int] = (3, 5),
@@ -1521,7 +1536,7 @@ class TreeFeature(Feature):
         """Sets a canopy of leaves placed at random, like an azalea.
 
         Args:
-            leaf_blocks (Sequence[tuple[str | MinecraftBlockDescriptor, float] | str | MinecraftBlockDescriptor]):
+            leaf_blocks (Sequence[tuple[str | Block | BlockDescriptor, float] | str | Block | BlockDescriptor]):
                 The leaf blocks, with their weight; 1 for a block given alone.
             canopy_height (int | tuple[int, int], optional): The number of layers, or a
                 range. Defaults to (3, 5).
@@ -1545,7 +1560,7 @@ class TreeFeature(Feature):
 
     def roofed_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         canopy_height: int = 3,
         core_width: int = 1,
         outer_radius: int = 3,
@@ -1555,7 +1570,7 @@ class TreeFeature(Feature):
         """Sets the flat, wide canopy of a dark oak.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             canopy_height (int, optional): The number of middle layers. At least 3.
                 Defaults to 3.
             core_width (int, optional): The width of the trunk. At least 1. Defaults to 1.
@@ -1580,7 +1595,7 @@ class TreeFeature(Feature):
 
     def spruce_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         lower_offset: int | tuple[int, int] = (0, 0),
         upper_offset: int | tuple[int, int] = (0, 0),
         max_radius: int | tuple[int, int] = (2, 3),
@@ -1589,7 +1604,7 @@ class TreeFeature(Feature):
         """Sets the canopy of a spruce.
 
         Args:
-            leaf_block (str | MinecraftBlockDescriptor): The block of the canopy.
+            leaf_block (str | Block | BlockDescriptor): The block of the canopy.
             lower_offset (int | tuple[int, int], optional): The lowest layer, or a range.
                 Defaults to (0, 0).
             upper_offset (int | tuple[int, int], optional): The highest layer, or a range.
@@ -1613,7 +1628,7 @@ class TreeFeature(Feature):
     def canopy_decoration(
         self,
         decoration_chance: float | tuple[int, int],
-        decoration_block: str | MinecraftBlockDescriptor | None = None,
+        decoration_block: str | Block | BlockDescriptor | None = None,
         num_steps: int | None = None,
         step_direction: Literal["down", "up", "out", "away"] | None = None,
     ) -> "TreeFeature":
@@ -1623,7 +1638,7 @@ class TreeFeature(Feature):
         Args:
             decoration_chance (float | tuple[int, int]): The chance of a decoration: a
                 number or a `(numerator, denominator)` fraction.
-            decoration_block (str | MinecraftBlockDescriptor, optional): The block placed.
+            decoration_block (str | Block | BlockDescriptor, optional): The block placed.
             num_steps (int, optional): How many blocks are placed.
             step_direction (Literal["down", "up", "out", "away"], optional): The direction
                 the blocks spread in.
@@ -1647,7 +1662,7 @@ class TreeFeature(Feature):
 
     def branch_cherry_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         height: int | tuple[int, int] = 4,
         radius: int | tuple[int, int] = 4,
         trunk_width: int | None = None,
@@ -1674,7 +1689,7 @@ class TreeFeature(Feature):
 
     def branch_fancy_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         height: int = 4,
         radius: int = 4,
     ) -> "TreeFeature":
@@ -1687,7 +1702,7 @@ class TreeFeature(Feature):
 
     def branch_acacia_canopy(
         self,
-        leaf_block: str | MinecraftBlockDescriptor,
+        leaf_block: str | Block | BlockDescriptor,
         canopy_size: int = 3,
         simplify_canopy: bool = False,
     ) -> "TreeFeature":
@@ -1706,32 +1721,32 @@ class TreeFeature(Feature):
 
     def mangrove_roots(
         self,
-        root_block: str | MinecraftBlockDescriptor,
-        muddy_root_block: str | MinecraftBlockDescriptor | None = None,
+        root_block: str | Block | BlockDescriptor,
+        muddy_root_block: str | Block | BlockDescriptor | None = None,
         max_root_width: int = 5,
         max_root_length: int = 15,
         y_offset: int = 0,
-        roots_may_grow_through: Sequence[str | MinecraftBlockDescriptor] | None = None,
-        mud_block: str | MinecraftBlockDescriptor | None = None,
-        above_root_block: str | MinecraftBlockDescriptor | None = None,
+        roots_may_grow_through: Sequence[str | Block | BlockDescriptor] | None = None,
+        mud_block: str | Block | BlockDescriptor | None = None,
+        above_root_block: str | Block | BlockDescriptor | None = None,
         above_root_chance: float | tuple[int, int] | None = None,
     ) -> "TreeFeature":
         """Sets the roots of a mangrove.
 
         Args:
-            root_block (str | MinecraftBlockDescriptor): The block of the roots.
-            muddy_root_block (str | MinecraftBlockDescriptor, optional): The block of the
+            root_block (str | Block | BlockDescriptor): The block of the roots.
+            muddy_root_block (str | Block | BlockDescriptor, optional): The block of the
                 roots in mud.
             max_root_width (int, optional): The widest the roots get, growing down. At
                 least 1. Defaults to 5.
             max_root_length (int, optional): The longest a root gets. At least 1. Defaults
                 to 15.
             y_offset (int, optional): The offset of the roots from the trunk. Defaults to 0.
-            roots_may_grow_through (Sequence[str | MinecraftBlockDescriptor], optional): The
+            roots_may_grow_through (Sequence[str | Block | BlockDescriptor], optional): The
                 blocks roots can grow through.
-            mud_block (str | MinecraftBlockDescriptor, optional): The block where a muddy
+            mud_block (str | Block | BlockDescriptor, optional): The block where a muddy
                 root is placed.
-            above_root_block (str | MinecraftBlockDescriptor, optional): A block placed on
+            above_root_block (str | Block | BlockDescriptor, optional): A block placed on
                 top of the roots.
             above_root_chance (float | tuple[int, int], optional): The chance of that block:
                 a number or a `(numerator, denominator)` fraction.
@@ -1764,7 +1779,7 @@ class TreeFeature(Feature):
     def root_decoration(
         self,
         decoration_chance: float | tuple[int, int],
-        decoration_block: str | MinecraftBlockDescriptor | None = None,
+        decoration_block: str | Block | BlockDescriptor | None = None,
         num_steps: int | None = None,
         step_direction: Literal["down", "up", "out", "away"] | None = None,
     ) -> "TreeFeature":
@@ -1773,7 +1788,7 @@ class TreeFeature(Feature):
         Args:
             decoration_chance (float | tuple[int, int]): The chance of a decoration: a
                 number or a `(numerator, denominator)` fraction.
-            decoration_block (str | MinecraftBlockDescriptor, optional): The block placed.
+            decoration_block (str | Block | BlockDescriptor, optional): The block placed.
             num_steps (int, optional): How many blocks are placed.
             step_direction (Literal["down", "up", "out", "away"], optional): The direction
                 the blocks spread in.

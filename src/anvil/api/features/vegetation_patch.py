@@ -1,24 +1,29 @@
 """The `minecraft:vegetation_patch_feature`."""
 
-from typing import Annotated, ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar, Literal
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
 from anvil.lib.jsonmodel import (
+    BlockId,
     Chance,
     ExactRangeMinMax,
     JsonObject,
     NonNegative,
     json_field,
 )
-from anvil.lib.schemas import MinecraftBlockDescriptor
 
 
 class _VegetationPatchFeature(_Feature):
     """The `minecraft:vegetation_patch_feature` body."""
 
-    replaceable_blocks: list[str | MinecraftBlockDescriptor] | None = None
-    ground_block: str | MinecraftBlockDescriptor = json_field()
+    replaceable_blocks: (
+        list[Annotated[str | Block | BlockDescriptor, BlockId]] | None
+    ) = None
+    ground_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     vegetation_feature: str = json_field()
     surface: Literal["floor", "ceiling"] | None = None
     depth: Annotated[float | tuple[float, float], ExactRangeMinMax] = json_field()
@@ -32,7 +37,7 @@ class _VegetationPatchFeature(_Feature):
     waterlogged: bool | None = None
 
     def set_replaceable_blocks(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> None:
         """Sets the blocks the ground block may replace."""
         self.replaceable_blocks = _blocks(blocks)
@@ -67,7 +72,7 @@ class VegetationPatchFeature(Feature):
     def __init__(
         self,
         name: str,
-        ground_block: str | MinecraftBlockDescriptor,
+        ground_block: str | Block | BlockDescriptor,
         vegetation_feature: "Feature | str",
         depth: float | tuple[float, float],
         vertical_range: int,
@@ -82,7 +87,7 @@ class VegetationPatchFeature(Feature):
 
         Args:
             name (str): The name of the feature, also its file name.
-            ground_block (str | MinecraftBlockDescriptor): The block the patch is made of.
+            ground_block (str | Block | BlockDescriptor): The block the patch is made of.
             vegetation_feature (Feature | str): The feature placed on the patch.
             depth (float | tuple[float, float]): How deep the ground blocks go, or a range
                 it is picked from.
@@ -118,12 +123,12 @@ class VegetationPatchFeature(Feature):
         )
 
     def replaceable_blocks(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "VegetationPatchFeature":
         """Sets the blocks the ground blocks may replace.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
         """
         self._feature.set_replaceable_blocks(blocks)
         return self

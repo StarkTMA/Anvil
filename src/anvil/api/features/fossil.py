@@ -2,10 +2,11 @@
 
 from typing import Annotated, ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
-from anvil.lib.jsonmodel import JsonObject, NonNegative, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import BlockId, JsonObject, NonNegative, json_field
 
 
 class _FossilFeature(_Feature):
@@ -13,11 +14,11 @@ class _FossilFeature(_Feature):
 
     __required__: ClassVar[tuple[str, ...]] = ("ore_block", "max_empty_corners")
 
-    ore_block: str | MinecraftBlockDescriptor | None = None
+    ore_block: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
     max_empty_corners: Annotated[int, NonNegative] | None = None
 
     def set_fossil(
-        self, ore_block: str | MinecraftBlockDescriptor, max_empty_corners: int
+        self, ore_block: str | Block | BlockDescriptor, max_empty_corners: int
     ) -> None:
         """Sets the ore block and how many corners may be empty."""
         self.ore_block = ore_block
@@ -59,14 +60,14 @@ class FossilFeature(Feature):
     def __init__(
         self,
         name: str,
-        ore_block: str | MinecraftBlockDescriptor,
+        ore_block: str | Block | BlockDescriptor,
         max_empty_corners: int,
     ) -> None:
         """Creates a fossil feature.
 
         Args:
             name (str): The name of the feature, also its file name.
-            ore_block (str | MinecraftBlockDescriptor): The ore block in the fossil.
+            ore_block (str | Block | BlockDescriptor): The ore block in the fossil.
             max_empty_corners (int): How many corners of the bounding box may be air or
                 fluid. At least 0.
         """

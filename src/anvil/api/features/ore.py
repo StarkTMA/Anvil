@@ -1,19 +1,31 @@
 """The `minecraft:ore_feature`."""
 
-from typing import Annotated, ClassVar, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
-from anvil.lib.jsonmodel import AtLeastOne, Chance, JsonObject, Length, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import (
+    AtLeastOne,
+    BlockId,
+    Chance,
+    JsonObject,
+    Length,
+    json_field,
+)
 
 
 class _OreReplaceRule(JsonObject):
     """A `replace_rules` entry of an ore feature."""
 
-    places_block: str | MinecraftBlockDescriptor = json_field()
+    places_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     may_replace: (
-        Annotated[list[str | MinecraftBlockDescriptor], Length(minimum=1)] | None
+        Annotated[
+            list[Annotated[str | Block | BlockDescriptor, BlockId]], Length(minimum=1)
+        ]
+        | None
     ) = None
 
 
@@ -36,8 +48,8 @@ class _OreFeature(_Feature):
 
     def add_replace_rule(
         self,
-        places_block: str | MinecraftBlockDescriptor,
-        may_replace: Sequence[str | MinecraftBlockDescriptor] | None = None,
+        places_block: str | Block | BlockDescriptor,
+        may_replace: Sequence[str | Block | BlockDescriptor] | None = None,
     ) -> None:
         """Adds a rule: the block placed, and the blocks it may replace."""
         rule = _OreReplaceRule(
@@ -102,14 +114,14 @@ class OreFeature(Feature):
 
     def add_replace_rule(
         self,
-        places_block: str | MinecraftBlockDescriptor,
-        may_replace: Sequence[str | MinecraftBlockDescriptor] | None = None,
+        places_block: str | Block | BlockDescriptor,
+        may_replace: Sequence[str | Block | BlockDescriptor] | None = None,
     ) -> "OreFeature":
         """Adds a replace rule.
 
         Args:
-            places_block (str | MinecraftBlockDescriptor): The block placed.
-            may_replace (Sequence[str | MinecraftBlockDescriptor], optional): The blocks it
+            places_block (str | Block | BlockDescriptor): The block placed.
+            may_replace (Sequence[str | Block | BlockDescriptor], optional): The blocks it
                 may replace. Any block when left out.
         """
         self._feature.add_replace_rule(places_block, may_replace)

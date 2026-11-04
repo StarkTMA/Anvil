@@ -1,13 +1,14 @@
 """Feature rules: they attach one feature to biomes, and say when and where it is placed."""
 
-from typing import ClassVar, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 
-from anvil.api.core.enums import FeatureRulePlacementPass
 from anvil.api.core.filters import Filter
 from anvil.api.features.feature import DistributionMixin, Feature, _ScatterParams
 from anvil.lib.config import Pack
 from anvil.lib.format_versions import FEATURE_RULE_VERSION
 from anvil.lib.jsonmodel import JsonFile, JsonObject, json_field
+from anvil.lib.jsonmodel.enums import FeatureRulePlacementPass
 
 
 class _FeatureRuleDescription(JsonObject):

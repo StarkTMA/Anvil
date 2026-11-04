@@ -2,17 +2,18 @@
 
 from typing import Annotated, ClassVar, Literal
 
-from anvil.api.core.enums import BlockFaceValues
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
-from anvil.lib.jsonmodel import Chance, InRange, JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import BlockId, Chance, InRange, JsonObject, json_field
+from anvil.lib.jsonmodel.enums import BlockFaceValues
 
 
 class _PartiallyExposedBlobFeature(_Feature):
     """The `minecraft:partially_exposed_blob_feature` body."""
 
-    places_block: str | MinecraftBlockDescriptor = json_field()
+    places_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     placement_radius_around_floor: Annotated[int, InRange(1, 8)] = json_field()
     placement_probability_per_valid_position: Annotated[float, Chance] = json_field()
     exposed_face: Literal["up", "down", "north", "south", "east", "west"] | None = None
@@ -48,7 +49,7 @@ class PartiallyExposedBlobFeature(Feature):
     def __init__(
         self,
         name: str,
-        places_block: str | MinecraftBlockDescriptor,
+        places_block: str | Block | BlockDescriptor,
         placement_radius_around_floor: int,
         placement_probability_per_valid_position: float,
         exposed_face: BlockFaceValues | None = BlockFaceValues.Up,
@@ -57,7 +58,7 @@ class PartiallyExposedBlobFeature(Feature):
 
         Args:
             name (str): The name of the feature, also its file name.
-            places_block (str | MinecraftBlockDescriptor): The block placed.
+            places_block (str | Block | BlockDescriptor): The block placed.
             placement_radius_around_floor (int): The cubic radius of the blob, from 1 to 8.
             placement_probability_per_valid_position (float): The chance a block is placed
                 at each valid position, from 0 to 1.

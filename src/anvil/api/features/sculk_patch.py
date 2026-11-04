@@ -1,24 +1,29 @@
 """The `minecraft:sculk_patch_feature`."""
 
-from typing import Annotated, ClassVar, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
 from anvil.lib.jsonmodel import (
+    BlockId,
     Chance,
     ExactRangeMinMax,
     InRange,
     JsonObject,
     json_field,
 )
-from anvil.lib.schemas import MinecraftBlockDescriptor
 
 
 class _SculkPatchFeature(_Feature):
     """The `minecraft:sculk_patch_feature` body."""
 
-    can_place_sculk_patch_on: list[str | MinecraftBlockDescriptor] = json_field()
-    central_block: str | MinecraftBlockDescriptor | None = None
+    can_place_sculk_patch_on: list[
+        Annotated[str | Block | BlockDescriptor, BlockId]
+    ] = json_field()
+    central_block: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
     central_block_placement_chance: Annotated[float, Chance] | None = None
     cursor_count: Annotated[int, InRange(0, 32)] = json_field()
     charge_amount: Annotated[int, InRange(1, 1000)] = json_field()
@@ -30,14 +35,14 @@ class _SculkPatchFeature(_Feature):
     ) = None
 
     def set_can_place_sculk_patch_on(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> None:
         """Sets the blocks the patch can be placed on."""
         self.can_place_sculk_patch_on = _blocks(blocks)
 
     def set_central_block(
         self,
-        block: str | MinecraftBlockDescriptor,
+        block: str | Block | BlockDescriptor,
         placement_chance: float | None = None,
     ) -> None:
         """Sets the block placed at the centre of the patch, and the chance it is placed."""
@@ -80,13 +85,13 @@ class SculkPatchFeature(Feature):
     def __init__(
         self,
         name: str,
-        can_place_sculk_patch_on: Sequence[str | MinecraftBlockDescriptor],
+        can_place_sculk_patch_on: Sequence[str | Block | BlockDescriptor],
         cursor_count: int,
         charge_amount: int,
         spread_attempts: int,
         growth_rounds: int,
         spread_rounds: int,
-        central_block: str | MinecraftBlockDescriptor | None = None,
+        central_block: str | Block | BlockDescriptor | None = None,
         central_block_placement_chance: float | None = None,
         extra_growth_chance: float | tuple[float, float] | None = None,
     ) -> None:
@@ -94,14 +99,14 @@ class SculkPatchFeature(Feature):
 
         Args:
             name (str): The name of the feature, also its file name.
-            can_place_sculk_patch_on (Sequence[str | MinecraftBlockDescriptor]): The blocks
+            can_place_sculk_patch_on (Sequence[str | Block | BlockDescriptor]): The blocks
                 the patch can be placed on.
             cursor_count (int): The number of cursors, from 0 to 32.
             charge_amount (int): The charge of each cursor, from 1 to 1000.
             spread_attempts (int): The spread attempts of each cursor, from 1 to 64.
             growth_rounds (int): The growth rounds, from 0 to 8.
             spread_rounds (int): The spread rounds, from 0 to 8.
-            central_block (str | MinecraftBlockDescriptor, optional): The block at the
+            central_block (str | Block | BlockDescriptor, optional): The block at the
                 centre of the patch.
             central_block_placement_chance (float, optional): The chance the central block
                 is placed, from 0 to 1.
@@ -126,25 +131,25 @@ class SculkPatchFeature(Feature):
             self._feature.set_extra_growth_chance(extra_growth_chance)
 
     def can_place_sculk_patch_on(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "SculkPatchFeature":
         """Sets the blocks the patch can be placed on.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
         """
         self._feature.set_can_place_sculk_patch_on(blocks)
         return self
 
     def central_block(
         self,
-        block: str | MinecraftBlockDescriptor,
+        block: str | Block | BlockDescriptor,
         placement_chance: float | None = None,
     ) -> "SculkPatchFeature":
         """Sets the block placed at the centre of the patch.
 
         Args:
-            block (str | MinecraftBlockDescriptor): The block.
+            block (str | Block | BlockDescriptor): The block.
             placement_chance (float, optional): The chance it is placed, from 0 to 1.
         """
         self._feature.set_central_block(block, placement_chance)

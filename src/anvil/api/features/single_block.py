@@ -1,18 +1,20 @@
 """The `minecraft:single_block_feature`."""
 
-from typing import Annotated, ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar, Literal
 
-from anvil.api.core.enums import BlockFaceValues
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
-from anvil.lib.jsonmodel import InRange, JsonObject, NonNegative, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import BlockId, InRange, JsonObject, NonNegative, json_field
+from anvil.lib.jsonmodel.enums import BlockFaceValues
 
 
 class _WeightedBlock(JsonObject):
     """A block of a single block feature's `places_block`, with its weight."""
 
-    block: str | MinecraftBlockDescriptor = json_field()
+    block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     weight: Annotated[float, NonNegative] = json_field()
 
 
@@ -20,20 +22,20 @@ class _MayNotAttachTo(JsonObject):
     """The `may_not_attach_to` of a single block feature: the blocks the block may not be
     next to, by face."""
 
-    top: list[str | MinecraftBlockDescriptor] | None = None
-    bottom: list[str | MinecraftBlockDescriptor] | None = None
-    north: list[str | MinecraftBlockDescriptor] | None = None
-    east: list[str | MinecraftBlockDescriptor] | None = None
-    south: list[str | MinecraftBlockDescriptor] | None = None
-    west: list[str | MinecraftBlockDescriptor] | None = None
-    all: list[str | MinecraftBlockDescriptor] | None = None
-    sides: list[str | MinecraftBlockDescriptor] | None = None
-    diagonal: list[str | MinecraftBlockDescriptor] | None = None
+    top: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    bottom: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    north: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    east: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    south: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    west: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    all: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    sides: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
+    diagonal: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
 
     def add_face(
         self,
         face: BlockFaceValues | Literal["diagonal"],
-        blocks: Sequence[str | MinecraftBlockDescriptor],
+        blocks: Sequence[str | Block | BlockDescriptor],
     ) -> None:
         """Adds blocks to a face: `Up` is the top face, `Down` the bottom one and `Side`
         every side face."""
@@ -73,10 +75,10 @@ class _SingleBlockFeature(_Feature):
     randomize_rotation: bool | None = None
     may_attach_to: _MayAttachTo | None = None
     may_not_attach_to: _MayNotAttachTo | None = None
-    may_replace: list[str | MinecraftBlockDescriptor] | None = None
+    may_replace: list[Annotated[str | Block | BlockDescriptor, BlockId]] | None = None
 
     def add_places_block(
-        self, block: str | MinecraftBlockDescriptor, weight: float
+        self, block: str | Block | BlockDescriptor, weight: float
     ) -> None:
         """Adds a block that can be placed, with its weight."""
         self.places_block.append(_WeightedBlock(block=block, weight=weight))
@@ -95,7 +97,7 @@ class _SingleBlockFeature(_Feature):
     def add_may_attach_to(
         self,
         face: BlockFaceValues | Literal["diagonal"],
-        blocks: Sequence[str | MinecraftBlockDescriptor],
+        blocks: Sequence[str | Block | BlockDescriptor],
         min_sides_must_attach: int | None,
         auto_rotate: bool | None,
     ) -> None:
@@ -108,14 +110,14 @@ class _SingleBlockFeature(_Feature):
     def add_may_not_attach_to(
         self,
         face: BlockFaceValues | Literal["diagonal"],
-        blocks: Sequence[str | MinecraftBlockDescriptor],
+        blocks: Sequence[str | Block | BlockDescriptor],
     ) -> None:
         """Adds blocks the block may not be placed next to on a face."""
         if self.may_not_attach_to is None:
             self.may_not_attach_to = _MayNotAttachTo()
         self.may_not_attach_to.add_face(face, blocks)
 
-    def set_may_replace(self, blocks: Sequence[str | MinecraftBlockDescriptor]) -> None:
+    def set_may_replace(self, blocks: Sequence[str | Block | BlockDescriptor]) -> None:
         """Sets the blocks the block may replace."""
         self.may_replace = _blocks(blocks)
 
@@ -178,12 +180,12 @@ class SingleBlockFeature(Feature):
         )
 
     def place_block(
-        self, block: str | MinecraftBlockDescriptor, weight: float = 1.0
+        self, block: str | Block | BlockDescriptor, weight: float = 1.0
     ) -> "SingleBlockFeature":
         """Adds a block that can be placed.
 
         Args:
-            block (str | MinecraftBlockDescriptor): The block.
+            block (str | Block | BlockDescriptor): The block.
             weight (float, optional): Its weight, relative to the others. Defaults to 1.
         """
         self._feature.add_places_block(block, weight)
@@ -192,7 +194,7 @@ class SingleBlockFeature(Feature):
     def may_attach_to(
         self,
         face: BlockFaceValues | Literal["diagonal"],
-        blocks: Sequence[str | MinecraftBlockDescriptor],
+        blocks: Sequence[str | Block | BlockDescriptor],
         min_sides_must_attach: int | None = 1,
         auto_rotate: bool | None = False,
     ) -> "SingleBlockFeature":
@@ -201,7 +203,7 @@ class SingleBlockFeature(Feature):
         Args:
             face (BlockFaceValues | Literal["diagonal"]): The face: `Up` is the top face,
                 `Down` the bottom one, `Side` every side face and `All` every face.
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
             min_sides_must_attach (int, optional): How many side faces must pass, from 1 to
                 4. Defaults to 1; None leaves it as it is.
             auto_rotate (bool, optional): Rotate the block to attach sensibly, unless the
@@ -215,7 +217,7 @@ class SingleBlockFeature(Feature):
     def may_not_attach_to(
         self,
         face: BlockFaceValues | Literal["diagonal"],
-        blocks: Sequence[str | MinecraftBlockDescriptor],
+        blocks: Sequence[str | Block | BlockDescriptor],
     ) -> "SingleBlockFeature":
         """Adds blocks the block may not be placed next to on a face. Call it once per
         face.
@@ -223,18 +225,18 @@ class SingleBlockFeature(Feature):
         Args:
             face (BlockFaceValues | Literal["diagonal"]): The face: `Up` is the top face,
                 `Down` the bottom one, `Side` every side face and `All` every face.
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
         """
         self._feature.add_may_not_attach_to(face, blocks)
         return self
 
     def may_replace(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "SingleBlockFeature":
         """Sets the blocks the block may replace.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
         """
         self._feature.set_may_replace(blocks)
         return self

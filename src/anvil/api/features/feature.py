@@ -6,11 +6,13 @@ feature, `_XFeatureFile` is the document written to the file (`format_version` a
 body under its `minecraft:` key), and `XFeature` is the file class you create and build.
 """
 
-from typing import Annotated, Any, ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, Any, ClassVar, Literal
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.lib.config import Pack
 from anvil.lib.jsonmodel import AtLeastOne, Fraction, JsonFile, JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
 
 
 class CoordinateRange(JsonObject):
@@ -158,10 +160,6 @@ class Feature(JsonFile):
         Raises:
             TypeError: When `Feature` itself is created rather than a feature type.
         """
-        if self._document is None:
-            raise TypeError(
-                "Feature is the base of the feature types: create one of them, such as ScatterFeature."
-            )
         super().__init__(name)
         if self._content.feature is not None:
             self._feature.description.set_identifier(self.identifier)
@@ -181,8 +179,8 @@ class Feature(JsonFile):
 
 
 def _blocks(
-    blocks: Sequence[str | MinecraftBlockDescriptor],
-) -> list[str | MinecraftBlockDescriptor]:
+    blocks: Sequence[str | Block | BlockDescriptor],
+) -> list[str | Block | BlockDescriptor]:
     if isinstance(blocks, str):
         raise TypeError(f"Expected a list of blocks, got the string {blocks!r}.")
     return list(blocks)

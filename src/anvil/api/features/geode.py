@@ -1,10 +1,14 @@
 """The `minecraft:geode_feature`."""
 
-from typing import Annotated, ClassVar, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
 from anvil.lib.jsonmodel import (
+    BlockId,
     Chance,
     InRange,
     JsonObject,
@@ -12,19 +16,23 @@ from anvil.lib.jsonmodel import (
     NonNegative,
     json_field,
 )
-from anvil.lib.schemas import MinecraftBlockDescriptor
 
 
 class _GeodeFeature(_Feature):
     """The `minecraft:geode_feature` body."""
 
-    filler: str | MinecraftBlockDescriptor = json_field()
-    inner_layer: str | MinecraftBlockDescriptor = json_field()
-    alternate_inner_layer: str | MinecraftBlockDescriptor = json_field()
-    middle_layer: str | MinecraftBlockDescriptor = json_field()
-    outer_layer: str | MinecraftBlockDescriptor = json_field()
+    filler: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
+    inner_layer: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
+    alternate_inner_layer: Annotated[str | Block | BlockDescriptor, BlockId] = (
+        json_field()
+    )
+    middle_layer: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
+    outer_layer: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     inner_placements: (
-        Annotated[list[str | MinecraftBlockDescriptor], Length(minimum=1)] | None
+        Annotated[
+            list[Annotated[str | Block | BlockDescriptor, BlockId]], Length(minimum=1)
+        ]
+        | None
     ) = None
     min_outer_wall_distance: Annotated[int, InRange(1, 10)] = json_field()
     max_outer_wall_distance: Annotated[int, InRange(1, 20)] = json_field()
@@ -43,7 +51,7 @@ class _GeodeFeature(_Feature):
     invalid_blocks_threshold: Annotated[int, NonNegative] = json_field()
 
     def set_inner_placements(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> None:
         """Sets the blocks that may be placed on the inside of the geode."""
         self.inner_placements = _blocks(blocks)
@@ -83,11 +91,11 @@ class GeodeFeature(Feature):
         self,
         name: str,
         *,
-        filler: str | MinecraftBlockDescriptor,
-        inner_layer: str | MinecraftBlockDescriptor,
-        alternate_inner_layer: str | MinecraftBlockDescriptor,
-        middle_layer: str | MinecraftBlockDescriptor,
-        outer_layer: str | MinecraftBlockDescriptor,
+        filler: str | Block | BlockDescriptor,
+        inner_layer: str | Block | BlockDescriptor,
+        alternate_inner_layer: str | Block | BlockDescriptor,
+        middle_layer: str | Block | BlockDescriptor,
+        outer_layer: str | Block | BlockDescriptor,
         min_outer_wall_distance: int,
         max_outer_wall_distance: int,
         min_distribution_points: int,
@@ -103,18 +111,18 @@ class GeodeFeature(Feature):
         use_alternate_layer0_chance: float,
         placements_require_layer0_alternate: bool,
         invalid_blocks_threshold: int,
-        inner_placements: Sequence[str | MinecraftBlockDescriptor] | None = None,
+        inner_placements: Sequence[str | Block | BlockDescriptor] | None = None,
     ) -> None:
         """Creates a geode feature.
 
         Args:
             name (str): The name of the feature, also its file name.
-            filler (str | MinecraftBlockDescriptor): The block inside the geode.
-            inner_layer (str | MinecraftBlockDescriptor): The inside layer of the shell.
-            alternate_inner_layer (str | MinecraftBlockDescriptor): The block that may
+            filler (str | Block | BlockDescriptor): The block inside the geode.
+            inner_layer (str | Block | BlockDescriptor): The inside layer of the shell.
+            alternate_inner_layer (str | Block | BlockDescriptor): The block that may
                 replace a block of the inside layer.
-            middle_layer (str | MinecraftBlockDescriptor): The middle layer of the shell.
-            outer_layer (str | MinecraftBlockDescriptor): The outer layer of the shell.
+            middle_layer (str | Block | BlockDescriptor): The middle layer of the shell.
+            outer_layer (str | Block | BlockDescriptor): The outer layer of the shell.
             min_outer_wall_distance (int): The least distance from a distribution point to
                 the outer wall, from 1 to 10.
             max_outer_wall_distance (int): The greatest distance from a distribution point
@@ -139,7 +147,7 @@ class GeodeFeature(Feature):
                 the alternate blocks.
             invalid_blocks_threshold (int): How many invalid blocks around a distribution
                 point stop the geode. At least 0.
-            inner_placements (Sequence[str | MinecraftBlockDescriptor], optional): The
+            inner_placements (Sequence[str | Block | BlockDescriptor], optional): The
                 blocks that may grow inside the geode.
         """
         super().__init__(name)
@@ -172,12 +180,12 @@ class GeodeFeature(Feature):
             self.inner_placements(inner_placements)
 
     def inner_placements(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "GeodeFeature":
         """Sets the blocks that may grow inside the geode.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks. At least one.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks. At least one.
         """
         self._feature.set_inner_placements(blocks)
         return self

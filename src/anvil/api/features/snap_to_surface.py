@@ -1,11 +1,13 @@
 """The `minecraft:snap_to_surface_feature`."""
 
-from typing import ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar, Literal
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
-from anvil.lib.jsonmodel import JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import BlockId, JsonObject, json_field
 
 
 class _SnapToSurfaceFeature(_Feature):
@@ -17,11 +19,13 @@ class _SnapToSurfaceFeature(_Feature):
     allow_air_placement: bool | None = None
     allow_non_air_placement: bool | None = None
     allow_underwater_placement: bool | None = None
-    allowed_surface_blocks: list[str | MinecraftBlockDescriptor] | None = None
+    allowed_surface_blocks: (
+        list[Annotated[str | Block | BlockDescriptor, BlockId]] | None
+    ) = None
     embed_in_surface: bool | None = None
 
     def set_allowed_surface_blocks(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> None:
         """Sets the blocks the feature may snap to."""
         self.allowed_surface_blocks = _blocks(blocks)
@@ -63,7 +67,7 @@ class SnapToSurfaceFeature(Feature):
         allow_air_placement: bool = True,
         allow_non_air_placement: bool = False,
         allow_underwater_placement: bool = False,
-        allowed_surface_blocks: Sequence[str | MinecraftBlockDescriptor] | None = None,
+        allowed_surface_blocks: Sequence[str | Block | BlockDescriptor] | None = None,
         embed_in_surface: bool = False,
     ) -> None:
         """Creates a snap to surface feature.
@@ -80,7 +84,7 @@ class SnapToSurfaceFeature(Feature):
                 than air and water, when it starts in one. Defaults to False.
             allow_underwater_placement (bool, optional): The search goes through water.
                 Defaults to False.
-            allowed_surface_blocks (Sequence[str | MinecraftBlockDescriptor], optional): The
+            allowed_surface_blocks (Sequence[str | Block | BlockDescriptor], optional): The
                 blocks it may snap to. Any block that supports the face when left out.
             embed_in_surface (bool, optional): Place the feature in the surface block rather
                 than on it. Defaults to False.
@@ -102,12 +106,12 @@ class SnapToSurfaceFeature(Feature):
             self.allowed_surface_blocks(allowed_surface_blocks)
 
     def allowed_surface_blocks(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "SnapToSurfaceFeature":
         """Sets the blocks the feature may snap to.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
         """
         self._feature.set_allowed_surface_blocks(blocks)
         return self

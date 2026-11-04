@@ -1,29 +1,32 @@
 """The `minecraft:multiface_feature`."""
 
-from typing import Annotated, ClassVar, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
-from anvil.lib.jsonmodel import Chance, InRange, JsonObject, Length, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import BlockId, Chance, InRange, JsonObject, Length, json_field
 
 
 class _MultifaceFeature(_Feature):
     """The `minecraft:multiface_feature` body."""
 
-    places_block: str | MinecraftBlockDescriptor = json_field()
+    places_block: Annotated[str | Block | BlockDescriptor, BlockId] = json_field()
     search_range: Annotated[int, InRange(1, 64)] = json_field()
     can_place_on_floor: bool = json_field()
     can_place_on_ceiling: bool = json_field()
     can_place_on_wall: bool = json_field()
     chance_of_spreading: Annotated[float, Chance] = json_field()
     can_place_on: (
-        Annotated[list[str | MinecraftBlockDescriptor], Length(minimum=1)] | None
+        Annotated[
+            list[Annotated[str | Block | BlockDescriptor, BlockId]], Length(minimum=1)
+        ]
+        | None
     ) = None
 
-    def set_can_place_on(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
-    ) -> None:
+    def set_can_place_on(self, blocks: Sequence[str | Block | BlockDescriptor]) -> None:
         """Sets the blocks the block can be placed on."""
         self.can_place_on = _blocks(blocks)
 
@@ -61,19 +64,19 @@ class MultifaceFeature(Feature):
     def __init__(
         self,
         name: str,
-        places_block: str | MinecraftBlockDescriptor,
+        places_block: str | Block | BlockDescriptor,
         search_range: int,
         can_place_on_floor: bool,
         can_place_on_ceiling: bool,
         can_place_on_wall: bool,
         chance_of_spreading: float,
-        can_place_on: Sequence[str | MinecraftBlockDescriptor] | None = None,
+        can_place_on: Sequence[str | Block | BlockDescriptor] | None = None,
     ) -> None:
         """Creates a multiface feature.
 
         Args:
             name (str): The name of the feature, also its file name.
-            places_block (str | MinecraftBlockDescriptor): The block placed.
+            places_block (str | Block | BlockDescriptor): The block placed.
             search_range (int): How far, in blocks, a valid position is searched for, from
                 1 to 64.
             can_place_on_floor (bool): The block can be placed on the top face of a block.
@@ -82,7 +85,7 @@ class MultifaceFeature(Feature):
             can_place_on_wall (bool): The block can be placed on the side faces of a block.
             chance_of_spreading (float): The chance each placed block spreads to another,
                 from 0 to 1.
-            can_place_on (Sequence[str | MinecraftBlockDescriptor], optional): The blocks it
+            can_place_on (Sequence[str | Block | BlockDescriptor], optional): The blocks it
                 can be placed on. Any block when left out.
         """
         super().__init__(name)
@@ -101,12 +104,12 @@ class MultifaceFeature(Feature):
             self.can_place_on(can_place_on)
 
     def can_place_on(
-        self, blocks: Sequence[str | MinecraftBlockDescriptor]
+        self, blocks: Sequence[str | Block | BlockDescriptor]
     ) -> "MultifaceFeature":
         """Sets the blocks the block can be placed on.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks. At least one.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks. At least one.
         """
         self._feature.set_can_place_on(blocks)
         return self

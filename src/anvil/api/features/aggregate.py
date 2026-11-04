@@ -1,6 +1,7 @@
 """The `minecraft:aggregate_feature`."""
 
-from typing import Annotated, ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar, Literal
 
 from anvil.api.features.feature import Feature, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION

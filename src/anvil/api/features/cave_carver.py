@@ -3,16 +3,23 @@ and `minecraft:underwater_cave_carver_feature`."""
 
 from typing import Annotated, Any, ClassVar
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
-from anvil.lib.jsonmodel import AtLeastOne, ExactRangeMinMax, JsonObject, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import (
+    AtLeastOne,
+    BlockId,
+    ExactRangeMinMax,
+    JsonObject,
+    json_field,
+)
 
 
 class _CaveCarverFeature(_Feature):
     """The body of a cave carver feature."""
 
-    fill_with: str | MinecraftBlockDescriptor | None = None
+    fill_with: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
     width_modifier: float | str | None = None
     skip_carve_chance: Annotated[int, AtLeastOne] | None = None
     height_limit: int | None = None
@@ -35,7 +42,7 @@ class _CaveCarverFeature(_Feature):
 class _UnderwaterCaveCarverFeature(_CaveCarverFeature):
     """The `minecraft:underwater_cave_carver_feature` body."""
 
-    replace_air_with: str | MinecraftBlockDescriptor | None = None
+    replace_air_with: Annotated[str | Block | BlockDescriptor, BlockId] | None = None
 
 
 class _CaveCarverFeatureFile(JsonObject):
@@ -93,7 +100,7 @@ class CaveCarverFeature(Feature):
     def __init__(
         self,
         name: str,
-        fill_with: str | MinecraftBlockDescriptor | None = None,
+        fill_with: str | Block | BlockDescriptor | None = None,
         width_modifier: float | str | None = None,
         skip_carve_chance: int | None = None,
         height_limit: int | None = None,
@@ -106,7 +113,7 @@ class CaveCarverFeature(Feature):
 
         Args:
             name (str): The name of the feature, also its file name.
-            fill_with (str | MinecraftBlockDescriptor, optional): The block the cave is
+            fill_with (str | Block | BlockDescriptor, optional): The block the cave is
                 filled with.
             width_modifier (float | str, optional): How many blocks the cave radius grows
                 by, from its centre: a number or a Molang expression.
@@ -157,7 +164,7 @@ class UnderwaterCaveCarverFeature(CaveCarverFeature):
     def __init__(
         self,
         name: str,
-        fill_with: str | MinecraftBlockDescriptor | None = None,
+        fill_with: str | Block | BlockDescriptor | None = None,
         width_modifier: float | str | None = None,
         skip_carve_chance: int | None = None,
         height_limit: int | None = None,
@@ -165,13 +172,13 @@ class UnderwaterCaveCarverFeature(CaveCarverFeature):
         horizontal_radius_multiplier: float | tuple[float, float] | None = None,
         vertical_radius_multiplier: float | tuple[float, float] | None = None,
         floor_level: float | tuple[float, float] | None = None,
-        replace_air_with: str | MinecraftBlockDescriptor | None = None,
+        replace_air_with: str | Block | BlockDescriptor | None = None,
     ) -> None:
         """Creates an underwater cave carver feature.
 
         Args:
             name (str): The name of the feature, also its file name.
-            fill_with (str | MinecraftBlockDescriptor, optional): The block the cave is
+            fill_with (str | Block | BlockDescriptor, optional): The block the cave is
                 filled with.
             width_modifier (float | str, optional): How many blocks the cave radius grows
                 by, from its centre: a number or a Molang expression.
@@ -186,7 +193,7 @@ class UnderwaterCaveCarverFeature(CaveCarverFeature):
                 radius multiplier, or a range it is picked from.
             floor_level (float | tuple[float, float], optional): The floor level, or a range
                 it is picked from.
-            replace_air_with (str | MinecraftBlockDescriptor, optional): The block air is
+            replace_air_with (str | Block | BlockDescriptor, optional): The block air is
                 replaced with.
         """
         super().__init__(

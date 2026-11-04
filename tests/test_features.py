@@ -1,8 +1,7 @@
 """Tests for the typed feature and feature rule files."""
 
 import pytest
-
-from anvil.api.core.enums import BlockFaceValues, FeatureRulePlacementPass
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.filters import Filter
 from anvil.api.features import (
     AggregateFeature,
@@ -21,8 +20,9 @@ from anvil.api.features import (
     TreeFeature,
     WeightedRandomFeature,
 )
+from anvil.lib.jsonmodel import Identifier
+from anvil.lib.jsonmodel.enums import BlockFaceValues, FeatureRulePlacementPass
 from anvil.lib.lib import AnvilIO
-from anvil.lib.schemas import MinecraftBlockDescriptor
 
 jsonschema = pytest.importorskip("jsonschema")
 
@@ -53,7 +53,10 @@ def test_feature_base_cannot_be_created():
 def test_single_block_feature():
     feature = SingleBlockFeature("flower", randomize_rotation=True)
     feature.place_block("minecraft:poppy").place_block(
-        MinecraftBlockDescriptor("minecraft:dandelion", True, states={"a": 1}), 3
+        BlockDescriptor(
+            name=Identifier.parse("minecraft:dandelion", vanilla=True), states={"a": 1}
+        ),
+        3,
     )
     feature.may_replace(["minecraft:air"])
     feature.may_attach_to(BlockFaceValues.Down, ["minecraft:grass_block"])

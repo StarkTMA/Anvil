@@ -1,17 +1,28 @@
 """The `minecraft:structure_template_feature`."""
 
-from typing import Annotated, ClassVar, Literal, Sequence
+from collections.abc import Sequence
+from typing import Annotated, ClassVar, Literal
 
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.features.feature import Feature, _blocks, _Feature
 from anvil.lib.format_versions import FEATURE_VERSION
-from anvil.lib.jsonmodel import InRange, JsonObject, Kept, NonNegative, json_field
-from anvil.lib.schemas import MinecraftBlockDescriptor
+from anvil.lib.jsonmodel import (
+    BlockId,
+    InRange,
+    JsonObject,
+    Kept,
+    NonNegative,
+    json_field,
+)
 
 
 class _BlockIntersection(JsonObject):
     """The `block_intersection` constraint of a structure template feature."""
 
-    block_allowlist: list[str | MinecraftBlockDescriptor] = json_field()
+    block_allowlist: list[Annotated[str | Block | BlockDescriptor, BlockId]] = (
+        json_field()
+    )
     only_check_intersection_for_motion_blocking_blocks: bool | None = None
 
 
@@ -43,7 +54,7 @@ class _StructureConstraints(JsonObject):
 
     def set_block_intersection(
         self,
-        blocks: Sequence[str | MinecraftBlockDescriptor],
+        blocks: Sequence[str | Block | BlockDescriptor],
         only_check_intersection_for_motion_blocking_blocks: bool | None = None,
     ) -> None:
         """Sets the only blocks the structure may intersect."""
@@ -158,13 +169,13 @@ class StructureTemplateFeature(Feature):
 
     def block_allowlist(
         self,
-        blocks: Sequence[str | MinecraftBlockDescriptor],
+        blocks: Sequence[str | Block | BlockDescriptor],
         only_check_intersection_for_motion_blocking_blocks: bool | None = None,
     ) -> "StructureTemplateFeature":
         """Requires the structure to intersect only these blocks.
 
         Args:
-            blocks (Sequence[str | MinecraftBlockDescriptor]): The blocks.
+            blocks (Sequence[str | Block | BlockDescriptor]): The blocks.
             only_check_intersection_for_motion_blocking_blocks (bool, optional): Only the
                 structure's motion blocking blocks are checked, rather than all of its
                 blocks but structure voids.
