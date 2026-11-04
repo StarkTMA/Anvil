@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from anvil.api.core.types import JsonSchema
 from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
 from anvil.lib.lib import AnvilIO
 
@@ -31,9 +30,9 @@ class JsonFile:
     _folder = ""
     _object_type = "addon_object"
     _queued = False
-    _document: ClassVar[type[JsonObject] | None] = None
-    """The typed content of the file. When set, `_content` starts as an empty document and
-    `__schema__()` describes the file."""
+    _document: ClassVar[type[JsonObject]]
+    """The typed content of the file: `_content` starts as an empty document, and
+    `__schema__()` describes the file. Abstract file bases leave it unset."""
     _file_name: str | None = None
     """The file's name when it is not the identifier's name, such as `global`."""
 
@@ -52,9 +51,11 @@ class JsonFile:
                 file name.
 
         Raises:
+            TypeError: When the class is an abstract file base, with no `_document`.
             ValueError: When the identifier is not valid (see `Identifier.parse`), or a vanilla
                 override is not allowed.
         """
+        type(self)._require_document()
         if is_vanilla and CONFIG._TARGET == ConfigPackageTarget.ADDON:
             raise ValueError(
                 f"Overriding vanilla features is not allowed for packages of type "
@@ -71,7 +72,7 @@ class JsonFile:
             self._created_from = traceback.format_stack()[:-1]
 
         self._directory = ""
-        self._content = self._document() if self._document else {}
+        self._content: JsonObject = self._document()
 
     @property
     def identifier(self) -> Identifier:
@@ -87,15 +88,21 @@ class JsonFile:
         return self.identifier
 
     @classmethod
-    def __schema__(cls) -> JsonSchema:
+    def _require_document(cls) -> None:
+        if not hasattr(cls, "_document"):
+            raise TypeError(
+                f"{cls.__name__} is an abstract file base: create one of its file types."
+            )
+
+    @classmethod
+    def __schema__(cls) -> dict[str, Any]:
         """The JSON Schema (draft 2020-12) of this file: the schema of its `_document`, with
         the file's type as `title` and where it is written under `x-anvil-file`.
 
         Raises:
-            TypeError: If the file has no typed `_document` yet.
+            TypeError: When the class is an abstract file base, with no `_document`.
         """
-        if cls._document is None:
-            raise TypeError(f"{cls.__name__} is not typed yet, so it has no schema.")
+        cls._require_document()
         file = {
             "pack": cls._pack,
             "folder": cls._folder,
@@ -109,19 +116,6 @@ class JsonFile:
             "x-anvil-file": {key: str(value) for key, value in file.items() if value},
             **schema,
         }
-
-    def content(self, content) -> "JsonFile":
-        """
-        Sets the content of the addon object and returns the object.
-
-        Args:
-            content (any): The content to be set for the addon object.
-
-        Returns:
-            self: The instance of the current JsonFile.
-        """
-        self._content = content
-        return self
 
     def queue(self, directory: str | None = None) -> "JsonFile":
         """
@@ -138,7 +132,7 @@ class JsonFile:
         if self._queued:
             return self
 
-        self._directory = directory if not directory is None else ""
+        self._directory = directory if directory is not None else ""
         self._queued = True
         ANVIL.__queue__(self)
         return self

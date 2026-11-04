@@ -15,9 +15,7 @@ identifier is in the project namespace, `CONFIG.NAMESPACE`. `Identifier.parse` c
 from __future__ import annotations
 
 from enum import Flag, auto
-from typing import ClassVar
-
-from anvil.api.core.types import ComponentClasses, JsonExport, JsonSchema
+from typing import Any, ClassVar
 
 from .identifier import Identifier
 from .object import JsonObject, only_schema, only_value
@@ -47,8 +45,8 @@ class JsonComponent(JsonObject, abstract=True):
     """
 
     _placement: ClassVar[ComponentPlacement] = ComponentPlacement.ANY
-    _requires: ClassVar[ComponentClasses] = ()
-    _clashes: ClassVar[ComponentClasses] = ()
+    _requires: ClassVar[tuple[type["JsonComponent"], ...]] = ()
+    _clashes: ClassVar[tuple[type["JsonComponent"], ...]] = ()
 
     identifier: ClassVar[Identifier]
 
@@ -66,12 +64,12 @@ class JsonComponent(JsonObject, abstract=True):
     def _parse_identifier(cls, identifier: str) -> Identifier:
         return Identifier.parse(identifier, vanilla=True, object_type=cls.__name__)
 
-    def __json__(self) -> JsonExport:
+    def __json__(self) -> dict[str, Any]:
         """The component as `{identifier: payload}`."""
         return {self.identifier: JsonObject.__json__(self)}
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         """The schema of `{identifier: payload}`."""
         return {
             "type": "object",
@@ -81,7 +79,9 @@ class JsonComponent(JsonObject, abstract=True):
         }
 
     @classmethod
-    def __payload_schema__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __payload_schema__(
+        cls, definitions: dict[str, dict[str, Any]]
+    ) -> dict[str, Any]:
         """The schema of the payload under the identifier."""
         return JsonObject.__schema_body__.__func__(cls, definitions)
 
@@ -104,10 +104,12 @@ class JsonValueComponent(JsonComponent, abstract=True):
     than as `{identifier: {...}}`.
     """
 
-    def __json__(self) -> JsonExport:
+    def __json__(self) -> dict[str, Any]:
         exported = JsonComponent.__json__(self)
         return {self.identifier: only_value(self, exported[self.identifier])}
 
     @classmethod
-    def __payload_schema__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __payload_schema__(
+        cls, definitions: dict[str, dict[str, Any]]
+    ) -> dict[str, Any]:
         return only_schema(cls, definitions)

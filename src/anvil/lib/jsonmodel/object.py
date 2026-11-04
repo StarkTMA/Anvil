@@ -8,6 +8,7 @@ A `JsonObject` subclass is declared with fields only. The base class:
 - lets only the object's own methods change its fields;
 - builds the JSON from the fields in `__json__()`, checking them against their annotations
   first;
+- builds an object back from parsed JSON in `__from_json__()`;
 - describes that JSON in `__schema__()`.
 
 A class declared with `abstract=True` is a shared base that cannot be instantiated.
@@ -18,8 +19,6 @@ from __future__ import annotations
 import dataclasses
 import sys
 from typing import Any, ClassVar, Self, dataclass_transform
-
-from anvil.api.core.types import JsonPayload, JsonSchema
 
 from .fields import json_field
 from .walker import DRAFT_2020_12, FieldSpec, compile_fields
@@ -97,7 +96,7 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
             specs = _FIELDS[cls] = compile_fields(cls)
         return specs
 
-    def __json__(self) -> JsonPayload:
+    def __json__(self) -> dict[str, Any]:
         """The JSON payload of this object, built from its fields after checking them."""
         cls = type(self)
         specs = cls.__json_fields__()
@@ -108,7 +107,7 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
                 spec.node.check(f"{cls.__name__}.{spec.name}", value)
         self.__validate__()
 
-        payload: JsonPayload = {}
+        payload: dict[str, Any] = {}
         for spec in specs:
             value = getattr(self, spec.name)
             if value is None or spec.exclude:
@@ -119,9 +118,45 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
         return payload
 
     @classmethod
-    def __schema__(cls) -> JsonSchema:
+    def __from_json__(cls, data: Any) -> Self:
+        """Builds the object from its parsed JSON, the inverse of `__json__()`. Each key goes
+        to the field written under it, read through the field's annotation.
+
+        Args:
+            data (Any): The parsed JSON object.
+
+        Raises:
+            TypeError: The data is not an object, or a value does not match its field.
+            ValueError: The data has a key the class does not write, or a constant field
+                holds another value.
+        """
+        if not isinstance(data, dict):
+            raise TypeError(
+                f"{cls.__name__} is read from a JSON object, got {type(data).__name__}."
+            )
+        specs = {spec.key: spec for spec in cls.__json_fields__() if not spec.exclude}
+        unknown = [key for key in data if key not in specs]
+        if unknown:
+            raise ValueError(
+                f"{cls.__name__} has no key {', '.join(repr(key) for key in unknown)}."
+            )
+        values: dict[str, Any] = {}
+        for key, item in data.items():
+            spec = specs[key]
+            value = spec.node.decode(item)
+            if spec.init:
+                values[spec.name] = value
+            elif value != spec.default():
+                raise ValueError(
+                    f"{cls.__name__}.{spec.name} is always {spec.default()!r}, got "
+                    f"{value!r}."
+                )
+        return cls(**values)
+
+    @classmethod
+    def __schema__(cls) -> dict[str, Any]:
         """The JSON Schema (draft 2020-12) of this object's JSON, its parts under `$defs`."""
-        definitions: dict[str, JsonSchema] = {}
+        definitions: dict[str, dict[str, Any]] = {}
         body = cls.__schema_body__(definitions)
         schema = {"$schema": DRAFT_2020_12, **body}
         if definitions:
@@ -129,13 +164,13 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
         return schema
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         """The schema of this object's JSON, adding the parts it uses to `definitions`.
 
         Args:
             definitions (dict[str, JsonSchema]): The `$defs` of the schema being built.
         """
-        properties: JsonSchema = {}
+        properties: dict[str, Any] = {}
         required: list[str] = []
         for spec in cls.__json_fields__():
             if spec.exclude:
@@ -145,14 +180,14 @@ class JsonObject(metaclass=_JsonObjectMeta, abstract=True):
                 spec.required and not spec.omit_default
             ) or spec.key in cls.__required__:
                 required.append(spec.key)
-        schema: JsonSchema = {"type": "object", "properties": properties}
+        schema: dict[str, Any] = {"type": "object", "properties": properties}
         if required:
             schema["required"] = required
         schema["additionalProperties"] = False
         return schema
 
 
-def only_value(obj: JsonObject, payload: JsonPayload) -> Any:
+def only_value(obj: JsonObject, payload: dict[str, Any]) -> Any:
     """The value of the only key in an object's payload."""
     if len(payload) > 1:
         raise TypeError(
@@ -171,13 +206,18 @@ class JsonValue(JsonObject, abstract=True):
         return only_value(self, JsonObject.__json__(self))
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __from_json__(cls, data: Any) -> Self:
+        specs = [spec for spec in cls.__json_fields__() if not spec.exclude]
+        return JsonObject.__from_json__.__func__(cls, {specs[0].key: data})
+
+    @classmethod
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         return only_schema(cls, definitions)
 
 
 def only_schema(
-    cls: type[JsonObject], definitions: dict[str, JsonSchema]
-) -> JsonSchema:
+    cls: type[JsonObject], definitions: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
     """The schema of the only field a class writes."""
     specs = [spec for spec in cls.__json_fields__() if not spec.exclude]
     if len(specs) != 1:

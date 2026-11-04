@@ -1,5 +1,6 @@
+"""Anvil's enums: targets, slots, block traits and states, JSON UI values and more."""
+
 from enum import StrEnum
-from typing import List
 
 
 class Target(StrEnum):
@@ -16,34 +17,6 @@ class Target(StrEnum):
     V = "@v"
     Initiator = "@initiator"
     N = "@n"
-
-
-class Style(StrEnum):
-    """
-    Enumeration for the different styles of text in the game.
-    """
-
-    Black = "§0"
-    DarkBlue = "§1"
-    DarkGreen = "§2"
-    DarkAqua = "§3"
-    DarkRed = "§4"
-    DarkPurple = "§5"
-    Gold = "§6"
-    Gray = "§7"
-    DarkGray = "§8"
-    Blue = "§9"
-    Green = "§a"
-    Aqua = "§b"
-    Red = "§c"
-    Purple = "§d"
-    Yellow = "§e"
-    White = "§f"
-    MineconGold = "§g"
-    Obfuscated = "§k"
-    Bold = "§l"
-    Italic = "§o"
-    Reset = "§r"
 
 
 class FogCameraLocation(StrEnum):
@@ -100,35 +73,6 @@ class Slots(StrEnum):
     Body = "slot.armor.body"
 
 
-class Gamemodes(StrEnum):
-    """
-    Enumeration for the different types of game modes.
-    """
-
-    Adventure = "adventure"
-    Creative = "creative"
-    Default = "default"
-    Survival = "survival"
-    Spectator = "spectator"
-
-    A = Adventure
-    C = Creative
-    D = Default
-    S = Survival
-
-
-class ScoreboardOperator(StrEnum):
-    """
-    Enumeration for the different types of mathematical operators.
-    """
-
-    Less = "<"
-    LessEqual = "<="
-    Equals = "="
-    Greater = ">"
-    GreaterEqual = ">="
-
-
 class Dimension(StrEnum):
     """
     Enumeration for the different dimensions in the game.
@@ -137,19 +81,6 @@ class Dimension(StrEnum):
     Nether = "minecraft:nether"
     Overworld = "minecraft:overworld"
     TheEnd = "minecraft:the_end"
-
-
-class FillMode(StrEnum):
-    Replace = "replace"
-    Outline = "outline"
-    Hollow = "hollow"
-    Destroy = "destroy"
-    Keep = "keep"
-
-
-class MusicRepeatMode(StrEnum):
-    Once = "play_once"
-    Loop = "loop"
 
 
 class Difficulty(StrEnum):
@@ -199,22 +130,6 @@ class DamageCause(StrEnum):
     Wither = "wither"
 
 
-class ScoreboardOperation(StrEnum):
-    """
-    Enumeration for the different operations that can be performed on a scoreboard.
-    """
-
-    Addition = "+="
-    Subtraction = "-="
-    Multiplication = "*="
-    Division = "/="
-    Modulus = "%="
-    Assign = "="
-    Min = "<"
-    Max = ">"
-    Swaps = "><"
-
-
 class Anchor(StrEnum):
     """
     Enumeration representing the two anchor points that can be used in Minecraft: the feet and the eyes.
@@ -222,43 +137,6 @@ class Anchor(StrEnum):
 
     Feet = "feet"
     Eyes = "eyes"
-
-
-class CameraShakeType(StrEnum):
-    """
-    Enumeration representing the types of camera shakes that can occur in Minecraft.
-    """
-
-    Positional = "positional"
-    Rotational = "rotational"
-
-
-class MaskMode(StrEnum):
-    """
-    Enumeration representing the different mask modes that can be applied in Minecraft.
-    """
-
-    Replace = "replace"
-    Masked = "masked"
-
-
-class CloneMode(StrEnum):
-    """
-    Enumeration representing the different modes that can be used when cloning in Minecraft.
-    """
-
-    Force = "force"
-    Move = "move"
-    Normal = "normal"
-
-
-class InputPermissions(StrEnum):
-    """
-    Enumeration representing the different input permissions that can be set for a player in Minecraft.
-    """
-
-    Camera = "camera"
-    Movement = "movement"
 
 
 class CameraPresets(StrEnum):
@@ -283,50 +161,6 @@ class ControlSchemes(StrEnum):
     LockedPlayerRelativeStrafe = "locked_player_relative_strafe"
 
 
-class CameraEasing(StrEnum):
-    Linear = "linear"
-    Spring = "spring"
-    InQuad = "in_quad"
-    OutQuad = "out_quad"
-    InOutQuad = "in_out_quad"
-    InCubic = "in_cubic"
-    OutCubic = "out_cubic"
-    InOutCubic = "in_out_cubic"
-    InQuart = "in_quart"
-    OutQuart = "out_quart"
-    InOutQuart = "in_out_quart"
-    InQuint = "in_quint"
-    OutQuint = "out_quint"
-    InOutQuint = "in_out_quint"
-    InSine = "in_sine"
-    OutSine = "out_sine"
-    InOutSine = "in_out_sine"
-    InExpo = "in_expo"
-    OutExpo = "out_expo"
-    InOutExpo = "in_out_expo"
-    InCirc = "in_circ"
-    OutCirc = "out_circ"
-    InOutCirc = "in_out_circ"
-    InBounce = "in_bounce"
-    OutBounce = "out_bounce"
-    InOutBounce = "in_out_bounce"
-    InBack = "in_back"
-    OutBack = "out_back"
-    InOutBack = "in_out_back"
-    InElastic = "in_elastic"
-    OutElastic = "out_elastic"
-    InOutElastic = "in_out_elastic"
-
-
-class TimeSpec(StrEnum):
-    DAY = "day"
-    SUNRISE = "sunrise"
-    NOON = "noon"
-    SUNSET = "sunset"
-    NIGHT = "night"
-    MIDNIGHT = "midnight"
-
-
 class Population(StrEnum):
     """
     Enumeration for the different types of in-game populations.
@@ -340,27 +174,23 @@ class Population(StrEnum):
     WaterAnimal = "water_animal"
 
 
-# Vanilla traits, used to define the traits of blocks
 class PlacementDirectionTrait(StrEnum):
-    CardinalDirection = "minecraft:cardinal_direction"  # North, South, East, West
-    FacingDirection = "minecraft:facing_direction"  # Up, Down, North, South, East, West
-    CornerAndCardinalDirection = "minecraft:corner_and_cardinal_direction"  # North, South, East, West, Northeast, Northwest, Southeast, Southwest
-    SixteenWayRotation = (
-        "minecraft:sixteen_way_rotation"  # 16 distinct rotational positions (0-15)
-    )
+    CardinalDirection = "minecraft:cardinal_direction"
+    FacingDirection = "minecraft:facing_direction"
+    CornerAndCardinalDirection = "minecraft:corner_and_cardinal_direction"
+    SixteenWayRotation = "minecraft:sixteen_way_rotation"
 
 
 class PlacementPositionTrait(StrEnum):
-    BlockFace = "minecraft:block_face"  # Up, Down, North, South, East, West
-    VerticalHalf = "minecraft:vertical_half"  # Top, Bottom
-    CornerAndCardinal = "minecraft:corner_and_cardinal"  # North, South, East, West, Northeast, Northwest, Southeast, Southwest
+    BlockFace = "minecraft:block_face"
+    VerticalHalf = "minecraft:vertical_half"
+    CornerAndCardinal = "minecraft:corner_and_cardinal"
 
 
 class ConnectionTrait(StrEnum):
-    CardinalConnections = "minecraft:cardinal_connections"  # north, south, east, west
+    CardinalConnections = "minecraft:cardinal_connections"
 
 
-# Vanilla states
 class CardinalConnectionStates(StrEnum):
     """
     Enumeration representing the connected faces of a block in Minecraft, used for blocks that can connect to adjacent blocks (e.g., fences, walls).
@@ -380,7 +210,6 @@ class MultiblockPartState(StrEnum):
     Part = "minecraft:multi_block_part"
 
 
-# Vanilla trait values, values of block states queries
 class CardinalDirectionsValues(StrEnum):
     SOUTH = "south"
     WEST = "west"
@@ -445,7 +274,7 @@ _ALL_FACES = [
 ]
 
 
-def expand_block_face_sides(faces: List[BlockFaceValues]) -> List[BlockFaceValues]:
+def expand_block_face_sides(faces: list[BlockFaceValues]) -> list[BlockFaceValues]:
     """Expand ``BlockFaceValues.Side`` and ``BlockFaceValues.All`` into explicit face lists.
 
     ``Side`` expands to the four cardinal directions (North, South, East, West).
@@ -1142,28 +971,6 @@ class EnchantsSlots(StrEnum):
     CosmeticHead = "cosmetic_head"
 
 
-class HudElement(StrEnum):
-    Hunger = "hunger"
-    All = "all"
-    Paperdoll = "paperdoll"
-    Armor = "armor"
-    Tooltips = "tooltips"
-    TouchControls = "touch_controls"
-    Crosshair = "crosshair"
-    Hotbar = "hotbar"
-    Health = "health"
-    ProgressBar = "progress_bar"
-    AirBubbles = "air_bubbles"
-    HorseHealth = "horse_health"
-    StatusEffects = "status_effects"
-    ItemText = "item_text"
-
-
-class HudVisibility(StrEnum):
-    Hide = "hide"
-    Reset = "reset"
-
-
 class ExplosionParticleEffect(StrEnum):
     Explosion = "explosion"
     WindBurst = "wind_burst"
@@ -1200,30 +1007,11 @@ class AimAssistTargetMode(StrEnum):
     Angle = "angle"
 
 
-class Glyph(StrEnum):
-    Forward = ":_input_key.forward:"
-    Back = ":_input_key.back:"
-    Left = ":_input_key.left:"
-    Right = ":_input_key.right:"
-    Inventory = ":_input_key.inventory:"
-    Use = ":_input_key.use:"
-    Chat = ":_input_key.chat:"
-    Attack = ":_input_key.attack:"
-    Sprint = ":_input_key.sprint:"
-    Jump = ":_input_key.jump:"
-    Sneak = ":_input_key.sneak:"
-
-
 class BlockLiquidDetectionTouching(StrEnum):
     Blocking = "blocking"
     Broken = "broken"
     Popped = "popped"
     NoReaction = "no_reaction"
-
-
-class BreedingMutationStrategy(StrEnum):
-    None_ = "none"
-    Random = "random"
 
 
 class InputModes(StrEnum):
@@ -1261,73 +1049,6 @@ class LeashSpringType(StrEnum):
     Bouncy = "bouncy"
     Dampened = "dampened"
     QuadDampened = "quad_dampened"
-
-
-class EnchantmentTypes(StrEnum):
-    AquaAffinity = "minecraft:aqua_affinity"
-    BaneOfArthropods = "minecraft:bane_of_arthropods"
-    Binding = "minecraft:binding"
-    BlastProtection = "minecraft:blast_protection"
-    BowInfinity = "minecraft:infinity"
-    Breach = "minecraft:breach"
-    Channeling = "minecraft:channeling"
-    Density = "minecraft:density"
-    DepthStrider = "minecraft:depth_strider"
-    Efficiency = "minecraft:efficiency"
-    FeatherFalling = "minecraft:feather_falling"
-    FireAspect = "minecraft:fire_aspect"
-    FireProtection = "minecraft:fire_protection"
-    Flame = "minecraft:flame"
-    Fortune = "minecraft:fortune"
-    FrostWalker = "minecraft:frost_walker"
-    Impaling = "minecraft:impaling"
-    Knockback = "minecraft:knockback"
-    Looting = "minecraft:looting"
-    Loyalty = "minecraft:loyalty"
-    LuckOfTheSea = "minecraft:luck_of_the_sea"
-    Lure = "minecraft:lure"
-    Mending = "minecraft:mending"
-    Multishot = "minecraft:multishot"
-    Piercing = "minecraft:piercing"
-    Power = "minecraft:power"
-    ProjectileProtection = "minecraft:projectile_protection"
-    Protection = "minecraft:protection"
-    Punch = "minecraft:punch"
-    QuickCharge = "minecraft:quick_charge"
-    Respiration = "minecraft:respiration"
-    Riptide = "minecraft:riptide"
-    Sharpness = "minecraft:sharpness"
-    SilkTouch = "minecraft:silk_touch"
-    Smite = "minecraft:smite"
-    SoulSpeed = "minecraft:soul_speed"
-    SwiftSneak = "minecraft:swift_sneak"
-    Thorns = "minecraft:thorns"
-    Unbreaking = "minecraft:unbreaking"
-    Vanishing = "minecraft:vanishing"
-    WindBurst = "minecraft:wind_burst"
-
-
-class BlockStickyType(StrEnum):
-    """
-    Enumeration for the different types of block stickiness in Minecraft.
-
-    Sticky: The block will stick to a sticky piston.
-    NonSticky: The block will not stick to a sticky piston.
-    """
-
-    Same = "same"
-    None_ = "none"
-
-
-class ComponentTarget(StrEnum):
-    """
-    Enumeration for the different component targets in Minecraft.
-
-    """
-
-    Any = "any"
-    Client = "client"
-    Server = "server"
 
 
 class ExplorationMapDestinations(StrEnum):
@@ -1377,3 +1098,262 @@ class FeatureRulePlacementPass(StrEnum):
     SkyPass = "sky_pass"
     AfterSkyPass = "after_sky_pass"
     FinalPass = "final_pass"
+
+
+# region JSON UI
+
+
+class UIBindingType(StrEnum):
+    """Enumeration of UI binding types for data connections.
+
+    Binding types determine how UI elements connect to data sources
+    and how they respond to data changes.
+
+    Attributes:
+        View: Binds to view-level data (element properties)
+        Global: Binds to global game data
+        Collection: Binds to collection data (arrays, lists)
+        CollectionDetails: Binds to specific collection item details
+        NONE: No binding applied
+    """
+
+    View = "view"
+    Global = "global"
+    Collection = "collection"
+    CollectionDetails = "collection_details"
+    NONE = "none"
+
+
+class UIElementType(StrEnum):
+    """Enumeration of UI element types.
+
+    Defines the different types of UI elements that can be created
+    within the framework.
+
+    Attributes:
+        Image: Image element for displaying textures
+        Panel: Container element for grouping other elements
+        Label: Text display element
+        Screen: Top-level screen container
+        Factory: Dynamic element generator
+        StackPanel: Container that arranges children in a stack
+        Grid: Container that arranges children in a grid layout
+        Custom: Custom renderer element
+        Button: Interactive button element
+        CollectionPanel: A stack panel for collections that does not stack its children
+        InputPanel: A panel that accepts input
+        Toggle: A toggle with a checked and an unchecked state
+        Dropdown: A toggle that opens a dropdown
+        Slider: A range input
+        SliderBox: The handle of a slider
+        EditBox: A text field
+        ScrollView: A scrolling panel
+        ScrollbarTrack: The track of a scrollbar
+        ScrollbarBox: The handle of a scrollbar
+        SelectionWheel: A selection wheel
+    """
+
+    Image = "image"
+    Panel = "panel"
+    Label = "label"
+    Screen = "screen"
+    Factory = "factory"
+    StackPanel = "stack_panel"
+    Grid = "grid"
+    Custom = "custom"
+    Button = "button"
+    CollectionPanel = "collection_panel"
+    InputPanel = "input_panel"
+    Toggle = "toggle"
+    Dropdown = "dropdown"
+    Slider = "slider"
+    SliderBox = "slider_box"
+    EditBox = "edit_box"
+    ScrollView = "scroll_view"
+    ScrollbarTrack = "scrollbar_track"
+    ScrollbarBox = "scrollbar_box"
+    SelectionWheel = "selection_wheel"
+
+
+class UIAnchor(StrEnum):
+    """Enumeration of anchor positions for UI element layout.
+
+    Anchors determine how elements are positioned relative to their
+    parent containers.
+
+    Attributes:
+        Center: Center position
+        TopLeft: Top-left corner
+        TopMiddle: Top center
+        TopRight: Top-right corner
+        LeftMiddle: Left center
+        RightMiddle: Right center
+        BottomLeft: Bottom-left corner
+        BottomMiddle: Bottom center
+        BottomRight: Bottom-right corner
+    """
+
+    Center = "center"
+    TopLeft = "top_left"
+    TopMiddle = "top_middle"
+    TopRight = "top_right"
+    LeftMiddle = "left_middle"
+    RightMiddle = "right_middle"
+    BottomLeft = "bottom_left"
+    BottomMiddle = "bottom_middle"
+    BottomRight = "bottom_right"
+
+
+class UITextAlignment(StrEnum):
+    """Enumeration of text alignment options.
+
+    Defines how text content is aligned within text elements.
+
+    Attributes:
+        Center: Center-aligned text
+        Left: Left-aligned text
+        Right: Right-aligned text
+    """
+
+    Center = "center"
+    Left = "left"
+    Right = "right"
+
+
+class UIAnimType(StrEnum):
+    """Enumeration of animation types.
+
+    Defines the different types of animations that can be applied
+    to UI elements.
+
+    Attributes:
+        Alpha: Transparency/opacity animation
+        Clip: Clipping animation
+        Color: Color transition animation
+        Flip_book: Frame-based flipbook animation
+        Offset: Position offset animation
+        Size: Size scaling animation
+        UV: Texture coordinate animation
+        Wait: Pause/delay animation
+        Aseprite_flip_book: Aseprite-based flipbook animation
+    """
+
+    Alpha = "alpha"
+    Clip = "clip"
+    Color = "color"
+    Flip_book = "flip_book"
+    Offset = "offset"
+    Size = "size"
+    UV = "uv"
+    Wait = "wait"
+    Aseprite_flip_book = "aseprite_flip_book"
+
+
+class UIEasing(StrEnum):
+    """Enumeration of easing functions for animations.
+
+    Easing functions control the rate of change in animations,
+    providing smooth transitions and natural motion effects.
+
+    Attributes:
+        Linear: Constant rate of change
+        Spring: Spring-like motion
+        InQuad, OutQuad, InOutQuad: Quadratic easing variations
+        InCubic, OutCubic, InOutCubic: Cubic easing variations
+        InQuart, OutQuart, InOutQuart: Quartic easing variations
+        InQuint, OutQuint, InOutQuint: Quintic easing variations
+        InSine, OutSine, InOutSine: Sinusoidal easing variations
+        InExpo, OutExpo, InOutExpo: Exponential easing variations
+        InCirc, OutCirc, InOutCirc: Circular easing variations
+        InBounce, OutBounce, InOutBounce: Bouncing easing variations
+        InBack, OutBack, InOutBack: Back easing variations
+        InElastic, OutElastic, InOutElastic: Elastic easing variations
+    """
+
+    Linear = "linear"
+    Spring = "spring"
+    InQuad = "in_quad"
+    OutQuad = "out_quad"
+    InOutQuad = "in_out_quad"
+    InCubic = "in_cubic"
+    OutCubic = "out_cubic"
+    InOutCubic = "in_out_cubic"
+    InQuart = "in_quart"
+    OutQuart = "out_quart"
+    InOutQuart = "in_out_quart"
+    InQuint = "in_quint"
+    OutQuint = "out_quint"
+    InOutQuint = "in_out_quint"
+    InSine = "in_sine"
+    OutSine = "out_sine"
+    InOutSine = "in_out_sine"
+    InExpo = "in_expo"
+    OutExpo = "out_expo"
+    InOutExpo = "in_out_expo"
+    InCirc = "in_circ"
+    OutCirc = "out_circ"
+    InOutCirc = "in_out_circ"
+    InBounce = "in_bounce"
+    OutBounce = "out_bounce"
+    InOutBounce = "in_out_bounce"
+    InBack = "in_back"
+    OutBack = "out_back"
+    InOutBack = "in_out_back"
+    InElastic = "in_elastic"
+    OutElastic = "out_elastic"
+    InOutElastic = "in_out_elastic"
+
+
+class UIElementTrigger(StrEnum):
+    """Enumeration of trigger types for UI element activation.
+
+    Defines when and how UI elements are triggered to appear or activate.
+
+    Attributes:
+        Title: Triggered by title/subtitle display
+        Actionbar: Triggered by actionbar message display
+        NONE: No trigger (always active or manually controlled)
+    """
+
+    Title = "title"
+    Actionbar = "actionbar"
+    NONE = "None"
+
+
+class UIFontSize(StrEnum):
+    """Enumeration of font size options.
+
+    Defines the available font sizes for text elements.
+
+    Attributes:
+        Normal: Standard font size
+        Small: Smaller font size
+        Large: Larger font size
+        ExtraLarge: Extra large font size
+    """
+
+    Normal = "normal"
+    Small = "small"
+    Large = "large"
+    ExtraLarge = "extra_large"
+
+
+# endregion
+# region Kit
+
+
+class SupportedBy(StrEnum):
+    """Where the block holding up a supported block is."""
+
+    Below = "below"
+    """The block below."""
+    BlockFace = "block_face"
+    """The block it was placed against, read from `minecraft:block_face`."""
+    Facing = "facing"
+    """The block its `minecraft:cardinal_direction` points at."""
+    Sign = "sign"
+    """The block below when its `standing` state is on, otherwise the block its
+    `minecraft:cardinal_direction` points at."""
+
+
+# endregion

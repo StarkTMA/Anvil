@@ -1,21 +1,16 @@
-from typing import TYPE_CHECKING, Any, Callable, Literal, TypeAlias
+"""Anvil's type aliases and the Literal value sets of components and files."""
 
-from anvil.api.core.enums import Slots
+from typing import Literal
 
-if TYPE_CHECKING:
-    from anvil.lib.jsonmodel import JsonComponent
-    from anvil.lib.schemas import MinecraftBlockDescriptor, MinecraftItemDescriptor
+from .enums import Slots
 
-# Vectors
 type Vector2D = tuple[float, float]
 type Vector3D = tuple[float, float, float]
 type Vector4D = tuple[float, float, float, float]
 
-type Vector2DInt = tuple[int, int]
 type Vector3DInt = tuple[int, int, int]
 type Vector4DInt = tuple[int, int, int, int]
 
-# Colors
 type RGB = Vector3D
 type RGBA = Vector4D
 type RGB255 = Vector3DInt
@@ -24,28 +19,6 @@ type HexRGB = str
 type HexRGBA = str
 type Color = RGB | RGBA | RGB255 | RGBA255 | HexRGB | HexRGBA
 
-# Coordinates and rotations
-type Coordinate = Vector3D
-type Coordinates = tuple[Vector3D, Vector3D, Vector3D]
-type RelativePosition = tuple[
-    int | Literal["^", "~"], int | Literal["^", "~"], int | Literal["^", "~"]
-]
-type RelativeRotation = tuple[int | Literal["~"], int | Literal["~"]]
-type Rotation = tuple[Coordinate, Coordinate]
-
-# Minecraft-specific types
-type Identifier = str
-type Seconds = int
-type Tick = int
-type StructureProcessors = Literal[
-    "minecraft:block_ignore",
-    "minecraft:protected_blocks",
-    "minecraft:capped",
-    "minecraft:rule",
-]
-
-# Command selectors
-type Target = Literal["@p", "@r", "@a", "@e", "@s", "@c", "@v", "@initiator"]
 
 InstrumentSound = Literal[
     "note.harp",
@@ -77,29 +50,7 @@ InstrumentSound = Literal[
     "note.none",
 ]
 
-# Components
-type NumberRange = tuple[float, float]
 
-type BlockReference = MinecraftBlockDescriptor | Identifier | str
-
-type ItemReference = MinecraftItemDescriptor | Identifier | str
-
-# JSON model
-type JsonPayload = dict[str, Any]
-
-type ComponentIdentifier = Identifier
-
-type JsonExport = dict[ComponentIdentifier, Any]
-
-type ComponentClass = type[JsonComponent]
-
-type ComponentClasses = tuple[ComponentClass, ...]
-
-type JsonSchema = dict[str, Any]
-
-type DefaultFactory = Callable[[], Any]
-
-# Biomes
 BiomeNoiseType = Literal[
     "beach",
     "deep_ocean",
@@ -143,9 +94,7 @@ FoliageColorMap = Literal[
 
 GrassColorMap = Literal["grass", "swamp_grass"]
 
-type BiomeTransformation = str | list[tuple[str, int]]
 
-# Blocks
 BlockDefaultGeometry = Literal[
     "minecraft:geometry.full_block",
     "minecraft:geometry.full_block_v1",
@@ -182,8 +131,17 @@ TintMethod = Literal[
     "water",
 ]
 
-# Items
 Rarity = Literal["common", "uncommon", "rare", "epic"]
+SpawnCategory = Literal[
+    "creature",
+    "monster",
+    "ambient",
+    "axolotls",
+    "water_creature",
+    "water_ambient",
+    "underground_water_creature",
+    "misc",
+]
 
 ItemUseAnimations = Literal[
     "eat",
@@ -216,6 +174,15 @@ ItemWearableSlots = Literal[
     Slots.Offhand,
 ]
 
-type Chance = float | FeatureChance
 
-type Weighted[T] = tuple[T, float]
+MobEvent = Literal[
+    "minecraft:pillager_patrols_event",
+    "minecraft:wandering_trader_event",
+    "minecraft:ender_dragon_event",
+]
+
+
+TextureFilter = Literal[
+    "Point", "Bilinear", "Trilinear", "MipMapBilinear", "TexelAA", "PCF"
+]
+TextureWrap = Literal["Repeat", "Clamp"]

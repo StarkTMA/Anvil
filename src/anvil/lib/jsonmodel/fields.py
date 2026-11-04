@@ -1,15 +1,14 @@
 """`json_field`, which declares a `JsonObject` field."""
 
 import dataclasses
+from collections.abc import Callable
 from typing import Any
-
-from anvil.api.core.types import DefaultFactory
 
 
 def json_field(
     *,
     default: Any = dataclasses.MISSING,
-    default_factory: DefaultFactory | Any = dataclasses.MISSING,
+    default_factory: Callable[[], Any] | Any = dataclasses.MISSING,
     key: str | None = None,
     omit_default: bool = False,
     init: bool = True,

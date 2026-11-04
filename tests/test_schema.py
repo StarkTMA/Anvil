@@ -10,12 +10,12 @@ from anvil.api.actors.components import (
 )
 from anvil.api.biomes.components import BiomeClientFoliageAppearance, BiomeClimate
 from anvil.api.blocks.components import BlockGeometry, BlockPlacementFilter
-from anvil.api.core.enums import BlockFaceValues
 from anvil.api.items.components import ItemDurability
 from anvil.api.pbr.fallback import PBRFallback
 from anvil.api.pbr.shadow import ShadowSettings
-from anvil.api.pbr.lighting import LocalLighting
+from anvil.api.world.particles import Particle
 from anvil.lib import config
+from anvil.lib.jsonmodel.enums import BlockFaceValues
 from anvil.lib.lib import AnvilIO
 
 jsonschema = pytest.importorskip("jsonschema")
@@ -136,17 +136,16 @@ def test_pbr_fallback_file_schema():
 
 def _filled_pbr_files():
     from anvil.api.pbr.atmosphere import AtmosphericSettings
-    from anvil.api.core.enums import FogCameraLocation, RenderDistanceType
     from anvil.api.pbr.color_grading import ColorGradingSettings
     from anvil.api.pbr.cubemap import CubeMapSettings
     from anvil.api.pbr.fog import FogSettings
     from anvil.api.pbr.lighting import LightingSettings
-    from anvil.lib.jsonmodel import KeyFrame
     from anvil.api.pbr.texture_set import TextureSet
     from anvil.api.pbr.water import WaterSettings
+    from anvil.lib.jsonmodel.enums import FogCameraLocation, RenderDistanceType
 
-    frames = [KeyFrame(0.0, 1.0), KeyFrame(1.0, 2.0)]
-    colors = [KeyFrame(0.0, "#ff8800"), KeyFrame(0.5, (0.2, 0.4, 0.6))]
+    frames = [(0.0, 1.0), (1.0, 2.0)]
+    colors = [(0.0, "#ff8800"), (0.5, (0.2, 0.4, 0.6))]
     lighting = LightingSettings()
     lighting.orbital_lights(frames, "#ffffff", 0.4, colors, 10)
     lighting.flash_light(3, (255, 0, 0))
@@ -192,6 +191,21 @@ def test_pbr_file_schemas():
         assert schema["x-anvil-file"]["pack"] == "resource_pack"
 
 
-def test_untyped_file_has_no_schema():
-    with pytest.raises(TypeError, match="not typed yet"):
-        LocalLighting.__schema__()
+def test_abstract_file_base_has_no_schema():
+    from anvil.lib.jsonmodel import JsonFile
+
+    class _Base(JsonFile):
+        pass
+
+    with pytest.raises(TypeError, match="abstract file base"):
+        _Base.__schema__()
+    with pytest.raises(TypeError, match="abstract file base"):
+        _Base("x")
+
+
+def test_particle_schema():
+    schema = Particle.__schema__()
+    jsonschema.Draft202012Validator.check_schema(schema)
+    assert schema["x-anvil-file"]["extension"] == ".particle.json"
+    components = schema["$defs"]["_ParticleComponents"]["properties"]
+    assert "minecraft:emitter_rate_steady" in components

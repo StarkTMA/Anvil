@@ -7,7 +7,7 @@ a schema. Metadata never replaces the type, it only constrains or formats it:
     damage: Annotated[float | tuple[float, float], MinMax] | None = json_field(default=None)
 
 Constraint types (`InRange`, `Length`, `Unique`, `OrderedPair`) refuse values. Shape types
-(`Bounds`, `Wrapped`, `Keyed`, `Encoded`...) change how the value is written. Every one of them
+(`Bounds`, `Wrapped`, `Keyed`, `Encoded`, `KeyFramed`...) change how the value is written. Every one of them
 also describes the JSON it accepts, for `JsonObject.__schema__()`.
 
 The ready-made instances at the end (`MinMax`, `NonNegative`, `Hex`...) are ready to use.
@@ -15,18 +15,20 @@ The ready-made instances at the end (`MinMax`, `NonNegative`, `Hex`...) are read
 """
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from functools import cache
+from typing import Any, Literal
 
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, JsonSchema
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB
 
-NUMBER: JsonSchema = {"type": "number"}
-STRING: JsonSchema = {"type": "string"}
+NUMBER: dict[str, Any] = {"type": "number"}
+STRING: dict[str, Any] = {"type": "string"}
 
 
 def _object_schema(
-    properties: dict[str, JsonSchema], optional: tuple[str, ...] = ()
-) -> JsonSchema:
+    properties: dict[str, dict[str, Any]], optional: tuple[str, ...] = ()
+) -> dict[str, Any]:
     """An object with exactly these keys, all required but the `optional` ones."""
     return {
         "type": "object",
@@ -73,13 +75,27 @@ class JsonType:
         """
         return value
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         """The schema of the written value.
 
         Args:
-            inner (JsonSchema): The schema of the annotation's type, or of the metadata before.
+            inner (dict[str, Any]): The schema of the annotation's type, or of the metadata
+                before.
         """
         return inner
+
+    def decode(self, data: Any) -> Any:
+        """The value `encode` was given, from its parsed JSON form.
+
+        Args:
+            data (Any): The parsed JSON.
+
+        Raises:
+            TypeError: The metadata writes the value in another form and cannot read it back.
+        """
+        if type(self).encode is not JsonType.encode:
+            raise TypeError(f"{type(self).__name__} cannot be read back from JSON.")
+        return data
 
 
 # region Constraints
@@ -132,7 +148,7 @@ class InRange(JsonType):
         elif not self.contains(value):
             raise ValueError(f"'{name}' must be {self}, got {value}.")
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         if "anyOf" in inner:
             return inner | {"anyOf": [self.schema(arm) for arm in inner["anyOf"]]}
         if inner.get("type") == "array":
@@ -141,7 +157,7 @@ class InRange(JsonType):
                     "prefixItems": [self.schema(item) for item in inner["prefixItems"]]
                 }
             return inner | {"items": self.schema(inner.get("items", NUMBER))}
-        bounds: JsonSchema = {}
+        bounds: dict[str, Any] = {}
         if self.minimum is not None:
             bounds["exclusiveMinimum" if self.min_exclusive else "minimum"] = (
                 self.minimum
@@ -167,7 +183,7 @@ class Length(InRange):
             unit = "characters" if isinstance(value, str) else "items"
             raise ValueError(f"'{name}' must have {self} {unit}, got {len(value)}.")
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         text = inner.get("type") == "string"
         limits = {
             "minLength" if text else "minItems": self.minimum,
@@ -235,7 +251,7 @@ class Bounds(JsonType):
             return {self.low: min(value), self.high: max(value)}
         return {self.low: value, self.high: value} if self.exact else value
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         arms = inner.get("anyOf", [inner])
         single = [arm for arm in arms if arm.get("type") in ("number", "integer")]
         pairs = [arm for arm in arms if arm.get("type") == "array"]
@@ -263,7 +279,7 @@ class NumeratorDenominator(JsonType):
             return {"numerator": value[0], "denominator": value[1]}
         return value
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         fraction = _object_schema(
             {
                 "numerator": {"type": "integer"},
@@ -290,7 +306,12 @@ class Wrapped(JsonType):
     def encode(self, value: Any) -> Any:
         return {self.key: value}
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def decode(self, data: Any) -> Any:
+        if not isinstance(data, dict) or set(data) != {self.key}:
+            raise TypeError(f"Expected an object with only '{self.key}'.")
+        return data[self.key]
+
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         return _object_schema({self.key: inner})
 
 
@@ -311,7 +332,7 @@ class Keyed(JsonType):
     def encode(self, value: Any) -> Any:
         return {str(getattr(item, self.attribute)): item for item in value}
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         return {"type": "object", "additionalProperties": inner.get("items", {})}
 
 
@@ -327,12 +348,12 @@ class Encoded(JsonType):
     """
 
     function: Callable[[Any], Any]
-    written: JsonSchema | Callable[[JsonSchema], JsonSchema] | None = None
+    written: dict[str, Any] | Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
     def encode(self, value: Any) -> Any:
         return self.function(value)
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         if callable(self.written):
             return self.written(inner)
         return inner if self.written is None else self.written
@@ -367,8 +388,49 @@ class IndexInto(JsonType):
     def encode(self, value: Any) -> Any:
         return self.names[value]
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         return {"enum": list(self.names)}
+
+
+@cache
+def _vanilla_ids(kind: str) -> frozenset[str]:
+    if kind == "item":
+        from anvil.api.vanilla.items import vanilla_item_ids
+
+        return frozenset(vanilla_item_ids())
+    if kind == "block":
+        from anvil.api.vanilla.blocks import vanilla_block_ids
+
+        return frozenset(vanilla_block_ids())
+    from anvil.api.vanilla.entities import vanilla_entity_ids
+
+    return frozenset(vanilla_entity_ids())
+
+
+@dataclass(frozen=True, slots=True)
+class VanillaId(JsonType):
+    """A reference to an item, block or entity. A vanilla `Identifier`, such as one from
+    `MinecraftItemTypes`, must name a vanilla object of that kind, and so must the name of a
+    `BlockDescriptor`. An `Item`, `Block` or `Entity` checked itself when it was created, and
+    a plain string is written as given.
+
+    Args:
+        kind (Literal["item", "block", "entity"]): What the reference names.
+    """
+
+    kind: Literal["item", "block", "entity"]
+
+    def validate(self, name: str, value: Any) -> None:
+        from anvil.api.blocks.descriptor import BlockDescriptor
+
+        from .identifier import Identifier
+
+        if isinstance(value, BlockDescriptor):
+            value = value.name
+        if not isinstance(value, Identifier) or not value.is_vanilla:
+            return
+        if f"{value.namespace}:{value.name}" not in _vanilla_ids(self.kind):
+            raise ValueError(f"'{value}' is not a vanilla {self.kind}. Field [{name}]")
 
 
 class Merged(JsonType):
@@ -384,20 +446,20 @@ class Merged(JsonType):
             payload.update(component.__json__())
         return payload
 
-    def schema(self, inner: JsonSchema) -> JsonSchema:
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
         return {"type": "object"}
 
 
 def _trigger(value: Any) -> Any:
     from anvil.api.core.components import EventTrigger
-    from anvil.api.core.enums import FilterSubject
+    from anvil.lib.jsonmodel.enums import FilterSubject
 
     if isinstance(value, str):
         return EventTrigger(event=value, target=FilterSubject.Self)
     return value
 
 
-def _trigger_schema(inner: JsonSchema) -> JsonSchema:
+def _trigger_schema(inner: dict[str, Any]) -> dict[str, Any]:
     arms = inner.get("anyOf", [inner])
     return next((arm for arm in arms if "$ref" in arm), inner)
 
@@ -408,7 +470,7 @@ def _kept(value: Any) -> Any:
     return KeptObject(value.__json__())
 
 
-def _kept_schema(inner: JsonSchema) -> JsonSchema:
+def _kept_schema(inner: dict[str, Any]) -> dict[str, Any]:
     if inner.get("type") == "boolean":
         return {"type": "object", "additionalProperties": False}
     return inner
@@ -454,20 +516,28 @@ def _rgba255(value: Any) -> Any:
     return AnvilFormatter.convert_color(value, RGBA255)
 
 
-def _block_object(value: Any) -> dict[str, Any]:
-    from anvil.lib.schemas import MinecraftBlockDescriptor
+def _block_name(value: Any) -> Any:
+    from anvil.api.blocks.descriptor import BlockDescriptor
 
-    if isinstance(value, MinecraftBlockDescriptor) and value.states:
-        return {"name": value.identifier, "states": dict(value.states)}
-    return {"name": getattr(value, "identifier", value)}
+    if isinstance(value, BlockDescriptor):
+        return value.name
+    return getattr(value, "identifier", value)
+
+
+def _block_object(value: Any) -> dict[str, Any]:
+    from anvil.api.blocks.descriptor import BlockDescriptor
+
+    if isinstance(value, BlockDescriptor) and value.states:
+        return {"name": value.name, "states": dict(value.states)}
+    return {"name": _block_name(value)}
 
 
 def _block_specifier(value: Any) -> Any:
-    from anvil.lib.schemas import MinecraftBlockDescriptor
+    from anvil.api.blocks.descriptor import BlockDescriptor
 
-    if isinstance(value, MinecraftBlockDescriptor) and value.states:
-        return {"name": value.identifier, "states": dict(value.states)}
-    return getattr(value, "identifier", value)
+    if isinstance(value, BlockDescriptor) and value.states:
+        return {"name": value.name, "states": dict(value.states)}
+    return _block_name(value)
 
 
 def _in_project(value: str) -> str:
@@ -477,7 +547,7 @@ def _in_project(value: str) -> str:
 
 
 def _faces(value: Any) -> list[str]:
-    from anvil.api.core.enums import expand_block_face_sides
+    from anvil.lib.jsonmodel.enums import expand_block_face_sides
 
     return [str(face) for face in expand_block_face_sides(list(value))]
 
@@ -486,6 +556,90 @@ def _icon_texture(value: Any) -> dict[str, str]:
     from anvil.lib.config import CONFIG
 
     return {"default": f"{CONFIG.NAMESPACE}:{value.color}"}
+
+
+_TIME = InRange(0.0, 1.0)
+
+
+def _frames(value: Any) -> list[tuple[float, Any]] | None:
+    if (
+        isinstance(value, list)
+        and value
+        and all(isinstance(frame, tuple) and len(frame) == 2 for frame in value)
+    ):
+        return value
+    return None
+
+
+def _over_the_day_dict(frames: list[tuple[float, Any]], encode) -> dict[str, Any]:
+    return {str(time): encode(value) for time, value in frames}
+
+
+def _over_the_day(value: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "anyOf": [
+            value,
+            {
+                "type": "object",
+                "propertyNames": {"pattern": "^(0(\\.[0-9]+)?|1(\\.0+)?)$"},
+                "additionalProperties": value,
+            },
+        ]
+    }
+
+
+@dataclass(frozen=True, slots=True)
+class KeyFramed(JsonType):
+    """A number, or `(time, number)` keyframes written as `{"<time>": number}` over the day.
+    Each time must be from 0.0 to 1.0.
+
+    Args:
+        minimum (float, optional): The lowest value, of the number or of every keyframe.
+        maximum (float, optional): The highest value, of the number or of every keyframe.
+    """
+
+    minimum: float | None = None
+    maximum: float | None = None
+
+    def validate(self, name: str, value: Any) -> None:
+        frames = _frames(value)
+        values = InRange(self.minimum, self.maximum)
+        if frames is None:
+            values.validate(name, value)
+            return
+        for index, (time, frame_value) in enumerate(frames):
+            _TIME.validate(f"{name}[{index}] time", time)
+            values.validate(f"{name}[{index}] value", frame_value)
+
+    def encode(self, value: Any) -> Any:
+        frames = _frames(value)
+        return value if frames is None else _over_the_day_dict(frames, lambda v: v)
+
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
+        number = InRange(self.minimum, self.maximum).schema({"type": "number"})
+        return _over_the_day(number)
+
+
+@dataclass(frozen=True, slots=True)
+class KeyFramedColor(JsonType):
+    """A color in any format, or `(time, color)` keyframes written as `{"<time>": color}` over
+    the day. Each time must be from 0.0 to 1.0. A hex color is written in full, in lower
+    case."""
+
+    def validate(self, name: str, value: Any) -> None:
+        for index, (time, _) in enumerate(_frames(value) or []):
+            _TIME.validate(f"{name}[{index}] time", time)
+
+    def encode(self, value: Any) -> Any:
+        from anvil.lib.lib import AnvilFormatter
+
+        frames = _frames(value)
+        if frames is None:
+            return AnvilFormatter.convert_color(value)
+        return _over_the_day_dict(frames, AnvilFormatter.convert_color)
+
+    def schema(self, inner: dict[str, Any]) -> dict[str, Any]:
+        return _over_the_day(COLOR_SCHEMA)
 
 
 # endregion
@@ -508,6 +662,9 @@ ExactRangeMinMax = Bounds("range_min", "range_max", exact=True)
 XpRange = Bounds("minXP", "maxXP", exact=True)
 DespawnDistance = Bounds("min_distance", "max_distance")
 ItemObject = Wrapped("item")
+ItemId = VanillaId("item")
+BlockId = VanillaId("block")
+EntityId = VanillaId("entity")
 ColorMap = Wrapped("color_map")
 
 Trigger = Encoded(_trigger, _trigger_schema)
@@ -521,7 +678,7 @@ left out when False."""
 Hex = Encoded(_hex, {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$"})
 """A color in any format as a `#rrggbb` string."""
 
-COLOR_SCHEMA: JsonSchema = {
+COLOR_SCHEMA: dict[str, Any] = {
     "anyOf": [
         {"type": "string", "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"},
         {

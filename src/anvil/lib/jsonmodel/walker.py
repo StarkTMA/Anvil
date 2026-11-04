@@ -1,5 +1,5 @@
-"""Compiles a `JsonObject` class's field annotations into the checks, encoders and schemas its
-export and `__schema__()` use.
+"""Compiles a `JsonObject` class's field annotations into the checks, encoders, decoders and
+schemas its export, `__from_json__()` and `__schema__()` use.
 
 Each class compiles once, on its first export or schema, and keeps the result. By then every
 module is loaded, so an annotation may name its own class or a class declared further down.
@@ -13,6 +13,7 @@ is dropped: an unset field is skipped, not checked.
 | `Literal[a, b]`, an `Enum` | one of the values                  | as is              |
 | `X \\| Y`                  | the first arm that passes          | as that arm        |
 | `list[X]`, `tuple[X, ...]` | a list or tuple of X               | a list             |
+| `dict[str, X]`             | a dict of str keys to X            | an object          |
 | `tuple[A, B]`              | a list or tuple of that length     | a list             |
 | a `JsonObject`             | isinstance                         | its `__json__()`   |
 | `type[X]`                  | a subclass of X                    | as is              |
@@ -25,11 +26,10 @@ import annotationlib
 import dataclasses
 import types
 import typing
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Annotated, Any, Callable, Literal, TypeAliasType, Union
-
-from anvil.api.core.types import JsonSchema
+from typing import Annotated, Any, Literal, TypeAliasType, Union
 
 from .jsontypes import JsonType
 
@@ -53,7 +53,7 @@ def _as_is(value: Any) -> Any:
     return value
 
 
-def _anything(definitions: dict[str, JsonSchema]) -> JsonSchema:
+def _anything(definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return {}
 
 
@@ -68,12 +68,15 @@ class Node:
         encode: `encode(value)` returns the JSON form.
         describe: `describe(definitions)` returns the schema, adding the parts it uses to
             `definitions`.
+        decode: `decode(data)` returns the Python value of parsed JSON, the inverse of
+            `encode`.
     """
 
     label: str
     check: Callable[[str, Any], None]
     encode: Callable[[Any], Any] = encode_value
-    describe: Callable[[dict[str, JsonSchema]], JsonSchema] = _anything
+    describe: Callable[[dict[str, dict[str, Any]]], dict[str, Any]] = _anything
+    decode: Callable[[Any], Any] = _as_is
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +88,8 @@ class FieldSpec:
         internal: State the object keeps for its own methods (excluded and not a constructor
             option). It is never checked.
         required: The field has no default, so its key is required in the schema.
+        init: The field is a constructor option. A constant such as a `type` discriminator
+            is not.
     """
 
     name: str
@@ -95,6 +100,7 @@ class FieldSpec:
     omit_default: bool
     required: bool
     default: Callable[[], Any]
+    init: bool
 
 
 # region Nodes
@@ -152,7 +158,10 @@ def _choice(values: tuple[Any, ...], label: str, enum: type | None = None) -> No
             raise _type_error(name, label, value)
         raise ValueError(f"'{name}' must be one of {label}, got {value!r}.")
 
-    return Node(label, check, _as_is, lambda definitions: {"enum": plain})
+    def decode(data: Any) -> Any:
+        return enum(data) if enum is not None and data in plain else data
+
+    return Node(label, check, _as_is, lambda definitions: {"enum": plain}, decode)
 
 
 def _object(cls: type) -> Node:
@@ -160,13 +169,18 @@ def _object(cls: type) -> Node:
     set before the part's body is built, so a part that contains itself ends in a `$ref`.
     """
 
-    def describe(definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def describe(definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         if cls.__name__ not in definitions:
             definitions[cls.__name__] = {}
             definitions[cls.__name__] = cls.__schema_body__(definitions)
         return {"$ref": f"#/$defs/{cls.__name__}"}
 
-    return _instance(cls, encode=lambda value: value.__json__(), describe=describe)
+    return _instance(
+        cls,
+        encode=lambda value: value.__json__(),
+        describe=describe,
+        decode=cls.__from_json__,
+    )
 
 
 def _items(item: Node | list[Node]) -> Node:
@@ -188,7 +202,7 @@ def _items(item: Node | list[Node]) -> Node:
         for index, (node, entry) in enumerate(zip(nodes(value), value)):
             node.check(f"{name}[{index}]", entry)
 
-    def describe(definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def describe(definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         if not fixed:
             return {"type": "array", "items": item.describe(definitions)}
         return {
@@ -198,11 +212,47 @@ def _items(item: Node | list[Node]) -> Node:
             "maxItems": len(item),
         }
 
+    def decode(data: Any) -> Any:
+        if not isinstance(data, list):
+            raise TypeError(f"Expected {label}, got {type(data).__name__}.")
+        values = [node.decode(entry) for node, entry in zip(nodes(data), data)]
+        return tuple(values) if fixed else values
+
     return Node(
         label,
         check,
         lambda value: [node.encode(entry) for node, entry in zip(nodes(value), value)],
         describe,
+        decode,
+    )
+
+
+def _mapping(item: Node) -> Node:
+    """`dict[str, X]`: an object of any keys, each value an X."""
+    label = f"dict[str, {item.label}]"
+
+    def check(name: str, value: Any) -> None:
+        if not isinstance(value, dict):
+            raise _type_error(name, label, value)
+        for key, entry in value.items():
+            if not isinstance(key, str):
+                raise _type_error(f"{name} key", "str", key)
+            item.check(f"{name}[{key!r}]", entry)
+
+    def decode(data: Any) -> Any:
+        if not isinstance(data, dict):
+            raise TypeError(f"Expected {label}, got {type(data).__name__}.")
+        return {key: item.decode(entry) for key, entry in data.items()}
+
+    return Node(
+        label,
+        check,
+        lambda value: {key: item.encode(entry) for key, entry in value.items()},
+        lambda definitions: {
+            "type": "object",
+            "additionalProperties": item.describe(definitions),
+        },
+        decode,
     )
 
 
@@ -223,8 +273,8 @@ def _union(arms: list[Node]) -> Node:
                 refusal = refusal or error
         raise refusal or _type_error(name, label, value)
 
-    def describe(definitions: dict[str, JsonSchema]) -> JsonSchema:
-        schemas: list[JsonSchema] = []
+    def describe(definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
+        schemas: list[dict[str, Any]] = []
         for arm in arms:
             schema = arm.describe(definitions)
             for entry in schema.get("anyOf", [schema]):
@@ -234,11 +284,22 @@ def _union(arms: list[Node]) -> Node:
             return {}
         return schemas[0] if len(schemas) == 1 else {"anyOf": schemas}
 
+    def decode(data: Any) -> Any:
+        for arm in arms:
+            try:
+                value = arm.decode(data)
+                arm.check("", value)
+                return value
+            except (TypeError, ValueError):
+                pass
+        raise TypeError(f"Expected {label}, got {data!r}.")
+
     return Node(
         label,
         matching,
         lambda value: matching("", value).encode(value),
         describe,
+        decode,
     )
 
 
@@ -257,13 +318,20 @@ def _annotated(inner: Node, metadata: list[JsonType]) -> Node:
             value = meta.encode(value)
         return encode_value(value)
 
-    def describe(definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def describe(definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         schema = inner.describe(definitions)
         for meta in metadata:
             schema = meta.schema(schema)
         return schema
 
-    return Node(inner.label, check, encode if encoders else inner.encode, describe)
+    def decode(data: Any) -> Any:
+        for meta in reversed(metadata):
+            data = meta.decode(data)
+        return inner.decode(data)
+
+    return Node(
+        inner.label, check, encode if encoders else inner.encode, describe, decode
+    )
 
 
 # endregion
@@ -296,6 +364,8 @@ def _compile(annotation: Any) -> Node:
         return _items(_compile(arguments[0]))
     if origin is tuple:
         return _items([_compile(argument) for argument in arguments])
+    if origin is dict and arguments[0] is str:
+        return _mapping(_compile(arguments[1]))
     if origin is type:
         return _instance(
             type,
@@ -343,6 +413,7 @@ def compile_fields(cls: type) -> tuple[FieldSpec, ...]:
                 required=field.default is dataclasses.MISSING
                 and field.default_factory is dataclasses.MISSING,
                 default=default,
+                init=field.init,
             )
         )
     return tuple(specs)

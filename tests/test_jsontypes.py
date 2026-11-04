@@ -4,8 +4,9 @@ from enum import StrEnum
 from typing import Annotated, Literal
 
 import pytest
-
-from anvil.api.core.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
+from anvil.api.blocks.blocks import Block
+from anvil.api.blocks.descriptor import BlockDescriptor
+from anvil.api.core.components import EventTrigger
 from anvil.lib.jsonmodel import (
     AsObject,
     AsString,
@@ -16,6 +17,7 @@ from anvil.lib.jsonmodel import (
     ExpandFaces,
     FitToFrame,
     Hex,
+    Identifier,
     IndexInto,
     InRange,
     ItemObject,
@@ -41,9 +43,7 @@ from anvil.lib.jsonmodel import (
     YesNo,
     json_field,
 )
-from anvil.lib.schemas import MinecraftBlockDescriptor
-
-from anvil.api.core.components import EventTrigger
+from anvil.lib.jsonmodel.types import RGB, RGB255, RGBA, RGBA255, HexRGB, HexRGBA
 
 type Color = HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255
 
@@ -252,7 +252,7 @@ def test_keyed_wrapped_and_object_shapes():
             default=None
         )
         items: list[Annotated[str, ItemObject]] | None = json_field(default=None)
-        block: Annotated[str | MinecraftBlockDescriptor, BlockObject] | None = (
+        block: Annotated[str | Block | BlockDescriptor, BlockObject] | None = (
             json_field(default=None)
         )
         pairs: Annotated[list[tuple[str, str]], AsObject] | None = json_field(
@@ -264,7 +264,7 @@ def test_keyed_wrapped_and_object_shapes():
         flags=[_Flag(name="head", on=False)],
         skins=[0, 1],
         items=["minecraft:apple"],
-        block=MinecraftBlockDescriptor("minecraft:stone", True),
+        block=Identifier.parse("minecraft:stone", vanilla=True),
         pairs=[("minecraft:cow", "minecraft:mooshroom")],
     )
     assert exported == {
@@ -319,8 +319,8 @@ def test_value_formats():
 
 
 def test_faces_and_project_names(monkeypatch):
-    from anvil.api.core.enums import BlockFaceValues
     from anvil.lib import config
+    from anvil.lib.jsonmodel.enums import BlockFaceValues
 
     class _Named(JsonObject):
         faces: Annotated[list[BlockFaceValues], ExpandFaces] | None = json_field(

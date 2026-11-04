@@ -5,9 +5,8 @@ against each one's placement, requirements and clashes.
 
 from __future__ import annotations
 
-from typing import Annotated, Any, Iterator, Self
-
-from anvil.api.core.types import JsonSchema
+from collections.abc import Iterator
+from typing import Annotated, Any, Self
 
 from .component import ComponentPlacement, JsonComponent
 from .fields import json_field
@@ -81,7 +80,6 @@ class JsonContainer(JsonObject):
         name (str): The group name: `components` for the root, or the key under `component_groups`.
     """
 
-    # private attr
     _components: Annotated[list[JsonComponent], Merged()] = json_field(
         default_factory=list, init=False, key="components"
     )
@@ -126,7 +124,7 @@ class JsonContainer(JsonObject):
         }
 
     @classmethod
-    def __schema_body__(cls, definitions: dict[str, JsonSchema]) -> JsonSchema:
+    def __schema_body__(cls, definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
         """Any components, keyed by identifier, under the container name."""
         return {"type": "object", "additionalProperties": {"type": "object"}}
 

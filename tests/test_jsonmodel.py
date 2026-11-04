@@ -330,18 +330,6 @@ def test_bare_names_get_the_namespace_vanilla_asks_for(project_namespace):
     assert _Bare.identifier == "minecraft:climate"
 
 
-def test_component_types_resolve_for_type_checkers():
-    from annotationlib import Format, call_evaluate_function
-
-    from anvil.api.core import types
-
-    def evaluate(alias):
-        return call_evaluate_function(alias.evaluate_value, Format.STRING)
-
-    assert evaluate(types.ComponentClass) == "type[JsonComponent]"
-    assert evaluate(types.ComponentClasses) == "tuple[ComponentClass, ...]"
-
-
 def test_metadata_converts_only_the_json_form():
     class _Upper(JsonType):
         def encode(self, value: Any) -> Any:
@@ -429,3 +417,52 @@ def test_abstract_check_survives_post_init_chains():
         _Parent()
     _Child()
     assert calls == ["parent", "child"]
+
+
+class _Shape(JsonObject):
+    kind: Literal["box", "ball"] = json_field()
+    size: tuple[float, float] | None = None
+    corners: list[_Point] = json_field(default_factory=list)
+    tags: dict[str, _Point] | None = None
+    radius: float | str | None = None
+    fixed: str = json_field(default="shape", init=False)
+
+
+class _Radius(JsonValue):
+    value: float = json_field()
+
+
+def test_from_json_rebuilds_typed_objects():
+    data = {
+        "kind": "box",
+        "size": [1, 2.5],
+        "corners": [{"x": 1}, {"y": 2}],
+        "tags": {"top": {"x": 3, "y": 4}},
+        "radius": "q.life_time",
+        "fixed": "shape",
+    }
+    shape = _Shape.__from_json__(data)
+    assert shape.size == (1, 2.5)
+    assert isinstance(shape.corners[0], _Point) and shape.corners[1].y == 2
+    assert shape.tags["top"].x == 3
+    assert shape.radius == "q.life_time"
+    assert shape.__json__() == {
+        "kind": "box",
+        "size": [1, 2.5],
+        "corners": [{"x": 1, "y": 0}, {"x": 0, "y": 2}],
+        "tags": {"top": {"x": 3, "y": 4}},
+        "radius": "q.life_time",
+        "fixed": "shape",
+    }
+    assert _Radius.__from_json__(2).value == 2
+
+
+def test_from_json_refuses_what_the_class_does_not_write():
+    with pytest.raises(ValueError, match="no key 'colour'"):
+        _Shape.__from_json__({"kind": "box", "colour": "red"})
+    with pytest.raises(ValueError, match="always 'shape'"):
+        _Shape.__from_json__({"kind": "box", "fixed": "other"})
+    with pytest.raises(TypeError):
+        _Shape.__from_json__({"kind": "box", "corners": [1]})
+    with pytest.raises(TypeError):
+        _Shape.__from_json__([])
