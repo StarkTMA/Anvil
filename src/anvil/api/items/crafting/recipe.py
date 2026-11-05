@@ -84,7 +84,7 @@ class _Recipe(JsonObject, abstract=True):
             raise ValueError("The recipe has no identifier.")
 
 
-class _BaseRecipe(JsonFile):
+class _BaseRecipe[D: JsonObject](JsonFile[D]):
     """The base of the recipe file classes."""
 
     _extension = ".recipe.json"
@@ -100,7 +100,7 @@ class _BaseRecipe(JsonFile):
     @property
     def _recipe(self) -> _Recipe:
         """The recipe body in the file."""
-        return self._content.recipe
+        return self._document.recipe
 
     def priority(self, priority: int) -> "_BaseRecipe":
         """Sets the priority of the recipe when several recipes match.

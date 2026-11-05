@@ -55,12 +55,11 @@ class _MusicDefinitionsFile(JsonObject):
         return schema
 
 
-class MusicDefinition(JsonFile):
+class MusicDefinition(JsonFile[_MusicDefinitionsFile]):
     """The music definitions of the resource pack, `sounds/music_definitions.json`: the
     music played for each music category. There is one per pack.
     """
 
-    _document = _MusicDefinitionsFile
     _instance = None
     _pack = Pack.RP
     _folder = "sounds"
@@ -100,7 +99,7 @@ class MusicDefinition(JsonFile):
         Returns:
             _SoundDescription: The music's sound definition; add its files with `add_sound`.
         """
-        self._content.add_music(
+        self._document.add_music(
             _Music(
                 category=str(music_reference),
                 event_name=f"{CONFIG.NAMESPACE}:music.{music_reference}",
@@ -117,6 +116,6 @@ class MusicDefinition(JsonFile):
         return super().queue("")
 
     def __export__(self) -> None:
-        if not self._content.music:
+        if not self._document.music:
             return None
         return super().__export__()

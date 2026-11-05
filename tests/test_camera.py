@@ -23,7 +23,7 @@ def project_namespace():
 def _check(file):
     schema = type(file).__schema__()
     jsonschema.Draft202012Validator.check_schema(schema)
-    exported = AnvilIO._normalize_json_like(file._content)
+    exported = AnvilIO._normalize_json_like(file._document)
     jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
     return exported
 
@@ -98,9 +98,9 @@ def test_camera_preset_inheritance():
     from_preset = CameraPreset("cam_inst", from_enum)
     from_text = CameraPreset("cam_str", "testns:other_camera")
 
-    assert from_enum._content.preset.inherit_from == "minecraft:free"
-    assert from_preset._content.preset.inherit_from == "testns:cam_enum"
-    assert from_text._content.preset.inherit_from == "testns:other_camera"
+    assert from_enum._document.preset.inherit_from == "minecraft:free"
+    assert from_preset._document.preset.inherit_from == "testns:cam_enum"
+    assert from_text._document.preset.inherit_from == "testns:other_camera"
     with pytest.raises(TypeError):
         CameraPreset("cam_invalid", 123)
 
@@ -153,7 +153,7 @@ def test_camera_preset_refuses_out_of_range_values(build):
     preset = CameraPreset("cam_range", CameraPresets.Free)
     build(preset)
     with pytest.raises(ValueError):
-        preset._content.__json__()
+        preset._document.__json__()
 
 
 def test_camera_preset_aim_assist():
@@ -173,7 +173,7 @@ def test_camera_preset_aim_assist():
 
     preset.aim_assist(AimAssistPreset("far"), distance=20)
     with pytest.raises(ValueError):
-        preset._content.__json__()
+        preset._document.__json__()
 
 
 def test_camera_preset_focus_target():

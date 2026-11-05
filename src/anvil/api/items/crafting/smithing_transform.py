@@ -60,13 +60,12 @@ class _SmithingTransformRecipeFile(JsonObject):
     )
 
 
-class SmithingRecipe(_BaseRecipe):
+class SmithingRecipe(_BaseRecipe[_SmithingTransformRecipeFile]):
     """A smithing table transform recipe: a base item upgraded with a template and a material.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/recipereference/examples/recipedefinitions/recipe_smithing_transform)
     """
 
-    _document = _SmithingTransformRecipeFile
     _object_type = "Smithing Recipe"
 
     def __init__(self, name: str, tags: Sequence[str] = ("smithing_table",)) -> None:

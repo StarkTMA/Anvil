@@ -132,7 +132,7 @@ class _TextureSetFile(JsonObject):
     )
 
 
-class TextureSet(JsonFile):
+class TextureSet(JsonFile[_TextureSetFile]):
     """Represents a PBR Texture Set configuration for Minecraft Bedrock Edition.
 
     Allows linking base color textures with physical property maps (normal, height, MER, MERS)
@@ -141,7 +141,6 @@ class TextureSet(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/visualreference/texture_set.v1.21.30)
     """
 
-    _document = _TextureSetFile
     _object_type = "Texture Set"
     _extension = ".texture_set.json"
     _pack = Pack.RP
@@ -284,7 +283,7 @@ class TextureSet(JsonFile):
                 components.mers
             )
 
-        self._content.texture_set.set_layers(color_map)
+        self._document.texture_set.set_layers(color_map)
         self._folder = self._folder / self._target
 
     def set_particle_textures(
@@ -344,7 +343,7 @@ class TextureSet(JsonFile):
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
 
         self._folder = self._folder / self._target / blockbench
-        self._content.texture_set.set_layers(color_map)
+        self._document.texture_set.set_layers(color_map)
         return self
 
     def set_vanilla_texture(
@@ -384,7 +383,7 @@ class TextureSet(JsonFile):
             self._blockbench.textures.queue_texture(components.mers, dest_dir=dest_dir)
             color_map["metalness_emissive_roughness_subsurface"] = components.mers
 
-        self._content.texture_set.set_layers(color_map)
+        self._document.texture_set.set_layers(color_map)
         return self
 
     def __export__(self) -> None:
@@ -400,7 +399,7 @@ class TextureSet(JsonFile):
                         )
 
         if CONFIG.PBR and (
-            self._content.texture_set.layer_count > 1
+            self._document.texture_set.layer_count > 1
             or self._target == "particle"
             or self._overriding_vanilla
         ):

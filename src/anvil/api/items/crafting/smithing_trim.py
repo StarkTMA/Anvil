@@ -62,13 +62,12 @@ def _item_or_tag(
     return str(item) if tag is None else _RecipeItem(tag=tag)
 
 
-class SmithingTrimRecipe(_BaseRecipe):
+class SmithingTrimRecipe(_BaseRecipe[_SmithingTrimRecipeFile]):
     """A smithing table trim recipe: armor decorated with a trim template and a material.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/recipereference/examples/recipedefinitions/recipe_smithing_trim)
     """
 
-    _document = _SmithingTrimRecipeFile
     _object_type = "Smithing Trim Recipe"
 
     def __init__(self, name: str, tags: Sequence[str] = ("smithing_table",)) -> None:

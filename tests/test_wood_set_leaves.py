@@ -77,7 +77,7 @@ def test_leaves_loot_table_conditions(make_leaves):
         if getattr(obj, "_object_type", None) == "Loot Table"
     ]
     table = [t for t in queued_tables if t.name == "rotten_leaves"][-1]
-    exported = AnvilIO._normalize_json_like(table._content)["pools"]
+    exported = AnvilIO._normalize_json_like(table._document)["pools"]
 
     # Pool 0: Shears
     assert exported[0]["conditions"] == [
@@ -118,5 +118,5 @@ def test_leaves_loot_table_without_sapling(make_leaves):
         if getattr(obj, "_object_type", None) == "Loot Table"
     ]
     (table,) = [t for t in queued_tables if t.name == "rotten_leaves"]
-    exported = AnvilIO._normalize_json_like(table._content)["pools"]
+    exported = AnvilIO._normalize_json_like(table._document)["pools"]
     assert len(exported) == 3  # shears, silk touch, sticks (no sapling)

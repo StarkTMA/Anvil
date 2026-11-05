@@ -1,6 +1,7 @@
 """Tests for the typed feature and feature rule files."""
 
 import pytest
+
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.core.filters import Filter
 from anvil.api.features import (
@@ -34,7 +35,7 @@ def _json(value):
 def _check(feature):
     schema = type(feature).__schema__()
     jsonschema.Draft202012Validator.check_schema(schema)
-    exported = _json(feature._content)
+    exported = _json(feature._document)
     jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
     return exported
 
@@ -82,7 +83,7 @@ def test_single_block_feature():
 
 def test_single_block_feature_needs_a_block():
     with pytest.raises(ValueError):
-        _json(SingleBlockFeature("empty")._content)
+        _json(SingleBlockFeature("empty")._document)
 
 
 def test_scatter_feature_and_rule_distribution():
@@ -127,7 +128,7 @@ def test_scatter_feature_and_rule_distribution():
 
 def test_scatter_feature_needs_a_distribution():
     with pytest.raises(ValueError):
-        _json(ScatterFeature("flowers", "test:flower")._content)
+        _json(ScatterFeature("flowers", "test:flower")._document)
 
 
 def test_coordinate_range_grid_options_need_a_grid():
@@ -141,7 +142,7 @@ def test_scatter_chance_denominator_must_be_positive():
     rule = FeatureRule("rule", "test:flower", FeatureRulePlacementPass.FirstPass)
     rule.distribution(1, (1, 0), 0, 0, 0)
     with pytest.raises(ValueError):
-        _json(rule._content)
+        _json(rule._document)
 
 
 def test_feature_lists():
@@ -150,7 +151,7 @@ def test_feature_lists():
     )
     assert _body(aggregate)["features"] == ["test:a", "test:b"]
     with pytest.raises(ValueError):
-        _json(AggregateFeature("none")._content)
+        _json(AggregateFeature("none")._document)
 
     weighted = (
         WeightedRandomFeature("pick").add_feature("test:a", 2).features([("test:b", 1)])
@@ -160,9 +161,9 @@ def test_feature_lists():
 
 def test_values_raise_instead_of_being_clamped():
     with pytest.raises(ValueError):
-        _json(OreFeature("ore", 0)._content)
+        _json(OreFeature("ore", 0)._document)
     with pytest.raises(ValueError):
-        _json(SnapToSurfaceFeature("snap", "test:a", 8, surface="sideways")._content)
+        _json(SnapToSurfaceFeature("snap", "test:a", 8, surface="sideways")._document)
 
 
 def test_ore_and_search_features():
@@ -177,7 +178,7 @@ def test_ore_and_search_features():
     assert _body(search)["search_volume"] == {"min": [0, 0, 0], "max": [0, 8, 0]}
     search.search_volume((0, 9, 0), (0, 8, 0))
     with pytest.raises(ValueError):
-        _json(search._content)
+        _json(search._document)
 
 
 def test_structure_template_constraints_are_kept_when_empty():
@@ -235,7 +236,7 @@ def test_geode_ranges_raise():
     )
     assert _body(GeodeFeature("geode", **options))["max_radius"] == 16
     with pytest.raises(ValueError):
-        _json(GeodeFeature("bad", **(options | {"generate_crack_chance": 2}))._content)
+        _json(GeodeFeature("bad", **(options | {"generate_crack_chance": 2}))._document)
 
 
 def test_tree_feature():
@@ -273,7 +274,7 @@ def test_tree_feature():
 
 def test_tree_has_one_trunk_and_needs_one():
     with pytest.raises(ValueError):
-        _json(TreeFeature("bare")._content)
+        _json(TreeFeature("bare")._document)
     tree = TreeFeature("tree").trunk("test:log").fancy_trunk("test:log")
     body = _body(tree)
     assert "trunk" not in body and "fancy_trunk" in body
@@ -323,4 +324,4 @@ def test_tree_trunks_and_canopies_match_the_schema(build):
 def test_tree_cherry_trunk_base_must_be_two():
     tree = TreeFeature("tree").cherry_trunk("test:log", base_height=1)
     with pytest.raises(ValueError):
-        _json(tree._content)
+        _json(tree._document)

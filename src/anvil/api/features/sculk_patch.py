@@ -73,14 +73,12 @@ class _SculkPatchFeatureFile(JsonObject):
         self.feature = feature
 
 
-class SculkPatchFeature(Feature):
+class SculkPatchFeature(Feature[_SculkPatchFeatureFile]):
     """Places a patch of sculk that spreads from cursors, with an optional block at its
     centre.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/featuresintroduction)
     """
-
-    _document = _SculkPatchFeatureFile
 
     def __init__(
         self,
@@ -114,7 +112,7 @@ class SculkPatchFeature(Feature):
                 chance, or a range it is picked from.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _SculkPatchFeature(
                 description=self._description(),
                 can_place_sculk_patch_on=_blocks(can_place_sculk_patch_on),

@@ -1051,7 +1051,7 @@ class _LootTableFile(JsonObject):
         return pool
 
 
-class LootTable(JsonFile):
+class LootTable(JsonFile[_LootTableFile]):
     """A loot table: what drops from entities, blocks, chests, fishing and other rewards.
 
     Each pool is rolled on its own, and each roll picks one of its entries by weight.
@@ -1069,7 +1069,6 @@ class LootTable(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/introductiontoloottables?view=minecraft-bedrock-stable)
     """
 
-    _document = _LootTableFile
     _extension = ".loot_table.json"
     _pack = Pack.BP
     _object_type = "Loot Table"
@@ -1093,7 +1092,7 @@ class LootTable(JsonFile):
         Returns:
             _LootPool: The pool, to add entries, conditions and tiers to.
         """
-        return self._content.add_pool(rolls)
+        return self._document.add_pool(rolls)
 
     @property
     def table_path(self) -> str:

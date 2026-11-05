@@ -256,7 +256,7 @@ class _UIScreenFile(JsonObject):
         )
 
 
-class _UIScreen(JsonFile):
+class _UIScreen(JsonFile[_UIScreenFile]):
     """A UI screen file: a namespace and its elements.
 
     It also keeps the title and actionbar texts its elements react to, which `UI` gathers.
@@ -264,7 +264,6 @@ class _UIScreen(JsonFile):
     [Bedrock Wiki](https://wiki.bedrock.dev/json-ui/json-ui-documentation)
     """
 
-    _document = _UIScreenFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "ui"
@@ -288,7 +287,7 @@ class _UIScreen(JsonFile):
             defs (_UIDefs): UI definitions manager
         """
         super().__init__(name)
-        self._content.set_namespace(namespace)
+        self._document.set_namespace(namespace)
         self._namespace = namespace
         self._anvil_animation = anvil_animation
         self._variables = variables
@@ -372,7 +371,7 @@ class _UIScreen(JsonFile):
                     f"{element_name}_element@anvil_hud.{element_name}",
                 )
 
-        self._content.elements.append(new_element)
+        self._document.elements.append(new_element)
         return new_element
 
     def queue(self, directory: str = "") -> "_UIScreen":
@@ -382,9 +381,9 @@ class _UIScreen(JsonFile):
         Args:
             directory (str, optional): Subdirectory for the file. Defaults to "".
         """
-        if not self._content.elements:
+        if not self._document.elements:
             return self
-        for element in self._content.elements:
+        for element in self._document.elements:
             element._copy_textures()
         self._defs.add_file(
             PurePosixPath("ui", directory, f"{self.name}{self._extension}").as_posix()

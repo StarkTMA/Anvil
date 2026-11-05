@@ -77,13 +77,12 @@ class _ShapedRecipeFile(JsonObject):
 _KEY_SYMBOLS = "abcdefghi"
 
 
-class ShapedCraftingRecipe(_BaseRecipe):
+class ShapedCraftingRecipe(_BaseRecipe[_ShapedRecipeFile]):
     """A shaped crafting recipe: ingredients placed in a pattern on the crafting grid.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/recipereference/examples/recipedefinitions/recipe_shaped)
     """
 
-    _document = _ShapedRecipeFile
     _object_type = "Shaped Crafting Recipe"
 
     def __init__(

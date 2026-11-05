@@ -85,14 +85,13 @@ class _CraftingItemsCatalogFile(JsonObject):
     )
 
 
-class CraftingItemCatalog(JsonFile):
+class CraftingItemCatalog(JsonFile[_CraftingItemsCatalogFile]):
     """The crafting item catalog: the groups and items added to the creative inventory and
     the recipe book. Additions go at the end of their category.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/craftingitemcatalogdocumentation)
     """
 
-    _document = _CraftingItemsCatalogFile
     _instance = None
     _extension = ".json"
     _pack = Pack.BP
@@ -140,7 +139,7 @@ class CraftingItemCatalog(JsonFile):
             )
 
         identifiers = [str(item.identifier) for item in items]
-        target = self._content.catalog.category(category)
+        target = self._document.catalog.category(category)
         group = target.group(localized_key)
         if group is None:
             target.add_group(
@@ -173,7 +172,7 @@ class CraftingItemCatalog(JsonFile):
         for item in items:
             item.server.description.set_menu_category(category=category)
 
-        self._content.catalog.category(category).add_group(
+        self._document.catalog.category(category).add_group(
             _CatalogGroup(items=[str(item.identifier) for item in items])
         )
         return self

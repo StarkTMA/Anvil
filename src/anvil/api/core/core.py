@@ -233,7 +233,7 @@ def addon_object_exception(object: JsonFile, e: Exception):
         err=True,
     )
     click.echo(
-        click.style(f"\rObject Content: {object._content}", fg="yellow"), err=True
+        click.style(f"\rObject Content: {object._document}", fg="yellow"), err=True
     )
     click.echo(click.style(f"\rError Message: {str(e)}", fg="red"), err=True)
     click.echo(click.style(f"\r{'='*60}", fg="red"), err=True)

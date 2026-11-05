@@ -94,7 +94,7 @@ class _AimAssistPresetFile(JsonObject):
     )
 
 
-class AimAssistPreset(JsonFile):
+class AimAssistPreset(JsonFile[_AimAssistPresetFile]):
     """An aim assist preset: which category is used for each held item, and what aim assist
     never targets. Camera presets use one through `CameraPreset.aim_assist`, the
     `/aimassist` command by its identifier.
@@ -104,7 +104,6 @@ class AimAssistPreset(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/camerasystem/aimassistpresets)
     """
 
-    _document = _AimAssistPresetFile
     _extension = ".json"
     _pack = Pack.BP
     _folder = _PRESETS_FOLDER
@@ -118,7 +117,7 @@ class AimAssistPreset(JsonFile):
                 `<namespace>:<name>`.
         """
         super().__init__(name)
-        self._content.preset.set_identifier(self.identifier)
+        self._document.preset.set_identifier(self.identifier)
 
     def item_setting(self, item: str, category: str) -> "AimAssistPreset":
         """Uses an aim assist category while an item is held.
@@ -127,7 +126,7 @@ class AimAssistPreset(JsonFile):
             item (str): The item identifier.
             category (str): The name of a category in `AimAssistCategories`.
         """
-        self._content.preset.add_item_setting(item, category)
+        self._document.preset.add_item_setting(item, category)
         return self
 
     def default_item_settings(self, category: str) -> "AimAssistPreset":
@@ -136,7 +135,7 @@ class AimAssistPreset(JsonFile):
         Args:
             category (str): The category name.
         """
-        self._content.preset.set_default_item_settings(category)
+        self._document.preset.set_default_item_settings(category)
         return self
 
     def hand_settings(self, category: str) -> "AimAssistPreset":
@@ -145,7 +144,7 @@ class AimAssistPreset(JsonFile):
         Args:
             category (str): The category name.
         """
-        self._content.preset.set_hand_settings(category)
+        self._document.preset.set_hand_settings(category)
         return self
 
     def exclusion_list(self, exclusions: list[str]) -> "AimAssistPreset":
@@ -155,7 +154,7 @@ class AimAssistPreset(JsonFile):
             exclusions (list[str]): The block and entity identifiers to exclude, such as
                 `"minecraft:bedrock"`.
         """
-        self._content.preset.set_exclusion_list(exclusions)
+        self._document.preset.set_exclusion_list(exclusions)
         return self
 
     def liquid_targeting_list(self, targets: list[str]) -> "AimAssistPreset":
@@ -165,7 +164,7 @@ class AimAssistPreset(JsonFile):
             targets (list[str]): The item identifiers that target liquids while held, such
                 as `"minecraft:bucket"`.
         """
-        self._content.preset.set_liquid_targeting_list(targets)
+        self._document.preset.set_liquid_targeting_list(targets)
         return self
 
     def queue(self) -> "AimAssistPreset":
@@ -294,14 +293,13 @@ class _AimAssistCategoriesFile(JsonObject):
     )
 
 
-class AimAssistCategories(JsonFile):
+class AimAssistCategories(JsonFile[_AimAssistCategoriesFile]):
     """The aim assist categories of the pack, written next to the aim assist presets as
     `categories.json`. Only one category is active at a time, chosen by the held item.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/camerasystem/aimassistpresets#aim-assist-categories)
     """
 
-    _document = _AimAssistCategoriesFile
     _extension = ".json"
     _pack = Pack.BP
     _folder = _PRESETS_FOLDER
@@ -318,7 +316,7 @@ class AimAssistCategories(JsonFile):
             category (str): The category name.
         """
         part = AimAssistCategory(category)
-        self._content.categories.add_category(part)
+        self._document.categories.add_category(part)
         return part
 
     def queue(self) -> "AimAssistCategories":

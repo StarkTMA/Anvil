@@ -436,13 +436,12 @@ class _AnimationsFile(JsonObject):
         self.animations.append(animation)
 
 
-class Animations(JsonFile):
+class Animations(JsonFile[_AnimationsFile]):
     """An animations file (``<name>.animations.json``) holding many animations.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/schemasreference/schemas/minecraftschema_actor_animation_1.8.0)
     """
 
-    _document = _AnimationsFile
     _extension = ".animations.json"
     _pack = Pack.RP
     _folder = "animations"
@@ -483,18 +482,18 @@ class Animations(JsonFile):
             animation_length=length,
         )
         animation._set_file(self)
-        self._content.add_animation(animation)
+        self._document.add_animation(animation)
         return animation
 
     @property
     def has_animations(self) -> bool:
-        return bool(self._content.animations)
+        return bool(self._document.animations)
 
     def get(self, name: str) -> _Animation | None:
         return next(
             (
                 animation
-                for animation in self._content.animations
+                for animation in self._document.animations
                 if animation.name == name
             ),
             None,
@@ -507,7 +506,7 @@ class Animations(JsonFile):
         """
         locators = geometry.locator_names
         problems: list[str] = []
-        for animation in self._content.animations:
+        for animation in self._document.animations:
             for bone in animation.bones:
                 if not bone.is_empty() and geometry.find(bone.name) is None:
                     problems.append(f"'{animation.name}': bone '{bone.name}' not found")

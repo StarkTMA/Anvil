@@ -36,15 +36,13 @@ class _HeightDifferenceFilterFeatureFile(JsonObject):
         self.feature = feature
 
 
-class HeightDifferenceFilterFeature(Feature):
+class HeightDifferenceFilterFeature(Feature[_HeightDifferenceFilterFeatureFile]):
     """Places a feature only where the terrain has the right shape: the height differences
     up and down, within a radius in each cardinal direction, must be within the limits
     given. Useful for features that only fit cliffs, slopes or flat ground.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_height_difference_filter_feature)
     """
-
-    _document = _HeightDifferenceFilterFeatureFile
 
     def __init__(
         self,
@@ -73,7 +71,7 @@ class HeightDifferenceFilterFeature(Feature):
                 downwards.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _HeightDifferenceFilterFeature(
                 description=self._description(),
                 places_feature=str(places_feature),

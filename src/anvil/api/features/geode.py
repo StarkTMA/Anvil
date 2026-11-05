@@ -75,7 +75,7 @@ class _GeodeFeatureFile(JsonObject):
         self.feature = feature
 
 
-class GeodeFeature(Feature):
+class GeodeFeature(Feature[_GeodeFeatureFile]):
     """Places a rock formation like a geode: layers of shell around a filler, with
     optional blocks growing inside and a crack.
 
@@ -84,8 +84,6 @@ class GeodeFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_geode_feature)
     """
-
-    _document = _GeodeFeatureFile
 
     def __init__(
         self,
@@ -151,7 +149,7 @@ class GeodeFeature(Feature):
                 blocks that may grow inside the geode.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _GeodeFeature(
                 description=self._description(),
                 filler=filler,

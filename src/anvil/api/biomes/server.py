@@ -49,13 +49,12 @@ class _BiomeServerFile(JsonObject):
 # endregion
 
 
-class BiomeServer(JsonFile):
+class BiomeServer(JsonFile[_BiomeServerFile]):
     """A server biome: its description and the components that generate it.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/biomesreference/)
     """
 
-    _document = _BiomeServerFile
     _extension = ".biome.json"
     _pack = Pack.BP
     _folder = "biomes"
@@ -75,12 +74,12 @@ class BiomeServer(JsonFile):
     @property
     def description(self) -> _BiomeDescription:
         """The biome description."""
-        return self._content.biome.description
+        return self._document.biome.description
 
     @property
     def components(self) -> ComponentGroup:
         """The biome components."""
-        return self._content.biome.components
+        return self._document.biome.components
 
     def __export__(self) -> None:
         """Checks the components before the file is written.

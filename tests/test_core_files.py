@@ -1,6 +1,7 @@
 """Tests for the typed texture atlases, sound files and pack manifests."""
 
 import pytest
+
 from anvil.api.blocks.blocks_json import BlocksJSONObject
 from anvil.api.core.manifest import ManifestBP, ManifestRP
 from anvil.api.sounds import (
@@ -59,7 +60,7 @@ def fresh_files(monkeypatch, tmp_path):
 def _check(file):
     schema = type(file).__schema__()
     jsonschema.Draft202012Validator.check_schema(schema)
-    exported = AnvilIO._normalize_json_like(file._content)
+    exported = AnvilIO._normalize_json_like(file._document)
     jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
     return exported
 
@@ -113,7 +114,7 @@ def test_terrain_variation_weight_is_checked():
     atlas = TerrainTexturesObject()
     atlas.add_block_variations("stone", "rock", [("stone_0", 0.01)])
     with pytest.raises(ValueError):
-        atlas._content.__json__()
+        atlas._document.__json__()
 
 
 def test_flipbook_textures():
@@ -142,7 +143,7 @@ def test_flipbook_replicate_must_be_a_power_of_two():
     flipbook = FlipBookTexturesObject()
     flipbook.add_block("lava", "fluid", "lava", [0], replicate=3)
     with pytest.raises(ValueError):
-        flipbook._content.__json__()
+        flipbook._document.__json__()
 
 
 # endregion
@@ -398,7 +399,7 @@ def test_manifest_settings():
 def test_manifest_settings_are_checked(build):
     build(ManifestBP().settings)
     with pytest.raises(ValueError):
-        ManifestBP()._content.__json__()
+        ManifestBP()._document.__json__()
 
 
 def test_manifest_setting_names_are_unique():

@@ -32,13 +32,12 @@ class _UIVariablesFile(JsonObject):
         return _keyed_schema(schema, "$variables", r"^\$", {})
 
 
-class _UIVariables(JsonFile):
+class _UIVariables(JsonFile[_UIVariablesFile]):
     """The global UI variables of the resource pack, in `ui/_global_variables.json`.
 
     [Bedrock Wiki](https://wiki.bedrock.dev/json-ui/json-ui-documentation#global-variables)
     """
 
-    _document = _UIVariablesFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "ui"
@@ -55,7 +54,7 @@ class _UIVariables(JsonFile):
             variable (str): The variable name, starting with `$`.
             value: Its value: a string, number, boolean, vector or expression.
         """
-        self._content.set_variable(variable, value)
+        self._document.set_variable(variable, value)
         return self
 
 
@@ -69,13 +68,12 @@ class _UIDefsFile(JsonObject):
         self.ui_defs.append(path)
 
 
-class _UIDefs(JsonFile):
+class _UIDefs(JsonFile[_UIDefsFile]):
     """The list of UI files of the resource pack, in `ui/_ui_defs.json`.
 
     [Bedrock Wiki](https://wiki.bedrock.dev/json-ui/json-ui-intro#ui-defs)
     """
 
-    _document = _UIDefsFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "ui"
@@ -91,5 +89,5 @@ class _UIDefs(JsonFile):
         Args:
             path (str): The path of the UI file from the pack root.
         """
-        self._content.add_file(path)
+        self._document.add_file(path)
         return self

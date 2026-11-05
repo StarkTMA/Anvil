@@ -674,14 +674,13 @@ class _SpawnRulesFile(JsonObject):
     )
 
 
-class SpawnRule(JsonFile):
+class SpawnRule(JsonFile[_SpawnRulesFile]):
     """An entity's spawn rules: its population pool and the conditions it spawns under.
     Written only when it has conditions.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/cliententitydocumentation/datadrivenspawning)
     """
 
-    _document = _SpawnRulesFile
     _extension = ".spawn_rules.json"
     _pack = Pack.BP
     _folder = "spawn_rules"
@@ -700,14 +699,14 @@ class SpawnRule(JsonFile):
     @property
     def description(self) -> _SpawnRuleDescription:
         """The description builders, such as `set_population_control`."""
-        return self._content.spawn_rules.description
+        return self._document.spawn_rules.description
 
     @property
     def add_condition(self) -> _SpawnRuleCondition:
         """Adds a set of conditions the entity spawns under, and returns it. Each set is
         another way to spawn, such as on the surface or underground."""
         condition = _SpawnRuleCondition()
-        self._content.spawn_rules.conditions.append(condition)
+        self._document.spawn_rules.conditions.append(condition)
         return condition
 
     def queue(self, directory: str | None = None) -> "SpawnRule | None":
@@ -716,6 +715,6 @@ class SpawnRule(JsonFile):
         Args:
             directory (str, optional): The folder inside `spawn_rules`.
         """
-        if self._content.spawn_rules.conditions:
+        if self._document.spawn_rules.conditions:
             return super().queue(directory=directory)
         return None

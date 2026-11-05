@@ -140,7 +140,7 @@ class _SingleBlockFeatureFile(JsonObject):
     )
 
 
-class SingleBlockFeature(Feature):
+class SingleBlockFeature(Feature[_SingleBlockFeatureFile]):
     """Places one block, picked at random by weight from the blocks added.
 
     `may_attach_to` and `may_replace` are allowlists of where the block can be placed: any
@@ -153,8 +153,6 @@ class SingleBlockFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_single_block_feature)
     """
-
-    _document = _SingleBlockFeatureFile
 
     def __init__(
         self,

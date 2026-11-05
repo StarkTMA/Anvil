@@ -52,7 +52,7 @@ class _ScatterFeatureFile(JsonObject):
     )
 
 
-class ScatterFeature(DistributionMixin, Feature):
+class ScatterFeature(DistributionMixin, Feature[_ScatterFeatureFile]):
     """Places a feature several times around its position, as set by `distribution()`.
 
     Coordinates are offsets from the position, not absolute positions. The scatter chance
@@ -63,8 +63,6 @@ class ScatterFeature(DistributionMixin, Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_scatter_feature)
     """
-
-    _document = _ScatterFeatureFile
 
     def __init__(
         self,

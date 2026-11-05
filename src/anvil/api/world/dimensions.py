@@ -110,7 +110,7 @@ class _DimensionFile(JsonObject):
     )
 
 
-class DimensionConfiguration(JsonFile):
+class DimensionConfiguration(JsonFile[_DimensionFile]):
     """Overrides a vanilla dimension's height bounds or generator.
 
     - The Overworld supports custom height bounds (``minecraft:dimension_bounds``) and void generation.
@@ -122,7 +122,6 @@ class DimensionConfiguration(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/datadrivenoverworldheight)
     """
 
-    _document = _DimensionFile
     _extension = ".json"
     _pack = Pack.BP
     _folder = "dimensions"
@@ -145,7 +144,7 @@ class DimensionConfiguration(JsonFile):
 
         super().__init__(dimension, is_vanilla=True)
         self._dimension = dimension
-        self._content.dimension.set_description(self.identifier)
+        self._document.dimension.set_description(self.identifier)
 
         if void or dimension != Dimension.Overworld:
             self.generator_type("void")
@@ -163,7 +162,7 @@ class DimensionConfiguration(JsonFile):
         if self._dimension != Dimension.Overworld:
             raise ValueError("Only the Overworld supports custom height bounds.")
         minimum, maximum = range
-        self._content.dimension.components.set_dimension_bounds(minimum, maximum)
+        self._document.dimension.components.set_dimension_bounds(minimum, maximum)
         return self
 
     def generator_type(
@@ -176,7 +175,7 @@ class DimensionConfiguration(JsonFile):
         Returns:
             DimensionConfiguration: The current DimensionConfiguration instance.
         """
-        self._content.dimension.components.set_generation(generator)
+        self._document.dimension.components.set_generation(generator)
         return self
 
     def queue(self) -> "DimensionConfiguration":

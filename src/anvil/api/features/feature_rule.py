@@ -84,14 +84,13 @@ class _FeatureRuleFile(JsonObject):
     )
 
 
-class FeatureRule(DistributionMixin, JsonFile):
+class FeatureRule(DistributionMixin, JsonFile[_FeatureRuleFile]):
     """Attaches one feature to the biomes that pass its biome filter, and says in which
     pass and where in each chunk the feature is placed.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/featuresintroduction#feature-rules)
     """
 
-    _document = _FeatureRuleFile
     _object_type = "Feature Rule"
     _extension = ".json"
     _pack = Pack.BP
@@ -113,7 +112,7 @@ class FeatureRule(DistributionMixin, JsonFile):
                 passes run before later ones; rules of one pass run in no set order.
         """
         super().__init__(name)
-        rule = self._content.feature_rules
+        rule = self._document.feature_rules
         rule.description.set_description(self.identifier, str(feature))
         rule.conditions.set_placement_pass(placement_pass)
 
@@ -125,11 +124,11 @@ class FeatureRule(DistributionMixin, JsonFile):
             filters (Filter | Sequence[Filter]): The filter, a group of filters such as
                 `Filter.any_of(...)`, or a list of filters.
         """
-        self._content.feature_rules.conditions.set_biome_filter(filters)
+        self._document.feature_rules.conditions.set_biome_filter(filters)
         return self
 
     def _distribution_owner(self) -> _FeatureRule:
-        return self._content.feature_rules
+        return self._document.feature_rules
 
     def queue(self) -> "FeatureRule":
         """Queues the feature rule for export."""

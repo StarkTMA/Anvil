@@ -151,7 +151,7 @@ class _TradeTableFile(JsonObject):
         return tier
 
 
-class TradeTable(JsonFile):
+class TradeTable(JsonFile[_TradeTableFile]):
     """A trade table: the trades of a villager or wandering trader, in tiers unlocked by the
     trader's experience.
 
@@ -166,7 +166,6 @@ class TradeTable(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/createtradetable?view=minecraft-bedrock-stable)
     """
 
-    _document = _TradeTableFile
     _extension = ".json"
     _pack = Pack.BP
     _object_type = "Trade Table"
@@ -190,7 +189,7 @@ class TradeTable(JsonFile):
         Returns:
             _TradeTier: The tier, to add groups of trades to.
         """
-        return self._content.add_tier(total_exp_required)
+        return self._document.add_tier(total_exp_required)
 
     @property
     def table_path(self) -> str:

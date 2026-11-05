@@ -41,7 +41,7 @@ def test_keyframe_serialization():
 
 
 def _exported(file, key):
-    return AnvilIO._normalize_json_like(file._content)[key]
+    return AnvilIO._normalize_json_like(file._document)[key]
 
 
 def test_atmospheric_settings():
@@ -157,13 +157,13 @@ def test_shadow_settings():
     assert settings._path == config.CONFIG.RP_PATH / "shadows"
     assert settings._file_name == "global"
 
-    assert AnvilIO._normalize_json_like(settings._content) == {
+    assert AnvilIO._normalize_json_like(settings._document) == {
         "format_version": SHADOW_SETTINGS_VERSION,
         "minecraft:shadow_settings": {},
     }
 
     settings.shadow_style("soft_shadows", 32)
-    assert AnvilIO._normalize_json_like(settings._content) == {
+    assert AnvilIO._normalize_json_like(settings._document) == {
         "format_version": SHADOW_SETTINGS_VERSION,
         "minecraft:shadow_settings": {"shadow_style": "soft_shadows", "texel_size": 32},
     }
@@ -172,11 +172,11 @@ def test_shadow_settings():
 def test_shadow_settings_checked_on_export():
     settings = ShadowSettings().shadow_style("blocky_shadows", 0)
     with pytest.raises(ValueError):
-        AnvilIO._normalize_json_like(settings._content)
+        AnvilIO._normalize_json_like(settings._document)
 
     settings = ShadowSettings().shadow_style("sharp_shadows")
     with pytest.raises(ValueError):
-        AnvilIO._normalize_json_like(settings._content)
+        AnvilIO._normalize_json_like(settings._document)
 
 
 def test_color_grading_settings():
@@ -247,7 +247,7 @@ def test_local_lighting():
     assert settings.lights["minecraft:torch"].light_type == "static_light"
     with pytest.raises(ValueError):
         settings.add_local_light("minecraft:lamp", "#fff", "spot_light")
-        settings._content.__json__()
+        settings._document.__json__()
     with config.override(PBR=False):
         with pytest.raises(ValueError):
             LocalLighting()
@@ -256,7 +256,7 @@ def test_local_lighting():
 def test_pbr_fallback():
     fallback = PBRFallback()
     assert fallback._path == config.CONFIG.RP_PATH / "pbr"
-    assert AnvilIO._normalize_json_like(fallback._content) == {
+    assert AnvilIO._normalize_json_like(fallback._document) == {
         "format_version": PBR_FALLBACK_SETTINGS_VERSION,
         "minecraft:pbr_fallback_settings": {},
     }
@@ -265,7 +265,7 @@ def test_pbr_fallback():
     fallback.actors_fallback("#0000cc00")
     fallback.particles_fallback((0, 0, 204, 0))
     mers = {"global_metalness_emissive_roughness_subsurface": [0, 0, 204, 0]}
-    assert AnvilIO._normalize_json_like(fallback._content) == {
+    assert AnvilIO._normalize_json_like(fallback._document) == {
         "format_version": PBR_FALLBACK_SETTINGS_VERSION,
         "minecraft:pbr_fallback_settings": {
             "actors": mers,
@@ -278,25 +278,25 @@ def test_pbr_fallback():
 def test_pbr_fallback_checked_on_export():
     fallback = PBRFallback().items_fallback("not a color")
     with pytest.raises(ValueError):
-        AnvilIO._normalize_json_like(fallback._content)
+        AnvilIO._normalize_json_like(fallback._document)
 
 
 def test_pbr_fallback_mer_has_no_alpha():
     fallback = PBRFallback()
-    blocks = fallback._content.settings.blocks
+    blocks = fallback._document.settings.blocks
     blocks.set_global_metalness_emissive_roughness("#ff8000")
-    exported = AnvilIO._normalize_json_like(fallback._content)
+    exported = AnvilIO._normalize_json_like(fallback._document)
     assert exported["minecraft:pbr_fallback_settings"]["blocks"] == {
         "global_metalness_emissive_roughness": [255, 128, 0]
     }
 
     blocks.set_global_metalness_emissive_roughness("#ff8000ff")
     with pytest.raises(ValueError, match="alpha"):
-        AnvilIO._normalize_json_like(fallback._content)
+        AnvilIO._normalize_json_like(fallback._document)
 
     blocks.set_global_metalness_emissive_roughness((255, 128, 0, 255))
     with pytest.raises((TypeError, ValueError)):
-        AnvilIO._normalize_json_like(fallback._content)
+        AnvilIO._normalize_json_like(fallback._document)
 
 
 def test_combined_fog():
@@ -406,14 +406,14 @@ def test_settings_identifiers_are_checked():
     from anvil.lib.jsonmodel import Identifier
 
     lighting = LightingSettings("sunset")
-    identifier = lighting._content.settings.description
+    identifier = lighting._document.settings.description
     assert isinstance(identifier, Identifier)
     assert identifier == "testns:sunset"
     assert identifier.namespace == "testns"
     assert lighting.identifier is identifier
 
     cubemap = CubeMapSettings()
-    assert cubemap._content.settings.description.is_vanilla
+    assert cubemap._document.settings.description.is_vanilla
 
     with pytest.raises(ValueError, match="custom identifier"):
         WaterSettings("minecraft:clear_water")

@@ -39,7 +39,7 @@ class _AggregateFeatureFile(JsonObject):
     )
 
 
-class AggregateFeature(Feature):
+class AggregateFeature(Feature[_AggregateFeatureFile]):
     """Places a collection of features, all at the same position, in no guaranteed order.
     The features should not depend on each other.
 
@@ -48,8 +48,6 @@ class AggregateFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_aggregate_feature)
     """
-
-    _document = _AggregateFeatureFile
 
     def features(self, feature_list: Sequence["Feature | str"]) -> "AggregateFeature":
         """Adds features to place. At least one is needed.

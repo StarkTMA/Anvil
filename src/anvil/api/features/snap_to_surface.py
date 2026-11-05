@@ -49,14 +49,12 @@ class _SnapToSurfaceFeatureFile(JsonObject):
         self.feature = feature
 
 
-class SnapToSurfaceFeature(Feature):
+class SnapToSurfaceFeature(Feature[_SnapToSurfaceFeatureFile]):
     """Places a feature on the floor, the ceiling or a wall found within a range above or
     below its position. Fails if the surface is in another biome.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_snap_to_surface_feature)
     """
-
-    _document = _SnapToSurfaceFeatureFile
 
     def __init__(
         self,
@@ -90,7 +88,7 @@ class SnapToSurfaceFeature(Feature):
                 than on it. Defaults to False.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _SnapToSurfaceFeature(
                 description=self._description(),
                 feature_to_snap=str(feature_to_snap),

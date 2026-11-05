@@ -131,14 +131,13 @@ class _SoundDefinitionsFile(JsonObject):
         ] + [sound]
 
 
-class SoundDefinition(JsonFile):
+class SoundDefinition(JsonFile[_SoundDefinitionsFile]):
     """The sound definitions of the resource pack, `sounds/sound_definitions.json`: each
     sound name and the files it plays. There is one per pack.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/addcustomsounds)
     """
 
-    _document = _SoundDefinitionsFile
     _instance = None
     _pack = Pack.RP
     _folder = "sounds"
@@ -195,7 +194,7 @@ class SoundDefinition(JsonFile):
             min_distance=min_distance,
             subtitle=subtitle,
         )
-        self._content.add_sound_definition(sound)
+        self._document.add_sound_definition(sound)
 
         if server_sound is not None:
             ServerSoundDefinition().server_sound_reference(
@@ -209,9 +208,9 @@ class SoundDefinition(JsonFile):
 
     def __export__(self) -> None:
         """Copies the sound files and writes the definitions, when there is any."""
-        if not self._content.sound_definitions:
+        if not self._document.sound_definitions:
             return None
-        for definition in self._content.sound_definitions:
+        for definition in self._document.sound_definitions:
             for sound in definition.sounds:
                 path = PurePosixPath(sound.name)
                 Directory.copy_files(

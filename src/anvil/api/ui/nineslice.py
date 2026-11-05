@@ -33,7 +33,7 @@ class _NinesliceFile(JsonObject):
             raise ValueError("A nineslice needs a base size.")
 
 
-class NinesliceJson(JsonFile):
+class NinesliceJson(JsonFile[_NinesliceFile]):
     """Makes a UI texture a nineslice: its border keeps its size and its center stretches.
 
     ```python
@@ -41,7 +41,6 @@ class NinesliceJson(JsonFile):
     ```
     """
 
-    _document = _NinesliceFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = Path("textures", "ui")
@@ -60,12 +59,12 @@ class NinesliceJson(JsonFile):
     ) -> "NinesliceJson":
         """Sets the border that does not stretch: one size for every side, or the left,
         top, right and bottom sizes in pixels."""
-        self._content.set_nineslice_size(nineslice_size)
+        self._document.set_nineslice_size(nineslice_size)
         return self
 
     def base_size(self, width: int, height: int) -> "NinesliceJson":
         """Sets the size of the texture in pixels."""
-        self._content.set_base_size(width, height)
+        self._document.set_base_size(width, height)
         return self
 
     def queue(self) -> "NinesliceJson":

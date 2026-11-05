@@ -41,13 +41,12 @@ class _FurnaceRecipeFile(JsonObject):
     )
 
 
-class SmeltingRecipe(_BaseRecipe):
+class SmeltingRecipe(_BaseRecipe[_FurnaceRecipeFile]):
     """A furnace recipe: an item smelted in furnaces, smokers, blast furnaces or campfires.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/recipereference/examples/recipedefinitions/recipe_furnace)
     """
 
-    _document = _FurnaceRecipeFile
     _object_type = "Smelting Recipe"
 
     def __init__(self, name: str, tags: Sequence[SmeltingTags]) -> None:

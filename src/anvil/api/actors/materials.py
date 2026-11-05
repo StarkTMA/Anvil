@@ -447,7 +447,7 @@ class Material(_MaterialSettings):
 
     def queue(self) -> "Material":
         """Adds the material to `materials/entity.material`."""
-        MaterialsObject()._content.materials.add(self)
+        MaterialsObject()._document.materials.add(self)
         return self
 
     def __str__(self) -> str:
@@ -490,14 +490,13 @@ class _MaterialsFile(JsonObject):
     materials: _Materials = json_field(default_factory=_Materials)
 
 
-class MaterialsObject(JsonFile):
+class MaterialsObject(JsonFile[_MaterialsFile]):
     """The project's custom entity materials, `materials/entity.material`. There is one per
     pack.
 
     ## [Documentation reference](https://wiki.bedrock.dev/visuals/materials)
     """
 
-    _document = _MaterialsFile
     _instance = None
     _extension = ".material"
     _pack = Pack.RP
@@ -518,11 +517,11 @@ class MaterialsObject(JsonFile):
 
     def add_material(self, material: Material) -> Material:
         """Adds a material to the file."""
-        self._content.materials.add(material)
+        self._document.materials.add(material)
         return material
 
     def queue(self) -> "MaterialsObject":
         """Queues the materials for export, when there is any."""
-        if self._content.materials.definitions:
+        if self._document.materials.definitions:
             super().queue()
         return self

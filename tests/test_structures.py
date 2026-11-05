@@ -6,7 +6,7 @@ from anvil.lib.lib import AnvilIO
 
 
 def _exported(file):
-    return AnvilIO._normalize_json_like(file._content)
+    return AnvilIO._normalize_json_like(file._document)
 
 
 @pytest.fixture

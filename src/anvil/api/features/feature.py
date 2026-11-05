@@ -139,7 +139,7 @@ class _Feature(JsonObject, abstract=True):
     description: _FeatureDescription = json_field(default_factory=_FeatureDescription)
 
 
-class Feature(JsonFile):
+class Feature[D: JsonObject](JsonFile[D]):
     """The base of the feature types. Create one of them, such as :class:`ScatterFeature`.
 
     A feature is written as its identifier wherever another file references it.
@@ -161,7 +161,7 @@ class Feature(JsonFile):
             TypeError: When `Feature` itself is created rather than a feature type.
         """
         super().__init__(name)
-        if self._content.feature is not None:
+        if self._document.feature is not None:
             self._feature.description.set_identifier(self.identifier)
 
     def _description(self) -> _FeatureDescription:
@@ -171,7 +171,7 @@ class Feature(JsonFile):
     @property
     def _feature(self) -> Any:
         """The body of the feature in the file."""
-        return self._content.feature
+        return self._document.feature
 
     def queue(self) -> "Feature":
         """Queues the feature for export."""

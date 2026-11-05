@@ -95,7 +95,7 @@ class _StructureTemplateFeatureFile(JsonObject):
         self.feature = feature
 
 
-class StructureTemplateFeature(Feature):
+class StructureTemplateFeature(Feature[_StructureTemplateFeatureFile]):
     """Places a structure saved as a `.mcstructure` file in the `structures` folder of a
     behavior pack, any behavior pack.
 
@@ -107,8 +107,6 @@ class StructureTemplateFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_structure_template_feature)
     """
-
-    _document = _StructureTemplateFeatureFile
 
     def __init__(
         self,
@@ -136,7 +134,7 @@ class StructureTemplateFeature(Feature):
                 level. Game default 0.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _StructureTemplateFeature(
                 description=self._description(),
                 structure_name=str(structure_name),

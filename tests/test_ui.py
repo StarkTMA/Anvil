@@ -116,7 +116,7 @@ def test_screen_file():
     screen = _screen()
     panel = screen.add_element("panel").set_type(UIElementType.Panel)
     panel.add_control("child").set_layer(1)
-    exported = _check(screen._content)
+    exported = _check(screen._document)
     assert exported == {
         "namespace": "test_ns",
         "panel": {"type": "panel", "controls": [{"child": {"layer": 1}}]},
@@ -128,13 +128,13 @@ def test_screen_refuses_two_elements_with_one_name():
     screen.add_element("panel")
     screen.add_element("panel")
     with pytest.raises(ValueError):
-        _json(screen._content)
+        _json(screen._document)
 
 
 def test_title_trigger_adds_the_factory_once():
     screen = _screen()
     screen.add_element("logo", trigger="title", keyword="logo")
-    exported = _json(screen._content)
+    exported = _json(screen._document)
     assert list(exported) == [
         "namespace",
         "logo_factory",
@@ -144,7 +144,7 @@ def test_title_trigger_adds_the_factory_once():
         "name": "hud_title_text_factory",
         "control_ids": {"hud_title_text": "logo_element@test_ns.logo"},
     }
-    variables = _json(screen._variables._content)
+    variables = _json(screen._variables._document)
     assert variables["$anvil.logo.text"] == "test:logo"
 
 
@@ -157,7 +157,7 @@ def test_animation_file():
     animations.add_animation("move").set_anim_type(UIAnimType.Offset).set_from(
         (0, "100%")
     ).set_to((0, 0))
-    exported = _check(animations._content)
+    exported = _check(animations._document)
     assert exported == {
         "namespace": "test_animations",
         "fade": {"anim_type": "alpha", "duration": "$fade_time", "from": 0, "to": 1},
@@ -169,10 +169,10 @@ def test_animation_file():
 def test_variables_and_defs_files():
     variables = _UIVariables()
     variables.add_variable("$a", 1).add_variable("$b", "x").add_variable("$a", 2)
-    assert _check(variables._content) == {"$a": 2, "$b": "x"}
+    assert _check(variables._document) == {"$a": 2, "$b": "x"}
 
     defs = _UIDefs().add_file("ui/anvil/common.json")
-    assert _check(defs._content) == {"ui_defs": ["ui/anvil/common.json"]}
+    assert _check(defs._document) == {"ui_defs": ["ui/anvil/common.json"]}
 
 
 def test_ui_file_needs_a_namespace():
@@ -185,7 +185,7 @@ def test_dialogue_file():
     scene = dialogue.add_scene("start").properties("Guide", "Hello there")
     scene.button("Next", ["say hi", "/tp @s 0 0 0"]).set_on_open_commands(["/say open"])
     dialogue.add_scene("silent")
-    exported = _check(dialogue._content)
+    exported = _check(dialogue._document)
     scenes = exported["minecraft:npc_dialogue"]["scenes"]
     assert scenes[0]["scene_tag"] == "test:start"
     assert scenes[0]["buttons"][0]["commands"] == ["/say hi", "/tp @s 0 0 0"]

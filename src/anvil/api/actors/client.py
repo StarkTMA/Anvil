@@ -711,14 +711,13 @@ class _ClientEntityFile(JsonObject):
     )
 
 
-class EntityClient(JsonFile):
+class EntityClient(JsonFile[_ClientEntityFile]):
     """A client entity: its geometry, textures, materials, animations and render
     controllers.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/examples/cliententitydocumentation/cliententitydocumentationintroduction)
     """
 
-    _document = _ClientEntityFile
     _extension = ".entity.json"
     _pack = Pack.RP
     _folder = "entity"
@@ -737,7 +736,7 @@ class EntityClient(JsonFile):
     @property
     def description(self) -> _EntityClientDescription:
         """The description builders."""
-        return self._content.client_entity.description
+        return self._document.client_entity.description
 
     def __export__(self) -> None:
         self.description.__prepare_export__(self)

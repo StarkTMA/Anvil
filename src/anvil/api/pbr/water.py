@@ -169,13 +169,12 @@ class _WaterSettingsFile(JsonObject):
     )
 
 
-class WaterSettings(JsonFile):
+class WaterSettings(JsonFile[_WaterSettingsFile]):
     """Water effects customization settings for Vibrant Visuals (PBR) rendering.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/vibrantvisuals/watercustomization)
     """
 
-    _document = _WaterSettingsFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "water"
@@ -191,7 +190,7 @@ class WaterSettings(JsonFile):
                 "Atmospherics addon requires PBR to be enabled in the config."
             )
         super().__init__("water" if name == "default_water" else name, identifier=name)
-        self._content.settings.set_description(self.identifier)
+        self._document.settings.set_description(self.identifier)
 
     def particle_concentrations(
         self,
@@ -208,7 +207,7 @@ class WaterSettings(JsonFile):
             chlorophyll (float | None): Concentration of chlorophyll in the water.
             suspended_sediment (float | None): Concentration of suspended sediment in the water.
         """
-        pc = self._content.settings.particle_concentrations
+        pc = self._document.settings.particle_concentrations
         if cdom is not None:
             pc.set_cdom(cdom)
         if chlorophyll is not None:
@@ -252,7 +251,7 @@ class WaterSettings(JsonFile):
             speed_scaling (float, optional): Controls how much faster/slower subsequent octaves move. Valid range: 0.0 to 2.0.
         """
 
-        waves = self._content.settings.waves
+        waves = self._document.settings.waves
         if enabled is not None:
             waves.set_enabled(enabled)
         if depth is not None:
@@ -299,7 +298,7 @@ class WaterSettings(JsonFile):
             scale (float, optional): Controls the size of the caustics texture repetition (0.1 - 5.0).
             texture (str, optional): Resource location for a custom caustics texture; defaults to built-in texture if not provided.
         """
-        caustics = self._content.settings.caustics
+        caustics = self._document.settings.caustics
         if enabled is not None:
             caustics.set_enabled(enabled)
         if frame_length is not None:

@@ -2,6 +2,7 @@
 animation controllers, events and the entity and item client descriptions."""
 
 import pytest
+
 from anvil.api.actors.animation_controllers import BPAnimationControllers
 from anvil.api.actors.animations import BPAnimations
 from anvil.api.actors.entity import Entity
@@ -36,7 +37,7 @@ def project(monkeypatch):
 def _check(file):
     schema = type(file).__schema__()
     jsonschema.Draft202012Validator.check_schema(schema)
-    exported = AnvilIO._normalize_json_like(file._content)
+    exported = AnvilIO._normalize_json_like(file._document)
     jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
     return exported
 
@@ -74,7 +75,7 @@ def test_material_with_the_same_key_replaces_the_first():
 def test_material_refuses_a_stencil_ref_out_of_range():
     Material("bad").set_stencilRef(300).queue()
     with pytest.raises(ValueError):
-        MaterialsObject()._content.__json__()
+        MaterialsObject()._document.__json__()
 
 
 def test_spawn_rule_conditions():
@@ -108,11 +109,11 @@ def test_spawn_rule_refuses_values_out_of_range():
     rule = SpawnRule("testns:imp")
     rule.add_condition.brightness_filter(0, 20)
     with pytest.raises(ValueError):
-        rule._content.__json__()
+        rule._document.__json__()
     rule = SpawnRule("testns:imp")
     rule.add_condition.delay_filter(1, 2, "testns:imp", 150)
     with pytest.raises(ValueError):
-        rule._content.__json__()
+        rule._document.__json__()
 
 
 def test_spawn_rule_without_conditions_is_not_queued():
@@ -213,7 +214,7 @@ def test_animation_controller_needs_its_transition_targets():
     file = BPAnimationControllers(server.description)
     file.queue()
     with pytest.raises(ValueError):
-        file._content.__json__()
+        file._document.__json__()
 
 
 def test_rp_controller_states():

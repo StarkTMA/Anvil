@@ -55,7 +55,7 @@ class _MultiBlockFeatureFile(JsonObject):
     )
 
 
-class MultiBlockFeature(Feature):
+class MultiBlockFeature(Feature[_MultiBlockFeatureFile]):
     """Places a multi-block, a block with the `minecraft:multi_block` trait.
 
     `places_block` must be the first part of the multi-block, the one whose
@@ -66,8 +66,6 @@ class MultiBlockFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_multi_block_feature)
     """
-
-    _document = _MultiBlockFeatureFile
 
     def __init__(
         self,

@@ -119,7 +119,7 @@ class _ServerSoundDefinitionsFile(JsonObject):
         self.definitions.append(sound)
 
 
-class ServerSoundDefinition(JsonFile):
+class ServerSoundDefinition(JsonFile[_ServerSoundDefinitionsFile]):
     """The behavior pack's server sound definitions (experimental, from Minecraft 26.40):
     duration, music information and tags of sounds the resource pack defines.
 
@@ -128,7 +128,6 @@ class ServerSoundDefinition(JsonFile):
     `SoundEvent.add_*_event` methods), so a server sound always has its client sound.
     """
 
-    _document = _ServerSoundDefinitionsFile
     _instance = None
     _pack = Pack.BP
     _folder = "sounds"
@@ -155,18 +154,18 @@ class ServerSoundDefinition(JsonFile):
             sound_identifier (str): The sound name, `<namespace>:<sound_reference>`.
             music_info (MusicInfo): The duration, music information and tags.
         """
-        self._content.add_definition(
+        self._document.add_definition(
             _ServerSound.from_music_info(sound_identifier, music_info)
         )
         return self
 
     def queue(self) -> "ServerSoundDefinition":
         """Queues the server sound definitions, when there is any."""
-        if not self._content.definitions:
+        if not self._document.definitions:
             return self
         return super().queue("")
 
     def __export__(self) -> None:
-        if not self._content.definitions:
+        if not self._document.definitions:
             return None
         return super().__export__()

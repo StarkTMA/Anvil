@@ -50,13 +50,12 @@ class _ShapelessRecipeFile(JsonObject):
     )
 
 
-class ShapelessRecipe(_BaseRecipe):
+class ShapelessRecipe(_BaseRecipe[_ShapelessRecipeFile]):
     """A shapeless crafting recipe: ingredients placed anywhere on the crafting grid.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/recipereference/examples/recipedefinitions/recipe_shapeless)
     """
 
-    _document = _ShapelessRecipeFile
     _object_type = "Shapeless Recipe"
 
     def __init__(self, name: str, tags: Sequence[str] = ("crafting_table",)) -> None:

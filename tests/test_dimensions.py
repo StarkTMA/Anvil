@@ -14,7 +14,7 @@ def world_project():
 
 
 def _exported(file):
-    return AnvilIO._normalize_json_like(file._content)
+    return AnvilIO._normalize_json_like(file._document)
 
 
 def test_overworld_bounds():

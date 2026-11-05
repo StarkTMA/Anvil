@@ -86,14 +86,13 @@ class _BlockCullingFile(JsonObject):
     )
 
 
-class _BlockCulling(JsonFile):
+class _BlockCulling(JsonFile[_BlockCullingFile]):
     """Block culling rules for a block's geometry.
 
     Rules are validated against the bones and cubes of the exported
     :class:`Geometry`, so a collection only accepts its own bones.
     """
 
-    _document = _BlockCullingFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "block_culling"
@@ -102,7 +101,7 @@ class _BlockCulling(JsonFile):
     def __init__(self, name: str, geometry: Geometry) -> None:
         super().__init__(name)
         self._geometry = geometry
-        self._content.rules.set_description(self.identifier)
+        self._document.rules.set_description(self.identifier)
 
     def add_rule(
         self,
@@ -142,7 +141,7 @@ class _BlockCulling(JsonFile):
                 bone=bone, face=face or None, cube=cube_index
             ),
         )
-        self._content.rules.add_rule(rule)
+        self._document.rules.add_rule(rule)
 
 
 _geometry_cullings: dict[str, _BlockCulling] = {}

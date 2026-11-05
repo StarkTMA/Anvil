@@ -1,5 +1,6 @@
 import orjson
 import pytest
+
 from anvil.api.biomes.components import (
     BiomeClimate,
     BiomeCreatureSpawnProbability,
@@ -677,7 +678,7 @@ def _check_file(file):
     jsonschema = pytest.importorskip("jsonschema")
     schema = type(file).__schema__()
     jsonschema.Draft202012Validator.check_schema(schema)
-    exported = AnvilIO._normalize_json_like(file._content)
+    exported = AnvilIO._normalize_json_like(file._document)
     jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
     return exported
 
@@ -712,7 +713,7 @@ def test_biome_server_file():
     server.components.add(BiomeTags(tags=["custom", "overworld"]))
     assert server.identifier == "test:test_biome"
     assert _check_file(server) == {
-        "format_version": server._content.format_version,
+        "format_version": server._document.format_version,
         "minecraft:biome": {
             "description": {"identifier": "test:test_biome"},
             "components": {
@@ -734,7 +735,7 @@ def test_biome_client_file():
     client = BiomeClient("test_biome")
     client.sky_color("#80a0ff").grass_appearance("swamp_grass").precipitation(ash=0.5)
     assert _check_file(client) == {
-        "format_version": client._content.format_version,
+        "format_version": client._document.format_version,
         "minecraft:client_biome": {
             "description": {"identifier": "test:test_biome"},
             "components": {

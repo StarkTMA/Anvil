@@ -1,4 +1,5 @@
 import pytest
+
 from anvil.api.world.loot_tables import LootConditions, LootTable
 from anvil.lib.lib import AnvilIO
 
@@ -131,7 +132,7 @@ def test_entries_reference_loot_tables_by_path():
     table = LootTable("outer")
     entry = table.pool().entry(inner, weight=2).set_quality(-1)
     entry.functions.FillContainer(inner)
-    assert _json(table._content)["pools"][0]["entries"][0] == {
+    assert _json(table._document)["pools"][0]["entries"][0] == {
         "type": "loot_table",
         "name": inner.table_path,
         "count": 1,
@@ -147,7 +148,7 @@ def test_functions_use_documented_keys():
     functions = table.pool((3, 1)).entry("minecraft:wool").functions
     functions.LootingEnchant((0, 1)).RandomAuxValue((0, 15))
     functions.RandomBlockState("color", (0, 15)).EnchantRandomGear(2.0)
-    pool = _json(table._content)["pools"][0]
+    pool = _json(table._document)["pools"][0]
     assert pool["rolls"] == {"min": 1, "max": 3}
     assert pool["entries"][0]["functions"] == [
         {"function": "looting_enchant", "count": {"min": 0, "max": 1}},
@@ -173,7 +174,7 @@ def test_added_functions():
     pool.entry("minecraft:iron_chestplate").functions.SetArmorTrim(
         "netherite", "wayfinder"
     )
-    entries = _json(table._content)["pools"][0]["entries"]
+    entries = _json(table._document)["pools"][0]["entries"]
     assert entries[0]["functions"] == [
         {
             "function": "set_banner_details",
@@ -224,7 +225,7 @@ def test_out_of_range_values_raise_on_export(build):
     table = LootTable("invalid")
     build(table.pool())
     with pytest.raises(ValueError):
-        _json(table._content)
+        _json(table._document)
 
 
 def test_schema_validates_export():
@@ -240,4 +241,4 @@ def test_schema_validates_export():
     pool.entry("minecraft:banner").functions.SetBannerDetails(
         0, "white", [("creeper", "lime")]
     ).ExplosionDecay().SetOminousBottleAmplifier((0, 4)).SetStewEffect([1])
-    jsonschema.validate(_json(table._content), LootTable.__schema__())
+    jsonschema.validate(_json(table._document), LootTable.__schema__())

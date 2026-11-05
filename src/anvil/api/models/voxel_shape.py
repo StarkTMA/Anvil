@@ -201,7 +201,7 @@ class _VoxelGroup:
                 yield item
 
 
-class VoxelShape(JsonFile):
+class VoxelShape(JsonFile[_VoxelShapeFile]):
     """A voxel shape file (``<name>.shape.json``) built from a tree of groups.
 
     The file is named after `name`. The shape identifier is
@@ -210,7 +210,6 @@ class VoxelShape(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/voxelshapes)
     """
 
-    _document = _VoxelShapeFile
     _extension = ".shape.json"
     _pack = Pack.BP
     _folder = "shapes"
@@ -221,7 +220,7 @@ class VoxelShape(JsonFile):
         self._identifier_name = identifier_name or name
         self._roots: list[_VoxelGroup] = []
         self._by_name: dict[str, _VoxelGroup] = {}
-        self._content.voxel_shape.description.set_identifier(self.shape_identifier)
+        self._document.voxel_shape.description.set_identifier(self.shape_identifier)
 
     @property
     def identifier_name(self) -> str:
@@ -236,7 +235,7 @@ class VoxelShape(JsonFile):
         self._by_name[group._name] = group
 
     def _sync(self) -> None:
-        self._content.voxel_shape.shape.set_boxes(self.boxes)
+        self._document.voxel_shape.shape.set_boxes(self.boxes)
 
     def group(self, name: str) -> _VoxelGroup:
         """Creates a root group and returns it."""

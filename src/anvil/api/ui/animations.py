@@ -259,13 +259,12 @@ class _UIAnimationFile(JsonObject):
         )
 
 
-class _UIAnimation(JsonFile):
+class _UIAnimation(JsonFile[_UIAnimationFile]):
     """A UI animation file, whose animations elements refer to as `@namespace.name`.
 
     [Bedrock Wiki](https://wiki.bedrock.dev/json-ui/json-ui-documentation#animations)
     """
 
-    _document = _UIAnimationFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "ui"
@@ -281,7 +280,7 @@ class _UIAnimation(JsonFile):
         """
         super().__init__(name)
         self._defs = defs
-        self._content.set_namespace(namespace)
+        self._document.set_namespace(namespace)
 
     def add_animation(self, animation_name: str) -> _UIAnimationElement:
         """Adds an animation and returns it.
@@ -290,7 +289,7 @@ class _UIAnimation(JsonFile):
             animation_name (str): Name of the animation
         """
         animation = _UIAnimationElement(animation_name)
-        self._content.animations.append(animation)
+        self._document.animations.append(animation)
         return animation
 
     def queue(self, directory: str = "") -> "_UIAnimation":

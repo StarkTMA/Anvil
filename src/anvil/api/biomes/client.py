@@ -78,13 +78,12 @@ class _BiomeClientFile(JsonObject):
 # endregion
 
 
-class BiomeClient(JsonFile):
+class BiomeClient(JsonFile[_BiomeClientFile]):
     """A client biome: its description and the components that render it.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/clientbiomesreference/)
     """
 
-    _document = _BiomeClientFile
     _extension = ".client_biome.json"
     _pack = Pack.RP
     _folder = "biomes"
@@ -104,12 +103,12 @@ class BiomeClient(JsonFile):
     @property
     def description(self) -> _BiomeDescription:
         """The biome description."""
-        return self._content.client_biome.description
+        return self._document.client_biome.description
 
     @property
     def components(self) -> ComponentGroup:
         """The client biome components."""
-        return self._content.client_biome.components
+        return self._document.client_biome.components
 
     def ambient_sounds(
         self,

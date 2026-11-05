@@ -198,7 +198,7 @@ class _CameraPresetFile(JsonObject):
     )
 
 
-class CameraPreset(JsonFile):
+class CameraPreset(JsonFile[_CameraPresetFile]):
     """A custom camera preset, used with the `/camera` command or the Script API. Settings
     it does not set are inherited from the preset it is based on.
 
@@ -207,7 +207,6 @@ class CameraPreset(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/camerasystem/cameracommandintroduction)
     """
 
-    _document = _CameraPresetFile
     _extension = ".camera.json"
     _pack = Pack.BP
     _folder = _PRESETS_FOLDER
@@ -236,7 +235,7 @@ class CameraPreset(JsonFile):
             raise TypeError(
                 "inherit_from must be a CameraPresets, a CameraPreset or an identifier."
             )
-        self._content.preset.set_description(self.identifier, str(inherit_from))
+        self._document.preset.set_description(self.identifier, str(inherit_from))
         self._replace_reticle = False
 
     def position(
@@ -249,7 +248,7 @@ class CameraPreset(JsonFile):
             y (float, optional): The Y position.
             z (float, optional): The Z position.
         """
-        self._content.preset.set_position(x, y, z)
+        self._document.preset.set_position(x, y, z)
         return self
 
     def rotation(
@@ -261,7 +260,7 @@ class CameraPreset(JsonFile):
             x (float, optional): The pitch, from -90 to 90 degrees. Positive looks down.
             y (float, optional): The yaw, in degrees.
         """
-        self._content.preset.set_rotation(x, y)
+        self._document.preset.set_rotation(x, y)
         return self
 
     def starting_rotation(
@@ -273,7 +272,7 @@ class CameraPreset(JsonFile):
             x (float, optional): The pitch, from -90 to 90 degrees.
             y (float, optional): The yaw, in degrees.
         """
-        self._content.preset.set_starting_rotation(x, y)
+        self._document.preset.set_starting_rotation(x, y)
         return self
 
     def player_effects(self, value: bool) -> "CameraPreset":
@@ -283,7 +282,7 @@ class CameraPreset(JsonFile):
         Args:
             value (bool): If player effects render.
         """
-        self._content.preset.set_player_effects(value)
+        self._document.preset.set_player_effects(value)
         return self
 
     def listener(self, value: bool | Literal["player"]) -> "CameraPreset":
@@ -293,7 +292,7 @@ class CameraPreset(JsonFile):
             value (bool | Literal["player"]): True or `"player"` hears from the player,
                 False from the camera.
         """
-        self._content.preset.set_listener("player" if value else None)
+        self._document.preset.set_listener("player" if value else None)
         return self
 
     def control_scheme(self, value: ControlSchemes) -> "CameraPreset":
@@ -302,7 +301,7 @@ class CameraPreset(JsonFile):
         Args:
             value (ControlSchemes): The control scheme.
         """
-        self._content.preset.set_control_scheme(value)
+        self._document.preset.set_control_scheme(value)
         return self
 
     def extend_player_rendering(self, value: bool = True) -> "CameraPreset":
@@ -312,7 +311,7 @@ class CameraPreset(JsonFile):
         Args:
             value (bool, optional): If rendering is extended. Defaults to True.
         """
-        self._content.preset.set_extend_player_rendering(value)
+        self._document.preset.set_extend_player_rendering(value)
         return self
 
     def view_offset(self, x_offset: float, y_offset: float) -> "CameraPreset":
@@ -322,7 +321,7 @@ class CameraPreset(JsonFile):
             x_offset (float): The X offset.
             y_offset (float): The Y offset.
         """
-        self._content.preset.set_view_offset(x_offset, y_offset)
+        self._document.preset.set_view_offset(x_offset, y_offset)
         return self
 
     def entity_offset(
@@ -335,7 +334,7 @@ class CameraPreset(JsonFile):
             y_offset (float): The Y offset.
             z_offset (float): The Z offset.
         """
-        self._content.preset.set_entity_offset(x_offset, y_offset, z_offset)
+        self._document.preset.set_entity_offset(x_offset, y_offset, z_offset)
         return self
 
     def radius(self, radius: float) -> "CameraPreset":
@@ -344,7 +343,7 @@ class CameraPreset(JsonFile):
         Args:
             radius (float): The distance, from 0.1 to 100 blocks.
         """
-        self._content.preset.set_radius(radius)
+        self._document.preset.set_radius(radius)
         return self
 
     def aim_assist(
@@ -370,7 +369,7 @@ class CameraPreset(JsonFile):
                 `aimassist_entity_highlight.png` from `assets/textures/ui` to replace the
                 targeting reticles. Defaults to False.
         """
-        self._content.preset.set_aim_assist(
+        self._document.preset.set_aim_assist(
             preset.identifier, target_mode, angle, distance
         )
         if replace_reticle:
@@ -404,7 +403,7 @@ class CameraPreset(JsonFile):
             tracking_radius (float, optional): The distance targets are tracked within, in
                 blocks. Defaults to 50.
         """
-        self._content.preset.set_focus_target(
+        self._document.preset.set_focus_target(
             rotation_speed,
             snap_to_target,
             horizontal_rotation_limit,

@@ -34,13 +34,11 @@ class _WeightedRandomFeatureFile(JsonObject):
     )
 
 
-class WeightedRandomFeature(Feature):
+class WeightedRandomFeature(Feature[_WeightedRandomFeatureFile]):
     """Places one feature, picked at random by weight.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_weighted_random_feature)
     """
-
-    _document = _WeightedRandomFeatureFile
 
     def add_feature(
         self, feature: "Feature | str", weight: float = 1.0

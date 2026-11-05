@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 
 import pytest
+
 from anvil.api.items.crafting import (
     CraftingItemCatalog,
     PotionBrewingRecipe,
@@ -33,7 +34,7 @@ def project(monkeypatch):
 def _check(file):
     schema = type(file).__schema__()
     jsonschema.Draft202012Validator.check_schema(schema)
-    exported = AnvilIO._normalize_json_like(file._content)
+    exported = AnvilIO._normalize_json_like(file._document)
     jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
     return exported
 
@@ -78,7 +79,7 @@ def test_shaped_recipe_refuses_a_bigger_grid():
 def test_shaped_recipe_needs_a_pattern():
     recipe = ShapedCraftingRecipe("empty").result("testns:x")
     with pytest.raises(ValueError):
-        recipe._content.__json__()
+        recipe._document.__json__()
 
 
 def test_shapeless_recipe_with_data_and_unlock_items():
@@ -98,7 +99,7 @@ def test_shapeless_recipe_with_data_and_unlock_items():
 def test_shapeless_recipe_refuses_ten_ingredients():
     recipe = ShapelessRecipe("many").ingredients(["a:x"] * 10).result("testns:x")
     with pytest.raises(ValueError):
-        recipe._content.__json__()
+        recipe._document.__json__()
 
 
 def test_stonecutter_recipe():

@@ -45,7 +45,7 @@ class _FossilFeatureFile(JsonObject):
     )
 
 
-class FossilFeature(Feature):
+class FossilFeature(Feature[_FossilFeatureFile]):
     """Places a skeleton of bone blocks with ore blocks in it.
 
     - Succeeds if the fossil is placed.
@@ -54,8 +54,6 @@ class FossilFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_fossil_feature)
     """
-
-    _document = _FossilFeatureFile
 
     def __init__(
         self,

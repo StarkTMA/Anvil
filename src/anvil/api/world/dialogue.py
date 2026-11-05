@@ -151,7 +151,7 @@ class _DialogueFile(JsonObject):
     )
 
 
-class Dialogue(JsonFile):
+class Dialogue(JsonFile[_DialogueFile]):
     """NPC dialogue scenes: text, an NPC name, buttons and the commands they run. A scene
     opens in game with `/dialogue open <npc> <player> <scene tag>`.
 
@@ -166,7 +166,6 @@ class Dialogue(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/npcdialogue)
     """
 
-    _document = _DialogueFile
     _extension = ".dialogue.json"
     _pack = Pack.BP
     _folder = "dialogue"
@@ -189,7 +188,7 @@ class Dialogue(JsonFile):
         Returns:
             _DialogueScene: The scene, to set its text, buttons and commands.
         """
-        return self._content.npc_dialogue.add_scene(f"{CONFIG.NAMESPACE}:{scene}")
+        return self._document.npc_dialogue.add_scene(f"{CONFIG.NAMESPACE}:{scene}")
 
     def queue(self) -> "Dialogue":
         """Queues the dialogue file for export."""

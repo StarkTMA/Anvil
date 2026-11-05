@@ -48,14 +48,13 @@ class _BlocksJsonFile(JsonObject):
         return schema
 
 
-class BlocksJSONObject(JsonFile):
+class BlocksJSONObject(JsonFile[_BlocksJsonFile]):
     """The resource pack's `blocks.json`, which gives blocks their sound group. There is
     one per pack.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/examples/blocksjsonfilestructure)
     """
 
-    _document = _BlocksJsonFile
     _instance = None
     _extension = ".json"
     _pack = Pack.RP
@@ -85,11 +84,11 @@ class BlocksJSONObject(JsonFile):
             sound_group (BlockSoundGroup | str, optional): The sound group.
         """
         sound = str(block) if sound_group is None else str(sound_group)
-        self._content.add_block(_BlockEntry(block=str(block), sound=sound))
+        self._document.add_block(_BlockEntry(block=str(block), sound=sound))
         return self
 
     def queue(self) -> "BlocksJSONObject":
         """Queues `blocks.json` for export, when it has a block."""
-        if not self._content.blocks:
+        if not self._document.blocks:
             return self
         return super().queue()

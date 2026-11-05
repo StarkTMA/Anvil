@@ -1071,7 +1071,7 @@ class Structure:
         )
 
 
-class _JigsawStructureProcess(JsonFile):
+class _JigsawStructureProcess(JsonFile[_ProcessorListFile]):
     """A processor list: rules that change the blocks of a structure template as it is
     placed, such as leaving out air or filling chests with loot.
 
@@ -1086,7 +1086,6 @@ class _JigsawStructureProcess(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/worldgenreference/examples/jigsawprocessors)
     """
 
-    _document = _ProcessorListFile
     _extension = ".json"
     _pack = Pack.BP
     _folder = Path("worldgen", "processors")
@@ -1099,7 +1098,7 @@ class _JigsawStructureProcess(JsonFile):
             name (str): The processor list name.
         """
         super().__init__(name)
-        self._content.processor_list.set_description(self.identifier)
+        self._document.processor_list.set_description(self.identifier)
 
     def add_block_ignore_processor(
         self, blocks: list[str | Block | BlockDescriptor]
@@ -1109,7 +1108,7 @@ class _JigsawStructureProcess(JsonFile):
         Args:
             blocks (list[Block | BlockDescriptor | str]): The blocks to leave out.
         """
-        self._content.processor_list.add_block_ignore_processor(blocks)
+        self._document.processor_list.add_block_ignore_processor(blocks)
         return self
 
     def add_protected_blocks_processor(
@@ -1120,7 +1119,7 @@ class _JigsawStructureProcess(JsonFile):
         Args:
             block_tag (str): The block tag.
         """
-        self._content.processor_list.add_protected_blocks_processor(block_tag)
+        self._document.processor_list.add_protected_blocks_processor(block_tag)
         return self
 
     def add_capped_processor(self, limit: int | tuple[int, int]) -> _CappedProcessor:
@@ -1134,7 +1133,7 @@ class _JigsawStructureProcess(JsonFile):
             _CappedProcessor: Give it its one processor with `add_block_rule()`,
                 `add_block_ignore_processor(...)` or `add_protected_blocks_processor(...)`.
         """
-        return self._content.processor_list.add_capped_processor(limit)
+        return self._document.processor_list.add_capped_processor(limit)
 
     def add_block_rule(self) -> _ProcessorRule:
         """Adds a block rule. Rules are checked in order, and the first one that matches
@@ -1145,16 +1144,15 @@ class _JigsawStructureProcess(JsonFile):
                 and `rule.position_predicate`, its result with `rule.set_output_state(...)`
                 and a loot table with `rule.block_entity_modifier.append_loot(...)`.
         """
-        return self._content.processor_list.add_block_rule()
+        return self._document.processor_list.add_block_rule()
 
 
-class _JigsawStructure(JsonFile):
+class _JigsawStructure(JsonFile[_JigsawFile]):
     """A jigsaw structure: where and how its pieces generate, from its start pool.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/worldgenreference/examples/jigsawjigsawstructures)
     """
 
-    _document = _JigsawFile
     _extension = ".json"
     _pack = Pack.BP
     _folder = Path("worldgen", "structures")
@@ -1205,7 +1203,7 @@ class _JigsawStructure(JsonFile):
             raise TypeError(
                 "start_pool must be an instance of JigsawStructureTemplatePool"
             )
-        jigsaw = self._content.jigsaw
+        jigsaw = self._document.jigsaw
         jigsaw.set_description(self.identifier)
         jigsaw.set_step(placement_step)
         jigsaw.set_start_pool(start_pool.identifier)
@@ -1222,7 +1220,7 @@ class _JigsawStructure(JsonFile):
         Args:
             filter (Filter): The biome filter.
         """
-        self._content.jigsaw.add_biome_filter(filter)
+        self._document.jigsaw.add_biome_filter(filter)
         return self
 
     def terrain_adaptation(
@@ -1241,7 +1239,7 @@ class _JigsawStructure(JsonFile):
                 - "beard_box" Adds density below the structure and removes it in its whole box.
                 - "encapsulate" Adds density all around every piece.
         """
-        self._content.jigsaw.set_terrain_adaptation(terrain_adaptation)
+        self._document.jigsaw.set_terrain_adaptation(terrain_adaptation)
         return self
 
     def heightmap_projection(
@@ -1252,7 +1250,7 @@ class _JigsawStructure(JsonFile):
         Args:
             heightmap_projection (Literal["none", "world_surface", "ocean_floor"]): The heightmap.
         """
-        self._content.jigsaw.set_heightmap_projection(heightmap_projection)
+        self._document.jigsaw.set_heightmap_projection(heightmap_projection)
         return self
 
     def dimension_padding(self, bottom: int = 0, top: int = 0) -> "_JigsawStructure":
@@ -1262,7 +1260,7 @@ class _JigsawStructure(JsonFile):
             bottom (int, optional): Blocks kept free at the bottom. Defaults to 0.
             top (int, optional): Blocks kept free at the top. Defaults to 0.
         """
-        self._content.jigsaw.set_dimension_padding(bottom, top)
+        self._document.jigsaw.set_dimension_padding(bottom, top)
         return self
 
     def max_distance_from_center(
@@ -1274,7 +1272,7 @@ class _JigsawStructure(JsonFile):
             horizontal (int): The horizontal distance, from 1 to 128.
             vertical (int, optional): The vertical distance, at least 1.
         """
-        self._content.jigsaw.set_max_distance_from_center(horizontal, vertical)
+        self._document.jigsaw.set_max_distance_from_center(horizontal, vertical)
         return self
 
     def add_direct_pool_alias(self, alias: str, target: str) -> "_JigsawStructure":
@@ -1284,7 +1282,7 @@ class _JigsawStructure(JsonFile):
             alias (str): The template pool identifier to replace.
             target (str): The template pool identifier used instead.
         """
-        self._content.jigsaw.add_direct_pool_alias(alias, target)
+        self._document.jigsaw.add_direct_pool_alias(alias, target)
         return self
 
     def add_random_pool_alias(self, alias: str) -> _RandomPoolAlias:
@@ -1296,7 +1294,7 @@ class _JigsawStructure(JsonFile):
         Returns:
             _RandomPoolAlias: Add its targets with `add_target(target, weight)`.
         """
-        return self._content.jigsaw.add_random_pool_alias(alias)
+        return self._document.jigsaw.add_random_pool_alias(alias)
 
     def add_random_group_pool_alias(self) -> _RandomGroupPoolAlias:
         """Applies one group of pool aliases, picked at random.
@@ -1305,20 +1303,19 @@ class _JigsawStructure(JsonFile):
             _RandomGroupPoolAlias: Add groups with `add_group(weight)`, then aliases to each
                 group with `add_direct_pool_alias` and `add_random_pool_alias`.
         """
-        return self._content.jigsaw.add_random_group_pool_alias()
+        return self._document.jigsaw.add_random_group_pool_alias()
 
     def queue(self) -> "_JigsawStructure":
         return super().queue()
 
 
-class JigsawStructureTemplatePool(JsonFile):
+class JigsawStructureTemplatePool(JsonFile[_TemplatePoolFile]):
     """A template pool: structure templates, features or nothing, picked by weight when a
     jigsaw block asks for this pool.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/worldgenreference/examples/jigsawtemplatepools)
     """
 
-    _document = _TemplatePoolFile
     _extension = ".json"
     _pack = Pack.BP
     _folder = Path("worldgen", "template_pools")
@@ -1333,9 +1330,9 @@ class JigsawStructureTemplatePool(JsonFile):
                 element of this one fits. Defaults to None.
         """
         super().__init__(name)
-        self._content.template_pool.set_description(self.identifier)
+        self._document.template_pool.set_description(self.identifier)
         if fallback is not None:
-            self._content.template_pool.set_fallback(fallback)
+            self._document.template_pool.set_fallback(fallback)
         self._structures: list[Structure] = []
         self._features: list[Feature] = []
         self._processors: list[_JigsawStructureProcess] = []
@@ -1376,7 +1373,7 @@ class JigsawStructureTemplatePool(JsonFile):
         if processors is not None:
             self._processors.append(processors)
 
-        pool = self._content.template_pool
+        pool = self._document.template_pool
         if isinstance(structure, str):
             structure = Structure(structure)
         if isinstance(structure, Structure):
@@ -1405,14 +1402,13 @@ class JigsawStructureTemplatePool(JsonFile):
         return super().queue()
 
 
-class JigsawStructureSet(JsonFile):
+class JigsawStructureSet(JsonFile[_StructureSetFile]):
     """A structure set: jigsaw structures, picked by weight, and how they spread in the
     world relative to other structures of the same set.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/worldgenreference/examples/jigsawstructuresets)
     """
 
-    _document = _StructureSetFile
     _extension = ".json"
     _pack = Pack.BP
     _folder = Path("worldgen", "structure_sets")
@@ -1437,7 +1433,7 @@ class JigsawStructureSet(JsonFile):
                 in each cell. Defaults to "linear".
         """
         super().__init__(name)
-        structure_set = self._content.structure_set
+        structure_set = self._document.structure_set
         structure_set.set_description(self.identifier)
         structure_set.placement.set_salt(salt_from_str(self.identifier))
         structure_set.placement.set_separation(separation)
@@ -1492,7 +1488,7 @@ class JigsawStructureSet(JsonFile):
             start_height_from_sea,
         )
         self._structures.append(structure)
-        self._content.structure_set.add_structure(structure.identifier, weight)
+        self._document.structure_set.add_structure(structure.identifier, weight)
         return structure
 
     def queue(self) -> "JigsawStructureSet":

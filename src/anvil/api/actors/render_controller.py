@@ -385,14 +385,13 @@ class _RenderControllersFile(JsonObject):
     )
 
 
-class RenderControllers(JsonFile):
+class RenderControllers(JsonFile[_RenderControllersFile]):
     """The render controllers of an entity or attachable, built at export from its client
     description, which holds them (`render_controller()` adds them).
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/animations/animationrendercontroller)
     """
 
-    _document = _RenderControllersFile
     _extension = ".rc.json"
     _pack = Pack.RP
     _folder = "render_controllers"
@@ -410,10 +409,10 @@ class RenderControllers(JsonFile):
 
     def queue(self, directory: str = "") -> "RenderControllers | None":
         """Queues the render controllers for export, when the actor has any."""
-        self._content = self._document(
+        self._document = self._document_type(
             render_controllers=list(self._source._render_controllers)
         )
-        if self._content.render_controllers:
+        if self._document.render_controllers:
             return super().queue(directory=directory)
         return None
 

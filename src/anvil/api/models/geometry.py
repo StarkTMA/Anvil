@@ -581,13 +581,12 @@ class _GeometryFile(JsonObject):
     )
 
 
-class Geometry(JsonFile):
+class Geometry(JsonFile[_GeometryFile]):
     """A Bedrock geometry file (``*.geo.json``) built from a tree of bones.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/schemasreference/schemas/minecraftschema_geometry_1.21.0)
     """
 
-    _document = _GeometryFile
     _extension = ".geo.json"
     _pack = Pack.RP
     _folder = Path("models", "entity")
@@ -610,7 +609,7 @@ class Geometry(JsonFile):
 
     @property
     def _model(self) -> _GeometryModel:
-        return self._content.geometry[0]
+        return self._document.geometry[0]
 
     @property
     def _description(self) -> _GeometryDescription:

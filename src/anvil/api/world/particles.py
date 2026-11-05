@@ -530,8 +530,7 @@ class ParticleNameMismatch(ParticlesNotRegisteredError):
         super().__init__(f"Expected '{particle_name}', found '{found_id}'")
 
 
-class Particle(JsonFile):
-    _document = _ParticleDocument
+class Particle(JsonFile[_ParticleDocument]):
     _non_queued_particles: set[str] = set()
     _queued_particles: set[str] = set()
     _extension = ".particle.json"
@@ -540,7 +539,7 @@ class Particle(JsonFile):
     _object_type = "Particle"
 
     def _check_event_particles(self):
-        for event in (self._content.particle_effect.events or {}).values():
+        for event in (self._document.particle_effect.events or {}).values():
             component = event.particle_effect
             if component is None or component.effect.startswith("minecraft:"):
                 continue
@@ -565,7 +564,7 @@ class Particle(JsonFile):
 
     def _load_file_content(self, source_path: Path) -> None:
         try:
-            self._content = _ParticleDocument.__from_json__(
+            self._document = _ParticleDocument.__from_json__(
                 orjson.loads(source_path.read_bytes())
             )
         except (TypeError, ValueError) as error:
@@ -582,7 +581,7 @@ class Particle(JsonFile):
             "particle",
             texture_name,
         )
-        description = self._content.particle_effect.description
+        description = self._document.particle_effect.description
         description.basic_render_parameters.set_texture(texture_path.as_posix())
         description.set_identifier(f"{CONFIG.NAMESPACE}:{self.name}")
 
@@ -603,7 +602,7 @@ class Particle(JsonFile):
         super().__init__(particle)
         self._load_file_content(source_path)
 
-        source_id = self._content.particle_effect.description.identifier
+        source_id = self._document.particle_effect.description.identifier
         if source_id != particle:
             raise ParticleNameMismatch(particle, source_id)
 

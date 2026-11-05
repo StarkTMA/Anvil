@@ -6,7 +6,7 @@ from anvil.lib.lib import AnvilIO
 
 
 def _json(file):
-    return AnvilIO._normalize_json_like(file._content)
+    return AnvilIO._normalize_json_like(file._document)
 
 
 def test_trade_table():

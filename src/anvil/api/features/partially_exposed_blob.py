@@ -37,14 +37,12 @@ class _PartiallyExposedBlobFeatureFile(JsonObject):
         self.feature = feature
 
 
-class PartiallyExposedBlobFeature(Feature):
+class PartiallyExposedBlobFeature(Feature[_PartiallyExposedBlobFeatureFile]):
     """Places a blob of a block, embedded in the surface but for one face that may be
     exposed to air or water.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_partially_exposed_blob_feature)
     """
-
-    _document = _PartiallyExposedBlobFeatureFile
 
     def __init__(
         self,
@@ -66,7 +64,7 @@ class PartiallyExposedBlobFeature(Feature):
                 down, north, south, east or west. Defaults to up.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _PartiallyExposedBlobFeature(
                 description=self._description(),
                 places_block=places_block,

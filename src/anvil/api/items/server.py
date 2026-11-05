@@ -102,13 +102,12 @@ class _ItemServerFile(JsonObject):
 # endregion
 
 
-class ItemServer(JsonFile):
+class ItemServer(JsonFile[_ItemServerFile]):
     """A server item: its description and components.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/itemreference/)
     """
 
-    _document = _ItemServerFile
     _extension = ".item.json"
     _pack = Pack.BP
     _folder = "items"
@@ -128,12 +127,12 @@ class ItemServer(JsonFile):
     @property
     def description(self) -> _ItemServerDescription:
         """The description builders, such as `set_menu_category`."""
-        return self._content.item.description
+        return self._document.item.description
 
     @property
     def components(self) -> ComponentGroup:
         """The item components."""
-        return self._content.item.components
+        return self._document.item.components
 
     def __export__(self) -> None:
         """Gives the item a display name when it has none and checks the components before

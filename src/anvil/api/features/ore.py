@@ -77,7 +77,7 @@ class _OreFeatureFile(JsonObject):
     )
 
 
-class OreFeature(Feature):
+class OreFeature(Feature[_OreFeatureFile]):
     """Places a vein of blocks, like an ore deposit. Any block can be placed.
 
     Each position checks the replace rules in order and uses the first one whose
@@ -88,8 +88,6 @@ class OreFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_ore_feature)
     """
-
-    _document = _OreFeatureFile
 
     def __init__(
         self,

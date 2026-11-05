@@ -32,7 +32,7 @@ class _SequenceFeatureFile(JsonObject):
     )
 
 
-class SequenceFeature(Feature):
+class SequenceFeature(Feature[_SequenceFeatureFile]):
     """Places a collection of features in order. Each feature starts at the position the
     previous one ended at.
 
@@ -41,8 +41,6 @@ class SequenceFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_sequence_feature)
     """
-
-    _document = _SequenceFeatureFile
 
     def features(self, feature_list: Sequence["Feature | str"]) -> "SequenceFeature":
         """Adds features to place in order. At least one is needed.

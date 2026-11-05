@@ -21,7 +21,7 @@ def _json(value):
 def _check(file):
     schema = type(file).__schema__()
     jsonschema.Draft202012Validator.check_schema(schema)
-    exported = _json(file._content)
+    exported = _json(file._document)
     jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
     return exported
 
@@ -114,7 +114,7 @@ def test_voxel_shape_file():
         },
     }
     top.remove()
-    assert len(_json(shape._content)["minecraft:voxel_shape"]["shape"]["boxes"]) == 1
+    assert len(_json(shape._document)["minecraft:voxel_shape"]["shape"]["boxes"]) == 1
 
 
 @pytest.mark.parametrize(
@@ -125,12 +125,12 @@ def test_voxel_box_limits(low, high):
     shape = VoxelShape("bad")
     shape.group("root").box(low, high)
     with pytest.raises(ValueError):
-        _json(shape._content)
+        _json(shape._document)
 
 
 def test_voxel_shape_needs_a_box():
     with pytest.raises(ValueError):
-        _json(VoxelShape("empty")._content)
+        _json(VoxelShape("empty")._document)
 
 
 def _mob():
@@ -208,13 +208,13 @@ def test_bones_stay_in_tree_order():
     geometry.find("body").bone("leg")
     names = [
         bone["name"]
-        for bone in _json(geometry._content)["minecraft:geometry"][0]["bones"]
+        for bone in _json(geometry._document)["minecraft:geometry"][0]["bones"]
     ]
     assert names == ["body", "arm", "leg", "head"]
     geometry.find("body").remove()
     names = [
         bone["name"]
-        for bone in _json(geometry._content)["minecraft:geometry"][0]["bones"]
+        for bone in _json(geometry._document)["minecraft:geometry"][0]["bones"]
     ]
     assert names == ["head"]
     assert geometry.find("arm") is None
@@ -251,7 +251,7 @@ def test_geometry_errors():
         geometry.find("arm").pivot = (0, 0, 0)
     geometry.find("head").cube((0, 0, 0), (1, 1, 1), north=((0, 0), (1, 1), 45))
     with pytest.raises(ValueError):
-        _json(geometry._content)
+        _json(geometry._document)
 
 
 def test_geometry_item_display_transforms():

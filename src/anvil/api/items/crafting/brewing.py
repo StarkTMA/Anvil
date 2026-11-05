@@ -61,7 +61,7 @@ class _BrewingMixRecipeFile(JsonObject):
     )
 
 
-class _PotionRecipe(_BaseRecipe):
+class _PotionRecipe[D: JsonObject](_BaseRecipe[D]):
     """The base of the brewing recipe file classes."""
 
     def __init__(self, name: str, tags: Sequence[str] = ("brewing_stand",)) -> None:
@@ -93,27 +93,25 @@ class _PotionRecipe(_BaseRecipe):
         return self
 
 
-class PotionBrewingRecipe(_PotionRecipe):
+class PotionBrewingRecipe(_PotionRecipe[_BrewingContainerRecipeFile]):
     """A brewing container recipe: changes the potion container, such as a potion into a
     splash potion.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/recipereference/examples/recipedefinitions/minecraftrecipe_potionbrewing)
     """
 
-    _document = _BrewingContainerRecipeFile
     _object_type = "Potion Brewing Recipe"
 
     def queue(self) -> "PotionBrewingRecipe":
         return super().queue()
 
 
-class PotionMixingRecipe(_PotionRecipe):
+class PotionMixingRecipe(_PotionRecipe[_BrewingMixRecipeFile]):
     """A brewing mix recipe: changes the potion type, such as awkward into strength.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/recipereference/examples/recipedefinitions/recipe_brewing_mix)
     """
 
-    _document = _BrewingMixRecipeFile
     _object_type = "Potion Mixing Recipe"
 
     def queue(self) -> "PotionMixingRecipe":

@@ -209,13 +209,12 @@ class _LightingSettingsFile(JsonObject):
     )
 
 
-class LightingSettings(JsonFile):
+class LightingSettings(JsonFile[_LightingSettingsFile]):
     """Global lighting settings for Vibrant Visuals (PBR) rendering.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/vibrantvisuals/lightingcustomization)
     """
 
-    _document = _LightingSettingsFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "lighting"
@@ -235,7 +234,7 @@ class LightingSettings(JsonFile):
         super().__init__(
             "global" if name == "default_lighting" else name, identifier=name
         )
-        self._content.settings.set_description(self.identifier)
+        self._document.settings.set_description(self.identifier)
 
     def orbital_lights(
         self,
@@ -283,7 +282,7 @@ class LightingSettings(JsonFile):
             orbital.moon.set_color(moon_color)
         if orbital_offset_degrees is not None:
             orbital.set_orbital_offset_degrees(orbital_offset_degrees)
-        self._content.settings.directional_lights.set_orbital(orbital)
+        self._document.settings.directional_lights.set_orbital(orbital)
 
     def flash_light(
         self,
@@ -296,7 +295,7 @@ class LightingSettings(JsonFile):
             illuminance (float): Peak brightness of the End flash in lux (lx).
             color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): Color contributed by the End flash. Supports RGB array or HEX string.
         """
-        flash = self._content.settings.directional_lights.flash
+        flash = self._document.settings.directional_lights.flash
         flash.set_illuminance(illuminance)
         flash.set_color(color)
 
@@ -306,7 +305,7 @@ class LightingSettings(JsonFile):
         Args:
             desaturation (float): Factor (0.0 to 1.0) controlling how much the albedo of a given pixel is desaturated.
         """
-        self._content.settings.emissive.set_desaturation(desaturation)
+        self._document.settings.emissive.set_desaturation(desaturation)
 
     def ambient(
         self,
@@ -327,7 +326,7 @@ class LightingSettings(JsonFile):
             illuminance (float | list[tuple[float, float]]): Minimum fallback light strength in lux (lx). Valid range: 0.0 to 5.0.
             color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]): Color of the ambient fallback light. Supports RGB array or HEX string.
         """
-        ambient = self._content.settings.ambient
+        ambient = self._document.settings.ambient
         ambient.set_illuminance(illuminance)
         ambient.set_color(color)
 
@@ -337,7 +336,7 @@ class LightingSettings(JsonFile):
         Args:
             intensity (float | list[tuple[float, float]]): Energy scaling factor. Valid range: 0.1 to 1.0.
         """
-        self._content.settings.sky.set_intensity(intensity)
+        self._document.settings.sky.set_intensity(intensity)
 
     def queue(self) -> "LightingSettings":
         return super().queue()
@@ -372,13 +371,12 @@ class _LocalLightingFile(JsonObject):
     )
 
 
-class LocalLighting(JsonFile):
+class LocalLighting(JsonFile[_LocalLightingFile]):
     """The blocks that give off light in Vibrant Visuals: point lights and static lights.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/vibrantvisuals/locallightingsettings)
     """
 
-    _document = _LocalLightingFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "local_lighting"
@@ -397,7 +395,7 @@ class LocalLighting(JsonFile):
     @property
     def lights(self) -> dict[str, _LocalLight]:
         """The lights, by block identifier."""
-        return self._content.lights
+        return self._document.lights
 
     def add_local_light(
         self,

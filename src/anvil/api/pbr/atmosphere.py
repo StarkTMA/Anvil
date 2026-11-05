@@ -164,7 +164,7 @@ class _AtmosphereSettingsFile(JsonObject):
     )
 
 
-class AtmosphericSettings(JsonFile):
+class AtmosphericSettings(JsonFile[_AtmosphereSettingsFile]):
     """Atmospheric settings for Vibrant Visuals (PBR) rendering.
 
     Allows customizing Rayleigh and Mie scattering, glare, blend stops, and sky colors.
@@ -172,7 +172,6 @@ class AtmosphericSettings(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/vibrantvisuals/atmosphericscustomization)
     """
 
-    _document = _AtmosphereSettingsFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "atmospherics"
@@ -191,7 +190,7 @@ class AtmosphericSettings(JsonFile):
         super().__init__(
             "atmospherics" if name == "default_atmospherics" else name, identifier=name
         )
-        self._content.settings.set_description(self.identifier)
+        self._document.settings.set_description(self.identifier)
 
     def horizon_blend_stops(
         self,
@@ -208,7 +207,7 @@ class AtmosphericSettings(JsonFile):
             mie_start (float | list[tuple[float, float]]): The height relative to the horizon where mie scattering begins.
             max (float | list[tuple[float, float]]): The maximum horizon height.
         """
-        stops = self._content.settings.horizon_blend_stops
+        stops = self._document.settings.horizon_blend_stops
         stops.set_min(min)
         stops.set_start(start)
         stops.set_mie_start(mie_start)
@@ -223,7 +222,7 @@ class AtmosphericSettings(JsonFile):
         Args:
             value (float | list[tuple[float, float]]): Rayleigh scattering strength.
         """
-        self._content.settings.set_rayleigh_strength(value)
+        self._document.settings.set_rayleigh_strength(value)
         return self
 
     def sun_mie_strength(
@@ -234,7 +233,7 @@ class AtmosphericSettings(JsonFile):
         Args:
             value (float | list[tuple[float, float]]): Sun Mie scattering strength.
         """
-        self._content.settings.set_sun_mie_strength(value)
+        self._document.settings.set_sun_mie_strength(value)
         return self
 
     def moon_mie_strength(
@@ -245,7 +244,7 @@ class AtmosphericSettings(JsonFile):
         Args:
             value (float | list[tuple[float, float]]): Moon Mie scattering strength.
         """
-        self._content.settings.set_moon_mie_strength(value)
+        self._document.settings.set_moon_mie_strength(value)
         return self
 
     def sun_glare_shape(
@@ -256,7 +255,7 @@ class AtmosphericSettings(JsonFile):
         Args:
             value (float | list[tuple[float, float]]): Sun glare shape factor.
         """
-        self._content.settings.set_sun_glare_shape(value)
+        self._document.settings.set_sun_glare_shape(value)
         return self
 
     def sky_zenith_color(
@@ -276,7 +275,7 @@ class AtmosphericSettings(JsonFile):
         Args:
             color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]): Sky zenith color.
         """
-        self._content.settings.set_sky_zenith_color(color)
+        self._document.settings.set_sky_zenith_color(color)
         return self
 
     def sky_horizon_color(
@@ -296,5 +295,5 @@ class AtmosphericSettings(JsonFile):
         Args:
             color (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255 | list[tuple[float, HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255]]): Sky horizon color.
         """
-        self._content.settings.set_sky_horizon_color(color)
+        self._document.settings.set_sky_horizon_color(color)
         return self

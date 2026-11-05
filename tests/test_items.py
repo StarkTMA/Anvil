@@ -1,5 +1,6 @@
 import orjson
 import pytest
+
 from anvil.api.blocks.descriptor import BlockDescriptor
 from anvil.api.items.components import (
     ItemAllowOffHand,
@@ -296,7 +297,7 @@ def _check_file(file):
     jsonschema = pytest.importorskip("jsonschema")
     schema = type(file).__schema__()
     jsonschema.Draft202012Validator.check_schema(schema)
-    exported = AnvilIO._normalize_json_like(file._content)
+    exported = AnvilIO._normalize_json_like(file._document)
     jsonschema.validate(exported, schema, cls=jsonschema.Draft202012Validator)
     return exported
 

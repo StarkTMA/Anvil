@@ -258,7 +258,7 @@ class _ManifestSettings:
 
     @property
     def _document(self) -> _Manifest:
-        return self.manifest._content
+        return self.manifest._document
 
     def _text(self, kind: str, text: str) -> str:
         key = f"pack.manifest.setting.{kind}"
@@ -354,10 +354,9 @@ class _ManifestSettings:
 # region Manifests
 
 
-class _PackManifest(JsonFile):
+class _PackManifest(JsonFile[_Manifest]):
     """What both pack manifests share. Each is a singleton."""
 
-    _document = _Manifest
     _extension = ".json"
     _instance = None
 
@@ -369,14 +368,14 @@ class _PackManifest(JsonFile):
     def _set_up(self, own_uuid: str, module: str, module_uuid: str, other_uuid: str):
         super().__init__("manifest")
         version = CONFIG._RELEASE
-        self._content.set_header(
+        self._document.set_header(
             own_uuid,
             version,
             MANIFEST_BUILD if not CONFIG._PREVIEW else MANIFEST_BUILD_PREVIEW,
         )
-        self._content.add_module(module, module_uuid, version)
-        self._content.add_pack_dependency(other_uuid, version)
-        self._content.set_metadata([CONFIG.COMPANY])
+        self._document.add_module(module, module_uuid, version)
+        self._document.add_pack_dependency(other_uuid, version)
+        self._document.set_metadata([CONFIG.COMPANY])
         self._initialized = True
 
     @property
@@ -389,20 +388,20 @@ class _PackManifest(JsonFile):
     ) -> list[str]:
         """The names of the manifest's settings of a kind."""
         return [
-            setting.name for setting in self._content.settings if setting.type == kind
+            setting.name for setting in self._document.settings if setting.type == kind
         ]
 
     def _dropdown_options(self, name: str) -> list[str] | None:
         """The option names of a dropdown, or None when there is no such dropdown."""
-        for setting in self._content.settings:
+        for setting in self._document.settings:
             if isinstance(setting, _DropdownSetting) and setting.name == name:
                 return [option.name for option in setting.options]
         return None
 
     def _addon_target(self) -> None:
         if CONFIG._TARGET == ConfigPackageTarget.ADDON:
-            self._content.header.set_pack_scope("world")
-            self._content.metadata.set_product_type("addon")
+            self._document.header.set_pack_scope("world")
+            self._document.metadata.set_product_type("addon")
 
 
 class ManifestRP(_PackManifest):
@@ -430,7 +429,7 @@ class ManifestRP(_PackManifest):
         if self._queued:
             return self
         if CONFIG.PBR:
-            self._content.add_capability("pbr")
+            self._document.add_capability("pbr")
         self._addon_target()
         return super().queue()
 
@@ -462,19 +461,19 @@ class ManifestBP(_PackManifest):
             return self
         if CONFIG._SCRIPT_API:
             preview = CONFIG._PREVIEW and CONFIG._EXPERIMENTAL
-            self._content.add_module(
+            self._document.add_module(
                 "script",
                 CONFIG._SCRIPT_MODULE_UUID,
                 CONFIG._RELEASE,
                 language="javascript",
                 entry="scripts/main.js",
             )
-            self._content.add_module_dependency(
+            self._document.add_module_dependency(
                 "@minecraft/server",
                 MODULE_MINECRAFT_SERVER_PREVIEW if preview else MODULE_MINECRAFT_SERVER,
             )
             if CONFIG._SCRIPT_UI:
-                self._content.add_module_dependency(
+                self._document.add_module_dependency(
                     "@minecraft/server-ui",
                     (
                         MODULE_MINECRAFT_SERVER_UI_PREVIEW

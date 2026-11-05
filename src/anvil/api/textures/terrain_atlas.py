@@ -86,14 +86,13 @@ class _TerrainTextureFile(JsonObject):
         )
 
 
-class TerrainTexturesObject(JsonFile):
+class TerrainTexturesObject(JsonFile[_TerrainTextureFile]):
     """The terrain atlas, `textures/terrain_texture.json`, which names the textures block
     material instances use. There is one per pack.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/variationsblocktexture)
     """
 
-    _document = _TerrainTextureFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "textures"
@@ -110,7 +109,7 @@ class TerrainTexturesObject(JsonFile):
         """Initializes a TerrainTexturesObject instance."""
         if not hasattr(self, "_initialized"):
             super().__init__("terrain_texture")
-            self._content.set_resource_pack_name(CONFIG.PROJECT_NAME)
+            self._document.set_resource_pack_name(CONFIG.PROJECT_NAME)
             self._initialized = True
 
     @staticmethod
@@ -133,7 +132,7 @@ class TerrainTexturesObject(JsonFile):
             force_vanilla (bool, optional): Uses `block_name` as it is, as vanilla textures
                 do. Defaults to False.
         """
-        self._content.add_texture(
+        self._document.add_texture(
             self._name(block_name, force_vanilla),
             [
                 PurePosixPath(
@@ -166,7 +165,7 @@ class TerrainTexturesObject(JsonFile):
             force_vanilla (bool, optional): Uses `block_name` as it is, as vanilla textures
                 do. Defaults to False.
         """
-        self._content.add_variations(
+        self._document.add_variations(
             self._name(block_name, force_vanilla),
             [
                 (
@@ -191,6 +190,6 @@ class TerrainTexturesObject(JsonFile):
 
     def __export__(self) -> None:
         """Writes the atlas, when it has any texture."""
-        if not self._content.texture_data:
+        if not self._document.texture_data:
             return None
         return super().__export__()

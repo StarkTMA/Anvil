@@ -374,7 +374,7 @@ class _RPAnimationControllersFile(_AnimationControllersFile):
     ] = json_field(default_factory=list)
 
 
-class _AnimationControllers(JsonFile):
+class _AnimationControllers[D: JsonObject](JsonFile[D]):
     """The base of the animation controllers files of an actor, built at export from its
     description, which holds the controllers (`animation_controller()` adds them)."""
 
@@ -382,25 +382,24 @@ class _AnimationControllers(JsonFile):
 
     def queue(self, directory: str | None = None):
         """Queues the controllers for export, when the actor has any."""
-        self._content = self._document(
+        self._document = self._document_type(
             animation_controllers=[
                 e
                 for e in self._source._animations
                 if isinstance(e, _AnimationController)
             ]
         )
-        if self._content.animation_controllers:
+        if self._document.animation_controllers:
             return super().queue(directory=directory)
         return None
 
 
-class BPAnimationControllers(_AnimationControllers):
+class BPAnimationControllers(_AnimationControllers[_BPAnimationControllersFile]):
     """The behavior pack animation controllers of an entity.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/animations/animationcontroller)
     """
 
-    _document = _BPAnimationControllersFile
     _extension = ".bp_ac.json"
     _pack = Pack.BP
     _folder = "animation_controllers"
@@ -417,13 +416,12 @@ class BPAnimationControllers(_AnimationControllers):
         self._source = source
 
 
-class RPAnimationControllers(_AnimationControllers):
+class RPAnimationControllers(_AnimationControllers[_RPAnimationControllersFile]):
     """The resource pack animation controllers of an entity or attachable.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/animations/animationcontroller)
     """
 
-    _document = _RPAnimationControllersFile
     _extension = ".rp_ac.json"
     _pack = Pack.RP
     _folder = "animation_controllers"

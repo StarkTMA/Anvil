@@ -61,13 +61,11 @@ class _VegetationPatchFeatureFile(JsonObject):
         self.feature = feature
 
 
-class VegetationPatchFeature(Feature):
+class VegetationPatchFeature(Feature[_VegetationPatchFeatureFile]):
     """Places a patch of ground blocks and a vegetation feature on it, such as moss.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_vegetation_patch_feature)
     """
-
-    _document = _VegetationPatchFeatureFile
 
     def __init__(
         self,
@@ -106,7 +104,7 @@ class VegetationPatchFeature(Feature):
                 Defaults to False.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _VegetationPatchFeature(
                 description=self._description(),
                 ground_block=ground_block,

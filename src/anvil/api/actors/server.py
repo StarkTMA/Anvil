@@ -383,13 +383,12 @@ class _EntityServerFile(JsonObject):
     )
 
 
-class EntityServer(JsonFile):
+class EntityServer(JsonFile[_EntityServerFile]):
     """A server entity: its description, components, component groups and events.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/entityreference/)
     """
 
-    _document = _EntityServerFile
     _extension = ".behavior.json"
     _pack = Pack.BP
     _folder = "entities"
@@ -411,7 +410,7 @@ class EntityServer(JsonFile):
 
     @property
     def _body(self) -> _EntityServer:
-        return self._content.entity
+        return self._document.entity
 
     @property
     def description(self) -> _EntityServerDescription:

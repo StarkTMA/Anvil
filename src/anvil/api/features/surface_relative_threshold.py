@@ -32,14 +32,12 @@ class _SurfaceRelativeThresholdFeatureFile(JsonObject):
         self.feature = feature
 
 
-class SurfaceRelativeThresholdFeature(Feature):
+class SurfaceRelativeThresholdFeature(Feature[_SurfaceRelativeThresholdFeatureFile]):
     """Places a feature only when its position is below the estimated surface of the
     world. Only works in the Overworld, with the 1.18 world generation or later.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_surface_relative_threshold_feature)
     """
-
-    _document = _SurfaceRelativeThresholdFeatureFile
 
     def __init__(
         self,
@@ -56,7 +54,7 @@ class SurfaceRelativeThresholdFeature(Feature):
                 surface the position must be. Defaults to 0.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _SurfaceRelativeThresholdFeature(
                 description=self._description(),
                 feature_to_place=str(feature_to_place),

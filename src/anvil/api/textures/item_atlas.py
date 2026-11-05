@@ -46,14 +46,13 @@ class _ItemTextureFile(JsonObject):
         self.texture_data.append(_ItemTexture(name=name, textures=textures))
 
 
-class ItemTexturesObject(JsonFile):
+class ItemTexturesObject(JsonFile[_ItemTextureFile]):
     """The item atlas, `textures/item_texture.json`, which names the textures item icons use.
     There is one per pack.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/addcustomitems)
     """
 
-    _document = _ItemTextureFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "textures"
@@ -70,7 +69,7 @@ class ItemTexturesObject(JsonFile):
         """Initializes a ItemTexturesObject instance."""
         if not hasattr(self, "_initialized"):
             super().__init__("item_texture")
-            self._content.set_resource_pack_name(CONFIG.PROJECT_NAME)
+            self._document.set_resource_pack_name(CONFIG.PROJECT_NAME)
             self._sprites: dict[str, list[str]] = {}
             self._initialized = True
 
@@ -149,7 +148,7 @@ class ItemTexturesObject(JsonFile):
             ]
             self._sprites[item_name] = paths
 
-        self._content.add_texture(f"{CONFIG.NAMESPACE}:{item_name}", paths)
+        self._document.add_texture(f"{CONFIG.NAMESPACE}:{item_name}", paths)
         return self
 
     def queue(self) -> "ItemTexturesObject":
@@ -158,7 +157,7 @@ class ItemTexturesObject(JsonFile):
 
     def __export__(self) -> None:
         """Copies the item sprites and writes the atlas, when it has any texture."""
-        if not self._content.texture_data:
+        if not self._document.texture_data:
             return None
         source = Path("assets", "textures", "items")
         for paths in self._sprites.values():

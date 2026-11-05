@@ -86,7 +86,7 @@ def test_particle_reads_its_file_and_renames_references(particles):
 
     with config.override(NAMESPACE="testns"):
         smoke = Particle("smoke", TextureComponents(color="smoke"))
-        exported = AnvilIO._normalize_json_like(smoke._content)
+        exported = AnvilIO._normalize_json_like(smoke._document)
     effect = exported["particle_effect"]
     assert effect["description"]["identifier"] == "testns:smoke"
     assert effect["description"]["basic_render_parameters"]["texture"] == (

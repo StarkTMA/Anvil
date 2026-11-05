@@ -90,13 +90,12 @@ class _CubeMapSettingsFile(JsonObject):
     )
 
 
-class CubeMapSettings(JsonFile):
+class CubeMapSettings(JsonFile[_CubeMapSettingsFile]):
     """Cubemap settings for sky and indirect lighting in Vibrant Visuals (PBR) rendering.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/vibrantvisuals/cubemapcustomization)
     """
 
-    _document = _CubeMapSettingsFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "cubemaps"
@@ -124,7 +123,7 @@ class CubeMapSettings(JsonFile):
 
         is_vanilla = identifier == "minecraft:default_cubemap"
         super().__init__(identifier, is_vanilla)
-        self._content.settings.set_description(self.identifier)
+        self._document.settings.set_description(self.identifier)
 
     def set_lighting(
         self,
@@ -147,7 +146,7 @@ class CubeMapSettings(JsonFile):
             affected_by_volumetric_scattering (bool, optional): Whether the cubemap is affected by volumetric scattering (fog/light shafts). Default False.
         """
 
-        lighting = self._content.settings.lighting
+        lighting = self._document.settings.lighting
         lighting.set_ambient_light_illuminance(ambient_light_illuminance)
         lighting.set_sky_light_contribution(sky_light_contribution)
         lighting.set_directional_light_contribution(directional_light_contribution)

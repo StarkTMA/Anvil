@@ -88,14 +88,8 @@ class _UnderwaterCaveCarverFeatureFile(JsonObject):
     )
 
 
-class CaveCarverFeature(Feature):
-    """Carves a cave through the current chunk and the chunks around it. Only works when its
-    feature rule places it in the `pregeneration_pass`.
-
-    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_cave_carver_feature)
-    """
-
-    _document = _CaveCarverFeatureFile
+class _CaveCarver[D: JsonObject](Feature[D]):
+    """The base of the cave carver features."""
 
     def __init__(
         self,
@@ -142,24 +136,28 @@ class CaveCarverFeature(Feature):
         )
 
 
-class NetherCaveCarverFeature(CaveCarverFeature):
+class CaveCarverFeature(_CaveCarver[_CaveCarverFeatureFile]):
+    """Carves a cave through the current chunk and the chunks around it. Only works when its
+    feature rule places it in the `pregeneration_pass`.
+
+    ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_cave_carver_feature)
+    """
+
+
+class NetherCaveCarverFeature(_CaveCarver[_NetherCaveCarverFeatureFile]):
     """Carves a cave through the Nether in the current chunk and the chunks around it. Only
     works when its feature rule places it in the `pregeneration_pass`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_nether_cave_carver_feature)
     """
 
-    _document = _NetherCaveCarverFeatureFile
 
-
-class UnderwaterCaveCarverFeature(CaveCarverFeature):
+class UnderwaterCaveCarverFeature(_CaveCarver[_UnderwaterCaveCarverFeatureFile]):
     """Carves a cave below sea level through the current chunk and the chunks around it.
     Only works when its feature rule places it in the `pregeneration_pass`.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_underwater_cave_carver_feature)
     """
-
-    _document = _UnderwaterCaveCarverFeatureFile
 
     def __init__(
         self,

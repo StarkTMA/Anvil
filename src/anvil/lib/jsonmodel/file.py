@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import traceback
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, get_args, get_origin
 
 from anvil.lib.config import CONFIG, ConfigPackageTarget, Pack
 from anvil.lib.lib import AnvilIO
@@ -15,9 +15,13 @@ if TYPE_CHECKING:
     from .object import JsonObject
 
 
-class JsonFile:
+class JsonFile[D: JsonObject]:
     """
     An object representing an addon with functionality to modify its content, queue it for processing, and export it.
+
+    A file type names its document, the class of its typed content, as the type argument:
+    `class ShadowSettings(JsonFile[_ShadowSettingsFile])`. An abstract file base stays
+    generic: `class Feature[D: JsonObject](JsonFile[D])`.
 
     Attributes:
         name (str): The name of the addon object.
@@ -30,9 +34,12 @@ class JsonFile:
     _folder = ""
     _object_type = "addon_object"
     _queued = False
-    _document: ClassVar[type[JsonObject]]
-    """The typed content of the file: `_content` starts as an empty document, and
-    `__schema__()` describes the file. Abstract file bases leave it unset."""
+    _document_type: type[D]
+    """The class of the file's typed content, the type argument the file type gives:
+    `_document` starts as an empty one, and `__schema__()` describes the file. Abstract file
+    bases have none."""
+    _document: D
+    """The file's typed content, written on export."""
     _file_name: str | None = None
     """The file's name when it is not the identifier's name, such as `global`."""
 
@@ -51,7 +58,7 @@ class JsonFile:
                 file name.
 
         Raises:
-            TypeError: When the class is an abstract file base, with no `_document`.
+            TypeError: When the class is an abstract file base, with no document type.
             ValueError: When the identifier is not valid (see `Identifier.parse`), or a vanilla
                 override is not allowed.
         """
@@ -72,7 +79,16 @@ class JsonFile:
             self._created_from = traceback.format_stack()[:-1]
 
         self._directory = ""
-        self._content: JsonObject = self._document()
+        self._document = self._document_type()
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        for base in cls.__dict__.get("__orig_bases__", ()):
+            origin = get_origin(base)
+            if isinstance(origin, type) and issubclass(origin, JsonFile):
+                document = get_args(base)[0]
+                if isinstance(document, type):
+                    cls._document_type = document
 
     @property
     def identifier(self) -> Identifier:
@@ -89,18 +105,18 @@ class JsonFile:
 
     @classmethod
     def _require_document(cls) -> None:
-        if not hasattr(cls, "_document"):
+        if not hasattr(cls, "_document_type"):
             raise TypeError(
                 f"{cls.__name__} is an abstract file base: create one of its file types."
             )
 
     @classmethod
     def __schema__(cls) -> dict[str, Any]:
-        """The JSON Schema (draft 2020-12) of this file: the schema of its `_document`, with
+        """The JSON Schema (draft 2020-12) of this file: the schema of its `_document_type`, with
         the file's type as `title` and where it is written under `x-anvil-file`.
 
         Raises:
-            TypeError: When the class is an abstract file base, with no `_document`.
+            TypeError: When the class is an abstract file base, with no document type.
         """
         cls._require_document()
         file = {
@@ -109,7 +125,7 @@ class JsonFile:
             "name": cls._file_name,
             "extension": cls._extension,
         }
-        schema = cls._document.__schema__()
+        schema = cls._document_type.__schema__()
         return {
             "$schema": schema.pop("$schema"),
             "title": cls._object_type,
@@ -117,7 +133,7 @@ class JsonFile:
             **schema,
         }
 
-    def queue(self, directory: str | None = None) -> "JsonFile":
+    def queue(self, directory: str | None = None) -> "JsonFile[D]":
         """
         Queues the addon object for processing and logs the event.
 
@@ -159,4 +175,4 @@ class JsonFile:
                 f"Relative file path [{path}] has [{len(path)}] characters, but cannot be more than [96] characters."
             )
 
-        AnvilIO.file(file_name, self._content, self._path, "w")
+        AnvilIO.file(file_name, self._document, self._path, "w")

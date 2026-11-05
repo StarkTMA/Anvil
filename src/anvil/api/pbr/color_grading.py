@@ -178,13 +178,12 @@ class _ColorGradingSettingsFile(JsonObject):
     )
 
 
-class ColorGradingSettings(JsonFile):
+class ColorGradingSettings(JsonFile[_ColorGradingSettingsFile]):
     """Color grading and tone mapping configuration settings for Vibrant Visuals (PBR) rendering.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/vibrantvisuals/colorgradingtonemappingcustomization)
     """
 
-    _document = _ColorGradingSettingsFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "color_grading"
@@ -204,7 +203,7 @@ class ColorGradingSettings(JsonFile):
             "color_grading" if name == "default_color_grading" else name,
             identifier=name,
         )
-        self._content.settings.set_description(self.identifier)
+        self._document.settings.set_description(self.identifier)
 
     def midtones(
         self,
@@ -223,7 +222,7 @@ class ColorGradingSettings(JsonFile):
             offset (tuple[float, float, float], optional): Additive offset per RGB channel. Valid range: -1.0 to 1.0.
             saturation (tuple[float, float, float], optional): Saturation intensity per RGB channel. Valid range: 0.0 to 10.0.
         """
-        mid = self._content.settings.color_grading.midtones
+        mid = self._document.settings.color_grading.midtones
         if contrast is not None:
             mid.set_contrast(contrast)
         if gain is not None:
@@ -257,7 +256,7 @@ class ColorGradingSettings(JsonFile):
             saturation (tuple[float, float, float], optional): Highlight saturation intensity per RGB channel. Valid range: 0.0 to 10.0.
         """
 
-        high = self._content.settings.color_grading.highlights
+        high = self._document.settings.color_grading.highlights
         high.set_enabled(True)
         if highlightsMin is not None:
             high.set_highlightsMin(highlightsMin)
@@ -293,7 +292,7 @@ class ColorGradingSettings(JsonFile):
             offset (tuple[float, float, float], optional): Shadow additive offset per RGB channel. Valid range: -1.0 to 1.0.
             saturation (tuple[float, float, float], optional): Shadow saturation intensity per RGB channel. Valid range: 0.0 to 10.0.
         """
-        shad = self._content.settings.color_grading.shadows
+        shad = self._document.settings.color_grading.shadows
         shad.set_enabled(True)
         if shadowsMax is not None:
             shad.set_shadowsMax(shadowsMax)
@@ -320,7 +319,7 @@ class ColorGradingSettings(JsonFile):
             temp_value (float, optional): Overall image temperature in Kelvin. Default is 6500.0. Valid range: 1000.0 to 15000.0.
             type (Literal["white_balance", "color_temperature"], optional): Inverts scale logic. Default is "white_balance".
         """
-        temp = self._content.settings.color_grading.temperature
+        temp = self._document.settings.color_grading.temperature
         temp.set_enabled(True)
         if temp_value is not None:
             temp.set_temperature(temp_value)
@@ -344,5 +343,5 @@ class ColorGradingSettings(JsonFile):
         Args:
             operator (Literal["reinhard", "reinhard_luma", "reinhard_luminance", "hable", "aces", "generic"]): The tone mapping operator.
         """
-        self._content.settings.tone_mapping.set_operator(operator)
+        self._document.settings.tone_mapping.set_operator(operator)
         return self

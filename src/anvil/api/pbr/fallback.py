@@ -70,13 +70,12 @@ class _PBRFallbackFile(JsonObject):
     )
 
 
-class PBRFallback(JsonFile):
+class PBRFallback(JsonFile[_PBRFallbackFile]):
     """PBR fallback settings acting as default values when texture sets are not provided.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/deferredrendering/pbrfallbackconfig_pbrfallbackconfigsettings)
     """
 
-    _document = _PBRFallbackFile
     _file_name = "global"
     _extension = ".json"
     _pack = Pack.RP
@@ -101,7 +100,7 @@ class PBRFallback(JsonFile):
         Args:
             MERS (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The MERS values as a color in any format, written as four whole numbers from 0 to 255.
         """
-        self._content.settings.blocks.set_global_metalness_emissive_roughness_subsurface(
+        self._document.settings.blocks.set_global_metalness_emissive_roughness_subsurface(
             MERS
         )
         return self
@@ -114,7 +113,7 @@ class PBRFallback(JsonFile):
         Args:
             MERS (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The MERS values as a color in any format, written as four whole numbers from 0 to 255.
         """
-        self._content.settings.actors.set_global_metalness_emissive_roughness_subsurface(
+        self._document.settings.actors.set_global_metalness_emissive_roughness_subsurface(
             MERS
         )
         return self
@@ -127,7 +126,7 @@ class PBRFallback(JsonFile):
         Args:
             MERS (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The MERS values as a color in any format, written as four whole numbers from 0 to 255.
         """
-        self._content.settings.particles.set_global_metalness_emissive_roughness_subsurface(
+        self._document.settings.particles.set_global_metalness_emissive_roughness_subsurface(
             MERS
         )
         return self
@@ -140,7 +139,7 @@ class PBRFallback(JsonFile):
         Args:
             MERS (HexRGB | HexRGBA | RGB | RGBA | RGB255 | RGBA255): The MERS values as a color in any format, written as four whole numbers from 0 to 255.
         """
-        self._content.settings.items.set_global_metalness_emissive_roughness_subsurface(
+        self._document.settings.items.set_global_metalness_emissive_roughness_subsurface(
             MERS
         )
         return self

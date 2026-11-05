@@ -49,7 +49,7 @@ class _MultifaceFeatureFile(JsonObject):
         self.feature = feature
 
 
-class MultifaceFeature(Feature):
+class MultifaceFeature(Feature[_MultifaceFeatureFile]):
     """Places a block on floors, walls or ceilings, and spreads it around, such as glow
     lichen. Any block can be placed.
 
@@ -58,8 +58,6 @@ class MultifaceFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_multiface_feature)
     """
-
-    _document = _MultifaceFeatureFile
 
     def __init__(
         self,
@@ -89,7 +87,7 @@ class MultifaceFeature(Feature):
                 can be placed on. Any block when left out.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _MultifaceFeature(
                 description=self._description(),
                 places_block=places_block,

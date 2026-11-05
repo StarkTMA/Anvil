@@ -284,7 +284,7 @@ class _FogSettingsFile(JsonObject):
     )
 
 
-class FogSettings(JsonFile):
+class FogSettings(JsonFile[_FogSettingsFile]):
     """
     Represents a Minecraft Fog resource pack definition.
 
@@ -298,7 +298,6 @@ class FogSettings(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/fogsreference/fogs)
     """
 
-    _document = _FogSettingsFile
     _extension = ".fog.json"
     _pack = Pack.RP
     _folder = "fogs"
@@ -313,7 +312,7 @@ class FogSettings(JsonFile):
                 (under the `minecraft` namespace). Defaults to False.
         """
         super().__init__(name, is_vanilla)
-        self._content.settings.set_description(self.identifier)
+        self._document.settings.set_description(self.identifier)
 
     def add_distance_location(
         self,
@@ -349,7 +348,7 @@ class FogSettings(JsonFile):
             fog_end=fog_end,
             render_distance_type=render_distance_type,
         )
-        self._content.settings.distance.set_location(distance)
+        self._document.settings.distance.set_location(distance)
         return distance
 
     def water_density(
@@ -384,7 +383,7 @@ class FogSettings(JsonFile):
                 f"max_density_height ({max_density_height})."
             )
 
-        density = self._content.settings.volumetric.density.water
+        density = self._document.settings.volumetric.density.water
         density.set_max_density(max_density)
         density.set_uniform(uniform)
         if not uniform:
@@ -424,7 +423,7 @@ class FogSettings(JsonFile):
                 f"max_density_height ({max_density_height})."
             )
 
-        density = self._content.settings.volumetric.density.air
+        density = self._document.settings.volumetric.density.air
         density.set_max_density(max_density)
         density.set_uniform(uniform)
         if not uniform:
@@ -458,7 +457,7 @@ class FogSettings(JsonFile):
             raise ValueError(
                 "Volumetric fog settings require PBR to be enabled in the config."
             )
-        media = self._content.settings.volumetric.media_coefficients
+        media = self._document.settings.volumetric.media_coefficients
         if water_scattering is not None or water_absorption is not None:
             media.water.set_scattering(water_scattering or (0, 0, 0))
             media.water.set_absorption(water_absorption or (0, 0, 0))
@@ -486,7 +485,7 @@ class FogSettings(JsonFile):
             raise ValueError(
                 "Volumetric fog settings require PBR to be enabled in the config."
             )
-        hg = self._content.settings.volumetric.henyey_greenstein_g
+        hg = self._document.settings.volumetric.henyey_greenstein_g
         hg.air.set_henyey_greenstein_g(air_g)
         hg.water.set_henyey_greenstein_g(water_g)
         return self

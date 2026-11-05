@@ -664,7 +664,7 @@ def _leaves(
     ]
 
 
-class TreeFeature(Feature):
+class TreeFeature(Feature[_TreeFeatureFile]):
     """Places a tree: a trunk anchored to a base block, and a canopy around its top.
 
     Set one trunk and at most one canopy. Setting another trunk, or another canopy,
@@ -672,8 +672,6 @@ class TreeFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_tree_feature)
     """
-
-    _document = _TreeFeatureFile
 
     def __init__(self, name: str) -> None:
         """Creates a tree feature. Set its trunk and canopy next.

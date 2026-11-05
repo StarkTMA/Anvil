@@ -120,7 +120,7 @@ class _BPAnimationsFile(JsonObject):
     )
 
 
-class BPAnimations(JsonFile):
+class BPAnimations(JsonFile[_BPAnimationsFile]):
     """The behavior pack animations of an entity, written when it has any. The entity's
     description holds them (`entity.server.description.animation()` adds them); the
     file writes them.
@@ -128,7 +128,6 @@ class BPAnimations(JsonFile):
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/animations/animationsoverview)
     """
 
-    _document = _BPAnimationsFile
     _extension = ".animation.json"
     _pack = Pack.BP
     _folder = "animations"
@@ -146,12 +145,12 @@ class BPAnimations(JsonFile):
 
     def queue(self, directory: str | None = None) -> "BPAnimations | None":
         """Queues the animations for export, when the entity has any."""
-        self._content = self._document(
+        self._document = self._document_type(
             animations=[
                 e for e in self._source._animations if isinstance(e, _BPAnimation)
             ]
         )
-        if self._content.animations:
+        if self._document.animations:
             return super().queue(directory=directory)
         return None
 

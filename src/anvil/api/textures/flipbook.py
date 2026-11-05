@@ -43,14 +43,13 @@ class _FlipbookTexturesFile(JsonValue):
         self.textures.append(texture)
 
 
-class FlipBookTexturesObject(JsonFile):
+class FlipBookTexturesObject(JsonFile[_FlipbookTexturesFile]):
     """The animated block textures, `textures/flipbook_textures.json`. There is one per
     pack.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/createanimatedblocktexture)
     """
 
-    _document = _FlipbookTexturesFile
     _extension = ".json"
     _pack = Pack.RP
     _folder = "textures"
@@ -102,7 +101,7 @@ class FlipBookTexturesObject(JsonFile):
 
         ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/createanimatedblocktexture)
         """
-        self._content.add_texture(
+        self._document.add_texture(
             _FlipbookTexture(
                 atlas_tile=f"{CONFIG.NAMESPACE}:{block_name}",
                 flipbook_texture=PurePosixPath(
@@ -129,6 +128,6 @@ class FlipBookTexturesObject(JsonFile):
 
     def __export__(self) -> None:
         """Writes the flipbook textures, when there is any."""
-        if not self._content.textures:
+        if not self._document.textures:
             return None
         return super().__export__()

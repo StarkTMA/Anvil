@@ -53,7 +53,7 @@ class _SearchFeatureFile(JsonObject):
         self.feature = feature
 
 
-class SearchFeature(Feature):
+class SearchFeature(Feature[_SearchFeatureFile]):
     """Sweeps a box, layer by layer along an axis, for positions where a feature can be
     placed, and places it when enough are found. With `-x`, positions with greater x are
     checked first.
@@ -63,8 +63,6 @@ class SearchFeature(Feature):
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_search_feature)
     """
-
-    _document = _SearchFeatureFile
 
     def __init__(
         self,
@@ -89,7 +87,7 @@ class SearchFeature(Feature):
                 least 1.
         """
         super().__init__(name)
-        self._content.set_feature(
+        self._document.set_feature(
             _SearchFeature(
                 description=self._description(),
                 places_feature=str(places_feature),

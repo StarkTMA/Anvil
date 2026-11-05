@@ -42,13 +42,12 @@ class _ShadowSettingsFile(JsonObject):
     )
 
 
-class ShadowSettings(JsonFile):
+class ShadowSettings(JsonFile[_ShadowSettingsFile]):
     """Global shadow settings for Vibrant Visuals (PBR) rendering.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/vibrantvisuals/shadowscustomization)
     """
 
-    _document: _ShadowSettingsFile = _ShadowSettingsFile
     _file_name = "global"
     _extension = ".json"
     _pack = Pack.RP
@@ -77,5 +76,5 @@ class ShadowSettings(JsonFile):
             texel_size (int, optional): The resolution shadow texels snap to, usually the
                 resolution of the pack's block textures. Defaults to 16.
         """
-        self._content.settings.set_shadow_style(style, texel_size)
+        self._document.settings.set_shadow_style(style, texel_size)
         return self

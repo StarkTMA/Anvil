@@ -37,14 +37,13 @@ class _AttachableFile(JsonObject):
     )
 
 
-class ItemClient(JsonFile):
+class ItemClient(JsonFile[_AttachableFile]):
     """The item client: its attachable, how the item renders when an entity holds or wears
     it.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/attachables)
     """
 
-    _document = _AttachableFile
     _extension = ".attachable.json"
     _pack = Pack.RP
     _folder = "attachables"
@@ -63,7 +62,7 @@ class ItemClient(JsonFile):
     @property
     def description(self) -> _ItemClientDescription:
         """The description builders."""
-        return self._content.attachable.description
+        return self._document.attachable.description
 
     def queue(self) -> "ItemClient":
         """Queues the item client for export."""

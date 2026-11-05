@@ -381,13 +381,12 @@ class _BlockServerFile(JsonObject):
 # endregion
 
 
-class BlockServer(JsonFile):
+class BlockServer(JsonFile[_BlockServerFile]):
     """A server block: its description, components and permutations.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/blockreference/)
     """
 
-    _document = _BlockServerFile
     _extension = ".block.json"
     _pack = Pack.BP
     _folder = "blocks"
@@ -407,17 +406,17 @@ class BlockServer(JsonFile):
     @property
     def description(self) -> _BlockServerDescription:
         """The description builders, such as `add_state` and `set_menu_category`."""
-        return self._content.block.description
+        return self._document.block.description
 
     @property
     def components(self) -> ComponentGroup:
         """The block components."""
-        return self._content.block.components
+        return self._document.block.components
 
     @property
     def permutations(self) -> list[Permutation]:
         """The permutations, in the order they were added."""
-        return self._content.block.permutations
+        return self._document.block.permutations
 
     def permutation(self, condition: str | Molang) -> Permutation:
         """Adds a permutation, components that apply while a condition is true, and returns it.

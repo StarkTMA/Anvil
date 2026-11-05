@@ -108,7 +108,7 @@ def test_schema_refuses_what_export_refuses():
 def test_shadow_settings_file_schema():
     with config.override(PBR=True):
         settings = ShadowSettings().shadow_style("blocky_shadows", 16)
-    schema = _check(settings._content, ShadowSettings.__schema__())
+    schema = _check(settings._document, ShadowSettings.__schema__())
     assert schema["title"] == "Shadow Settings"
     assert schema["x-anvil-file"] == {
         "pack": "resource_pack",
@@ -127,7 +127,7 @@ def test_shadow_settings_file_schema():
 def test_pbr_fallback_file_schema():
     with config.override(PBR=True):
         fallback = PBRFallback().block_fallback("#0000cc00")
-    schema = _check(fallback._content, PBRFallback.__schema__())
+    schema = _check(fallback._document, PBRFallback.__schema__())
     assert schema["title"] == "PBR Fallback Settings"
     assert schema["x-anvil-file"]["folder"] == "pbr"
     body = schema["$defs"]["_PBRFallback"]["properties"]
@@ -187,7 +187,7 @@ def test_pbr_file_schemas():
     with config.override(PBR=True):
         files = _filled_pbr_files()
     for file in files:
-        schema = _check(file._content, type(file).__schema__())
+        schema = _check(file._document, type(file).__schema__())
         assert schema["x-anvil-file"]["pack"] == "resource_pack"
 
 

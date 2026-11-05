@@ -195,14 +195,13 @@ class _SoundsFile(JsonObject):
         return self.block_sounds[-1]
 
 
-class SoundEvent(JsonFile):
+class SoundEvent(JsonFile[_SoundsFile]):
     """The sound events of the resource pack, `sounds.json`: the sounds blocks and entities
     play for each event, and sounds played by name. There is one per pack.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/documents/addcustomsounds)
     """
 
-    _document = _SoundsFile
     _instance = None
     _pack = Pack.RP
     _object_type = "Sound Events"
@@ -272,7 +271,7 @@ class SoundEvent(JsonFile):
             _SoundDescription: The sound definition; add its files with `add_sound`.
         """
         self._changed = True
-        sounds = self._content.entity_sounds.entity(str(entity))
+        sounds = self._document.entity_sounds.entity(str(entity))
         event = self._sound(sound_event, sound_reference, pitch, volume)
         if variant_query is not None:
             if variant_map is None:
@@ -329,7 +328,7 @@ class SoundEvent(JsonFile):
             _SoundDescription: The sound definition; add its files with `add_sound`.
         """
         self._changed = True
-        self._content.block(str(block)).add_event(
+        self._document.block(str(block)).add_event(
             self._sound(sound_event, sound_reference, pitch, volume)
         )
         BlocksJSONObject().add_block(block)
@@ -375,7 +374,7 @@ class SoundEvent(JsonFile):
             _SoundDescription: The sound definition; add its files with `add_sound`.
         """
         self._changed = True
-        self._content.interactive_sounds.block(str(block)).add_event(
+        self._document.interactive_sounds.block(str(block)).add_event(
             self._sound(sound_event, sound_reference, pitch, volume)
         )
         BlocksJSONObject().add_block(block)
@@ -441,7 +440,7 @@ class SoundEvent(JsonFile):
             _SoundDescription: The sound definition; add its files with `add_sound`.
         """
         self._changed = True
-        self._content.individual_event_sounds.add_event(
+        self._document.individual_event_sounds.add_event(
             self._sound(
                 sound_reference,
                 sound_reference,
@@ -490,7 +489,7 @@ class SoundEvent(JsonFile):
             _SoundDescription: The sound definition; add its files with `add_sound`.
         """
         self._changed = True
-        self._content.individual_named_sounds.add_sound(
+        self._document.individual_named_sounds.add_sound(
             self._sound(
                 sound_reference,
                 sound_reference,

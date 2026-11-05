@@ -100,14 +100,12 @@ class _GrowingPlantFeatureFile(JsonObject):
     )
 
 
-class GrowingPlantFeature(Feature):
+class GrowingPlantFeature(Feature[_GrowingPlantFeatureFile]):
     """Places a growing plant: a column anchored to the floor or the ceiling, made of body
     blocks and a head block at its tip, such as cave vines.
 
     ## [Documentation reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/featuresreference/examples/features/minecraft_growing_plant_feature)
     """
-
-    _document = _GrowingPlantFeatureFile
 
     def __init__(
         self,
