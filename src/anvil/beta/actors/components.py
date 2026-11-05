@@ -31,6 +31,6 @@ class EntityReflectProjectiles(JsonComponent):
 
     def __validate__(self) -> None:
         if not CONFIG._EXPERIMENTAL:
-            raise NotImplementedError(
-                "EntityReflectProjectiles is experimental and needs the experimental flag in anvilconfig.json."
+            raise ValueError(
+                "EntityReflectProjectiles is experimental: turn on features.experimental in anvilconfig.json."
             )

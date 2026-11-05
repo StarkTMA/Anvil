@@ -14,6 +14,21 @@ from .jsontypes import Merged
 from .object import JsonObject
 
 
+def _clash(first: JsonComponent, second: JsonComponent) -> bool:
+    """Whether either component lists the other's class in its `_clashes`."""
+    return isinstance(second, type(first)._clashes) or isinstance(
+        first, type(second)._clashes
+    )
+
+
+def _clash_error(first: JsonComponent, second: JsonComponent, where: str) -> ValueError:
+    return ValueError(
+        f"Component '{first.identifier}' ({type(first).__name__}) clashes with "
+        f"'{second.identifier}' ({type(second).__name__}). Remove one of them. "
+        f"Found in {where}."
+    )
+
+
 def validate_components(
     owner: Any,
     root: JsonContainer,
@@ -22,7 +37,8 @@ def validate_components(
     is_block: bool = False,
 ) -> None:
     """Checks where each component is placed, and the components each one requires or clashes
-    with. A component in a group may rely on one in the root.
+    with. A component in a group may rely on one in the root, and must not clash with one
+    there.
 
     Raises:
         ValueError: A component is misplaced, misses a component it requires, or clashes.
@@ -36,12 +52,10 @@ def validate_components(
         available = identifiers | {component.identifier for component in present}
         for component in components:
             cls = type(component)
-            for clash in cls._clashes:
-                if clash.identifier in identifiers:
-                    raise ValueError(
-                        f"Component '{component.identifier}' clashes with "
-                        f"'{clash.identifier}'. Remove one of them. "
-                        f"Found in {where} of '{owner.identifier}'."
+            for other in [*components, *present]:
+                if other is not component and _clash(component, other):
+                    raise _clash_error(
+                        component, other, f"{where} of '{owner.identifier}'"
                     )
             for requirement in cls._requires:
                 if requirement.identifier not in available:
@@ -91,8 +105,14 @@ class JsonContainer(JsonObject):
 
         Args:
             *components (JsonComponent): The components to add.
+
+        Raises:
+            ValueError: A component clashes with one already in the container.
         """
         for component in components:
+            for existing in self._components:
+                if _clash(component, existing):
+                    raise _clash_error(component, existing, self._where())
             for index, existing in enumerate(self._components):
                 if existing.identifier == component.identifier:
                     self._components[index] = component

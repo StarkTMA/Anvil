@@ -735,7 +735,7 @@ def test_reflect_projectiles_needs_experimental(monkeypatch):
         reflection_sound="reflect",
     )
     monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", False, raising=False)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError, match="experimental"):
         AnvilIO._normalize_json_like(component)
     monkeypatch.setattr(CONFIG, "_EXPERIMENTAL", True, raising=False)
     assert AnvilIO._normalize_json_like(component) == {

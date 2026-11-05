@@ -169,3 +169,5 @@ nav:
     - Beta API Reference:
           - Actors:
                 - Components: beta/actors/components.md
+          - Blocks:
+                - Components: beta/blocks/components.md
