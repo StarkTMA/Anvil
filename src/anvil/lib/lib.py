@@ -253,6 +253,11 @@ class AnvilIO:
 
         from anvil.lib.config import CONFIG
 
+        STAMP_EXCLUDE = [
+            "package.json",
+            "tsconfig.json",
+        ]
+
         Directory.create(directory)
         path = Path(directory) / name
         type = name.split(".")[-1]
@@ -262,7 +267,7 @@ class AnvilIO:
                 content, minify=CONFIG._MINIFY or "--minify" in sys.argv
             )
 
-        if CONFIG._ADD_STAMP and not type == "yml":
+        if CONFIG._ADD_STAMP and not type == "yml" and name not in STAMP_EXCLUDE:
             file_stamp = cls._get_file_stamp(
                 name,
                 type,
