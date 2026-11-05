@@ -1,5 +1,6 @@
 import pytest
-from anvil.api.vanilla.entities import vanilla_entity_ids
+
+from anvil.api.vanilla.entities import vanilla_entities_ids
 from anvil.api.vanilla.factories.minecraft_entities import SulfurCube
 from anvil.lib.jsonmodel import JsonComponent
 from anvil.lib.jsonmodel.enums import FilterSubject
@@ -16,7 +17,7 @@ def test_sulfur_cube_entity():
     desc = SulfurCube()
     assert desc == "minecraft:sulfur_cube"
     assert desc.is_vanilla
-    assert "minecraft:sulfur_cube" in vanilla_entity_ids()
+    assert "minecraft:sulfur_cube" in vanilla_entities_ids()
 
 
 def test_entity_hide_held_items():
@@ -263,6 +264,7 @@ def test_entity_unset_options_are_left_out():
 
 def test_entity_single_value_is_required():
     import pytest
+
     from anvil.api.actors.components import EntityScale
 
     with pytest.raises(TypeError):
@@ -303,6 +305,7 @@ def test_entity_speeds_in_meters():
 
 def test_entity_knockback_resistance_is_checked_not_clamped():
     import pytest
+
     from anvil.api.actors.components import EntityKnockbackResistance
 
     with pytest.raises(ValueError):
@@ -357,6 +360,7 @@ def test_entity_environment_sensor_triggers():
 
 def test_entity_on_equipment_changed_slots():
     import pytest
+
     from anvil.api.actors.components import EntityOnEquipmentChanged
     from anvil.lib.jsonmodel.enums import Slots
 
@@ -379,6 +383,7 @@ def test_entity_loot_and_trade_table_paths():
 
 def test_entity_burns_in_daylight_slot():
     import pytest
+
     from anvil.api.actors.components import EntityBurnsInDaylight
     from anvil.lib.jsonmodel.enums import Slots
 
@@ -413,6 +418,7 @@ def test_entity_damage_sensor_triggers():
 
 def test_entity_timer_time_or_choices():
     import pytest
+
     from anvil.api.actors.components import EntityTimer, TimeChoice
 
     timer = EntityTimer(time_down_event="ring", time=(1, 3), looping=False)
@@ -446,6 +452,7 @@ def test_entity_shooter_writes_def():
 
 def test_entity_npc_data():
     import pytest
+
     from anvil.api.actors.components import EntityNPC, NPCData, NPCOffsets
 
     offsets = NPCOffsets(translate=(0, 1, 0), scale=(1, 1, 1))

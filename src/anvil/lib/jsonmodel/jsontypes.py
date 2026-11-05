@@ -395,16 +395,16 @@ class IndexInto(JsonType):
 @cache
 def _vanilla_ids(kind: str) -> frozenset[str]:
     if kind == "item":
-        from anvil.api.vanilla.items import vanilla_item_ids
+        from anvil.api.vanilla.items import vanilla_items_ids
 
-        return frozenset(vanilla_item_ids())
+        return frozenset(vanilla_items_ids())
     if kind == "block":
         from anvil.api.vanilla.blocks import vanilla_block_ids
 
         return frozenset(vanilla_block_ids())
-    from anvil.api.vanilla.entities import vanilla_entity_ids
+    from anvil.api.vanilla.entities import vanilla_entities_ids
 
-    return frozenset(vanilla_entity_ids())
+    return frozenset(vanilla_entities_ids())
 
 
 @dataclass(frozen=True, slots=True)

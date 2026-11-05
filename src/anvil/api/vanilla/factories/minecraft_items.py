@@ -84,10 +84,10 @@ def _make_factory(name: str):
 
 
 def __getattr__(name: str):
-    from anvil.api.vanilla.items import vanilla_item_ids
+    from anvil.api.vanilla.items import vanilla_items_ids
 
     identifier = _NAMES.get(name, f"minecraft:{_to_snake(name)}")
-    if name.startswith("_") or identifier not in vanilla_item_ids():
+    if name.startswith("_") or identifier not in vanilla_items_ids():
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     func = _make_factory(name)
     globals()[name] = func

@@ -2,7 +2,7 @@
 bedrock-samples repository, at a release tag chosen by hand.
 
 ```
-python tools/update_vanilla.py v1.26.50.4
+python tools/update_vanilla.py v1.26.60.5
 ```
 
 The whole module is deleted and rewritten on every run. Mojang's metadata has no tags
@@ -408,10 +408,10 @@ def _make_factory(name: str):
 
 
 def __getattr__(name: str):
-    from anvil.api.vanilla.{ids} import vanilla_{ids[:-1]}_ids
+    from anvil.api.vanilla.{ids} import vanilla_{ids}_ids
 
     identifier = _NAMES.get(name, f"minecraft:{{_to_snake(name)}}")
-    if name.startswith("_") or identifier not in vanilla_{ids[:-1]}_ids():
+    if name.startswith("_") or identifier not in vanilla_{ids}_ids():
         raise AttributeError(f"module {{__name__!r}} has no attribute {{name!r}}")
     func = _make_factory(name)
     globals()[name] = func
@@ -558,8 +558,8 @@ _NAMES""",
     files["items.py"] = (
         "from enum import StrEnum\n\n"
         "from .factories import minecraft_items as MinecraftItemTypes\n\n"
-        '__all__ = ["MinecraftItemTypes", "MinecraftItemTags", "vanilla_item_ids"]\n\n\n'
-        f"def vanilla_item_ids() -> list[str]:\n    return [\n{listed}    ]\n\n\n"
+        '__all__ = ["MinecraftItemTypes", "MinecraftItemTags", "vanilla_items_ids"]\n\n\n'
+        f"def vanilla_items_ids() -> list[str]:\n    return [\n{listed}    ]\n\n\n"
         + enum("MinecraftItemTags", "Vanilla item tags.", ITEM_TAGS)
     )
 
@@ -582,7 +582,7 @@ def entities(tag: str, files: dict[str, str]) -> None:
     listed = "".join(f'        "{i}",\n' for i in identifiers)
     files["entities.py"] = (
         "from .factories import minecraft_entities as MinecraftEntityTypes\n\n\n"
-        f"def vanilla_entity_ids() -> list[str]:\n    return [\n{listed}    ]\n"
+        f"def vanilla_entities_ids() -> list[str]:\n    return [\n{listed}    ]\n"
     )
 
 

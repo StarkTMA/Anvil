@@ -27,12 +27,12 @@ class Item:
                 item is not in `MinecraftItemTypes`.
         """
         from anvil.api.items.server import ItemServer
-        from anvil.api.vanilla.items import vanilla_item_ids
+        from anvil.api.vanilla.items import vanilla_items_ids
 
         self.identifier = Identifier.parse(
             name, vanilla=is_vanilla, object_type=self._object_type
         )
-        if self.identifier.is_vanilla and self.identifier not in vanilla_item_ids():
+        if self.identifier.is_vanilla and self.identifier not in vanilla_items_ids():
             raise ValueError(
                 f"Invalid vanilla item '{self.identifier}'. Please use a valid vanilla "
                 f"item from MinecraftItemTypes. Item [{self.identifier}]"

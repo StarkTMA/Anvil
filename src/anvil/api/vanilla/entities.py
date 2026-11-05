@@ -1,7 +1,7 @@
 from .factories import minecraft_entities as MinecraftEntityTypes
 
 
-def vanilla_entity_ids() -> list[str]:
+def vanilla_entities_ids() -> list[str]:
     return [
         "minecraft:agent",
         "minecraft:allay",
@@ -49,6 +49,7 @@ def vanilla_entity_ids() -> list[str]:
         "minecraft:fishing_hook",
         "minecraft:fox",
         "minecraft:frog",
+        "minecraft:frostbite",
         "minecraft:ghast",
         "minecraft:glow_squid",
         "minecraft:goat",
@@ -58,6 +59,7 @@ def vanilla_entity_ids() -> list[str]:
         "minecraft:hopper_minecart",
         "minecraft:horse",
         "minecraft:husk",
+        "minecraft:ice_ball",
         "minecraft:iron_golem",
         "minecraft:lightning_bolt",
         "minecraft:lingering_potion",

@@ -43,6 +43,7 @@ class MinecraftBiomeTypes(StrEnum):
     FrozenRiver = "minecraft:frozen_river"
     Grove = "minecraft:grove"
     Hell = "minecraft:hell"
+    IceCaves = "minecraft:ice_caves"
     IceMountains = "minecraft:ice_mountains"
     IcePlains = "minecraft:ice_plains"
     IcePlainsSpikes = "minecraft:ice_plains_spikes"
